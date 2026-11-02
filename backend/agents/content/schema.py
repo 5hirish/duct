@@ -23,6 +23,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from agents.core.session import BaseAgentSession
 
 from agents.content.channels import Platform
+from agents.content.plan_period import MAX_PLAN_DAYS
+from agents.content.voice_rules import VoiceRules
 from agents.models import AspectRatio, ImageModel, Provider
 
 
@@ -153,6 +155,10 @@ class ContentBrandContext(BaseModel):
     visual: ContentVisualAssets = Field(default_factory=ContentVisualAssets)
     # Where the brand already posts, as Platform values (channels.brand_platforms).
     active_channels: list[str] = Field(default_factory=list)
+    # The project's own voice (agents/content/voice_rules.py): posts it wrote,
+    # for the writer to match, and the rules a text post keeps.
+    writing_samples: list[str] = Field(default_factory=list)
+    voice_rules: VoiceRules = Field(default_factory=VoiceRules)
 
 
 # ---------------------------------------------------------------------------
@@ -167,7 +173,12 @@ class PlanRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     project_id: UUID
+    # The period the person picked: ``days`` from ``start_date`` (the Plan
+    # tab's week, two weeks or 30 days), or the month from ``start_date``
+    # without a length. Neither plans the month in progress
+    # (plan_period.default_period).
     start_date: date | None = None
+    days: int | None = Field(default=None, ge=1, le=MAX_PLAN_DAYS)
 
 
 class DraftPostRequest(BaseModel):
@@ -215,6 +226,12 @@ class ContentSession(BaseAgentSession):
     mode: RunMode
     plan_id: UUID | None = None
     post_id: UUID | None = None
+    # The dates a plan run manages (agents/content/plan_period.py): set by the
+    # runner before the opening turn, from the plan itself when the session is
+    # bound to one. submit_plan holds every plan to it; 0 days means no run
+    # set it (a test calling the tool directly) and nothing is enforced.
+    period_start: date | None = None
+    period_days: int = 0
     # Persisted-conversation linkage (session resume / chat history). Set by the
     # route layer when a session is created; the runner re-primes from the DB when
     # resume is True. recorder persists each turn (agents/content/persistence.py).
@@ -398,6 +415,10 @@ class ContentStatus(StrEnum):
     DRAFT     — user clicked Save; now a real, kept draft.
     SCHEDULED — queued to publish.
     POSTED    — published.
+    FAILED    — PostBridge didn't publish it at its scheduled time. Its reason
+                is the activity log row that recorded the change
+                (routes/content.py, _settle_overdue); publishing again is
+                the way out.
     DISCARDED — rejected.
     """
 
@@ -405,6 +426,7 @@ class ContentStatus(StrEnum):
     DRAFT     = "draft"
     SCHEDULED = "scheduled"
     POSTED    = "posted"
+    FAILED    = "failed"
     DISCARDED = "discarded"
 
 
@@ -716,7 +738,11 @@ class PlanDraft(BaseModel):
     start_date: date | None = None
     character: Character = Field(default_factory=Character)
     strategy: PlanStrategy = Field(default_factory=PlanStrategy)
-    days: list[Day] = Field(min_length=1, description="The posts, in order; each needs a topic and a pillar.")
+    days: list[Day] = Field(
+        min_length=1,
+        max_length=MAX_PLAN_DAYS,
+        description="The posts, in order, one per day of the plan's period; each needs a topic and a pillar.",
+    )
 
     @field_validator("days")
     @classmethod

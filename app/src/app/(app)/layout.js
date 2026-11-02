@@ -14,6 +14,7 @@ import LocalBackendGate from "../../components/LocalBackendGate.jsx";
 import UpdateToast from "../../components/UpdateToast.jsx";
 import ReloadToast from "../../components/ReloadToast.jsx";
 import ConnectionBanner from "../../components/ConnectionBanner.jsx";
+import DailyDraftsReminder from "../../components/content/DailyDraftsReminder.jsx";
 import { CommandProvider } from "../../components/commands/CommandRegistry";
 import CommandPalette from "../../components/commands/CommandPalette";
 import AppCommands from "../../components/commands/AppCommands";
@@ -61,6 +62,14 @@ function AppLayoutInner({ children }) {
     // a valid auth token, so it's a no-op when signed out.
     migrateFromLegacyProfile();
     hydrateProjectsFromBackend();
+    // A project can be made outside this tab — by a coding agent over MCP, or
+    // on another device — and the list was only pulled at mount, so it stayed
+    // missing from the switcher until a reload. Coming back to the tab is
+    // when someone would look for it.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") hydrateProjectsFromBackend();
+    };
+    document.addEventListener("visibilitychange", onVisible);
     // The profile's interface language, on a device that has not seen it
     // yet: the server frame rendered from the cookie (or the browser), so if
     // the profile says otherwise, write the cookie and re-render once.
@@ -74,6 +83,7 @@ function AppLayoutInner({ children }) {
     return () => {
       alive = false;
       stopCatchUp();
+      document.removeEventListener("visibilitychange", onVisible);
     };
     // `router` is stable; this runs once per mount on purpose.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -123,6 +133,10 @@ function AppLayoutInner({ children }) {
           </SidebarInset>
           <AppCommands />
           <CommandPalette />
+          {/* The drafts queue's one notice a day, from wherever the app is
+              open. Inside AuthGuard: signed out, its read would be a 401,
+              and a 401 ends the session it does not have. */}
+          <DailyDraftsReminder />
         </SidebarProvider>
         </CommandProvider>
         </AuditNavProvider>

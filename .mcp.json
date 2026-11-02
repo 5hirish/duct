@@ -7,9 +7,9 @@
         "next-devtools-mcp@latest"
       ]
     },
-    "phoenix": {
+    "jaeger": {
       "type": "http",
-      "url": "http://localhost:6006/mcp"
+      "url": "http://localhost:16686/api/ai/mcp/"
     },
     "github": {
       "type": "http",

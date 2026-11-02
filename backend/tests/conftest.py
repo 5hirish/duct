@@ -61,7 +61,7 @@ def make_sqlite_engine(*, drop_partial_indexes: bool = False, path=None):
 # `clean_env`, so any of it a test writes is undone afterwards.
 _LOCAL_MODE_ENV_VARS = (
     "DUCT_LOCAL", "DUCT_DESKTOP", "DUCT_DATA_DIR", "DUCT_API_KEY", "DUCT_ENV_FILE",
-    "API_PUBLIC_URL", "FRONTEND_ORIGIN", "APP_ENV", "SENTRY_DSN",
+    "API_PUBLIC_URL", "FRONTEND_ORIGIN", "APP_ENV", "POSTHOG_API_KEY",
     "DATABASE_URL", "UPLOADS_DIR", "INIT_DB_ON_STARTUP",
     # The shell's keychain copies, and the signing key bootstrap() writes from
     # them. JWT_SECRET was missing here while `bootstrap()` has always written

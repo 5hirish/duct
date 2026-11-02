@@ -27,6 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import {
   VENDOR,
+  VENDOR_HOME,
   connectVendorKey,
   disconnectVendorKey,
   getVendorKeyStatus,
@@ -78,7 +79,7 @@ const RUNNING = new Set(["running", "polling", "fetching"]);
 // and a sweep on every tab switch (or twice under StrictMode) buys nothing.
 const backfilled = new Set();
 
-const APIFY_URL = "https://console.apify.com";
+const APIFY_URL = VENDOR_HOME[VENDOR.APIFY];
 
 function DiscoverHeader({ aside }) {
   return (
@@ -335,7 +336,7 @@ export default function DiscoverPage({ projectId }) {
             <Spinner className="size-3.5" />
             <Trans>Scraping on Apify ({elapsed}s) — polling every 3s, results appear as soon as the actor finishes.</Trans>
           </div>
-          <div className="grid grid-cols-2 gap-4 @2xl:grid-cols-3 @4xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 @2xl:grid-cols-3 @4xl:grid-cols-4 @7xl:grid-cols-[repeat(auto-fill,minmax(18rem,1fr))]">
             {[0, 1, 2, 3].map((i) => (
               <Skeleton key={i} className="aspect-[3/4] rounded-xl" />
             ))}
@@ -378,7 +379,7 @@ export default function DiscoverPage({ projectId }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 @2xl:grid-cols-3 @4xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 @2xl:grid-cols-3 @4xl:grid-cols-4 @7xl:grid-cols-[repeat(auto-fill,minmax(18rem,1fr))]">
             {sorted.map((p) => (
               <ResultCard key={p.id} post={p} busy={busy[p.id]} onSave={() => handleSave(p)} />
             ))}

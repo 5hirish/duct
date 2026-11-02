@@ -1,15 +1,16 @@
 /**
- * The desktop crash-reporting opt-in.
+ * The desktop shell's one data switch: usage events and crash reports, from
+ * the window (`lib/analytics/posthog.js`), the shell itself and, in a
+ * self-host build, the bundled backend.
  *
- * Desktop is the only shell where this is a question. On the web the app is
- * served by us and already reports; on a laptop the bundled backend is running
- * on the user's own machine, and `local_server.py` blanks `SENTRY_DSN` by
- * default precisely because "a user's laptop is not a deployment". This is the
- * switch that lets someone opt into helping, rather than being opted in.
+ * Desktop is the only shell where this is a question. On the web the cookie
+ * choice decides analytics; on a laptop there is no banner, and the bundled
+ * backend runs on the user's own machine, where `local_server.py` blanks
+ * `POSTHOG_API_KEY` by default because "a user's laptop is not a deployment".
  *
  * Returns `available: false` where the toggle should not be offered at all —
- * the browser, an older shell without the commands, or a build compiled with no
- * DSN, where the switch would be theatre.
+ * the browser, an older shell without the commands, or a build compiled with
+ * no PostHog token, where the switch would be theatre.
  */
 
 import { isDesktopShell } from "./shell.js";

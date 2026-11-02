@@ -95,7 +95,7 @@ Both differences come from the size of a frozen Python tree.
 | `DUCT_DEVID_CERT_P12`, `DUCT_DEVID_CERT_PASSWORD`, `DUCT_DEVID_IDENTITY`, `DUCT_APPLE_TEAM_ID` | CI secrets | Developer ID signing |
 | `DUCT_ASC_API_KEY_ID`, `DUCT_ASC_API_ISSUER_ID`, `DUCT_ASC_API_KEY_P8` | CI secrets | Notarization, through the App Store Connect API key |
 | `DUCT_TELEMETRY_DEFAULT_ON=1` | Release workflow only | Crash reports on unless the user opts out |
-| `SENTRY_DSN` | Builds with `--features crash-reporting` | Crash-report destination, compiled in; absent means the app never reports |
+| `POSTHOG_PROJECT_TOKEN`, `POSTHOG_HOST` | CI variables, not secrets: the token is public | Crash-report destination for `--features crash-reporting` builds, compiled in; no token means the app never reports. Host defaults to PostHog's US cloud |
 | `GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET` | CI secret | Second half of the Google sign-in client; the id has a default in the shell |
 
 ### Go deeper

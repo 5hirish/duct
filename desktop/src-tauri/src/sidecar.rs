@@ -142,7 +142,8 @@ pub struct SidecarInfo {
 ///
 /// Anything but the documented JSON object is a failed start, and the raw
 /// line rides in the error on purpose: a traceback or "Address already in
-/// use" from the frozen Python is the only clue the user (or Sentry) gets.
+/// use" from the frozen Python is the only clue the user (or a crash report)
+/// gets.
 fn parse_handshake(line: &str) -> Result<SidecarInfo, String> {
     serde_json::from_str::<SidecarInfo>(line)
         .map_err(|e| format!("sidecar handshake was not valid JSON ({e}): {line}"))
@@ -376,10 +377,11 @@ fn try_spawn(app: &AppHandle) -> Result<(), String> {
     }
 
     // Crash reporting for the bundled backend, only with consent. `local_server`
-    // blanks its own DSN by default on purpose — a laptop is not a deployment —
-    // so passing nothing here leaves that default intact. Passing it explicitly
-    // is the only way the sidecar ever reports, which keeps the decision in one
-    // place the user controls rather than spread across two processes.
+    // blanks its own reporting key by default on purpose — a laptop is not a
+    // deployment — so passing nothing here leaves that default intact. Passing
+    // it explicitly is the only way the sidecar ever reports, which keeps the
+    // decision in one place the user controls rather than spread across two
+    // processes.
     //
     // Which variables that takes is the reporter's business, not this file's: a
     // build with no reporter compiled in returns none and the loop does nothing.

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronDown, CopyPlus, Plus } from "lucide-react";
@@ -11,16 +11,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   listPosts,
 } from "@/lib/contentApi";
-import { getActiveProjectId, getActiveProject } from "@/lib/projects";
+import { getProjectById } from "@/lib/projects";
+import { useActiveProjectId } from "@/hooks/useActiveProjectId";
 import BrandContextForm from "@/components/content/BrandContextForm";
-import DiscoverPage from "@/components/content/DiscoverPage";
 import AccountsTab from "@/components/content/AccountsTab";
-import AnalyticsView from "@/components/content/AnalyticsView";
 import FormatLibrary from "@/components/content/FormatLibrary";
 import StyleGallery from "@/components/content/StyleGallery";
 import PostCard from "@/components/content/PostCard";
 import CloneFromUrlDialog from "@/components/content/CloneFromUrlDialog";
 import PlanBoard from "@/components/content/PlanBoard";
+import DraftsQueue from "@/components/content/DraftsQueue";
+import ReminderSetting from "@/components/content/ReminderSetting";
 import { PlatformGlyph, platformMeta } from "@/components/content/platformGlyphs";
 import {
   DropdownMenu,
@@ -28,7 +29,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DRAFT_CHANNELS } from "@/lib/contentEnums";
+import { DRAFT_CHANNELS, PostStatus } from "@/lib/contentEnums";
+
+// One tab shows at a time and the hub opens on the plan. Analytics brings
+// Recharts and Discover is the largest tab, so neither is downloaded until
+// someone opens it.
+const AnalyticsView = lazy(() => import("@/components/content/AnalyticsView"));
+const DiscoverPage = lazy(() => import("@/components/content/DiscoverPage"));
 
 const TABS = ["plan", "posts", "analytics", "discover", "library", "brand", "accounts"];
 
@@ -46,35 +53,30 @@ const TAB_LABELS = {
 
 export default function ContentLandingPage() {
   const { t, i18n } = useLingui();
-  const [tab,        setTab]        = useState("plan");
-  const [projectId,  setProjectId]  = useState(null);
-  const [projectName, setProjectName] = useState("");
-  const [error,      setError]      = useState("");
+  const [tab, setTab] = useState("plan");
+  const projectId = useActiveProjectId();
+  const project = useMemo(() => (projectId ? getProjectById(projectId) : null), [projectId]);
+  const projectName = project?.profile?.company?.name || project?.name || t`Project`;
 
+  // A link from outside the hub (the plan board's first-run fixes) names its
+  // tab; read once here rather than with useSearchParams, which would make the
+  // whole hub suspend for a value only the first render needs.
   useEffect(() => {
-    const id = getActiveProjectId();
-    if (!id) {
-      setError(t`Select a project in the sidebar to use the content agent.`);
-      return;
-    }
-    setProjectId(id);
-    const p = getActiveProject();
-    setProjectName(p?.profile?.company?.name || p?.name || t`Project`);
-    // `t` follows the locale; this runs once on mount on purpose.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const wanted = new URLSearchParams(window.location.search).get("tab");
+    if (TABS.includes(wanted)) setTab(wanted);
   }, []);
 
-  if (error) {
+  if (projectId === "") {
     return (
       <div className="max-w-2xl mx-auto py-12 px-6 text-center">
-        <p className="text-sm text-muted-foreground">{error}</p>
+        <p className="text-sm text-muted-foreground"><Trans>Select a project in the sidebar to use the content agent.</Trans></p>
       </div>
     );
   }
 
   if (!projectId) {
     return (
-      <div className="grid grid-cols-2 gap-4 @md:grid-cols-3 @3xl:grid-cols-4" role="status" aria-label={t`Loading`}>
+      <div className="grid grid-cols-2 gap-4 @md:grid-cols-3 @3xl:grid-cols-4 @7xl:grid-cols-[repeat(auto-fill,minmax(18rem,1fr))]" role="status" aria-label={t`Loading`}>
         {[0, 1, 2, 3].map((i) => (
           <Skeleton key={i} className="aspect-[4/5] rounded-xl" />
         ))}
@@ -92,13 +94,15 @@ export default function ContentLandingPage() {
       </header>
 
       <nav className="border-b border-border/60 mb-6">
-        <div className="flex items-center gap-1">
+        {/* Seven tabs are ~500px of text: on a phone, or a tablet with the
+            sidebar open, they scroll in place instead of widening the page. */}
+        <div className="flex items-center gap-1 overflow-x-auto">
           {TABS.map((id) => (
             <button
               key={id}
               type="button"
               onClick={() => setTab(id)}
-              className={`px-3 py-2 text-sm capitalize transition-colors border-b-2 -mb-px ${
+              className={`shrink-0 whitespace-nowrap px-3 py-2 text-sm capitalize transition-colors border-b-2 -mb-px ${
                 tab === id
                   ? "border-primary text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground"
@@ -110,15 +114,22 @@ export default function ContentLandingPage() {
         </div>
       </nav>
 
-      {tab === "plan"      && <PlanTab      projectId={projectId} />}
-      {tab === "posts"     && <PostsTab     projectId={projectId} />}
-      {tab === "analytics" && (
-        <AnalyticsView projectId={projectId} onLinkAccounts={() => setTab("accounts")} />
-      )}
-      {tab === "discover"  && <DiscoverPage projectId={projectId} />}
-      {tab === "library"   && <LibraryTab   projectId={projectId} />}
-      {tab === "brand"     && <BrandTab     projectId={projectId} />}
-      {tab === "accounts"  && <AccountsTab  projectId={projectId} />}
+      {/* Keyed on the project so a switch from the sidebar remounts the tab:
+          each one loads its project's data on mount, and the Posts tab's
+          loading flag would otherwise never reset for the new project. */}
+      <div key={projectId}>
+        {tab === "plan"      && <PlanTab      projectId={projectId} onOpenTab={setTab} />}
+        {tab === "posts"     && <PostsTab     projectId={projectId} />}
+        <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
+          {tab === "analytics" && (
+            <AnalyticsView projectId={projectId} onLinkAccounts={() => setTab("accounts")} />
+          )}
+          {tab === "discover"  && <DiscoverPage projectId={projectId} />}
+        </Suspense>
+        {tab === "library"   && <LibraryTab   projectId={projectId} />}
+        {tab === "brand"     && <BrandTab     projectId={projectId} />}
+        {tab === "accounts"  && <AccountsTab  projectId={projectId} />}
+      </div>
     </div>
   );
 }
@@ -127,13 +138,13 @@ export default function ContentLandingPage() {
 // Plan tab
 // ---------------------------------------------------------------------------
 
-function PlanTab({ projectId }) {
+function PlanTab({ projectId, onOpenTab }) {
   // This tab scrolls inside .app-main-wide, so nothing above gives the board a
   // height — it is the one caller that has to state one. svh, not vh, to match
   // the rest of the app's full-height surfaces.
   return (
     <div className="h-[calc(100svh-15rem)] min-h-[28rem]">
-      <PlanBoard projectId={projectId} />
+      <PlanBoard projectId={projectId} onOpenTab={onOpenTab} />
     </div>
   );
 }
@@ -185,14 +196,17 @@ function LibraryTab({ projectId }) {
 // Posts tab — all drafted/posted posts for the project
 // ---------------------------------------------------------------------------
 
-const POST_FILTERS = ["all", "posted", "scheduled", "draft"];
+// Drafts come first and say "waiting": a draft nobody has answered is the
+// drafts queue (issue #266), and the tab opens on it while it has anything.
+const POST_FILTERS = [PostStatus.DRAFT, "all", PostStatus.POSTED, PostStatus.SCHEDULED, PostStatus.FAILED];
 
 // Filter ids are post statuses (API values); these are what the chips say.
 const FILTER_LABELS = {
   all: msg`all`,
-  posted: msg`posted`,
-  scheduled: msg`scheduled`,
-  draft: msg`draft`,
+  [PostStatus.POSTED]: msg`posted`,
+  [PostStatus.SCHEDULED]: msg`scheduled`,
+  [PostStatus.FAILED]: msg`failed`,
+  [PostStatus.DRAFT]: msg`waiting`,
 };
 
 function postRank(p) {
@@ -206,7 +220,8 @@ function PostsTab({ projectId }) {
   const router = useRouter();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("all");
+  // null until the posts arrive: the default depends on whether any wait.
+  const [filter, setFilter] = useState(null);
   const [cloneOpen, setCloneOpen] = useState(false);
 
   // The two ways into a post no plan asked for: write one for a channel the
@@ -251,7 +266,9 @@ function PostsTab({ projectId }) {
       try {
         const p = await listPosts(projectId);
         if (cancelled) return;
-        setPosts(Array.isArray(p) ? p : []);
+        const rows = Array.isArray(p) ? p : [];
+        setPosts(rows);
+        setFilter((f) => f ?? (rows.some((r) => r.status === PostStatus.DRAFT) ? PostStatus.DRAFT : "all"));
       } catch {/* ignore */}
       finally {
         if (!cancelled) setLoading(false);
@@ -266,10 +283,18 @@ function PostsTab({ projectId }) {
     return acc;
   }, {});
 
-  const filterLabel = i18n._(FILTER_LABELS[filter]);
+  const activeFilter = filter ?? "all";
+  const filterLabel = i18n._(FILTER_LABELS[activeFilter]);
+
+  // An answer from the queue (a skip, or an approve that scheduled or posted
+  // it) moves the post to its new status here, so the counts follow at once.
+  const answered = (postId, updated) => {
+    if (!updated) return;
+    setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, ...updated } : p)));
+  };
 
   const visible = posts
-    .filter((p) => filter === "all" || p.status === filter)
+    .filter((p) => activeFilter === "all" || p.status === activeFilter)
     .sort((a, b) => {
       const [ar, av] = postRank(a);
       const [br, bv] = postRank(b);
@@ -278,7 +303,7 @@ function PostsTab({ projectId }) {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 gap-4 @md:grid-cols-3 @3xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 @md:grid-cols-3 @3xl:grid-cols-4 @7xl:grid-cols-[repeat(auto-fill,minmax(18rem,1fr))]">
         {[0, 1, 2, 3].map((i) => (
           <Skeleton key={i} className="aspect-[4/5] rounded-xl" />
         ))}
@@ -307,14 +332,16 @@ function PostsTab({ projectId }) {
         <div className="order-last ml-auto flex items-center gap-2">{cloneButton}{newPostMenu}</div>
         {POST_FILTERS.map((f) => {
           const n = counts[f] || 0;
-          if (f !== "all" && n === 0) return null;
+          // The active chip stays even at zero: answering the last draft
+          // should not leave a view with no chip saying what it is.
+          if (f !== "all" && n === 0 && f !== activeFilter) return null;
           return (
             <button
               key={f}
               type="button"
               onClick={() => setFilter(f)}
               className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors ${
-                filter === f
+                activeFilter === f
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground hover:bg-muted/70"
               }`}
@@ -325,12 +352,19 @@ function PostsTab({ projectId }) {
         })}
       </div>
 
-      {visible.length === 0 ? (
+      {activeFilter === PostStatus.DRAFT ? (
+        <DraftsQueue
+          posts={visible}
+          projectId={projectId}
+          onAnswered={answered}
+          aside={<ReminderSetting />}
+        />
+      ) : visible.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border/60 px-4 py-10 text-center text-sm text-muted-foreground">
           <Trans>No {filterLabel} posts.</Trans>
         </p>
       ) : (
-        <div className="grid grid-cols-2 gap-4 @md:grid-cols-3 @3xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 @md:grid-cols-3 @3xl:grid-cols-4 @7xl:grid-cols-[repeat(auto-fill,minmax(18rem,1fr))]">
           {visible.map((p) => <PostCard key={p.id} post={p} />)}
         </div>
       )}

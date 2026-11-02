@@ -22,8 +22,8 @@ below were opened faithfully and dropped on the floor: the API package's
 ``set_tracer_provider``, and nothing had. The launch config even set an
 ``OTEL_ENDPOINT`` that no code read. ``server.py`` now calls
 ``configure_tracing`` with ``OTEL_EXPORTER_OTLP_ENDPOINT`` — the standard
-variable, so a Phoenix on ``:6006`` locally and any OTLP collector in
-production are the same one-line change — and leaves tracing off when it is
+variable, so Jaeger on ``:4318`` locally (``scripts/jaeger.sh``) and any OTLP
+collector in production are the same one-line change — and leaves tracing off when it is
 unset, which is what every test and every self-host build gets.
 
 Stability, stated honestly
@@ -78,20 +78,19 @@ GEN_AI_TOOL_NAME = "gen_ai.tool.name"
 GEN_AI_TOOL_CALL_ID = "gen_ai.tool.call.id"
 GEN_AI_TOOL_TYPE = "gen_ai.tool.type"
 
-# Not GenAI semconv: the OpenInference attribute Phoenix groups its trace view
-# by (LLM / TOOL / AGENT columns, latency per kind). A plain string attribute,
-# no dependency, ignored by any backend that does not know it — cheap enough
-# to carry so the local trace UI is legible rather than a flat list of spans.
+# Not GenAI semconv: the OpenInference attribute that LLM trace viewers such as
+# Phoenix and Langfuse group spans by (LLM / TOOL / AGENT). Jaeger, the local
+# viewer (scripts/jaeger.sh), reads the gen_ai.* names above and ignores it. A
+# plain string with no dependency, kept for whoever points OTLP at one of those.
 OPENINFERENCE_SPAN_KIND = "openinference.span.kind"
 SPAN_KIND_LLM = "LLM"
 SPAN_KIND_TOOL = "TOOL"
 SPAN_KIND_AGENT = "AGENT"
 
 # Also OpenInference, on the resource rather than the span: the project a trace
-# belongs to. One local Phoenix collects every project on this machine, so
-# without it Duct's spans land in "default" mixed with everyone else's and the
-# trace list is unreadable. Any other OTLP backend sees one more resource
-# attribute and ignores it.
+# belongs to. A viewer that collects every project on a machine files Duct's
+# spans under it rather than in "default" with everyone else's. Jaeger groups
+# by service.name instead and ignores it.
 OPENINFERENCE_PROJECT_NAME = "openinference.project.name"
 PROJECT_NAME = "duct"
 
@@ -100,8 +99,8 @@ OP_CHAT = "chat"
 OP_EXECUTE_TOOL = "execute_tool"
 OP_INVOKE_AGENT = "invoke_agent"
 
-# What the exporter appends to a bare collector URL. Phoenix, the collector
-# and Sentry all take traces at this path; a value that already ends in it is
+# What the exporter appends to a bare collector URL. Jaeger, the OTel
+# collector and most hosted backends take traces at this path; a value that already ends in it is
 # left alone so a full URL works too.
 OTLP_TRACES_PATH = "/v1/traces"
 SERVICE_NAME = "duct-backend"
@@ -115,6 +114,8 @@ _PROVIDER_NAMES = {
     "anthropic": "anthropic",
     "google_genai": "gcp.gemini",
     "openrouter": "openrouter",
+    "ollama": "ollama",
+    "openai_compatible": "openai_compatible",
 }
 
 

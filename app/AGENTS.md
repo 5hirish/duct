@@ -10,8 +10,8 @@ Next.js App Router report viewer and agent interface.
 - **State:** React Context (`InsightContext.js`) + component-level state only. No Redux/Zustand.
 - **HTTP:** Native `fetch` wrapped in `lib/api.js`. No type-safe client or OpenAPI generation.
 - **Auth:** Custom API key (`NEXT_PUBLIC_DUCT_API_KEY`) sent to backend + Google Sign-In (`GoogleSignInButton.jsx`). No next-auth/Clerk/Supabase.
-- **Observability:** Sentry (`@sentry/nextjs` — server, edge, client), analytics behind a swappable provider (`lib/analytics/`, GTM by default via `NEXT_PUBLIC_GTM_ID`, gated on consent), Cloudflare Turnstile bot protection.
-  Sentry is **not** behind the consent gate, so the client's `dataCollection` block (`instrumentation-client.ts`) is Sentry 10's restrictive baseline written out — no IP, no bodies. Since Sentry 11 an unset `dataCollection` collects every category, so removing that block is a privacy change, not a tidy-up. Streamed spans pass through neither `beforeSend` nor scope tags: a header that must never leave goes in `dataCollection.httpHeaders` (as `sentry.server.config.ts` does for `X-Provider-*`), and a tag performance data is split by is also set with `Sentry.setAttribute`.
+- **Observability:** PostHog behind a swappable seam (`lib/analytics/`; `NEXT_PUBLIC_ANALYTICS_PROVIDER` picks, unset runs every provider whose variable is set: `NEXT_PUBLIC_POSTHOG_KEY`), gated on consent. No tag manager: GTM and GA4 were removed in October 2026, because a container runs scripts configured outside this repository and the product measures itself with open-source tools; Cloudflare Turnstile bot protection. Nothing outside `lib/analytics/` names a vendor.
+  PostHog runs in two modes on one client (`lib/analytics/posthog.js`). **Errors** starts for every browser session from `instrumentation-client.ts`: early `error`/`unhandledrejection` listeners at once, the library on idle, in-memory persistence, so it stores nothing and needs no banner; error boundaries call `reportError`. **Full** starts on consent: cookie across `.getduct.ai`, page views, autocapture, heatmaps, replay. In the desktop shell the Preferences switch (`lib/telemetry.js`) replaces both the banner and the errors-before-consent rule: off sends nothing at all, on runs full mode in memory and never records a replay. Three rules a change here must keep: the `no-external` build only (the shell's IPC trusts every script on this origin, and it keeps `script-src` at `'self'`); `lib/analytics/scrub.js` on every event (query strings and the `/invite/` and `/open/audit/` path tokens go); and the replay masks all text and blocks images, embeds and canvases, plus `mask_all_text` on clicks, because a human watching a replay of a customer's GA4 numbers breaks Google's Limited Use rule. Server render errors go through `instrumentation.ts` → `lib/analytics/server.js` (posthog-node). Events reach PostHog through the same-origin `/ingest` rewrite in `next.config.mjs`, which the marketing site uses too.
 - **Overrides:** `package.json` forces `lodash-es` to ^4.18.1. `mermaid` 12.0.0 depends on `chevrotain` 11.1.2, which pins `lodash-es` 4.17.23 exactly, and that version carries a high advisory (code injection via `_.template`) and a moderate one (prototype pollution in `_.unset`/`_.omit`). Delete the override once `mermaid` moves to `chevrotain` 12 or later, which no longer uses lodash.
 
 ## Deployment
@@ -99,7 +99,25 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
   - `audit/seo/` + `audit/seo/[sessionId]/` — SEO audit hub and live workspace
   - `content/` — Content Studio hub; `content/plan/` the planner board;
     `content/posts/[postId]`, `posts/new`, `sessions/new` — the content agent
-    workspace over a post or a plan
+    workspace over a post or a plan. A plan session is the plan manager for
+    one period: `?plan=<id>` revises that plan, `?start=<day>&days=<n>` plans
+    that period, and neither manages the plan covering today (or makes one
+    for the month in progress). The Plan tab's Revise plan is the first;
+    New plan and Plan ahead ask how far ahead (`PlanPeriodPicker.jsx`: the
+    month, 1 or 2 weeks, 30 days) and are the second. The dates come from
+    `lib/contentSchedule.js`, which mirrors `agents/content/plan_period.py`
+    and must keep agreeing with it. The hub's Posts tab opens on its Waiting
+    chip while any draft is unanswered: that view is the drafts queue (#266,
+    `components/content/DraftsQueue.jsx`), read from `status=draft` rather
+    than a route of its own. Approve opens `PublishModal` on the channel's
+    best slot (`suggestedAt`), Skip takes a `SkipReason` the content agent's
+    next draft reads as a feedback memory. Its one notice a day is
+    `components/content/DailyDraftsReminder.jsx`, mounted once in the app
+    layout inside `AuthGuard`; its time and switch are per device
+    (`lib/dailyReminder.js`). The Brand tab's Writing samples and Voice rules
+    (#271, `WritingSamples.jsx`, `VoiceRulesFields.jsx`, caps in
+    `lib/voiceRules.js`) save into `content_brand`; the rules are stored only
+    once changed, so an untouched project keeps following Duct's defaults
   - `execute/` — change-set review queue: diffs, approve, apply, roll back
   - `connections/` — connector/integration management
   - `artifacts/` + `[artifactId]/`, `activity/`, `usage/`, `memory/` — the
@@ -133,7 +151,16 @@ bag and is spent once).
 **Every routable segment renders `LocalBackendGate`.** The desktop shell
 bundles its own backend and only learns its loopback port at runtime, so
 `BASE` is repointed once at boot (`lib/localBackend.js`) and the gate holds
-rendering until then. Skipping it is not a slow path, it is a sign-out: the
+*hydration* until then. It does not hold the HTML: the server renders the
+page, a browser hydrates it at once, and the shell suspends hydration with
+`use()`, which keeps the server's HTML on screen and runs no effect or handler
+below the gate until the backend is named. Two consequences. A gated page's
+first render has to match the server's, so browser state (`localStorage`,
+`isLocalBackendActive()`, `isMac()`) is read in an effect, not during render;
+the front door's Turnstile flag is the worked example. And a member opening
+`/` must not see the front door the server drew for everyone, so
+`lib/sessionHint.js` marks `<html data-session="member">` before paint and the
+page clears it if it stays. Skipping the gate is not a slow path, it is a sign-out: the
 session token is stored under one key but signed by whichever backend minted
 it, so a token from the wrong one comes back 401 "Invalid token" and
 `authFetch.endSession` reads any 401 as a dead session. That is what `/start`
@@ -259,18 +286,18 @@ it is a claim about the code, not a way to quiet the check.
   for signed-out runs, mirrored from the profile rather than edited here
 - `lib/consent.js` — the consent *rule* and the stored decision. Names no vendor.
 - `lib/analytics/` — the seam. `index.js` selects a provider from
-  `NEXT_PUBLIC_ANALYTICS_PROVIDER` (unset → `gtm` when a container is
-  configured, else `none`); `gtm.js` is the only file that knows Google exists;
+  `NEXT_PUBLIC_ANALYTICS_PROVIDER` (unset → `posthog` when its key is
+  set, else `none`); `posthog.js` is the only file that knows the vendor;
   `none.js` is a complete implementation, not a stub. Adding a provider is one
   file plus a line in `PROVIDERS`. **Nothing outside this directory may
   reference a tag vendor** — that is what lets a self-host build measure nothing
   without editing our consent logic, and it mirrors
   `desktop/src-tauri/src/telemetry/` on the Rust side.
-- `ProductAnalytics` owns the flow. The desktop shell measures nothing and is
-  never asked: `gtm.isConfigured()` is false there, because the shell's IPC
-  trusts every script on this origin and a tag container exists to run scripts
-  configured outside this repository. The Preferences switch in
-  `lib/telemetry.js` governs crash reports alone.
+- `ProductAnalytics` owns the flow. The desktop shell is never asked: the
+  Preferences switch in `lib/telemetry.js` stands in for the banner there.
+  Never add a tag manager: the shell's IPC trusts every script on this origin,
+  and a tag container exists to run scripts configured outside this
+  repository.
 - `lib/format.js` — dates, numbers and labels: `relativeTime`, `relativeDays`,
   `formatDate`, `formatTime`, `toDate`, `dayKey`, `compactNumber`,
   `formatNumber`, `formatPercent`, `titleCase`, `formatTitle`, `capitalize`,
@@ -286,6 +313,13 @@ it is a claim about the code, not a way to quiet the check.
   refreshes it again.
 - `lib/sse.js` — `consumeSseStream` / `parseSseDataFrame`, shared by every
   streaming endpoint (audit, content, insights)
+- `lib/visibility.js` — `pollWhileVisible(tick, ms)` / `pageHidden()`. Every
+  poller goes through it: the desktop window sits open all day behind other
+  apps, and a tick nobody can see costs battery and wakes the backend. It
+  re-checks on return, so a skipped tick loses nothing.
+- `hooks/useNearViewport.js` — latches true once an element nears the screen.
+  For list items that are expensive to fill (a fetch, a document in a frame);
+  the artifact library is why it exists.
 - `lib/authFetch.js` — the one home for the auth token: `AUTH_TOKEN_KEY`,
   `authToken`, `hasAuthToken`, `authedHeaders`, `authedRequest`, plus
   `decodeJwtPayload` / `isTokenValid`. Never hardcode `"duct_auth_token"`.
@@ -307,7 +341,8 @@ it is a claim about the code, not a way to quiet the check.
   written by `setAuthToken`), because the shell addresses two — its sidecar and
   the hosted API — and a token from the wrong one is well-formed, unexpired and
   correctly signed, so nothing else on the client can tell it apart.
-  `reconcileStoredSession()` runs once, from `LocalBackendGate`, and discards a
+  `reconcileStoredSession()` runs once, when `lib/localBackend.js` settles the
+  backend (before anything below the gate renders), and discards a
   mismatch *quietly*: no event, no parked redirect, no "your session ended".
   That is the distinction — a mismatch is not an expiry, and treating it as one
   is what signed people out mid-use. A session with no recorded issuer predates
@@ -341,12 +376,43 @@ they are placed.
 - Content: `@container` variants on Tailwind's `@`-scale — `@md` 28rem, `@lg` 32rem,
   `@xl` 36rem, `@2xl` 42rem, `@4xl` 56rem. Roughly 224px per grid column.
 - Viewport (`sm:`/`md:`/…) only for genuine device concerns: the sign-in page,
-  the sidebar's mobile sheet, the pane toggle, and `md:text-sm` on chat inputs
-  (which exists to stop iOS zooming a sub-16px field).
+  the sidebar's mobile sheet, and `md:text-sm` on chat inputs (which exists to
+  stop iOS zooming a sub-16px field). The pane toggle used to be on this list
+  and was wrong there: `SplitWorkspace` now splits at `@xl/split`, its own
+  width, because `md:` said "split" with the sidebar's 16rem already gone and
+  clipped the right pane on an iPad in portrait and an iPhone in landscape.
+- **Safe areas are applied once, at the edge.** The body pads left and right
+  only (`styles/theme.css`); the top and bottom insets belong to whatever
+  touches that edge — `.app-header`, the composer, the sidebar container,
+  sheets, the corner notices. A full-height layout (`h-svh`, `h-dvh`) never
+  adds them again, and an element that is `fixed` pads itself, because the
+  body's padding does not reach it. Left and right are separate values on
+  purpose: iPhone Duo's are asymmetric.
 - No hand-picked pixel breakpoints. There are currently zero; keep it that way.
 - Before adding `container-type` anywhere new: it implies `contain: layout`, which
   makes that element the containing block for `position: fixed` descendants.
   Overlays must be portalled (they are — see below) or they will shrink to it.
+
+**Heavy code loads when it is on screen.** A library that only one kind of
+surface uses — charts (Recharts, Nivo), syntax highlighting, Mermaid, the
+slide rasteriser — is a `lazy()` import behind a placeholder of the same size,
+never a static import in a module that common screens reach. A static one in
+`ArtifactRenderer` put ~110 KB of charts on every screen that drew a markdown
+card. Import a package's single file by path, not from its index: one Prism
+theme from `styles/prism` shipped all ~45. Measure a route the way
+`docs/engineering/2026-10-28-performance-review.md` did before and after.
+
+**Long transcripts stay flat.** The chat pane re-renders on every token and
+every clock tick, so anything it draws per row is `memo`ised and takes props
+that keep their identity (the reducer preserves unchanged rows). A stream that
+re-parses everything so far (a brief, a report) is throttled, never debounced:
+a debounce never fires while chunks keep coming.
+
+**Platform hooks.** The root layout sets `data-platform` (mac, windows, linux,
+other) and `data-shell="desktop"` on `<html>` before first paint;
+`styles/base.css` holds the rules that read them. Use them for platform fit
+(Linux drops backdrop blur, WebKitGTK's slow path), never for features, which
+gate on `getShellInfo()` capabilities.
 
 **Units.** Type, spacing and sticky offsets in `rem` so they follow the reader's
 text size. Device units stay `px`: borders, outlines, shadows, radii, 1px optical
@@ -415,7 +481,9 @@ the page.
   `workspace/CodeBlock`. See "Agent workspaces" below before touching any of
   them.
 - Shortcuts: `lib/shortcuts`' `useShortcut("mod+k", fn)` — platform-neutral, owned
-  by the surface that needs it.
+  by the surface that needs it. An Enter-to-send handler checks
+  `isComposing(e)` first: Enter confirms a Japanese, Chinese or Korean
+  candidate, and without the check it sent half-written messages.
 - Commands: `useRegisterCommands` from `components/commands/CommandRegistry`. A
   route contributes its own commands and they withdraw on unmount.
 - Navigation: `lib/navigation`'s `NAV_SECTIONS` is the single source of truth for
@@ -741,7 +809,7 @@ or leave it visible; do not delete the row to make the count look better.
 
 Frames **mount only when scrolled near** and the catalogue crops them to their
 specimen. Both are load-bearing, not polish: each frame is a whole Next document
-(app bundle, Sentry, HMR client), and 27 entries × 2 devices eagerly mounted is
+(app bundle, analytics, HMR client), and 27 entries × 2 devices eagerly mounted is
 not slow, it is `ERR_INSUFFICIENT_RESOURCES` and a half-loaded page. Keep the
 lazy mount if you touch `Frame`.
 

@@ -14,20 +14,23 @@ var ductLangPath = window.ductLangPath || function (path) {
 window.ductT = ductT;
 window.ductLangPath = ductLangPath;
 
-// ─── Consent, then Google Tag Manager ────────────────────────────────────────
-// The container fires GA4 and a Conversion Linker, which set _ga, _ga_* and
-// _gcl_*. None of those are exempt under ePrivacy Art 5(3), or Spain's LSSI
-// Art 22.2. The loader this replaces deferred the tag until first interaction,
-// which was a performance trick and never consent — the cookie still landed,
-// three seconds later, unasked.
+// ─── Consent, then PostHog ──────────────────────────────────────────────────
+// PostHog sets ph_<token>_posthog, which is not exempt under ePrivacy Art 5(3),
+// or Spain's LSSI Art 22.2. The loader this replaces deferred the tag until
+// first interaction, which was a performance trick and never consent — the
+// cookie still landed, three seconds later, unasked.
 //
-// Consent Mode defaults are declared here rather than in a Consent
-// Initialization tag, because the denial has to exist before gtm.js parses, and
-// a tag inside the container cannot beat the container's own loader.
+// So it loads never before an answer where we ask, never after a decline,
+// never on localhost. One banner, one footer link, one withdrawal.
 //
-// A rejection stops GTM loading at all rather than running it in cookieless
-// ping mode. Advanced mode is defensible; "we sent nothing" needs no defending.
-(function (w, d, s, l, containerId) {
+// No tag manager. Google Tag Manager and GA4 ran beside PostHog until October
+// 2026 and went because a container runs scripts configured outside this
+// repository, and an open-source product measures itself with open-source
+// tools. A rejection stops PostHog loading at all rather than running it
+// cookieless: "we sent nothing" needs no defending.
+(function (w, d, s, cfg) {
+  var phToken = cfg.posthog_token || '';
+  var phHost = cfg.posthog_api_host || '';
   var CHOICE_KEY = 'duct_consent';
   // Six months, then ask again. Consent does not last forever, and the CNIL's
   // six is the shorter of the two numbers we are answerable to.
@@ -41,18 +44,26 @@ window.ductLangPath = ductLangPath;
   var CONSENT_REGIONS = ('AT BE BG HR CY CZ DK EE FI FR DE GR HU IS IE IT LV LI LT ' +
     'LU MT NL NO PL PT RO SK SI ES SE GB CH').split(' ');
 
-  // What the tags actually write. Withdrawing consent has to remove what was
+  // What the tag actually writes. Withdrawing consent has to remove what was
   // already set, or "decline" only ever means "stop counting from here".
-  var COOKIE_PREFIXES = ['_ga', '_gid', '_gcl', '_gac'];
+  var COOKIE_PREFIXES = ['ph_'];
+  // What GTM and GA4 left behind for anyone who accepted before they were
+  // removed. Nothing reads them any more, so every visit deletes them, whatever
+  // the visitor chose; the privacy policy says so.
+  var RETIRED_COOKIE_PREFIXES = ['_ga', '_gid', '_gcl', '_gac'];
+  // PostHog keeps a copy of its cookie in localStorage, and its session state
+  // in sessionStorage, under the same prefix.
+  var STORAGE_PREFIX = 'ph_';
 
   var host = (w.location && w.location.hostname) || '';
   var isLocalhost = host === 'localhost' || host === '127.0.0.1' ||
     host === '0.0.0.0' || host.slice(-6) === '.local';
-  var gtmLoaded = false;
+  var phRequested = false;
+  var phReady = false;
+  // Events tracked before PostHog arrives. In memory only, and drained only by
+  // a PostHog that the gate let load: after a decline they are never sent.
+  var phPending = [];
   var banner = null;
-
-  w[l] = w[l] || [];
-  function gtag() { w[l].push(arguments); }
 
   function readStore(store, key) {
     try { return w[store].getItem(key); } catch (e) { return null; }
@@ -91,51 +102,131 @@ window.ductLangPath = ductLangPath;
       (w.location.protocol === 'https:' ? '; Secure' : '');
   }
 
-  function setConsent(state) {
-    gtag('consent', 'update', {
-      ad_storage: state,
-      ad_user_data: state,
-      ad_personalization: state,
-      analytics_storage: state
+  // Same rule as the app (app/src/app/layout.js), so a person's platform reads
+  // the same on both surfaces.
+  function platform() {
+    var n = w.navigator || {};
+    var p = n.platform || '';
+    var u = n.userAgent || '';
+    var v = p || u;
+    if (/Mac|iPhone|iPad/.test(v)) return 'mac';
+    if (/Win/.test(v)) return 'windows';
+    if (/Linux|X11/.test(v) && !/Android/.test(u)) return 'linux';
+    return 'other';
+  }
+
+  // Every URL PostHog records loses its query string and fragment: a link can
+  // carry an email address or a token as easily as a campaign tag. Nothing is
+  // lost for attribution, because by the time before_send runs PostHog has
+  // already copied utm_* and the ad click ids (gclid and the rest) into
+  // properties of their own. Matched by name so $current_url, $referrer and
+  // their $initial_ and $session_entry_ twins are all covered.
+  var URL_PROPERTY = /(?:url|referrer)$/;
+  function withoutQueries(props) {
+    if (!props) return;
+    for (var key in props) {
+      if (Object.prototype.hasOwnProperty.call(props, key) &&
+          URL_PROPERTY.test(key) && typeof props[key] === 'string') {
+        props[key] = props[key].split(/[?#]/)[0];
+      }
+    }
+  }
+  function beforeSend(event) {
+    if (!event) return event;
+    withoutQueries(event.properties);
+    withoutQueries(event.$set);
+    withoutQueries(event.$set_once);
+    return event;
+  }
+
+  function initPosthog() {
+    var ph = w.posthog;
+    // A decline can land while the script is still in flight; the reload it
+    // triggers is coming, and nothing should start before it does.
+    if (!ph || !ph.init || readChoice() === DENIED) return;
+    ph.init(phToken, {
+      api_host: phHost,
+      ui_host: cfg.posthog_ui_host,
+      // One distinct id across getduct.ai and app.getduct.ai: the cookie is
+      // set on the registrable domain, like the consent choice.
+      persistence: 'localStorage+cookie',
+      cross_subdomain_cookie: true,
+      person_profiles: 'identified_only',
+      capture_pageview: true,
+      capture_pageleave: true,
+      autocapture: true,
+      capture_exceptions: true,
+      capture_performance: { web_vitals: true },
+      // What the privacy policy promises a replay leaves out: typing, and
+      // the console, whatever the project setting says.
+      session_recording: { maskAllInputs: true },
+      enable_recording_console_log: false,
+      // An opt-out also drops PostHog's own cookie and storage on the spot,
+      // before the sweep in decline() gets to them.
+      opt_out_persistence_by_default: true,
+      before_send: beforeSend,
+      loaded: function (instance) {
+        instance.register({
+          surface: 'site',
+          platform: platform(),
+          locale: d.documentElement.getAttribute('lang') || 'en'
+        });
+        // A withdrawal leaves PostHog's opt-out marker in localStorage. The
+        // consent cookie is the record of the choice, not that marker, so an
+        // Accept given since then has to clear it or nothing is ever sent.
+        if (instance.has_opted_out_capturing()) {
+          instance.opt_in_capturing({ captureEventName: false });
+        }
+        phReady = true;
+        while (phPending.length) {
+          var next = phPending.shift();
+          instance.capture(next[0], next[1]);
+        }
+      }
     });
   }
 
-  function loadGtm() {
-    if (gtmLoaded || !containerId || isLocalhost) return;
-    gtmLoaded = true;
-    w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+  // The library is fetched through the app's reverse proxy, not from
+  // posthog.com, so a blocker that drops PostHog's hosts does not take the
+  // measurement with it. Without the official snippet's stub: array.js makes
+  // window.posthog itself, and phPending stands in for the stub's queue.
+  function loadPosthog() {
+    if (phRequested || !phToken || !phHost || isLocalhost) return;
+    phRequested = true;
     var f = d.getElementsByTagName(s)[0];
     var j = d.createElement(s);
-    var dl = l !== 'dataLayer' ? '&l=' + l : '';
     j.async = true;
-    j.src = 'https://www.googletagmanager.com/gtm.js?id=' + containerId + dl;
+    j.crossOrigin = 'anonymous';
+    j.src = phHost + '/static/array.js';
+    j.onload = initPosthog;
     f.parentNode.insertBefore(j, f);
   }
 
   // Load on first interaction or idle, as before — the deferral was always a
   // performance win, it just was never the consent story.
-  function loadGtmDeferred() {
-    if (gtmLoaded || !containerId || isLocalhost) return;
+  function loadPosthogDeferred() {
+    if (isLocalhost) return;
     ['pointerdown', 'keydown', 'scroll', 'touchstart'].forEach(function (evt) {
-      w.addEventListener(evt, loadGtm, { once: true, passive: true });
+      w.addEventListener(evt, loadPosthog, { once: true, passive: true });
     });
     if ('requestIdleCallback' in w) {
-      w.requestIdleCallback(loadGtm, { timeout: 3000 });
+      w.requestIdleCallback(loadPosthog, { timeout: 3000 });
     } else {
-      w.setTimeout(loadGtm, 3000);
+      w.setTimeout(loadPosthog, 3000);
     }
   }
 
-  function clearAnalyticsCookies() {
-    var domains = ['', host, '.' + host];
+  function clearCookies(prefixes) {
+    // consentDomain() is where PostHog's cross-subdomain cookie lives.
+    var domains = ['', host, '.' + host, consentDomain()];
     var bare = host.replace(/^www\./, '');
     if (bare !== host) { domains.push(bare, '.' + bare); }
     var jar = d.cookie ? d.cookie.split(';') : [];
     for (var i = 0; i < jar.length; i++) {
       var name = jar[i].split('=')[0].replace(/^\s+/, '');
       var matched = false;
-      for (var p = 0; p < COOKIE_PREFIXES.length; p++) {
-        if (name.indexOf(COOKIE_PREFIXES[p]) === 0) { matched = true; break; }
+      for (var p = 0; p < prefixes.length; p++) {
+        if (name.indexOf(prefixes[p]) === 0) { matched = true; break; }
       }
       if (!matched) continue;
       for (var k = 0; k < domains.length; k++) {
@@ -145,22 +236,36 @@ window.ductLangPath = ductLangPath;
     }
   }
 
+  function clearAnalyticsStorage() {
+    ['localStorage', 'sessionStorage'].forEach(function (store) {
+      try {
+        // Backwards, because removing an item renumbers the ones after it.
+        for (var i = w[store].length - 1; i >= 0; i--) {
+          var key = w[store].key(i);
+          if (key && key.indexOf(STORAGE_PREFIX) === 0) w[store].removeItem(key);
+        }
+      } catch (e) { /* storage blocked: nothing was written there either */ }
+    });
+  }
+
   function accept() {
     writeChoice(GRANTED);
-    setConsent(GRANTED);
     closeBanner();
-    loadGtm();
+    loadPosthog();
   }
 
   function decline() {
-    var wasRunning = gtmLoaded;
+    var wasRunning = phRequested;
     writeChoice(DENIED);
-    setConsent(DENIED);
-    clearAnalyticsCookies();
+    // PostHog first, so it stops writing the cookie about to be deleted and
+    // sends nothing on the way out, not even the $pageleave the reload fires.
+    if (phReady) w.posthog.opt_out_capturing();
+    clearCookies(COOKIE_PREFIXES);
+    clearAnalyticsStorage();
     closeBanner();
-    // GTM cannot be unloaded once it is in the page. If it was already running
-    // under an earlier "accept", a reload is the only honest way to make the
-    // withdrawal real rather than cosmetic.
+    // PostHog cannot be unloaded once it is in the page. If it was already
+    // running under an earlier "accept", a reload is the only honest way to
+    // make the withdrawal real rather than cosmetic.
     if (wasRunning) w.location.reload();
   }
 
@@ -213,7 +318,8 @@ window.ductLangPath = ductLangPath;
     title.id = 'consent-title';
     title.textContent = ductT('Cookies, honestly');
     var body = d.createElement('p');
-    body.innerHTML = ductT('We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same.') +
+    // The app's banner says the same words; change both or neither.
+    body.innerHTML = ductT('We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same.') +
       ' <a href="' + ductLangPath('/privacy') + '">' + ductT('Privacy Policy') + '</a>';
     copy.appendChild(title);
     copy.appendChild(body);
@@ -244,33 +350,31 @@ window.ductLangPath = ductLangPath;
     status: function () { return readChoice() || 'unset'; }
   };
 
-  if (!containerId || isLocalhost) return;
+  // One call for every event the site counts. It queues until PostHog loads,
+  // and PostHog loads only behind the gate: calling this before a decision,
+  // or after a decline, sends nothing.
+  w.ductTrack = function (event, props) {
+    if (phReady) w.posthog.capture(event, props);
+    else phPending.push([event, props]);
+  };
 
-  gtag('consent', 'default', {
-    ad_storage: DENIED,
-    ad_user_data: DENIED,
-    ad_personalization: DENIED,
-    analytics_storage: DENIED,
-    functionality_storage: GRANTED,
-    security_storage: GRANTED,
-    wait_for_update: 500
-  });
+  clearCookies(RETIRED_COOKIE_PREFIXES);
+
+  if (!phToken || isLocalhost) return;
 
   var choice = readChoice();
   if (choice === GRANTED) {
-    setConsent(GRANTED);
-    loadGtmDeferred();
+    loadPosthogDeferred();
   } else if (choice !== DENIED) {
     needsConsent(function (required) {
       if (required) { showBanner(); return; }
       // Outside the EEA, UK and Switzerland the default is measurement, with
       // the footer link as the way out. Deliberately not stored: a choice
       // nobody made should not follow them to a country that would have asked.
-      setConsent(GRANTED);
-      loadGtmDeferred();
+      loadPosthogDeferred();
     });
   }
-})(window, document, 'script', 'dataLayer', (window.DUCT_CONFIG || {}).gtm || '');
+})(window, document, 'script', window.DUCT_CONFIG || {});
 // ─────────────────────────────────────────────────────────────────────────────
 
 function initDuct() {
@@ -848,21 +952,6 @@ Array.prototype.forEach.call(imgs, function(img) {
 });
 
 window.addEventListener('keydown', function(e) { if (e.key === 'Escape') close(); });
-})();
-
-// UTM params — persist to sessionStorage and attach to dataLayer on pageload
-(function() {
-var params = new URLSearchParams(window.location.search);
-var utmKeys = ['utm_source','utm_medium','utm_campaign','utm_term','utm_content'];
-var utms = {};
-utmKeys.forEach(function(k) {
-  var v = params.get(k) || sessionStorage.getItem(k);
-  if (v) { utms[k] = v; sessionStorage.setItem(k, v); }
-});
-if (Object.keys(utms).length) {
-  window.dataLayer = window.dataLayer || [];
-  window.dataLayer.push(Object.assign({ event: 'utm_data' }, utms));
-}
 })();
 
 // Shared submit function — reads form URL and entry ID from data- attributes on the button

@@ -34,6 +34,7 @@ def test_provider_keys_only_includes_supplied_and_strips():
             gemini_key="   ",  # blank -> ignored
             openrouter_key=None,
             xai_key=None,
+            compatible_key=None,
         )
     )
     assert keys == {Provider.ANTHROPIC: "sk-ant-xyz"}
@@ -43,7 +44,7 @@ def test_provider_keys_empty_when_none_supplied():
     keys = asyncio.run(
         get_user_provider_keys(
             anthropic_key=None, openai_key=None, gemini_key=None,
-            openrouter_key=None, xai_key=None,
+            openrouter_key=None, xai_key=None, compatible_key=None,
         )
     )
     assert keys == {}
@@ -60,6 +61,7 @@ def test_openrouter_key_is_its_own_provider_not_an_openai_one():
             gemini_key=None,
             openrouter_key="sk-or-v1-abc",
             xai_key=None,
+            compatible_key=None,
         )
     )
     assert keys == {Provider.OPENROUTER: "sk-or-v1-abc"}

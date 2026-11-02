@@ -52,13 +52,15 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ProviderCard from "@/components/connections/ProviderCard";
+import InstanceProviderCard from "@/components/connections/InstanceProviderCard";
+import EndpointProviderCard from "@/components/connections/EndpointProviderCard";
 import TelemetryCard from "@/components/TelemetryCard.jsx";
 import AdvancedSettings from "@/components/models/AdvancedSettings";
 import TierCard from "@/components/models/TierCard";
 import TierSummary from "@/components/models/TierSummary";
 import UsagePanel from "@/components/models/UsagePanel";
 import { LOGOS } from "@/components/connections/logos";
-import { PROVIDERS } from "@/lib/providerKeys";
+import { ENDPOINT_PROVIDER, INSTANCE_PROVIDERS, PROVIDERS } from "@/lib/providerKeys";
 import {
   MODEL_MAP_CHANGED,
   TIERS,
@@ -116,6 +118,18 @@ function ModelSettings() {
   const [saved, setSaved] = useState("");
   const savedTimer = useRef(null);
 
+  // The catalogue reloads with the status: a connected endpoint's models are
+  // the caller's own, so connecting or disconnecting one changes the pickers.
+  const reloadProviders = useCallback(() => {
+    fetchModelCatalogue().then(setCatalogue);
+    fetchProviderStatus().then((status) => {
+      setProviders(status.providers);
+      setImages(status.images);
+      setVideos(status.videos);
+      setChatgptAuthEnabled(Boolean(status.chatgptAuthEnabled));
+    });
+  }, []);
+
   // First paint: everything the page renders is server-owned except the map.
   useEffect(() => {
     setMap(loadModelMap());
@@ -140,14 +154,8 @@ function ModelSettings() {
         return next;
       });
     });
-    fetchModelCatalogue().then(setCatalogue);
-    fetchProviderStatus().then((status) => {
-      setProviders(status.providers);
-      setImages(status.images);
-      setVideos(status.videos);
-      setChatgptAuthEnabled(Boolean(status.chatgptAuthEnabled));
-    });
-  }, []);
+    reloadProviders();
+  }, [reloadProviders]);
 
   const picks = useMemo(() => tierPicks(map), [map]);
   // Depend on the *content* of the picks, not the object identity. Reading
@@ -446,6 +454,28 @@ function ModelSettings() {
                 status={providersById[provider.statusId]}
                 planEnabled={chatgptAuthEnabled}
                 loading={providers === null}
+              />
+            ))}
+            {/* A server the reader brings: an address and models, not a key. */}
+            <EndpointProviderCard
+              provider={ENDPOINT_PROVIDER}
+              logo={LOGOS[ENDPOINT_PROVIDER.id]}
+              status={providersById[ENDPOINT_PROVIDER.statusId]}
+              loading={providers === null}
+              onChange={reloadProviders}
+              onOpenTiers={() => {
+                setCustomising(true);
+                selectTab("tiers");
+              }}
+            />
+            {/* Offered by the server, not keyed by the reader; each renders
+                nothing on a deployment that does not offer it. */}
+            {INSTANCE_PROVIDERS.map((provider) => (
+              <InstanceProviderCard
+                key={provider.id}
+                provider={provider}
+                logo={LOGOS[provider.id]}
+                status={providersById[provider.statusId]}
               />
             ))}
             {/* Desktop only, and only in a build that can actually report —

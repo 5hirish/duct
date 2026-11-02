@@ -597,3 +597,146 @@ class FakeMcpServer:
                 yield self
 
         return run()
+
+
+class FakeSMTP:
+    """Stands in for ``smtplib.SMTP`` and ``SMTP_SSL`` in the email seam's SMTP
+    provider: records the conversation instead of opening a socket.
+
+    ``sessions`` is shared by both classes ``install`` patches in, one entry per
+    connection, so a test reads which class was opened, on which port, and what
+    was said, in order. ``fail_with`` makes the first command raise, the way a
+    refused login or a dropped connection would.
+    """
+
+    def __init__(self, fail_with: Exception | None = None):
+        self.sessions: list[dict] = []
+        self.fail_with = fail_with
+
+    def install(self, monkeypatch, module) -> None:
+        fake = self
+
+        class _Client:
+            implicit_tls = False
+
+            def __init__(self, host, port, timeout=None, context=None):  # noqa: ARG002
+                self.session = {"host": host, "port": port, "tls": self.implicit_tls, "calls": []}
+                fake.sessions.append(self.session)
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *exc):
+                return False
+
+            def _record(self, name, *args):
+                if fake.fail_with is not None:
+                    raise fake.fail_with
+                self.session["calls"].append((name, *args))
+
+            def starttls(self, context=None):  # noqa: ARG002
+                self._record("starttls")
+
+            def login(self, user, password):
+                self._record("login", user, password)
+
+            def send_message(self, message):
+                self._record("send_message", message)
+
+        class _ClientSSL(_Client):
+            implicit_tls = True
+
+        monkeypatch.setattr(module.smtplib, "SMTP", _Client)
+        monkeypatch.setattr(module.smtplib, "SMTP_SSL", _ClientSSL)
+
+
+# ---------------------------------------------------------------------------
+# PostBridge
+# ---------------------------------------------------------------------------
+#
+# Faked beneath the real ``PostBridgeClient``, at the httpx transport, so the
+# client's own request building, error parsing and response models run: a fake
+# client would have passed while ``scheduled_at`` went out without its zone.
+
+import json as _json  # noqa: E402
+
+import httpx  # noqa: E402
+
+
+class PostBridgeQueue:
+    """PostBridge's posts, media and post-results endpoints over dicts,
+    recording every request.
+
+    ``posts`` is the queue by id; ``results`` maps a post id to the post
+    results PostBridge would list for it; ``uploads`` holds what reached each
+    signed upload URL, in order. ``create_status`` is the status a new post
+    comes back with, and ``down`` makes every call a 503.
+    """
+
+    POST_ID = "pb_post_1"
+    UPLOAD_HOST = "uploads.postbridge.test"
+
+    def __init__(self) -> None:
+        self.posts: dict[str, dict] = {}
+        self.results: dict[str, list[dict]] = {}
+        self.uploads: list[dict] = []
+        self.requests: list[tuple[str, str, dict | None]] = []
+        self.create_status = "scheduled"
+        self.down = False
+
+    def __call__(self, req: httpx.Request) -> httpx.Response:
+        if req.url.host == self.UPLOAD_HOST:
+            upload = next(u for u in self.uploads if u["media_id"] == req.url.path.strip("/"))
+            upload["bytes"] = req.read()
+            upload["content_type"] = req.headers.get("content-type", "")
+            self.requests.append((req.method, "<upload>", None))
+            return httpx.Response(200)
+        body = _json.loads(req.read()) if req.content else None
+        self.requests.append((req.method, req.url.path, body))
+        if self.down:
+            return httpx.Response(503, json={"message": "maintenance"})
+        if req.method == "POST" and req.url.path == "/v1/media/create-upload-url":
+            media_id = f"m{len(self.uploads) + 1}"
+            self.uploads.append({"media_id": media_id, **body})
+            return httpx.Response(200, json={
+                "media_id": media_id, "name": body["name"],
+                "upload_url": f"https://{self.UPLOAD_HOST}/{media_id}",
+            })
+        if req.method == "POST" and req.url.path == "/v1/posts":
+            post = {"id": self.POST_ID, "caption": body["caption"], "status": self.create_status,
+                    "scheduled_at": body.get("scheduled_at"), "social_accounts": body["social_accounts"],
+                    "media": body.get("media")}
+            if self.create_status == "failed":
+                post["warnings"] = ["The X account needs reconnecting."]
+            self.posts[self.POST_ID] = post
+            return httpx.Response(200, json=post)
+        if req.method == "GET" and req.url.path == "/v1/post-results":
+            return httpx.Response(200, json={"data": self.results.get(req.url.params.get("post_id"), [])})
+        post_id = req.url.path.removeprefix("/v1/posts/")
+        post = self.posts.get(post_id)
+        if post is None:
+            return httpx.Response(404, json={"message": "Post not found"})
+        if req.method == "GET":
+            return httpx.Response(200, json=post)
+        if req.method == "PATCH":
+            post.update(body)
+            return httpx.Response(200, json=post)
+        if req.method == "DELETE":
+            if post["status"] not in ("scheduled", "draft"):
+                return httpx.Response(400, json={"message": "Can only delete scheduled or draft posts"})
+            del self.posts[post_id]
+            return httpx.Response(200, json={})
+        raise AssertionError(f"unexpected PostBridge call: {req.method} {req.url.path}")
+
+    def client(self, *_args):
+        from service.post_bridge import PostBridgeClient
+
+        return PostBridgeClient("sk-fake", client=httpx.AsyncClient(transport=httpx.MockTransport(self)))
+
+    def calls(self) -> list[tuple[str, str]]:
+        return [(method, path) for method, path, _ in self.requests]
+
+    def created(self) -> dict:
+        """The body of the last create-post request."""
+        return next(body for method, path, body in reversed(self.requests)
+                    if (method, path) == ("POST", "/v1/posts"))

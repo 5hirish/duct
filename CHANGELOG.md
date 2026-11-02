@@ -26,6 +26,48 @@ published without one. The same script, with no arguments, holds
 
 ### Added
 
+- **Local models on your own Ollama.** A self-hosted Duct pointed at an Ollama
+  server runs on any model pulled there that can call tools, with no key and
+  no bill: pick one for a tier like any other model. Duct asks Ollama for a
+  context long enough for its prompts, where Ollama's own default would cut
+  them short.
+- **Mail through any SMTP server.** A self-hosted Duct sends invitations and
+  audit reports through its own mail server or any provider's SMTP relay, and
+  Mailpit catches local mail so a flow can be read as it would arrive. Resend's
+  dedicated integration is gone; Resend accepts SMTP too.
+- **Bring your own provider.** Connect any host or server that speaks
+  OpenAI's API from Settings, from Together, Fireworks, Groq or DeepInfra to
+  vLLM, llama.cpp or LM Studio. Duct lists the server's models, you pick which
+  ones it may use, and it checks the first one really calls tools before
+  saving. Off your own network the address has to be public and https.
+
+### Changed
+
+- **New Google Ads keywords always wait for you.** A project set to assisted
+  or auto could add keywords without a click; a new keyword goes live enabled,
+  so it spends before anyone looks, and undo removes it but not the money.
+  Keywords now wait for approval like budgets, bids and pauses do. On assisted
+  and auto, negative keywords still apply on their own.
+
+### Removed
+
+- **Google Tag Manager and GA4, from the site and the web app.** PostHog,
+  which is open source, already measured both, and a tag container runs
+  scripts configured outside this repository with the session token in reach.
+  The cookie bar names PostHog alone, and the site deletes the `_ga` and
+  `_gcl_au` cookies that earlier visits were given.
+
+## [0.7.2] — 2026-10-29
+
+Pages that arrive drawn, conversations that stay fast however long they get,
+and a desktop shell that fits a small laptop, zooms on a 4K screen and updates
+on Windows without asking for admin.
+
+
+### Added
+
+- **Desktop: zoom.** View has Zoom In, Zoom Out and Actual Size on the
+  browser's ladder, so 14 px text on a 4K screen at 100% scaling can grow.
 - **GitHub connector, through a GitHub App.** Commits, merged pull requests,
   closed issues, releases and changed docs for the window asked, so Insights
   can test "did the drop start with a change we shipped?". Each pull mints a
@@ -54,6 +96,22 @@ published without one. The same script, with no arguments, holds
 
 ### Changed
 
+- **Pages render on the server.** The gate that waits for the desktop shell
+  to name its backend holds hydration, not the HTML, so the front door and
+  onboarding arrive drawn instead of "Starting Duct…" while 300–600 KB of
+  script loads. A pre-paint session hint keeps a signed-in member from seeing
+  the front door on the way into the app.
+- **Long sessions stop slowing down with their length.** A settled reply no
+  longer re-renders on every streamed token, a brief beside the chat stops
+  re-parsing with it, a brief being written re-parses ten times a second, and
+  the artifact library fills its cards as they near the screen.
+- **Charts, code themes and slide capture load on first use**, behind a
+  placeholder of the same size: about a quarter less script on an Insights
+  thread and a sixth less on Content Studio.
+- **Windows installs per user.** Updates no longer raise an admin prompt.
+  The first update from a per-machine install retires it with one last
+  prompt and keeps the Start menu and desktop shortcuts.
+- The desktop window checks its connection only while it is visible.
 - **Claude Haiku 5.5 is Anthropic's Light rung**, replacing Haiku 4.5: a
   tenth of the price up to a 100k-token prompt, a 1M window, and the same
   effort dial as Opus 5.5. A saved pick of Haiku 4.5 moves with it.
@@ -76,6 +134,21 @@ published without one. The same script, with no arguments, holds
 
 ### Fixed
 
+- **The cookie bar no longer crashes the page that asks.** It rendered outside
+  the translation provider, so every first-time visitor asked about cookies
+  (the EEA, the UK, Switzerland) got "This page couldn't load", and the root
+  error page crashed the same way.
+- The desktop window opens centred and on screen at 1366×768 and 1280×800;
+  Linux no longer shows a blank window on NVIDIA and paints its splash before
+  registering deep links; About sits under Help on Windows and Linux, and the
+  splash has no menu bar; the `.deb` no longer depends on an unused tray
+  library.
+- Phones to 4K: safe areas apply once, so full-screen views fit a notched
+  iPhone; the split view waits until both panes fit; Enter no longer sends in
+  the middle of Japanese, Chinese or Korean composition; replies keep a
+  reading width, long URLs wrap and tabs scroll on phones; grids grow at 2560
+  and 3840 px. The page learns its platform before first paint, so Linux drops
+  backdrop blur and the desktop window stops rubber-banding.
 - **Project selection stays in its tab.** Switching projects in another tab no longer retargets the work in the current tab.
 
 - The desktop app keeps painting while it reads the keychain, a reload no
@@ -101,6 +174,10 @@ published without one. The same script, with no arguments, holds
 
 ### Security
 
+- Signing in to a connected MCP server is held to the server you typed: if
+  its metadata names another address as the resource, or another issuer than
+  the one it was found at, the sign-in stops instead of minting a token in
+  that name.
 - The desktop window only ever shows Duct: a page that sends it elsewhere
   opens in your browser instead, a sign-in or connector code returning
   through a deep link always lands on Duct's own origin, and the page can

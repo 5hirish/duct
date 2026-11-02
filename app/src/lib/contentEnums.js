@@ -43,6 +43,7 @@ export const PostStatus = Object.freeze({
   DRAFT:     "draft",     // saved/kept
   SCHEDULED: "scheduled",
   POSTED:    "posted",
+  FAILED:    "failed",    // PostBridge didn't publish it at its time; post.publish_error says why
   DISCARDED: "discarded",
 });
 
@@ -54,6 +55,7 @@ export const POST_STATUS_LABELS = Object.freeze({
   [PostStatus.DRAFT]:     msg`Draft`,
   [PostStatus.SCHEDULED]: msg`Scheduled`,
   [PostStatus.POSTED]:    msg`Posted`,
+  [PostStatus.FAILED]:    msg`Failed`,
   [PostStatus.DISCARDED]: msg`Discarded`,
 });
 
@@ -101,6 +103,32 @@ export const CLONE_APPROACH_LABELS = Object.freeze({
   [CloneApproach.CLOSE]:          msg`Copied closely`,
   [CloneApproach.ADAPT]:          msg`Adapted`,
   [CloneApproach.STRUCTURE_ONLY]: msg`Structure only`,
+});
+
+// Mirrors SkipReason in backend/routes/content.py: a no to a draft, which
+// the content agent's next run reads back as a feedback memory. Few, and
+// each says something different about what to write next time.
+export const SkipReason = Object.freeze({
+  NOT_TRUE:        "not_true",
+  TOO_REVEALING:   "too_revealing",
+  NOT_INTERESTING: "not_interesting",
+  ALREADY_SAID:    "already_said",
+  WRONG_VOICE:     "wrong_voice",
+});
+
+export const SKIP_REASON_LABELS = Object.freeze({
+  [SkipReason.NOT_TRUE]:        msg`Not true`,
+  [SkipReason.TOO_REVEALING]:   msg`Gives too much away`,
+  [SkipReason.NOT_INTERESTING]: msg`Not interesting`,
+  [SkipReason.ALREADY_SAID]:    msg`Already said`,
+  [SkipReason.WRONG_VOICE]:     msg`Not my voice`,
+});
+
+// Mirrors SlotReason in backend/agents/content/best_time.py: why the
+// drafts queue suggests the time it does.
+export const SlotReason = Object.freeze({
+  HISTORY: "history",
+  DEFAULT: "default",
 });
 
 export const AspectRatio = Object.freeze({

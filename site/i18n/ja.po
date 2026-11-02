@@ -515,9 +515,9 @@ msgstr "ユニバーサル · AppleシリコンおよびIntel"
 #: assets/*.js
 msgctxt "js"
 msgid ""
-"We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same."
+"We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same."
 msgstr ""
-"Google Analyticsを使用して、どのページでサインアップが発生したかを確認しています。これが唯一の用途であり、広告ターゲティング、プロファイル作成、販売は一切行いません。拒否してもサイトの動作はまったく同じです。"
+"PostHogを使用して、どのページでサインアップが発生し、Ductがどこでユーザーの妨げになっているかを確認します。これには、入力されたすべての情報が非表示にされた訪問のリプレイも含まれます。これが唯一の用途であり、広告ターゲティングや販売目的ではありません。拒否した場合でも、Ductはまったく同じように機能します。"
 
 #: assets/*.js
 msgctxt "js"
@@ -6661,7 +6661,7 @@ msgid ""
 "Plug the MCP servers you already use into Duct's agent. Read-only tools run straight away; anything else waits for your approval first."
 msgstr "既存のMCPサーバーをDuctのエージェントに接続してください。読み取り専用ツールはすぐに実行されます。それ以外は、まず承認を待ちます。"
 
-#: mcp.html
+#: mcp.html privacy.html
 msgid "PostHog"
 msgstr "PostHog"
 
@@ -7518,6 +7518,10 @@ msgid "How Duct works"
 msgstr "Ductの仕組み"
 
 #: privacy.html
+msgid "1 year"
+msgstr "1年"
+
+#: privacy.html
 msgid "1. Google User Data We Access"
 msgstr "1. アクセスするGoogleユーザーデータ"
 
@@ -7562,16 +7566,16 @@ msgid "19. Contact"
 msgstr "19. お問い合わせ"
 
 #: privacy.html
-msgid "2 years"
-msgstr "2年間"
-
-#: privacy.html
 msgid "2. Changes Duct Makes on Your Behalf"
 msgstr "2. Ductがお客様に代わって行う変更"
 
 #: privacy.html
 msgid "3. How We Use Google User Data"
 msgstr "3. Googleユーザーデータの使用方法"
+
+#: privacy.html
+msgid "30 days"
+msgstr "30日間"
 
 #: privacy.html
 msgid "4. Limited Use of Google User Data"
@@ -7606,10 +7610,6 @@ msgid "9. Website Audits and Lead Reports"
 msgstr "9. ウェブサイト監査とリードレポート"
 
 #: privacy.html
-msgid "90 days"
-msgstr "90日間"
-
-#: privacy.html
 msgid "<0>Advertising:</0> Meta Ads, Apple Search Ads, OpenAI Ads"
 msgstr "<0>広告:</0> Meta Ads、Apple Search Ads、OpenAI Ads"
 
@@ -7639,9 +7639,9 @@ msgstr ""
 
 #: privacy.html
 msgid ""
-"<0>Crash reports and usage data are on by default in the app we distribute, and one switch in Preferences turns both off.</0> Once you touch it your answer is kept and no default applies again. A crash report contains the error and the stack trace that caused it; usage data is which screens and features you open — never your provider API keys, your data, or anything you generate. If you build Duct yourself both are off by default instead, because then we are not the ones running it."
+"<0>Crash reports and usage data are on by default in the app we distribute, and one switch in Preferences turns both off.</0> Once you touch it your answer is kept and no default applies again. A crash report contains the error and the stack trace that caused it; usage data is which screens and features you open — never your provider API keys, your data, or anything you generate. If you are signed in, both carry your account ID. If you build Duct yourself both are off by default instead, because then we are not the ones running it."
 msgstr ""
-"<0>クラッシュレポートと使用状況データは、配布するアプリではデフォルトでオンになっており、設定の1つのスイッチで両方をオフにできます。</0> 一度設定を変更すると、その設定が保持され、デフォルトは再度適用されません。クラッシュレポートには、エラーとその原因となったスタックトレースが含まれます。使用状況データは、開いた画面と機能に関するものであり、プロバイダーのAPIキー、お客様のデータ、またはお客様が生成したものは一切含まれません。Ductを自分でビルドした場合、これらはデフォルトでオフになります。これは、その場合、当社が実行しているわけではないためです。"
+"<0>配布するアプリでは、クラッシュレポートと使用状況データはデフォルトでオンになっており、設定の1つのスイッチで両方をオフにできます。</0>一度設定すると、その選択が保持され、デフォルト設定が再度適用されることはありません。クラッシュレポートには、エラーとその原因となったスタックトレースが含まれます。使用状況データは、開いた画面や機能に関するものであり、プロバイダーのAPIキー、データ、または生成されたものは一切含まれません。サインインしている場合、両方ともアカウントIDを含みます。Ductを自分でビルドした場合、私たちがそれを実行しているわけではないため、両方ともデフォルトでオフになります。"
 
 #: privacy.html
 msgid ""
@@ -7689,6 +7689,12 @@ msgstr ""
 
 #: privacy.html
 msgid ""
+"<0>In the web app,</0> everything you type, and also all text on screen, images, embedded documents, charts and video. A replay of the app shows the layout, your clicks and where you went, never the data on the page. When PostHog counts a click in the app, it records which element was clicked, not the text on it."
+msgstr ""
+"<0>ウェブアプリでは、</0>入力したすべての情報、および画面上のすべてのテキスト、画像、埋め込みドキュメント、グラフ、動画。アプリのリプレイは、レイアウト、クリック、移動先を示しますが、ページ上のデータは一切表示されません。PostHogがアプリ内のクリックをカウントする場合、クリックされた要素を記録し、その上のテキストは記録しません。"
+
+#: privacy.html
+msgid ""
 "<0>Nothing is written automatically.</0> Duct proposes a change set, shows you the exact before-and-after for every individual change, and applies nothing until you explicitly approve it in the app."
 msgstr ""
 "<0>何も自動的に書き込まれることはありません。</0> Ductは変更セットを提案し、個々の変更について正確な変更前と変更後を表示します。お客様がアプリで明示的に承認するまで、何も適用されません。"
@@ -7700,10 +7706,20 @@ msgstr ""
 "<0>OAuthトークンと保存されたプロバイダーキーは、</0> Fernet対称暗号化を使用して保存時に暗号化され、ユーザーごとにサーバー側に保存され、ブラウザに公開されることはありません。"
 
 #: privacy.html
+msgid "<0>On our website,</0> everything you type into a field."
+msgstr "<0>当社のウェブサイトでは、</0>フィールドに入力したすべての情報。"
+
+#: privacy.html
 msgid ""
 "<0>OpenRouter is a router, not a model provider,</0> and it warrants a specific note. It forwards a request to whichever underlying provider the routing configuration selects, and those providers differ in whether they log or train on what they receive. Where you supply your own OpenRouter key, that routing configuration is yours: the retention and training behaviour of a request is governed by the data policy set on your OpenRouter account, and you should set it to match the commitments you need. We recommend enabling OpenRouter's zero-logging and no-training data policy before connecting a key. Duct does not use your data for training regardless of which route is taken."
 msgstr ""
 "<0>OpenRouterはルーターであり、モデルプロバイダーではありません。</0> これには特別な注意が必要です。OpenRouterは、ルーティング設定が選択する基盤となるプロバイダーにリクエストを転送します。これらのプロバイダーは、受信したデータをログに記録するか、またはトレーニングに使用するかどうかで異なります。お客様が独自のOpenRouterキーを提供する場合、そのルーティング設定はお客様のものです。リクエストの保持およびトレーニングの動作は、お客様のOpenRouterアカウントで設定されたデータポリシーによって管理されます。お客様は、必要なコミットメントに一致するように設定する必要があります。キーを接続する前に、OpenRouterのゼロログおよび非トレーニングデータポリシーを有効にすることをお勧めします。Ductは、どのルートが選択されたかに関わらず、お客様のデータをトレーニングに使用することはありません。"
+
+#: privacy.html
+msgid ""
+"<0>PostHog, Inc. is a US company, and stores what it receives in its US region.</0> Sending it data from the EU relies on the EU Standard Contractual Clauses in PostHog's data processing agreement."
+msgstr ""
+"<0>PostHog, Inc.は米国の企業であり、受信したデータを米国のリージョンに保存します。</0>EUからデータを送信する場合、PostHogのデータ処理契約におけるEU標準契約条項に依拠します。"
 
 #: privacy.html
 msgid "<0>Product and behavioural analytics:</0> Mixpanel, Microsoft Clarity"
@@ -7767,9 +7783,15 @@ msgstr ""
 
 #: privacy.html
 msgid ""
-"<0>The desktop app sets no cookies, and is never going to ask you about them.</0> It reports usage through the same Google Tag Manager container as the rest of Duct, but with storage switched off permanently: Google Analytics receives the event and writes nothing to your machine, so none of the cookies in section 11 exist there and there is nothing to consent to. A consent bar in front of an application you just opened is not a question worth interrupting anyone for."
+"<0>The desktop app never records a replay of your session.</0> Session replay (section 11) exists only on our website and in the web app in a browser."
 msgstr ""
-"<0>デスクトップアプリはCookieを設定せず、Cookieについて尋ねることもありません。</0> 他のDuctと同様のGoogle Tag Managerコンテナを通じて使用状況を報告しますが、ストレージは永続的にオフになっています。Google Analyticsはイベントを受け取りますが、お客様のマシンには何も書き込まないため、セクション11のCookieは存在せず、同意する必要もありません。開いたばかりのアプリケーションの前に同意バーを表示することは、誰かの邪魔をする価値のある質問ではありません。"
+"<0>デスクトップアプリはセッションのリプレイを記録することはありません。</0>セッションリプレイ（セクション11）は、当社のウェブサイトおよびブラウザ内のウェブアプリでのみ存在します。"
+
+#: privacy.html
+msgid ""
+"<0>The desktop app sets no cookies, and is never going to ask you about them.</0> Its usage events and crash reports go to PostHog, which in the desktop app holds everything in memory and writes nothing to your machine, so none of the cookies in section 11 exist there and there is nothing to consent to. A consent bar in front of an application you just opened is not a question worth interrupting anyone for."
+msgstr ""
+"<0>デスクトップアプリはクッキーを設定せず、クッキーについて尋ねることもありません。</0>その使用状況イベントとクラッシュレポートはPostHogに送信されますが、デスクトップアプリではすべてをメモリに保持し、お使いのデバイスには何も書き込まないため、セクション11のクッキーは存在せず、同意する必要もありません。開いたばかりのアプリケーションの前に同意バーが表示されるのは、誰かの作業を中断する価値のある質問ではありません。"
 
 #: privacy.html
 msgid ""
@@ -7798,6 +7820,10 @@ msgstr ""
 #: privacy.html
 msgid "A stable Google account identifier"
 msgstr "安定したGoogleアカウント識別子"
+
+#: privacy.html
+msgid "AI model calls"
+msgstr "AIモデル呼び出し"
 
 #: privacy.html
 msgid ""
@@ -7847,10 +7873,6 @@ msgstr "Apify"
 #: privacy.html
 msgid "Application hosting and the primary database"
 msgstr "アプリケーションホスティングとプライマリデータベース"
-
-#: privacy.html
-msgid "Attributes a signup to the ad or link that led to it"
-msgstr "サインアップを、それに繋がった広告またはリンクに紐付ける"
 
 #: privacy.html
 msgid "Audit tool submissions"
@@ -7904,9 +7926,9 @@ msgstr "データは、EU標準契約条項を含む転送メカニズムに基�
 
 #: privacy.html
 msgid ""
-"Declining means Google Tag Manager is never loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we delete the cookies below and reload the page."
+"Declining means PostHog is not loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we stop PostHog, delete the cookies below and PostHog's copy of them in your browser's storage, and reload the page."
 msgstr ""
-"拒否すると、Google Tag Managerは制限モードで読み込まれるのではなく、まったく読み込まれません。以前に同意した後で拒否した場合、当社は以下のCookieを削除し、ページを再読み込みします。"
+"拒否するということは、PostHogが制限モードで読み込まれるのではなく、まったく読み込まれないことを意味します。以前に承諾した後で拒否した場合、PostHogを停止し、以下のクッキーとブラウザのストレージにあるPostHogのコピーを削除し、ページを再読み込みします。"
 
 #: privacy.html
 msgid ""
@@ -7923,8 +7945,9 @@ msgstr "診断"
 
 #: privacy.html
 msgid ""
-"Distinguishes one visitor from another so a returning visit is not counted twice"
-msgstr "訪問者を区別し、再訪問が二重にカウントされないようにします"
+"Distinguishes one visitor from another, and carries the same visit across <0>getduct.ai</0> and <1>app.getduct.ai</1> so it counts as one person, not two. PostHog may keep the same value in your browser's local storage"
+msgstr ""
+"訪問者を区別し、<0>getduct.ai</0>と<1>app.getduct.ai</1>間で同じ訪問を保持し、2人ではなく1人としてカウントします。PostHogは、ブラウザのローカルストレージに同じ値を保持する場合があります"
 
 #: privacy.html
 msgid ""
@@ -7997,16 +8020,14 @@ msgid "End of session"
 msgstr "セッション終了"
 
 #: privacy.html
-msgid "Error diagnostics"
-msgstr "エラー診断"
-
-#: privacy.html
-msgid "Error monitoring and crash reporting"
-msgstr "エラー監視とクラッシュレポート"
-
-#: privacy.html
 msgid "Expires"
 msgstr "有効期限"
+
+#: privacy.html
+msgid ""
+"For each call Duct makes to an AI model we record metadata only: the model, the number of tokens, how long it took, what it cost, and any error. Never the prompt or the response text."
+msgstr ""
+"DuctがAIモデルに対して行う各呼び出しについて、メタデータのみを記録します。モデル、トークン数、所要時間、費用、およびエラー。プロンプトや応答テキストは記録しません。"
 
 #: privacy.html
 msgid "For privacy questions, data access or deletion requests:"
@@ -8039,10 +8060,6 @@ msgid "Google Search Console queries, pages, impressions, clicks and positions"
 msgstr "Google Search Console のクエリ、ページ、インプレッション、クリック、順位"
 
 #: privacy.html
-msgid "Google Tag Manager (Conversion Linker)"
-msgstr "Google Tag Manager (コンバージョンリンカー)"
-
-#: privacy.html
 msgid "Google Tag Manager accounts, containers, tags and triggers"
 msgstr "Google Tag Manager のアカウント、コンテナ、タグ、トリガー"
 
@@ -8061,10 +8078,6 @@ msgstr ""
 "Googleは、Ductが接続できるいくつかのソースの1つです。それぞれはオプションであり、お客様が個別に接続し、承認した認証情報を使用してプロバイダーの公式APIを通じてアクセスされます。Ductはレポート作成に必要な指標を読み取り、お客様が明示的に承認した変更のみを書き込みます。"
 
 #: privacy.html
-msgid "Holds the state of the current session for our specific property"
-msgstr "特定のプロパティの現在のセッションの状態を保持します"
-
-#: privacy.html
 msgid "If you use Duct's content features:"
 msgstr "Ductのコンテンツ機能を使用する場合："
 
@@ -8077,18 +8090,14 @@ msgid "In transit"
 msgstr "転送中"
 
 #: privacy.html
-msgid "Incidentally, in error context only"
-msgstr "偶発的に、エラーコンテキストのみ"
-
-#: privacy.html
 msgid ""
 "It does not cover an instance of the software that someone else runs. If you use a Duct deployment operated by a third party, or one you run yourself, the operator of that deployment is the data controller and this policy does not apply to it. Publishing the code does not give us access to any data held in a deployment we do not operate."
 msgstr ""
 "このポリシーは、他者が実行するソフトウェアのインスタンスには適用されません。第三者が運営するDuctのデプロイメント、またはお客様自身が実行するデプロイメントを使用する場合、そのデプロイメントの運営者がデータ管理者であり、このポリシーは適用されません。コードを公開しても、当社が運営していないデプロイメントに保持されているデータにアクセスできるわけではありません。"
 
 #: privacy.html terms.html
-msgid "Last updated: September 7, 2026"
-msgstr "最終更新日：2026年9月7日"
+msgid "Last updated: October 29, 2026"
+msgstr "最終更新日：2026年10月29日"
 
 #. meta og:description
 #. meta twitter:description
@@ -8109,8 +8118,10 @@ msgid "No"
 msgstr "いいえ"
 
 #: privacy.html
-msgid "No — email address and report content only"
-msgstr "いいえ — メールアドレスとレポートコンテンツのみ"
+msgid ""
+"No — usage events, session replays masked as described in section 11, error reports, page timing and AI call metadata; never your connected tools' data or your prompts. An error report may incidentally contain an identifier, as described in section 11"
+msgstr ""
+"いいえ — 使用状況イベント、セクション11で説明されているようにマスクされたセッションリプレイ、エラーレポート、ページタイミング、AI呼び出しメタデータ。接続されたツールのデータやプロンプトは記録しません。エラーレポートには、セクション11で説明されているように、偶発的に識別子が含まれる場合があります"
 
 #: privacy.html
 msgid "OAuth refresh tokens and saved provider keys"
@@ -8123,14 +8134,31 @@ msgstr ""
 "当社の公開SEO監査ツールは、お客様が提出したメールアドレスとウェブサイトURLを収集し、そのウェブサイトからページを取得して分析し、結果のレポートをメールで送信します。当社は、再送できるように、またDuctについてお客様に連絡できるように、提出物とレポートを保存します。お客様が所有または監査を許可されているウェブサイトのみを提出してください。提出物を削除するには、<0>hello@getduct.ai</0>までお問い合わせください。"
 
 #: privacy.html
+msgid ""
+"Our servers report their own errors to PostHog the same way, along with a few log lines recording when a server starts and stops. We configure error reporting to avoid capturing Google user data, but a report may incidentally contain an identifier such as a property ID."
+msgstr ""
+"当社のサーバーは、サーバーの起動と停止を記録するいくつかのログ行とともに、同様の方法でPostHogに自身のエラーを報告します。Googleユーザーデータをキャプチャしないようにエラー報告を設定していますが、レポートには偶発的にプロパティIDなどの識別子が含まれる場合があります。"
+
+#: privacy.html
 msgid "PostBridge"
 msgstr "PostBridge"
+
+#: privacy.html
+msgid ""
+"PostHog also records session replays: a reconstruction of the page and where you clicked, so we can watch where a visit went wrong. What a replay hides is hidden in your browser, before anything leaves it:"
+msgstr ""
+"PostHogはセッションリプレイも記録します。ページとクリックした場所を再構築し、訪問がどこでうまくいかなかったかを確認できるようにします。リプレイが隠すものは、データがブラウザから離れる前にブラウザ内で隠されます。"
 
 #. meta og:title
 #. meta twitter:title
 #: privacy.html
 msgid "Privacy Policy — Duct"
 msgstr "プライバシーポリシー — Duct"
+
+#: privacy.html
+msgid ""
+"Product and web analytics, session replay, error and crash reporting, page-speed measurement, AI call metadata"
+msgstr "製品およびウェブ分析、セッションリプレイ、エラーおよびクラッシュ報告、ページ速度測定、AI呼び出しメタデータ"
 
 #: privacy.html
 msgid "Prompts and reference media only"
@@ -8154,13 +8182,14 @@ msgstr "接続されたソースデータを受信しますか？"
 
 #: privacy.html
 msgid ""
-"Remembers your choice, so you are not asked on every page. Set on <0>getduct.ai</0> and all its subdomains, so answering once in your browser also answers for the app. The desktop app never sets it, because it loads no analytics at all. Strictly necessary — it exists whether you accept or decline"
+"Remembers your choice, so you are not asked on every page. Set on <0>getduct.ai</0> and all its subdomains, so answering once in your browser also answers for the app. The desktop app never sets it, because it never asks (section 7). Strictly necessary — it exists whether you accept or decline"
 msgstr ""
-"お客様の選択を記憶し、すべてのページで尋ねられることはありません。<0>getduct.ai</0>とそのすべてのサブドメインで設定されるため、ブラウザで一度回答すると、アプリにも適用されます。デスクトップアプリは分析を一切読み込まないため、これを設定することはありません。厳密に必要です — お客様が承諾するか拒否するかにかかわらず存在します"
+"選択を記憶するため、すべてのページで尋ねられることはありません。<0>getduct.ai</0>とそのすべてのサブドメインに設定されるため、ブラウザで一度回答するとアプリにも適用されます。デスクトップアプリは、尋ねることがないため（セクション7）、これを設定することはありません。厳密に必要 — 承諾するか拒否するかにかかわらず存在します"
 
 #: privacy.html
-msgid "Resend"
-msgstr "再送信"
+msgid ""
+"Replays never include your browser's console logs. We do not record keystrokes or form contents."
+msgstr "リプレイにはブラウザのコンソールログは含まれません。キー入力やフォームの内容は記録しません。"
 
 #: privacy.html
 msgid ""
@@ -8185,8 +8214,14 @@ msgid ""
 msgstr "Googleユーザーデータをデータブローカー、情報再販業者、またはその他の第三者へ独自の目的のために販売、賃貸、または転送すること"
 
 #: privacy.html
-msgid "Sentry"
-msgstr "Sentry"
+msgid "Session replays (PostHog)"
+msgstr "セッションリプレイ (PostHog)"
+
+#: privacy.html
+msgid ""
+"Session replays and click analytics in the web app never record Google user data: all text on screen is masked in your browser before anything is sent (section 11)."
+msgstr ""
+"ウェブアプリでのセッションリプレイとクリック分析は、Googleユーザーデータを記録することはありません。画面上のすべてのテキストは、送信される前にブラウザでマスクされます（セクション11）。"
 
 #: privacy.html
 msgid "Set by"
@@ -8270,10 +8305,6 @@ msgid "To report on traffic, conversion and retention alongside your other tools
 msgstr "他のツールと合わせて、トラフィック、コンバージョン、およびリテンションを報告するため"
 
 #: privacy.html
-msgid "Transactional email (report delivery, project invitations)"
-msgstr "トランザクションメール（レポート配信、プロジェクト招待）"
-
-#: privacy.html
 msgid "Until you ask us to delete them"
 msgstr "お客様が削除を依頼するまで"
 
@@ -8283,8 +8314,16 @@ msgid ""
 msgstr "ソースを切断するか、キーを削除するか、アカウントを削除するか、またはプロバイダーでアクセスを取り消すまで — いずれか早い方"
 
 #: privacy.html
+msgid "Up to 7 years, the retention of our PostHog plan"
+msgstr "最大7年間、当社のPostHogプランの保持期間"
+
+#: privacy.html
 msgid "Usage data"
 msgstr "利用データ"
+
+#: privacy.html
+msgid "Usage events, error reports and AI call metadata (PostHog)"
+msgstr "使用状況イベント、エラーレポート、AI呼び出しメタデータ (PostHog)"
 
 #: privacy.html
 msgid "Use Google user data to build or enrich independent databases or profiles"
@@ -8307,21 +8346,27 @@ msgstr ""
 
 #: privacy.html
 msgid ""
-"We are based in Spain and process personal data under the EU GDPR. You have the right to access, correct, export, restrict the processing of, or delete your personal data, and to object to processing. Our legal basis is the performance of our contract with you for operating the product, and legitimate interest for security and diagnostics. Exercise any of these rights at <0>hello@getduct.ai</0>; you also have the right to lodge a complaint with your local supervisory authority (in Spain, the AEPD)."
+"We are based in Spain and process personal data under the EU GDPR. You have the right to access, correct, export, restrict the processing of, or delete your personal data, and to object to processing. Our legal basis is the performance of our contract with you for operating the product; legitimate interest for security and diagnostics, including the error reports and server-side events in section 11; and your consent for analytics cookies and session replays where we ask for it. Exercise any of these rights at <0>hello@getduct.ai</0>; you also have the right to lodge a complaint with your local supervisory authority (in Spain, the AEPD)."
 msgstr ""
-"当社はスペインに拠点を置き、EU GDPRに基づき個人データを処理します。お客様には、ご自身の個人データにアクセスし、修正し、エクスポートし、処理を制限し、または削除する権利、および処理に異議を唱える権利があります。当社の法的根拠は、製品運用のためのお客様との契約履行、およびセキュリティと診断のための正当な利益です。これらの権利を行使するには、<0>hello@getduct.ai</0>までご連絡ください。また、お客様には現地の監督機関（スペインではAEPD）に苦情を申し立てる権利もあります。"
+"当社はスペインに拠点を置き、EU GDPRに基づき個人データを処理します。お客様には、個人データへのアクセス、訂正、エクスポート、処理の制限、または削除、および処理への異議申し立ての権利があります。当社の法的根拠は、製品を運用するためのお客様との契約の履行、セクション11のエラーレポートやサーバーサイドイベントを含むセキュリティおよび診断のための正当な利益、そして、要求する分析クッキーおよびセッションリプレイに対するお客様の同意です。これらの権利を行使するには、<0>hello@getduct.ai</0>までご連絡ください。また、お客様の地域の監督機関（スペインではAEPD）に苦情を申し立てる権利もあります。"
 
 #: privacy.html
 msgid ""
-"We collect basic product analytics — pages visited, features used, general interaction patterns — to understand how Duct is used. This runs through Google Tag Manager, which loads Google Analytics 4. We do not record keystrokes or form contents."
+"We collect product analytics — pages visited, features used, what you click, how fast pages load — to see which pages earn a signup and where Duct gets in your way. On our website and in the web app in a browser this runs through PostHog, which follows the cookie choice described below."
 msgstr ""
-"Ductがどのように使用されているかを理解するため、当社は基本的な製品分析データ（訪問ページ、使用機能、一般的な操作パターンなど）を収集します。これはGoogle Tag Managerを通じて実行され、Google Analytics 4をロードします。キー入力やフォームの内容は記録しません。"
+"当社は、プロダクトアナリティクス（訪問したページ、使用した機能、クリックした内容、ページの読み込み速度など）を収集し、どのページがサインアップにつながり、Ductがどこでユーザーの妨げになっているかを確認しています。当社のウェブサイトおよびブラウザのウェブアプリでは、これはPostHogを通じて実行され、以下に記載されているクッキーの選択に従います。"
 
 #: privacy.html
 msgid ""
 "We do not sell your data. We share it only with the service providers below, only as needed to operate Duct, and only under terms that restrict them to that purpose:"
 msgstr ""
 "お客様のデータを販売することはありません。Ductの運用に必要な場合に限り、以下のサービスプロバイダーと共有し、その目的に限定する条件の下でのみ共有します。"
+
+#: privacy.html
+msgid ""
+"We do not use Google Analytics, Google Tag Manager or any other tag manager. We stopped in October 2026, and our website deletes the cookies they set before then (<0>_ga</0>, <1>_gcl_au</1>) on your next visit."
+msgstr ""
+"当社はGoogle Analytics、Google Tag Manager、その他のタグマネージャーを使用していません。2026年10月に使用を停止し、それ以前に設定されたクッキー（<0>_ga</0>、<1>_gcl_au</1>）は、次回の訪問時に当社のウェブサイトが削除します。"
 
 #: privacy.html
 msgid "We follow the principle of least privilege for internal data access"
@@ -8354,9 +8399,15 @@ msgstr "アクセスするもの"
 
 #: privacy.html
 msgid ""
-"When something breaks, we collect error reports containing the technical context of the failure (stack trace, browser, the operation attempted). We configure our error monitoring to avoid capturing Google user data, but a report may incidentally contain an identifier such as a property ID."
+"When something breaks in the web app, it sends PostHog an error report: the stack trace, your browser, the page's path without its query string, and, if you are signed in, your account ID. The web app also sends how long each page took to load and respond (web vitals), which is timing and nothing else. <0>Error reports and page timing in the web app are sent whether or not you accept analytics cookies,</0> because they store nothing on your device: they are held in memory for that page and gone when you leave it. On our website, both are part of analytics and follow your cookie choice."
 msgstr ""
-"何らかの障害が発生した場合、障害の技術的コンテキスト（スタックトレース、ブラウザ、試行された操作）を含むエラーレポートを収集します。エラー監視はGoogleユーザーデータをキャプチャしないように設定していますが、レポートにプロパティIDなどの識別子が偶発的に含まれる場合があります。"
+"ウェブアプリで何らかの障害が発生した場合、PostHogにエラーレポートを送信します。これには、スタックトレース、お使いのブラウザ、クエリ文字列を含まないページのパス、そしてサインインしている場合はアカウントIDが含まれます。ウェブアプリはまた、各ページの読み込みと応答にかかった時間（ウェブバイタル）も送信します。これは時間情報のみであり、それ以外の情報はありません。<0>ウェブアプリでのエラーレポートとページタイミングは、アナリティクスクッキーを受け入れるかどうかにかかわらず送信されます。</0>これは、デバイスに何も保存せず、そのページの間メモリに保持され、ページを離れると消去されるためです。当社のウェブサイトでは、これら両方ともアナリティクスの一部であり、クッキーの選択に従います。"
+
+#: privacy.html
+msgid ""
+"When you are signed in, our servers also record the actions you take in Duct, such as starting a content plan or approving or applying a change, with your account ID. Your PostHog profile keeps your email address and name, so we can contact you about a problem you hit."
+msgstr ""
+"サインインしている場合、当社のサーバーは、コンテンツプランの開始、変更の承認または適用など、Ductで行うアクションをアカウントIDとともに記録します。お客様のPostHogプロファイルには、メールアドレスと名前が保持されており、発生した問題について当社から連絡できるようになっています。"
 
 #: privacy.html
 msgid ""
@@ -8400,18 +8451,6 @@ msgid "Your name and profile picture"
 msgstr "お客様の名前とプロフィール画像"
 
 #: privacy.html
-msgid "_ga"
-msgstr "_ga"
-
-#: privacy.html
-msgid "_ga_SXH5LYVTJ8"
-msgstr "_ga_SXH5LYVTJ8"
-
-#: privacy.html
-msgid "_gcl_au"
-msgstr "_gcl_au"
-
-#: privacy.html
 msgid "adwords"
 msgstr "adwords"
 
@@ -8434,6 +8473,10 @@ msgstr "duct_consent_region"
 #: privacy.html
 msgid "openid"
 msgstr "openid"
+
+#: privacy.html
+msgid "ph_phc_…_posthog"
+msgstr "ph_phc_…_posthog"
 
 #: privacy.html
 msgid "tagmanager.edit.containers"
@@ -8829,12 +8872,14 @@ msgstr "<0>承認は個別です。</0>1つの変更セットを承認しても�
 
 #: terms.html
 msgid ""
-"<0>Creating and publishing content</0> — drafts, images and video you review before anything is published (see section 8)"
-msgstr "<0>コンテンツの作成と公開</0> — 公開前にレビューする下書き、画像、動画（セクション8を参照）"
+"<0>Crash reports and usage data are on by default</0> in the app we distribute, and one switch in Preferences turns both off. In a build you compile yourself they are off by default. The <1>Privacy Policy</1> says what each contains"
+msgstr ""
+"配布するアプリでは<0>クラッシュレポートと使用状況データはデフォルトでオンになっています</0>。設定の1つのスイッチで両方をオフにできます。ご自身でコンパイルしたビルドでは、これらはデフォルトでオフになっています。各内容については<1>プライバシーポリシー</1>に記載されています。"
 
 #: terms.html
-msgid "<0>Diagnostics are opt-in</0> and off by default"
-msgstr "<0>診断はオプトイン</0>で、デフォルトではオフです"
+msgid ""
+"<0>Creating and publishing content</0> — drafts, images and video you review before anything is published (see section 8)"
+msgstr "<0>コンテンツの作成と公開</0> — 公開前にレビューする下書き、画像、動画（セクション8を参照）"
 
 #: terms.html
 msgid ""
@@ -11632,6 +11677,131 @@ msgstr "← 戻る"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← 最初からやり直す"
+
+#~ msgid "No — email address and report content only"
+#~ msgstr "いいえ — メールアドレスとレポートコンテンツのみ"
+
+#~ msgid "Resend"
+#~ msgstr "再送信"
+
+#~ msgid "Transactional email (report delivery, project invitations)"
+#~ msgstr "トランザクションメール（レポート配信、プロジェクト招待）"
+
+#~ msgctxt "js"
+#~ msgid ""
+#~ "We use PostHog and Google Analytics to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same."
+#~ msgstr ""
+#~ "PostHogとGoogle Analyticsを使用して、どのページでサインアップが発生し、Ductがどこでユーザーの妨げになっているかを確認します。これには、入力されたすべての情報が非表示にされた訪問のリプレイも含まれます。これが唯一の用途であり、広告ターゲティングや販売目的ではありません。拒否した場合でも、Ductはまったく同じように機能します。"
+
+#~ msgid "2 years"
+#~ msgstr "2年間"
+
+#~ msgid "90 days"
+#~ msgstr "90日間"
+
+#~ msgid ""
+#~ "<0>The desktop app sets no cookies, and is never going to ask you about them.</0> It loads no Google Tag Manager and no Google Analytics at all. Its usage events and crash reports go to PostHog, which in the desktop app holds everything in memory and writes nothing to your machine, so none of the cookies in section 11 exist there and there is nothing to consent to. A consent bar in front of an application you just opened is not a question worth interrupting anyone for."
+#~ msgstr ""
+#~ "<0>デスクトップアプリはクッキーを設定せず、クッキーについて尋ねることもありません。</0>Google Tag ManagerもGoogle Analyticsも一切読み込みません。その使用状況イベントとクラッシュレポートはPostHogに送信されますが、デスクトップアプリではすべてをメモリに保持し、お使いのデバイスには何も書き込まないため、セクション11のクッキーは存在せず、同意する必要もありません。開いたばかりのアプリケーションの前に同意バーが表示されるのは、誰かの作業を中断する価値のある質問ではありません。"
+
+#~ msgid "Attributes a signup to the ad or link that led to it"
+#~ msgstr "サインアップを、それに繋がった広告またはリンクに紐付ける"
+
+#~ msgid ""
+#~ "Declining means neither Google Tag Manager nor PostHog is loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we stop PostHog, delete the cookies below and PostHog's copy of them in your browser's storage, and reload the page."
+#~ msgstr ""
+#~ "拒否するということは、Google Tag ManagerもPostHogも制限モードで読み込まれるのではなく、まったく読み込まれないことを意味します。以前に承諾した後で拒否した場合、PostHogを停止し、以下のクッキーとブラウザのストレージにあるPostHogのコピーを削除し、ページを再読み込みします。"
+
+#~ msgid ""
+#~ "Distinguishes one visitor from another so a returning visit is not counted twice"
+#~ msgstr "訪問者を区別し、再訪問が二重にカウントされないようにします"
+
+#~ msgid "Google Tag Manager (Conversion Linker)"
+#~ msgstr "Google Tag Manager (コンバージョンリンカー)"
+
+#~ msgid "Holds the state of the current session for our specific property"
+#~ msgstr "特定のプロパティの現在のセッションの状態を保持します"
+
+#~ msgid ""
+#~ "We collect product analytics — pages visited, features used, what you click, how fast pages load — to see which pages earn a signup and where Duct gets in your way. On our website and in the web app in a browser this runs through two tools: Google Analytics 4, loaded by Google Tag Manager, and PostHog. Both follow the cookie choice described below."
+#~ msgstr ""
+#~ "当社は、プロダクトアナリティクス（訪問したページ、使用した機能、クリックした内容、ページの読み込み速度など）を収集し、どのページがサインアップにつながり、Ductがどこでユーザーの妨げになっているかを確認しています。当社のウェブサイトおよびブラウザのウェブアプリでは、これはGoogle Tag Managerによって読み込まれるGoogle Analytics 4とPostHogの2つのツールを通じて実行されます。どちらも以下に記載されているクッキーの選択に従います。"
+
+#~ msgid "_ga"
+#~ msgstr "_ga"
+
+#~ msgid "_ga_SXH5LYVTJ8"
+#~ msgstr "_ga_SXH5LYVTJ8"
+
+#~ msgid "_gcl_au"
+#~ msgstr "_gcl_au"
+
+#~ msgid "3 months"
+#~ msgstr "3ヶ月"
+
+#~ msgid ""
+#~ "When something breaks in the web app, it sends PostHog an error report: the stack trace, your browser, the page's path without its query string, and, if you are signed in, your account ID. <0>Error reports in the web app are sent whether or not you accept analytics cookies,</0> because they store nothing on your device: they are held in memory for that page and gone when you leave it. On our website, error reports are part of analytics and follow your cookie choice."
+#~ msgstr ""
+#~ "ウェブアプリで問題が発生した場合、PostHogにエラーレポートが送信されます。これには、スタックトレース、お使いのブラウザ、クエリ文字列を含まないページのパス、およびサインインしている場合はアカウントIDが含まれます。<0>ウェブアプリのエラーレポートは、アナリティクスクッキーを受け入れるかどうかにかかわらず送信されます</0>。これは、デバイスに何も保存されないためです。それらはそのページの間メモリに保持され、ページを離れると消去されます。当社のウェブサイトでは、エラーレポートはアナリティクスの一部であり、お客様のクッキーの選択に従います。"
+
+#~ msgctxt "js"
+#~ msgid ""
+#~ "We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same."
+#~ msgstr ""
+#~ "Google Analyticsを使用して、どのページでサインアップが発生したかを確認しています。これが唯一の用途であり、広告ターゲティング、プロファイル作成、販売は一切行いません。拒否してもサイトの動作はまったく同じです。"
+
+#~ msgid ""
+#~ "<0>Crash reports and usage data are on by default in the app we distribute, and one switch in Preferences turns both off.</0> Once you touch it your answer is kept and no default applies again. A crash report contains the error and the stack trace that caused it; usage data is which screens and features you open — never your provider API keys, your data, or anything you generate. If you build Duct yourself both are off by default instead, because then we are not the ones running it."
+#~ msgstr ""
+#~ "<0>クラッシュレポートと使用状況データは、配布するアプリではデフォルトでオンになっており、設定の1つのスイッチで両方をオフにできます。</0> 一度設定を変更すると、その設定が保持され、デフォルトは再度適用されません。クラッシュレポートには、エラーとその原因となったスタックトレースが含まれます。使用状況データは、開いた画面と機能に関するものであり、プロバイダーのAPIキー、お客様のデータ、またはお客様が生成したものは一切含まれません。Ductを自分でビルドした場合、これらはデフォルトでオフになります。これは、その場合、当社が実行しているわけではないためです。"
+
+#~ msgid ""
+#~ "<0>The desktop app sets no cookies, and is never going to ask you about them.</0> It reports usage through the same Google Tag Manager container as the rest of Duct, but with storage switched off permanently: Google Analytics receives the event and writes nothing to your machine, so none of the cookies in section 11 exist there and there is nothing to consent to. A consent bar in front of an application you just opened is not a question worth interrupting anyone for."
+#~ msgstr ""
+#~ "<0>デスクトップアプリはCookieを設定せず、Cookieについて尋ねることもありません。</0> 他のDuctと同様のGoogle Tag Managerコンテナを通じて使用状況を報告しますが、ストレージは永続的にオフになっています。Google Analyticsはイベントを受け取りますが、お客様のマシンには何も書き込まないため、セクション11のCookieは存在せず、同意する必要もありません。開いたばかりのアプリケーションの前に同意バーを表示することは、誰かの邪魔をする価値のある質問ではありません。"
+
+#~ msgid ""
+#~ "Declining means Google Tag Manager is never loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we delete the cookies below and reload the page."
+#~ msgstr ""
+#~ "拒否すると、Google Tag Managerは制限モードで読み込まれるのではなく、まったく読み込まれません。以前に同意した後で拒否した場合、当社は以下のCookieを削除し、ページを再読み込みします。"
+
+#~ msgid "Error diagnostics"
+#~ msgstr "エラー診断"
+
+#~ msgid "Error monitoring and crash reporting"
+#~ msgstr "エラー監視とクラッシュレポート"
+
+#~ msgid "Incidentally, in error context only"
+#~ msgstr "偶発的に、エラーコンテキストのみ"
+
+#~ msgid "Last updated: September 7, 2026"
+#~ msgstr "最終更新日：2026年9月7日"
+
+#~ msgid ""
+#~ "Remembers your choice, so you are not asked on every page. Set on <0>getduct.ai</0> and all its subdomains, so answering once in your browser also answers for the app. The desktop app never sets it, because it loads no analytics at all. Strictly necessary — it exists whether you accept or decline"
+#~ msgstr ""
+#~ "お客様の選択を記憶し、すべてのページで尋ねられることはありません。<0>getduct.ai</0>とそのすべてのサブドメインで設定されるため、ブラウザで一度回答すると、アプリにも適用されます。デスクトップアプリは分析を一切読み込まないため、これを設定することはありません。厳密に必要です — お客様が承諾するか拒否するかにかかわらず存在します"
+
+#~ msgid "Sentry"
+#~ msgstr "Sentry"
+
+#~ msgid ""
+#~ "We are based in Spain and process personal data under the EU GDPR. You have the right to access, correct, export, restrict the processing of, or delete your personal data, and to object to processing. Our legal basis is the performance of our contract with you for operating the product, and legitimate interest for security and diagnostics. Exercise any of these rights at <0>hello@getduct.ai</0>; you also have the right to lodge a complaint with your local supervisory authority (in Spain, the AEPD)."
+#~ msgstr ""
+#~ "当社はスペインに拠点を置き、EU GDPRに基づき個人データを処理します。お客様には、ご自身の個人データにアクセスし、修正し、エクスポートし、処理を制限し、または削除する権利、および処理に異議を唱える権利があります。当社の法的根拠は、製品運用のためのお客様との契約履行、およびセキュリティと診断のための正当な利益です。これらの権利を行使するには、<0>hello@getduct.ai</0>までご連絡ください。また、お客様には現地の監督機関（スペインではAEPD）に苦情を申し立てる権利もあります。"
+
+#~ msgid ""
+#~ "We collect basic product analytics — pages visited, features used, general interaction patterns — to understand how Duct is used. This runs through Google Tag Manager, which loads Google Analytics 4. We do not record keystrokes or form contents."
+#~ msgstr ""
+#~ "Ductがどのように使用されているかを理解するため、当社は基本的な製品分析データ（訪問ページ、使用機能、一般的な操作パターンなど）を収集します。これはGoogle Tag Managerを通じて実行され、Google Analytics 4をロードします。キー入力やフォームの内容は記録しません。"
+
+#~ msgid ""
+#~ "When something breaks, we collect error reports containing the technical context of the failure (stack trace, browser, the operation attempted). We configure our error monitoring to avoid capturing Google user data, but a report may incidentally contain an identifier such as a property ID."
+#~ msgstr ""
+#~ "何らかの障害が発生した場合、障害の技術的コンテキスト（スタックトレース、ブラウザ、試行された操作）を含むエラーレポートを収集します。エラー監視はGoogleユーザーデータをキャプチャしないように設定していますが、レポートにプロパティIDなどの識別子が偶発的に含まれる場合があります。"
+
+#~ msgid "<0>Diagnostics are opt-in</0> and off by default"
+#~ msgstr "<0>診断はオプトイン</0>で、デフォルトではオフです"
 
 #~ msgid "<0/>Most tools ask first"
 #~ msgstr "<0/>ほとんどのツールが最初に尋ねます"

@@ -31,7 +31,7 @@ import ChatInput from "@/components/workspace/ChatInput";
 import { DropHint } from "@/components/workspace/Attachments";
 import { AUTONOMY_ASK } from "@/lib/projectsApi";
 import { CornerNotice } from "@/components/ui/corner-notice";
-import { FolderOpen, RefreshCw } from "lucide-react";
+import { CalendarPlus, FolderOpen, Plus, RefreshCw } from "lucide-react";
 import { CookieConsent } from "@/components/CookieConsent";
 import LoadError from "@/components/LoadError";
 import CloneFromUrlDialog from "@/components/content/CloneFromUrlDialog";
@@ -46,19 +46,23 @@ import { activitiesFromEvents, contextActivity, dataSourceRollup } from "@/lib/t
 import { briefFile } from "@/lib/brief";
 import { saveText } from "@/lib/download";
 import { ArtifactGallery } from "@/components/artifacts/ArtifactCards";
+import { ChartJsonView } from "@/components/artifacts/ArtifactRenderer";
 import { NEEDS_YOU, FOUND, IN_PROGRESS } from "@/lib/desk";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
 import ConnectorTile from "@/components/connections/ConnectorTile";
 import ManualConnectorCard from "@/components/connections/ManualConnectorCard";
+import OAuthConnectorCard from "@/components/connections/OAuthConnectorCard";
 import McpConnectDialog from "@/components/connections/McpConnectDialog";
 import McpConnectors from "@/components/connections/McpConnectors";
 import { NATIVE_SOURCE } from "@/lib/connectorSource";
 import PauseCard from "@/components/workspace/PauseCard";
 import { AgentEvent } from "@/lib/agentEvents";
 import ProviderCard from "@/components/connections/ProviderCard";
+import InstanceProviderCard from "@/components/connections/InstanceProviderCard";
+import EndpointProviderCard from "@/components/connections/EndpointProviderCard";
 import { LOGOS } from "@/components/connections/logos";
-import { PROVIDERS } from "@/lib/providerKeys";
+import { ENDPOINT_PROVIDER, INSTANCE_PROVIDERS, PROVIDERS } from "@/lib/providerKeys";
 import EntityAvatar from "@/components/connections/EntityAvatar";
 import ProjectEntitySelect from "@/components/connections/ProjectEntitySelect";
 import StorageBadge from "@/components/connections/StorageBadge";
@@ -72,6 +76,10 @@ import AuditReportV1 from "@/components/audit/AuditReportV1";
 import MemoryTimeline from "@/components/memory/MemoryTimeline";
 import PlanKanban from "@/components/content/PlanKanban";
 import PlanStrategy from "@/components/content/PlanStrategy";
+import PlanDayOne from "@/components/content/PlanDayOne";
+import PlanList from "@/components/content/PlanList";
+import { PlanPeriodMenu, PlanPeriodToggle } from "@/components/content/PlanPeriodPicker";
+import { planPeriodOptions } from "@/lib/contentSchedule";
 import PlanViewport from "@/components/content/PlanViewport";
 import PostMetricsForm from "@/components/content/PostMetricsForm";
 import PostVideo from "@/components/content/PostVideo";
@@ -80,6 +88,10 @@ import SynthesisPanel from "@/components/content/SynthesisPanel";
 import PublishReviewPanel from "@/components/content/PublishReviewPanel";
 import TextPostEditor from "@/components/content/TextPostEditor";
 import PostCard from "@/components/content/PostCard";
+import DraftsQueue from "@/components/content/DraftsQueue";
+import ReminderSetting from "@/components/content/ReminderSetting";
+import WritingSamples from "@/components/content/WritingSamples";
+import VoiceRulesFields from "@/components/content/VoiceRulesFields";
 import { MEMORY_KINDS } from "@/lib/memoryApi";
 import { ANSWERS as STORY_ANSWERS, AUDIT_REPORT as STORY_AUDIT, CHANGE_SET as STORY_CHANGE_SET, CONNECTORS as STORY_CONNECTORS, MEMORIES as STORY_MEMORIES, PLAN as STORY_PLAN, POSTS as STORY_POSTS } from "@/lib/__fixtures__/solo-story.mjs";
 import { TranscriptRow, WorkingIndicator } from "@/components/workspace/AgentChat";
@@ -1022,6 +1034,82 @@ const PLAN_STRATEGY_ALL_PROVEN = {
   explore_evidence: "Every type has at least three measured posts, so the test slot goes to identity_challenge hooks instead.",
 };
 
+// A whole month as the plan agent hands it over: thirty pending posts, the
+// story's five topics cycled with the bets each slot makes. What the plan
+// workspace's list shows the moment submit_plan runs.
+const MONTH_OBJECTIVES = ["saves", "follows", "shares", "clicks", "saves"];
+const PLAN_MONTH = {
+  id: "plan_preview_month",
+  name: "October content plan",
+  start_date: "2026-10-01T00:00:00",
+  days: Array.from({ length: 30 }, (_, i) => {
+    const d = STORY_PLAN.days[i % STORY_PLAN.days.length];
+    return { ...d, status: "pending", post_id: null, objective: MONTH_OBJECTIVES[i % MONTH_OBJECTIVES.length] };
+  }),
+};
+
+// The brand context the first-run Plan tab reads back. A project that came
+// through the audit usually has a voice and pillars and no linked account.
+const PLAN_BRAND_READY = {
+  description: "Budgeting for freelancers who invoice in euros.",
+  content_brand: { tone: "Practical, warm, a little dry. Numbers over adjectives." },
+  content_pillars: {
+    items: [
+      { id: "money_habits", name: "Money habits" },
+      { id: "invoicing", name: "Invoicing" },
+      { id: "tax_without_fear", name: "Tax without fear" },
+      { id: "behind_the_app", name: "Behind the app" },
+    ],
+  },
+};
+const PLAN_BRAND_EMPTY = { description: "", content_brand: {}, content_pillars: {} };
+const PLAN_ACCOUNTS = [
+  { account_id: 1, platform: "tiktok", username: "solo.money" },
+  { account_id: 2, platform: "instagram", username: "solomoney.app" },
+];
+// The two keys a user brings, as GET /content/vendor-keys/{vendor} answers.
+// Keyed by the API's vendor ids ("post-bridge", "apify").
+const PLAN_VENDORS_MISSING = {
+  "post-bridge": { connected: false, own_key: false, is_owner: true },
+  apify: { connected: false, own_key: false, is_owner: true },
+};
+const PLAN_VENDORS_CONNECTED = {
+  "post-bridge": { connected: true, own_key: true, is_owner: true },
+  apify: { connected: true, own_key: true, is_owner: true },
+};
+const PLAN_VENDORS_COLLABORATOR = {
+  "post-bridge": { connected: false, own_key: false, is_owner: false },
+  apify: { connected: false, own_key: false, is_owner: false },
+};
+// What the preview does with a pasted key: accept it after a beat, the way
+// the real save waits for the vendor, or refuse it the way a wrong key is.
+const acceptKey = () => new Promise((resolve) => setTimeout(resolve, 900));
+const refuseKey = (vendor) => Promise.reject(new Error(vendor === "apify"
+  ? "Apify didn't accept that key. Copy it again from your Apify account."
+  : "PostBridge didn't accept that key. Copy it again from your PostBridge dashboard."));
+
+// The period choices on fixed dates, so the scene reads the same any day:
+// a new plan on Oct 7, planning ahead from Nov 1 with a week already planned
+// from Nov 10, and a new plan on Oct 28, when the month rolls over.
+const planOn = (start, n) => ({ start_date: start, days: Array.from({ length: n }, () => ({})) });
+function PlanPeriodScene() {
+  const rollover = useMemo(() => planPeriodOptions(new Date(2026, 9, 28)), []);
+  const [length, setLength] = useState(rollover[0].length);
+  return (
+    <div className="flex flex-col gap-6 p-5">
+      <div className="flex flex-wrap items-center gap-2">
+        <PlanPeriodMenu options={planPeriodOptions(new Date(2026, 10, 1), [planOn("2026-11-10", 7)])} onPick={() => {}} icon={CalendarPlus} variant="outline">
+          Plan ahead
+        </PlanPeriodMenu>
+        <PlanPeriodMenu options={planPeriodOptions(new Date(2026, 9, 7))} onPick={() => {}} icon={Plus}>
+          New plan
+        </PlanPeriodMenu>
+      </div>
+      <PlanPeriodToggle options={rollover} value={length} onChange={setLength} />
+    </div>
+  );
+}
+
 // A posted post's numbers, as the metrics form receives them. The published
 // one carries what a PostBridge sync writes plus a typed saves count; the
 // other went out from the platform's own app, so nothing has synced.
@@ -1069,6 +1157,53 @@ const X_OVER_POST = {
   caption: "Most freelancers who ask me about tax want a better percentage. The percentage is almost never the problem. The problem is that the money sits in the same account as everything else for weeks, and money that looks spendable gets spent. Move it the hour the invoice clears, into an account with no card.",
 };
 const X_METRICS_POST = { ...X_THREAD_POST, id: "text-x-3", status: "posted", post_bridge_post_id: "pb_story_x", perf: {} };
+
+// The drafts queue (issue 266): three drafts nobody has answered, from a
+// chat (X), a plan day (the carousel) and the LinkedIn writer, newest first.
+const QUEUE_DRAFTS = [
+  { ...X_THREAD_POST, id: "queue-x", created_at: "2026-10-30T18:00:00Z" },
+  { ...STORY_POSTS.post_1, id: "queue-carousel", status: "draft", created_at: "2026-10-30T09:00:00Z" },
+  { ...LINKEDIN_POST, id: "queue-li", created_at: "2026-10-29T16:00:00Z" },
+];
+// GET /content/best-slot per channel: X on its default, LinkedIn from the
+// account's own history, TikTok on the weekday-morning fallback.
+const QUEUE_SLOTS = {
+  twitter: { at: "2026-11-02T08:00:00Z", reason: "default", posts: 0, hour: 9 },
+  linkedin: { at: "2026-11-03T07:00:00Z", reason: "history", posts: 7, hour: 8 },
+  tiktok: { at: "2026-11-02T08:00:00Z", reason: "default", posts: 2, hour: 9 },
+};
+const queueSlot = (_project, channel) => Promise.resolve(QUEUE_SLOTS[channel]);
+
+// The Brand tab's voice (issue 271). VOICE_DEFAULTS is what GET /content/brand
+// answers as voice_rules_default: the rules every project had as constants.
+const VOICE_DEFAULTS = {
+  banned_words: ["game-changer", "revolutionary", "excited to share", "dive in", "unpopular opinion",
+    "hot take", "here's a thread", "a few thoughts on", "today I learned", "quick reminder", "let that sink in"],
+  no_client_names: true,
+  protect_the_edge: true,
+};
+const VOICE_BUILD_IN_PUBLIC = { banned_words: ["synergy", "game-changer"], no_client_names: false, protect_the_edge: false };
+
+/** Both fields are controlled by the Brand tab's form; this is that form's state. */
+function WritingSamplesScene({ initial }) {
+  const [samples, setSamples] = useState(initial);
+  return <div className="max-w-xl p-5"><WritingSamples samples={samples} onChange={setSamples} /></div>;
+}
+
+function VoiceRulesScene({ initial, customised: startCustomised }) {
+  const [rules, setRules] = useState(initial);
+  const [customised, setCustomised] = useState(startCustomised);
+  return (
+    <div className="max-w-xl p-5">
+      <VoiceRulesFields
+        rules={rules}
+        customised={customised}
+        onChange={(next) => { setRules(next); setCustomised(true); }}
+        onReset={() => { setRules(VOICE_DEFAULTS); setCustomised(false); }}
+      />
+    </div>
+  );
+}
 
 /** TextPostEditor is controlled by the post pane; this is that pane's state. */
 function TextPostScene({ initial }) {
@@ -1462,6 +1597,14 @@ export const SCENES = [
     ),
   },
   {
+    id: "oauth-card-google",
+    state: "not connected, and connected with a partial grant",
+    group: "OAuthConnectorCard",
+    title: "A Google sign-in connector",
+    note: "Open each tile. What the card shows is the stored row and nothing else: there is no \u201cthis session only\u201d state any more, because the token never reaches the browser. Not connected, the dialog offers Sign in with Google; press it and the preview answers the way the desktop hand-off does, so the waiting line with Open it again appears. Connected, the storage glyph says where the row lives, the permissions list shows the scope that was declined, and the footer carries Disconnect (which asks first) and Reconnect.",
+    render: () => <OAuthCardScene />,
+  },
+  {
     id: "manual-card-one-click",
     state: "GitHub App available, not connected and connected",
     group: "ManualConnectorCard",
@@ -1534,6 +1677,110 @@ export const SCENES = [
         />
       </div>
     ),
+  },
+  {
+    id: "instance-provider",
+    state: "ready, and not answering",
+    group: "InstanceProviderCard",
+    title: "Local models: Ollama offered by the server, no key",
+    note: "Two tiles for one provider in its two states. Ready reads On this server in the info tone, not green: green is for a key the reader put there. Open the grey one: the two steps name the two ways it fails, and Check again asks the server which (in the preview there is no backend, so it answers with the request's own error). Neither dialog has a key field or a Remove button; nothing here is the reader's to store.",
+    render: () => (
+      <div className="conn-grid">
+        <InstanceProviderCard
+          provider={INSTANCE_PROVIDERS[0]}
+          logo={LOGOS.ollama}
+          status={{ id: "ollama", source: "instance", reachable: true, configured: true, keyless: true }}
+        />
+        <InstanceProviderCard
+          provider={INSTANCE_PROVIDERS[0]}
+          logo={LOGOS.ollama}
+          status={{ id: "ollama", source: "none", reachable: false, configured: true, keyless: true }}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "endpoint-provider",
+    state: "not connected, connected, self-hosted",
+    group: "EndpointProviderCard",
+    title: "Bring your own provider: an address, its models, a tool call",
+    note: "Three tiles. The first is a hosted Duct with nothing connected: open it, pick Together, and Find models lists a host's catalogue with a filter; type localhost instead and the field says why a hosted server cannot reach it before any request. Picking base-model and testing shows the no-tools failure with Connect anyway; any other model passes the check (saving then fails here, since the preview has no backend to remember it on). The second is connected and remembered: the host is the tile's tag, the dialog lists the chosen models with their context and offers Check again, Change and Disconnect. The third is a self-hosted Duct, which offers LM Studio, vLLM and llama.cpp as well.",
+    render: () => {
+      const listing = [
+        { id: "Qwen/Qwen3-235B-A22B", context_length: 262144 },
+        { id: "Qwen/Qwen3-32B", context_length: 40960 },
+        { id: "base-model", context_length: 0 },
+        { id: "deepseek-ai/DeepSeek-V4", context_length: 131072 },
+        { id: "meta-llama/Llama-4-Maverick-17B-128E-Instruct", context_length: 1048576 },
+        { id: "meta-llama/Llama-4-Scout", context_length: 131072 },
+        { id: "mistralai/Mistral-Small-4", context_length: 131072 },
+        { id: "moonshotai/Kimi-K2.5", context_length: 262144 },
+        { id: "openai/gpt-oss-120b", context_length: 131072 },
+        { id: "zai-org/GLM-5", context_length: 202752 },
+      ];
+      const probe = async ({ baseUrl, model }) => {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        if (/localhost|127\.0/.test(baseUrl)) {
+          return { ok: false, code: "refused", detail: "That address is on a private network, which Duct's servers can't reach." };
+        }
+        const base = baseUrl.replace(/\/+$/, "");
+        const answer = { ok: true, base_url: base, models: listing };
+        if (model) {
+          answer.check =
+            model === "base-model"
+              ? { ok: false, code: "no_tools", model, detail: "It answered in words instead of calling the tool it was given." }
+              : { ok: true, model, latency_ms: 1380 };
+        }
+        return answer;
+      };
+      const readKey = async () => ({ key: "" });
+      const check = async () => ({ ok: true, model: "Qwen/Qwen3-32B", latency_ms: 1210 });
+      const connected = {
+        id: "openai_compatible",
+        source: "stored",
+        reachable: true,
+        stored: true,
+        private_ok: false,
+        endpoint: {
+          base_url: "https://api.together.xyz/v1",
+          host: "api.together.xyz",
+          has_key: true,
+          models: [
+            { id: "Qwen/Qwen3-32B", context_length: 40960 },
+            { id: "meta-llama/Llama-4-Scout", context_length: 131072 },
+          ],
+        },
+      };
+      return (
+        <div className="conn-grid">
+          <EndpointProviderCard
+            provider={ENDPOINT_PROVIDER}
+            logo={LOGOS.compatible}
+            status={{ id: "openai_compatible", source: "none", reachable: false, stored: false, private_ok: false, endpoint: null }}
+            readKey={readKey}
+            probe={probe}
+            check={check}
+          />
+          <EndpointProviderCard
+            provider={ENDPOINT_PROVIDER}
+            logo={LOGOS.compatible}
+            status={connected}
+            readKey={readKey}
+            probe={probe}
+            check={check}
+            onOpenTiers={() => {}}
+          />
+          <EndpointProviderCard
+            provider={ENDPOINT_PROVIDER}
+            logo={LOGOS.compatible}
+            status={{ id: "openai_compatible", source: "none", reachable: false, stored: false, private_ok: true, endpoint: null }}
+            readKey={readKey}
+            probe={probe}
+            check={check}
+          />
+        </div>
+      );
+    },
   },
   {
     id: "storage-badge",
@@ -2520,6 +2767,93 @@ export const SCENES = [
     ),
   },
   {
+    id: "drafts-queue",
+    state: "three drafts waiting · one slot from history",
+    group: "DraftsQueue",
+    title: "The drafts queue on the Posts tab",
+    note: "The Posts tab opens on its Waiting chip while any draft is unanswered (issue 266): plan-day drafts and chat drafts alike, any channel, newest first. Each card says when it would go out and why: the account's own best hour once five posts on that channel have numbers, else the channel's default. Approve opens the publish dialog on that time; Edit in chat opens the post's workspace; Skip asks one of five reasons and turns it into a feedback memory the content agent's next draft reads. A long LinkedIn post folds behind Show all. What to check: Approve is the heaviest thing on each card, and Skip sits right, out of the way.",
+    render: () => (
+      <div className="p-5">
+        <DraftsQueue
+          posts={QUEUE_DRAFTS}
+          projectId="p"
+          loadSlot={queueSlot}
+          skip={(id) => new Promise((resolve) => setTimeout(() => resolve({ id, status: "discarded" }), 400))}
+          aside={<ReminderSetting surface="shell" />}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "drafts-queue-empty",
+    state: "the last draft answered",
+    group: "DraftsQueue",
+    title: "Nothing waiting",
+    note: "What the Waiting view says once the last draft is answered. The chip stays while it is the one selected, so the view never loses its label; on the next visit the tab opens on All instead.",
+    render: () => (
+      <div className="p-5">
+        <DraftsQueue posts={[]} projectId="p" loadSlot={queueSlot} aside={<ReminderSetting surface="browser" />} />
+      </div>
+    ),
+  },
+  {
+    id: "reminder-setting",
+    state: "the daily notice's time",
+    group: "ReminderSetting",
+    title: "When the daily notice arrives",
+    note: "One notice a day, \"3 drafts ready\", through the desktop shell or a browser tab that granted notifications, and only while the app is not being looked at. Per device, beside the queue. Hidden where nothing can notify, because a setting for a notice that can never arrive is a promise the page breaks.",
+    render: () => (
+      <div className="p-5">
+        <ReminderSetting surface="shell" />
+      </div>
+    ),
+  },
+  {
+    id: "writing-samples",
+    state: "two posts pasted",
+    group: "WritingSamples",
+    title: "Writing samples on the Brand tab",
+    note: "Posts the brand already wrote (issue 271). The text writer reads them before every X or LinkedIn draft, and a carousel caption hears them too, so a draft starts in a real voice. Up to five, 1,500 characters each, counted under each field. What to check: the counter sits right under its own field, and Add a post disables at five.",
+    render: () => <WritingSamplesScene initial={[X_THREAD_POST.caption, LINKEDIN_POST.caption]} />,
+  },
+  {
+    id: "writing-samples-empty",
+    state: "nothing pasted yet",
+    group: "WritingSamples",
+    title: "Before the first sample",
+    note: "One empty field rather than an empty list: the placeholder says what goes in it.",
+    render: () => <WritingSamplesScene initial={[]} />,
+  },
+  {
+    id: "voice-rules-default",
+    state: "Duct's defaults",
+    group: "VoiceRulesFields",
+    title: "Voice rules, never touched",
+    note: "The rules every project had as constants until issue 271, shown as settings: the banned list as chips, the two switches on. Change anything and Back to Duct's defaults appears. The writer refuses an X or LinkedIn draft with a banned word and says which, so the list is a promise, not a hint.",
+    render: () => <VoiceRulesScene initial={VOICE_DEFAULTS} customised={false} />,
+  },
+  {
+    id: "voice-rules-custom",
+    state: "a build-in-public founder's rules",
+    group: "VoiceRulesFields",
+    title: "Voice rules, customised",
+    note: "Clients may be named and the mechanism may be shown; each switch's line says what it means in its current position, not in the other one.",
+    render: () => <VoiceRulesScene initial={VOICE_BUILD_IN_PUBLIC} customised />,
+  },
+  {
+    id: "post-card-failed",
+    state: "a scheduled post PostBridge failed · with and without a reason",
+    group: "PostCard",
+    title: "A post that didn't go out",
+    note: "The board asks PostBridge about a scheduled post once its time has passed (issue 311). A failure gets the Failed chip and PostBridge's own sentence under the title; when PostBridge gave none, the card says so in its own words. Publishing again is the way out.",
+    render: () => (
+      <div className="grid max-w-md grid-cols-2 gap-4 p-5">
+        <PostCard post={{ ...X_THREAD_POST, id: "failed-1", status: "failed", publish_error: "The X account needs reconnecting." }} />
+        <PostCard post={{ ...LINKEDIN_POST, id: "failed-2", status: "failed", publish_error: "" }} />
+      </div>
+    ),
+  },
+  {
     id: "post-metrics-x",
     state: "X post published through PostBridge · nothing syncs",
     group: "PostMetricsForm",
@@ -2602,6 +2936,18 @@ export const SCENES = [
     ),
   },
   {
+    id: "vendor-key-inline",
+    state: "inline · Apify refused the key",
+    group: "VendorKeyForm",
+    title: "The key field inside a row",
+    note: "The same field with no card around it, for a row that already says what the vendor is for (the Plan tab's checklist). Submit any key: the refusal appears under the field the same way it does in the card.",
+    render: () => (
+      <div className="max-w-sm p-5">
+        <VendorKeyForm layout="inline" vendor="Apify" homeUrl="https://console.apify.com" onConnect={() => refuseKey("apify")} />
+      </div>
+    ),
+  },
+  {
     id: "vendor-key-collaborator",
     state: "collaborator · the owner hasn't connected PostBridge",
     group: "VendorKeyForm",
@@ -2610,6 +2956,98 @@ export const SCENES = [
     render: () => (
       <div className="p-5">
         <VendorKeyForm vendor="PostBridge" homeUrl="https://app.post-bridge.com" isOwner={false} onConnect={() => Promise.resolve()} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-board-empty",
+    state: "voice and pillars set, no connector yet",
+    group: "PlanDayOne",
+    title: "The Plan tab, before the first plan",
+    note: "The first screen of Content Studio for a new project, and the usual case after the audit: the voice and pillars it drafted, neither connector's key saved. It used to be a dashed \"No plan yet\" box. Now it says what a plan is, reads back what Duct will plan from, takes the PostBridge and Apify keys right in their rows, asks how far ahead to plan (the month in progress, or 1 week, 2 weeks, 30 days, each naming its dates), and shows a sample week in the same list the plan workspace uses. Paste anything into a key field and press Enter: the preview refuses it the way a wrong key is refused. What to check: the button is the heaviest thing on the screen; the checklist sits beside the sample from @3xl and above it below that; the sample is dimmed, labelled and cannot be tabbed into.",
+    render: () => (
+      <div className="p-5">
+        <PlanDayOne brand={PLAN_BRAND_READY} accounts={[]} vendors={PLAN_VENDORS_MISSING} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={refuseKey} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-day-one-fresh",
+    state: "nothing set yet",
+    group: "PlanDayOne",
+    title: "A project with no brand context",
+    note: "Every source missing. Voice and pillars say what Duct does about them (it asks) and offer the tab that fixes them; the two connectors take their key in place. The button still works: the agent asks for what is missing before it plans. A pasted key is accepted after a beat here and the field stays busy, since the preview has no state to turn the row over with.",
+    render: () => (
+      <div className="p-5">
+        <PlanDayOne brand={PLAN_BRAND_EMPTY} accounts={[]} vendors={PLAN_VENDORS_MISSING} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-day-one-ready",
+    state: "everything set",
+    group: "PlanDayOne",
+    title: "All four sources ready",
+    note: "Voice, four pillars, two linked accounts and Apify connected. The plan learns from those accounts' own results, which is what the strategy band on a finished plan reports; the research row points at Discover, because only posts saved there reach the plan.",
+    render: () => (
+      <div className="p-5">
+        <PlanDayOne brand={PLAN_BRAND_READY} accounts={PLAN_ACCOUNTS} vendors={PLAN_VENDORS_CONNECTED} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-day-one-collaborator",
+    state: "a collaborator, owner hasn't connected either key",
+    group: "PlanDayOne",
+    title: "When the keys are someone else's",
+    note: "A project spends its owner's PostBridge and Apify keys, so a collaborator gets no field, only who to ask.",
+    render: () => (
+      <div className="p-5">
+        <PlanDayOne brand={PLAN_BRAND_READY} accounts={[]} vendors={PLAN_VENDORS_COLLABORATOR} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-day-one-unknown",
+    state: "brand context failed to load",
+    group: "PlanDayOne",
+    title: "When the sources cannot be read",
+    note: "The checklist is left out rather than reporting every source as missing: a failed read and an empty brand are different facts. The same goes for one connector whose status could not be read: its row and its share of the count drop out.",
+    render: () => (
+      <div className="p-5">
+        <PlanDayOne brand={null} accounts={null} vendors={{}} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-period-picker",
+    state: "Oct 7, Nov 1 with a plan from Nov 10, and Oct 28",
+    group: "PlanPeriodPicker",
+    title: "How far ahead a new plan looks",
+    note: "The Plan tab's \"Plan ahead\" and \"New plan\" menus, and the toggles the first-run screen uses for the same choice. Every option names the dates it will plan, by the run's own rules: the month in progress, or 1 week, 2 weeks, 30 days, never more than 30. What to check: \"Plan ahead\" starts on Nov 1 and stops the day before the plan already made from Nov 10, so the month is offered as \"9 days\" and the longer lengths, which come to the same dates, are not offered twice; the toggles are for Oct 28, so the month is November, not the four days left of October.",
+    render: () => <PlanPeriodScene />,
+  },
+  {
+    id: "plan-list-month",
+    state: "a fresh 30-day plan, every post pending",
+    group: "PlanList",
+    title: "The plan as an agenda",
+    note: "What the plan workspace shows once submit_plan runs: thirty posts in date order, grouped by week from the plan's first day, filterable by status. Pending rows carry no badge (thirty identical pills is noise); hovering one says Draft. What to check: the week header sticks while the list scrolls; platforms drop out of the row in a narrow pane before the title loses room.",
+    render: () => (
+      <div style={{ height: 640, display: "flex" }} className="bg-background">
+        <PlanList plan={PLAN_MONTH} onReviseDay={() => {}} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-list-story",
+    state: "one week: two posted, one drafted, two pending",
+    group: "PlanList",
+    title: "A plan with posts moving",
+    note: "The story week. Posted and drafted rows carry their status and time; a scheduled post would say Scheduled. The filter counts follow, and Discarded appears only once something is in it.",
+    render: () => (
+      <div style={{ height: 420, display: "flex" }} className="bg-background">
+        <PlanList plan={STORY_PLAN} postsById={STORY_POSTS} onReviseDay={() => {}} />
       </div>
     ),
   },
@@ -2642,11 +3080,11 @@ export const SCENES = [
     state: "a live plan with its strategy",
     group: "PlanViewport",
     title: "The plan pane in the workspace",
-    note: "The right pane of a plan session once submit_plan has run: the name bar, the strategy, then the board. A plan made before strategies were recorded shows no strategy band at all.",
+    note: "The right pane of a plan session once submit_plan has run: the name bar, the strategy, then the list. A plan made before strategies were recorded shows no strategy band at all.",
     render: () => (
       <div style={{ height: 720, display: "flex" }} className="bg-background">
         <div className="flex-1 min-w-0">
-          <PlanViewport payload={{ type: "plan", ...STORY_PLAN, strategy: PLAN_STRATEGY }} />
+          <PlanViewport payload={{ type: "plan", ...PLAN_MONTH, strategy: PLAN_STRATEGY }} onReviseDay={() => {}} />
         </div>
       </div>
     ),
@@ -2671,6 +3109,48 @@ export const SCENES = [
       </div>
     ),
   })),
+  {
+    id: "chat-code-and-long-link",
+    group: "AgentChat",
+    title: "A code block and a long link in a reply",
+    state: "settled reply, highlighter loading on first sight",
+    note: "The highlighter is not in the chat's first load: the first code block on screen fetches it, and until then the block is drawn plain in the same dark box at the same size, so only the token colours arrive late. Reload with the network throttled to see the swap. The link has no spaces to break at; it must wrap inside the column rather than scroll the transcript sideways at phone width.",
+    render: () => (
+      <div className="max-w-xl">
+        <TranscriptRow
+          msg={{
+            role: "assistant",
+            text: "The redirect chain is in the response headers:\n\n```bash\ncurl -sI https://example.com/pricing | grep -i location\n```\n\nThe canonical it lands on is https://example.com/pricing/plans/annual?utm_source=newsletter&utm_medium=email&utm_campaign=october-launch-reminder-second-send, which no internal link points to.",
+          }}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "artifact-chart",
+    group: "Artifacts",
+    title: "A chart artifact",
+    state: "line chart, Recharts loaded on first sight",
+    note: "Recharts loads when a chart is on screen, not with every screen that can show an artifact; a skeleton of the chart's own height holds the place, so nothing below it moves when the chart arrives.",
+    render: () => (
+      <ChartJsonView
+        source={JSON.stringify({
+          type: "line",
+          title: "Organic sessions, last six weeks",
+          x: "week",
+          series: [{ key: "sessions", label: "Sessions" }, { key: "signups", label: "Sign-ups" }],
+          data: [
+            { week: "W1", sessions: 1240, signups: 31 },
+            { week: "W2", sessions: 1310, signups: 35 },
+            { week: "W3", sessions: 1180, signups: 29 },
+            { week: "W4", sessions: 1420, signups: 41 },
+            { week: "W5", sessions: 1510, signups: 44 },
+            { week: "W6", sessions: 1630, signups: 52 },
+          ],
+        })}
+      />
+    ),
+  },
   {
     id: "audit-report-v1",
     group: "Audit",
@@ -2835,6 +3315,49 @@ function OneClickCardScene() {
       <ManualConnectorCard
         {...common}
         serverRowList={[row("r1", "acme/app"), row("r2", "acme/site")]}
+      />
+    </div>
+  );
+}
+
+function OAuthCardScene() {
+  const GA4_READ = "https://www.googleapis.com/auth/analytics.readonly";
+  const GA4_EDIT = "https://www.googleapis.com/auth/analytics.edit";
+  const scopes = [
+    { scope: GA4_READ, label: "Read reports", why: "To read traffic and conversions for briefs.", access: "read", required: true, granted: true },
+    { scope: GA4_EDIT, label: "Edit configuration", why: "To stage key events you approve.", access: "write", required: false, granted: false },
+  ];
+  const row = {
+    id: "r1",
+    connector_type: "ga4",
+    account_id: "",
+    account_name: "",
+    storage: "cloud",
+    residency: "server",
+    scopes,
+    scope_status: "partial",
+    missing_scopes: [GA4_EDIT],
+  };
+  const common = {
+    connectorType: "ga4",
+    title: "Google Analytics",
+    description: "Traffic, sessions, engagement and conversions.",
+    logo: LOGOS.ga4,
+    start: () => new Promise((resolve) => setTimeout(() => resolve("browser"), 400)),
+    onDisconnect: () => {},
+  };
+  return (
+    <div className="conn-grid">
+      <OAuthConnectorCard {...common} connected={false} oauthConnected={false} tone="off" status="Not connected" />
+      <OAuthConnectorCard
+        {...common}
+        connected
+        oauthConnected
+        tone="partial"
+        status="Connected · 1 permission missing"
+        scopes={scopes}
+        scopeStatus="partial"
+        rows={[row]}
       />
     </div>
   );

@@ -287,14 +287,14 @@ takes neither dependency, for three reasons:
 - The regression harness is `session_replay.py`: the real runner, the real
   prompt, the real model, on the session's own data. A framework's replay
   would re-implement the fetch layer to get the same hermeticity.
-- Phoenix is already installed for traces. Set `OTEL_EXPORTER_OTLP_ENDPOINT`
-  before a replay and the per-turn and per-tool timings are in Phoenix,
-  reachable from the MCP; that is the timing half of the run rubric without
-  a second tool.
+- Jaeger already holds the traces (`scripts/jaeger.sh`). Set
+  `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318` before a replay and the
+  per-turn and per-tool timings are in Jaeger, reachable from its MCP; that is
+  the timing half of the run rubric without a second tool.
 
-Reach for `phoenix.evals` (already in the venv) when the ledger has enough
-records to need a batch judge over many sessions; until then a batch judge
-would score what nobody has time to read.
+When the ledger has enough records to need a batch judge over many sessions,
+pick an open-source one then; until then a batch judge would score what
+nobody has time to read.
 
 ## Known gaps
 

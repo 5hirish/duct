@@ -6,6 +6,8 @@ import { STATUS_ORDER, statusMeta } from "../../lib/contentStatus";
 import { effectiveSchedule, planStartOf } from "../../lib/contentSchedule";
 import PostMiniCard from "./PostMiniCard";
 
+const HIDDEN_WHEN_EMPTY = new Set([PostStatus.FAILED, PostStatus.DISCARDED]);
+
 const COLUMNS = STATUS_ORDER.map((key) => {
   const meta = statusMeta(key);
   return { key, label: meta.label, accent: meta.accentClass };
@@ -56,9 +58,10 @@ export default function PlanKanban({ plan, postsById = {}, onReviseDay }) {
       <div className="grid min-w-0 grid-cols-1 gap-4 @md:grid-cols-2 @4xl:grid-flow-col @4xl:auto-cols-fr @4xl:grid-cols-none">
         {COLUMNS.map((col) => {
           const cards = grouped[col.key] || [];
-          // Discarded is where posts go to be forgotten; an empty lane for it
-          // is a column-width "Nothing here yet" on every fresh plan.
-          if (col.key === PostStatus.DISCARDED && cards.length === 0) return null;
+          // Discarded is where posts go to be forgotten, and Failed is rare;
+          // an empty lane for either is a column-width "Nothing here yet" on
+          // every fresh plan.
+          if (HIDDEN_WHEN_EMPTY.has(col.key) && cards.length === 0) return null;
           return (
             <div key={col.key} className={`flex min-w-0 flex-col rounded-lg border ${col.accent}`}>
               <div className="flex items-center justify-between border-b border-border/50 px-3 py-2">

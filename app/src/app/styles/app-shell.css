@@ -5,7 +5,11 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  min-height: 3.25rem;
+  /* The top safe area is this bar's to clear (theme.css pads the body's sides
+     only): under a status bar or a Dynamic Island the bar grows by the inset
+     and keeps its 3.25rem of controls below it. Zero everywhere else. */
+  padding-top: env(safe-area-inset-top, 0px);
+  min-height: calc(3.25rem + env(safe-area-inset-top, 0px));
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -66,7 +70,9 @@
 .app-main {
   container-type: inline-size;
   width: 100%;
-  max-width: 1440px;
+  /* rem, not px: the cap follows the reader's text size and the desktop
+     app's zoom, so a zoomed-in page keeps the same measure. */
+  max-width: 90rem;
   margin: 0 auto;
   padding: 1.75rem 1rem 4rem;
 }

@@ -310,7 +310,7 @@ function FormatCard({ format, onView, onEdit, onDelete }) {
           </h3>
           <p className="truncate text-xs text-muted-foreground">{subtitleOf(format)}</p>
         </div>
-        <div className="relative z-10 flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+        <div className="relative z-10 flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
           <button
             type="button"
             title={t`Edit`}

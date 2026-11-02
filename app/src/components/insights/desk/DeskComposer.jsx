@@ -22,6 +22,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { faviconUrl } from "@/lib/favicon";
 import { fetchProviderStatus } from "@/lib/modelTiers";
 import { clearDraft, readDraft, writeDraft } from "@/lib/composerDraft";
+import { isComposing } from "@/lib/shortcuts";
 import ComposerDials, { TierDial } from "../../workspace/ComposerDials";
 import ContextRing from "../../workspace/ContextRing";
 
@@ -140,7 +141,7 @@ export default function DeskComposer({ project, autonomy, onAutonomyChange, plac
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
+            if (e.key === "Enter" && !e.shiftKey && !isComposing(e)) {
               e.preventDefault();
               send();
             }

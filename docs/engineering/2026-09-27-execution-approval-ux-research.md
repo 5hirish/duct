@@ -36,7 +36,7 @@ toggle, and close the loop with "did it work?", which is also the upsell.**
 
 ### Gaps
 
-- **G1.** `google_ads.add_keywords` is on the auto-apply allowlist, beside the file's own rule that anything moving money stays off it until numeric limits exist.
+- **G1.** `google_ads.add_keywords` is on the auto-apply allowlist, beside the file's own rule that anything moving money stays off it until numeric limits exist. *Fixed 2026-10-30: off the allowlist, and a test keeps every op that spends off it.*
 - **G2.** An agent may roll back any set at any autonomy level, including one whose rollback increases spend (un-pausing, restoring a budget) or republishes a GTM version, and rollback runs no drift check, so it can overwrite a manual change made since.
 - **G3.** The same action carries different friction on the two surfaces (a GTM publish is one click in chat, a confirm on the Executions page), and the card's rollback reassurance is shown for every destructive op, including ones rollback cannot fully undo.
 - **G4.** One binary "destructive" flag is the only risk label; pausing a campaign has none.

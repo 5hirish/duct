@@ -199,6 +199,13 @@ scratchpad.
   it.
 - **Green before merge, even with the bypass.** Admin bypass on the `main`
   ruleset exists for emergencies, not for impatience. Let the checks finish.
+- **A contributor's pull request is read, never run.** Review it against the
+  issue it closes (the seam the issue named, nothing more), approve its
+  waiting CI runs once the diff is read, post the review, and leave the merge
+  to the maintainer: `main` wants signed commits, a fork's are not, so it
+  goes in as a squash. Never check the branch out or run its code locally;
+  CI is the machine it runs on. The contributor-facing half is in
+  [`CONTRIBUTING.md`](CONTRIBUTING.md), "How a contribution is reviewed".
 - **Branches are short-lived and named for their type** (`feat/`, `fix/`,
   `chore/`, `docs/`, `ci/`, `test/`). When it merges, delete the branch and
   remove its worktree the same day. A merged branch left lying around is what
@@ -258,7 +265,7 @@ that happened twice in one session, for two `next build`s that bind no port
 and needed nothing stopped. Three commands answer most of it:
 
 ```bash
-lsof -nP -iTCP -sTCP:LISTEN | grep -E ':(3003|8002|8090|6006)\b'  # app, API, site, Phoenix
+lsof -nP -iTCP -sTCP:LISTEN | grep -E ':(3003|8002|8090|16686)\b' # app, API, site, Jaeger
 curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8002/health
 curl -s -D - -o /dev/null http://localhost:8002/health             # headers say where it broke
 ```
@@ -280,9 +287,9 @@ Two traps. `:8002` is the uvicorn dev server and **not** the desktop app,
 which runs a frozen PyInstaller sidecar on a port of its own
 ([`backend/AGENTS.md`](backend/AGENTS.md), "Desktop (local sidecar) mode") —
 a desktop symptom reproduced against `:8002` proves nothing about the desktop
-build. And Phoenix on **6006** already holds the traces of every agent turn,
-model call and tool call, with its own MCP server at `/mcp` on the same port:
-read a slow or failed run there rather than reconstructing it from the
+build. And Jaeger on **16686** already holds the traces of every agent turn,
+model call and tool call, with its own MCP server at `/api/ai/mcp/` on the same
+port: read a slow or failed run there rather than reconstructing it from the
 transcript.
 
 The server's log lines are readable too, because the editor launch configs set
@@ -359,8 +366,11 @@ Check here before hand-rolling env or secret plumbing:
   `.env.test` targets.
 - `envfile.py` — shared dotenv parser used by the above.
 - `dev_stop.sh` — stop what a dev session started: `all`, or any of `backend`,
-  `app`, `site`, `phoenix`, `desktop`. Both editors' stop tasks call it, so the
+  `app`, `site`, `jaeger`, `desktop`. Both editors' stop tasks call it, so the
   kill list exists once.
+- `jaeger.sh` — the local trace viewer for agent runs: Jaeger, pinned and
+  checked against its release checksum on first run. UI and MCP on 16686,
+  OTLP on 4318, spans on disk for a week (`jaeger.yaml`).
 - `security/audit.py`, `security/leak_scan.py` — repo hygiene, both run in CI.
 - `shots/shoot.mjs` — product screenshots from the real app for the README and
   the site: one story (`app/src/lib/__fixtures__/solo-story.mjs`) feeds the

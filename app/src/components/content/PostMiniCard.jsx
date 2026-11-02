@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { Images, Video, Image as ImageIcon, Clock, Type } from "lucide-react";
+import { Images, Video, Image as ImageIcon, Clock, Type, ChevronRight, Target } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { mediaUrl } from "@/lib/contentApi";
-import { firstImageSrc, statusMeta } from "@/lib/contentStatus";
+import { POST_TYPE_LABELS, PostStatus } from "@/lib/contentEnums";
+import { SCHEDULED_META, firstImageSrc, statusMeta } from "@/lib/contentStatus";
 import { KIND_LABEL } from "@/lib/contentSchedule";
 import { PlatformGlyph, platformMeta } from "@/components/content/platformGlyphs";
 import { ClipStill } from "@/components/content/PostVideo";
+import { Badge } from "@/components/ui/badge";
 import { titleCase } from "@/lib/format";
 
 // Shared with PlanStrategy, so a post type has one icon wherever it appears.
@@ -28,13 +30,18 @@ const KIND_BADGE = {
  *                 Week calendar where a single day mixes statuses.
  *   - "chip"    : a single status-tinted line (type icon + title + primary
  *                 platform). Used by the Month calendar cells.
+ *   - "row"     : one agenda line — weekday and date, a cover tile, title,
+ *                 type · pillar · goal, then the status. Used by PlanList.
+ *                 A pending row carries no badge: on a fresh plan that would
+ *                 be thirty identical pills, so only the rows that moved say
+ *                 so and the rest offer to be drafted.
  *
  * Props:
  *   - day      : plan.days[] entry (topic, pillar, post_type, platforms, ...)
  *   - post     : linked full post (or null)
  *   - schedule : effectiveSchedule(...) result ({ kind, label, time, ... })
  *   - onRevise : () => void  — drafting affordance when there's no post yet
- *   - variant  : "full" | "compact" | "chip" (default "full")
+ *   - variant  : "full" | "compact" | "chip" | "row" (default "full")
  */
 export default function PostMiniCard({ day, post, schedule, onRevise, variant = "full" }) {
   const { t, i18n } = useLingui();
@@ -73,7 +80,81 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
   });
 
   let inner;
-  if (variant === "chip") {
+  if (variant === "row") {
+    const date = schedule?.date || null;
+    const typeLabel = POST_TYPE_LABELS[postType];
+    const objective = day?.objective || "";
+    const badge = schedule?.kind === "scheduled" ? SCHEDULED_META : sMeta;
+    inner = (
+      <div className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors group-hover/row:bg-muted/60">
+        {/* The agenda's spine: weekday over day number, the way a calendar's
+            schedule view reads. The week header above carries the month. */}
+        <div className="w-9 shrink-0 text-center leading-none">
+          {date && (
+            <>
+              <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+                {date.toLocaleDateString(i18n.locale, { weekday: "short" })}
+              </p>
+              <p className="mt-1 text-base font-semibold tabular-nums">{date.getDate()}</p>
+            </>
+          )}
+        </div>
+
+        {/* The cover once there is one; the post type until then. */}
+        <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted/40 text-muted-foreground">
+          {thumb ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={thumb} alt="" className="size-full object-cover" />
+          ) : (
+            <TypeIcon className="size-4" aria-hidden />
+          )}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="line-clamp-2 text-sm font-medium leading-snug">{title}</p>
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-2xs text-muted-foreground">
+            <span>{typeLabel ? i18n._(typeLabel) : titleCase(postType)}</span>
+            {pillar && <><span aria-hidden>·</span><span>{titleCase(pillar)}</span></>}
+            {objective && (
+              <>
+                <span aria-hidden>·</span>
+                <span className="inline-flex items-center gap-1">
+                  <Target className="size-2.5" aria-hidden />
+                  <span className="sr-only"><Trans>Goal:</Trans></span>
+                  {titleCase(objective)}
+                </span>
+              </>
+            )}
+            {schedule?.time && (
+              <>
+                <span aria-hidden>·</span>
+                <span className="inline-flex items-center gap-1"><Clock className="size-2.5" aria-hidden />{schedule.time}</span>
+              </>
+            )}
+          </p>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          {/* Platforms only where there is room; the title outranks them. */}
+          {platformBadges.length > 0 && (
+            <span className="hidden items-center gap-1 @md:flex">{platformBadges}</span>
+          )}
+          {status === PostStatus.PENDING ? (
+            (postId || onRevise) && (
+              <span className="flex items-center gap-0.5 text-xs text-muted-foreground group-hover/row:text-foreground group-focus-visible/row:text-foreground">
+                <span className="opacity-0 transition-opacity group-hover/row:opacity-100 group-focus-visible/row:opacity-100">
+                  <Trans>Draft post</Trans>
+                </span>
+                <ChevronRight className="size-4" aria-hidden />
+              </span>
+            )
+          ) : (
+            <Badge variant={badge.badgeVariant}>{i18n._(badge.label)}</Badge>
+          )}
+        </div>
+      </div>
+    );
+  } else if (variant === "chip") {
     // Single-line month chip: status carried by the tinted background; the
     // leading type icon and trailing primary-platform glyph add format + reach.
     const primary = platforms[0] || null;
@@ -183,13 +264,14 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
 
   // Shared interaction: link to the post (status-aware) or the create flow.
   // stopPropagation keeps a Month chip's click from also firing the day cell.
+  // `group/row` is what the row variant's hover and focus styles key off.
   if (postId) {
     const href = status === "draft" ? `/content/posts/${postId}?revise=1` : `/content/posts/${postId}`;
     return (
       <Link
         href={href}
         title={variant === "chip" ? title : undefined}
-        className="block"
+        className="group/row block rounded-lg"
         onClick={(e) => e.stopPropagation()}
       >
         {inner}
@@ -202,7 +284,7 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
         type="button"
         onClick={(e) => { e.stopPropagation(); onRevise(); }}
         title={variant === "chip" ? title : undefined}
-        className="block w-full text-left"
+        className="group/row block w-full rounded-lg text-left"
       >
         {inner}
       </button>

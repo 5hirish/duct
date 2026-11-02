@@ -17,6 +17,7 @@ import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { HEADLINE_CLEAR, HEADLINE_NEEDS_YOU, buildDesk, headline } from "@/lib/desk";
 import { loadDesk, pinArtifact, pinConversation } from "@/lib/deskApi";
 import { getActiveProjectId, getProjectById, PROJECTS_CHANGED } from "@/lib/projects";
+import { pageHidden } from "@/lib/visibility";
 import { AUTONOMY_ASK } from "@/lib/projectsApi";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Reveal } from "@/components/ui/reveal";
@@ -146,7 +147,13 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
       if (document.visibilityState === "visible") refresh();
     };
     document.addEventListener("visibilitychange", onVisible);
-    const timer = working ? setInterval(refresh, DESK_POLL_MS) : null;
+    // The visibility listener above already refreshes on return, so a hidden
+    // tick has nothing to add.
+    const timer = working
+      ? setInterval(() => {
+          if (!pageHidden()) refresh();
+        }, DESK_POLL_MS)
+      : null;
     return () => {
       document.removeEventListener("visibilitychange", onVisible);
       if (timer) clearInterval(timer);

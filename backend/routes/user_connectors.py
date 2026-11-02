@@ -1,4 +1,10 @@
-"""Connector credential endpoints — GET/POST/DELETE /api/user/connectors."""
+"""Connector credential endpoints — /api/user/connectors.
+
+Two ways a credential gets here. A pasted key (Stripe, Meta, …) is posted
+whole. An OAuth connector's token never passes through a client: the page mints
+a connect link, the provider's callback parks the grant, and the same signed-in
+user claims it — GitHub's App and the four Google connectors alike.
+"""
 
 from __future__ import annotations
 
@@ -19,7 +25,7 @@ from models.connector import (
     ConnectorCredential,
 )
 from service.auth import get_current_user
-from service.connector_access import list_data_sources
+from service.connector_access import decrypt_row, list_data_sources
 from service.connector_scopes import (
     SCOPE_NA,
     missing_scopes,
@@ -27,12 +33,17 @@ from service.connector_scopes import (
     scope_rows,
     scope_status,
 )
-from service.auth_exchange import consume_github_grant, store_connect_link_code
-from service.connector_store import upsert_credential
+from service.auth_exchange import (
+    consume_connector_grant,
+    consume_github_grant,
+    store_connect_link_code,
+)
+from service.connector_store import merge_settings, store_oauth_grant, upsert_credential
 from service.connectors import (
     CAP_ACCOUNTS,
     ConnectorAuthContext,
     get_connector,
+    normalize_connector_id,
     registry,
     server_only_keys_in,
 )
@@ -107,7 +118,23 @@ class ConnectorOut(BaseModel):
     # opened, because the nouns only arrived with the lazy entity listing.
     entity_noun: str = "account"
     entity_noun_plural: str = "accounts"
+    # The connector's editable, non-secret keys as stored (`settings_keys`):
+    # the Google Ads manager (MCC) id. The page shows what the server will
+    # use rather than a copy it once typed into one tab.
+    settings: dict[str, str] = {}
 
+
+def _settings_of(c: ConnectorCredential, keys: frozenset[str]) -> dict[str, str]:
+    """The stored values of ``keys``, and nothing else from the blob.
+
+    Only for connectors that declare settings, so listing rows decrypts nothing
+    for the rest. A blob that cannot be read shows no settings rather than
+    failing the whole listing.
+    """
+    if not keys:
+        return {}
+    blob = decrypt_row(c)
+    return {k: str(blob[k]) for k in sorted(keys) if blob.get(k)}
 
 
 def _to_out(c: ConnectorCredential) -> ConnectorOut:
@@ -131,6 +158,7 @@ def _to_out(c: ConnectorCredential) -> ConnectorOut:
         residency=c.residency or RESIDENCY_SERVER,
         entity_noun=entry[0].entity_noun if entry else "account",
         entity_noun_plural=entry[0].entity_noun_plural if entry else "accounts",
+        settings=_settings_of(c, entry[0].settings_keys) if entry else {},
     )
 
 
@@ -266,7 +294,8 @@ def _check_residency(residency: str) -> str:
 
 
 def _refuse_server_only_keys(connector_type: str, credentials: dict) -> None:
-    """A grant Duct verified itself is never taken from a request (service/github/app.py)."""
+    """A grant Duct obtained itself is never taken from a request: a GitHub App
+    installation id (service/github/app.py) or a Google refresh token."""
     reserved = server_only_keys_in(connector_type, credentials)
     if reserved:
         raise HTTPException(
@@ -306,31 +335,142 @@ def save_connector(
     return _to_out(row)
 
 
+def _owned_row_or_404(session: Session, user: User, row_id: UUID) -> ConnectorCredential:
+    """The caller's own row, or 404 — never 403, so ids are not an oracle."""
+    row = session.execute(
+        select(ConnectorCredential).where(
+            ConnectorCredential.id == row_id,
+            ConnectorCredential.user_id == user.id,
+        )
+    ).scalars().first()
+    if row is None:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Connector not found")
+    return row
+
+
+class ConnectorSettingsIn(BaseModel):
+    # Only the connector's `settings_keys`; an empty value clears one.
+    settings: dict[str, str]
+
+
+@router.patch("/{row_id}")
+def update_connector_settings(
+    row_id: UUID,
+    body: ConnectorSettingsIn,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> ConnectorOut:
+    """Change a stored connection's non-secret settings without reconnecting.
+
+    The narrow write the Google Ads manager id needed once the token stopped
+    passing through the browser: a save used to post the token and the MCC id
+    together, replacing the blob whole. This merges the named keys and leaves
+    the token, which no request may write, where the connect flow put it.
+    """
+    row = _owned_row_or_404(session, user, row_id)
+    entry = registry().get(row.connector_type)
+    allowed = entry[0].settings_keys if entry else frozenset()
+    refused = sorted(set(body.settings) - allowed)
+    if refused:
+        raise HTTPException(
+            status_code=422,
+            detail=f"{', '.join(refused)} cannot be changed here. Reconnect on the Connections page.",
+        )
+    merge_settings(row, body.settings)
+    session.add(row)
+    session.commit()
+    session.refresh(row)
+    return _to_out(row)
+
+
 @router.delete("/{connector_id}", status_code=204)
 def delete_connector(
     connector_id: UUID,
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ) -> None:
-    row = session.execute(
-        select(ConnectorCredential).where(
-            ConnectorCredential.id == connector_id,
-            ConnectorCredential.user_id == user.id,
-        )
-    ).scalars().first()
-    if row is None:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Connector not found")
-    session.delete(row)
+    session.delete(_owned_row_or_404(session, user, connector_id))
     session.commit()
+
+
+# ---------------------------------------------------------------------------
+# OAuth connect: a link naming the user, then a claim by the same user
+# ---------------------------------------------------------------------------
+
+class ConnectLinkIn(BaseModel):
+    connector_type: str
+
+
+class ClaimIn(BaseModel):
+    code: str
+
+
+def _mint_connect_link(connector_type: str, user: User) -> dict:
+    """A five-minute, single-use code naming the signed-in user.
+
+    The authorize route is a browser navigation, which carries no bearer
+    token, so this is how it learns whose connect it is — the guest-link
+    pattern from sign-in, in its own namespace. Refused here for a connector
+    with no sign-in, so the page never sends anyone to a dead authorize URL.
+    """
+    cid = normalize_connector_id(connector_type)
+    if cid == GITHUB_CONNECTOR_ID:
+        if not gh_app.is_configured():
+            raise HTTPException(
+                status_code=501,
+                detail="The GitHub App is not configured on this server. Connect with a fine-grained token instead.",
+            )
+    else:
+        entry = registry().get(cid)
+        if entry is None or not entry[0].oauth_scope:
+            raise HTTPException(
+                status_code=422,
+                detail=f"{connector_type!r} does not connect with a sign-in. Add its keys on the Connections page.",
+            )
+    return {"link": store_connect_link_code(str(user.id))}
+
+
+@router.post("/connect-link")
+def start_connect(body: ConnectLinkIn, user: User = Depends(get_current_user)) -> dict:
+    """Mint the link ``/auth/connectors/{id}/oauth/authorize?link=`` requires."""
+    return _mint_connect_link(body.connector_type, user)
+
+
+@router.post("/claim")
+def claim_connector_grant(
+    body: ClaimIn,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> ConnectorOut:
+    """Store what Google granted, for the user who started the connect.
+
+    The only writer of a Google refresh token from the Connections page, and the
+    response carries the row, never the token. The code came back through a
+    redirect any browser could be sent to, so it is honoured for the user whose
+    link began the connect and for no one else; someone else's code answers
+    exactly as an unknown one does, and is spent either way.
+    """
+    payload = consume_connector_grant(body.code.strip())
+    if payload is None or payload.get("user_id") != str(user.id):
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND,
+            detail="That connection expired or was started from another account. Connect again.",
+        )
+    row = store_oauth_grant(
+        session,
+        user_id=user.id,
+        connector_type=str(payload.get("connector_type") or ""),
+        refresh_token=str(payload.get("refresh_token") or ""),
+        granted_scopes=str(payload.get("granted_scopes") or ""),
+    )
+    session.commit()
+    session.refresh(row)
+    return _to_out(row)
 
 
 # ---------------------------------------------------------------------------
 # GitHub App: the one-click connection (service/github/app.py has the flow)
 # ---------------------------------------------------------------------------
-
-class GitHubClaimIn(BaseModel):
-    code: str
-
 
 @router.get("/github/app")
 def github_app_status(user: User = Depends(get_current_user)) -> dict:
@@ -345,23 +485,13 @@ def github_app_status(user: User = Depends(get_current_user)) -> dict:
 
 @router.post("/github/connect")
 def start_github_connect(user: User = Depends(get_current_user)) -> dict:
-    """A five-minute, single-use code naming the signed-in user.
-
-    The authorize route is a browser navigation, which carries no bearer
-    token, so this is how it learns whose connect it is — the guest-link
-    pattern from sign-in, in its own namespace.
-    """
-    if not gh_app.is_configured():
-        raise HTTPException(
-            status_code=501,
-            detail="The GitHub App is not configured on this server. Connect with a fine-grained token instead.",
-        )
-    return {"link": store_connect_link_code(str(user.id))}
+    """``/connect-link`` for GitHub, kept for the clients that still call it."""
+    return _mint_connect_link(GITHUB_CONNECTOR_ID, user)
 
 
 @router.post("/github/claim")
 def claim_github_grant(
-    body: GitHubClaimIn,
+    body: ClaimIn,
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ) -> dict:

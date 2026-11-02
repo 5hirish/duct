@@ -5,10 +5,14 @@
 // extra credentials the platform needs on top of OAuth — Google Ads is the one
 // that does, since Duct's developer token is still pending Google approval.
 //
-// Connecting goes through `startConnectorOAuth`, not a plain link: in the
-// desktop shell the OAuth has to happen in the system browser, and the result
-// comes back through the shell's deep link rather than by this window
-// navigating anywhere. See `lib/connectorAuth.js`.
+// Connecting goes through `startConnectorOAuth`, not a plain link: it mints
+// the link naming this session's user first, and in the desktop shell the
+// OAuth has to happen in the system browser, with the result coming back
+// through the shell's deep link rather than by this window navigating
+// anywhere. See `lib/connectorAuth.js`.
+//
+// What the card shows is what the account has stored, nothing else: `rows`
+// come from the server, and the token never reaches this app (issue #456).
 
 import { useState } from "react";
 import { Trans, useLingui } from "@lingui/react/macro";
@@ -23,7 +27,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { STORAGE_NONE, STORAGE_SESSION, rowStorage } from "../../lib/credentialStorage";
+import { STORAGE_NONE, rowStorage } from "../../lib/credentialStorage";
 import { isLocalBackendActive } from "../../lib/localBackend";
 import { startConnectorOAuth } from "../../lib/connectorAuth";
 import { NATIVE_SOURCE } from "../../lib/connectorSource";
@@ -37,8 +41,9 @@ export default function OAuthConnectorCard({
   title,
   description,
   logo,
+  connectorType,      // "google_ads" | "ga4" | "gsc" | "gtm"
   connected,          // fully usable (OAuth done + any extra credentials saved)
-  oauthConnected,     // browser sign-in done — may still need extra credentials
+  oauthConnected,     // a stored row exists — may still need extra settings
   // One row per scope this connector asks for: {scope, label, why, access,
   // required, granted}. Joined server-side so the browser holds no catalog of
   // its own and cannot drift from what the backend actually requests.
@@ -47,10 +52,9 @@ export default function OAuthConnectorCard({
   tone,               // "on" | "partial" | "off"
   status,             // tile status line — phrased as the next action
   pillStatus,         // dialog pill — phrased as state; defaults to `status`
-  authorizeUrl,
   onDisconnect,
-  signedIn,
-  syncedToAccount,    // credentials stored server-side for this connector
+  // How Connect starts; the preview passes a stub so pressing it mints no link.
+  start = startConnectorOAuth,
   children,           // extra config rendered above the connect row
   // Per-project account mapping
   projectName,
@@ -61,13 +65,11 @@ export default function OAuthConnectorCard({
   mappingBusy,
 }) {
   const { t } = useLingui();
-  // A stored row is durable wherever the server happens to be; without one the
-  // token exists only in this tab, which is the case worth naming.
-  const storage = syncedToAccount
+  // Where the stored row lives: the cloud, or this machine for a self-hosted
+  // sidecar on its own database.
+  const storage = oauthConnected
     ? rowStorage(rows[0], { localSidecar: isLocalBackendActive() })
-    : oauthConnected
-      ? STORAGE_SESSION
-      : STORAGE_NONE;
+    : STORAGE_NONE;
 
   const [open, setOpen] = useState(false);
   const [confirmingDisconnect, setConfirmingDisconnect] = useState(false);
@@ -82,11 +84,13 @@ export default function OAuthConnectorCard({
     if (phase === "starting") return;
     setPhase("starting");
     try {
-      const mode = await startConnectorOAuth(authorizeUrl);
+      const mode = await start(connectorType);
       // "redirect" means this window is already navigating away; leave the
       // button busy rather than flashing it back to idle mid-unload.
       setPhase(mode === "browser" ? "browser" : "starting");
     } catch {
+      // The link could not be minted (a dead session signs out on its own;
+      // anything else leaves the button to try again).
       setPhase("");
     }
   }
@@ -159,40 +163,25 @@ export default function OAuthConnectorCard({
       >
         {children && <div className="conn-dialog-section">{children}</div>}
 
-        {(phase === "browser" || (oauthConnected && storage === STORAGE_SESSION)) && (
+        {/* The storage sentence lives in the glyph's tooltip; printing it
+            here as well put the same words on screen twice. A section is
+            rendered only when it has something in it: in a `gap` layout an
+            empty wrapper still takes a grid row and the gap either side. */}
+        {phase === "browser" && (
           <div className="conn-dialog-section">
-            {phase === "browser" && (
-              <p className="conn-hint">
-                <Trans>
-                  Finish in your browser — Google won’t sign you in inside an app
-                  window. This card updates on its own when you’re done.{" "}
-                  <button
-                    type="button"
-                    className="app-link underline underline-offset-2"
-                    onClick={connect}
-                  >
-                    Open it again
-                  </button>
-                </Trans>
-              </p>
-            )}
-            {/* The storage sentence lives in the glyph's tooltip; printing it
-                here as well put the same words on screen twice. Only the
-                session case keeps prose, because it is a call to action rather
-                than a description — and it is now rendered only in that case.
-                It used to be an always-present wrapper <div> holding a
-                conditional <p>, which in a `gap` layout is not free: the empty
-                div still took a grid row and 10px of the gap either side of a
-                box with nothing in it. */}
-            {oauthConnected && storage === STORAGE_SESSION && (
-              <p className="conn-hint">
-                {signedIn ? (
-                  <Trans>Reconnect to save it to your account.</Trans>
-                ) : (
-                  <Trans>Sign in to save it to your account.</Trans>
-                )}
-              </p>
-            )}
+            <p className="conn-hint">
+              <Trans>
+                Finish in your browser — Google won’t sign you in inside an app
+                window. This card updates on its own when you’re done.{" "}
+                <button
+                  type="button"
+                  className="app-link underline underline-offset-2"
+                  onClick={connect}
+                >
+                  Open it again
+                </button>
+              </Trans>
+            </p>
           </div>
         )}
 

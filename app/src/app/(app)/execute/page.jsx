@@ -487,8 +487,8 @@ function AutonomyPanel({ project, level, onChange, saving, error }) {
       <p className="app-subtle" style={{ margin: 0, fontSize: "var(--text-xs)" }}>
         <Trans>
           Destructive work waits here at every level — GTM publishes, archives, unlinks,
-          anything touching budget or status. Assisted and Auto share one narrow allowlist:
-          keywords, GA4 key events and audiences, GTM workspace edits.
+          anything touching budget or status, and new keywords. Assisted and Auto share one
+          narrow allowlist: negative keywords, GA4 key events and audiences, GTM workspace edits.
         </Trans>
       </p>
 
@@ -765,8 +765,8 @@ export default function ExecutePage() {
     try {
       if (action === "approve") await approveChangeSet(cs.id, changeIds);
       if (action === "reject") await rejectChangeSet(cs.id);
-      if (action === "apply") await applyChangeSet(cs.id, cs.connector_type);
-      if (action === "rollback") await rollbackChangeSet(cs.id, cs.connector_type);
+      if (action === "apply") await applyChangeSet(cs.id);
+      if (action === "rollback") await rollbackChangeSet(cs.id);
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));

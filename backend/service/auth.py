@@ -16,6 +16,7 @@ from agents.models import Provider
 from config import Configs, get_configs
 from db.session import get_session_optional
 from models.auth import User
+from service.analytics import identify_user
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +35,9 @@ _gemini_key_header = APIKeyHeader(name="X-Provider-Gemini", auto_error=False)
 # header rather than riding on X-Provider-OpenAI.
 _openrouter_key_header = APIKeyHeader(name="X-Provider-OpenRouter", auto_error=False)
 _xai_key_header = APIKeyHeader(name="X-Provider-XAI", auto_error=False)
+# A user's own OpenAI-compatible endpoint: address, key and chosen models packed
+# into one value (service/compatible.py), so it travels as a key does.
+_compatible_key_header = APIKeyHeader(name="X-Provider-Compatible", auto_error=False)
 # Rides beside X-Provider-OpenAI when that header carries a ChatGPT access
 # token rather than an API key. The desktop shell signs the user in to their
 # own ChatGPT plan and holds the refresh token in the OS keychain; what reaches
@@ -63,6 +67,7 @@ async def get_user_provider_keys(
     gemini_key: str | None = Security(_gemini_key_header),
     openrouter_key: str | None = Security(_openrouter_key_header),
     xai_key: str | None = Security(_xai_key_header),
+    compatible_key: str | None = Security(_compatible_key_header),
     openai_account_id: str | None = Security(_openai_account_header),
 ) -> dict[Provider, str]:
     """Per-request bring-your-own provider API keys from the X-Provider-* headers.
@@ -70,8 +75,9 @@ async def get_user_provider_keys(
     Returns only the providers the caller actually supplied (non-blank). The
     generate route prefers these over the server-side config keys, falling back
     to the backend's own key when a provider is absent. These values are secrets:
-    never log them and never persist them (see the Sentry header scrub in
-    server.py).
+    never log them and never persist them. Error tracking never sees them
+    either: PostHog's request context records method, path, user agent and
+    address, never a header (service/analytics.py).
 
     An OpenAI value that is a ChatGPT access token is packed together with its
     account id, so the pair travels the same road an API key does — through
@@ -81,13 +87,21 @@ async def get_user_provider_keys(
     from agents.core.codex import is_subscription_credential, pack_subscription_credential
 
     if openai_key and is_subscription_credential(openai_key):
-        openai_key = pack_subscription_credential(openai_key, openai_account_id or "")
+        if get_configs().chatgpt_auth_enabled:
+            openai_key = pack_subscription_credential(openai_key, openai_account_id or "")
+        else:
+            # The kill switch has to hold here, not only in the app: a shell
+            # signed in before the switch went off keeps sending its token,
+            # and hiding the card stops nobody. Dropped rather than refused,
+            # so a stored API key underneath still serves the run.
+            openai_key = None
     supplied = {
         Provider.ANTHROPIC: anthropic_key,
         Provider.OPENAI: openai_key,
         Provider.GOOGLE_GENAI: gemini_key,
         Provider.OPENROUTER: openrouter_key,
         Provider.XAI: xai_key,
+        Provider.OPENAI_COMPATIBLE: compatible_key,
     }
     return {
         provider: value.strip()
@@ -136,6 +150,7 @@ async def get_current_user(
     user = session.execute(select(User).where(User.email == email)).scalars().first()
     if user is None:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="User not found")
+    identify_user(user)
     return user
 
 
@@ -185,4 +200,5 @@ async def get_current_user_optional(
     user = session.execute(select(User).where(User.email == email)).scalars().first()
     if user is None:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="User not found")
+    identify_user(user)
     return user

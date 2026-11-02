@@ -33,6 +33,21 @@ class Provider(str, Enum):
     # shape at api.x.ai too, but the native package carries reasoning_effort
     # and xAI's server-side search as real fields rather than passthrough.
     XAI = "xai"
+    # Open models on an Ollama server the instance points at (OLLAMA_BASE_URL),
+    # through ``langchain-ollama`` → ``ChatOllama``: Ollama's own API rather
+    # than its OpenAI-compatible one, which would drop the reasoning text.
+    # No key — the server is the credential — and no catalogue: a model id is
+    # whatever tag the server holds, written ``ollama:<tag>`` (see
+    # ``OLLAMA_MODEL_PREFIX``).
+    OLLAMA = "ollama"
+    # Any server that speaks OpenAI's chat-completions API, at an address the
+    # user brings: vLLM, llama.cpp, LM Studio, SGLang, or a host of open-weight
+    # models (Together, Fireworks, Groq, DeepInfra). ChatOpenAI at that base
+    # URL. The credential is the address, an optional key and the models the
+    # user chose, packed into one string (``service/compatible.py``) so it
+    # travels and is stored exactly like a key. Model ids are
+    # ``compat:<the server's id>`` (``COMPATIBLE_MODEL_PREFIX``).
+    OPENAI_COMPATIBLE = "openai_compatible"
 
 
 class ModelName(str, Enum):
@@ -591,10 +606,18 @@ def _model_key(model: "ModelName | str | None") -> "ModelName | None":
         return None
 
 
+# A model on the instance's own Ollama server costs nothing per token: the
+# price is the hardware, which nobody bills by the call. Zero, not ``None``,
+# because zero is the true answer and a blank would read as "unknown".
+LOCAL_MODEL_PRICE = ModelPrice(0.0, 0.0)
+
+
 def price_for(model: "ModelName | str | None") -> ModelPrice | None:
     """The price list for a model id, by enum member or raw string; ``None``
     for a model the table does not know. A retired id is priced as itself,
     since a thread it served was billed at its own rate."""
+    if is_ollama_model(model):
+        return LOCAL_MODEL_PRICE
     key = _model_key(model)
     if key is not None:
         return PRICING.get(key)
@@ -668,6 +691,8 @@ def langchain_provider(provider: Provider) -> str:
     """
     if provider in GATEWAY_BASE_URL and provider not in NATIVE_GATEWAY_PROVIDERS:
         return Provider.OPENAI.value
+    if provider is Provider.OPENAI_COMPATIBLE:
+        return Provider.OPENAI.value
     return provider.value
 
 
@@ -700,7 +725,19 @@ def get_api_key_kwargs(
         return {"anthropic_api_key": api_key}
     if provider == Provider.XAI:
         return {"xai_api_key": api_key}
+    if provider == Provider.OLLAMA:
+        # The server is the credential; there is no key to send.
+        return {"base_url": base_url}
+    if provider == Provider.OPENAI_COMPATIBLE:
+        # ``api_key`` here is already the endpoint's own key, unpacked by
+        # ``resolve_chat_model``. The OpenAI SDK refuses to build a client with
+        # none, and a server that checks no key ignores whatever it is sent.
+        return {"api_key": api_key or NO_ENDPOINT_KEY, "base_url": base_url}
     return {}
+
+
+# What a key-less OpenAI-compatible server is sent in its key's place.
+NO_ENDPOINT_KEY = "no-key"
 
 
 def resolve_provider(name: str | None) -> Provider:
@@ -749,6 +786,46 @@ _PROVIDER_PREFIXES: tuple[tuple[str, Provider], ...] = (
 )
 
 
+# An Ollama model is namespaced because its tag has no shape of its own:
+# `qwen3:8b` matches no vendor prefix, and `hf.co/org/repo:Q4_K_M` contains a
+# "/" and would be read as an OpenRouter slug, spending the wrong credential.
+# A bare ":" is no test either — OpenRouter slugs end in `:free` and `:nitro`.
+OLLAMA_MODEL_PREFIX = "ollama:"
+
+
+def is_ollama_model(model: "ModelName | str | None") -> bool:
+    return str(getattr(model, "value", model) or "").strip().startswith(OLLAMA_MODEL_PREFIX)
+
+
+def ollama_model_id(tag: str) -> str:
+    """The id Duct stores for an Ollama tag."""
+    return f"{OLLAMA_MODEL_PREFIX}{tag.strip()}"
+
+
+def ollama_tag(model: "ModelName | str") -> str:
+    """The tag Ollama knows a model by: the id without Duct's namespace."""
+    return str(getattr(model, "value", model) or "").strip().removeprefix(OLLAMA_MODEL_PREFIX)
+
+
+# Namespaced for the same reason as Ollama's, more so: a vLLM model is named by
+# its Hugging Face repo (`Qwen/Qwen3-32B`), which reads as an OpenRouter slug.
+COMPATIBLE_MODEL_PREFIX = "compat:"
+
+
+def is_compatible_model(model: "ModelName | str | None") -> bool:
+    return str(getattr(model, "value", model) or "").strip().startswith(COMPATIBLE_MODEL_PREFIX)
+
+
+def compatible_model_id(served: str) -> str:
+    """The id Duct stores for a model an OpenAI-compatible server lists."""
+    return f"{COMPATIBLE_MODEL_PREFIX}{served.strip()}"
+
+
+def compatible_served_id(model: "ModelName | str") -> str:
+    """The id the server knows a model by: Duct's id without the namespace."""
+    return str(getattr(model, "value", model) or "").strip().removeprefix(COMPATIBLE_MODEL_PREFIX)
+
+
 def provider_of(model: "ModelName | str") -> Provider | None:
     """The provider that serves this model id, or None when unrecognisable.
 
@@ -760,6 +837,11 @@ def provider_of(model: "ModelName | str") -> Provider | None:
     name = str(getattr(model, "value", model) or "").strip().lower()
     if not name:
         return None
+    # Before the "/" test: an Ollama tag pulled from Hugging Face has one.
+    if name.startswith(OLLAMA_MODEL_PREFIX):
+        return Provider.OLLAMA
+    if name.startswith(COMPATIBLE_MODEL_PREFIX):
+        return Provider.OPENAI_COMPATIBLE
     if "/" in name:
         return Provider.OPENROUTER
     for prefix, provider in _PROVIDER_PREFIXES:

@@ -13,7 +13,7 @@ import {
 import { Trans, useLingui } from "@lingui/react/macro";
 import { cdnImage, mediaUrl } from "@/lib/contentApi";
 import { SCHEDULED_META, statusMeta } from "@/lib/contentStatus";
-import { PostType } from "@/lib/contentEnums";
+import { PostStatus, PostType } from "@/lib/contentEnums";
 import { metricsOf } from "@/lib/contentMetrics";
 import { PlatformGlyph, platformMeta } from "@/components/content/platformGlyphs";
 import { ClipStill } from "@/components/content/PostVideo";
@@ -40,6 +40,7 @@ export default function PostCard({ post }) {
   const m = metricsOf(post.perf);
   const hasMetrics = [m.views, m.likes, m.comments, m.shares, m.saves].some((v) => v != null);
   const status = post.status || "pending";
+  const failureReason = post.publish_error || "";
   const chip = chipFor(status);
   const formatLabel = post.format_name || post.format_slug || "";
   const published = post.posted_at;
@@ -116,6 +117,16 @@ export default function PostCard({ post }) {
         <h3 className="line-clamp-2 text-sm font-semibold leading-snug group-hover:text-primary">
           {post.topic || post.post_dir_slug || t`Untitled post`}
         </h3>
+
+        {/* The chip says Failed; this says why, in PostBridge's own words
+            (vendor text, so it is shown as sent, not translated). */}
+        {status === PostStatus.FAILED && (
+          <p className="line-clamp-3 text-xs text-destructive">
+            {failureReason
+              ? <Trans>PostBridge didn't publish it: {failureReason}</Trans>
+              : <Trans>PostBridge didn't publish it at its scheduled time.</Trans>}
+          </p>
+        )}
 
         <div className="flex flex-wrap items-center gap-1.5">
           {post.pillar && (

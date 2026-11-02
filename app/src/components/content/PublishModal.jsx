@@ -14,6 +14,7 @@ import {
   getPost,
   listLinkedAccounts,
   listSocialAccounts,
+  localPickerValue,
   publishPost,
 } from "@/lib/contentApi";
 import { PLATFORM_LABELS, Platform, PostType } from "@/lib/contentEnums";
@@ -35,8 +36,11 @@ import PublishReviewPanel from "./PublishReviewPanel";
  *   - onClose     : () => void
  *   - post        : { id, project_id, topic, caption, platforms[], post_type, replies[], channel }
  *   - onPublished : (updatedPost) => void  — fired after successful publish
+ *   - suggestedAt : ISO instant to open on as the schedule (the drafts queue's
+ *                   best slot); absent, the dialog opens on "Post now"
+ *   - suggestion  : a line saying why that time, shown while it is still the pick
  */
-export default function PublishModal({ open, onClose, post, onPublished }) {
+export default function PublishModal({ open, onClose, post, onPublished, suggestedAt, suggestion }) {
   const { t, i18n } = useLingui();
   const [accounts, setAccounts]     = useState([]);
   const [selected, setSelected]     = useState(new Set());
@@ -57,9 +61,15 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
     return out;
   }, [accounts]);
 
+  // The picker's own format, in the reader's zone like minDateTime below: the
+  // UTC slice this used to take showed a 9:00 Madrid slot as 07:00, and
+  // absoluteTime then sent 07:00 Madrid.
+  const suggestedValue = suggestedAt ? localPickerValue(suggestedAt) : "";
+
   useEffect(() => {
     if (!open || !post?.project_id) return;
     setStage("loading"); setError("");
+    if (suggestedValue) { setScheduledAt(suggestedValue); setTiktokDraft(false); }
     let cancelled = false;
     (async () => {
       try {
@@ -127,7 +137,7 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
   }
 
   const hasAccounts = accounts.length > 0;
-  const minDateTime = new Date(Date.now() + 5 * 60_000).toISOString().slice(0, 16);
+  const minDateTime = localPickerValue(new Date(Date.now() + 5 * 60_000));
 
   // A publish in flight must not be dismissable — hence the guards on
   // onOpenChange, outside-click and Escape rather than a bare onClose.
@@ -248,6 +258,9 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
                       className="rounded border border-input bg-background px-2 py-0.5 text-xs"
                     />
                   </label>
+                  {suggestion && scheduledAt && scheduledAt === suggestedValue && (
+                    <p className="pl-5 text-2xs text-muted-foreground">{suggestion}</p>
+                  )}
                   {offersTiktokDraft && (
                     <label className="flex items-center gap-2 text-xs">
                       <input

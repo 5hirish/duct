@@ -66,8 +66,14 @@ from agents.models import (
     ModelName,
     Provider,
     binds_thinking_to_conversation,
+    compatible_model_id,
+    compatible_served_id,
     get_api_key_kwargs,
+    is_compatible_model,
+    is_ollama_model,
     langchain_provider,
+    ollama_model_id,
+    ollama_tag,
     takes_temperature,
 )
 from agents.thinking import thinking_kwargs
@@ -173,10 +179,59 @@ def default_base_url(provider: Provider) -> str:
     install-wide setting, not a per-request one — and because agents/models.py
     stays a config-free leaf module. Direct vendors never consult it.
     """
+    from config import get_configs
+    if provider is Provider.OLLAMA:
+        return get_configs().ollama_base_url or ""
     if provider not in GATEWAY_BASE_URL:
         return ""
-    from config import get_configs
     return getattr(get_configs(), "openrouter_base_url", "") or ""
+
+
+def _ollama_context_length(model: ModelName | str) -> int:
+    """The context Duct asks Ollama to load for this model, and budgets in.
+
+    The configured length (``OLLAMA_CONTEXT_LENGTH``), held to the length the
+    model was trained on when the server says what that is.
+    """
+    from config import get_configs
+    from service.ollama import model_or_none
+
+    wanted = get_configs().ollama_context_length
+    info = model_or_none(ollama_tag(model))
+    trained = info.context_length if info is not None else 0
+    return min(wanted, trained) if trained else wanted
+
+
+def duct_window(model: ModelName | str) -> int:
+    """The window Duct budgets this model's threads in."""
+    if is_ollama_model(model):
+        return _ollama_context_length(model)
+    if is_compatible_model(model):
+        from service.compatible import window_for
+
+        return window_for(str(getattr(model, "value", model)))
+    return context_window_for(model)
+
+
+def _ollama_kwargs(model: ModelName | str, thinking: str) -> dict:
+    """What ChatOllama needs that no other provider's class takes.
+
+    ``num_ctx`` is the one that matters. Without it Ollama loads the model at
+    its own default, 4,096 tokens on a machine without a large GPU, and drops
+    what does not fit, Duct's system prompt and tool schemas included, without
+    an error: the run just goes wrong. ``reasoning`` keeps a thinking model's
+    reasoning out of its answer (it arrives as ``reasoning_content``, which the
+    stream already shows as thinking); sent only to a model the server says
+    thinks, because Ollama refuses it from one that cannot. A "quick" run asks
+    for none, the way the other providers' dials go to their lowest rung.
+    """
+    from service.ollama import model_or_none
+
+    kwargs: dict[str, Any] = {"num_ctx": _ollama_context_length(model)}
+    info = model_or_none(ollama_tag(model))
+    if info is not None and info.thinks:
+        kwargs["reasoning"] = thinking != "quick"
+    return kwargs
 
 
 def _thinking_kwargs_for(provider: Provider, model, thinking: str) -> dict:
@@ -288,6 +343,17 @@ def resolve_chat_model(
             **cache,
             **_retry_kwargs(provider),
         )
+    elif provider is Provider.OPENAI_COMPATIBLE:
+        return _compatible_chat(model, api_key, temperature)
+    elif provider is Provider.OLLAMA:
+        # Ollama knows the model by its tag, not by Duct's namespaced id.
+        llm = init_chat_model(
+            model=ollama_tag(model),
+            model_provider=langchain_provider(provider),
+            temperature=temperature,
+            **_ollama_kwargs(model, thinking),
+            **get_api_key_kwargs(provider, api_key, base_url=base_url or default_base_url(provider)),
+        )
     else:
         llm = init_chat_model(
             model=getattr(model, "value", model),
@@ -299,6 +365,45 @@ def resolve_chat_model(
             **get_api_key_kwargs(provider, api_key, base_url=base_url or default_base_url(provider)),
         )
     return _within_ducts_window(llm, model)
+
+
+# Marks a chat model as the user's own endpoint for readers that hold only the
+# model object (``structured_output``): it is a ChatOpenAI like OpenAI's own.
+DUCT_PROVIDER_METADATA = "duct_provider"
+
+
+def _compatible_chat(model: ModelName | str, credential: str, temperature: float | None) -> Any:
+    """ChatOpenAI at the user's own endpoint, on one of the models they chose.
+
+    The credential carries the address, the key and the chosen models with
+    their context lengths, so nothing here asks the server anything. A model
+    id that is not one of theirs (a run that resolved here with no tier
+    naming this provider) takes the first they chose. No thinking dial and no
+    cache key: neither is part of the shape every server accepts, and an
+    unknown field is a 400 on some of them. Off a private network every
+    request is held to a public address (``guarded_http_clients``).
+    """
+    from service import compatible
+
+    endpoint = compatible.unpack(credential)
+    if endpoint is None:
+        raise ValueError("That isn't an OpenAI-compatible endpoint Duct can read. Connect it again in Settings.")
+    served = compatible_served_id(model) if is_compatible_model(model) else endpoint.models[0].id
+    known = endpoint.model(served)
+    window = known.window if known else compatible.DEFAULT_CONTEXT_LENGTH
+    model_id = compatible_model_id(served)
+    compatible.remember_window(model_id, window)
+    llm = init_chat_model(
+        model=served,
+        model_provider=langchain_provider(Provider.OPENAI_COMPATIBLE),
+        temperature=temperature,
+        stream_usage=True,
+        metadata={DUCT_PROVIDER_METADATA: Provider.OPENAI_COMPATIBLE.value},
+        **_retry_kwargs(Provider.OPENAI_COMPATIBLE),
+        **get_api_key_kwargs(Provider.OPENAI_COMPATIBLE, endpoint.api_key, base_url=endpoint.base_url),
+        **compatible.guarded_http_clients(private_ok=compatible.private_allowed()),
+    )
+    return _within_ducts_window(llm, model_id)
 
 
 def _within_ducts_window(llm: Any, model: ModelName | str) -> Any:
@@ -315,7 +420,7 @@ def _within_ducts_window(llm: Any, model: ModelName | str) -> Any:
     fraction of the budget. Rulebook gap 3. The rest of the profile is kept;
     the integrations read other keys from it (output limits, modalities).
     """
-    window = context_window_for(model)
+    window = duct_window(model)
     profile = dict(getattr(llm, "profile", None) or {})
     if profile.get("max_input_tokens") != window:
         profile["max_input_tokens"] = window
@@ -338,7 +443,8 @@ def structured_output(llm: Any, schema: type[BaseModel], **kwargs: Any) -> Any:
     ``json_schema`` is Claude's own structured output, constrained decoding on
     every Claude in the catalogue.
 
-    Everyone else keeps their default. OpenAI (the ChatGPT plan included)
+    A user's own OpenAI-compatible endpoint asks for a JSON schema and falls
+    back to a tool call (below). Everyone else keeps their default. OpenAI (the ChatGPT plan included)
     and Gemini already default to ``json_schema``. OpenRouter and xAI default
     to tool calling, and OpenRouter fronts open-weight models whose hosts do
     not all accept a JSON-schema response format — moving them is a change
@@ -346,6 +452,16 @@ def structured_output(llm: Any, schema: type[BaseModel], **kwargs: Any) -> Any:
     """
     if isinstance(llm, ChatAnthropic):
         kwargs.setdefault("method", "json_schema")
+    elif (getattr(llm, "metadata", None) or {}).get(DUCT_PROVIDER_METADATA) == Provider.OPENAI_COMPATIBLE.value:
+        # Constrained decoding first: vLLM, llama.cpp, LM Studio, Ollama and
+        # the open-weight hosts implement a JSON-schema response format, and a
+        # small model held to the schema answers where it would reply in words
+        # to a forced tool call (measured on qwen3 0.6B: 3/3 against 0/3). A
+        # server that refuses the format, or a reply that does not parse, falls
+        # back to a tool call, the one thing connecting the endpoint proved.
+        if "method" not in kwargs:
+            primary = llm.with_structured_output(schema, method="json_schema", **kwargs)
+            return primary.with_fallbacks([llm.with_structured_output(schema, method="function_calling", **kwargs)])
     return llm.with_structured_output(schema, **kwargs)
 
 
@@ -506,6 +622,22 @@ def _states(delta: Any) -> list[dict]:
     return [d for d in (delta if isinstance(delta, list) else [delta]) if isinstance(d, dict)]
 
 
+def _served_model_id(name: Any, configured: Any) -> str:
+    """The id a call is priced and windowed by: the model that answered when
+    the response names one, else the thread's.
+
+    Ollama names its bare tag, which would read as a model Duct does not know
+    (no price, a 200k window it never had); it gets the namespace back.
+    """
+    if not name:
+        return str(getattr(configured, "value", configured) or "")
+    if is_ollama_model(configured) and not is_ollama_model(name):
+        return ollama_model_id(str(name))
+    if is_compatible_model(configured) and not is_compatible_model(name):
+        return compatible_model_id(str(name))
+    return str(name)
+
+
 class UsageTracker:
     """Turn the per-chunk ``usage_metadata`` of a stream into one TOKEN_USAGE
     per model call.
@@ -541,8 +673,11 @@ class UsageTracker:
             self._pending["cache_read_tokens"] += int(details.get("cache_read") or 0)
             self._pending["cache_creation_tokens"] += int(details.get("cache_creation") or 0)
         if response.get("model_name") and self._pending is not None:
-            self._pending["model"] = str(response["model_name"])
-        if self._pending is not None and (response.get("stop_reason") or response.get("finish_reason")):
+            self._pending["model"] = _served_model_id(response["model_name"], self.model)
+        # Ollama names the end of a call `done_reason`.
+        if self._pending is not None and (
+            response.get("stop_reason") or response.get("finish_reason") or response.get("done_reason")
+        ):
             return self.flush()
         return None
 
@@ -556,7 +691,7 @@ class UsageTracker:
             **usage,
             "model": str(model),
             "total_tokens": usage["input_tokens"] + usage["output_tokens"],
-            "context_window": context_window_for(model),
+            "context_window": duct_window(model),
             # None for a model the price table does not know: the tooltip then
             # shows tokens without a dollar figure rather than a made-up one.
             "cost_usd": cost_usd(
@@ -603,7 +738,7 @@ def usage_from_messages(messages: list, model: Any) -> dict:
         details = usage.get("input_token_details") or {}
         # The message may name the model that actually answered (a fallback);
         # price by that when it does, else by the thread's configured model.
-        served = (getattr(message, "response_metadata", None) or {}).get("model_name") or model
+        served = _served_model_id((getattr(message, "response_metadata", None) or {}).get("model_name"), model)
         last = {
             "input_tokens": int(usage.get("input_tokens") or 0),
             "output_tokens": int(usage.get("output_tokens") or 0),
@@ -625,7 +760,7 @@ def usage_from_messages(messages: list, model: Any) -> dict:
     return {
         "last": last,
         "total": total,
-        "context_window": context_window_for(model),
+        "context_window": duct_window(model),
         "model": str(getattr(model, "value", model) or ""),
     }
 
@@ -1151,6 +1286,7 @@ async def stream_agent(
     provider: Provider | None = None,
     model: ModelName | str = "",
     conversation_id: str = "",
+    user_id: str = "",
     on_todo: Callable[[list], Awaitable[None]] | None = None,
     on_tool_use: Callable[[str, Any, str], Awaitable[None]] | None = None,
     on_tool_result: Callable[[str, Any, str, bool], Awaitable[None]] | None = None,
@@ -1222,6 +1358,17 @@ async def stream_agent(
         if on_tool_result is not None:
             await on_tool_result(name, result, tool_use_id, is_error)
 
+    turn_config = dict(config or {})
+    if conversation_id:
+        from service.analytics import langchain_callback
+
+        callback = langchain_callback(
+            session_id=conversation_id,
+            distinct_id=user_id,
+        )
+        if callback is not None:
+            turn_config["callbacks"] = [*(turn_config.get("callbacks") or []), callback]
+
     with model_span(
         provider=(provider or Provider.ANTHROPIC).value,
         model=getattr(model, "value", model) or "unknown",
@@ -1233,7 +1380,7 @@ async def stream_agent(
         foreign_interrupts = 0
         async for mode, chunk in agent.astream(
             _turn_input(prompt),
-            config or {},
+            turn_config,
             stream_mode=["messages", "updates", "custom"],
         ):
             if mode == "custom":

@@ -5,25 +5,18 @@
 // objects rendered by app components; primitives (markdown/html/csv/mermaid)
 // get their standard treatments. Anything unknown falls back to raw text.
 
-import { useEffect, useMemo, useState } from "react";
+import { lazy, memo, Suspense, useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { Trans, useLingui } from "@lingui/react/macro";
-import AuditReportV1 from "@/components/audit/AuditReportV1";
-import { SkeletonDocument } from "@/components/ui/skeleton";
+import { Skeleton, SkeletonDocument } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+
+// Both pull in Recharts, and this module is imported for `MarkdownView` and
+// `svgDataUrl` by screens that never draw a chart or a report. Loaded when an
+// artifact of that type is actually on screen.
+const AuditReportV1 = lazy(() => import("@/components/audit/AuditReportV1"));
+const ChartSpecView = lazy(() => import("./ChartSpecView"));
 
 export const CONTENT_TYPES = {
   REPORT_JSON: "application/vnd.duct.report+json",
@@ -56,15 +49,6 @@ export function SvgView({ source, title = "" }) {
   );
 }
 
-// The five chart series the theme defines, which are contrast-checked against
-// both canvases (scripts/check-contrast.mjs) and move when the theme does; the
-// six fixed hexes here did neither, and three of them were the status hues at
-// values no status token uses.
-const CHART_COLORS = [
-  "var(--chart-1)", "var(--chart-3)", "var(--chart-5)",
-  "var(--chart-2)", "var(--chart-4)", "var(--primary)",
-];
-
 function safeJson(text) {
   try {
     return JSON.parse(text || "");
@@ -73,10 +57,13 @@ function safeJson(text) {
   }
 }
 
+const MARKDOWN_PLUGINS = [remarkGfm];
+
 /** Markdown, typeset. `className` carries the measure and the padding, because
  *  the same renderer draws a thumbnail, a pane-width document and an inline
- *  reply, and only the caller knows which. */
-export function MarkdownView({ source, className = "max-w-3xl px-1 py-2" }) {
+ *  reply, and only the caller knows which. Memoised: a brief open beside a
+ *  streaming chat was re-parsed in full on every token of the chat. */
+export const MarkdownView = memo(function MarkdownView({ source, className = "max-w-3xl px-1 py-2" }) {
   return (
     // The plugin wraps inline code in literal backticks by default, which
     // reads as unrendered markdown next to a real code style.
@@ -86,10 +73,10 @@ export function MarkdownView({ source, className = "max-w-3xl px-1 py-2" }) {
         className
       )}
     >
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>{source}</ReactMarkdown>
+      <ReactMarkdown remarkPlugins={MARKDOWN_PLUGINS}>{source}</ReactMarkdown>
     </div>
   );
-}
+});
 
 export function MermaidView({ source }) {
   const { t } = useLingui();
@@ -203,26 +190,11 @@ export function ChartJsonView({ source }) {
   if (!spec?.data?.length || !spec?.x || !spec?.series?.length) {
     return <pre className="text-xs p-3 overflow-x-auto">{source}</pre>;
   }
-  const ChartComp = spec.type === "line" ? LineChart : BarChart;
   return (
     <div style={{ width: "100%", height: 360 }}>
-      {spec.title && <p className="text-sm font-medium mb-1 px-1">{spec.title}</p>}
-      <ResponsiveContainer>
-        <ChartComp data={spec.data} margin={{ top: 8, right: 16, bottom: 8, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-          <XAxis dataKey={spec.x} fontSize={12} />
-          <YAxis fontSize={12} />
-          <Tooltip />
-          <Legend />
-          {spec.series.map((s, i) =>
-            spec.type === "line" ? (
-              <Line key={s.key} dataKey={s.key} name={s.label || s.key} stroke={CHART_COLORS[i % CHART_COLORS.length]} dot={false} />
-            ) : (
-              <Bar key={s.key} dataKey={s.key} name={s.label || s.key} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-            )
-          )}
-        </ChartComp>
-      </ResponsiveContainer>
+      <Suspense fallback={<Skeleton className="h-full w-full rounded-lg" />}>
+        <ChartSpecView spec={spec} />
+      </Suspense>
     </div>
   );
 }
@@ -289,7 +261,11 @@ export default function ArtifactRenderer({ artifact, content }) {
 
   // Structured report (vendor type; legacy rows used application/json)
   if (structured && (ct === CONTENT_TYPES.REPORT_JSON || ct === "application/json" || artifact.kind === "report")) {
-    return <AuditReportV1 data={structured} />;
+    return (
+      <Suspense fallback={<SkeletonDocument className="p-2" label={t`Loading the artifact`} />}>
+        <AuditReportV1 data={structured} />
+      </Suspense>
+    );
   }
   if (ct === CONTENT_TYPES.HTML) {
     if (content == null) return <SkeletonDocument className="p-2" label={t`Loading the artifact`} />;

@@ -21,7 +21,7 @@ Iteration field `PVTIF_lAHOAGxEyM4Bi8OtzhhydDk`. Status `PVTSSF_lAHOAGxEyM4Bi8Ot
 
 ```
 # reads
-gh api graphql -f query='{ user(login:"5hirish"){ projectV2(number:10){ field(name:"Iteration"){ ... on ProjectV2IterationField { configuration { iterations { id title startDate duration } completedIterations { id title startDate duration } } } } statusUpdates(last:5){ nodes { createdAt body } } } } }'
+gh api graphql -f query='{ user(login:"5hirish"){ projectV2(number:10){ field(name:"Iteration"){ ... on ProjectV2IterationField { configuration { iterations { id title startDate duration } completedIterations { id title startDate duration } } } } statusUpdates(first:5){ nodes { createdAt body } } } } }'
 gh project item-list 10 --owner 5hirish --limit 300 --format json
 gh api repos/5hirish/duct/milestones?state=all
 gh pr list --repo 5hirish/duct --state open --json number,title,updatedAt,closingIssuesReferences
@@ -43,7 +43,7 @@ gh api graphql -f query='mutation($p:ID!,$b:String!,$s:ProjectV2StatusUpdateStat
 
 ## 1. Read the state
 
-Run the reads above. `iterations[0]` is the current sprint and `iterations[1]` the next one; the sprint ends at `startDate + duration` days. The date for the merged-PR search is the latest status update's `createdAt`.
+Run the reads above. `iterations[0]` is the current sprint and `iterations[1]` the next one; the sprint ends at `startDate + duration` days. The date for the merged-PR search is the latest status update's `createdAt`. `statusUpdates` comes newest first, so `first:5` is the latest five: on 28 Oct 2026 the old `last:5` returned the oldest five and hid the update that had already planned Iteration 4, which would have re-planned the sprint and doubled its rollover comments.
 
 ## 2. Choose the mode
 

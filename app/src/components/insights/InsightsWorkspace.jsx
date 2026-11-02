@@ -53,6 +53,9 @@ const AGENT_TYPE = "insights";
 // `openedGroup` for the brief being written in this session, which has no
 // stored group id until its first version lands.
 const LIVE_GROUP = "live";
+// Ten repaints a second reads as live typing and keeps a long brief's
+// re-parse off the per-chunk path.
+const BRIEF_REPAINT_MS = 100;
 
 export default function InsightsWorkspace({
   projectId,
@@ -89,6 +92,10 @@ export default function InsightsWorkspace({
   // Streamed brief text also lives in a ref: the event callback would
   // otherwise close over a stale value on every chunk.
   const briefRef = useRef("");
+  // At most one repaint per BRIEF_REPAINT_MS while it streams: each repaint
+  // re-parses the whole brief so far, and once per chunk made a long brief
+  // quadratic.
+  const briefTimer = useRef(null);
   // The posture this conversation runs at. Seeded from the stored project,
   // corrected by PIPELINE_STARTED (the backend may step it down for the
   // model), and changed from the composer chip — which writes the project
@@ -117,10 +124,17 @@ export default function InsightsWorkspace({
         // The brief, arriving. Show it being written rather than waiting for
         // the closing tag — a long brief is a long silence otherwise.
         briefRef.current += event.text || "";
-        setWriting(briefRef.current);
+        if (!briefTimer.current) {
+          briefTimer.current = setTimeout(() => {
+            briefTimer.current = null;
+            setWriting(briefRef.current);
+          }, BRIEF_REPAINT_MS);
+        }
         setPane("brief");
         break;
       case InsightsEvent.ARTIFACT_VERSION: {
+        clearTimeout(briefTimer.current);
+        briefTimer.current = null;
         briefRef.current = "";
         setWriting("");
         const payload = event.payload || {};
@@ -276,6 +290,8 @@ export default function InsightsWorkspace({
   }
 
   function handleRetry() {
+    clearTimeout(briefTimer.current);
+    briefTimer.current = null;
     setWriting("");
     briefRef.current = "";
     agent.retry();

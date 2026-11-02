@@ -87,14 +87,14 @@ function resumeFields({ conversationId, resume, startFresh, artifactType, artifa
  * /api/agents/tiktok_studio/sessions. The hook owns opening the stream,
  * reconnecting and closing; this only knows the two modes' fields.
  *
- *   plan_month: { projectId, startDate? }
+ *   plan_month: { projectId, startDate?, days? }
  *   draft_post: { projectId, planId?, dayIndex?, topic?, pillar?, channel? }
  * plus the resume fields (conversationId, resume, startFresh, artifactType,
  * artifactId) in either mode.
  */
 export function contentSessionBody(mode, context = {}) {
   const {
-    projectId, startDate, planId, dayIndex, topic, pillar, channel, cloneUrl,
+    projectId, startDate, days, planId, dayIndex, topic, pillar, channel, cloneUrl,
     conversationId, resume, startFresh, artifactType, artifactId,
   } = context;
   const resumeBody = resumeFields({ conversationId, resume, startFresh, artifactType, artifactId });
@@ -103,6 +103,7 @@ export function contentSessionBody(mode, context = {}) {
       mode,
       project_id: projectId,
       ...(startDate ? { start_date: startDate } : {}),
+      ...(days ? { days } : {}),
       ...resumeBody,
     };
   }
@@ -290,12 +291,75 @@ export async function markPostPosted(postId, { publishedUrl } = {}) {
 }
 
 /**
- * POST /api/content/posts/{id}/publish — uploads each linked image to
+ * The next good time for a post on `channel`, as `{ at, reason, posts, hour }`:
+ * `reason` is SlotReason.HISTORY once the account's own posts with numbers
+ * decide it, else SlotReason.DEFAULT. `tz` is the reader's zone, so the hour
+ * is theirs.
+ */
+export async function getBestSlot(projectId, channel, tz = browserTimeZone()) {
+  const params = new URLSearchParams({ project_id: projectId, channel, tz });
+  const res = await fetch(
+    `${BASE}/api/content/best-slot?${params.toString()}`,
+    { headers: backendAuthedHeaders() },
+  );
+  return jsonOrThrow(res);
+}
+
+/** No to a draft, with the SkipReason that shapes the next one. */
+export async function skipPost(postId, reason) {
+  const res = await fetch(
+    `${BASE}/api/content/posts/${encodeURIComponent(postId)}/skip`,
+    {
+      method: "POST",
+      headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ reason }),
+    },
+  );
+  const out = await jsonOrThrow(res);
+  invalidatePosts();
+  return out;
+}
+
+function browserTimeZone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+  } catch {
+    // An engine without Intl zones: the server reads "" as UTC.
+    return "";
+  }
+}
+
+/**
+ * A schedule time as an absolute instant. The picker's value
+ * ("2026-10-02T09:00") has no zone, and the server read it as UTC, so a
+ * post set for 9:00 in Madrid went out at 11:00. JavaScript reads that
+ * shape as the reader's own local time, which is what they picked.
+ */
+export function absoluteTime(value) {
+  if (!value) return value;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? value : d.toISOString();
+}
+
+/**
+ * A moment as the `datetime-local` picker's value, in the reader's zone:
+ * "2026-10-02T09:00". `toISOString` would give UTC, and the picker would show
+ * a time hours off from the one meant.
+ */
+export function localPickerValue(date) {
+  const d = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/**
+ * POST /api/content/posts/{id}/publish — uploads the post's media to
  * PostBridge then creates the post.
  *
  * @param postId          Content post UUID
  * @param socialAccountIds Numeric PostBridge social account IDs
- * @param scheduledAt     ISO 8601 string (optional; omit to post now)
+ * @param scheduledAt     the picker's local time (optional; omit to post now)
  * @param tiktokDraft     true → land as a TikTok draft, false → schedule/post
  */
 export async function publishPost(postId, { socialAccountIds, scheduledAt, tiktokDraft = false } = {}) {
@@ -306,7 +370,7 @@ export async function publishPost(postId, { socialAccountIds, scheduledAt, tikto
       headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({
         social_account_ids: socialAccountIds,
-        ...(scheduledAt ? { scheduled_at: scheduledAt } : {}),
+        ...(scheduledAt ? { scheduled_at: absoluteTime(scheduledAt) } : {}),
         tiktok_draft: tiktokDraft,
       }),
     },
@@ -369,6 +433,13 @@ export async function listSocialAccounts(projectId, platform) {
  * connects one. Status is { connected, own_key, is_owner }.
  */
 export const VENDOR = Object.freeze({ POSTBRIDGE: "post-bridge", APIFY: "apify" });
+
+// Where a user gets the key for each vendor. Every "connect" form links here,
+// and the Plan tab's checklist offers both, so the address is said once.
+export const VENDOR_HOME = Object.freeze({
+  [VENDOR.POSTBRIDGE]: "https://app.post-bridge.com",
+  [VENDOR.APIFY]: "https://console.apify.com",
+});
 
 export async function getVendorKeyStatus(vendor, projectId) {
   const url = new URL(`${BASE}/api/content/vendor-keys/${vendor}`);

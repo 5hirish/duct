@@ -28,6 +28,7 @@ import CloneSourceNote from "./CloneSourceNote";
 import PublishReviewPanel from "./PublishReviewPanel";
 import { SanityCheckId, isScored } from "@/lib/contentReview";
 import { titleCase } from "@/lib/format";
+import { isComposing } from "@/lib/shortcuts";
 import { Spinner } from "@/components/ui/spinner";
 
 // Message descriptors (module-level): rendered with `i18n._`.
@@ -348,6 +349,7 @@ function HashtagInput({ value, onChange }) {
     setDraft("");
   }
   function onKey(e) {
+    if (isComposing(e)) return;
     if (e.key === "Enter" || e.key === ",") { e.preventDefault(); add(); }
     else if (e.key === "Backspace" && !draft && value.length) onChange(value.slice(0, -1));
   }

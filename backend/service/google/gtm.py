@@ -21,7 +21,10 @@ from service.connectors import (
     entity_facts,
     register_connector,
 )
-from service.google.constants import GTM_CONNECTOR_ID
+from service.google.constants import (
+    GOOGLE_SERVER_ONLY_KEYS,
+    GTM_CONNECTOR_ID,
+)
 
 _TOKEN_URI = "https://oauth2.googleapis.com/token"
 GTM_SCOPES = (
@@ -143,6 +146,7 @@ GTM_META = ConnectorMeta(
     capabilities=frozenset({CAP_ACCOUNTS}),
     entity_noun="container",
     entity_noun_plural="containers",
+    server_only_keys=GOOGLE_SERVER_ONLY_KEYS,
 )
 
 register_connector(GTM_META, GTMConnector())

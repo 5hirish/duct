@@ -11,10 +11,13 @@
         "create": false,
         "title": "Duct (dev)",
         "url": "http://localhost:3003",
+        "visible": false,
         "width": 1200,
         "height": 800,
         "minWidth": 900,
-        "minHeight": 600
+        "minHeight": 600,
+        "center": true,
+        "preventOverflow": true
       }
     ]
   }
