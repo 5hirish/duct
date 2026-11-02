@@ -302,6 +302,34 @@ def test_a_draft_never_replaces_the_person_or_their_site(env):
     assert project.company_name == "Acme Labs"
 
 
+def test_a_draft_sets_up_content_studio_and_get_project_reads_it_back(env):
+    ana = env.user("ana@acme.example")
+    project = env.project(ana, content_brand={"writing_samples": ["A post I wrote."]})
+    token = env.token(ana)
+    out = env.call(token, "draft_project", {
+        "project_id": str(project.id),
+        "fields": {
+            "tone": "dry, direct", "do_not_say": "revolutionary, game-changing",
+            "features": [{"name": "Scheduled briefs", "description": "A Monday email."},
+                         {"name": "scheduled  BRIEFS"}],
+            "content_pillars": ["Build in public", "Marketing for developers"],
+        },
+        "guessed": ["tone"],
+    })["structuredContent"]
+    assert sorted(out["changed"]) == ["content_pillars", "do_not_say", "features", "tone"]
+    env.session.refresh(project)
+    assert project.content_brand["writing_samples"] == ["A post I wrote."]
+    assert project.content_brand["features"] == [
+        {"id": "scheduled_briefs", "name": "Scheduled briefs", "description": "A Monday email."},
+    ], "one feature per id"
+    assert project.provenance["tone"] == PROVENANCE_INFERRED
+    assert project.provenance["do_not_say"] == PROVENANCE_DOCUMENT
+
+    fields = env.call(token, "get_project", {"project_id": str(project.id)})["structuredContent"]["fields"]
+    assert fields["tone"] == {"value": "dry, direct", "source": "a guess"}
+    assert fields["value_prop"] == {"value": None, "source": None}
+
+
 def test_running_the_same_draft_again_changes_nothing(env):
     ana = env.user("ana@acme.example")
     token = env.token(ana)

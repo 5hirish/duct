@@ -80,6 +80,7 @@ from agents.content.channels import (
     primary_channel,
     resolve as resolve_channel,
 )
+from agents.content.pillars import pillars_of
 from agents.content.plan_period import PlanPeriod, default_period, keep_drafted_days, plan_end
 from agents.content.publishing import (
     SLIDE_RENDER,
@@ -1265,7 +1266,9 @@ def build_content_tools_lc(
                     "industry":              proj.industry,
                     "audience":              proj.audience,
                     "content_brand":         proj.content_brand,
-                    "content_pillars":       proj.content_pillars,
+                    # The Studio's own pillars, or the profile's while it has
+                    # none (agents/content/pillars.py).
+                    "content_pillars":       {"items": pillars_of(proj)},
                     "content_visual_assets": proj.content_visual_assets,
                     # Where the brand already posts, as the platform values a
                     # plan day's `platforms` takes.

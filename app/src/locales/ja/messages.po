@@ -10175,8 +10175,12 @@ msgid "Your accounts"
 msgstr "あなたのアカウント"
 
 #: src/components/settings/AgentAccess.jsx
-msgid "Your agent can read your projects and draft their profile. It can't approve changes, connect tools, or replace anything you typed or confirmed."
-msgstr "あなたのエージェントはプロジェクトを読み込み、そのプロフィールを下書きできます。変更を承認したり、ツールを接続したり、入力または確認した内容を置き換えたりすることはできません。"
+msgid "Your agent can read your projects and draft their profile and Content Studio voice. It can't approve changes, connect tools, or replace anything you typed or confirmed."
+msgstr "あなたのエージェントはプロジェクトを読み込み、そのプロフィールと Content Studio のトーンを下書きできます。変更を承認したり、ツールを接続したり、入力または確認した内容を置き換えたりすることはできません。"
+
+#: src/components/settings/AgentAccess.jsx
+#~ msgid "Your agent can read your projects and draft their profile. It can't approve changes, connect tools, or replace anything you typed or confirmed."
+#~ msgstr "あなたのエージェントはプロジェクトを読み込み、そのプロフィールを下書きできます。変更を承認したり、ツールを接続したり、入力または確認した内容を置き換えたりすることはできません。"
 
 #: src/components/workspace/QuestionsCard.jsx
 msgid "Your answer"

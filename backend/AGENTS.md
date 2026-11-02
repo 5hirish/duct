@@ -542,7 +542,12 @@ Postgres `DATABASE_URL` names.
   `get_project`, `draft_project`. Writes go through
   `service/project_writes.apply_draft`, labelled `document` (or `inferred`
   for what the agent guessed), so they never replace the person or their
-  site; each one leaves an `activity_logs` row (`category="project"`). No
+  site; each one leaves an `activity_logs` row (`category="project"`).
+  `draft_project` fills Content Studio's voice too (`CONTENT_FIELDS` in
+  `content_brand`: tone, value prop, goal, always/never say, features) under
+  the same rules, which is why the Brand tab's save calls `claim_edits`: a
+  field the person changed there becomes theirs, one they only carried along
+  stays open to the next draft. No
   tool calls a model on Duct's side, and none approves, applies, connects
   or touches credentials.
 - `agents/engines.resolve_job_run` — provider and model over the keys *this
@@ -691,6 +696,10 @@ agents/
     │                     post; once its time has passed, settle, which the post
     │                     listing runs (throttled per project) so it reads posted or
     │                     failed, the reason on an activity_logs row
+    ├── pillars.py      — the pillars every reader plans from (`pillars_of`): the Studio's
+    │                     own, or the profile's names (the audit crawl, an MCP draft) until
+    │                     the Brand tab holds some. The agent used to read only the first,
+    │                     so a project set up from Claude Code planned with no pillars
     ├── text_prompts.py — X and LinkedIn draft on their own base prompt; nothing in the
     │                     visual playbook applies to a post that is words
     ├── voice_rules.py  — the project's own voice (#271): writing samples, banned words

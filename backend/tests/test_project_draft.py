@@ -27,6 +27,7 @@ from routes import user_projects
 from service.auth import get_current_user
 from service.membership import ensure_owner_membership
 from service.project_draft import (
+    CONTENT_FIELDS,
     FIELDS,
     PROVENANCE_CRAWL,
     PROVENANCE_DOCUMENT,
@@ -34,6 +35,7 @@ from service.project_draft import (
     PROVENANCE_USER,
     RANK,
     UNTITLED_PROJECT,
+    claim_edits,
     merge_draft,
     reconcile_save,
     snapshot,
@@ -284,6 +286,47 @@ def test_a_draft_that_claims_too_much_is_refused(api, field):
     api.user = _user(api.session, "ana@acme.example")
     res = api.client.post(f"/api/user/projects/{uuid.uuid4()}/draft", json={"fields": field})
     assert res.status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# Content Studio's voice: drafted like the profile, claimed by the Brand tab
+# ---------------------------------------------------------------------------
+
+def test_a_content_draft_lands_in_content_brand_beside_what_was_there():
+    project = _project(content_brand={"writing_samples": ["mine"], "tone": ""})
+    landed = merge_draft(project, _draft(
+        tone=("dry, direct", PROVENANCE_INFERRED),
+        features=([{"id": "briefs", "name": "Briefs", "description": ""}], PROVENANCE_DOCUMENT),
+    ))
+    assert sorted(landed) == ["features", "tone"]
+    assert project.content_brand["writing_samples"] == ["mine"]
+    assert project.content_brand["tone"] == "dry, direct"
+    assert project.provenance == {"tone": PROVENANCE_INFERRED, "features": PROVENANCE_DOCUMENT}
+
+
+def test_a_brand_tab_edit_is_the_persons_and_a_cleared_field_is_open_again():
+    project = _project(
+        content_brand={"tone": "drafted", "do_say": "drafted", "value_prop": "drafted"},
+        provenance={"tone": PROVENANCE_DOCUMENT, "do_say": PROVENANCE_DOCUMENT, "value_prop": PROVENANCE_DOCUMENT},
+    )
+    before = snapshot(project, CONTENT_FIELDS)
+    project.content_brand = {"tone": "what I typed", "do_say": "", "value_prop": "drafted"}
+    claim_edits(project, before)
+    assert project.provenance == {"tone": PROVENANCE_USER, "value_prop": PROVENANCE_DOCUMENT}
+
+    landed = merge_draft(project, _draft(
+        tone=("a newer draft", PROVENANCE_DOCUMENT),
+        do_say=("refilled", PROVENANCE_DOCUMENT),
+        value_prop=("refreshed", PROVENANCE_DOCUMENT),
+    ))
+    assert sorted(landed) == ["do_say", "value_prop"], "carried along stays open to the next draft"
+    assert project.content_brand["tone"] == "what I typed"
+
+
+def test_a_whole_project_save_leaves_content_labels_alone():
+    project = _project(name="Acme", content_brand={"tone": "drafted"}, provenance={"tone": PROVENANCE_DOCUMENT})
+    reconcile_save(project, snapshot(project), dict(project.provenance), {})
+    assert project.provenance == {"tone": PROVENANCE_DOCUMENT}
 
 
 # ---------------------------------------------------------------------------

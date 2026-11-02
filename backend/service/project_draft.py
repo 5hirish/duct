@@ -94,19 +94,38 @@ FIELDS: dict[str, DraftField] = {
     "content_pillars": DraftField("brand_channels", "content_pillars", list),
 }
 
+# Content Studio's voice and product fields. Only a server-side writer drafts
+# them (an outside agent, through the MCP server), and they take the same
+# labels and the same three rules as the fields above. They are not part of a
+# whole-project save, though: the Brand tab writes them through
+# ``PUT /api/content/brand``, which records what the person changed with
+# ``claim_edits``. So ``reconcile_save`` and the app's FIELD_PATHS leave them
+# out.
+CONTENT_FIELDS: dict[str, DraftField] = {
+    "tone": DraftField("content_brand", "tone"),
+    "value_prop": DraftField("content_brand", "value_prop"),
+    "content_goal": DraftField("content_brand", "content_goal"),
+    "do_say": DraftField("content_brand", "do_say"),
+    "do_not_say": DraftField("content_brand", "do_not_say"),
+    "features": DraftField("content_brand", "features", list),
+}
+
+# Everything a draft may write.
+DRAFT_FIELDS: dict[str, DraftField] = {**FIELDS, **CONTENT_FIELDS}
+
 
 def rank_of(label: str | None) -> int:
     return RANK.get(label or "", RANK[PROVENANCE_INFERRED])
 
 
 def get_value(project: Any, name: str) -> Any:
-    spec = FIELDS[name]
+    spec = DRAFT_FIELDS[name]
     raw = getattr(project, spec.column)
     return raw if spec.key is None else (raw or {}).get(spec.key)
 
 
 def set_value(project: Any, name: str, value: Any) -> None:
-    spec = FIELDS[name]
+    spec = DRAFT_FIELDS[name]
     if spec.key is None:
         setattr(project, spec.column, value)
         return
@@ -187,7 +206,7 @@ def merge_draft(project: Any, fields: Mapping[str, Mapping[str, Any]]) -> list[s
     labels = dict(project.provenance or {})
     landed: list[str] = []
     for name, field in fields.items():
-        if name not in FIELDS:
+        if name not in DRAFT_FIELDS:
             continue
         source, value = field.get("provenance"), field.get("value")
         if source not in DRAFT_SOURCES:
@@ -208,10 +227,11 @@ def merge_draft(project: Any, fields: Mapping[str, Mapping[str, Any]]) -> list[s
     return landed
 
 
-def snapshot(project: Any | None) -> dict[str, Any]:
-    """Every draftable field's value, taken before a save overwrites them.
+def snapshot(project: Any | None, names: Iterable[str] = FIELDS) -> dict[str, Any]:
+    """Each named field's value, taken before a save overwrites them: the
+    profile's by default, ``CONTENT_FIELDS`` for the Brand tab's save.
     ``None`` for a project that does not exist yet."""
-    return {name: None if project is None else get_value(project, name) for name in FIELDS}
+    return {name: None if project is None else get_value(project, name) for name in names}
 
 
 def reconcile_save(
@@ -253,4 +273,24 @@ def reconcile_save(
             labels[name] = theirs
             continue
         set_value(project, name, old)
+    project.provenance = labels
+
+
+def claim_edits(project: Any, before: Mapping[str, Any]) -> None:
+    """Settle the labels after the Brand tab saved Content Studio's fields.
+
+    ``before`` is ``snapshot(project, CONTENT_FIELDS)`` from before the save.
+    A field the person changed is theirs now, so no draft replaces it; one
+    they cleared is open again for the next draft to fill. A field they only
+    carried along keeps its label, so an agent's draft can still refresh it.
+    """
+    labels = dict(project.provenance or {})
+    for name in CONTENT_FIELDS:
+        new = get_value(project, name)
+        if _same(name, before[name], new):
+            continue
+        if is_blank(name, new):
+            labels.pop(name, None)
+        else:
+            labels[name] = PROVENANCE_USER
     project.provenance = labels

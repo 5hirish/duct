@@ -53,6 +53,7 @@ from starlette.status import HTTP_409_CONFLICT
 
 from agents.content.assessment import reassess_post
 from agents.content.channels import channel_payload, primary_channel, resolve as resolve_channel
+from agents.content.pillars import pillars_of
 from agents.content.plan_period import PlanPeriod, requested_period
 from agents.content.voice_rules import VoiceRules, voice_problems, voice_rules_of
 from agents.content.publishing import (
@@ -123,6 +124,7 @@ from service.analytics import capture_event
 from service.auth import get_current_user, get_user_provider_keys
 from service.content_metrics import merge_manual_metrics, merge_synced_metrics
 from service.membership import get_project_for_user, get_project_row_for_user
+from service.project_draft import CONTENT_FIELDS, claim_edits, snapshot
 from service.provider_keys import stored_keys_for
 from utils.dates import now_iso, utcnow
 
@@ -883,7 +885,9 @@ def _brand_out(p: Project) -> BrandContextOut:
         description=p.description or "",
         url=p.url or "",
         content_brand=p.content_brand or {},
-        content_pillars=p.content_pillars or {},
+        # The pillars the agent plans from, so the Brand tab shows the
+        # profile's while the Studio has none and a save adopts them.
+        content_pillars={"items": pillars_of(p)},
         content_visual_assets=p.content_visual_assets or {},
         voice_rules=voice_rules_of(p.content_brand).model_dump(),
         voice_rules_default=VoiceRules().model_dump(),
@@ -907,6 +911,7 @@ def put_brand_context(
     db: Session = Depends(db_session),
 ) -> BrandContextOut:
     proj = _project_for_user(db, user, project_id)
+    before = snapshot(proj, CONTENT_FIELDS)
     if body.content_brand is not None:
         proj.content_brand = body.content_brand
     if body.content_pillars is not None:
@@ -919,6 +924,9 @@ def put_brand_context(
         proj.tagline = body.tagline
     if body.description is not None:
         proj.description = body.description
+    # What the person changed here is theirs; an agent's draft
+    # (service/mcp_server) may still refresh what they only carried along.
+    claim_edits(proj, before)
     proj.updated_at = datetime.now(timezone.utc)
     db.add(proj)
     db.commit()

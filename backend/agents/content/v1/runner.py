@@ -66,6 +66,7 @@ from agents.content.artifacts import (
 from agents.content.events import STEP_LABELS, ContentEvent, ContentStep, StepStatus
 from agents.content.channels import brand_platforms
 from agents.content.performance import AccountPerformance, load_account_performance
+from agents.content.pillars import pillars_of
 from agents.content.plan_period import MAX_PLAN_DAYS, PlanPeriod, default_period, plan_end
 from agents.content.voice_rules import voice_rules_of, writing_samples_of
 from agents.core.events import run_context
@@ -241,15 +242,9 @@ def _load_brand_context(project_id: UUID) -> ContentBrandContext:
             raise ValueError(f"Project {project_id} not found.")
 
         brand_blob = proj.content_brand or {}
-        pillars_blob = proj.content_pillars or {}
         visual_blob = proj.content_visual_assets or {}
 
-        pillars_list = pillars_blob.get("items") if isinstance(pillars_blob, dict) else pillars_blob
-        pillars = [
-            ContentPillar.model_validate(p)
-            for p in (pillars_list or [])
-            if isinstance(p, dict)
-        ]
+        pillars = [ContentPillar.model_validate(p) for p in pillars_of(proj)]
         features = [
             AppFeature.model_validate(f)
             for f in (brand_blob.get("features") or [])

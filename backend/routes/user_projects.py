@@ -24,8 +24,8 @@ from models.project import Project, unique_slug
 from service.auth import get_current_user
 from service.membership import accessible_projects, get_project_for_user, member_role
 from service.project_draft import (
+    DRAFT_FIELDS,
     DRAFT_SOURCES,
-    FIELDS,
     clean_labels,
     reconcile_save,
     snapshot,
@@ -88,7 +88,7 @@ class ProjectDraftIn(BaseModel):
         if len(json.dumps({k: f.value for k, f in v.items()}, default=str)) > _JSONB_MAX_BYTES:
             raise ValueError("Draft payload too large (max 128 KB).")
         for name, field in v.items():
-            spec = FIELDS.get(name)
+            spec = DRAFT_FIELDS.get(name)
             if spec and field.value is not None and not isinstance(field.value, spec.kind):
                 raise ValueError(f"{name} must be a {spec.kind.__name__}")
         return v

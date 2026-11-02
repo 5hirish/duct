@@ -133,8 +133,8 @@ export default function AgentAccess({
       </p>
       <p className="mb-8 text-sm text-muted-foreground">
         <Trans>
-          Your agent can read your projects and draft their profile. It can&apos;t approve changes,
-          connect tools, or replace anything you typed or confirmed.
+          Your agent can read your projects and draft their profile and Content Studio voice. It
+          can&apos;t approve changes, connect tools, or replace anything you typed or confirmed.
         </Trans>
       </p>
 
