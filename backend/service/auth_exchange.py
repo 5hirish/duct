@@ -27,6 +27,15 @@ Referer headers.
   creating an account; the tokens come back as a grant for the claim route,
   honoured only for the same user (``routes/mcp.py``).
 
+* **An agent signing in to Duct's MCP server** — Duct as the authorization
+  server, the reverse of the MCP connect above (``service/mcp_server/oauth``).
+  ``/oauth/authorize`` parks the checked request and sends the browser to the
+  app with its code; the consent page reads it (``peek_agent_request``, since
+  a reload must not spend it) and the person's answer spends it. Allowing
+  parks the grant under the authorization code the agent redeems at
+  ``/oauth/token``: a minute, because the agent redeems it the moment its
+  listener receives it.
+
 * **GitHub App connect** — both directions at once. The authorize route is a
   bare navigation again, so the signed-in app first mints a *connect link*
   naming its user (five minutes, like the guest link). What comes back is a
@@ -52,6 +61,8 @@ _NS_CONNECT_LINK = "connect_link"
 _NS_GITHUB_GRANT = "github_grant"
 _NS_MCP_FLOW = "mcp_flow"
 _NS_MCP_GRANT = "mcp_grant"
+_NS_AGENT_REQUEST = "agent_request"
+_NS_AGENT_CODE = "agent_code"
 
 _store: dict[str, tuple[str, Any, float]] = {}  # code → (namespace, payload, issued_at)
 _TTL = 60  # seconds
@@ -69,6 +80,9 @@ _TTL_BY_NAMESPACE = {
     _NS_GITHUB_GRANT: _GRANT_TTL,
     _NS_MCP_FLOW: _MCP_FLOW_TTL,
     _NS_MCP_GRANT: _GRANT_TTL,
+    # The person may have to sign in to Duct first, like an MCP connect.
+    _NS_AGENT_REQUEST: _MCP_FLOW_TTL,
+    _NS_AGENT_CODE: _TTL,
 }
 
 
@@ -81,6 +95,14 @@ def _store_code(namespace: str, payload: Any) -> str:
     code = secrets.token_urlsafe(32)
     _store[code] = (namespace, payload, time.monotonic())
     return code
+
+
+def _peek_code(namespace: str, code: str) -> Any | None:
+    _purge_expired()
+    entry = _store.get(code)
+    if entry is None or entry[0] != namespace or time.monotonic() - entry[2] > _ttl_for(namespace):
+        return None
+    return entry[1]
 
 
 def _consume_code(namespace: str, code: str) -> Any | None:
@@ -207,3 +229,30 @@ def _purge_expired() -> None:
     ]
     for k in expired:
         _store.pop(k, None)
+
+
+def store_agent_request(request: dict[str, Any]) -> str:
+    """Park an agent's checked authorization request; the code names it to the consent page (10 min)."""
+    return _store_code(_NS_AGENT_REQUEST, dict(request))
+
+
+def peek_agent_request(code: str) -> dict[str, Any] | None:
+    """The parked request, left in place: the consent page reads it on every load."""
+    payload = _peek_code(_NS_AGENT_REQUEST, code)
+    return dict(payload) if isinstance(payload, dict) else None
+
+
+def consume_agent_request(code: str) -> dict[str, Any] | None:
+    """The parked request, spent by the person's answer either way."""
+    payload = _consume_code(_NS_AGENT_REQUEST, code)
+    return payload if isinstance(payload, dict) else None
+
+
+def store_agent_code(grant: dict[str, Any]) -> str:
+    """Park what the person allowed; the returned code is the OAuth authorization code (60 s)."""
+    return _store_code(_NS_AGENT_CODE, dict(grant))
+
+
+def consume_agent_code(code: str) -> dict[str, Any] | None:
+    payload = _consume_code(_NS_AGENT_CODE, code)
+    return payload if isinstance(payload, dict) else None

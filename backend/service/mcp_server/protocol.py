@@ -34,6 +34,10 @@ from models.auth import McpToken, User
 
 logger = logging.getLogger(__name__)
 
+# Where the server answers. The OAuth metadata names it as the protected
+# resource, so the route and the metadata must not disagree.
+MCP_PATH = "/mcp"
+
 # Newest first. A client asking for one of these gets it back; one asking for
 # anything else gets the newest, and decides for itself whether to continue.
 PROTOCOL_VERSIONS = ("2025-11-25", "2025-06-18", "2025-03-26")
