@@ -56,7 +56,7 @@ msgid ""
 msgstr ""
 "Um plano em um quadro, um post por cartão, slides e imagens gerados para cada um, um clique para publicar em nove redes. Os resultados voltam para o cartão, para que o próximo plano aprenda com o anterior."
 
-#: about.html compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
+#: about.html compare.html connect-agent.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
 msgid "About"
 msgstr "Sobre"
 
@@ -113,7 +113,7 @@ msgstr ""
 "Decisões de design são discutidas abertamente. O GitHub é o melhor lugar para me encontrar."
 
 #. link title
-#: about.html compare.html doctrine.html index.html mcp.html open-source.html
+#: about.html compare.html connect-agent.html doctrine.html index.html mcp.html open-source.html
 msgid "Duct Blog"
 msgstr "Blog do Duct"
 
@@ -170,7 +170,7 @@ msgstr ""
 msgid "FONS. The spring, before anything has run. The app’s front door."
 msgstr "FONS. A nascente, antes que algo tenha corrido. A porta de entrada do app."
 
-#: about.html compare.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/nav-simple.html privacy.html seo-audit.html terms.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+#: about.html compare.html connect-agent.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/nav-simple.html privacy.html seo-audit.html terms.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Home"
 msgstr "Início"
 
@@ -252,7 +252,7 @@ msgstr ""
 msgid "Principles, not <0>platitudes</0>"
 msgstr "Princípios, não <0>clichês</0>"
 
-#: about.html compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
+#: about.html compare.html connect-agent.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
 msgid "Privacy Policy"
 msgstr "Política de privacidade"
 
@@ -305,7 +305,7 @@ msgstr "Marcar com estrela no GitHub →"
 msgid "Substance over ceremony"
 msgstr "Substância acima da cerimônia"
 
-#: about.html compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
+#: about.html compare.html connect-agent.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
 msgid "Terms of Service"
 msgstr "Termos de serviço"
 
@@ -977,7 +977,7 @@ msgstr "Veja onde o Duct ganha"
 msgid "Self-host, no licence fee"
 msgstr "Auto-hospede, sem taxa de licença"
 
-#: compare.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html seo-audit.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+#: compare.html connect-agent.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html seo-audit.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Skip to content"
 msgstr "Pular para o conteúdo"
 
@@ -1110,6 +1110,457 @@ msgstr "escreve"
 #: compare.html
 msgid "“Why did this move?”"
 msgstr "“Por que isso se moveu?”"
+
+#: connect-agent.html
+msgid "<0></0> Duct's MCP server · Browser sign-in"
+msgstr "<0></0> Servidor MCP do Duct · Entrar pelo navegador"
+
+#: connect-agent.html
+msgid "<0>Claude Code</0> wants to use your Duct account"
+msgstr "<0>Claude Code</0> quer usar sua conta do Duct"
+
+#: connect-agent.html
+msgid ""
+"A draft never overwrites what you typed in Duct. It only fills blank fields or replaces an earlier draft. Check the project page in Duct."
+msgstr ""
+"Um rascunho nunca sobrescreve o que você digitou no Duct. Ele apenas preenche campos em branco ou substitui um rascunho anterior. Verifique a página do projeto no Duct."
+
+#: connect-agent.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
+msgid "Access"
+msgstr "Acesso"
+
+#: connect-agent.html
+msgid "Add Duct to <0>opencode.json</0>:"
+msgstr "Adicione Duct a <0>opencode.json</0>:"
+
+#: connect-agent.html
+msgid "Add Duct to <0>~/.cursor/mcp.json</0>:"
+msgstr "Adicione Duct a <0>~/.cursor/mcp.json</0>:"
+
+#: connect-agent.html
+msgid "Add Duct to your agent"
+msgstr "Adicione o Duct ao seu agente"
+
+#. meta description
+#: connect-agent.html
+msgid ""
+"Add Duct's MCP server to Claude Code, Codex, Cursor, VS Code or ChatGPT. Sign in with your browser, click Allow, and your agent can read and set up projects."
+msgstr ""
+"Adicione o servidor MCP do Duct a Claude Code, Codex, Cursor, VS Code ou ChatGPT. Entre com seu navegador, clique em Permitir, e seu agente poderá ler e configurar projetos."
+
+#: connect-agent.html
+msgid "Add a connector with this address, and choose OAuth for authentication:"
+msgstr "Adicione um conector com este endereço, e escolha OAuth para autenticação:"
+
+#: connect-agent.html
+msgid "Add it, allow it, <0>ask it.</0>"
+msgstr "Adicione-o, permita-o, <0>pergunte a ele.</0>"
+
+#: connect-agent.html
+msgid ""
+"Add this address to Claude Code, Codex, Cursor, VS Code, OpenCode, Claude or ChatGPT. Your browser opens on Duct, you click Allow, and your agent can read your projects and draft their details."
+msgstr ""
+"Adicione este endereço a Claude Code, Codex, Cursor, VS Code, OpenCode, Claude ou ChatGPT. Seu navegador abre no Duct, você clica em Permitir, e seu agente poderá ler seus projetos e rascunhar seus detalhes."
+
+#: connect-agent.html
+msgid "Allow"
+msgstr "Permitir"
+
+#: connect-agent.html
+msgid ""
+"Another agent? If it can add a remote MCP server by its address, give it the same one. If it can't sign in, <0>use a token</0>."
+msgstr ""
+"Outro agente? Se ele puder adicionar um servidor MCP remoto pelo seu endereço, dê a ele o mesmo. Se ele não conseguir entrar, <0>use um token</0>."
+
+#: connect-agent.html
+msgid "Approve or apply changes."
+msgstr "Aprove ou aplique as alterações."
+
+#: connect-agent.html
+msgid "Ask it something"
+msgstr "Pergunte algo a ele"
+
+#: connect-agent.html
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: connect-agent.html
+msgid "ChatGPT"
+msgstr "ChatGPT"
+
+#: connect-agent.html
+msgid "Choose HTTP, paste the address and name it <0>duct</0>:"
+msgstr "Escolha HTTP, cole o endereço e nomeie-o <0>duct</0>:"
+
+#: connect-agent.html
+msgid "Claude"
+msgstr "Claude"
+
+#: connect-agent.html
+msgid "Claude Code"
+msgstr "Claude Code"
+
+#. meta twitter:description
+#: connect-agent.html
+msgid ""
+"Claude Code, Codex, Cursor, VS Code, OpenCode, Claude and ChatGPT all connect to Duct by one address. No token to copy or paste."
+msgstr ""
+"Claude Code, Codex, Cursor, VS Code, OpenCode, Claude e ChatGPT todos se conectam ao Duct por um endereço. Nenhum token para copiar ou colar."
+
+#: connect-agent.html
+msgid "Claude, on claude.ai or Claude Desktop"
+msgstr "Claude, em claude.ai ou Claude Desktop"
+
+#: connect-agent.html
+msgid "Codex"
+msgstr "Codex"
+
+#: connect-agent.html
+msgid "Connect tools."
+msgstr "Conecte ferramentas."
+
+#: connect-agent.html
+msgid "Copied"
+msgstr "Copiado"
+
+#: connect-agent.html
+msgid "Copy"
+msgstr "Copiar"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the Claude Code command"
+msgstr "Copiar o comando do Claude Code"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the Claude Code command with a token"
+msgstr "Copiar o comando do Claude Code com um token"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the Codex command"
+msgstr "Copiar o comando do Codex"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the Cursor settings"
+msgstr "Copiar as configurações do Cursor"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the OpenCode settings"
+msgstr "Copiar as configurações do OpenCode"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the server address"
+msgstr "Copiar o endereço do servidor"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the sign-in command"
+msgstr "Copiar o comando de entrada"
+
+#: connect-agent.html
+msgid "Cursor"
+msgstr "Cursor"
+
+#: connect-agent.html
+msgid ""
+"Draft a project's description, audience and competitors from your repo or files."
+msgstr ""
+"Rascunhe a descrição, público e concorrentes de um projeto do seu repositório ou arquivos."
+
+#: connect-agent.html
+msgid ""
+"Drafted the description, audience and competitors from the repo. They're on the project in Duct."
+msgstr ""
+"Rascunhou a descrição, público e concorrentes do repositório. Eles estão no projeto no Duct."
+
+#: connect-agent.html
+msgid ""
+"Duct gives your agent three tools today. Approving, applying and connecting stay with you, in Duct."
+msgstr ""
+"Duct oferece três ferramentas ao seu agente hoje. Aprovar, aplicar e conectar permanecem com você, no Duct."
+
+#: connect-agent.html
+msgid "Duct opens in your browser. Click Allow."
+msgstr "Duct abre no seu navegador. Clique em Permitir."
+
+#: connect-agent.html
+msgid "Every agent connects to the same server. Pick yours for the exact steps."
+msgstr ""
+"Todo agente se conecta ao mesmo servidor. Escolha o seu para os passos exatos."
+
+#: connect-agent.html
+msgid "Every agent is listed. <0>Disconnect any one.</0>"
+msgstr "Todo agente está listado. <0>Desconecte qualquer um.</0>"
+
+#: connect-agent.html
+msgid "Every change shows in the project's activity."
+msgstr "Toda alteração aparece na atividade do projeto."
+
+#: connect-agent.html
+msgid ""
+"For CI, a remote machine or an agent without sign-in. Create one on the same settings page, under No browser? Use a token. Your agent sends it as a header:"
+msgstr ""
+"Para CI, uma máquina remota ou um agente sem precisar entrar. Crie um na mesma página de configurações, em \"Sem navegador? Use um token.\". Seu agente o envia como um cabeçalho:"
+
+#: connect-agent.html
+msgid ""
+"Give your agent the address above, with one command or one line of settings. The exact steps for each agent are below."
+msgstr ""
+"Dê ao seu agente o endereço acima, com um comando ou uma linha de configurações. Os passos exatos para cada agente estão abaixo."
+
+#: connect-agent.html
+msgid "How to connect your agent"
+msgstr "Como conectar seu agente"
+
+#: connect-agent.html
+msgid "I asked it to set up the project and nothing changed"
+msgstr "Eu pedi para ele configurar o projeto e nada mudou"
+
+#: connect-agent.html
+msgid "I host Duct myself"
+msgstr "Eu hospedo o Duct"
+
+#: connect-agent.html
+msgid "In ChatGPT's settings, turn on developer mode."
+msgstr "Nas configurações do ChatGPT, ative o modo de desenvolvedor."
+
+#: connect-agent.html
+msgid ""
+"In Claude Code, run <0>/mcp</0>, pick <1>duct</1> and choose <2>Authenticate</2>."
+msgstr ""
+"No Claude Code, execute <0>/mcp</0>, selecione <1>duct</1> e escolha <2>Autenticar</2>."
+
+#: connect-agent.html
+msgid "In Claude Code:"
+msgstr "No Claude Code:"
+
+#: connect-agent.html
+msgid "In Cursor's MCP settings, press the login prompt on the duct server."
+msgstr ""
+"Nas configurações de MCP do Cursor, pressione o prompt de login no servidor duct."
+
+#: connect-agent.html
+msgid ""
+"In Duct, open Settings → Connect your AI agent. Every agent you allowed is there, and you can disconnect it. A disconnected agent stops on its next call."
+msgstr ""
+"No Duct, abra Configurações → Conecte seu agente de IA. Todos os agentes que você permitiu estão lá, e você pode desconectá-lo. Um agente desconectado para na sua próxima chamada."
+
+#: connect-agent.html
+msgid "In your terminal, run:"
+msgstr "No seu terminal, execute:"
+
+#: connect-agent.html
+msgid "It can never"
+msgstr "Ele nunca pode"
+
+#: connect-agent.html
+msgid "It reads and drafts. <0>You decide.</0>"
+msgstr "Ele lê e rascunha. <0>Você decide.</0>"
+
+#: connect-agent.html
+msgid ""
+"It says it couldn't register, or “does not support dynamic client registration”"
+msgstr ""
+"Ele diz que não conseguiu registrar, ou “não suporta registro dinâmico de cliente”"
+
+#: connect-agent.html
+msgid "It worked, and now it gets a 401"
+msgstr "Funcionou, e agora ele recebe um 401"
+
+#: connect-agent.html
+msgid "List your projects."
+msgstr "Liste seus projetos."
+
+#: connect-agent.html
+msgid "My browser never opened"
+msgstr "Meu navegador nunca abriu"
+
+#: connect-agent.html
+msgid "Name it Duct and paste the address:"
+msgstr "Nomeie-o Duct e cole o endereço:"
+
+#: connect-agent.html
+msgid "No browser? Use a token."
+msgstr "Sem navegador? Use um token."
+
+#: connect-agent.html
+msgid ""
+"On claude.ai or in Claude Desktop, open Settings → Connectors and choose Add custom connector."
+msgstr ""
+"Em claude.ai ou no Claude Desktop, abra Configurações → Conectores e escolha Adicionar conector personalizado."
+
+#. meta og:description
+#: connect-agent.html
+msgid ""
+"One address in your agent, one Allow in your browser. It can read your Duct projects and draft their details, never approve a change."
+msgstr ""
+"Um endereço no seu agente, um Permitir no seu navegador. Ele pode ler seus projetos Duct e rascunhar seus detalhes, nunca aprovar uma alteração."
+
+#: connect-agent.html
+msgid "Open the Command Palette and run <0>MCP: Add Server</0>."
+msgstr "Abra a Paleta de Comandos e execute <0>MCP: Adicionar Servidor</0>."
+
+#: connect-agent.html
+msgid "OpenCode"
+msgstr "OpenCode"
+
+#: connect-agent.html
+msgid ""
+"Overwrite what you typed in Duct. A draft only fills blanks or replaces an earlier draft."
+msgstr ""
+"Sobrescreva o que você digitou no Duct. Um rascunho apenas preenche espaços em branco ou substitui um rascunho anterior."
+
+#: connect-agent.html
+msgid "Press Connect. Duct opens in your browser. Click Allow."
+msgstr "Pressione Conectar. Duct abre no seu navegador. Clique em Permitir."
+
+#: connect-agent.html
+msgid "Read one project."
+msgstr "Leia um projeto."
+
+#: connect-agent.html
+msgid "See keys or credentials."
+msgstr "Veja chaves ou credenciais."
+
+#: connect-agent.html mcp.html
+msgid "Server address"
+msgstr "Endereço do servidor"
+
+#: connect-agent.html
+msgid "Set up this product in Duct."
+msgstr "Configure este produto no Duct."
+
+#: connect-agent.html
+msgid "Setup by agent"
+msgstr "Configuração por agente"
+
+#: connect-agent.html
+msgid "Seven agents. <0>One address.</0>"
+msgstr "Sete agentes. <0>Um endereço.</0>"
+
+#: connect-agent.html
+msgid "Sign in and click Allow"
+msgstr "Entrar e clique em Permitir"
+
+#: connect-agent.html
+msgid ""
+"Start the sign-in yourself: run /mcp in Claude Code, codex mcp login duct in Codex, or opencode mcp auth duct in OpenCode."
+msgstr ""
+"Inicie o login você mesmo: execute /mcp no Claude Code, codex mcp login duct no Codex, ou opencode mcp auth duct no OpenCode."
+
+#: connect-agent.html
+msgid ""
+"Start the sign-in yourself: run <0>/mcp</0> in Claude Code, <1>codex mcp login duct</1> in Codex, or <2>opencode mcp auth duct</2> in OpenCode."
+msgstr ""
+"Inicie o login você mesmo: execute <0>/mcp</0> no Claude Code, <1>codex mcp login duct</1> no Codex, ou <2>opencode mcp auth duct</2> no OpenCode."
+
+#: connect-agent.html
+msgid "Stuck? <0>Start here.</0>"
+msgstr "Preso? <0>Comece aqui.</0>"
+
+#: connect-agent.html
+msgid "Then sign in:"
+msgstr "Então entre:"
+
+#: connect-agent.html mcp.html
+msgid "Troubleshooting"
+msgstr "Solução de problemas"
+
+#: connect-agent.html
+msgid ""
+"Try “Set up this product in Duct.” Your agent reads your repo and drafts the project's description, audience and competitors."
+msgstr ""
+"Experimente “Configure este produto no Duct.” Seu agente lê seu repositório e rascunha a descrição, público e concorrentes do projeto."
+
+#: connect-agent.html
+msgid ""
+"Update your agent to its latest version and try again. If it still fails, connect with a token instead."
+msgstr ""
+"Atualize seu agente para a versão mais recente e tente novamente. Se ainda falhar, conecte-se com um token em vez disso."
+
+#. meta og:title
+#. meta twitter:title
+#: connect-agent.html
+msgid "Use Duct from Claude Code, Codex or Cursor"
+msgstr "Use o Duct de Claude Code, Codex ou Cursor"
+
+#: connect-agent.html partials/footer-expanded.html
+msgid "Use Duct from your agent"
+msgstr "Use o Duct do seu agente"
+
+#: connect-agent.html
+msgid "Use Duct from your agent.<0/><1>No token to copy.</1>"
+msgstr "Use o Duct do seu agente.<0/><1>Nenhum token para copiar.</1>"
+
+#: connect-agent.html
+msgid ""
+"Use your own API address followed by /mcp, in place of https://api.getduct.ai/mcp."
+msgstr ""
+"Use seu próprio endereço de API seguido por /mcp, no lugar de https://api.getduct.ai/mcp."
+
+#: connect-agent.html
+msgid ""
+"Use your own API address followed by <0>/mcp</0>, in place of <1>https://api.getduct.ai/mcp</1>."
+msgstr ""
+"Use seu próprio endereço de API seguido por <0>/mcp</0>, no lugar de <1>https://api.getduct.ai/mcp</1>."
+
+#: connect-agent.html
+msgid "VS Code"
+msgstr "VS Code"
+
+#: connect-agent.html
+msgid ""
+"VS Code asks you to sign in the first time it uses Duct. Your browser opens on Duct. Click Allow."
+msgstr ""
+"O VS Code pede para você entrar na primeira vez que usa o Duct. Seu navegador abre no Duct. Clique em Permitir."
+
+#: connect-agent.html
+msgid ""
+"Want Duct's own agent to call your MCP servers instead? That is the other direction: <0>Your MCP servers in Duct →</0>"
+msgstr ""
+"Quer que o próprio agente do Duct chame seus servidores MCP em vez disso? Essa é a outra direção: <0>Seus servidores MCP no Duct →</0>"
+
+#: connect-agent.html
+msgid "What your agent can do"
+msgstr "O que seu agente pode fazer"
+
+#: connect-agent.html
+msgid ""
+"You disconnected it in Duct, or its sign-in lapsed after 90 days without use. Sign in again from your agent."
+msgstr ""
+"Você o desconectou no Duct, ou seu acesso expirou após 90 dias sem uso. Entre novamente pelo seu agente."
+
+#: connect-agent.html
+msgid "You see every connected agent"
+msgstr "Você vê cada agente conectado"
+
+#. div aria-label
+#: connect-agent.html
+msgid "Your agent"
+msgstr "Seu agente"
+
+#: connect-agent.html
+msgid "Your agent can"
+msgstr "Seu agente pode"
+
+#: connect-agent.html
+msgid ""
+"Your browser opens on Duct and asks whether your agent may use your account. Click Allow. There is no token to copy."
+msgstr ""
+"Seu navegador abre no Duct e pergunta se seu agente pode usar sua conta. Clique em Permitir. Não há token para copiar."
+
+#: connect-agent.html
+msgid "Your browser opens on Duct. Click Allow."
+msgstr "Seu navegador abre no Duct. Clique em Permitir."
+
+#: connect-agent.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-seo-audit.html partials/nav-simple.html
+msgid "duct <0></0>"
+msgstr "duct <0></0>"
 
 #: doctrine.html
 msgid ""
@@ -3151,10 +3602,6 @@ msgid "API key pair"
 msgstr "Par de chaves da API"
 
 #: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
-msgid "Access"
-msgstr "Acesso"
-
-#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
 msgid "All integrations"
 msgstr "Todas as integrações"
 
@@ -3434,10 +3881,6 @@ msgid ""
 "Yes. Duct is free with your own model keys or the ChatGPT plan you already have, and the core is MIT licensed. A paid plan later bundles the models; nothing open today moves behind it. What will cost money."
 msgstr ""
 "Sim. Duct é gratuito com suas próprias chaves de modelo ou o plano ChatGPT que você já tem, e o núcleo tem licença MIT. Um plano pago posteriormente agrupará os modelos; nada que é aberto hoje passará a ser pago. O que vai custar dinheiro."
-
-#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-seo-audit.html partials/nav-simple.html
-msgid "duct <0></0>"
-msgstr "duct <0></0>"
 
 #: integrations/chatgpt-ads.html
 msgid ""
@@ -6814,7 +7257,7 @@ msgstr "Linear"
 msgid "Local servers that run over stdio on your own computer."
 msgstr "Servidores locais que executam via stdio no seu próprio computador."
 
-#: mcp.html partials/footer-expanded.html
+#: mcp.html
 msgid "MCP servers"
 msgstr "Servidores MCP"
 
@@ -6910,10 +7353,6 @@ msgid "Replies are data, not orders"
 msgstr "Respostas são dados, não ordens"
 
 #: mcp.html
-msgid "Server address"
-msgstr "Endereço do servidor"
-
-#: mcp.html
 msgid ""
 "Servers on a private network. The hosted service only calls public internet addresses."
 msgstr ""
@@ -6996,10 +7435,6 @@ msgstr ""
 "Hoje, servidores conectados são usados no chat de insights. Resumos agendados e Content Studio ainda não os chamam."
 
 #: mcp.html
-msgid "Troubleshooting"
-msgstr "Solução de problemas"
-
-#: mcp.html
 msgid "Try: <0>Did yesterday's deploy go out cleanly?</0>"
 msgstr "Experimente: <0>A implantação de ontem foi limpa?</0>"
 
@@ -7034,6 +7469,12 @@ msgstr ""
 #: mcp.html
 msgid "Waiting for you"
 msgstr "Aguardando você"
+
+#: mcp.html
+msgid ""
+"Want to use Duct from your own agent instead, like Claude Code or Cursor? <0>Use Duct from your agent →</0>"
+msgstr ""
+"Quer usar o Duct do seu próprio agente, como Claude Code ou Cursor? <0>Use o Duct do seu agente →</0>"
 
 #: mcp.html
 msgid ""
@@ -7657,6 +8098,10 @@ msgstr "Casos de Uso"
 #: partials/footer-expanded.html
 msgid "X / Twitter"
 msgstr "X / Twitter"
+
+#: partials/footer-expanded.html
+msgid "Your MCP servers in Duct"
+msgstr "Seus servidores MCP no Duct"
 
 #: partials/footer-expanded.html
 msgid "© 2026 Alleviate Lab · Spain · Built in the open by <0>Shirish Kadam</0>."
@@ -12142,6 +12587,11 @@ msgstr "← Voltar"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← Recomeçar"
+
+#~ msgid ""
+#~ "For CI, a remote machine or an agent without sign-in. On the same settings page, open Use a token instead and create one. Your agent sends it as a header:"
+#~ msgstr ""
+#~ "Para CI, uma máquina remota ou um agente sem entrada. Na mesma página de configurações, abra Usar um token em vez disso e crie um. Seu agente o envia como um cabeçalho:"
 
 #~ msgid "No — email address and report content only"
 #~ msgstr "Não — apenas endereço de e-mail e conteúdo do relatório"
