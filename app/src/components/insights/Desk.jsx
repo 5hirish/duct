@@ -22,7 +22,9 @@ import { AUTONOMY_ASK } from "@/lib/projectsApi";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Reveal } from "@/components/ui/reveal";
 import { cn } from "@/lib/utils";
-import DeskCards from "./desk/DeskCards";
+import { Page, PageHeader } from "@/components/ui/page";
+import DeskCards, { DeskConnectFirst } from "./desk/DeskCards";
+import { useGreeting } from "./desk/useGreeting";
 import DeskLists from "./desk/DeskLists";
 import DeskActivity, { activityGridClass } from "./desk/DeskActivity";
 import DeskComposer from "./desk/DeskComposer";
@@ -178,8 +180,10 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
   });
   // Plain identifiers, so the catalogue names them ({needsYou}) rather than
   // numbering them ({0}) — AGENTS.md, "Values in a string".
-  const { needsYou, found, sourceCount } = head;
+  const { needsYou, sourceCount } = head;
   const lastChecked = relative(head.lastRunAt);
+  const hasActivity = data.activity.length > 0;
+  const greeting = useGreeting();
 
   // Day one is "this project has produced nothing yet" — not "the fetch was
   // slow" and not "there is no project".
@@ -237,7 +241,7 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
   // sized to exactly one child gives it nowhere to go — so this read as sticky,
   // passed review as sticky, and scrolled away like any other block.
   const composer = (
-    <div className="sticky bottom-0 -mx-4 mt-auto bg-gradient-to-t from-background from-70% px-4 pb-4 pt-10">
+    <div className="sticky bottom-0 z-10 mt-auto bg-gradient-to-t from-background from-60% pb-4 pt-8">
       <DeskComposer
         project={project}
         autonomy={autonomy}
@@ -253,17 +257,17 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-8">
+      <Page>
         <div className="flex flex-col gap-3">
-          <Skeleton className="h-8 w-[420px] max-w-full" />
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="h-10 w-[420px] max-w-full" />
           <Skeleton className="h-4 w-[300px] max-w-full" />
         </div>
-        <div className="grid gap-4 @md:grid-cols-2 @3xl:grid-cols-3">
-          <Skeleton className="h-48" />
-          <Skeleton className="h-48" />
-          <Skeleton className="h-48" />
+        <div className="grid gap-3 @xl:grid-cols-2">
+          <Skeleton className="h-40" />
+          <Skeleton className="h-40" />
         </div>
-      </div>
+      </Page>
     );
   }
 
@@ -271,6 +275,7 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
     return (
       <div className="flex min-h-[calc(100svh-160px)] flex-col">
         <DeskDayOne
+          greeting={greeting}
           hasProject={Boolean(project)}
           sourceCount={data.sourceCount}
           hasThread={data.conversations.length > 0}
@@ -285,67 +290,74 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
     // The skeleton above is a different subtree, not this one crossfading
     // with itself — Reveal just eases the swap in rather than popping.
     <Reveal className="flex min-h-[calc(100svh-160px)] flex-col">
-      {/* Sized off this region's own box, not the viewport (AGENTS.md) — the
-          sidebar and the Activity rail itself both eat into the window
-          without moving a `lg:` breakpoint, so viewport-based collapse was
-          firing far later than the space actually ran out. */}
-      <div className={cn("grid gap-y-8", activityGridClass(activityCollapsed))}>
+      {/* Sized off this region's own box, not the viewport (AGENTS.md). The
+          rail only exists once there is activity to show: an empty 288px
+          column of "Nothing yet" was what pushed the cards into one stacked
+          column at the desktop app's default width. */}
+      <div className={cn("grid flex-1 gap-y-10", hasActivity && activityGridClass(activityCollapsed))}>
         {/* Its own container: once split, this column is narrower than
-            `.app-main`, and DeskCards/DeskLists need to size off that, not
-            the ancestor the row-vs-stacked decision above just used. */}
-        <div className="@container flex min-w-0 flex-col gap-8">
-          <div>
-            <h1 className="text-3xl font-bold leading-tight tracking-tight">
-              {head.state === HEADLINE_NEEDS_YOU ? (
-                <Plural value={needsYou} one="# thing needs you." other="# things need you." />
-              ) : head.state === HEADLINE_CLEAR ? (
-                <Trans>Nothing needs you right now.</Trans>
-              ) : (
-                <Trans>Nothing to report yet.</Trans>
-              )}
-            </h1>
-            <p className="measure mt-2.5 text-sm leading-relaxed text-muted-foreground">
-              {head.state === HEADLINE_CLEAR && (
-                <>
-                  <Plural value={found} one="# finding on file." other="# findings on file." />{" "}
-                </>
-              )}
-              {head.hasRun ? (
-                <Trans>
-                  Last checked {lastChecked}.{" "}
-                  <Plural value={sourceCount} one="# source connected." other="# sources connected." />
-                </Trans>
-              ) : (
-                <Trans>
-                  Nothing has run yet.{" "}
-                  <Plural value={sourceCount} one="# source connected." other="# sources connected." />
-                </Trans>
-              )}
-            </p>
-          </div>
+            `.app-main`, and the cards size off that. The composer lives in
+            this column too, so it shares the content's left edge instead of
+            centring under the rail. */}
+        <div className="@container flex min-w-0 flex-col">
+          <Page className="flex-1">
+            <PageHeader
+              size="hero"
+              eyebrow={greeting}
+              title={
+                head.state === HEADLINE_NEEDS_YOU ? (
+                  <Plural value={needsYou} one="# thing needs you." other="# things need you." />
+                ) : head.state === HEADLINE_CLEAR ? (
+                  <Trans>Nothing needs you right now.</Trans>
+                ) : (
+                  <Trans>Nothing to report yet.</Trans>
+                )
+              }
+              status={
+                head.hasRun ? (
+                  <Trans>
+                    Last checked {lastChecked} ·{" "}
+                    <Plural value={sourceCount} one="# source connected" other="# sources connected" />
+                  </Trans>
+                ) : sourceCount ? (
+                  <Plural
+                    value={sourceCount}
+                    one="# source connected. Ask anything below to start."
+                    other="# sources connected. Ask anything below to start."
+                  />
+                ) : (
+                  <Trans>Nothing is connected yet.</Trans>
+                )
+              }
+            />
 
-          <DeskCards buckets={buckets} />
+            {sourceCount === 0 && <DeskConnectFirst />}
 
-          <p className="-mt-4 text-xs text-muted-foreground">
-            <Trans>Each item shows up in one card only — sorted by who’s holding it.</Trans>
-          </p>
+            <DeskCards
+              buckets={buckets}
+              allClear={head.state === HEADLINE_CLEAR && head.hasRun}
+              lastChecked={lastChecked}
+              quiet={sourceCount === 0}
+            />
 
-          <DeskLists
-            conversations={data.conversations}
-            artifacts={data.artifacts}
-            onPinThread={togglePinThread}
-            onPinArtifact={togglePinArtifact}
-          />
+            <DeskLists
+              conversations={data.conversations}
+              artifacts={data.artifacts}
+              onPinThread={togglePinThread}
+              onPinArtifact={togglePinArtifact}
+            />
+          </Page>
+          {composer}
         </div>
 
-        <DeskActivity
-          items={data.activity}
-          collapsed={activityCollapsed}
-          onToggle={toggleActivity}
-        />
+        {hasActivity && (
+          <DeskActivity
+            items={data.activity}
+            collapsed={activityCollapsed}
+            onToggle={toggleActivity}
+          />
+        )}
       </div>
-
-      {composer}
     </Reveal>
   );
 }

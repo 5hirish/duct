@@ -2,17 +2,23 @@
 
 // The three cards. One rule decides which one an item is in — see lib/desk.js.
 //
-// Only the first card is loud. Three equally-weighted cards give the eye
-// nowhere to land, and "needs you" is the only one of the three that is ever
-// urgent; the other two are things to read, not things to do.
+// Only the first card is loud (the Card `hero` variant). Three equally
+// weighted cards give the eye nowhere to land, and "needs you" is the only one
+// of the three that is ever urgent; the other two are things to read. Empty
+// buckets are not drawn at all.
 
 import Link from "next/link";
 import { msg } from "@lingui/core/macro";
-import { Plural, useLingui } from "@lingui/react/macro";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { CARD_LIMIT, NEEDS_YOU, FOUND, IN_PROGRESS } from "@/lib/desk";
 import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
 import { ClampTooltipContent, clampClass } from "@/components/ui/clamp-text";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Card, CardFooter } from "@/components/ui/card";
+import { TileGrid } from "@/components/ui/page";
+import MosaicPanel, { MOSAIC } from "@/components/MosaicPanel";
+import { LOGOS } from "@/components/connections/logos";
 import { useRelativeTime } from "./useRelativeTime";
 
 const CARDS = [
@@ -20,22 +26,16 @@ const CARDS = [
     key: NEEDS_YOU,
     label: msg`Needs you`,
     dot: "bg-destructive",
-    ring: "border-destructive/40",
-    empty: msg`Nothing is waiting on you.`,
   },
   {
     key: FOUND,
     label: msg`What I found`,
-    dot: "bg-[var(--orange)]",
-    ring: "border-border",
-    empty: msg`Nothing checked yet.`,
+    dot: "bg-primary",
   },
   {
     key: IN_PROGRESS,
     label: msg`In progress`,
-    dot: "bg-primary",
-    ring: "border-border",
-    empty: msg`Nothing running.`,
+    dot: "bg-info",
   },
 ];
 
@@ -125,50 +125,110 @@ function Item({ item }) {
   );
 }
 
-export default function DeskCards({ buckets }) {
+export default function DeskCards({ buckets, allClear = false, lastChecked = "", quiet = false }) {
   const { i18n } = useLingui();
   const byKey = {
     [NEEDS_YOU]: buckets.needsYou,
     [FOUND]: buckets.found,
     [IN_PROGRESS]: buckets.inProgress,
   };
+  // Only the buckets that hold something. Three cards with two reading
+  // "Nothing checked yet." / "Nothing running." was furniture: it took the
+  // screen and said nothing (2026-11-02 audit).
+  const shownCards = CARDS.filter((card) => (byKey[card.key] || []).length > 0);
+
+  if (shownCards.length === 0) return allClear ? <DeskAllClear lastChecked={lastChecked} /> : null;
 
   return (
-    <div className="grid gap-4 @lg:grid-cols-2 @3xl:grid-cols-3">
-      {CARDS.map((card) => {
+    <TileGrid cols={Math.min(shownCards.length, 3)}>
+      {shownCards.map((card) => {
         const items = byKey[card.key] || [];
         const shown = items.slice(0, CARD_LIMIT);
         const rest = items.length - shown.length;
         return (
-          <section
+          <Card
             key={card.key}
-            className={cn("flex flex-col rounded-xl border bg-card p-5", card.ring)}
+            // One hero a screen: while nothing is connected, connecting is it.
+            variant={card.key === NEEDS_YOU && !quiet ? "hero" : "default"}
             aria-label={i18n._(card.label)}
+            role="region"
           >
-            <header className="mb-4 flex items-center gap-2.5">
-              <span className={cn("size-[7px] rounded-full", card.dot)} aria-hidden />
-              <h2 className="text-sm font-bold tracking-tight">{i18n._(card.label)}</h2>
-              <span className="text-sm text-muted-foreground">{items.length || ""}</span>
+            <header className="flex items-center gap-2.5">
+              <span className={cn("size-2 rounded-full", card.dot)} aria-hidden />
+              <h2 className="text-sm font-semibold">{i18n._(card.label)}</h2>
+              <span className="text-sm tabular-nums text-muted-foreground">{items.length}</span>
             </header>
-
-            {shown.length === 0 ? (
-              <p className="text-xs text-muted-foreground">{i18n._(card.empty)}</p>
-            ) : (
-              <div className="flex flex-col gap-3.5">
-                {shown.map((item) => (
-                  <Item key={item.id} item={item} />
-                ))}
-              </div>
-            )}
-
+            <div className="flex flex-col gap-1">
+              {shown.map((item) => (
+                <Item key={item.id} item={item} />
+              ))}
+            </div>
             {rest > 0 && (
-              <p className="mt-auto pt-4 text-xs text-muted-foreground">
+              <CardFooter className="text-xs text-muted-foreground">
                 <Plural value={rest} one="# more not shown" other="# more not shown" />
-              </p>
+              </CardFooter>
             )}
-          </section>
+          </Card>
         );
       })}
-    </div>
+    </TileGrid>
+  );
+}
+
+/**
+ * Nothing waiting, nothing found, nothing running, and Duct has looked: the
+ * desk's inbox-zero. The one place on the daily path that earns the mosaic,
+ * because it is the reward for an empty queue (DESIGN.md, delight where use is
+ * rare), and it says when Duct last looked so the calm is trustworthy.
+ */
+function DeskAllClear({ lastChecked }) {
+  return (
+    <Card variant="quiet" size="lg" className="items-center gap-6 @2xl:flex-row">
+      <MosaicPanel name={MOSAIC.otium} size={240} className="shrink-0" />
+      <div className="flex flex-col gap-2 @2xl:max-w-sm">
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          {lastChecked ? (
+            <Trans>Duct last looked {lastChecked} and found nothing worth your time. Enjoy the quiet.</Trans>
+          ) : (
+            <Trans>Duct found nothing worth your time. Enjoy the quiet.</Trans>
+          )}
+        </p>
+      </div>
+    </Card>
+  );
+}
+
+// The connectors a first source most often is. Logos, not a list of names:
+// the reader recognises them before reading them.
+const FIRST_SOURCES = ["gsc", "ga4", "google_ads", "stripe"];
+
+/** The one thing to do while nothing is connected: the screen's hero. */
+export function DeskConnectFirst() {
+  return (
+    <Card variant="hero" size="lg" className="gap-5 @2xl:flex-row @2xl:items-center">
+      <div className="flex shrink-0 -space-x-2" aria-hidden>
+        {FIRST_SOURCES.map((key) => (
+          <span
+            key={key}
+            className="flex size-11 items-center justify-center rounded-xl border bg-background ring-4 ring-card [&_img]:size-6 [&_svg]:size-6"
+          >
+            {LOGOS[key]}
+          </span>
+        ))}
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <p className="text-sm font-semibold">
+          <Trans>Connect your first source</Trans>
+        </p>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          <Trans>Search Console is the easiest start. Your first brief takes about three minutes.</Trans>
+        </p>
+      </div>
+      <Button asChild className="shrink-0 self-start @2xl:self-center">
+        <Link href="/connections">
+          <Trans>Connect a source</Trans>
+        </Link>
+      </Button>
+    </Card>
   );
 }

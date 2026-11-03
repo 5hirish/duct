@@ -30,6 +30,7 @@ import { SanityCheckId, isScored } from "@/lib/contentReview";
 import { titleCase } from "@/lib/format";
 import { isComposing } from "@/lib/shortcuts";
 import { Spinner } from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
 
 // Message descriptors (module-level): rendered with `i18n._`.
 const STREAMING_HINTS = [
@@ -328,11 +329,10 @@ function Labeled({ label, hint, children }) {
   );
 }
 
-const INPUT_CLS =
-  "w-full rounded-xl border border-input bg-input/40 px-3 py-2 text-sm outline-none transition-[box-shadow,border-color] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/25 placeholder:text-muted-foreground";
-
-function Textarea({ value, onChange, ...props }) {
-  return <textarea value={value} onChange={(e) => onChange(e.target.value)} className={`${INPUT_CLS} resize-y`} {...props} />;
+// The ui Textarea with a value-first onChange, which is what this form's
+// `patch(key, value)` calls want.
+function CaptionField({ value, onChange, ...props }) {
+  return <Textarea value={value} onChange={(e) => onChange(e.target.value)} {...props} />;
 }
 
 // ---------------------------------------------------------------------------
@@ -383,7 +383,7 @@ function PostCopy({ post, patch }) {
   return (
     <section className="space-y-4 rounded-2xl border border-border bg-card p-4">
       <Labeled label={t`Caption`} hint={t`first line is the hook — 2–3 sentences`}>
-        <Textarea rows={4} value={post.caption || ""} onChange={(v) => patch("caption", v)} placeholder={t`First line is the hook. Keep it 2–3 sentences.`} />
+        <CaptionField rows={4} value={post.caption || ""} onChange={(v) => patch("caption", v)} placeholder={t`First line is the hook. Keep it 2–3 sentences.`} />
       </Labeled>
       <Labeled label={t`Hashtags`}>
         <HashtagInput value={Array.isArray(post.hashtags) ? post.hashtags : []} onChange={(v) => patch("hashtags", v)} />

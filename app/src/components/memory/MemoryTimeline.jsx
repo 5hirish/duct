@@ -64,6 +64,7 @@ import { SkeletonList } from "@/components/ui/skeleton";
 import LoadError from "@/components/LoadError";
 import { isSessionExpired } from "@/lib/authFetch";
 import { formatDate, relativeTime, titleCase } from "@/lib/format";
+import { Textarea } from "@/components/ui/textarea";
 
 // One lucide glyph per kind, for both vocabularies (project and user memory).
 // Anything unmapped gets the tag, which is what "some fact" looks like.
@@ -213,12 +214,11 @@ function MemoryRow({ entry, onPatch, onDelete, busy, focused = false }) {
           ) : (
             <div className="space-y-2">
               <Input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} />
-              <textarea
+              <Textarea
                 value={draft.body}
                 aria-label={t`Memory body`}
                 onChange={(e) => setDraft({ ...draft, body: e.target.value })}
                 rows={3}
-                className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
                 placeholder={t`What was observed, why it matters, how to apply it.`}
               />
               <div className="flex gap-2">
@@ -344,13 +344,12 @@ function RememberForm({ kinds, defaultKind, placeholder, onCreate, busy, onClose
           autoFocus
         />
       </div>
-      <textarea
+      <Textarea
         value={body}
         aria-label={t`Why it matters, and how an agent should apply it`}
         onChange={(e) => setBody(e.target.value)}
         rows={2}
         placeholder={t`Why it matters, and how an agent should apply it. Optional.`}
-        className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm"
       />
       <div className="flex gap-2">
         <Button type="submit" size="sm" disabled={busy || !title.trim()}><Trans>Remember it</Trans></Button>

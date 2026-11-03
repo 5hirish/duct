@@ -14,6 +14,8 @@ import { FileText, FileBarChart2, Table2, Image as ImageIcon, Pin } from "lucide
 import { msg } from "@lingui/core/macro";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
+import { Section } from "@/components/ui/page";
 import { artifactLook, pinnedFirst } from "@/lib/desk";
 import { capitalize } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -22,7 +24,7 @@ import { useRelativeTime } from "./useRelativeTime";
 // A document says what it is before you read its name.
 const LOOKS = {
   brief: { Icon: FileText, className: "bg-primary/15 text-primary" },
-  report: { Icon: FileBarChart2, className: "bg-[var(--orange)]/15 text-brand" },
+  report: { Icon: FileBarChart2, className: "bg-info/15 text-info" },
   data: { Icon: Table2, className: "bg-success/15 text-success" },
   image: { Icon: ImageIcon, className: "bg-muted text-muted-foreground" },
 };
@@ -101,7 +103,7 @@ function Row({ children, onClick }) {
           onClick();
         }
       }}
-      className="group grid cursor-pointer grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-3 border-b border-border/60 py-3 last:border-0 hover:bg-accent/40 @lg:grid-cols-[20px_minmax(0,1fr)_130px_110px_150px]"
+      className="group grid cursor-pointer grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-4 py-3 outline-none transition-colors last:border-0 hover:bg-accent/50 focus-visible:bg-accent/50 @lg:grid-cols-[20px_minmax(0,1fr)_130px_110px_150px]"
     >
       {children}
     </div>
@@ -117,20 +119,26 @@ export default function DeskLists({ conversations, artifacts, onPinThread, onPin
   const docs = pinnedFirst(artifacts, (a) => a.created_at);
   const ago = useRelativeTime();
 
+  // Nothing yet on either list: say nothing. The composer below is the
+  // invitation, and two empty tabs above it explaining that they are empty
+  // were the noise the 2026-11-02 audit counted.
+  if (threads.length === 0 && docs.length === 0) return null;
+
   return (
+    <Section title={<Trans>Recent</Trans>}>
     <Tabs value={tab} onValueChange={setTab} className="gap-3">
       <TabsList>
-        <TabsTrigger value="threads"><Trans>Threads</Trans></TabsTrigger>
-        <TabsTrigger value="artifacts"><Trans>Artifacts</Trans></TabsTrigger>
+        <TabsTrigger value="threads"><Trans>Conversations</Trans></TabsTrigger>
+        <TabsTrigger value="artifacts"><Trans>Documents</Trans></TabsTrigger>
       </TabsList>
 
       <TabsContent value="threads">
         {threads.length === 0 ? (
-          <p className="py-4 text-xs text-muted-foreground">
-            <Trans>No threads yet. Ask something below and one starts.</Trans>
+          <p className="py-4 text-sm text-muted-foreground">
+            <Trans>No conversations yet.</Trans>
           </p>
         ) : (
-          <div>
+          <Card className="gap-0 overflow-hidden p-0">
             {threads.map((conv) => {
               const state = threadState(conv, i18n);
               const title = conv.title || t`Untitled thread`;
@@ -160,17 +168,17 @@ export default function DeskLists({ conversations, artifacts, onPinThread, onPin
                 </Row>
               );
             })}
-          </div>
+          </Card>
         )}
       </TabsContent>
 
       <TabsContent value="artifacts">
         {docs.length === 0 ? (
-          <p className="py-4 text-xs text-muted-foreground">
-            <Trans>Nothing written yet. Artifacts a thread produces collect here.</Trans>
+          <p className="py-4 text-sm text-muted-foreground">
+            <Trans>No documents yet.</Trans>
           </p>
         ) : (
-          <div>
+          <Card className="gap-0 overflow-hidden p-0">
             {docs.map((doc) => {
               const look = artifactLook(doc);
               const { Icon, className } = LOOKS[look.tone] || LOOKS.data;
@@ -219,9 +227,10 @@ export default function DeskLists({ conversations, artifacts, onPinThread, onPin
                 </Row>
               );
             })}
-          </div>
+          </Card>
         )}
       </TabsContent>
     </Tabs>
+    </Section>
   );
 }

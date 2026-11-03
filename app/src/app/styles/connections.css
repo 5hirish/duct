@@ -12,13 +12,12 @@
   gap: 0.75rem;
 }
 
+/* The legacy class, matched to `ui/card` until its last caller moves onto it. */
 .connection-card {
   border: 1px solid var(--border);
-  border-radius: var(--radius-3xl);
+  border-radius: var(--radius-xl);
   background: var(--card);
-  padding: 1.25rem;
-  box-shadow: var(--shadow-sm, 0 1px 3px oklch(0 0 0 / 0.08));
-  ring: 1px solid oklch(0 0 0 / 0.05);
+  padding: 1.5rem;
 }
 
 .connection-card-head {

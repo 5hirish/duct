@@ -14,9 +14,15 @@ import { ReportMode, DEFAULT_AUDIT_TEMPLATE_ID } from "@/lib/audit";
 import { archiveAgentConversation, listAgentConversations } from "@/lib/api";
 import { hasAuthToken } from "@/lib/authFetch";
 import { startAuditResume } from "@/lib/auditResume";
+import { Textarea } from "@/components/ui/textarea";
+import { Card } from "@/components/ui/card";
+import { Page, PageHeader, Section } from "@/components/ui/page";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ChevronDown } from "lucide-react";
+import { relativeTime } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 const CONTENT_TYPES = [
-  { value: "", label: msg`Select type…` },
   { value: "blog", label: msg`Blog / Articles` },
   { value: "landing_pages", label: msg`Landing Pages` },
   { value: "product_pages", label: msg`Product Pages` },
@@ -28,12 +34,6 @@ const EFFORT_OPTIONS = [
   { value: "medium", label: msg`Medium`, hint: msg`Balanced` },
   { value: "high",   label: msg`High`,   hint: msg`Deeper analysis` },
 ];
-
-// Kept for the one control the primitive does not cover (`<textarea>`), and
-// written the way the primitive writes it: `text-base md:text-sm` so iOS
-// Safari does not zoom the page when a field under 16px takes focus, and
-// `focus-visible` so a mouse click does not light the ring up.
-const FIELD = "w-full rounded-3xl border border-control bg-input/50 px-3 py-2 text-base placeholder:text-muted-foreground outline-none transition-[color,box-shadow,background-color] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 md:text-sm";
 
 /** What a past audit's run is doing, from the list route — so one stuck on a
  *  question or a failure says so before it is opened. Idle says nothing. */
@@ -196,196 +196,194 @@ export default function SeoAuditSetupPage() {
 
   const projectName = activeProject?.name || t`this project`;
 
+  const field = "flex flex-col gap-2";
+  const label = "text-sm font-medium";
+
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10">
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight"><Trans>SEO Audit</Trans></h1>
-        <p className="text-muted-foreground mt-1 text-sm">
-          <Trans>Crawl your site, surface issues, and get an AI-generated report with actionable recommendations.</Trans>
-        </p>
-      </div>
+    <Page width="narrow">
+      <PageHeader
+        title={<Trans>SEO Audit</Trans>}
+        status={<Trans>Duct reads your site the way a search engine does, in about three minutes.</Trans>}
+      />
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* URL */}
-        <div>
-          <label className="block text-sm font-medium mb-1.5" htmlFor="url">
-            <Trans>Website URL <span className="text-destructive">*</span></Trans>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {/* The field and its button are one row, like the front door: a
+            single-field form over a full-width button reads as two steps. */}
+        <Card size="lg" className="gap-3">
+          <label className={label} htmlFor="url">
+            <Trans>Site to audit</Trans>
           </label>
-          <Input
-            id="url" type="url" placeholder={t`https://yoursite.com`}
-            value={url} onChange={e => setUrl(e.target.value)} required
-            className="border-control"
-          />
-        </div>
-
-        {/* Business context */}
-        <div className="rounded-lg border border-border/60 p-4 space-y-4">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            <Trans>Optional — improves report quality</Trans>
-          </p>
-
-          {activeProject && (
-            <div className="flex items-start justify-between gap-4 rounded-md bg-muted/30 px-3 py-2.5">
-              <div>
-                <p className="text-sm font-medium">
-                  <Trans>Use {projectName}&apos;s business context</Trans>
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  <Trans>Turn off to audit a different business or competitor — only the fields below are used.</Trans>
-                </p>
-              </div>
-              <Switch
-                className="mt-0.5 shrink-0"
-                checked={useProjectContext}
-                onCheckedChange={(next) => toggleProjectContext(next)}
-              />
-            </div>
-          )}
-
-          {activeProject && useProjectContext && (
-            <div className="flex items-start justify-between gap-4 rounded-md bg-muted/30 px-3 py-2.5">
-              <div>
-                <p className="text-sm font-medium"><Trans>Remember this session</Trans></p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {remember
-                    ? <Trans>This run reads project memory, and what it concludes is written back.</Trans>
-                    : <Trans>A one-off: project memory is neither read nor written. The report is still saved.</Trans>}
-                </p>
-              </div>
-              <Switch
-                className="mt-0.5 shrink-0"
-                checked={remember}
-                aria-label={t`Remember this session`}
-                onCheckedChange={(next) => setRemember(next)}
-              />
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 gap-4 @md:grid-cols-2">
-            <div>
-              <label className="block text-sm font-medium mb-1.5" htmlFor="biz-name"><Trans>Business name</Trans></label>
-              <Input id="biz-name" type="text" placeholder="Duct" value={businessName}
-                onChange={e => setBusinessName(e.target.value)} className="border-control" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1.5" htmlFor="content-type"><Trans>Primary content type</Trans></label>
-              <select id="content-type" value={contentType} onChange={e => setContentType(e.target.value)}
-                className={FIELD}>
-                {CONTENT_TYPES.map(ct => <option key={ct.value} value={ct.value}>{i18n._(ct.label)}</option>)}
-              </select>
-            </div>
+          <div className="flex flex-col gap-2 @md:flex-row">
+            <Input
+              id="url" type="url" placeholder={t`https://yoursite.com`}
+              value={url} onChange={e => setUrl(e.target.value)} required
+              className="h-10"
+            />
+            <Button type="submit" size="lg" disabled={loading} className="shrink-0">
+              {loading ? <Trans>Starting…</Trans> : <Trans>Run audit</Trans>}
+            </Button>
           </div>
+          {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+        </Card>
 
-          <div>
-            <label className="block text-sm font-medium mb-1.5" htmlFor="description"><Trans>Business description</Trans></label>
-            <Input id="description" type="text" placeholder={t`One-sentence description of what you do`}
-              value={description} onChange={e => setDescription(e.target.value)} className="border-control" />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1.5" htmlFor="keywords"><Trans>Target keywords</Trans></label>
-            <Input id="keywords" type="text"
-              placeholder={t`analytics reporting, growth intelligence, SEO audit (comma-separated)`}
-              value={keywords} onChange={e => setKeywords(e.target.value)} className="border-control" />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1.5" htmlFor="competitors"><Trans>Competitors</Trans></label>
-            <Input id="competitors" type="text"
-              placeholder={t`competitor1.com, competitor2.com (comma-separated)`}
-              value={competitors} onChange={e => setCompetitors(e.target.value)} className="border-control" />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1.5" htmlFor="goals"><Trans>Primary SEO goal</Trans></label>
-            <textarea id="goals" rows={2} placeholder={t`e.g. Increase trial signups from organic search`}
-              value={goals} onChange={e => setGoals(e.target.value)}
-              className={`${FIELD} resize-none`} />
-          </div>
-        </div>
-
-        {/* Advanced */}
-        <div className="rounded-lg border border-border/60 overflow-hidden">
+        {/* Everything else is optional, so it waits behind one disclosure
+            (NN/g: progressive disclosure, one level). It was seven fields,
+            two switches and an "Advanced" fold, all open above the button. */}
+        <Card variant="quiet" size="sm" className="gap-0">
           <button
             type="button"
             onClick={() => setAdvancedOpen(o => !o)}
-            className="w-full flex items-center justify-between px-4 py-3 text-sm hover:bg-muted/40 transition-colors"
+            aria-expanded={advancedOpen}
+            className="flex w-full items-center justify-between gap-3 rounded-md text-left text-sm font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
           >
-            <span className="font-medium"><Trans>Advanced</Trans></span>
-            <span className={`text-muted-foreground transition-transform duration-150 ${advancedOpen ? "rotate-90" : ""}`}>›</span>
+            <span>
+              <Trans>Context and settings</Trans>
+              <span className="ml-2 font-normal text-muted-foreground">
+                {activeProject && useProjectContext
+                  ? <Trans>Using {projectName}</Trans>
+                  : <Trans>Optional</Trans>}
+              </span>
+            </span>
+            <ChevronDown className={cn("size-4 text-muted-foreground transition-transform", advancedOpen && "rotate-180")} aria-hidden />
           </button>
 
-          <div
-            className="overflow-hidden transition-all duration-200"
-            style={{ maxHeight: advancedOpen ? "300px" : "0px" }}
-          >
-            <div className="px-4 pb-4 space-y-5 border-t border-border/40">
+          {advancedOpen && (
+            <div className="mt-5 flex flex-col gap-5">
+              {activeProject && (
+                <label className="flex items-start justify-between gap-4">
+                  <span className="flex flex-col gap-0.5">
+                    <span className={label}><Trans>Use {projectName}&apos;s context</Trans></span>
+                    <span className="text-sm text-muted-foreground">
+                      <Trans>Off to audit a competitor or another business.</Trans>
+                    </span>
+                  </span>
+                  <Switch
+                    className="mt-0.5 shrink-0"
+                    checked={useProjectContext}
+                    onCheckedChange={(next) => toggleProjectContext(next)}
+                  />
+                </label>
+              )}
 
-              {/* Effort */}
-              <div className="pt-4">
-                <p className="text-sm font-medium mb-1"><Trans>Analysis effort</Trans></p>
-                <p className="text-xs text-muted-foreground mb-2.5">
-                  <Trans>Controls how deeply the AI reasons about your site before writing findings.</Trans>
-                </p>
-                <div className="flex gap-2">
+              {activeProject && useProjectContext && (
+                <label className="flex items-start justify-between gap-4">
+                  <span className="flex flex-col gap-0.5">
+                    <span className={label}><Trans>Remember this audit</Trans></span>
+                    <span className="text-sm text-muted-foreground">
+                      {remember
+                        ? <Trans>Reads project memory and writes back what it learns.</Trans>
+                        : <Trans>A one-off. The report is still saved.</Trans>}
+                    </span>
+                  </span>
+                  <Switch
+                    className="mt-0.5 shrink-0"
+                    checked={remember}
+                    aria-label={t`Remember this audit`}
+                    onCheckedChange={(next) => setRemember(next)}
+                  />
+                </label>
+              )}
+
+              <div className="grid grid-cols-1 gap-5 @md:grid-cols-2">
+                <div className={field}>
+                  <label className={label} htmlFor="biz-name"><Trans>Business name</Trans></label>
+                  <Input id="biz-name" type="text" placeholder={activeProject?.name || t`Your business`} value={businessName}
+                    onChange={e => setBusinessName(e.target.value)} />
+                </div>
+                <div className={field}>
+                  <label className={label} htmlFor="content-type"><Trans>Primary content type</Trans></label>
+                  <Select value={contentType || undefined} onValueChange={setContentType}>
+                    <SelectTrigger id="content-type" className="w-full">
+                      <SelectValue placeholder={t`Choose one`} />
+                    </SelectTrigger>
+                    <SelectContent position="popper">
+                      {CONTENT_TYPES.map(ct => (
+                        <SelectItem key={ct.value} value={ct.value}>{i18n._(ct.label)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className={field}>
+                <label className={label} htmlFor="description"><Trans>What the business does</Trans></label>
+                <Input id="description" type="text" placeholder={t`One sentence`}
+                  value={description} onChange={e => setDescription(e.target.value)} />
+              </div>
+
+              <div className={field}>
+                <label className={label} htmlFor="keywords"><Trans>Target keywords</Trans></label>
+                <Input id="keywords" type="text"
+                  placeholder={t`Comma-separated`}
+                  value={keywords} onChange={e => setKeywords(e.target.value)} />
+              </div>
+
+              <div className={field}>
+                <label className={label} htmlFor="competitors"><Trans>Competitors</Trans></label>
+                <Input id="competitors" type="text"
+                  placeholder={t`rival.com, other.com`}
+                  value={competitors} onChange={e => setCompetitors(e.target.value)} />
+              </div>
+
+              <div className={field}>
+                <label className={label} htmlFor="goals"><Trans>Primary SEO goal</Trans></label>
+                <Textarea id="goals" rows={2} placeholder={t`e.g. More trial signups from organic search`}
+                  value={goals} onChange={e => setGoals(e.target.value)} />
+              </div>
+
+              <div className={field}>
+                <p className={label}><Trans>Analysis effort</Trans></p>
+                <div role="radiogroup" aria-label={t`Analysis effort`} className="grid grid-cols-3 gap-2">
                   {EFFORT_OPTIONS.map(opt => (
                     <button
                       key={opt.value}
                       type="button"
+                      role="radio"
+                      aria-checked={effort === opt.value}
                       onClick={() => setEffort(opt.value)}
-                      className={`flex-1 rounded-lg border px-3 py-2 text-left transition-colors ${
+                      className={cn(
+                        "rounded-lg border px-3 py-2 text-left transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/40",
                         effort === opt.value
-                          ? "border-primary bg-primary/8 text-foreground"
-                          : "border-border hover:border-border/80 text-muted-foreground hover:text-foreground"
-                      }`}
+                          ? "border-primary bg-primary/5 text-foreground"
+                          : "border-border bg-card text-muted-foreground hover:text-foreground"
+                      )}
                     >
                       <span className="block text-sm font-medium">{i18n._(opt.label)}</span>
-                      <span className="block text-2xs text-muted-foreground mt-0.5">{i18n._(opt.hint)}</span>
+                      <span className="mt-0.5 block text-xs text-muted-foreground">{i18n._(opt.hint)}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Adaptive thinking */}
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-medium"><Trans>Adaptive thinking</Trans></p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    <Trans>Lets the AI reason internally before responding. Improves accuracy on complex sites.</Trans>
-                  </p>
-                </div>
+              <label className="flex items-start justify-between gap-4">
+                <span className="flex flex-col gap-0.5">
+                  <span className={label}><Trans>Adaptive thinking</Trans></span>
+                  <span className="text-sm text-muted-foreground">
+                    <Trans>Reasons before answering. Better on complex sites.</Trans>
+                  </span>
+                </span>
                 <Switch
                   className="mt-0.5 shrink-0"
                   checked={adaptiveThinking}
                   aria-label={t`Adaptive thinking`}
                   onCheckedChange={setAdaptiveThinking}
                 />
-              </div>
-
+              </label>
             </div>
-          </div>
-        </div>
-
-        {error && <p className="text-sm text-destructive">{error}</p>}
-
-        <Button type="submit" disabled={loading} className="w-full">
-          {loading ? <Trans>Starting audit…</Trans> : <Trans>Run SEO Audit →</Trans>}
-        </Button>
+          )}
+        </Card>
       </form>
 
       {prevAudits.length > 0 && (
-        <div className="mt-8">
-          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            <Trans>Previous audits</Trans>
-          </h2>
-          <div className="grid gap-2">
+        <Section title={<Trans>Previous audits</Trans>} count={prevAudits.length}>
+          <Card className="gap-0 overflow-hidden p-0">
             {prevAudits.slice(0, 5).map((conv) => {
               const badge = auditBadge(conv);
               const eventCount = conv.last_seq;
               return (
               <div
                 key={conv.id}
-                className="flex items-center justify-between gap-3 rounded-md border border-input px-3 py-2"
+                className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3 last:border-0"
               >
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">
@@ -395,7 +393,7 @@ export default function SeoAuditSetupPage() {
                     )}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {conv.last_active_at ? new Date(conv.last_active_at).toLocaleString() : ""}
+                    {conv.last_active_at ? relativeTime(conv.last_active_at, { fallbackAfterDays: 7, locale: i18n.locale }) : ""}
                     {eventCount ? <> · <Plural value={eventCount} one="# event" other="# events" /></> : ""}
                   </p>
                 </div>
@@ -434,9 +432,9 @@ export default function SeoAuditSetupPage() {
               </div>
               );
             })}
-          </div>
-        </div>
+          </Card>
+        </Section>
       )}
-    </div>
+    </Page>
   );
 }

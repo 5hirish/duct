@@ -47,6 +47,7 @@ import {
 } from "@/lib/contentApi";
 import MarkdownSpec from "@/components/content/MarkdownSpec";
 import LoadError from "@/components/LoadError";
+import { Textarea } from "@/components/ui/textarea";
 
 const SLIDE_MIN = 1;
 const SLIDE_MAX = 12;
@@ -575,13 +576,13 @@ function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved }) 
                 <TabsTrigger value="preview"><Trans>Preview</Trans></TabsTrigger>
               </TabsList>
               <TabsContent value="edit">
-                <textarea
+                <Textarea
                   value={spec}
                   aria-label={t`Format spec`}
                   onChange={(e) => setSpec(e.target.value)}
                   spellCheck={false}
                   placeholder={t`# My Format\n\n## Slide Structure\n\n| Slide | Type |\n|-------|------|\n| 1 | Hook |`}
-                  className="h-[48vh] w-full resize-y rounded-md border border-border/70 bg-background p-3 font-mono text-xs leading-relaxed outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                  className="field-sizing-fixed h-[48vh] max-h-none font-mono"
                 />
                 <p className="mt-1 text-right text-2xs tabular-nums text-muted-foreground"><Plural value={charCount} one="# char" other="# chars" /></p>
               </TabsContent>

@@ -24,12 +24,12 @@ const SEGMENT_LABELS = {
   plan: msg`Plan`,
   posts: msg`Posts`,
   sessions: msg`Sessions`,
-  insights: msg`Insights`,
-  "organic-growth": msg`Organic Growth`,
+  insights: msg`Home`,
   generate: msg`Generate Insight`,
-  session: msg`Session`,
-  audit: msg`Audit`,
+  session: msg`Conversation`,
   seo: msg`SEO Audit`,
+  execute: msg`Changes`,
+  artifacts: msg`Documents`,
   connections: msg`Connections`,
   projects: msg`Projects`,
   project: msg`Project`,
@@ -59,14 +59,27 @@ function prettifySegment(segment) {
   return titleCase(decoded);
 }
 
+// Segments that are a route's plumbing, not a place: /insights is Home, and
+// /insights/organic-growth is the same Home; /audit has no page of its own.
+// The trail skips them, so the breadcrumb names where you are in the words
+// the sidebar uses.
+const HIDDEN_SEGMENTS = new Set(["organic-growth", "audit"]);
+const SEGMENT_HREFS = { "/insights": "/insights/organic-growth" };
+
 function buildTrail(pathname, i18n) {
   if (!pathname) return [];
   const segments = pathname.split("/").filter(Boolean);
-  return segments.map((segment, i) => ({
-    label: SEGMENT_LABELS[segment] ? i18n._(SEGMENT_LABELS[segment]) : prettifySegment(segment),
-    href: "/" + segments.slice(0, i + 1).join("/"),
-    isLast: i === segments.length - 1,
-  }));
+  const crumbs = segments
+    .map((segment, i) => {
+      const path = "/" + segments.slice(0, i + 1).join("/");
+      return {
+        segment,
+        label: SEGMENT_LABELS[segment] ? i18n._(SEGMENT_LABELS[segment]) : prettifySegment(segment),
+        href: SEGMENT_HREFS[path] || path,
+      };
+    })
+    .filter((crumb) => !HIDDEN_SEGMENTS.has(crumb.segment));
+  return crumbs.map((crumb, i) => ({ ...crumb, isLast: i === crumbs.length - 1 }));
 }
 
 export default function AppNav() {

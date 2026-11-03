@@ -36,7 +36,8 @@ import { CookieConsent } from "@/components/CookieConsent";
 import LoadError from "@/components/LoadError";
 import CloneFromUrlDialog from "@/components/content/CloneFromUrlDialog";
 import CloneSourceNote from "@/components/content/CloneSourceNote";
-import DeskCards from "@/components/insights/desk/DeskCards";
+import DeskCards, { DeskConnectFirst } from "@/components/insights/desk/DeskCards";
+import FirstSourceCelebration from "@/components/connections/FirstSourceCelebration";
 import DeskActivity, { activityGridClass } from "@/components/insights/desk/DeskActivity";
 import SplitWorkspace from "@/components/workspace/SplitWorkspace";
 import { ArtifactPaneHeader, BriefPane, DataPane, DocumentFocus } from "@/components/insights/InsightsWorkspace";
@@ -2016,6 +2017,22 @@ export const SCENES = [
     title: "Cards, an agent-length finding title",
     note: "Drag the frame through the 448–768px band: three columns to two to one. The long title in “What I found” clamps to two lines instead of pushing its siblings out — hover or tab to it for the rest.",
     render: () => <DeskCards buckets={DESK_BUCKETS_SHAPED} />,
+  },
+  {
+    id: "desk-connect-first",
+    state: "nothing connected",
+    group: "Desk",
+    title: "Connect your first source",
+    note: "The Desk's one hero while nothing is connected: four logos, one line, one button. Below @2xl it stacks; check the button sits at the left edge, not stretched.",
+    render: () => <DeskConnectFirst />,
+  },
+  {
+    id: "connections-first-source",
+    state: "the first source just connected",
+    group: "Connections",
+    title: "First source celebration",
+    note: "Shown once per browser, only while exactly one source is connected. Clear localStorage key duct_first_source_celebrated to see it again; the tesserae burst once and are skipped under reduced motion.",
+    render: () => <FirstSourceCelebration connectedTypes={["gsc"]} ready />,
   },
   {
     id: "desk-background-refresh",

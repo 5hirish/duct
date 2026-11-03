@@ -26,19 +26,23 @@
 
   /* shadcn semantic tokens — Duct brand (see docs/archive/2026-Q2/2026-04-06-dashboard-library-evaluation.md) */
   --background: oklch(1 0 0);
-  --foreground: oklch(0.18 0.03 265);
+  --foreground: oklch(0.2 0.012 55);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.03 265);
+  --card-foreground: oklch(0.2 0.012 55);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.03 265);
-  --primary: oklch(0.52 0.22 270);
+  --popover-foreground: oklch(0.2 0.012 55);
+  /* The brand orange is the one accent (DESIGN.md, "One accent"). It was the
+     shadcn default violet until 2026-11-02, the most-cited "generated app"
+     tell, and the reason no screen looked like Duct. Same value as `--brand`:
+     white on it holds 4.6:1. */
+  --primary: oklch(0.58 0.18 45);
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.96 0.005 80);
-  --secondary-foreground: oklch(0.18 0.03 265);
-  --muted: oklch(0.96 0.005 80);
-  --muted-foreground: oklch(0.44 0.022 265);
-  --accent: oklch(0.96 0.005 80);
-  --accent-foreground: oklch(0.18 0.03 265);
+  --secondary: oklch(0.965 0.006 75);
+  --secondary-foreground: oklch(0.2 0.012 55);
+  --muted: oklch(0.965 0.006 75);
+  --muted-foreground: oklch(0.46 0.014 60);
+  --accent: oklch(0.955 0.008 70);
+  --accent-foreground: oklch(0.2 0.012 55);
   --destructive: oklch(0.52 0.22 27);
   --destructive-foreground: oklch(1 0 0);
   /* The other two status colours, beside the one that already existed.
@@ -56,7 +60,7 @@
      a key that works but is not yours — this machine's env file, or Duct's own
      account. Amber was the only non-green available and it read as a fault,
      which is wrong about a run that will succeed. Hue 250 is far enough from
-     the 270 primary to stay a status colour rather than a second accent. */
+     orange primary to stay a status colour rather than a second accent. */
   --info: oklch(0.52 0.15 250);
   --info-foreground: oklch(1 0 0);
   /* The brand orange, as a colour you can put words on. `--orange` above is
@@ -64,8 +68,7 @@
      logo mark is not a contrast question; but white on it measures 3.10:1 and
      the lead-magnet CTA and the audit upsell banner were both setting 12-13px
      white on it. Same hue, taken down to where a small label survives: 4.6:1.
-     If the open accent decision (DESIGN.md, "Known gaps") ever lands on
-     orange, `--primary` points here and nothing else moves. */
+     `--primary` carries the same value. */
   --brand: oklch(0.58 0.18 45);
   --brand-foreground: oklch(1 0 0);
   /* Two different jobs, which is why one token could not do both. `--border`
@@ -78,22 +81,27 @@
   --border: oklch(0.92 0.005 80);
   --input: oklch(0.92 0.005 80);
   --control: oklch(0.62 0.012 80);
-  --ring: oklch(0.52 0.22 270);
+  --ring: oklch(0.62 0.17 45);
   /* Series colours clear 3:1 against the canvas so adjacent marks stay apart
      for a low-vision reader; the old `--chart-3`/`-5` sat at 2.6 and 1.9. */
-  --chart-1: oklch(0.52 0.22 270);
-  --chart-2: oklch(0.3 0.05 265);
-  --chart-3: oklch(0.62 0.17 48);
-  --chart-4: oklch(0.55 0.08 265);
+  --chart-1: oklch(0.58 0.18 45);
+  --chart-2: oklch(0.3 0.03 60);
+  --chart-3: oklch(0.52 0.15 265);
+  --chart-4: oklch(0.55 0.06 70);
   --chart-5: oklch(0.58 0.11 165);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0.01 80);
-  --sidebar-foreground: oklch(0.18 0.03 265);
-  --sidebar-primary: oklch(0.52 0.22 270);
+  /* 8px: controls are rounded-lg (8), cards rounded-xl (11), dialogs
+     rounded-2xl (14), pills rounded-full. Apple's scale (8 controls, 12 cards,
+     16 dialogs) with concentric corners: a card's inner control sits at the
+     card radius minus its padding. Was 10px under shadcn's Luma style, which
+     also rounded every input and button into a capsule. */
+  --radius: 0.5rem;
+  --sidebar: oklch(0.982 0.008 75);
+  --sidebar-foreground: oklch(0.2 0.012 55);
+  --sidebar-primary: oklch(0.58 0.18 45);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.96 0.005 80);
-  --sidebar-accent-foreground: oklch(0.18 0.03 265);
-  --sidebar-border: oklch(0.92 0.005 80);
-  --sidebar-ring: oklch(0.52 0.22 270);
+  --sidebar-accent: oklch(0.945 0.01 70);
+  --sidebar-accent-foreground: oklch(0.2 0.012 55);
+  --sidebar-border: oklch(0.92 0.006 75);
+  --sidebar-ring: oklch(0.62 0.17 45);
 }
 

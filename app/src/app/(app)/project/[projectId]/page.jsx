@@ -45,6 +45,8 @@ import {
   markConfirmed,
 } from "../../../../lib/projectDraft";
 import { fetchProjectConfig, getFallbackProjectConfig } from "../../../../lib/projectConfig";
+import { Textarea } from "@/components/ui/textarea";
+import { Page, PageHeader } from "@/components/ui/page";
 
 // `value` is what the profile stores and the prompts read, so it stays
 // English; `label` is what the person picking it sees.
@@ -439,9 +441,9 @@ export default function ProjectContextPage() {
 
   if (!ready) {
     return (
-      <section>
-        <h1 className="text-2xl font-semibold tracking-tight mb-2"><Trans>Project context</Trans></h1>
-        <div className="flex max-w-2xl flex-col gap-5" role="status" aria-label={t`Loading the project`}>
+      <Page width="narrow">
+        <PageHeader title={<Trans>Project context</Trans>} />
+        <div className="flex flex-col gap-5" role="status" aria-label={t`Loading the project`}>
           {[0, 1, 2].map((i) => (
             <div key={i} className="flex flex-col gap-2">
               <Skeleton className="h-3.5 w-28 rounded" />
@@ -449,54 +451,54 @@ export default function ProjectContextPage() {
             </div>
           ))}
         </div>
-      </section>
+      </Page>
     );
   }
 
   if (projectLoadError) {
     return (
-      <section>
-        <h1 className="text-2xl font-semibold tracking-tight mb-2"><Trans>Project context</Trans></h1>
-        <p className="text-sm text-muted-foreground mb-4">{projectLoadError}</p>
-        <Button asChild>
-          <Link href="/projects"><Trans>Back to manage projects</Trans></Link>
+      <Page width="narrow">
+        <PageHeader title={<Trans>Project context</Trans>} status={projectLoadError} />
+        <Button asChild className="self-start">
+          <Link href="/projects"><Trans>Back to projects</Trans></Link>
         </Button>
-      </section>
+      </Page>
     );
   }
 
   return (
-    <section>
-      {/* Sticky progress shell */}
-      <div className="project-progress-shell">
-        <div className="page-toolbar" style={{ marginBottom: 8 }}>
-          <h1 className="page-toolbar-title text-lg font-semibold tracking-tight"><Trans>Project context</Trans></h1>
-          <span className="text-sm text-muted-foreground">
-            {drafted > 0 ? (
-              <Plural value={drafted} one="# drafted field to confirm" other="# drafted fields to confirm" />
-            ) : (
-              <Trans>{inputProgressPercent}% complete</Trans>
-            )}
-          </span>
-          {/* Members live with the project they grant access to; the targets
-              set here become project memory, so its timeline sits beside the
-              form that writes them. */}
-          <div className="ml-auto flex items-center gap-1">
-            <Button asChild variant="ghost" size="sm">
+    <Page width="narrow">
+      <PageHeader
+        title={<Trans>Project context</Trans>}
+        status={
+          drafted > 0 ? (
+            <Plural value={drafted} one="# drafted field to confirm" other="# drafted fields to confirm" />
+          ) : (
+            <Trans>{inputProgressPercent}% complete</Trans>
+          )
+        }
+        // Members live with the project they grant access to; the targets set
+        // here become project memory, so its timeline sits beside the form.
+        actions={
+          <>
+            <Button asChild variant="outline" size="sm">
               <Link href={`/project/${projectMeta.id}/memory`}>
                 <Brain className="size-4" />
                 <Trans>Memory</Trans>
               </Link>
             </Button>
-            <Button asChild variant="ghost" size="sm">
+            <Button asChild variant="outline" size="sm">
               <Link href={`/project/${projectMeta.id}/members`}>
                 <Users className="size-4" />
                 <Trans>Members</Trans>
               </Link>
             </Button>
-          </div>
-        </div>
+          </>
+        }
+      />
 
+      {/* Sticky progress shell */}
+      <div className="project-progress-shell">
         <div className="mb-3">
           <Progress value={inputProgressPercent} className="h-1.5" />
         </div>
@@ -549,7 +551,7 @@ export default function ProjectContextPage() {
                 own("company_name");
                 setProfile((prev) => ({ ...prev, company: { ...prev.company, name: e.target.value } }));
               }}
-              placeholder={t`Acme Inc.`}
+              placeholder={t`Your company`}
             />
           </div>
           <div className="grid gap-1.5">
@@ -641,9 +643,8 @@ export default function ProjectContextPage() {
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="north-star-goal-window"><Trans>What does success look like in the next 90 days?</Trans></Label>
-            <textarea
+            <Textarea
               id="north-star-goal-window"
-              className="flex min-h-[80px] w-full rounded-3xl border border-input bg-input/50 px-4 py-2.5 text-sm transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
               rows={3}
               value={profile.targets.north_star_goal_window}
               onChange={(e) =>
@@ -673,9 +674,8 @@ export default function ProjectContextPage() {
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="north-star-constraints"><Trans>What currently limits this metric most? <span className="text-muted-foreground">(optional)</span></Trans></Label>
-            <textarea
+            <Textarea
               id="north-star-constraints"
-              className="flex min-h-[80px] w-full rounded-3xl border border-input bg-input/50 px-4 py-2.5 text-sm transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
               rows={3}
               value={profile.targets.north_star_constraints}
               onChange={(e) =>
@@ -686,9 +686,8 @@ export default function ProjectContextPage() {
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="growth-stage-context"><Trans>Growth stage context or constraints <span className="text-muted-foreground">(optional)</span></Trans></Label>
-            <textarea
+            <Textarea
               id="growth-stage-context"
-              className="flex min-h-[80px] w-full rounded-3xl border border-input bg-input/50 px-4 py-2.5 text-sm transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
               rows={2}
               value={profile.targets.growth_stage_context}
               onChange={(e) =>
@@ -746,9 +745,8 @@ export default function ProjectContextPage() {
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="persona-desc"><Trans>Persona description</Trans></Label>
-            <textarea
+            <Textarea
               id="persona-desc"
-              className="flex min-h-[80px] w-full rounded-3xl border border-input bg-input/50 px-4 py-2.5 text-sm transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
               rows={3}
               value={profile.audience.personas[0]?.description || ""}
               onChange={(e) => {
@@ -874,9 +872,8 @@ export default function ProjectContextPage() {
 
           <div className="grid gap-1.5">
             <Label htmlFor="context-notes"><Trans>Additional business context</Trans></Label>
-            <textarea
+            <Textarea
               id="context-notes"
-              className="flex min-h-[80px] w-full rounded-3xl border border-input bg-input/50 px-4 py-2.5 text-sm transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
               rows={2}
               value={profile.brand_channels.context_notes}
               onChange={(e) =>
@@ -913,6 +910,6 @@ export default function ProjectContextPage() {
           </Button>
         )}
       </div>
-    </section>
+    </Page>
   );
 }

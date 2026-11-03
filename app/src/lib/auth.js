@@ -73,6 +73,12 @@ export function useAuth() {
   return ctx;
 }
 
+/** The signed-in user or null, for a component that also renders outside the
+ *  shell (a /preview scene) and only wants the name when there is one. */
+export function useAuthUser() {
+  return useContext(AuthContext)?.user || null;
+}
+
 function AuthLoadingMessage({ message }) {
   return (
     <div

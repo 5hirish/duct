@@ -23,8 +23,6 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { FolderKanban } from "lucide-react";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import {
@@ -55,6 +53,8 @@ import {
 import { hasAuthToken } from "@/lib/authFetch";
 import VoiceSample from "@/components/profile/VoiceSample";
 import LanguageMenu from "@/components/LanguageMenu";
+import { Page, PageHeader } from "@/components/ui/page";
+import { Textarea } from "@/components/ui/textarea";
 
 /** Long enough that a typist is not interrupted, short enough to feel saved. */
 const SAVE_DEBOUNCE_MS = 600;
@@ -159,28 +159,19 @@ export default function ProfilePage() {
   const offsetSuffix = offset ? ` · ${offset}` : "";
 
   return (
-    <section>
-      <div className="page-toolbar-back">
-        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight"><Trans>Profile</Trans></h1>
-        <span aria-live="polite" className={`mt-saved${saved ? " mt-saved--on" : ""}`}>
-          {saved}
-        </span>
-        <Button asChild variant="ghost" size="sm" className="ml-auto">
-          {/* A shortcut, not a back link: the arrow read as "you came from
-              projects", which is rarely where a settings page was opened
-              from. The folder says what it is. */}
-          <Link href="/projects">
-            <FolderKanban className="size-4" /> <Trans>Your projects</Trans>
-          </Link>
-        </Button>
-      </div>
-
-      <p className="app-subtle" style={{ marginTop: 0, marginBottom: 20 }}>
-        <Trans>Every agent reads this, on every project. Only you can see it.</Trans>
-      </p>
+    <Page width="narrow">
+      <PageHeader
+        title={<Trans>Profile</Trans>}
+        status={<Trans>Every agent reads this, on every project. Only you can see it.</Trans>}
+        actions={
+          <span aria-live="polite" className={`mt-saved${saved ? " mt-saved--on" : ""}`}>
+            {saved}
+          </span>
+        }
+      />
 
       {!signedIn && (
-        <p className="app-subtle" style={{ marginBottom: 16, fontSize: 13 }}>
+        <p className="text-sm text-muted-foreground">
           <Trans>
             Saved on this device until you sign in. A signed-in profile follows you, and the
             scheduled brief can read it.
@@ -188,7 +179,7 @@ export default function ProfilePage() {
         </p>
       )}
       {offline && (
-        <p role="alert" className="text-destructive" style={{ marginBottom: 16, fontSize: 13 }}>
+        <p role="alert" className="text-sm text-destructive">
           <Trans>Not saved to your account. It is kept on this device; try again in a moment.</Trans>
         </p>
       )}
@@ -209,7 +200,7 @@ export default function ProfilePage() {
               className="pf-input"
               value={profile.display_name}
               maxLength={80}
-              placeholder={t`Shirish`}
+              placeholder={t`Your first name`}
               onChange={(e) => update({ display_name: e.target.value }, { debounce: true })}
             />
           </div>
@@ -359,8 +350,7 @@ export default function ProfilePage() {
             wins when it disagrees with the setting above.
           </Trans>
         </p>
-        <textarea
-          className="pf-notes"
+        <Textarea
           value={profile.notes}
           maxLength={NOTES_MAX_CHARS}
           rows={4}
@@ -384,6 +374,6 @@ export default function ProfilePage() {
           </Button>
         </div>
       </div>
-    </section>
+    </Page>
   );
 }

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  Plug,
+  Gauge,
   Check,
   Plus,
   ChevronsUpDown,
@@ -26,7 +26,6 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Trans, useLingui } from "@lingui/react/macro";
-import { plural } from "@lingui/core/macro";
 import {
   Sidebar,
   SidebarContent,
@@ -426,6 +425,14 @@ function SidebarUserFooter() {
             <span><Trans>Models &amp; providers</Trans></span>
           </Link>
         </DropdownMenuItem>
+        {/* Out of the sidebar on 2026-11-02: what your key spent is an
+            account question, asked monthly, not a place you work in. */}
+        <DropdownMenuItem asChild>
+          <Link href="/usage">
+            <Gauge className="size-4" />
+            <span><Trans>Usage</Trans></span>
+          </Link>
+        </DropdownMenuItem>
         {/* Duct reached from outside: the person's own agent setting up their
             projects through the MCP server (settings/agents). */}
         <DropdownMenuItem asChild>
@@ -438,6 +445,7 @@ function SidebarUserFooter() {
         {/* The profile page has the same control; here it is one click away
             for someone who landed in a language they cannot read. */}
         <LanguageMenuItem />
+        <ThemeMenuItem />
         <NotificationMenuItem />
         <DropdownMenuSeparator />
         {/* Plain new-tab links: installExternalLinkHandler (lib/shell.js)
@@ -478,7 +486,10 @@ function SidebarUserFooter() {
 // Theme sidebar item
 // ---------------------------------------------------------------------------
 
-function ThemeSidebarItem() {
+// Appearance follows the system by default (Apple: avoid an app-specific
+// appearance setting), so the override lives in the account menu rather than
+// as a permanent row in the sidebar where it sat beside the real navigation.
+function ThemeMenuItem() {
   const { t } = useLingui();
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -487,15 +498,10 @@ function ThemeSidebarItem() {
   const isDark = resolvedTheme === "dark";
 
   return (
-    <SidebarMenuItem>
-      <SidebarMenuButton
-        onClick={() => mounted && setTheme(isDark ? "light" : "dark")}
-        tooltip={isDark ? t`Light mode` : t`Dark mode`}
-      >
-        {mounted && isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-        <span>{mounted && isDark ? t`Light mode` : t`Dark mode`}</span>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
+    <DropdownMenuItem onSelect={() => mounted && setTheme(isDark ? "light" : "dark")}>
+      {mounted && isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+      <span>{mounted && isDark ? t`Light mode` : t`Dark mode`}</span>
+    </DropdownMenuItem>
   );
 }
 
@@ -503,7 +509,7 @@ function ThemeSidebarItem() {
 // AppSidebar
 // ---------------------------------------------------------------------------
 
-/** How many sources are connected, for the footer badge.
+/** How many sources are connected, for the count beside Connections.
  *
  * It used to count two hardcoded sessionStorage keys — GA4 and GSC — so the
  * badge could never read higher than 2 and never saw Google Ads, GTM, or any
@@ -626,7 +632,7 @@ export default function AppSidebar() {
             )}
 
             <SidebarGroup className="py-2">
-              <SidebarGroupLabel className="px-4 text-2xs font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+              <SidebarGroupLabel className="px-4 text-xs font-medium text-muted-foreground">
                 {i18n._(section.label)}
               </SidebarGroupLabel>
               <SidebarGroupContent>
@@ -637,22 +643,8 @@ export default function AppSidebar() {
                     const label = i18n._(item.label);
                     const working = runsUnder(liveRuns, item.matchPrefix).length > 0;
 
-                    if (!item.available) {
-                      return (
-                        <SidebarMenuItem key={item.key}>
-                          <SidebarMenuButton
-                            className="cursor-default opacity-45 hover:bg-transparent hover:text-sidebar-foreground/45"
-                            tooltip={t`${label} — coming soon`}
-                          >
-                            <Icon className="size-4" />
-                            <span>{label}</span>
-                            <span className="ml-auto rounded-full bg-muted px-1.5 py-px text-2xs leading-none text-muted-foreground">
-                              <Trans>Soon</Trans>
-                            </span>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      );
-                    }
+                    if (!item.available) return null;
+                    const count = item.badge === "connections" ? connectionCount : 0;
 
                     return (
                       <SidebarMenuItem key={item.key}>
@@ -660,13 +652,17 @@ export default function AppSidebar() {
                           <Link href={item.href}>
                             <Icon className="size-4" />
                             <span>{label}</span>
-                            {working && (
+                            {working ? (
                               <span
                                 role="img"
                                 aria-label={t`Working…`}
                                 className="ml-auto size-2 shrink-0 animate-pulse rounded-full bg-primary group-data-[collapsible=icon]:hidden"
                               />
-                            )}
+                            ) : count > 0 ? (
+                              <span className="ml-auto text-xs tabular-nums text-muted-foreground group-data-[collapsible=icon]:hidden">
+                                {count}
+                              </span>
+                            ) : null}
                           </Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
@@ -681,37 +677,6 @@ export default function AppSidebar() {
 
       {/* Footer */}
       <SidebarFooter className="gap-0 border-t border-sidebar-border p-2">
-        {/* Connections + Theme — same visual style as nav items */}
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              isActive={pathname.startsWith("/connections")}
-              tooltip={
-                connectionCount
-                  ? plural(connectionCount, { one: "Connections · # active", other: "Connections · # active" })
-                  : t`Connections — add a source`
-              }
-            >
-              <Link href="/connections">
-                <Plug className="size-4" />
-                <span><Trans>Connections</Trans></span>
-                {connectionCount > 0 ? (
-                  <span className="ml-auto rounded-full bg-primary/15 px-1.5 py-px text-2xs leading-none font-medium text-primary group-data-[collapsible=icon]:hidden">
-                    {connectionCount}
-                  </span>
-                ) : (
-                  <span className="ml-auto text-2xs text-muted-foreground group-data-[collapsible=icon]:hidden">
-                    <Trans>New</Trans>
-                  </span>
-                )}
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <ThemeSidebarItem />
-        </SidebarMenu>
-
-        <SidebarSeparator className="my-2 group-data-[collapsible=icon]:hidden" />
 
         {/* User */}
         <SidebarUserFooter />

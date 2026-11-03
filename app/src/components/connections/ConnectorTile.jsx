@@ -1,48 +1,47 @@
 "use client";
 
-// The one card shape on the Connections page.
+// The one card shape on the Connections page, built on `ui/card`.
 //
-// Every connector and model provider gets the same tile: logo, name, one line
-// of what it's for, and its live state. Setup happens in a dialog
-// (`ConnectorDialog`), never inline, so the grid stays scannable no matter how
-// many fields a given connector needs.
+// Logo, name, one line of what it's for, and its live state. Setup happens in a
+// dialog (`ConnectorDialog`), never inline, so the grid stays scannable no
+// matter how many fields a connector needs.
 //
-// The card is a container, not a button. It was a <button> wrapping the whole
-// thing, which put the storage glyph's tooltip trigger — itself a button —
-// inside it. React refuses to hydrate that ("<button> cannot be a descendant
-// of <button>"), and the HTML parser had already moved the inner one out of
-// the card before React ever saw it. The fix is the pattern AGENTS.md
-// prescribes for exactly this: the button goes on the title and stretches
-// over the card with a pseudo-element. One tab stop, one readable name, and
-// anything that needs its own interaction just sits above it.
+// The card is a container, not a button: the storage glyph in the footer is a
+// tooltip trigger (itself a button), and a button cannot hold a button. The
+// title is the button and stretches over the card (`cardLinkClass`), so there
+// is one tab stop with a readable name and the footer's own controls sit above
+// it. The footer is the Card's, pinned to the bottom, so the state lines of a
+// row of tiles share one baseline however long each description runs.
+//
+// `featured` is the large tile for the few sources worth connecting first: it
+// says what the source will let Duct answer (`benefit`) and shows the action
+// as a real button, because on day one the action is the point of the tile.
 
 import { ChevronRight } from "lucide-react";
-import { useLingui } from "@lingui/react/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
+import { Button } from "@/components/ui/button";
+import { Card, CardFooter, cardLinkClass } from "@/components/ui/card";
+import { ConnectorKind } from "@/lib/connectorSource";
+import { cn } from "@/lib/utils";
 import ConnectorDot from "./ConnectorDot";
-import ConnectorSource from "./ConnectorSource";
 import StorageBadge from "./StorageBadge";
 
 /**
  * @param tag  Optional short capability label beside the title ("Works with
- *   ChatGPT"). A fact about what the tile accepts, not a state — states go in
- *   the foot. One tile has one today; it is a prop so the second does not
- *   need a second markup path.
- * @param source  `{ kind, publisher }` (lib/connectorSource.js): native and by
- *   Duct, or MCP and by the vendor. Connectors pass one, model providers do
- *   not, since the grid that mixes kinds is the connectors one.
- * @param tone  "on" | "info" | "partial" | "off" — drives the status dot's
- *   colour. "info" is reachable-but-not-yours (Duct's key, or this machine's);
- *   "partial" is reachable-but-degraded. They are different claims.
- * @param status  Short state line, e.g. "Connected — Acme Ads".
- * @param storage  STORAGE_* constant — where the credential lives. On the tile
- *   rather than only in the dialog because "saved to your account" and "living
- *   in this tab" are indistinguishable from outside, and the difference is the
- *   whole reason a connection appears to vanish.
+ *   ChatGPT"). A fact about what the tile accepts, not a state.
+ * @param source  `{ kind, publisher }` (lib/connectorSource.js). Only an MCP
+ *   source is labelled: native is the default, and a "Native" badge on fourteen
+ *   of fifteen tiles told nobody anything.
+ * @param tone  "on" | "info" | "partial" | "off" — the status dot's colour.
+ * @param status  Short state line, e.g. "Connected".
+ * @param storage  STORAGE_* constant — where the credential lives.
+ * @param featured  Large tile with `benefit` and a visible Connect button.
  */
 export default function ConnectorTile({
   logo,
   title,
   description,
+  benefit,
   tag,
   source,
   tone = "off",
@@ -50,49 +49,78 @@ export default function ConnectorTile({
   storage,
   onClick,
   disabled = false,
+  featured = false,
 }) {
   const { t } = useLingui();
+  const mcp = source?.kind === ConnectorKind.MCP;
+  const connected = tone === "on" || tone === "info" || tone === "partial";
   return (
-    <div className={`conn-tile${disabled ? " is-disabled" : ""}`}>
-      <span className="conn-tile-logo" aria-hidden="true">
-        {logo}
-      </span>
-      <div className="conn-tile-body">
-        <div className="conn-tile-top">
-          {disabled ? (
-            <span className="conn-tile-title">{title}</span>
-          ) : (
-            // The visible text is the title, so the accessible name has to
-            // contain it verbatim (WCAG 2.5.3) — "Configure X", not "Open
-            // settings".
-            <button
-              type="button"
-              className="conn-tile-title conn-tile-open"
-              onClick={onClick}
-              aria-label={t`Configure ${title}`}
-            >
-              {title}
-            </button>
+    <Card
+      variant={disabled ? "quiet" : "interactive"}
+      size={featured ? "default" : "sm"}
+      className={cn(disabled && "opacity-60")}
+    >
+      <div className="flex items-start gap-3">
+        <span
+          className={cn(
+            "flex shrink-0 items-center justify-center rounded-lg border bg-background [&_img]:size-6 [&_svg]:size-6",
+            featured ? "size-12 [&_img]:size-7 [&_svg]:size-7" : "size-10"
           )}
-          {tag && <span className="conn-tile-tag">{tag}</span>}
-          {!disabled && (
-            <ChevronRight className="conn-tile-chevron" size={16} aria-hidden="true" />
-          )}
+          aria-hidden="true"
+        >
+          {logo}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            {disabled ? (
+              <span className="truncate text-sm font-semibold">{title}</span>
+            ) : (
+              // The visible text is the title, so the accessible name contains
+              // it verbatim (WCAG 2.5.3): "Configure X", not "Open settings".
+              <button
+                type="button"
+                data-card-link
+                onClick={onClick}
+                aria-label={t`Configure ${title}`}
+                className={cn("truncate text-left text-sm font-semibold", cardLinkClass)}
+              >
+                {title}
+              </button>
+            )}
+            {mcp && (
+              <span className="shrink-0 rounded-full border px-1.5 text-2xs font-medium leading-4 text-muted-foreground">
+                {source.publisher ? <Trans>MCP · {source.publisher}</Trans> : t`MCP`}
+              </span>
+            )}
+            {tag && (
+              <span className="shrink-0 rounded-full bg-muted px-1.5 text-2xs font-medium leading-4 text-muted-foreground">
+                {tag}
+              </span>
+            )}
+          </div>
+          <p className="mt-1 line-clamp-2 text-sm leading-snug text-muted-foreground">
+            {featured && benefit ? benefit : description}
+          </p>
         </div>
-        <ConnectorSource source={source} />
-        <p className="conn-tile-desc">{description}</p>
-        <div className={`conn-tile-foot${tone === "on" ? " conn-tile-foot--on" : ""}`}>
-          <ConnectorDot tone={tone} />
-          {/* State on the left, where it is read; where the credential lives
-              on the right. The word stays even when the dot is green — the dot
-              alone made the left half of the row look empty, and colour is
-              never the only channel anyway (WCAG 1.4.1). It used to clip to
-              "Connec…" because a full-width pill sat beside it; the pill is a
-              24px glyph now, so the room exists. */}
-          <span className="conn-tile-foot-text">{status}</span>
-          <StorageBadge storage={storage} />
-        </div>
+        {!disabled && !featured && (
+          <ChevronRight className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+        )}
       </div>
-    </div>
+      <CardFooter className="min-h-6 text-xs text-muted-foreground">
+        <ConnectorDot tone={tone} />
+        {/* The word stays beside the dot: colour is never the only channel
+            (WCAG 1.4.1), and under deuteranopia green and amber converge. */}
+        <span className={cn("truncate", tone === "on" && "font-medium text-foreground")}>{status}</span>
+        <span className="ml-auto flex items-center gap-2">
+          <StorageBadge storage={storage} />
+          {featured && !disabled && !connected && (
+            // Above the stretched title link, so it is its own target.
+            <Button size="sm" className="relative z-10" onClick={onClick} tabIndex={-1}>
+              <Trans>Connect</Trans>
+            </Button>
+          )}
+        </span>
+      </CardFooter>
+    </Card>
   );
 }

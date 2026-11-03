@@ -34,8 +34,8 @@ msgid "· {fans} fans"
 msgstr "· {fans} fans"
 
 #: src/components/insights/InsightsWorkspace.jsx
-msgid "· set to <0>{configured}</0>, stepped down for this model"
-msgstr "· establecido en <0>{configured}</0>, reducido para este modelo"
+#~ msgid "· set to <0>{configured}</0>, stepped down for this model"
+#~ msgstr "· establecido en <0>{configured}</0>, reducido para este modelo"
 
 #: src/components/content/DiscoverPage.jsx
 msgid "(no caption)"
@@ -155,9 +155,13 @@ msgstr "{competitorCount, plural, one {# competidor} other {# competidores}}"
 msgid "{competitors, plural, one {# competitor} other {# competitors}}"
 msgstr "{competitors, plural, one {# competidor} other {# competidores}}"
 
+#: src/app/(app)/connections/page.jsx
+msgid "{connectedCount, plural, one {# source connected} other {# sources connected}}"
+msgstr "{connectedCount, plural, one {# fuente conectada} other {# fuentes conectadas}}"
+
 #: src/components/AppSidebar.jsx
-msgid "{connectionCount, plural, one {Connections · # active} other {Connections · # active}}"
-msgstr "{connectionCount, plural, one {Conexiones · # activa} other {Conexiones · # activas}}"
+#~ msgid "{connectionCount, plural, one {Connections · # active} other {Connections · # active}}"
+#~ msgstr "{connectionCount, plural, one {Conexiones · # activa} other {Conexiones · # activas}}"
 
 #: src/app/(auth)/desktop-auth/page.js
 msgid "{connectorName} connected"
@@ -216,8 +220,12 @@ msgstr "{destructiveCount, plural, one {# cambio destructivo} other {# cambios d
 #~ msgstr "{dialName} {dialDefault} · lo que sea que haga este modelo de todos modos"
 
 #: src/components/insights/desk/DeskDayOne.jsx
-msgid "{done} of 3 done"
-msgstr "{done} de 3 hechos"
+#~ msgid "{done} of 3 done"
+#~ msgstr "{done} de 3 hechos"
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "{done} of 3 done. It fills itself in after that."
+msgstr "{done} de 3 completados. Se completa solo después de eso."
 
 #: src/components/audit/AuditReport.jsx
 msgid "{done}/{total} categories"
@@ -264,8 +272,8 @@ msgid "{fieldLabel} (optional)"
 msgstr "{fieldLabel} (opcional)"
 
 #: src/components/insights/Desk.jsx
-msgid "{found, plural, one {# finding on file.} other {# findings on file.}}"
-msgstr "{found, plural, one {# hallazgo registrado.} other {# hallazgos registrados.}}"
+#~ msgid "{found, plural, one {# finding on file.} other {# findings on file.}}"
+#~ msgstr "{found, plural, one {# hallazgo registrado.} other {# hallazgos registrados.}}"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "{from} – {to}"
@@ -320,8 +328,8 @@ msgid "{issues, plural, one {# error} other {# errors}}"
 msgstr "{issues, plural, one {# error} other {# errores}}"
 
 #: src/components/AppSidebar.jsx
-msgid "{label} — coming soon"
-msgstr "{label} — próximamente"
+#~ msgid "{label} — coming soon"
+#~ msgstr "{label} — próximamente"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "{label} API key"
@@ -400,8 +408,12 @@ msgid "{n} chars"
 msgstr "{n} caracteres"
 
 #: src/app/(app)/project/[projectId]/members/page.jsx
-msgid "{name} · Members"
-msgstr "{name} · Miembros"
+#~ msgid "{name} · Members"
+#~ msgstr "{name} · Miembros"
+
+#: src/components/connections/FirstSourceCelebration.jsx
+msgid "{name} is connected."
+msgstr "{name} está conectado."
 
 #: src/components/connections/McpConnectors.jsx
 msgid "{name} is connected. The insights chat can use its tools now."
@@ -525,8 +537,8 @@ msgid "{posts, plural, one {# post} other {# posts}}"
 msgstr "{posts, plural, one {# publicación} other {# publicaciones}}"
 
 #: src/app/(app)/project/[projectId]/memory/page.jsx
-msgid "{projectName} · Memory"
-msgstr "{projectName} · Memoria"
+#~ msgid "{projectName} · Memory"
+#~ msgstr "{projectName} · Memoria"
 
 #: src/components/workspace/AgentChat.jsx
 msgid "{ranTier} · {requestedTier} is rate limited"
@@ -613,13 +625,21 @@ msgstr "{slides, plural, one {# diapositiva} other {# diapositivas}}"
 msgid "{slideShare} of posts · <0>{slideEng}</0> eng."
 msgstr "{slideShare} de publicaciones · <0>{slideEng}</0> interacciones"
 
+#: src/components/insights/Desk.jsx
+msgid "{sourceCount, plural, one {# source connected. Ask anything below to start.} other {# sources connected. Ask anything below to start.}}"
+msgstr "{sourceCount, plural, one {# fuente conectada. Pregunta cualquier cosa a continuación para empezar.} other {# fuentes conectadas. Pregunta cualquier cosa a continuación para empezar.}}"
+
 #: src/components/GoogleAdsReport.js
 msgid "{summary} Operator takeaway: {takeaway}"
 msgstr "{summary} Conclusión del operador: {takeaway}"
 
 #: src/components/LocalInsightDetail.jsx
-msgid "{theme} · Generated: {generatedAt}"
-msgstr "{theme} · Generado: {generatedAt}"
+msgid "{theme} · Generated {generatedAt} · Saved in this browser"
+msgstr "{theme} · Generado {generatedAt} · Guardado en este navegador"
+
+#: src/components/LocalInsightDetail.jsx
+#~ msgid "{theme} · Generated: {generatedAt}"
+#~ msgstr "{theme} · Generado: {generatedAt}"
 
 #: src/components/models/TierSummary.jsx
 msgid "{tierName} has no key and nothing below it can run either."
@@ -681,6 +701,10 @@ msgstr "{videoShare} de publicaciones · <0>{videoEng}</0> interacciones"
 msgid "{views, plural, one {# view} other {# views}}"
 msgstr "{views, plural, one {# vista} other {# vistas}}"
 
+#: src/app/(app)/execute/page.jsx
+msgid "{waiting, plural, one {# change set waiting for you} other {# change sets waiting for you}}"
+msgstr "{waiting, plural, one {# conjunto de cambios esperando por ti} other {# conjuntos de cambios esperando por ti}}"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "{warnCount, plural, one {# Warning} other {# Warnings}}"
 msgstr "{warnCount, plural, one {# advertencia} other {# advertencias}}"
@@ -718,13 +742,13 @@ msgstr "# Mi formato\n"
 "| 1 | Gancho |"
 
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
-msgid "← Artifacts"
-msgstr "← Artefactos"
+#~ msgid "← Artifacts"
+#~ msgstr "← Artefactos"
 
 #: src/app/(app)/insights/organic-growth/[slug]/page.jsx
 #: src/components/LocalInsightDetail.jsx
-msgid "← Back to insights"
-msgstr "← Volver a los hallazgos"
+#~ msgid "← Back to insights"
+#~ msgstr "← Volver a los hallazgos"
 
 #: src/components/commands/CommandPalette.jsx
 msgid "↑↓ to move · ↵ to run · esc to close"
@@ -799,8 +823,8 @@ msgid "<0>Limited scan: </0>Based on {pagesCrawled} of {sitemapUrls} sitemap pag
 msgstr "<0>Escaneo limitado: </0>Basado en {pagesCrawled} de {sitemapUrls} páginas del mapa del sitio."
 
 #: src/app/(app)/connections/page.jsx
-msgid "<0>Native</0> connectors are built by Duct and feed briefs, alerts and the chat. <1>MCP</1> connectors are each company’s own server; the insights chat calls their tools. <2>How MCP works</2>"
-msgstr "<0>Los conectores nativos</0> son creados por Duct y alimentan informes, alertas y el chat. <1>Los conectores MCP</1> son el propio servidor de cada empresa; el chat de hallazgos llama a sus herramientas. <2>Cómo funciona MCP</2>"
+#~ msgid "<0>Native</0> connectors are built by Duct and feed briefs, alerts and the chat. <1>MCP</1> connectors are each company’s own server; the insights chat calls their tools. <2>How MCP works</2>"
+#~ msgstr "<0>Los conectores nativos</0> son creados por Duct y alimentan informes, alertas y el chat. <1>Los conectores MCP</1> son el propio servidor de cada empresa; el chat de hallazgos llama a sus herramientas. <2>Cómo funciona MCP</2>"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "<0>Pillars:</0> {pillars}"
@@ -862,8 +886,8 @@ msgid "2–4 hrs"
 msgstr "2–4 h"
 
 #: src/components/insights/desk/DeskDayOne.jsx
-msgid "23 came from your own team"
-msgstr "23 vinieron de tu propio equipo"
+#~ msgid "23 came from your own team"
+#~ msgstr "23 vinieron de tu propio equipo"
 
 #: src/components/content/PlanPeriodPicker.jsx
 #: src/lib/usageApi.js
@@ -875,6 +899,10 @@ msgstr "30 días"
 #~ msgid "30-day plan"
 #~ msgstr "Plan de 30 días"
 
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "46 were your own team testing"
+msgstr "46 fueron pruebas de tu propio equipo"
+
 #: src/lib/usageApi.js
 msgid "7 days"
 msgstr "7 días"
@@ -884,8 +912,12 @@ msgid "90 days"
 msgstr "90 días"
 
 #: src/app/(app)/execute/page.jsx
-msgid "A change that matches a guardrail arrives <0>blocked</0> and can never auto-apply; agents see the rules and propose around them. A rule with no matcher is guidance only."
-msgstr "Un cambio que coincide con una barandilla llega <0>bloqueado</0> y nunca se autoaplicará; los agentes ven las reglas y proponen soluciones a su alrededor. Una regla sin coincidencia es solo una guía."
+#~ msgid "A change that matches a guardrail arrives <0>blocked</0> and can never auto-apply; agents see the rules and propose around them. A rule with no matcher is guidance only."
+#~ msgstr "Un cambio que coincide con una barandilla llega <0>bloqueado</0> y nunca se autoaplicará; los agentes ven las reglas y proponen soluciones a su alrededor. Una regla sin coincidencia es solo una guía."
+
+#: src/app/(app)/execute/page.jsx
+msgid "A change that matches a guardrail arrives blocked and can never apply on its own. Agents see the rules and propose around them. A rule with no matcher is guidance only."
+msgstr "Un cambio que coincide con una barrera de seguridad llega bloqueado y nunca se puede aplicar por sí solo. Los agentes ven las reglas y proponen soluciones a su alrededor. Una regla sin coincidencia es solo una guía."
 
 #: src/components/content/ContentWorkspace.jsx
 msgid "A clearer brief produces sharper content. Skip if you'd rather Duct decide."
@@ -932,8 +964,12 @@ msgid "A new version of Duct is ready"
 msgstr "Una nueva versión de Duct está lista"
 
 #: src/app/(app)/audit/seo/page.jsx
-msgid "A one-off: project memory is neither read nor written. The report is still saved."
-msgstr "Una sola vez: la memoria del proyecto no se lee ni se escribe. El informe se guarda igualmente."
+#~ msgid "A one-off: project memory is neither read nor written. The report is still saved."
+#~ msgstr "Una sola vez: la memoria del proyecto no se lee ni se escribe. El informe se guarda igualmente."
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "A one-off. The report is still saved."
+msgstr "Puntual. El informe sigue guardado."
 
 #: src/app/invite/[token]/page.jsx
 msgid "a project"
@@ -1024,8 +1060,8 @@ msgid "accounts"
 msgstr "cuentas"
 
 #: src/app/(app)/project/[projectId]/page.jsx
-msgid "Acme Inc."
-msgstr "Acme Inc."
+#~ msgid "Acme Inc."
+#~ msgstr "Acme Inc."
 
 #: src/app/(start)/start/page.jsx
 #: src/components/onboarding/FrontDoor.jsx
@@ -1096,8 +1132,8 @@ msgid "Add a post"
 msgstr "Añadir una publicación"
 
 #: src/components/insights/desk/DeskDayOne.jsx
-msgid "Add a project"
-msgstr "Añadir un proyecto"
+#~ msgid "Add a project"
+#~ msgstr "Añadir un proyecto"
 
 #: src/components/content/TextPostEditor.jsx
 msgid "Add a reply"
@@ -1167,6 +1203,10 @@ msgstr "Añade esto a <0>~/.codex/config.toml</0>."
 msgid "Add this to <0>~/.cursor/mcp.json</0>."
 msgstr "Añade esto a <0>~/.cursor/mcp.json</0>."
 
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Add your site"
+msgstr "Añade tu sitio"
+
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Added to your {draftedName} project"
 msgstr "Añadido a tu proyecto {draftedName}"
@@ -1188,10 +1228,13 @@ msgid "Ads API key"
 msgstr "Ads API key"
 
 #: src/components/insights/desk/DeskDayOne.jsx
-msgid "Ads says 4,212. Stripe settled 1,890."
-msgstr "Ads dice 4.212. Stripe liquidó 1.890."
+msgid "Ads counts 2,310 conversions. Stripe settled 1,402."
+msgstr "Anuncios cuenta 2.310 conversiones. Stripe liquidó 1.402."
 
-#: src/app/(app)/audit/seo/page.jsx
+#: src/components/insights/desk/DeskDayOne.jsx
+#~ msgid "Ads says 4,212. Stripe settled 1,890."
+#~ msgstr "Ads dice 4.212. Stripe liquidó 1.890."
+
 #: src/components/models/AdvancedSettings.jsx
 msgid "Advanced"
 msgstr "Avanzado"
@@ -1201,7 +1244,6 @@ msgid "Advice only, publish either way"
 msgstr "Solo asesoramiento, publica de todos modos"
 
 #: src/app/(app)/activity/page.jsx
-#: src/app/(app)/execute/page.jsx
 msgid "agent"
 msgstr "agente"
 
@@ -1227,8 +1269,12 @@ msgstr "Propuesto por el agente"
 #~ msgstr "Agentes"
 
 #: src/app/(app)/execute/page.jsx
-msgid "Agents propose, you approve. Every change is previewed against your guardrails, and anything applied can be rolled back."
-msgstr "Los agentes proponen, tú apruebas. Cada cambio se previsualiza según tus límites, y cualquier cosa aplicada puede revertirse."
+msgid "Agents propose changes to your accounts and you approve them. Every change is checked against your guardrails first, and anything applied can be rolled back."
+msgstr "Los agentes proponen cambios en tus cuentas y tú los apruebas. Cada cambio se verifica primero con tus barreras de seguridad, y cualquier cosa aplicada puede ser revertida."
+
+#: src/app/(app)/execute/page.jsx
+#~ msgid "Agents propose, you approve. Every change is previewed against your guardrails, and anything applied can be rolled back."
+#~ msgstr "Los agentes proponen, tú apruebas. Cada cambio se previsualiza según tus límites, y cualquier cosa aplicada puede revertirse."
 
 #: src/lib/projectsApi.js
 msgid "Agents propose; nothing runs until you approve it here."
@@ -1269,6 +1315,10 @@ msgstr "Todas las {total} revisiones pasan"
 msgid "all accounts"
 msgstr "todas las cuentas"
 
+#: src/app/(app)/execute/page.jsx
+msgid "All changes"
+msgstr "Todos los cambios"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "All clear"
 msgstr "Todo despejado"
@@ -1291,8 +1341,6 @@ msgid "All posts <0>· {rowCount}</0>"
 msgstr "Todas las publicaciones <0>· {rowCount}</0>"
 
 #: src/app/(app)/execute/page.jsx
-#: src/app/(app)/project/[projectId]/members/page.jsx
-#: src/app/(app)/project/[projectId]/memory/page.jsx
 msgid "All projects"
 msgstr "Todos los proyectos"
 
@@ -1325,8 +1373,8 @@ msgid "Always say"
 msgstr "Siempre di"
 
 #: src/components/insights/desk/DeskDayOne.jsx
-msgid "An A/B test live 74 days with nobody in it."
-msgstr "Una prueba A/B activa durante 74 días sin nadie en ella."
+#~ msgid "An A/B test live 74 days with nobody in it."
+#~ msgstr "Una prueba A/B activa durante 74 días sin nadie en ella."
 
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "An answer worth keeping becomes an artifact here, and versions pile up as it is rewritten."
@@ -1349,8 +1397,8 @@ msgid "Analytics"
 msgstr "Análisis"
 
 #: src/app/(app)/audit/seo/page.jsx
-msgid "analytics reporting, growth intelligence, SEO audit (comma-separated)"
-msgstr "informes de análisis, inteligencia de crecimiento, auditoría SEO (separado por comas)"
+#~ msgid "analytics reporting, growth intelligence, SEO audit (comma-separated)"
+#~ msgstr "informes de análisis, inteligencia de crecimiento, auditoría SEO (separado por comas)"
 
 #: src/components/ContextCompressionCard.jsx
 msgid "Analytics rows reach the model as a compact table, not raw JSON — about half the tokens, every number unchanged."
@@ -1425,6 +1473,7 @@ msgstr "Guía de acceso a la API de Apple"
 msgid "Applied"
 msgstr "Aplicado"
 
+#: src/app/(app)/execute/page.jsx
 #: src/components/execution/ChangeSetCard.jsx
 msgid "Applied automatically"
 msgstr "Aplicado automáticamente"
@@ -1516,14 +1565,13 @@ msgid "Archive this conversation (its report artifacts stay in the library)"
 msgstr "Archivar esta conversación (sus artefactos de informe permanecen en la biblioteca)"
 
 #: src/components/insights/desk/DeskDayOne.jsx
-msgid "Are my conversions real people?"
-msgstr "¿Mis conversiones son personas reales?"
+#~ msgid "Are my conversions real people?"
+#~ msgstr "¿Mis conversiones son personas reales?"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "artifact"
 msgstr "artefacto"
 
-#: src/app/(app)/artifacts/[artifactId]/page.jsx
 #: src/components/artifacts/ArtifactRenderer.jsx
 #: src/components/insights/InsightsWorkspace.jsx
 #: src/components/memory/MemoryTimeline.jsx
@@ -1539,9 +1587,6 @@ msgid "Artifact version"
 msgstr "Versión del artefacto"
 
 #: src/app/(app)/activity/page.jsx
-#: src/app/(app)/artifacts/page.jsx
-#: src/components/insights/desk/DeskLists.jsx
-#: src/lib/navigation.js
 msgid "Artifacts"
 msgstr "Artefactos"
 
@@ -1564,6 +1609,7 @@ msgstr "Haz una pregunta de seguimiento…"
 
 #: src/app/(app)/activity/page.jsx
 #: src/app/(app)/artifacts/page.jsx
+#: src/components/connections/FirstSourceCelebration.jsx
 #: src/components/models/UsagePanel.jsx
 msgid "Ask a question"
 msgstr "Haz una pregunta"
@@ -1592,6 +1638,10 @@ msgstr "Pregunta sobre tus datos de crecimiento…"
 msgid "Ask Duct"
 msgstr "Pregunta a Duct"
 
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Ask Duct something"
+msgstr "Pregúntale algo a Duct"
+
 #: src/components/content/ContentWorkspace.jsx
 msgid "Ask Duct to refine the plan or post…"
 msgstr "Pide a Duct que refine el plan o la publicación…"
@@ -1605,8 +1655,8 @@ msgid "Ask me anything about your site"
 msgstr "Pregúntame cualquier cosa sobre tu sitio"
 
 #: src/components/insights/desk/DeskDayOne.jsx
-msgid "Ask me something"
-msgstr "Pregúntame algo"
+#~ msgid "Ask me something"
+#~ msgstr "Pregúntame algo"
 
 #: src/app/invite/[token]/page.jsx
 msgid "Ask whoever invited you to send a new one, or <0>sign in</0> if you already have access."
@@ -1655,8 +1705,8 @@ msgid "Audience"
 msgstr "Audiencia"
 
 #: src/components/AppNav.jsx
-msgid "Audit"
-msgstr "Auditoría"
+#~ msgid "Audit"
+#~ msgstr "Auditoría"
 
 #: src/app/(app)/projects/page.jsx
 #: src/components/insights/desk/DeskDayOne.jsx
@@ -1706,12 +1756,16 @@ msgid "Auto · {made}"
 msgstr "Automático · {made}"
 
 #: src/app/(app)/execute/page.jsx
-msgid "auto-applied"
-msgstr "aplicado automáticamente"
+#~ msgid "auto-applied"
+#~ msgstr "aplicado automáticamente"
 
 #: src/app/(app)/execute/page.jsx
-msgid "Autonomy — {projectName}"
-msgstr "Autonomía — {projectName}"
+msgid "Autonomy"
+msgstr "Autonomía"
+
+#: src/app/(app)/execute/page.jsx
+#~ msgid "Autonomy — {projectName}"
+#~ msgstr "Autonomía — {projectName}"
 
 #: src/app/(app)/execute/page.jsx
 msgid "Autonomy is unchanged — that didn't save."
@@ -1739,12 +1793,16 @@ msgstr "Volver a los valores predeterminados de Duct"
 
 #: src/app/(app)/connections/page.jsx
 #: src/app/(app)/settings/models/page.jsx
-msgid "Back to Insights"
-msgstr "Volver a Hallazgos"
+#~ msgid "Back to Insights"
+#~ msgstr "Volver a Hallazgos"
 
 #: src/app/(app)/project/[projectId]/page.jsx
-msgid "Back to manage projects"
-msgstr "Volver a gestionar proyectos"
+#~ msgid "Back to manage projects"
+#~ msgstr "Volver a gestionar proyectos"
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Back to projects"
+msgstr "Volver a proyectos"
 
 #: src/app/(public)/layout.jsx
 msgid "Back to site"
@@ -1887,8 +1945,8 @@ msgid "Business context"
 msgstr "Contexto de negocio"
 
 #: src/app/(app)/audit/seo/page.jsx
-msgid "Business description"
-msgstr "Descripción del negocio"
+#~ msgid "Business description"
+#~ msgstr "Descripción del negocio"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Business model"
@@ -2036,6 +2094,12 @@ msgstr "conjunto de cambios {id}"
 msgid "Changed in the account after you approved it, so it was not applied. Ask for a fresh proposal."
 msgstr "Cambió en la cuenta después de que lo aprobaste, por lo que no se aplicó. Pide una nueva propuesta."
 
+#: src/app/(app)/execute/page.jsx
+#: src/components/AppNav.jsx
+#: src/lib/navigation.js
+msgid "Changes"
+msgstr "Cambios"
+
 #: src/components/content/FormatLibrary.jsx
 msgid "Changes apply to future drafts that pull this format."
 msgstr "Los cambios se aplican a futuros borradores que utilicen este formato."
@@ -2047,6 +2111,10 @@ msgstr "Cambios v{baseVersion} → v{targetVersion}"
 #: src/components/models/UsagePanel.jsx
 msgid "charged at a fraction of the rate"
 msgstr "cobrado a una fracción de la tarifa"
+
+#: src/components/models/UsagePanel.jsx
+msgid "Charges on your own provider key. Duct never bills them."
+msgstr "Cargos en tu propia clave de proveedor. Duct nunca los factura."
 
 #: src/components/insights/InsightsWorkspace.jsx
 #: src/components/workspace/SplitWorkspace.jsx
@@ -2117,6 +2185,10 @@ msgstr "Elige {entity} para {projectName}"
 #: src/components/models/ModelPicker.jsx
 msgid "Choose a model"
 msgstr "Elige un modelo"
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Choose one"
+msgstr "Elige uno"
 
 #: src/app/(app)/connections/page.jsx
 msgid "Choose repositories on GitHub"
@@ -2197,8 +2269,12 @@ msgid "Colors and style applied to images and slides."
 msgstr "Colores y estilo aplicados a imágenes y diapositivas."
 
 #: src/app/(app)/connections/page.jsx
-msgid "Coming soon"
-msgstr "Próximamente"
+#~ msgid "Coming soon"
+#~ msgstr "Próximamente"
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Comma-separated"
+msgstr "Separado por comas"
 
 #: src/app/(app)/connections/page.jsx
 msgid "Comma-separated distinct_id substrings to exclude. Mixpanel has no internal-traffic filter — QA accounts corrupt every funnel until excluded."
@@ -2267,8 +2343,8 @@ msgid "Competitive Landscape"
 msgstr "Panorama competitivo"
 
 #: src/app/(app)/audit/seo/page.jsx
-msgid "competitor1.com, competitor2.com (comma-separated)"
-msgstr "competidor1.com, competidor2.com (separado por comas)"
+#~ msgid "competitor1.com, competitor2.com (comma-separated)"
+#~ msgstr "competidor1.com, competidor2.com (separado por comas)"
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Competitors"
@@ -2302,6 +2378,7 @@ msgstr "Configurar {title}"
 msgid "Confirm"
 msgstr "Confirmar"
 
+#: src/components/connections/ConnectorTile.jsx
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/content/VendorKeyForm.jsx
 msgid "Connect"
@@ -2320,17 +2397,26 @@ msgstr "¿Conectar {label}?"
 msgid "Connect a model"
 msgstr "Conectar un modelo"
 
+#: src/components/insights/desk/DeskCards.jsx
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Connect a source"
 msgstr "Conectar una fuente"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Connect a source and Duct starts reading it the same minute."
+msgstr "Conecta una fuente y Duct empieza a leerla al instante."
 
 #: src/components/content/AccountsTab.jsx
 #~ msgid "Connect a TikTok, Instagram, or YouTube account in PostBridge, then refresh to link it to this project."
 #~ msgstr "Conecta una cuenta de TikTok, Instagram o YouTube en PostBridge, luego actualiza para vincularla a este proyecto."
 
 #: src/app/(app)/connections/page.jsx
-msgid "Connect an account once — it’s saved for your whole account. Open a card to set it up and to pick which of your accounts <0>{projectName}</0> reads from."
-msgstr "Conecta una cuenta una vez; se guarda para toda tu cuenta. Abre una tarjeta para configurarla y elegir de cuáles de tus cuentas <0>{projectName}</0> leerá."
+#~ msgid "Connect an account once — it’s saved for your whole account. Open a card to set it up and to pick which of your accounts <0>{projectName}</0> reads from."
+#~ msgstr "Conecta una cuenta una vez; se guarda para toda tu cuenta. Abre una tarjeta para configurarla y elegir de cuáles de tus cuentas <0>{projectName}</0> leerá."
+
+#: src/app/(app)/connections/page.jsx
+msgid "Connect an account once and every project can use it. Open a source to pick which of your accounts {projectName} reads from."
+msgstr "Conecta una cuenta una vez y cada proyecto puede usarla. Abre una fuente para elegir de qué cuentas leerá {projectName}."
 
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Connect anyway"
@@ -2360,6 +2446,10 @@ msgstr "Conecta tu cuenta de {vendor}"
 #: src/components/AppSidebar.jsx
 msgid "Connect your AI agent"
 msgstr "Conecta tu agente de IA"
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Connect your first source"
+msgstr "Conecta tu primera fuente"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Connect your LinkedIn, X, TikTok, Instagram or YouTube account in PostBridge, then refresh to link it to this project."
@@ -2424,13 +2514,13 @@ msgstr "Enlace de conexión caducado"
 
 #: src/app/(app)/connections/page.jsx
 #: src/components/AppNav.jsx
-#: src/components/AppSidebar.jsx
+#: src/lib/navigation.js
 msgid "Connections"
 msgstr "Conexiones"
 
 #: src/components/AppSidebar.jsx
-msgid "Connections — add a source"
-msgstr "Conexiones — añadir una fuente"
+#~ msgid "Connections — add a source"
+#~ msgstr "Conexiones — añadir una fuente"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Connector"
@@ -2477,6 +2567,10 @@ msgstr "Content Studio"
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Context"
 msgstr "Contexto"
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Context and settings"
+msgstr "Contexto y ajustes"
 
 #: src/components/workspace/ContextRing.jsx
 #~ msgid "context compacted"
@@ -2528,16 +2622,24 @@ msgstr "Continuar con ChatGPT"
 #~ msgstr "Continuar con tu cuenta de Google"
 
 #: src/app/(app)/audit/seo/page.jsx
-msgid "Controls how deeply the AI reasons about your site before writing findings."
-msgstr "Controla la profundidad con la que la IA razona sobre tu sitio antes de escribir los hallazgos."
+#~ msgid "Controls how deeply the AI reasons about your site before writing findings."
+#~ msgstr "Controla la profundidad con la que la IA razona sobre tu sitio antes de escribir los hallazgos."
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "conversation"
 msgstr "conversación"
 
+#: src/components/AppNav.jsx
+msgid "Conversation"
+msgstr "Conversación"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "conversation turns {firstTurn}–{lastTurn}"
 msgstr "turnos de conversación {firstTurn}–{lastTurn}"
+
+#: src/components/insights/desk/DeskLists.jsx
+msgid "Conversations"
+msgstr "Conversaciones"
 
 #: src/components/GoogleAdsReport.js
 msgid "Conversions"
@@ -2710,8 +2812,8 @@ msgid "Crawl Health"
 msgstr "Salud de rastreo"
 
 #: src/app/(app)/audit/seo/page.jsx
-msgid "Crawl your site, surface issues, and get an AI-generated report with actionable recommendations."
-msgstr "Rastrea tu sitio, detecta problemas y obtén un informe generado por IA con recomendaciones prácticas."
+#~ msgid "Crawl your site, surface issues, and get an AI-generated report with actionable recommendations."
+#~ msgstr "Rastrea tu sitio, detecta problemas y obtén un informe generado por IA con recomendaciones prácticas."
 
 #: src/lib/auditEvents.js
 msgid "Crawling pages"
@@ -2770,8 +2872,8 @@ msgid "Critical impact"
 msgstr "Impacto crítico"
 
 #: src/app/(app)/connections/page.jsx
-msgid "CRM lifecycle stages, pipeline and closed revenue."
-msgstr "Etapas del ciclo de vida del CRM, embudo y ingresos cerrados."
+#~ msgid "CRM lifecycle stages, pipeline and closed revenue."
+#~ msgstr "Etapas del ciclo de vida del CRM, embudo y ingresos cerrados."
 
 #: src/components/AgentDrawer.jsx
 #~ msgid "Cross-agent invocations — coming soon"
@@ -2946,8 +3048,12 @@ msgid "Destructive operations change what is live for every visitor."
 msgstr "Las operaciones destructivas cambian lo que está en vivo para cada visitante."
 
 #: src/app/(app)/execute/page.jsx
-msgid "Destructive work waits here at every level — GTM publishes, archives, unlinks, anything touching budget or status, and new keywords. Assisted and Auto share one narrow allowlist: negative keywords, GA4 key events and audiences, GTM workspace edits."
-msgstr "El trabajo destructivo espera aquí en cada nivel — GTM publica, archiva, desvincula, cualquier cosa que afecte el presupuesto o el estado, y las palabras clave nuevas. Asistido y Automático comparten una lista de permitidos limitada: palabras clave negativas, eventos clave y audiencias de GA4, ediciones del espacio de trabajo de GTM."
+msgid "Destructive work always waits for you: Tag Manager publishes, archives, unlinks, anything touching budget or status, and new keywords. Assisted and Auto may apply only negative keywords, Analytics key events and audiences, and Tag Manager workspace edits."
+msgstr "El trabajo destructivo siempre te espera: Tag Manager publica, archiva, desvincula, cualquier cosa que afecte el presupuesto o el estado, y nuevas palabras clave. Asistido y Automático solo pueden aplicar palabras clave negativas, eventos clave y audiencias de Analytics, y ediciones del espacio de trabajo de Tag Manager."
+
+#: src/app/(app)/execute/page.jsx
+#~ msgid "Destructive work waits here at every level — GTM publishes, archives, unlinks, anything touching budget or status, and new keywords. Assisted and Auto share one narrow allowlist: negative keywords, GA4 key events and audiences, GTM workspace edits."
+#~ msgstr "El trabajo destructivo espera aquí en cada nivel — GTM publica, archiva, desvincula, cualquier cosa que afecte el presupuesto o el estado, y las palabras clave nuevas. Asistido y Automático comparten una lista de permitidos limitada: palabras clave negativas, eventos clave y audiencias de GA4, ediciones del espacio de trabajo de GTM."
 
 #: src/app/(app)/execute/page.jsx
 #~ msgid "Destructive work waits here at every level — GTM publishes, archives, unlinks, anything touching budget or status. Assisted and Auto share one narrow allowlist: keywords, GA4 key events and audiences, GTM workspace edits."
@@ -2970,16 +3076,16 @@ msgid "Diagram failed to render ({error}) — source below."
 msgstr "No se pudo renderizar el diagrama ({error}) — fuente a continuación."
 
 #: src/components/insights/desk/DeskDayOne.jsx
-msgid "Did anything stop working?"
-msgstr "¿Algo dejó de funcionar?"
+#~ msgid "Did anything stop working?"
+#~ msgstr "¿Algo dejó de funcionar?"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Did something"
 msgstr "Hizo algo"
 
 #: src/components/insights/desk/DeskDayOne.jsx
-msgid "Did the revenue actually arrive?"
-msgstr "¿Los ingresos realmente llegaron?"
+#~ msgid "Did the revenue actually arrive?"
+#~ msgstr "¿Los ingresos realmente llegaron?"
 
 #: src/components/onboarding/DocumentPicker.jsx
 msgid "Didn't upload. Remove it and add it again"
@@ -3047,6 +3153,10 @@ msgstr "Discover busca en TikTok a través de Apify, con tu propia cuenta, así 
 msgid "Discover what's working"
 msgstr "Descubre qué funciona"
 
+#: src/components/connections/FirstSourceCelebration.jsx
+msgid "Dismiss"
+msgstr "Descartar"
+
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Dismiss project update"
 msgstr "Descartar actualización del proyecto"
@@ -3064,6 +3174,7 @@ msgstr "Documentación / Ayuda"
 msgid "document"
 msgstr "documento"
 
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
 #: src/components/insights/desk/DeskLists.jsx
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Document"
@@ -3073,7 +3184,11 @@ msgstr "Documento"
 msgid "Document preview"
 msgstr "Vista previa del documento"
 
+#: src/app/(app)/artifacts/[artifactId]/page.jsx
 #: src/app/(app)/artifacts/page.jsx
+#: src/components/AppNav.jsx
+#: src/components/insights/desk/DeskLists.jsx
+#: src/lib/navigation.js
 msgid "Documents"
 msgstr "Documentos"
 
@@ -3171,6 +3286,10 @@ msgstr "Duct {version} está disponible"
 msgid "Duct asks you before every call to a server added by address."
 msgstr "Duct te pregunta antes de cada llamada a un servidor añadido por dirección."
 
+#: src/app/(app)/connections/page.jsx
+msgid "Duct builds and maintains the built-in sources, and they feed briefs, alerts and the chat. MCP sources are each company’s own server; the chat calls their tools. <0>How MCP works</0>"
+msgstr "Duct construye y mantiene las fuentes integradas, y estas alimentan informes, alertas y el chat. Las fuentes MCP son el propio servidor de cada empresa; el chat llama a sus herramientas. <0>Cómo funciona MCP</0>"
+
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Duct can’t call that address."
 msgstr "Duct no puede llamar a esa dirección."
@@ -3180,7 +3299,6 @@ msgid "Duct can't read this type yet"
 msgstr "Duct aún no puede leer este tipo"
 
 #: src/app/(start)/start/page.jsx
-#: src/components/insights/desk/DeskDayOne.jsx
 msgid "Duct checks a number before it trusts it."
 msgstr "Duct verifica un número antes de confiar en él."
 
@@ -3224,6 +3342,10 @@ msgstr "Duct olvida tu clave de API y deja de publicar a través de tu cuenta de
 msgid "Duct forgets your Apify token and stops searching through your account. References you saved stay saved."
 msgstr "Duct olvida tu token de Apify y deja de buscar a través de tu cuenta. Las referencias que guardaste se mantienen."
 
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Duct found nothing worth your time. Enjoy the quiet."
+msgstr "Duct no encontró nada que valga tu tiempo. Disfruta de la tranquilidad."
+
 #: src/components/workspace/QuestionsCard.jsx
 msgid "Duct has a quick question"
 msgstr "Duct tiene una pregunta rápida"
@@ -3231,6 +3353,14 @@ msgstr "Duct tiene una pregunta rápida"
 #: src/components/AppSidebar.jsx
 msgid "duct home"
 msgstr "inicio de duct"
+
+#: src/components/connections/FirstSourceCelebration.jsx
+msgid "Duct is reading it now. Ask your first question while it does."
+msgstr "Duct lo está leyendo ahora. Haz tu primera pregunta mientras lo hace."
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Duct last looked {lastChecked} and found nothing worth your time. Enjoy the quiet."
+msgstr "Duct revisó por última vez {lastChecked} y no encontró nada que valga tu tiempo. Disfruta de la tranquilidad."
 
 #: src/components/ConnectionBanner.jsx
 msgid "Duct needs a connection. Your work is saved and will still be here."
@@ -3259,6 +3389,10 @@ msgstr "Duct lo lee como un motor de búsqueda."
 #: src/components/content/PlanDayOne.jsx
 msgid "Duct reads your brand, your pillars and what has already worked, then lays out the weeks ahead, a post a day, with a reason for each one. You draft them one at a time, and nothing goes out without your yes."
 msgstr "Duct lee tu marca, tus pilares y lo que ya ha funcionado, luego establece las semanas siguientes, una publicación al día, con una razón para cada una. Tú las redactas una a una, y nada se publica sin tu aprobación."
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Duct reads your site the way a search engine does, in about three minutes."
+msgstr "Duct lee tu sitio como lo hace un motor de búsqueda, en unos tres minutos."
 
 #: src/components/onboarding/FrontDoor.jsx
 #~ msgid "Duct reads your site the way a search engine does, then tells you what to fix first."
@@ -3340,17 +3474,29 @@ msgstr "p. ej. Compara siempre con el mismo período del año pasado"
 msgid "e.g. Drive trial signups via saveable beauty education"
 msgstr "p. ej. Impulsa registros de prueba a través de educación de belleza guardable"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "e.g. Duct reads your marketing data and says what changed."
+msgstr "p. ej. Duct lee tus datos de marketing y dice qué cambió."
+
 #: src/app/(app)/audit/seo/page.jsx
-msgid "e.g. Increase trial signups from organic search"
-msgstr "p. ej. Aumenta los registros de prueba desde la búsqueda orgánica"
+#~ msgid "e.g. Increase trial signups from organic search"
+#~ msgstr "p. ej. Aumenta los registros de prueba desde la búsqueda orgánica"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "e.g. Limited sales capacity, high onboarding drop-off, or long implementation cycles."
 msgstr "p. ej. Capacidad de ventas limitada, alta tasa de abandono en la incorporación o ciclos de implementación largos."
 
+#: src/app/(app)/audit/seo/page.jsx
+msgid "e.g. More trial signups from organic search"
+msgstr "ej. Más registros de prueba desde la búsqueda orgánica"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "e.g. Notion, HubSpot, in-house spreadsheets"
 msgstr "p. ej. Notion, HubSpot, hojas de cálculo internas"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "e.g. Numbers you can trust"
+msgstr "p. ej. Números en los que puedes confiar"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "e.g. Reach 500 weekly active users with at least 40% week-4 retention."
@@ -3377,8 +3523,8 @@ msgid "Each change is reverted using the rollback handle recorded when it was ap
 msgstr "Cada cambio se revierte usando el identificador de reversión registrado cuando se aplicó."
 
 #: src/components/insights/Desk.jsx
-msgid "Each item shows up in one card only — sorted by who’s holding it."
-msgstr "Cada elemento aparece en una sola tarjeta, ordenado por quién lo tiene."
+#~ msgid "Each item shows up in one card only — sorted by who’s holding it."
+#~ msgstr "Cada elemento aparece en una sola tarjeta, ordenado por quién lo tiene."
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Each redirect hop bleeds crawl budget and PageRank."
@@ -3499,8 +3645,8 @@ msgid "Every agent reads this, on every project. Only you can see it."
 msgstr "Cada agente lee esto, en cada proyecto. Solo tú puedes verlo."
 
 #: src/components/insights/desk/DeskDayOne.jsx
-msgid "Every dashboard called it healthy"
-msgstr "Cada panel lo consideró saludable"
+#~ msgid "Every dashboard called it healthy"
+#~ msgstr "Cada panel lo consideró saludable"
 
 #: src/app/(app)/activity/page.jsx
 msgid "Every entry names who did it, so the trail starts once there is an account to name."
@@ -3518,6 +3664,10 @@ msgstr "Cada publicación fechada, con su pilar y su propósito. Abre una y Duct
 msgid "Every post in this plan has a draft."
 msgstr "Cada publicación de este plan tiene un borrador."
 
+#: src/app/(app)/artifacts/page.jsx
+msgid "Every report Duct writes lands here, with each version kept."
+msgstr "Cada informe que Duct escribe llega aquí, manteniendo cada versión."
+
 #: src/components/content/PlanStrategy.jsx
 msgid "Every type has results"
 msgstr "Cada tipo tiene resultados"
@@ -3526,17 +3676,21 @@ msgstr "Cada tipo tiene resultados"
 msgid "Every version of it goes with it. This cannot be undone."
 msgstr "Cada versión va con él. Esto no se puede deshacer."
 
+#: src/app/(app)/project/[projectId]/members/page.jsx
+msgid "Everyone on {name} shares its reports, audits and content."
+msgstr "Todos en {name} comparten sus informes, auditorías y contenido."
+
 #: src/components/connections/ConnectorPermissions.jsx
 msgid "Everything above still works. To grant the rest, choose Reconnect and tick them on Google’s consent screen."
 msgstr "Todo lo anterior sigue funcionando. Para conceder el resto, elige Volver a conectar y márcalos en la pantalla de consentimiento de Google."
 
 #: src/app/(app)/activity/page.jsx
-msgid "Everything that changed on <0>{projectName}</0> — who proposed it, who approved it, what was applied or rolled back."
-msgstr "Todo lo que cambió en <0>{projectName}</0> — quién lo propuso, quién lo aprobó, qué se aplicó o se revirtió."
+#~ msgid "Everything that changed on <0>{projectName}</0> — who proposed it, who approved it, what was applied or rolled back."
+#~ msgstr "Todo lo que cambió en <0>{projectName}</0> — quién lo propuso, quién lo aprobó, qué se aplicó o se revirtió."
 
 #: src/app/(app)/artifacts/page.jsx
-msgid "Everything your agents have produced for <0>{projectName}</0> — reports, documents, exports. Stored durably; open one to view, download, or continue its chat."
-msgstr "Todo lo que tus agentes han producido para <0>{projectName}</0> — informes, documentos, exportaciones. Almacenado de forma duradera; abre uno para ver, descargar o continuar su chat."
+#~ msgid "Everything your agents have produced for <0>{projectName}</0> — reports, documents, exports. Stored durably; open one to view, download, or continue its chat."
+#~ msgstr "Todo lo que tus agentes han producido para <0>{projectName}</0> — informes, documentos, exportaciones. Almacenado de forma duradera; abre uno para ver, descargar o continuar su chat."
 
 #: src/components/GoogleAdsReport.js
 msgid "Evidence: {evidence}"
@@ -3552,8 +3706,8 @@ msgid "Example month"
 msgstr "Mes de ejemplo"
 
 #: src/lib/navigation.js
-msgid "Execute"
-msgstr "Ejecutar"
+#~ msgid "Execute"
+#~ msgstr "Ejecutar"
 
 #: src/app/(app)/activity/page.jsx
 msgid "Execution"
@@ -3565,8 +3719,8 @@ msgstr "Autonomía de ejecución"
 
 #: src/app/(app)/execute/page.jsx
 #: src/lib/navigation.js
-msgid "Executions"
-msgstr "Ejecuciones"
+#~ msgid "Executions"
+#~ msgstr "Ejecuciones"
 
 #: src/lib/userProfile.js
 msgid "Executive"
@@ -3655,8 +3809,8 @@ msgid "Filter models"
 msgstr "Filtrar modelos"
 
 #: src/app/(app)/activity/page.jsx
-msgid "Filtered to one conversation · <0>show all</0>"
-msgstr "Filtrado a una conversación · <0>mostrar todo</0>"
+#~ msgid "Filtered to one conversation · <0>show all</0>"
+#~ msgstr "Filtrado a una conversación · <0>mostrar todo</0>"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Finalizing report"
@@ -3725,6 +3879,10 @@ msgstr "Primer prompt"
 #: src/components/audit/AuditReportV1.jsx
 msgid "Fix These First"
 msgstr "Soluciona esto primero"
+
+#: src/app/(app)/execute/page.jsx
+msgid "Fixes from an audit or a conversation land here for you to approve."
+msgstr "Las correcciones de una auditoría o una conversación llegan aquí para que las apruebes."
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Follows"
@@ -3835,6 +3993,10 @@ msgstr "Genera un par de claves EC P-256, sube la mitad PÚBLICA en ads.apple.co
 msgid "Generate Insight"
 msgstr "Generar hallazgo"
 
+#: src/app/(app)/insights/organic-growth/[slug]/page.jsx
+msgid "Generated {generatedAt}"
+msgstr "Generado {generatedAt}"
+
 #: src/components/GoogleAdsReport.js
 msgid "Generated at {generatedAt} · {sourceFile}"
 msgstr "Generado el {generatedAt} · {sourceFile}"
@@ -3853,8 +4015,8 @@ msgstr "Imagen generada"
 #~ msgstr "Imagen generada · imagen {imageNo}"
 
 #: src/app/(app)/insights/organic-growth/[slug]/page.jsx
-msgid "Generated: {generatedAt}"
-msgstr "Generado: {generatedAt}"
+#~ msgid "Generated: {generatedAt}"
+#~ msgstr "Generado: {generatedAt}"
 
 #: src/components/content/ContentWorkspace.jsx
 #~ msgid "Generating 30-day plan"
@@ -3959,8 +4121,8 @@ msgid "Go to {itemLabel}"
 msgstr "Ir a {itemLabel}"
 
 #: src/components/commands/AppCommands.jsx
-msgid "Go to Connections"
-msgstr "Ir a Conexiones"
+#~ msgid "Go to Connections"
+#~ msgstr "Ir a Conexiones"
 
 #: src/components/AppErrorPanel.jsx
 msgid "Go to home"
@@ -3978,6 +4140,10 @@ msgstr "Ir a Memoria"
 msgid "Go to Sign In"
 msgstr "Ir a Iniciar sesión"
 
+#: src/components/commands/AppCommands.jsx
+msgid "Go to Usage"
+msgstr "Ir a Uso"
+
 #: src/components/content/PostMiniCard.jsx
 msgid "Goal:"
 msgstr "Objetivo:"
@@ -3987,14 +4153,38 @@ msgstr "Objetivo:"
 msgid "Good"
 msgstr "Bien"
 
+#: src/components/insights/desk/useGreeting.js
+msgid "Good afternoon"
+msgstr "Buenas tardes"
+
+#: src/components/insights/desk/useGreeting.js
+msgid "Good afternoon, {name}"
+msgstr "Buenas tardes, {name}"
+
+#: src/components/insights/desk/useGreeting.js
+msgid "Good evening"
+msgstr "Buenas noches"
+
+#: src/components/insights/desk/useGreeting.js
+msgid "Good evening, {name}"
+msgstr "Buenas noches, {name}"
+
+#: src/components/insights/desk/useGreeting.js
+msgid "Good morning"
+msgstr "Buenos días"
+
+#: src/components/insights/desk/useGreeting.js
+msgid "Good morning, {name}"
+msgstr "Buenos días, {name}"
+
 #: src/app/(app)/connections/page.jsx
 #: src/components/connections/logos.jsx
 msgid "Google Ads"
 msgstr "Google Ads"
 
 #: src/components/insights/desk/DeskDayOne.jsx
-msgid "Google Ads, GA4 or Mixpanel. This is the step that changes everything — I can’t check a number I can’t see."
-msgstr "Google Ads, GA4 o Mixpanel. Este es el paso que lo cambia todo; no puedo verificar un número que no puedo ver."
+#~ msgid "Google Ads, GA4 or Mixpanel. This is the step that changes everything — I can’t check a number I can’t see."
+#~ msgstr "Google Ads, GA4 o Mixpanel. Este es el paso que lo cambia todo; no puedo verificar un número que no puedo ver."
 
 #: src/components/onboarding/FrontDoor.jsx
 msgid "Google Ads, GA4, Search Console and Meta Ads connect later — read-only, only the ones you pick."
@@ -4072,8 +4262,8 @@ msgid "Grounded in the data from {accountName}"
 msgstr "Basado en los datos de {accountName}"
 
 #: src/lib/navigation.js
-msgid "Growth"
-msgstr "Crecimiento"
+#~ msgid "Growth"
+#~ msgstr "Crecimiento"
 
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Growth brief"
@@ -4164,6 +4354,10 @@ msgstr "guardado para esta sesión del navegador"
 msgid "held in this machine’s keychain"
 msgstr "guardado en el llavero de esta máquina"
 
+#: src/app/(app)/execute/page.jsx
+msgid "Hide"
+msgstr "Ocultar"
+
 #: src/components/workspace/SplitWorkspace.jsx
 msgid "Hide {rightText}"
 msgstr "Ocultar {rightText}"
@@ -4218,6 +4412,13 @@ msgstr "Alto impacto · Más esfuerzo"
 msgid "High volume, low judgement"
 msgstr "Alto volumen, bajo criterio"
 
+#: src/app/(app)/insights/organic-growth/[slug]/page.jsx
+#: src/components/AppNav.jsx
+#: src/components/LocalInsightDetail.jsx
+#: src/lib/navigation.js
+msgid "Home"
+msgstr "Inicio"
+
 #: src/lib/contentReview.js
 msgid "Hook"
 msgstr "Gancho"
@@ -4255,8 +4456,12 @@ msgid "How posts sound and what they must (or must not) say."
 msgstr "Cómo suenan las publicaciones y qué deben (o no deben) decir."
 
 #: src/app/(app)/memory/page.jsx
-msgid "How you like to be worked with. Every agent reads this, on every project, and only you can see it."
-msgstr "Cómo te gusta que trabajen contigo. Cada agente lee esto, en cada proyecto, y solo tú puedes verlo."
+msgid "How you like to be worked with. Every agent reads it; only you can see it."
+msgstr "Cómo te gusta que se trabaje contigo. Cada agente lo lee; solo tú puedes verlo."
+
+#: src/app/(app)/memory/page.jsx
+#~ msgid "How you like to be worked with. Every agent reads this, on every project, and only you can see it."
+#~ msgstr "Cómo te gusta que trabajen contigo. Cada agente lee esto, en cada proyecto, y solo tú puedes verlo."
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Hreflang"
@@ -4402,7 +4607,6 @@ msgstr "Auditoría inicial"
 msgid "Insight not found"
 msgstr "Hallazgo no encontrado"
 
-#: src/components/AppNav.jsx
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Insights"
 msgstr "Hallazgos"
@@ -4448,8 +4652,8 @@ msgid "Invite a teammate"
 msgstr "Invita a un compañero de equipo"
 
 #: src/app/(app)/project/[projectId]/members/page.jsx
-msgid "Invite teammates to collaborate on this project. Everyone here shares the same reports, audits, and content."
-msgstr "Invita a compañeros de equipo a colaborar en este proyecto. Todos aquí comparten los mismos informes, auditorías y contenido."
+#~ msgid "Invite teammates to collaborate on this project. Everyone here shares the same reports, audits, and content."
+#~ msgstr "Invita a compañeros de equipo a colaborar en este proyecto. Todos aquí comparten los mismos informes, auditorías y contenido."
 
 #: src/components/ProjectMembers.jsx
 msgid "Invited"
@@ -4470,6 +4674,10 @@ msgstr "Distribución de problemas en todos los hallazgos"
 #: src/hooks/useAgentNotifications.js
 msgid "It has a question before it can continue."
 msgstr "Tiene una pregunta antes de poder continuar."
+
+#: src/components/LocalInsightDetail.jsx
+msgid "It may have been cleared from this browser."
+msgstr "Puede que se haya borrado de este navegador."
 
 #: src/components/settings/AgentAccess.jsx
 msgid "It reads your README and docs, shows you what it will send, then drafts the project. Review it in Duct afterwards; every field says where it came from."
@@ -4582,8 +4790,12 @@ msgid "Last call"
 msgstr "Última llamada"
 
 #: src/components/insights/Desk.jsx
-msgid "Last checked {lastChecked}. {sourceCount, plural, one {# source connected.} other {# sources connected.}}"
-msgstr "Última comprobación: {lastChecked}. {sourceCount, plural, one {# fuente conectada.} other {# fuentes conectadas.}}"
+msgid "Last checked {lastChecked} · {sourceCount, plural, one {# source connected} other {# sources connected}}"
+msgstr "Última comprobación {lastChecked} · {sourceCount, plural, one {# fuente conectada} other {# fuentes conectadas}}"
+
+#: src/components/insights/Desk.jsx
+#~ msgid "Last checked {lastChecked}. {sourceCount, plural, one {# source connected.} other {# sources connected.}}"
+#~ msgstr "Última comprobación: {lastChecked}. {sourceCount, plural, one {# fuente conectada.} other {# fuentes conectadas.}}"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Late-paying client? Say this, word for word."
@@ -4620,16 +4832,24 @@ msgid "Leave this project?"
 msgstr "¿Abandonar este proyecto?"
 
 #: src/components/settings/AgentAccess.jsx
-msgid "Let Claude Code, Codex or Cursor set up your projects from the repo you are working in."
-msgstr "Deja que Claude Code, Codex o Cursor configuren tus proyectos desde el repositorio en el que trabajas."
+#~ msgid "Let Claude Code, Codex or Cursor set up your projects from the repo you are working in."
+#~ msgstr "Deja que Claude Code, Codex o Cursor configuren tus proyectos desde el repositorio en el que trabajas."
+
+#: src/app/(app)/settings/agents/page.jsx
+msgid "Let Claude Code, Codex or Cursor set up your projects from your repo."
+msgstr "Deja que Claude Code, Codex o Cursor configuren tus proyectos desde tu repositorio."
 
 #: src/components/workspace/QuestionsCard.jsx
 msgid "Let Duct decide"
 msgstr "Deja que Duct decida"
 
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Let’s get your desk set up."
+msgstr "Vamos a configurar tu escritorio."
+
 #: src/app/(app)/audit/seo/page.jsx
-msgid "Lets the AI reason internally before responding. Improves accuracy on complex sites."
-msgstr "Permite que la IA razone internamente antes de responder. Mejora la precisión en sitios complejos."
+#~ msgid "Lets the AI reason internally before responding. Improves accuracy on complex sites."
+#~ msgstr "Permite que la IA razone internamente antes de responder. Mejora la precisión en sitios complejos."
 
 #: src/app/(app)/content/page.jsx
 msgid "library"
@@ -4849,8 +5069,8 @@ msgid "Loading…"
 msgstr "Cargando…"
 
 #: src/components/LocalInsightDetail.jsx
-msgid "Local"
-msgstr "Local"
+#~ msgid "Local"
+#~ msgstr "Local"
 
 #: src/components/AppSidebar.jsx
 msgid "Log out"
@@ -4924,7 +5144,6 @@ msgstr "Hecho por {model}"
 msgid "Making a video clip"
 msgstr "Creando un clip de video"
 
-#: src/app/(app)/projects/page.jsx
 #: src/components/AppSidebar.jsx
 #: src/components/commands/AppCommands.jsx
 msgid "Manage projects"
@@ -4967,16 +5186,22 @@ msgid "Match my messages"
 msgstr "Coincidir con mis mensajes"
 
 #: src/components/connections/ConnectorSource.jsx
+#: src/components/connections/ConnectorTile.jsx
 msgid "MCP"
 msgstr "MCP"
+
+#. placeholder {0}: source.publisher
+#: src/components/connections/ConnectorTile.jsx
+msgid "MCP · {0}"
+msgstr "MCP · {0}"
 
 #: src/components/connections/McpConnectors.jsx
 msgid "MCP connectors"
 msgstr "Conectores MCP"
 
-#: src/components/connections/McpServers.jsx
-#~ msgid "MCP servers"
-#~ msgstr "Servidores MCP"
+#: src/app/(app)/connections/page.jsx
+msgid "MCP servers"
+msgstr "Servidores MCP"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Measured"
@@ -5163,12 +5388,16 @@ msgid "Monthly plan"
 msgstr "Plan mensual"
 
 #: src/app/(app)/content/page.jsx
-msgid "Monthly plans, post drafts, formats, and analytics for {projectName}."
-msgstr "Planes mensuales, borradores de publicaciones, formatos y análisis para {projectName}."
+#~ msgid "Monthly plans, post drafts, formats, and analytics for {projectName}."
+#~ msgstr "Planes mensuales, borradores de publicaciones, formatos y análisis para {projectName}."
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "More"
 msgstr "Más"
+
+#: src/app/(app)/connections/page.jsx
+msgid "More sources"
+msgstr "Más fuentes"
 
 #: src/lib/modelTiers.js
 msgid "Most of what runs"
@@ -5179,8 +5408,8 @@ msgid "Most recent"
 msgstr "Más reciente"
 
 #: src/components/insights/desk/DeskDayOne.jsx
-msgid "Most reporting problems aren’t bad decisions — they’re good decisions made on numbers nobody checked. Three steps and this page starts filling itself in."
-msgstr "La mayoría de los problemas de informes no son malas decisiones, son buenas decisiones tomadas con números que nadie verificó. Tres pasos y esta página comenzará a llenarse sola."
+#~ msgid "Most reporting problems aren’t bad decisions — they’re good decisions made on numbers nobody checked. Three steps and this page starts filling itself in."
+#~ msgstr "La mayoría de los problemas de informes no son malas decisiones, son buenas decisiones tomadas con números que nadie verificó. Tres pasos y esta página comenzará a llenarse sola."
 
 #: src/components/content/DiscoverPage.jsx
 msgid "Most saved"
@@ -5241,7 +5470,6 @@ msgstr "Necesita trabajo"
 
 #: src/app/(app)/audit/seo/page.jsx
 #: src/components/insights/desk/DeskCards.jsx
-#: src/components/insights/desk/DeskDayOne.jsx
 #: src/components/insights/desk/DeskLists.jsx
 msgid "Needs you"
 msgstr "Te necesita"
@@ -5249,6 +5477,10 @@ msgstr "Te necesita"
 #: src/components/content/PlanDayOne.jsx
 msgid "Net 30 is a choice, not a law"
 msgstr "Neto 30 es una elección, no una ley"
+
+#: src/app/(app)/execute/page.jsx
+msgid "Never pause the Brand campaign"
+msgstr "Nunca pauses la campaña de Marca"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Never say"
@@ -5263,7 +5495,6 @@ msgid "Never used"
 msgstr "Nunca usado"
 
 #: src/components/AppNav.jsx
-#: src/components/AppSidebar.jsx
 msgid "New"
 msgstr "Nuevo"
 
@@ -5288,6 +5519,7 @@ msgstr "Nuevo plan"
 msgid "New post"
 msgstr "Nueva publicación"
 
+#: src/app/(app)/projects/page.jsx
 #: src/components/AppSidebar.jsx
 msgid "New project"
 msgstr "Nuevo proyecto"
@@ -5355,8 +5587,8 @@ msgid "No API key needed"
 msgstr "No se necesita clave API"
 
 #: src/app/(app)/artifacts/page.jsx
-msgid "No artifacts yet"
-msgstr "Aún no hay artefactos"
+#~ msgid "No artifacts yet"
+#~ msgstr "Aún no hay artefactos"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "No base styles available."
@@ -5391,9 +5623,21 @@ msgstr "Sin compromiso — lo evaluaremos y te contactaremos."
 msgid "No competitor research was returned for this audit."
 msgstr "No se devolvió ninguna investigación de la competencia para esta auditoría."
 
+#: src/components/insights/desk/DeskLists.jsx
+msgid "No conversations yet."
+msgstr "Aún no hay conversaciones."
+
 #: src/components/content/ReminderSetting.jsx
 msgid "No daily reminder"
 msgstr "Sin recordatorio diario"
+
+#: src/app/(app)/artifacts/page.jsx
+msgid "No documents yet"
+msgstr "Aún no hay documentos"
+
+#: src/components/insights/desk/DeskLists.jsx
+msgid "No documents yet."
+msgstr "Aún no hay documentos."
 
 #: src/components/content/PlanList.jsx
 msgid "No drafts yet. Pick a pending post to start one."
@@ -5571,8 +5815,8 @@ msgid "No textual changes between these versions."
 msgstr "Ningún cambio textual entre estas versiones."
 
 #: src/components/insights/desk/DeskLists.jsx
-msgid "No threads yet. Ask something below and one starts."
-msgstr "Ningún hilo todavía. Pregunta algo abajo y uno comenzará."
+#~ msgid "No threads yet. Ask something below and one starts."
+#~ msgstr "Ningún hilo todavía. Pregunta algo abajo y uno comenzará."
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "No title"
@@ -5587,8 +5831,8 @@ msgid "No viewport configured."
 msgstr "Ningún viewport configurado."
 
 #: src/app/(app)/projects/page.jsx
-msgid "No website URL"
-msgstr "Ninguna URL de sitio web"
+#~ msgid "No website URL"
+#~ msgstr "Ninguna URL de sitio web"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Nobody had compared them"
@@ -5765,8 +6009,8 @@ msgid "Nothing below this tier can run either — add a key to use {tierName}."
 msgstr "Nada por debajo de este nivel puede ejecutarse tampoco. Añade una clave para usar {tierName}."
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "Nothing checked yet."
-msgstr "Nada revisado aún."
+#~ msgid "Nothing checked yet."
+#~ msgstr "Nada revisado aún."
 
 #: src/components/content/PlanList.jsx
 msgid "Nothing discarded."
@@ -5785,8 +6029,8 @@ msgid "Nothing has run on your key yet"
 msgstr "Nada se ha ejecutado en tu clave aún"
 
 #: src/components/insights/Desk.jsx
-msgid "Nothing has run yet. {sourceCount, plural, one {# source connected.} other {# sources connected.}}"
-msgstr "Nada se ha ejecutado aún. {sourceCount, plural, one {# fuente conectada.} other {# fuentes conectadas.}}"
+#~ msgid "Nothing has run yet. {sourceCount, plural, one {# source connected.} other {# sources connected.}}"
+#~ msgstr "Nada se ha ejecutado aún. {sourceCount, plural, one {# fuente conectada.} other {# fuentes conectadas.}}"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Nothing here"
@@ -5796,8 +6040,15 @@ msgstr "Nada aquí"
 msgid "Nothing here yet."
 msgstr "Nada aquí aún."
 
+#: src/components/insights/Desk.jsx
+msgid "Nothing is connected yet."
+msgstr "Aún no hay nada conectado."
+
+#: src/app/(app)/execute/page.jsx
+msgid "Nothing is waiting for you."
+msgstr "Nada te está esperando."
+
 #: src/components/content/DraftsQueue.jsx
-#: src/components/insights/desk/DeskCards.jsx
 msgid "Nothing is waiting on you."
 msgstr "Nada te está esperando."
 
@@ -5818,8 +6069,12 @@ msgid "Nothing needs you right now."
 msgstr "Nada te necesita ahora mismo."
 
 #: src/app/(app)/execute/page.jsx
-msgid "Nothing proposed yet. Run an audit or an insight session and the fixes land here for approval."
-msgstr "Nada propuesto aún. Ejecuta una auditoría o una sesión de hallazgos y las correcciones aparecerán aquí para su aprobación."
+msgid "Nothing proposed yet"
+msgstr "Aún no hay nada propuesto"
+
+#: src/app/(app)/execute/page.jsx
+#~ msgid "Nothing proposed yet. Run an audit or an insight session and the fixes land here for approval."
+#~ msgstr "Nada propuesto aún. Ejecuta una auditoría o una sesión de hallazgos y las correcciones aparecerán aquí para su aprobación."
 
 #: src/components/content/PlanStrategy.jsx
 msgid "Nothing proven yet"
@@ -5838,8 +6093,8 @@ msgid "Nothing remembered yet. Run an audit, apply a change, or set your targets
 msgstr "Nada recordado aún. Ejecuta una auditoría, aplica un cambio o establece tus objetivos en la configuración del proyecto; todo lo que un agente concluye aparece aquí con su evidencia."
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "Nothing running."
-msgstr "Nada en ejecución."
+#~ msgid "Nothing running."
+#~ msgstr "Nada en ejecución."
 
 #: src/lib/credentialStorage.js
 msgid "Nothing stored yet."
@@ -5858,8 +6113,8 @@ msgid "Nothing written yet"
 msgstr "Nada escrito aún"
 
 #: src/components/insights/desk/DeskLists.jsx
-msgid "Nothing written yet. Artifacts a thread produces collect here."
-msgstr "Nada escrito aún. Los artefactos que produce un hilo se recogen aquí."
+#~ msgid "Nothing written yet. Artifacts a thread produces collect here."
+#~ msgstr "Nada escrito aún. Los artefactos que produce un hilo se recogen aquí."
 
 #: src/components/insights/desk/DeskActivity.jsx
 msgid "Nothing yet. Every sync, check and change lands here — with what it found and how to undo it."
@@ -5892,6 +6147,10 @@ msgstr "Desactivado"
 #: src/components/TelemetryCard.jsx
 msgid "Off by default — Duct runs its backend here, and nothing leaves unless you say so."
 msgstr "Desactivado por defecto — Duct ejecuta su backend aquí, y nada sale a menos que tú lo digas."
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Off to audit a competitor or another business."
+msgstr "Listo para auditar a un competidor u otro negocio."
 
 #: src/components/audit/AuditReport.jsx
 msgid "older version"
@@ -5939,8 +6198,12 @@ msgid "Once the writing is right, ask Duct to make the clip. It shows up here to
 msgstr "Una vez que la redacción sea correcta, pídele a Duct que cree el clip. Aparecerá aquí para que lo veas antes de que se publique."
 
 #: src/components/insights/desk/DeskDayOne.jsx
-msgid "Once you connect a source:"
-msgstr "Una vez que conectes una fuente:"
+#~ msgid "Once you connect a source:"
+#~ msgstr "Una vez que conectes una fuente:"
+
+#: src/app/(app)/activity/page.jsx
+msgid "One conversation · <0>show all</0>"
+msgstr "Una conversación · <0>mostrar todo</0>"
 
 #: src/components/insights/ConnectionRequest.jsx
 msgid "One Google sign-in does both: it saves this project to an account and lets Duct read Search Console and Analytics. Read-only, and you can untick either at Google."
@@ -5951,8 +6214,8 @@ msgid "One key, hundreds of models"
 msgstr "Una clave, cientos de modelos"
 
 #: src/components/content/BrandContextForm.jsx
-msgid "One memorable line"
-msgstr "Una frase memorable"
+#~ msgid "One memorable line"
+#~ msgstr "Una frase memorable"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "One memorable line."
@@ -5971,21 +6234,25 @@ msgstr "Un modelo en {foundAt}"
 msgid "One moment — Duct has a quick question"
 msgstr "Un momento — Duct tiene una pregunta rápida"
 
+#: src/app/(app)/audit/seo/page.jsx
+msgid "One sentence"
+msgstr "Una frase"
+
 #: src/components/content/BrandContextForm.jsx
 msgid "One sentence on what you do."
 msgstr "Una frase sobre lo que haces."
 
 #: src/components/insights/desk/DeskDayOne.jsx
-msgid "One site or account. Everything I check hangs off it."
-msgstr "Un sitio o cuenta. Todo lo que reviso depende de ello."
+#~ msgid "One site or account. Everything I check hangs off it."
+#~ msgstr "Un sitio o cuenta. Todo lo que reviso depende de ello."
 
 #: src/components/content/BrandContextForm.jsx
 msgid "One-line description — what this pillar covers."
 msgstr "Descripción de una línea — qué cubre este pilar."
 
 #: src/app/(app)/audit/seo/page.jsx
-msgid "One-sentence description of what you do"
-msgstr "Descripción de una frase de lo que haces"
+#~ msgid "One-sentence description of what you do"
+#~ msgstr "Descripción de una frase de lo que haces"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Ongoing"
@@ -6186,8 +6453,12 @@ msgid "optional"
 msgstr "opcional"
 
 #: src/app/(app)/audit/seo/page.jsx
-msgid "Optional — improves report quality"
-msgstr "Opcional — mejora la calidad del informe"
+msgid "Optional"
+msgstr "Opcional"
+
+#: src/app/(app)/audit/seo/page.jsx
+#~ msgid "Optional — improves report quality"
+#~ msgstr "Opcional — mejora la calidad del informe"
 
 #: src/components/connections/ProjectEntitySelect.jsx
 msgid "Optional — the agent will ask if you leave this unset."
@@ -6217,8 +6488,6 @@ msgstr "O usa tu plan de ChatGPT"
 msgid "Organic"
 msgstr "Orgánico"
 
-#: src/components/AppNav.jsx
-#: src/lib/navigation.js
 #: src/lib/usageApi.js
 msgid "Organic Growth"
 msgstr "Crecimiento orgánico"
@@ -6284,8 +6553,8 @@ msgid "Paid Ads"
 msgstr "Anuncios pagados"
 
 #: src/lib/navigation.js
-msgid "Paid Ads Intelligence"
-msgstr "Inteligencia de anuncios pagados"
+#~ msgid "Paid Ads Intelligence"
+#~ msgstr "Inteligencia de anuncios pagados"
 
 #: src/lib/engines.js
 #~ msgid "Paid media & organic growth intelligence."
@@ -6408,8 +6677,8 @@ msgid "Pick one of its models for a tier on the Tiers tab. Only models that can 
 msgstr "Elige uno de sus modelos para un nivel en la pestaña Niveles. Solo aparecen los modelos que pueden llamar a herramientas, porque todos los agentes de Duct trabajan llamándolas."
 
 #: src/components/insights/desk/DeskDayOne.jsx
-msgid "Pick one of the questions below, or type your own."
-msgstr "Elige una de las preguntas a continuación, o escribe la tuya."
+#~ msgid "Pick one of the questions below, or type your own."
+#~ msgstr "Elige una de las preguntas a continuación, o escribe la tuya."
 
 #: src/components/connections/ManualConnectorCard.jsx
 msgid "Pick the account to use:"
@@ -6636,12 +6905,12 @@ msgid "Print report"
 msgstr "Imprimir informe"
 
 #: src/lib/navigation.js
-msgid "Product"
-msgstr "Producto"
+#~ msgid "Product"
+#~ msgstr "Producto"
 
 #: src/lib/navigation.js
-msgid "Product Intelligence"
-msgstr "Inteligencia de producto"
+#~ msgid "Product Intelligence"
+#~ msgstr "Inteligencia de producto"
 
 #: src/lib/userProfile.js
 msgid "Product Manager"
@@ -6673,6 +6942,7 @@ msgid "Progress"
 msgstr "Progreso"
 
 #: src/app/(app)/content/page.jsx
+#: src/app/(app)/execute/page.jsx
 #: src/components/AppNav.jsx
 msgid "Project"
 msgstr "Proyecto"
@@ -6706,15 +6976,25 @@ msgstr "ajustes del proyecto · {field}"
 msgid "Project settings → API keys → Secret API key (V2) with the read scopes. Public SDK keys (appl_/goog_) cannot read the REST API."
 msgstr "Ajustes del proyecto → Claves API → Clave API secreta (V2) con los ámbitos de lectura. Las claves SDK públicas (appl_/goog_) no pueden leer la API REST."
 
-#: src/app/(app)/memory/page.jsx
+#: src/app/(app)/project/[projectId]/members/page.jsx
+#: src/app/(app)/project/[projectId]/memory/page.jsx
+#: src/app/(app)/projects/page.jsx
 #: src/components/AppNav.jsx
 #: src/components/commands/AppCommands.jsx
 msgid "Projects"
 msgstr "Proyectos"
 
 #: src/app/(app)/activity/page.jsx
-msgid "Proposals, approvals, rollbacks and artifact versions land here, each with who did it."
-msgstr "Las propuestas, aprobaciones, reversiones y versiones de artefactos llegan aquí, cada una con quién lo hizo."
+msgid "Proposals, approvals and rollbacks land here."
+msgstr "Las propuestas, aprobaciones y reversiones llegan aquí."
+
+#: src/app/(app)/activity/page.jsx
+#~ msgid "Proposals, approvals, rollbacks and artifact versions land here, each with who did it."
+#~ msgstr "Las propuestas, aprobaciones, reversiones y versiones de artefactos llegan aquí, cada una con quién lo hizo."
+
+#: src/app/(app)/execute/page.jsx
+msgid "Proposed by"
+msgstr "Propuesto por"
 
 #: src/app/(app)/execute/page.jsx
 msgid "Proposed by you"
@@ -6902,6 +7182,10 @@ msgstr "Leyendo tus documentos"
 msgid "Reading…"
 msgstr "Leyendo…"
 
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Reads project memory and writes back what it learns."
+msgstr "Lee la memoria del proyecto y escribe lo que aprende."
+
 #: src/app/(start)/start/page.jsx
 msgid "Reads what a search engine sees"
 msgstr "Lee lo que ve un motor de búsqueda"
@@ -6932,20 +7216,32 @@ msgid "Ready: {readyModel} called a tool in {readySeconds} s."
 msgstr "Listo: {readyModel} llamó a una herramienta en {readySeconds} s."
 
 #: src/components/insights/desk/DeskDayOne.jsx
-msgid "Real problems from a real account. Nothing lands here unchecked."
-msgstr "Problemas reales de una cuenta real. Nada llega aquí sin revisar."
+#~ msgid "Real problems from a real account. Nothing lands here unchecked."
+#~ msgstr "Problemas reales de una cuenta real. Nada llega aquí sin revisar."
 
 #: src/components/insights/desk/DeskDayOne.jsx
-msgid "Real upgrades: 13, not 36."
-msgstr "Mejoras reales: 13, no 36."
+msgid "Real signups: 118, not 164."
+msgstr "Registros reales: 118, no 164."
+
+#: src/components/insights/desk/DeskDayOne.jsx
+#~ msgid "Real upgrades: 13, not 36."
+#~ msgstr "Mejoras reales: 13, no 36."
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Reasoning"
 msgstr "Razonando"
 
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Reasons before answering. Better on complex sites."
+msgstr "Razones antes de responder. Mejor en sitios complejos."
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "recalled {recalls}×"
 msgstr "recordado {recalls}×"
+
+#: src/components/insights/desk/DeskLists.jsx
+msgid "Recent"
+msgstr "Recientes"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Recommended"
@@ -7067,6 +7363,10 @@ msgstr "Recordarlo en Duct, cifrado, para que sobreviva a una actualización y p
 msgid "Remember selection"
 msgstr "Recordar selección"
 
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Remember this audit"
+msgstr "Recordar esta auditoría"
+
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Remember this endpoint on Duct, so scheduled runs can use it"
 msgstr "Recordar este endpoint en Duct, para que las ejecuciones programadas puedan usarlo"
@@ -7076,8 +7376,8 @@ msgid "Remember this key on Duct"
 msgstr "Recordar esta clave en Duct"
 
 #: src/app/(app)/audit/seo/page.jsx
-msgid "Remember this session"
-msgstr "Recordar esta sesión"
+#~ msgid "Remember this session"
+#~ msgstr "Recordar esta sesión"
 
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Remembered ✓"
@@ -7192,6 +7492,10 @@ msgstr "Los informes y las ejecuciones de agente usan este {one}."
 #: src/app/(app)/artifacts/page.jsx
 msgid "Reports are stored against your account, so they survive the tab that made them."
 msgstr "Los informes se guardan en tu cuenta, para que sobrevivan a la pestaña que los creó."
+
+#: src/app/(app)/artifacts/page.jsx
+msgid "Reports, briefs and exports for {projectName}"
+msgstr "Informes, informes y exportaciones para {projectName}"
 
 #: src/components/audit/ExecutionOffer.jsx
 msgid "Request execution"
@@ -7350,6 +7654,10 @@ msgstr "Revocar invitación a {invitee}"
 msgid "Risk"
 msgstr "Riesgo"
 
+#: src/app/(app)/audit/seo/page.jsx
+msgid "rival.com, other.com"
+msgstr "rival.com, other.com"
+
 #: src/components/GoogleAdsReport.js
 msgid "ROAS by campaign"
 msgstr "ROAS por campaña"
@@ -7385,24 +7693,28 @@ msgid "Rolling back…"
 msgstr "Revirtiendo…"
 
 #: src/app/(app)/execute/page.jsx
-msgid "Rule, e.g. “Never pause the Brand campaign”"
-msgstr "Regla, ej. “Nunca pausar la campaña de Marca”"
+#~ msgid "Rule, e.g. “Never pause the Brand campaign”"
+#~ msgstr "Regla, ej. “Nunca pausar la campaña de Marca”"
 
 #: src/components/insights/ToolApproval.jsx
 msgid "Run {toolName} on {serverName}?"
 msgstr "¿Ejecutar {toolName} en {serverName}?"
 
 #: src/app/(app)/artifacts/page.jsx
-msgid "Run an audit with your project selected and its report lands here — versioned, so you can read what changed between two runs of the same check."
-msgstr "Ejecuta una auditoría con tu proyecto seleccionado y su informe aparecerá aquí — versionado, para que puedas leer qué cambió entre dos ejecuciones de la misma verificación."
+#~ msgid "Run an audit with your project selected and its report lands here — versioned, so you can read what changed between two runs of the same check."
+#~ msgstr "Ejecuta una auditoría con tu proyecto seleccionado y su informe aparecerá aquí — versionado, para que puedas leer qué cambió entre dos ejecuciones de la misma verificación."
 
 #: src/app/(app)/artifacts/page.jsx
 msgid "Run an SEO audit"
 msgstr "Ejecutar una auditoría SEO"
 
 #: src/app/(app)/audit/seo/page.jsx
-msgid "Run SEO Audit →"
-msgstr "Ejecutar auditoría SEO →"
+msgid "Run audit"
+msgstr "Ejecutar auditoría"
+
+#: src/app/(app)/audit/seo/page.jsx
+#~ msgid "Run SEO Audit →"
+#~ msgstr "Ejecutar auditoría SEO →"
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Run this in your terminal."
@@ -7671,6 +7983,14 @@ msgstr "Buscar comandos"
 msgid "Search commands…"
 msgstr "Buscar comandos…"
 
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Search Console is the easiest start. Your first brief takes about three minutes."
+msgstr "Search Console es el inicio más fácil. Tu primer informe tarda unos tres minutos."
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "Search Console, Analytics or Google Ads. Duct can’t check a number it can’t see."
+msgstr "Search Console, Analytics o Google Ads. Duct no puede verificar un número que no puede ver."
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Search memory"
 msgstr "Buscar memoria"
@@ -7732,8 +8052,8 @@ msgid "Select a project in the sidebar to view its plan."
 msgstr "Selecciona un proyecto en la barra lateral para ver su plan."
 
 #: src/app/(app)/projects/page.jsx
-msgid "Select a project to edit its configuration, or manage existing projects safely."
-msgstr "Selecciona un proyecto para editar su configuración o gestionar proyectos existentes de forma segura."
+#~ msgid "Select a project to edit its configuration, or manage existing projects safely."
+#~ msgstr "Selecciona un proyecto para editar su configuración o gestionar proyectos existentes de forma segura."
 
 #: src/app/(app)/execute/page.jsx
 msgid "Select all ({selectedCount}/{approvableCount} selected)"
@@ -7769,8 +8089,8 @@ msgid "Select some text first"
 msgstr "Selecciona primero algo de texto"
 
 #: src/app/(app)/audit/seo/page.jsx
-msgid "Select type…"
-msgstr "Seleccionar tipo…"
+#~ msgid "Select type…"
+#~ msgstr "Seleccionar tipo…"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Select voice..."
@@ -7868,8 +8188,8 @@ msgid "Service account username"
 msgstr "Nombre de usuario de la cuenta de servicio"
 
 #: src/components/AppNav.jsx
-msgid "Session"
-msgstr "Sesión"
+#~ msgid "Session"
+#~ msgstr "Sesión"
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Session failed"
@@ -7898,6 +8218,10 @@ msgstr "Establecer"
 #: src/components/content/BrandContextForm.jsx
 msgid "Set once in project setup, so audit, insights and content agree."
 msgstr "Se establece una vez en la configuración del proyecto, para que la auditoría, los hallazgos y el contenido coincidan."
+
+#: src/components/insights/InsightsWorkspace.jsx
+msgid "Set to {configured}, stepped down for this model."
+msgstr "Configurado en {configured}, reducido para este modelo."
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Set up this product in Duct."
@@ -7970,12 +8294,16 @@ msgid "Shift+Enter for a new line · Esc to stop"
 msgstr "Shift+Enter para una nueva línea · Esc para detener"
 
 #: src/app/(app)/settings/profile/page.jsx
-msgid "Shirish"
-msgstr "Shirish"
+#~ msgid "Shirish"
+#~ msgstr "Shirish"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Short description"
 msgstr "Descripción breve"
+
+#: src/app/(app)/execute/page.jsx
+msgid "Show"
+msgstr "Mostrar"
 
 #: src/components/workspace/SplitWorkspace.jsx
 msgid "Show {rightText}"
@@ -8121,8 +8449,12 @@ msgid "Sign in to see what your runs cost"
 msgstr "Inicia sesión para ver el coste de tus ejecuciones"
 
 #: src/app/(app)/artifacts/page.jsx
-msgid "Sign in to see your saved artifacts"
-msgstr "Inicia sesión para ver tus artefactos guardados"
+#~ msgid "Sign in to see your saved artifacts"
+#~ msgstr "Inicia sesión para ver tus artefactos guardados"
+
+#: src/app/(app)/artifacts/page.jsx
+msgid "Sign in to see your saved documents"
+msgstr "Inicia sesión para ver tus documentos guardados"
 
 #: src/components/audit/ShareReport.jsx
 msgid "Sign in to share this"
@@ -8186,6 +8518,10 @@ msgstr "Iniciando sesión..."
 #: src/app/(app)/connections/page.jsx
 msgid "Signups, logins and upgrades, one name across web and app."
 msgstr "Registros, inicios de sesión y actualizaciones, un solo nombre en la web y la app."
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Site to audit"
+msgstr "Sitio a auditar"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Sitemap"
@@ -8314,8 +8650,12 @@ msgid "Something interrupted the audit. Your site is fine — this was on our en
 msgstr "Algo interrumpió la auditoría. Tu sitio está bien — esto fue un problema nuestro."
 
 #: src/components/AppSidebar.jsx
-msgid "Soon"
-msgstr "Próximamente"
+#~ msgid "Soon"
+#~ msgstr "Próximamente"
+
+#: src/app/(app)/execute/page.jsx
+msgid "Source"
+msgstr "Fuente"
 
 #: src/components/GoogleAdsReport.js
 msgid "Source: {source}"
@@ -8378,14 +8718,17 @@ msgid "Start over"
 msgstr "Empezar de nuevo"
 
 #: src/components/insights/desk/DeskDayOne.jsx
-msgid "Start with a question"
-msgstr "Empieza con una pregunta"
+#~ msgid "Start with a question"
+#~ msgstr "Empieza con una pregunta"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Start with these"
+msgstr "Empieza con estos"
 
 #: src/app/(start)/start/page.jsx
 msgid "Start with your website. Duct reads it, audits it, and builds your project from what it finds. An account can wait until there is something worth keeping."
 msgstr "Empieza con tu sitio web. Duct lo lee, lo audita y construye tu proyecto a partir de lo que encuentra. Una cuenta puede esperar hasta que haya algo que valga la pena guardar."
 
-#: src/app/(app)/audit/seo/page.jsx
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Starting audit…"
 msgstr "Iniciando auditoría…"
@@ -8397,6 +8740,14 @@ msgstr "Iniciando Duct…"
 #: src/components/workspace/AgentChat.jsx
 msgid "Starting session…"
 msgstr "Iniciando sesión…"
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Starting…"
+msgstr "Iniciando…"
+
+#: src/app/(app)/execute/page.jsx
+msgid "Status"
+msgstr "Estado"
 
 #: src/components/connections/ProviderCard.jsx
 msgid "Stay connected"
@@ -8934,6 +9285,10 @@ msgstr "La dirección https pública que sirve la API con el formato de OpenAI, 
 msgid "The reply is ready when you are."
 msgstr "La respuesta está lista cuando tú lo estés."
 
+#: src/app/(app)/connections/page.jsx
+msgid "The revenue every other number should answer to."
+msgstr "Los ingresos a los que todas las demás cifras deben responder."
+
 #: src/lib/agentSession.js
 msgid "The run stopped without saying why. Try again."
 msgstr "La ejecución se detuvo sin decir por qué. Inténtalo de nuevo."
@@ -9132,8 +9487,8 @@ msgid "This is usually temporary — try again in a moment."
 msgstr "Esto suele ser temporal; inténtalo de nuevo en un momento."
 
 #: src/components/LocalInsightDetail.jsx
-msgid "This locally-stored insight may have been cleared from your browser."
-msgstr "Este hallazgo almacenado localmente puede haber sido eliminado de tu navegador."
+#~ msgid "This locally-stored insight may have been cleared from your browser."
+#~ msgstr "Este hallazgo almacenado localmente puede haber sido eliminado de tu navegador."
 
 #: src/app/(start)/start/page.jsx
 msgid "This looks like a client-rendered app, so the crawler may see very little — the same as a search engine."
@@ -9199,8 +9554,8 @@ msgid "This removes the project and its configuration from this browser, and can
 msgstr "Esto elimina el proyecto y su configuración de este navegador, y no se puede deshacer. Los informes guardados permanecen donde están."
 
 #: src/app/(app)/audit/seo/page.jsx
-msgid "This run reads project memory, and what it concludes is written back."
-msgstr "Esta ejecución lee la memoria del proyecto, y lo que concluye se vuelve a escribir."
+#~ msgid "This run reads project memory, and what it concludes is written back."
+#~ msgstr "Esta ejecución lee la memoria del proyecto, y lo que concluye se vuelve a escribir."
 
 #: src/app/not-found.js
 msgid "This screen doesn't exist or has moved. Nothing is wrong with your install."
@@ -9251,8 +9606,8 @@ msgid "thread"
 msgstr "hilo"
 
 #: src/components/insights/desk/DeskLists.jsx
-msgid "Threads"
-msgstr "Hilos"
+#~ msgid "Threads"
+#~ msgstr "Hilos"
 
 #: src/app/(app)/settings/models/page.jsx
 msgid "Tiers"
@@ -9301,6 +9656,10 @@ msgstr "Tono"
 #: src/components/connections/McpConnectors.jsx
 msgid "Tools from OpenSEO, PostHog and other apps, for the insights chat. Saved to your account."
 msgstr "Herramientas de OpenSEO, PostHog y otras apps, para el chat de hallazgos. Guardado en tu cuenta."
+
+#: src/app/(app)/connections/page.jsx
+msgid "Tools from other companies’ own servers, for the chat. Pick one of these or paste the address of any remote MCP server."
+msgstr "Herramientas de los propios servidores de otras empresas, para el chat. Elige una de estas o pega la dirección de cualquier servidor MCP remoto."
 
 #: src/components/content/DiscoverPage.jsx
 msgid "Top + recent posts for hashtags you care about. Best for finding what's actually working in the niche."
@@ -9361,8 +9720,8 @@ msgid "Trying again won't help. Connect GitHub with a fine-grained token from th
 msgstr "Volver a intentarlo no servirá. Conecta GitHub con un token fine-grained desde la tarjeta de GitHub."
 
 #: src/app/(app)/audit/seo/page.jsx
-msgid "Turn off to audit a different business or competitor — only the fields below are used."
-msgstr "Desactiva para auditar un negocio o competidor diferente; solo se usan los campos siguientes."
+#~ msgid "Turn off to audit a different business or competitor — only the fields below are used."
+#~ msgstr "Desactiva para auditar un negocio o competidor diferente; solo se usan los campos siguientes."
 
 #: src/components/onboarding/FrontDoor.jsx
 #~ msgid "Type your address — that’s the whole setup. Duct reads your site the way a search engine does, then tells you what to fix first."
@@ -9413,8 +9772,8 @@ msgid "Unpin {label}"
 msgstr "Desanclar {label}"
 
 #: src/app/(app)/projects/page.jsx
-msgid "Unspecified industry"
-msgstr "Industria no especificada"
+#~ msgid "Unspecified industry"
+#~ msgstr "Industria no especificada"
 
 #: src/components/insights/desk/DeskLists.jsx
 msgid "Untitled"
@@ -9460,13 +9819,17 @@ msgstr "Actualizado {when}"
 
 #: src/app/(app)/settings/models/page.jsx
 #: src/app/(app)/usage/page.jsx
-#: src/lib/navigation.js
+#: src/components/AppSidebar.jsx
 msgid "Usage"
 msgstr "Uso"
 
 #: src/app/(app)/audit/seo/page.jsx
-msgid "Use {projectName}'s business context"
-msgstr "Usar el contexto de negocio de {projectName}"
+#~ msgid "Use {projectName}'s business context"
+#~ msgstr "Usar el contexto de negocio de {projectName}"
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Use {projectName}'s context"
+msgstr "Usar el contexto de {projectName}"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Use a different PostBridge key"
@@ -9515,6 +9878,10 @@ msgstr "Usado {tool}"
 #: src/components/settings/AgentAccess.jsx
 msgid "Used {used}"
 msgstr "Usado {used}"
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Using {projectName}"
+msgstr "Usando {projectName}"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Using {tool}"
@@ -9784,8 +10151,8 @@ msgid "Website <0>(optional)</0>"
 msgstr "Sitio web <0>(opcional)</0>"
 
 #: src/app/(app)/audit/seo/page.jsx
-msgid "Website URL <0>*</0>"
-msgstr "URL del sitio web <0>*</0>"
+#~ msgid "Website URL <0>*</0>"
+#~ msgstr "URL del sitio web <0>*</0>"
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Website URL is required."
@@ -9807,6 +10174,14 @@ msgstr "Lo que realmente cuesta el septiembre de un freelancer"
 msgid "What an X or LinkedIn draft never does. Duct's defaults until you change them."
 msgstr "Lo que un borrador de X o LinkedIn nunca hace. Los valores predeterminados de Duct hasta que los cambies."
 
+#: src/app/(app)/execute/page.jsx
+msgid "What autonomy allows"
+msgstr "Lo que la autonomía permite"
+
+#: src/app/(app)/activity/page.jsx
+msgid "What changed on {projectName}, and who did it"
+msgstr "Qué cambió en {projectName} y quién lo hizo"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "What currently limits this metric most? <0>(optional)</0>"
 msgstr "¿Qué limita más esta métrica actualmente? <0>(opcional)</0>"
@@ -9824,16 +10199,24 @@ msgid "What does success look like?"
 msgstr "¿Cómo se ve el éxito?"
 
 #: src/app/(app)/project/[projectId]/memory/page.jsx
-msgid "What Duct knows about this project. Agents read it before every run — confirm, correct, or pin a fact so it stays in view."
-msgstr "Lo que Duct sabe sobre este proyecto. Los agentes lo leen antes de cada ejecución: confirma, corrige o fija un hecho para que permanezca visible."
+msgid "What Duct knows about {projectName}. Agents read it before every run."
+msgstr "Lo que Duct sabe sobre {projectName}. Los agentes lo leen antes de cada ejecución."
+
+#: src/app/(app)/project/[projectId]/memory/page.jsx
+#~ msgid "What Duct knows about this project. Agents read it before every run — confirm, correct, or pin a fact so it stays in view."
+#~ msgstr "Lo que Duct sabe sobre este proyecto. Los agentes lo leen antes de cada ejecución: confirma, corrige o fija un hecho para que permanezca visible."
 
 #: src/components/content/PlanDayOne.jsx
 msgid "What Duct plans from"
 msgstr "De qué planifica Duct"
 
 #: src/components/models/UsagePanel.jsx
-msgid "What Duct spent running your agents. These are charges on your own provider key — Duct never bills them."
-msgstr "Lo que Duct gastó ejecutando tus agentes. Estos son cargos en tu propia clave de proveedor; Duct nunca los factura."
+#~ msgid "What Duct spent running your agents. These are charges on your own provider key — Duct never bills them."
+#~ msgstr "Lo que Duct gastó ejecutando tus agentes. Estos son cargos en tu propia clave de proveedor; Duct nunca los factura."
+
+#: src/app/(app)/connections/page.jsx
+msgid "What each campaign costs and what it brings back."
+msgstr "Lo que cuesta cada campaña y lo que retorna."
 
 #: src/app/(start)/start/page.jsx
 msgid "What happens next"
@@ -9847,6 +10230,10 @@ msgstr "Lo que encontré"
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "What is my site actually about?"
 msgstr "¿De qué trata realmente mi sitio?"
+
+#: src/components/ui/page.jsx
+msgid "What is this?"
+msgstr "¿Qué es esto?"
 
 #: src/components/insights/ToolApproval.jsx
 msgid "What it will send"
@@ -9863,6 +10250,14 @@ msgstr "¿Cómo debería llamarte Duct?"
 #: src/components/content/TextPostEditor.jsx
 msgid "What the {label} feed shows before “see more”"
 msgstr "Lo que muestra el feed de {label} antes de «ver más»"
+
+#: src/app/(app)/audit/seo/page.jsx
+msgid "What the business does"
+msgstr "Lo que hace el negocio"
+
+#: src/components/insights/desk/DeskDayOne.jsx
+msgid "What this page will hold"
+msgstr "Lo que contendrá esta página"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "What was observed, why it matters, how to apply it."
@@ -9920,6 +10315,10 @@ msgstr "Dónde encontrar estas credenciales"
 msgid "Where to post"
 msgstr "Dónde publicar"
 
+#: src/app/(app)/connections/page.jsx
+msgid "Where visitors come from and what they do next."
+msgstr "De dónde vienen los visitantes y qué hacen después."
+
 #: src/components/insights/AccountSelect.jsx
 msgid "Which {label} account should Duct use?"
 msgstr "¿Qué cuenta de {label} debería usar Duct?"
@@ -9947,6 +10346,10 @@ msgstr "¿Qué páginas deberían posicionarse y no lo hacen?"
 #: src/components/TelemetryCard.jsx
 msgid "Which screens and features you open"
 msgstr "Qué pantallas y funciones abres"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Which searches bring people in, and which ones stopped."
+msgstr "Qué búsquedas atraen a la gente y cuáles se detuvieron."
 
 #: src/app/(app)/connections/page.jsx
 msgid "Which tests are live, whether they still bucket, per-metric results."
@@ -10000,9 +10403,13 @@ msgstr "Ganancia"
 msgid "Winning hooks"
 msgstr "Ganchos ganadores"
 
+#: src/lib/navigation.js
+msgid "Work"
+msgstr "Trabajo"
+
 #: src/components/insights/desk/DeskDayOne.jsx
-msgid "Work still moving — mine or yours. Nothing here waits on you."
-msgstr "El trabajo sigue avanzando — mío o tuyo. Nada aquí te espera."
+#~ msgid "Work still moving — mine or yours. Nothing here waits on you."
+#~ msgstr "El trabajo sigue avanzando — mío o tuyo. Nada aquí te espera."
 
 #: src/components/insights/desk/DeskCards.jsx
 #: src/components/workspace/ActivityRow.jsx
@@ -10027,13 +10434,16 @@ msgid "working…"
 msgstr "trabajando…"
 
 #: src/app/(app)/audit/seo/page.jsx
-#: src/app/(app)/execute/page.jsx
 #: src/components/AppSidebar.jsx
 #: src/components/content/PublishModal.jsx
 #: src/components/insights/desk/DeskLists.jsx
 #: src/components/workspace/AgentChat.jsx
 msgid "Working…"
 msgstr "Trabajando…"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Worth adding next"
+msgstr "Vale la pena añadir a continuación"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Write to me in"
@@ -10173,7 +10583,7 @@ msgstr "tu cuenta"
 msgid "Your accounts"
 msgstr "Tus cuentas"
 
-#: src/components/settings/AgentAccess.jsx
+#: src/app/(app)/settings/agents/page.jsx
 msgid "Your agent can read your projects and draft their profile. It can't approve changes, connect tools, or replace anything you typed or confirmed."
 msgstr "Tu agente puede leer tus proyectos y redactar su perfil. No puede aprobar cambios, conectar herramientas, ni reemplazar nada que hayas escrito o confirmado."
 
@@ -10209,6 +10619,10 @@ msgstr "tu solicitud"
 msgid "Your best hour on {channelLabel}, from {posts} posts with numbers."
 msgstr "Tu mejor hora en {channelLabel}, de {posts} publicaciones con números."
 
+#: src/app/(app)/audit/seo/page.jsx
+msgid "Your business"
+msgstr "Tu negocio"
+
 #: src/components/connections/ProviderCard.jsx
 msgid "your ChatGPT account"
 msgstr "tu cuenta de ChatGPT"
@@ -10237,6 +10651,10 @@ msgstr "Tu inicio de sesión de ChatGPT está guardado, pero esta compilación n
 #: src/components/connections/McpConnectors.jsx
 msgid "Your Cloudflare account through its API: Workers, DNS, zones and analytics."
 msgstr "Tu cuenta de Cloudflare a través de su API: Workers, DNS, zonas y analíticas."
+
+#: src/app/(app)/project/[projectId]/page.jsx
+msgid "Your company"
+msgstr "Tu empresa"
 
 #: src/components/ConnectionBanner.jsx
 msgid "Your connection is fine but Duct's servers are not responding. This is usually brief."
@@ -10269,6 +10687,10 @@ msgstr "tu correo electrónico"
 #: src/components/models/UsagePanel.jsx
 msgid "Your first agent run fills this in. Below is a normal month."
 msgstr "Tu primera ejecución de agente completa esto. Abajo hay un mes normal."
+
+#: src/app/(app)/settings/profile/page.jsx
+msgid "Your first name"
+msgstr "Tu nombre"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "your formats"
@@ -10320,8 +10742,8 @@ msgid "your profile"
 msgstr "tu perfil"
 
 #: src/app/(app)/settings/profile/page.jsx
-msgid "Your projects"
-msgstr "Tus proyectos"
+#~ msgid "Your projects"
+#~ msgstr "Tus proyectos"
 
 #: src/components/TelemetryCard.jsx
 msgid "Your provider API keys"
