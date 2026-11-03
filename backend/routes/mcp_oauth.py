@@ -141,6 +141,12 @@ def authorize(
         return _redirect(oauth.consent_page(error=CONSENT_ERROR_INVALID))
 
     def back(error: str, description: str) -> RedirectResponse:
+        # Straight back only to this computer. Anyone may register a client,
+        # so bouncing a browser to a registered https address before the
+        # person has done anything would make Duct's domain a redirector
+        # (RFC 9700 §4.11.2); the app's error state stands in.
+        if not oauth.is_loopback_uri(redirect_uri):
+            return _redirect(oauth.consent_page(error=CONSENT_ERROR_INVALID))
         return _redirect(oauth.with_query(
             redirect_uri, error=error, error_description=description, state=state, iss=oauth.issuer(),
         ))

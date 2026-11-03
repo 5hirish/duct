@@ -216,6 +216,12 @@ def test_registration_takes_the_addresses_real_agents_use(env, uri):
     ({"redirect_uris": ["http://evil.example/cb"]}, "invalid_redirect_uri"),
     ({"redirect_uris": ["javascript:alert(1)"]}, "invalid_redirect_uri"),
     ({"redirect_uris": ["https://ok.example/cb#frag"]}, "invalid_redirect_uri"),
+    # The consent page names the host: a lookalike or a name before an "@"
+    # would put "claude.ai" on screen in front of someone else's server.
+    ({"redirect_uris": ["https://\u0441laude.ai/api/mcp/auth_callback"]}, "invalid_redirect_uri"),
+    ({"redirect_uris": ["https://claude.ai@evil.example/cb"]}, "invalid_redirect_uri"),
+    # Loopback to Python, evil.example to a browser, which reads "\\" as "/".
+    ({"redirect_uris": ["http://evil.example\\@127.0.0.1/cb"]}, "invalid_redirect_uri"),
     ({"redirect_uris": []}, "invalid_redirect_uri"),
     ({"redirect_uris": [CALLBACK], "token_endpoint_auth_method": "client_secret_basic"}, "invalid_client_metadata"),
     ({"redirect_uris": [CALLBACK], "grant_types": ["client_credentials"]}, "invalid_client_metadata"),
@@ -254,8 +260,22 @@ def test_a_loopback_listener_may_come_back_on_another_port(env):
     _, challenge = _pkce()
     client_id = env.register()
     assert env.consent(client_id, challenge, redirect_uri="http://127.0.0.1:50999/callback")
-    other_path = env.authorize(client_id, challenge, redirect_uri="http://127.0.0.1:50999/elsewhere")
-    assert other_path.headers["location"].startswith(f"{APP}/authorize?error=")
+    for elsewhere in (
+        "http://127.0.0.1:50999/elsewhere",
+        "http://evil.example\\@127.0.0.1:50999/callback",
+        "http://user@127.0.0.1:50999/callback",
+    ):
+        res = env.authorize(client_id, challenge, redirect_uri=elsewhere)
+        assert res.headers["location"] == f"{APP}/authorize?error=invalid_request", elsewhere
+
+
+def test_an_error_goes_straight_back_only_to_this_computer(env):
+    """Anyone can register, so an immediate redirect to a registered https
+    address would make Duct's domain a redirector for whoever registered it."""
+    _, challenge = _pkce()
+    uri = "https://agent.example/cb"
+    res = env.authorize(env.register(uris=[uri]), challenge, redirect_uri=uri, response_type="token")
+    assert res.headers["location"] == f"{APP}/authorize?error=invalid_request"
 
 
 @pytest.mark.parametrize("extra, error", [
@@ -278,6 +298,14 @@ def test_the_consent_page_learns_who_is_asking_and_where_it_returns(env):
         described = env.client.get(f"/api/oauth/requests/{request_code}").json()
     assert described == {"client_name": "Claude Code", "destination": "device", "destination_name": "127.0.0.1"}
     assert env.client.get("/api/oauth/requests/made-up").status_code == 404
+
+
+def test_a_web_destination_shows_its_port(env):
+    _, challenge = _pkce()
+    uri = "https://agent.example:8443/cb"
+    request_code = env.consent(env.register(uris=[uri]), challenge, redirect_uri=uri)
+    described = env.client.get(f"/api/oauth/requests/{request_code}").json()
+    assert (described["destination"], described["destination_name"]) == ("web", "agent.example:8443")
 
 
 def test_declining_sends_the_agent_access_denied_and_spends_the_request(env):

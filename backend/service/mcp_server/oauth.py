@@ -94,6 +94,11 @@ _LOOPBACK_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
 _REFUSED_SCHEMES = frozenset({"javascript", "data", "file", "vbscript", "about", "blob", "ws", "wss", "ftp"})
 _SCHEME = re.compile(r"^[a-z][a-z0-9+.-]*$")
 _CONTROL = re.compile(r"[\x00-\x1f\x7f]+")
+# Where a browser and urlsplit read an address differently. WHATWG parsing
+# treats a backslash as "/" in an http(s) address and drops tabs and
+# newlines, so evil.com, a backslash, then "@127.0.0.1/cb" is loopback to
+# Python and evil.com to the browser that follows it.
+_AMBIGUOUS = re.compile(r"[\\\s]")
 
 _CLIENT_TYPE = "mcp_client"
 _KEY_CONTEXT = b"duct mcp oauth client id v1"
@@ -176,12 +181,32 @@ def _signing_key() -> bytes:
 
 
 def _is_loopback(parts) -> bool:
-    return parts.scheme == "http" and (parts.hostname or "") in _LOOPBACK_HOSTS
+    """An http address on this computer, and nothing but: its authority must
+    be exactly a loopback host and an optional port, so no user name or
+    stray character can make a browser read it as somewhere else."""
+    host = parts.hostname or ""
+    if parts.scheme != "http" or host not in _LOOPBACK_HOSTS:
+        return False
+    try:
+        port = parts.port
+    except ValueError:
+        return False
+    bracketed = f"[{host}]" if ":" in host else host
+    return parts.netloc.lower() == (f"{bracketed}:{port}" if port is not None else bracketed)
+
+
+def is_loopback_uri(uri: str) -> bool:
+    try:
+        return not _AMBIGUOUS.search(uri) and _is_loopback(urlsplit(uri))
+    except ValueError:
+        return False
 
 
 def _check_redirect_uri(uri: Any) -> str:
     if not isinstance(uri, str) or not uri or len(uri) > REDIRECT_URI_MAX_CHARS:
         raise RegistrationError("invalid_redirect_uri", "Each redirect URI must be a string under 512 characters.")
+    if _AMBIGUOUS.search(uri):
+        raise RegistrationError("invalid_redirect_uri", f"No backslashes or spaces in a redirect URI: {uri!r}")
     try:
         parts = urlsplit(uri)
     except ValueError:
@@ -191,9 +216,18 @@ def _check_redirect_uri(uri: Any) -> str:
         raise RegistrationError("invalid_redirect_uri", f"Duct cannot send a sign-in to {uri}.")
     if scheme == "https" and not parts.hostname:
         raise RegistrationError("invalid_redirect_uri", f"Not a web address: {uri}")
+    # The consent page names this host, and the person trusts what it says.
+    # urlsplit hands back Unicode, so "сlaude.ai" with a Cyrillic "с" would
+    # show as claude.ai; credentials before an "@" put a familiar name in
+    # front of a stranger's host; a browser decodes a percent-escaped host
+    # that urlsplit shows as typed. None has a place in a callback address.
+    if not parts.netloc.isascii() or "@" in parts.netloc or "%" in parts.netloc:
+        raise RegistrationError(
+            "invalid_redirect_uri", f"Use a plain ASCII host with no user name in it, not {uri}."
+        )
     # Plain http only to this computer (RFC 8252 §7.3). Anywhere else it would
     # carry the code across the network in the clear.
-    if scheme == "http" and not _is_loopback(parts):
+    if scheme == "http" and not is_loopback_uri(uri):
         raise RegistrationError(
             "invalid_redirect_uri", f"Use https, or http to localhost or 127.0.0.1, not {uri}."
         )
@@ -268,11 +302,10 @@ def redirect_allowed(registered: Client, uri: str) -> bool:
     for each sign-in, after it registered (RFC 8252 §7.3)."""
     if uri in registered.redirect_uris:
         return True
-    try:
-        asked = urlsplit(uri)
-    except ValueError:
+    if not is_loopback_uri(uri):
         return False
-    if not _is_loopback(asked) or asked.fragment:
+    asked = urlsplit(uri)
+    if asked.fragment:
         return False
     for known in registered.redirect_uris:
         parts = urlsplit(known)
@@ -288,7 +321,10 @@ def destination(uri: str) -> tuple[str, str]:
     if _is_loopback(parts):
         return DESTINATION_DEVICE, parts.hostname or ""
     if parts.scheme == "https":
-        return DESTINATION_WEB, parts.hostname or ""
+        # The port too: the same name on another port can be someone else's
+        # server, and the page should not hide the difference.
+        host = parts.hostname or ""
+        return DESTINATION_WEB, f"{host}:{parts.port}" if parts.port else host
     return DESTINATION_APP, parts.scheme
 
 
