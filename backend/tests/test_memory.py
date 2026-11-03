@@ -452,6 +452,20 @@ async def test_write_notification_reaches_the_ui_without_leaking_to_the_model():
     assert "ui" not in unheard
 
 
+def test_a_run_on_title_is_sent_back_to_be_a_headline():
+    """The service would cut it at 200 characters mid-sentence; the tool refuses
+    it before any write, so the model rewrites it and the detail lands in body."""
+    from agents.core.memory_tools import TITLE_HEADLINE_MAX, _remember_sync
+
+    out = _remember_sync(
+        {"kind": "conclusion", "title": "x" * (TITLE_HEADLINE_MAX + 1)},
+        project_id=uuid4(), user_id=None, conversation_id=None,
+        agent_type="insights", scope="project", source_type="agent",
+    )
+    assert out["status"] == "not_stored"
+    assert "body" in out["message"]
+
+
 # ---------------------------------------------------------------------------
 # System writers
 # ---------------------------------------------------------------------------
