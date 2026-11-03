@@ -139,6 +139,71 @@ const RULES = [
     re: /\btext-muted-foreground\/\d+\b/g,
     allow: new Map(),
   },
+  // ── The page frame and the form primitives (2026-11-02 UI audit) ──────────
+  // Each of these was measured before it was written down: page titles in six
+  // places at three sizes, eight of sixteen screens opening on an explanatory
+  // paragraph, twelve hand-made textareas at four radii (one of them commented
+  // "kept for the one control the primitive does not cover" — the primitive
+  // had simply never been generated), and 139 bordered boxes beside a Card
+  // component nothing imported.
+  {
+    id: "no-raw-h1",
+    why: "A page's title is PageHeader's. Hand-made titles drifted to six left edges, three sizes and three weights, and each arrived with a paragraph explaining the page under it.",
+    fix: "<Page><PageHeader title=… status=… actions=… help=… /> from components/ui/page. Explanation goes in `help`.",
+    re: /<h1\b/g,
+    allow: new Map([
+      ["components/ui/page.jsx", "the one place a page title is drawn"],
+      ["app/not-found.js", "outside the app shell"],
+      ["app/(auth)", "the front door has its own composition"],
+      ["app/(start)", "onboarding has its own composition"],
+      ["app/(public)", "a public marketing page"],
+      ["app/invite", "signed-out landing page"],
+      ["app/preview", "the preview harness"],
+      ["components/onboarding", "the front door and onboarding"],
+      ["components/AppErrorPanel.jsx", "the error boundary renders outside any page"],
+      ["components/LocalBackendGate.jsx", "renders before the app shell exists"],
+      ["components/content/PostViewport.jsx", "a workspace pane's own title strip, not a page"],
+      ["components/workspace/ChatMarkdown.jsx", "markdown the agent wrote"],
+      ["components/content/MarkdownSpec.jsx", "markdown the agent wrote"],
+      ["components/audit/AuditReportV1.jsx", "a generated document with its own heading"],
+    ]),
+  },
+  {
+    id: "no-page-toolbar",
+    why: "The hand-composed `.page-toolbar` title row is gone; PageHeader replaced it.",
+    fix: "PageHeader from components/ui/page.",
+    re: /\bpage-toolbar(?:-[a-z]+)?\b/g,
+    allow: new Map(),
+  },
+  {
+    id: "no-raw-textarea",
+    why: "ui/textarea is the multi-line field: the field radius, auto-growing, one focus ring. Twelve hand-made ones had four radii between them, including a capsule that clipped its own text.",
+    fix: "<Textarea /> from components/ui/textarea.",
+    re: /<textarea\b/g,
+    allow: new Map([
+      ["components/ui/textarea.tsx", "the primitive"],
+      ["components/workspace/ChatInput.jsx", "the chat composer: a borderless box inside its own card"],
+      ["components/insights/desk/DeskComposer.jsx", "the desk composer, same shape as ChatInput"],
+      ["components/content/TextPostEditor.jsx", "an inline editor surface with no field chrome"],
+    ]),
+  },
+  {
+    id: "no-capsule-field",
+    why: "A field is a rectangle with the field radius. Capsule inputs (shadcn's Luma style) are for one-line pills; on anything that can wrap they clip the text.",
+    fix: "Leave the radius to the primitive. Badges and chips are the capsules.",
+    re: /<(?:Input|Textarea|SelectTrigger)\b[^>]*\brounded-(?:full|2xl|3xl|4xl)\b/g,
+    allow: new Map(),
+  },
+  {
+    id: "no-hand-rolled-card",
+    why: "ui/card is the one card: radius, padding, border, a footer pinned to the bottom so a row of cards lines up. Hand-made `rounded-xl border bg-card` boxes each picked their own.",
+    fix: "<Card variant=… size=…> from components/ui/card; lists of one kind of thing are rows in one Card.",
+    re: /\brounded-(?:lg|xl|2xl|3xl|4xl)\b(?=[^"'`]*\bbg-card\b)(?=[^"'`]*\bborder\b)/g,
+    // A burn-down, not an allowlist: the boxes that existed when the rule
+    // arrived. Lower it when you replace one; it can never go up.
+    budget: 38,
+    allow: new Map(),
+  },
   {
     id: "no-viewport-prefix-in-content",
     why: "The sidebar takes 16rem out of the window, and both agent panes are user-resizable, so `sm:` can fire while the box you are in is 300px. Each layout region declares a container for exactly this reason (app/AGENTS.md).",
@@ -192,6 +257,15 @@ for (const rule of RULES) {
       if (EXEMPT_MATCH.has(m[0]) && EXEMPT_LINE.test(lines[line - 1] || "")) continue;
       hits.push(`${rel}:${line}  ${m[0].trim()}`);
     }
+  }
+
+  if (rule.budget !== undefined && hits.length <= rule.budget) {
+    summary.push(
+      `✓ ${rule.id} (${hits.length} left of a budget of ${rule.budget}${
+        hits.length < rule.budget ? ` — lower the budget to ${hits.length}` : ""
+      })`
+    );
+    continue;
   }
 
   if (hits.length) {
