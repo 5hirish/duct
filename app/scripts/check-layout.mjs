@@ -17,7 +17,9 @@
  *   - a title truncated to a few letters because its row crushed it rather
  *     than wrapping (a change set's title read "Ac" on a phone);
  *   - a wide column centred inside a left-aligned page, so the content starts
- *     somewhere other than under its title.
+ *     somewhere other than under its title;
+ *   - on a dev server, the desk in every generated situation: more than one
+ *     lead, a headline that wraps, a row or a lead title its clamp let go.
  *
  * It needs the app running (APP, default http://localhost:3003) and starts the
  * fixture backend itself (scripts/mock-agent-backend.mjs on MOCK_PORT, 8012),
@@ -42,6 +44,7 @@ const req = createRequire(import.meta.url);
 const { chromium } = req(req.resolve("playwright", { paths: [process.env.PLAYWRIGHT_FROM || join(REPO, "site")] }));
 const fixtures = await import(join(REPO, "scripts/shots/fixtures.mjs"));
 const { STORY } = await import(join(REPO, "app/src/lib/__fixtures__/solo-story.mjs"));
+const { DESK_SCENARIOS } = await import(join(REPO, "app/src/lib/__fixtures__/deskScenarios.mjs"));
 
 const APP = process.env.APP || "http://localhost:3003";
 const API = process.env.API || "http://localhost:8002";
@@ -79,6 +82,10 @@ const fail = (where, what) => failures.push(`${where}  ${what}`);
 try {
   await waitFor(`${MOCK}/api/agents`, 15000);
   const browser = await chromium.launch({ headless: true });
+  const deskScenes = (await fetch(`${APP}/preview`).then((r) => r.ok).catch(() => false))
+    ? DESK_SCENARIOS.map((s) => s.id)
+    : null;
+  if (!deskScenes) console.log("desk scenarios skipped: /preview is dev-only");
   try {
     for (const viewport of WIDTHS) {
       const context = await browser.newContext({ viewport, colorScheme: "dark", locale: "en-GB" });
@@ -121,6 +128,25 @@ try {
         }
       }
 
+      // The desk in every generated situation (lib/__fixtures__/deskScenarios.mjs),
+      // through /preview, which only a dev server has: under `next start` this
+      // half is skipped and says so. The arrangement's counts are held by
+      // check:desk; this holds what only a browser can see — the clamps.
+      if (deskScenes) {
+        for (const id of deskScenes) {
+          const where = `desk scenario ${id} @${viewport.width}`;
+          await page.goto(`${APP}/preview/frame?scene=desk-scenario-${id}&theme=dark`, { waitUntil: "domcontentloaded" });
+          await page.waitForSelector('[data-slot="page-header"] h1', { timeout: 20000 }).catch(() => {});
+          await page.waitForTimeout(400);
+          const d = await page.evaluate(measureDesk);
+          if (d.leads > 1) fail(where, `${d.leads} lead items, expected at most one`);
+          if (d.h1Lines > (viewport.width < 640 ? 2 : 1)) fail(where, `the headline runs to ${d.h1Lines} lines`);
+          if (d.overflow > PX) fail(where, `page is ${d.overflow}px wider than the window`);
+          for (const h of d.tallRows) fail(where, `a row is ${h}px tall: its title is not held to one line`);
+          if (d.leadTitleLines > 2) fail(where, `the lead's title runs to ${d.leadTitleLines} lines`);
+        }
+      }
+
       // Same left edge and same size for every page title at this width.
       const plain = titles.filter((t) => t.size !== "hero");
       const lefts = new Set(titles.map((t) => Math.round(t.left)));
@@ -148,6 +174,23 @@ if (failures.length) {
   process.exit(1);
 }
 console.log(`layout OK — ${ROUTES.length} screens × ${WIDTHS.length} widths`);
+
+// Runs in the page: the desk's slots, whatever the generated content was.
+function measureDesk() {
+  const h1 = document.querySelector('[data-slot="page-header"] h1');
+  const lines = (el) => (el ? Math.round(el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight)) : 0);
+  const lead = document.querySelector('[data-desk="lead"]');
+  return {
+    leads: document.querySelectorAll('[data-desk="lead"]').length,
+    h1Lines: lines(h1),
+    leadTitleLines: lines(lead?.querySelector("h2")),
+    overflow: document.documentElement.scrollWidth - window.innerWidth,
+    // One line of text plus the row's padding is ~57px; a second line is ~77.
+    tallRows: [...document.querySelectorAll('[data-desk="row"]')]
+      .map((r) => Math.round(r.getBoundingClientRect().height))
+      .filter((h) => h > 64),
+  };
+}
 
 // Runs in the page.
 function measure() {

@@ -100,6 +100,96 @@ changes the primitive, with a sentence saying why, not the screen.
 
 ---
 
+## Content awareness — design for text nobody has written yet
+
+**Duct is an agent product: most of what a screen shows is written at run
+time, by a model, by the person or by a vendor's API, not by whoever drew the
+screen.** A layout built around one good screenshot breaks on the next run.
+Design the structure for the whole range, and let content fill slots the
+structure owns. The Home desk taught this (2026-11-03): three bucket cards
+built around a tidy sample showed a user seven six-week-old items, two of
+them the same finding in different words, one titled with their own typo.
+
+**What fills Duct's screens**
+
+| Source | Examples | What varies | Treat it as |
+|---|---|---|---|
+| Model-written | findings and incidents (`project_memories` titles and bodies), change-set titles and diffs, briefs and reports, chat replies, content drafts and captions | 3 to 60 words; near-duplicates of one fact; with or without a number; confidence; language | untrusted for length and uniqueness: clamp it, merge it, rank it in code |
+| Person-written | chat messages (a thread's title *is* its first message, verbatim, `routes/agents.py`), project and company names, brand context, voice rules, writing samples, uploaded files | typos and "pls"; one word to pages; any language; emoji | the person's words: shown as theirs (`<q>`), never restyled as Duct's voice |
+| Data and vendor | connector, property, campaign and page names; URLs; metric values, units and currencies; timestamps; a provider's error sentence | identifiers with no spaces; 0 to 10⁹; missing values; data that stopped refreshing | data: tabular figures, `lib/format.js` (`formatMeasure`, `formatDelta`), say when it is old |
+| Duct's own copy | titles, labels, state sentences, empty states | five languages, German ~30% longer | fixed and translated: the only text a layout may be sized around |
+
+**The axes.** Before building an agent surface, write down its range on each
+and design every extreme, not the middle:
+
+- **Count**: 0, 1, a few, more than fit. The desk sees 0 and 300.
+- **Mix**: all one kind; every kind at once.
+- **Length**: shortest plausible, longest plausible, German, Japanese.
+- **Shape**: with and without a number, a date, an owner, a source.
+- **Age**: minutes old, months old; data that has not refreshed.
+- **Repetition**: the same fact twice in other words.
+- **State**: never run, running, failed, stale, disconnected, empty because all clear.
+
+**The rules that follow** (`lib/desk.js`'s `arrangeDesk` is the worked example
+of all of them):
+
+1. **The structure owns the slots.** An item is a fixed anatomy: mark, verb,
+   headline, optional number, age, action. A missing part leaves the row the
+   same shape. Content never changes a layout's shape: not the number of
+   columns, not which box is the hero.
+2. **Duct's copy sets the size of large type, never generated text.** A page
+   headline comes from the page's state, one translated sentence per state.
+   Model text goes in a clamped slot below it.
+3. **Rank and bound; don't bucket.** Code ranks the items, the screen shows a
+   fixed number and says "N more". Buckets hand the layout to the
+   distribution of content: seven beside one beside an empty box.
+4. **Code decides weight, not the model.** What leads, what is urgent, what
+   is filed away is a deterministic, tested function, never a model's wording.
+5. **What needs the person, what Duct knows, what Duct is doing** are three
+   tenses and get three treatments: a ranked queue, a few notes with the rest
+   a link away, an ambient count in the header. Work in progress never takes
+   a card, so it can never be the empty box on the page.
+6. **Age and repetition are rules.** Old waiting items file themselves away
+   and the page says how many. Restatements merge and show ×N: the same
+   stored subject, or the same words *with the same numbers*, because
+   "sessions fell 12%" and "sessions fell 8%" are two facts. A page whose
+   data is stale says so before it says anything else.
+7. **Contract at the source, clamp as the net.** A model-written field gets a
+   length contract where it is produced (the tool rejects, the model rewrites)
+   and a clamp in the UI for whatever predates the contract. An ellipsis in
+   the middle of a model's sentence is a failure, not a style.
+8. **The person's words stay theirs.** A thread title copied from a message
+   is quoted wherever it sits among Duct's own words (the desk's queue), so
+   "Analyse the webperformance pls." reads as a quote, not as a typo in
+   Duct's copy. A list that is only the person's threads needs no quotes.
+9. **Test against generated content, not a screenshot.** Every agent surface
+   gets scenario fixtures across the axes (`lib/__fixtures__/deskScenarios.mjs`
+   is the model: named situations plus a seeded `randomDesk`). They render as
+   `/preview` scenes, and the arrangement's invariants (at most one lead,
+   bounded rows, nothing shown twice, the headline count equal to the queue)
+   are asserted over a thousand random desks in `check:desk`.
+
+**Personality is visual, not verbal.** When the words are generated, the
+character has to come from what Duct draws. Three layers, each with a job:
+
+- **A mark per kind of thing.** Every item has a tile: a tinted square whose
+  lucide glyph says what it is (a question waiting on you, changes to
+  approve, a problem, a metric, a goal), or the connector's own logo when the
+  item came from one, recognised before it is read. Tints stay in their
+  families (primary, info, warning, success, muted), so a busy desk reads in
+  a few colours, not eleven. This is meaning, not decoration: NN/g's warning
+  about pictograms beside KPIs is about icons that repeat the label.
+- **Numbers as numbers.** A finding that carries a value shows it as a
+  figure with an arrow for direction, never as a sentence about it.
+- **A mosaic where someone arrives.** The panels mark the page's rare
+  states: `otium` for all caught up, `salve` for coming back after weeks,
+  `fractum` for a source that broke. One per screen, never on the daily
+  path, and a new state that needs one is drawn with the
+  [`mosaic-panel`](../.agents/skills/mosaic-panel/SKILL.md) skill, never
+  borrowed from stock.
+
+---
+
 ## The system as built
 
 **This file has a rendered half.** `/preview` in **Design system** mode (dev
@@ -697,6 +787,10 @@ before calling a screen done.
    `TileGrid`, `Card`)? Run `npm run check:layout` with the dev server up:
    it renders the screen at 390, 1100 and 1440px and fails on what eyes
    miss.
+0a. Does it show generated or typed content? Then it has scenario fixtures
+   across the axes in "Content awareness" (0, 1 and 300 items; a 40-word
+   title; German; six-week-old data; the same fact twice), and you have
+   looked at every one of them in `/preview`.
 1. Squint (or blur): is the most important thing visibly heavier than the
    rest, or is everything the same weight?
 2. Does every number carry a comparison (delta/sparkline/benchmark), with

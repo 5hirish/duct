@@ -14,6 +14,7 @@ import { FileText, FileBarChart2, Table2, Image as ImageIcon, Pin } from "lucide
 import { msg } from "@lingui/core/macro";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Section } from "@/components/ui/page";
 import { artifactLook, pinnedFirst } from "@/lib/desk";
@@ -110,10 +111,28 @@ function Row({ children, onClick }) {
   );
 }
 
+// Rows a tab shows before "Show all". The desk is a summary: a project with a
+// year of threads must not make Home a year long (DESIGN.md, "Content
+// awareness": rank and bound).
+const RECENT_LIMIT = 5;
+
+function ShowAll({ total, open, onToggle }) {
+  if (total <= RECENT_LIMIT) return null;
+  return (
+    <div className="pt-2">
+      <Button variant="ghost" size="sm" onClick={onToggle} aria-expanded={open}>
+        {open ? <Trans>Show fewer</Trans> : <Plural value={total} one="Show all #" other="Show all #" />}
+      </Button>
+    </div>
+  );
+}
+
 export default function DeskLists({ conversations, artifacts, onPinThread, onPinArtifact }) {
   const { t, i18n } = useLingui();
   const router = useRouter();
   const [tab, setTab] = useState("threads");
+  const [allThreads, setAllThreads] = useState(false);
+  const [allDocs, setAllDocs] = useState(false);
 
   const threads = pinnedFirst(conversations, (c) => c.last_active_at || c.created_at);
   const docs = pinnedFirst(artifacts, (a) => a.created_at);
@@ -139,7 +158,7 @@ export default function DeskLists({ conversations, artifacts, onPinThread, onPin
           </p>
         ) : (
           <Card className="gap-0 overflow-hidden p-0">
-            {threads.map((conv) => {
+            {(allThreads ? threads : threads.slice(0, RECENT_LIMIT)).map((conv) => {
               const state = threadState(conv, i18n);
               const title = conv.title || t`Untitled thread`;
               const messageCount = conv.last_seq;
@@ -170,6 +189,7 @@ export default function DeskLists({ conversations, artifacts, onPinThread, onPin
             })}
           </Card>
         )}
+        <ShowAll total={threads.length} open={allThreads} onToggle={() => setAllThreads((v) => !v)} />
       </TabsContent>
 
       <TabsContent value="artifacts">
@@ -179,7 +199,7 @@ export default function DeskLists({ conversations, artifacts, onPinThread, onPin
           </p>
         ) : (
           <Card className="gap-0 overflow-hidden p-0">
-            {docs.map((doc) => {
+            {(allDocs ? docs : docs.slice(0, RECENT_LIMIT)).map((doc) => {
               const look = artifactLook(doc);
               const { Icon, className } = LOOKS[look.tone] || LOOKS.data;
               // Opening a document opens the thread that wrote it, with the
@@ -229,6 +249,7 @@ export default function DeskLists({ conversations, artifacts, onPinThread, onPin
             })}
           </Card>
         )}
+        <ShowAll total={docs.length} open={allDocs} onToggle={() => setAllDocs((v) => !v)} />
       </TabsContent>
     </Tabs>
     </Section>

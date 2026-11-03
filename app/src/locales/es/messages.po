@@ -58,6 +58,11 @@ msgstr "(tú)"
 msgid "{0, plural, one {# call} other {# calls}}"
 msgstr "{0, plural, one {# llamada} other {# llamadas}}"
 
+#. placeholder {0}: item.count ?? 0
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "{0, plural, one {# change to approve} other {# changes to approve}}"
+msgstr "{0, plural, one {# cambio para aprobar} other {# cambios para aprobar}}"
+
 #. placeholder {0}: notice.count
 #: src/components/content/DailyDraftsReminder.jsx
 msgid "{0, plural, one {# draft ready} other {# drafts ready}}"
@@ -82,6 +87,31 @@ msgstr "{0, plural, one {# coincidencia} other {# coincidencias}}"
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "{0, plural, one {# pull} other {# pulls}}"
 msgstr "{0, plural, one {# extracción} other {# extracciones}}"
+
+#. placeholder {0}: items.length
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "{0, plural, one {Duct filed # older item away.} other {Duct filed # older items away.}}"
+msgstr "{0, plural, one {Duct archivó # elemento antiguo.} other {Duct archivó # elementos antiguos.}}"
+
+#. placeholder {0}: item.copies
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "{0, plural, one {Duct noted this # time} other {Duct noted this # times}}"
+msgstr "{0, plural, one {Duct lo notó # vez} other {Duct lo notó # veces}}"
+
+#. placeholder {0}: more.length
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "{0, plural, one {Show # more} other {Show # more}}"
+msgstr "{0, plural, one {Mostrar # más} other {Mostrar # más}}"
+
+#. placeholder {0}: items.length
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "{0, plural, one {Working on # thing} other {Working on # things}}"
+msgstr "{0, plural, one {Trabajando en # cosa} other {Trabajando en # cosas}}"
+
+#. placeholder {0}: item.copies
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "{0, plural, one {You asked this # time} other {You asked this # times}}"
+msgstr "{0, plural, one {Preguntaste esto # vez} other {Preguntaste esto # veces}}"
 
 #. placeholder {0}: dial.dial
 #. placeholder {1}: dial.default_native
@@ -176,8 +206,8 @@ msgid "{cost} to make"
 msgstr "{cost} para hacer"
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "{count, plural, one {# change to approve} other {# changes to approve}}"
-msgstr "{count, plural, one {# cambio para aprobar} other {# cambios para aprobar}}"
+#~ msgid "{count, plural, one {# change to approve} other {# changes to approve}}"
+#~ msgstr "{count, plural, one {# cambio para aprobar} other {# cambios para aprobar}}"
 
 #: src/components/audit/ExecutionOffer.jsx
 msgid "{count, plural, one {# fix we can generate} other {# fixes we can generate}}"
@@ -444,8 +474,8 @@ msgid "{name} was not attached — the limit is {max} MB per file."
 msgstr "{name} no se adjuntó — el límite es de {max} MB por archivo."
 
 #: src/components/insights/Desk.jsx
-msgid "{needsYou, plural, one {# thing needs you.} other {# things need you.}}"
-msgstr "{needsYou, plural, one {# cosa te necesita.} other {# cosas te necesitan.}}"
+#~ msgid "{needsYou, plural, one {# thing needs you.} other {# things need you.}}"
+#~ msgstr "{needsYou, plural, one {# cosa te necesita.} other {# cosas te necesitan.}}"
 
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "{newCount} new, {resolvedCount} resolved"
@@ -569,8 +599,8 @@ msgid "{removed} no longer has access."
 msgstr "{removed} ya no tiene acceso."
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "{rest, plural, one {# more not shown} other {# more not shown}}"
-msgstr "{rest, plural, one {# más no mostrado} other {# más no mostrados}}"
+#~ msgid "{rest, plural, one {# more not shown} other {# more not shown}}"
+#~ msgstr "{rest, plural, one {# más no mostrado} other {# más no mostrados}}"
 
 #: src/components/commands/CommandPalette.jsx
 msgid "{resultCount, plural, one {# command} other {# commands}}"
@@ -626,8 +656,12 @@ msgid "{slideShare} of posts · <0>{slideEng}</0> eng."
 msgstr "{slideShare} de publicaciones · <0>{slideEng}</0> interacciones"
 
 #: src/components/insights/Desk.jsx
-msgid "{sourceCount, plural, one {# source connected. Ask anything below to start.} other {# sources connected. Ask anything below to start.}}"
-msgstr "{sourceCount, plural, one {# fuente conectada. Pregunta cualquier cosa a continuación para empezar.} other {# fuentes conectadas. Pregunta cualquier cosa a continuación para empezar.}}"
+#~ msgid "{sourceCount, plural, one {# source connected. Ask anything below to start.} other {# sources connected. Ask anything below to start.}}"
+#~ msgstr "{sourceCount, plural, one {# fuente conectada. Pregunta cualquier cosa a continuación para empezar.} other {# fuentes conectadas. Pregunta cualquier cosa a continuación para empezar.}}"
+
+#: src/components/insights/Desk.jsx
+msgid "{sourceCount, plural, one {# source connected} other {# sources connected}}"
+msgstr "{sourceCount, plural, one {# fuente conectada} other {# fuentes conectadas}}"
 
 #: src/components/GoogleAdsReport.js
 msgid "{summary} Operator takeaway: {takeaway}"
@@ -673,6 +707,10 @@ msgstr "{tokensIn} entrada · {tokensOut} salida"
 msgid "{total, plural, one {Granted} other {All # granted}}"
 msgstr "{total, plural, one {Concedido} other {Los # concedidos}}"
 
+#: src/components/insights/desk/DeskLists.jsx
+msgid "{total, plural, one {Show all #} other {Show all #}}"
+msgstr "{total, plural, one {Mostrar todo #} other {Mostrar todo #}}"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "{unconfirmed, plural, one {# unconfirmed} other {# unconfirmed}}"
 msgstr "{unconfirmed, plural, one {# sin confirmar} other {# sin confirmar}}"
@@ -704,6 +742,10 @@ msgstr "{views, plural, one {# vista} other {# vistas}}"
 #: src/app/(app)/execute/page.jsx
 msgid "{waiting, plural, one {# change set waiting for you} other {# change sets waiting for you}}"
 msgstr "{waiting, plural, one {# conjunto de cambios esperando por ti} other {# conjuntos de cambios esperando por ti}}"
+
+#: src/components/insights/Desk.jsx
+msgid "{waiting, plural, one {One thing needs you.} other {# things need you.}}"
+msgstr "{waiting, plural, one {Una cosa te necesita.} other {# cosas te necesitan.}}"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "{warnCount, plural, one {# Warning} other {# Warnings}}"
@@ -781,6 +823,10 @@ msgstr "↺ Intentar de nuevo"
 #: src/components/ProjectSwitcher.jsx
 msgid "+ New project"
 msgstr "+ Nuevo proyecto"
+
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "×{n}"
+msgstr "×{n}"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "< 1 hr"
@@ -971,6 +1017,10 @@ msgstr "Una nueva versión de Duct está lista"
 msgid "A one-off. The report is still saved."
 msgstr "Puntual. El informe sigue guardado."
 
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "A problem Duct found"
+msgstr "Un problema que Duct encontró"
+
 #: src/app/invite/[token]/page.jsx
 msgid "a project"
 msgstr "un proyecto"
@@ -986,6 +1036,10 @@ msgstr "Un proyecto comienza con un sitio. Duct lo lee y redacta el resto — no
 #: src/components/content/FormatLibrary.jsx
 msgid "A reusable recipe — slide structure, caption styles, image prompt rules — that the drafting agent follows."
 msgstr "Una receta reutilizable — estructura de diapositivas, estilos de subtítulos, reglas de indicaciones de imagen — que el agente de redacción sigue."
+
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "A run stopped on an error"
+msgstr "Una ejecución se detuvo por un error"
 
 #: src/components/connections/ProviderCard.jsx
 msgid "A saved key is already in use. Paste a new one to replace it, or choose Remove key to forget it."
@@ -1336,6 +1390,10 @@ msgstr "Todos los documentos"
 msgid "All documents in this thread"
 msgstr "Todos los documentos en este hilo"
 
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "All notes"
+msgstr "Todas las notas"
+
 #: src/components/content/AnalyticsView.jsx
 msgid "All posts <0>· {rowCount}</0>"
 msgstr "Todas las publicaciones <0>· {rowCount}</0>"
@@ -1415,6 +1473,10 @@ msgstr "y"
 #: src/app/(app)/projects/page.jsx
 msgid "another user"
 msgstr "otro usuario"
+
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "Answer"
+msgstr "Responder"
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Answer above, or leave a note for after"
@@ -1515,8 +1577,8 @@ msgid "Applying changes…"
 msgstr "Aplicando cambios…"
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "Applying now"
-msgstr "Aplicando ahora"
+#~ msgid "Applying now"
+#~ msgstr "Aplicando ahora"
 
 #: src/app/(app)/execute/page.jsx
 #: src/components/execution/ChangeSetCard.jsx
@@ -1524,6 +1586,7 @@ msgid "Applying…"
 msgstr "Aplicando…"
 
 #: src/components/content/DraftsQueue.jsx
+#: src/components/insights/desk/DeskQueue.jsx
 #: src/components/insights/ToolApproval.jsx
 msgid "Approve"
 msgstr "Aprobar"
@@ -1553,8 +1616,8 @@ msgid "Approved — ready to apply"
 msgstr "Aprobado — listo para aplicar"
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "Approved, waiting to run"
-msgstr "Aprobado, esperando para ejecutar"
+#~ msgid "Approved, waiting to run"
+#~ msgstr "Aprobado, esperando para ejecutar"
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Archive"
@@ -1623,8 +1686,8 @@ msgid "Ask a question..."
 msgstr "Haz una pregunta..."
 
 #: src/components/insights/Desk.jsx
-msgid "Ask about “{topFinding}” — or anything else"
-msgstr "Pregunta sobre “{topFinding}” — o cualquier otra cosa"
+#~ msgid "Ask about “{topFinding}” — or anything else"
+#~ msgstr "Pregunta sobre “{topFinding}” — o cualquier otra cosa"
 
 #: src/components/ChatSidebar.jsx
 msgid "Ask about this insight"
@@ -2139,8 +2202,8 @@ msgid "Check the connection. Behind a corporate proxy, Duct respects HTTPS_PROXY
 msgstr "Revisa la conexión. Detrás de un proxy corporativo, Duct respeta HTTPS_PROXY."
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "Checked"
-msgstr "Revisado"
+#~ msgid "Checked"
+#~ msgstr "Revisado"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Checked connected sources"
@@ -3294,6 +3357,10 @@ msgstr "Duct construye y mantiene las fuentes integradas, y estas alimentan info
 msgid "Duct can’t call that address."
 msgstr "Duct no puede llamar a esa dirección."
 
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Duct can't read anything right now. What it found before is still below."
+msgstr "Duct no puede leer nada ahora mismo. Lo que encontró antes sigue abajo."
+
 #: src/components/onboarding/DocumentPicker.jsx
 msgid "Duct can't read this type yet"
 msgstr "Duct aún no puede leer este tipo"
@@ -3354,13 +3421,25 @@ msgstr "Duct tiene una pregunta rápida"
 msgid "duct home"
 msgstr "inicio de duct"
 
+#: src/components/insights/Desk.jsx
+msgid "Duct is looking now."
+msgstr "Duct está buscando ahora."
+
 #: src/components/connections/FirstSourceCelebration.jsx
 msgid "Duct is reading it now. Ask your first question while it does."
 msgstr "Duct lo está leyendo ahora. Haz tu primera pregunta mientras lo hace."
 
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "Duct is waiting on your answer"
+msgstr "Duct está esperando tu respuesta"
+
 #: src/components/insights/desk/DeskCards.jsx
 msgid "Duct last looked {lastChecked} and found nothing worth your time. Enjoy the quiet."
 msgstr "Duct revisó por última vez {lastChecked} y no encontró nada que valga tu tiempo. Disfruta de la tranquilidad."
+
+#: src/components/insights/Desk.jsx
+msgid "Duct last looked {since}."
+msgstr "Duct miró por última vez {since}."
 
 #: src/components/ConnectionBanner.jsx
 msgid "Duct needs a connection. Your work is saved and will still be here."
@@ -3397,6 +3476,10 @@ msgstr "Duct lee tu sitio como lo hace un motor de búsqueda, en unos tres minut
 #: src/components/onboarding/FrontDoor.jsx
 #~ msgid "Duct reads your site the way a search engine does, then tells you what to fix first."
 #~ msgstr "Duct lee tu sitio como lo hace un motor de búsqueda, luego te dice qué arreglar primero."
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Duct reads your sources again and tells you what changed since {since}."
+msgstr "Duct lee tus fuentes de nuevo y te dice qué cambió desde {since}."
 
 #: src/app/(start)/start/page.jsx
 msgid "Duct runs on your own account, so an audit costs you cents — and Duct never sees your data twice."
@@ -3781,8 +3864,8 @@ msgid "Failed to send"
 msgstr "Error al enviar"
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "Fairly sure"
-msgstr "Bastante seguro"
+#~ msgid "Fairly sure"
+#~ msgstr "Bastante seguro"
 
 #: src/components/workspace/ComposerDials.jsx
 #~ msgid "Fast and cheaper. Headings, text and tables; pastes into a doc"
@@ -4355,6 +4438,7 @@ msgid "held in this machine’s keychain"
 msgstr "guardado en el llavero de esta máquina"
 
 #: src/app/(app)/execute/page.jsx
+#: src/components/insights/desk/DeskQueue.jsx
 msgid "Hide"
 msgstr "Ocultar"
 
@@ -4569,7 +4653,6 @@ msgstr "Impacto y dinero primero, pocas acciones, sin jerga"
 msgid "Impressions, clicks and spend. Conversions stay in Ads Manager."
 msgstr "Impresiones, clics y gasto. Las conversiones se quedan en Ads Manager."
 
-#: src/components/insights/desk/DeskCards.jsx
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "In progress"
 msgstr "En progreso"
@@ -5084,6 +5167,10 @@ msgstr "Registró métricas"
 msgid "Longer than the platform allows: {at}"
 msgstr "Más largo de lo que permite la plataforma: {at}"
 
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "Look into it"
+msgstr "Investigar"
+
 #: src/components/connections/McpConnectors.jsx
 msgid "Look up issues and projects, or file a new issue."
 msgstr "Busca problemas y proyectos, o crea un nuevo problema."
@@ -5109,8 +5196,8 @@ msgid "Low"
 msgstr "Bajo"
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "Low confidence"
-msgstr "Baja confianza"
+#~ msgid "Low confidence"
+#~ msgstr "Baja confianza"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Low effort"
@@ -5469,7 +5556,6 @@ msgid "Needs Work"
 msgstr "Necesita trabajo"
 
 #: src/app/(app)/audit/seo/page.jsx
-#: src/components/insights/desk/DeskCards.jsx
 #: src/components/insights/desk/DeskLists.jsx
 msgid "Needs you"
 msgstr "Te necesita"
@@ -5839,8 +5925,8 @@ msgid "Nobody had compared them"
 msgstr "Nadie los había comparado"
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "Nobody has closed this"
-msgstr "Nadie ha cerrado esto"
+#~ msgid "Nobody has closed this"
+#~ msgstr "Nadie ha cerrado esto"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "noindex"
@@ -5879,8 +5965,12 @@ msgid "Not answering"
 msgstr "No responde"
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "Not confirmed"
-msgstr "No confirmado"
+#~ msgid "Not confirmed"
+#~ msgstr "No confirmado"
+
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "Not confirmed yet"
+msgstr "Aún no confirmado"
 
 #: src/app/(app)/connections/page.jsx
 #: src/components/connections/EndpointProviderCard.jsx
@@ -5993,6 +6083,7 @@ msgid "Note"
 msgstr "Nota"
 
 #: src/components/audit/AuditStepProgress.jsx
+#: src/components/insights/desk/DeskQueue.jsx
 msgid "Notes"
 msgstr "Notas"
 
@@ -6039,6 +6130,10 @@ msgstr "Nada aquí"
 #: src/components/content/PlanKanban.jsx
 msgid "Nothing here yet."
 msgstr "Nada aquí aún."
+
+#: src/components/insights/Desk.jsx
+msgid "Nothing is connected right now."
+msgstr "Nada está conectado ahora mismo."
 
 #: src/components/insights/Desk.jsx
 msgid "Nothing is connected yet."
@@ -6301,6 +6396,10 @@ msgstr "Abrir {vendor}"
 #: src/components/connections/ProviderCard.jsx
 msgid "Open <0>Settings → Models & providers → OpenAI</0> and choose <1>Continue with ChatGPT</1>."
 msgstr "Abre <0>Ajustes → Modelos y proveedores → OpenAI</0> y elige <1>Continuar con ChatGPT</1>."
+
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "Open and retry"
+msgstr "Abrir y reintentar"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Open billing"
@@ -6689,8 +6788,8 @@ msgid "Pick the ones Duct may use, up to {MAX_MODELS}. They join the tier picker
 msgstr "Elige los que Duct puede usar, hasta {MAX_MODELS}. Se suman a los selectores de nivel, y el primero se usa cuando un nivel no indica ninguno."
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "Pick up where you left off"
-msgstr "Retoma donde lo dejaste"
+#~ msgid "Pick up where you left off"
+#~ msgstr "Retoma donde lo dejaste"
 
 #: src/components/audit/ExecutionOffer.jsx
 msgid "Pick what you’d like done. We’ll scope it and follow up."
@@ -7261,6 +7360,10 @@ msgstr "Acciones recomendadas"
 msgid "Reconnect"
 msgstr "Reconectar"
 
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Reconnect a source"
+msgstr "Reconectar una fuente"
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "Reconnect this source →"
 msgstr "Reconectar esta fuente →"
@@ -7577,6 +7680,7 @@ msgid "Result"
 msgstr "Resultado"
 
 #: src/components/ConnectionBanner.jsx
+#: src/components/insights/desk/DeskQueue.jsx
 msgid "Retry"
 msgstr "Reintentar"
 
@@ -7599,6 +7703,7 @@ msgstr "Los cambios reversibles en la lista de permitidos se aplican solos; el r
 
 #: src/app/(app)/execute/page.jsx
 #: src/components/content/PublishReviewPanel.jsx
+#: src/components/insights/desk/DeskQueue.jsx
 msgid "Review"
 msgstr "Revisar"
 
@@ -7609,6 +7714,10 @@ msgstr "Revisar de nuevo"
 #: src/components/content/PostViewport.jsx
 msgid "Review before publishing"
 msgstr "Revisar antes de publicar"
+
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "Review changes"
+msgstr "Revisar cambios"
 
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Review what changed"
@@ -8302,6 +8411,7 @@ msgid "Short description"
 msgstr "Descripción breve"
 
 #: src/app/(app)/execute/page.jsx
+#: src/components/insights/desk/DeskQueue.jsx
 msgid "Show"
 msgstr "Mostrar"
 
@@ -8324,6 +8434,11 @@ msgstr "Mostrar cambios"
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Show Duct in"
 msgstr "Mostrar Duct en"
+
+#: src/components/insights/desk/DeskLists.jsx
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "Show fewer"
+msgstr "Mostrar menos"
 
 #: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/ProviderCard.jsx
@@ -8765,6 +8880,10 @@ msgstr "Paso II de III · Tu modelo"
 msgid "Still connecting to the session — try again in a moment."
 msgstr "Todavía conectando a la sesión; inténtalo de nuevo en un momento."
 
+#: src/components/insights/Desk.jsx
+msgid "Still open"
+msgstr "Aún abierto"
+
 #: src/components/workspace/ChatInput.jsx
 msgid "Stop"
 msgstr "Detener"
@@ -8779,8 +8898,8 @@ msgid "Stopped"
 msgstr "Detenido"
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "Stopped — pick up where it left off"
-msgstr "Detenido — retoma donde lo dejaste"
+#~ msgid "Stopped — pick up where it left off"
+#~ msgstr "Detenido — retoma donde lo dejaste"
 
 #: src/lib/agentHistory.js
 msgid "Stopped here — the turn was interrupted."
@@ -8939,6 +9058,10 @@ msgstr "Toma {number}"
 #: src/components/content/PostVideo.jsx
 msgid "Take {number}, publishing"
 msgstr "Toma {number}, publicando"
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Take a fresh look"
+msgstr "Echar un nuevo vistazo"
 
 #: src/components/content/PostVideo.jsx
 msgid "Takes"
@@ -9210,8 +9333,8 @@ msgid "The key works, but the account has no credit"
 msgstr "La clave funciona, pero la cuenta no tiene crédito"
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "The last turn failed"
-msgstr "El último turno falló"
+#~ msgid "The last turn failed"
+#~ msgstr "El último turno falló"
 
 #: src/components/content/VoiceRulesFields.jsx
 msgid "The list is full"
@@ -9779,7 +9902,7 @@ msgstr "Desanclar {label}"
 msgid "Untitled"
 msgstr "Sin título"
 
-#: src/components/insights/desk/DeskCards.jsx
+#: src/components/insights/desk/DeskQueue.jsx
 msgid "Untitled change set"
 msgstr "Conjunto de cambios sin título"
 
@@ -9792,10 +9915,14 @@ msgstr "Publicación sin título"
 msgid "Untitled project"
 msgstr "Proyecto sin título"
 
-#: src/components/insights/desk/DeskCards.jsx
 #: src/components/insights/desk/DeskLists.jsx
+#: src/components/insights/desk/DeskQueue.jsx
 msgid "Untitled thread"
 msgstr "Hilo sin título"
+
+#: src/components/insights/Desk.jsx
+msgid "Up next"
+msgstr "A continuación"
 
 #: src/components/UpdateToast.jsx
 msgid "Update failed: {error}"
@@ -10079,8 +10206,8 @@ msgid "Waiting for your browser…"
 msgstr "Esperando tu navegador…"
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "Waiting on your answer"
-msgstr "Esperando tu respuesta"
+#~ msgid "Waiting on your answer"
+#~ msgstr "Esperando tu respuesta"
 
 #: src/components/audit/ExecutionOffer.jsx
 msgid "Want Duct to execute these fixes for you?"
@@ -10166,6 +10293,10 @@ msgstr "Semana"
 msgid "Week {number}"
 msgstr "Semana {number}"
 
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Welcome back. Take a fresh look?"
+msgstr "Bienvenido de nuevo. ¿Echar un nuevo vistazo?"
+
 #: src/components/content/PlanDayOne.jsx
 msgid "What a freelancer's September actually costs"
 msgstr "Lo que realmente cuesta el septiembre de un freelancer"
@@ -10181,6 +10312,10 @@ msgstr "Lo que la autonomía permite"
 #: src/app/(app)/activity/page.jsx
 msgid "What changed on {projectName}, and who did it"
 msgstr "Qué cambió en {projectName} y quién lo hizo"
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "What changed since {since}?"
+msgstr "¿Qué cambió desde {since}?"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "What currently limits this metric most? <0>(optional)</0>"
@@ -10222,7 +10357,6 @@ msgstr "Lo que cuesta cada campaña y lo que retorna."
 msgid "What happens next"
 msgstr "Qué sucede a continuación"
 
-#: src/components/insights/desk/DeskCards.jsx
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "What I found"
 msgstr "Lo que encontré"
@@ -10411,7 +10545,6 @@ msgstr "Trabajo"
 #~ msgid "Work still moving — mine or yours. Nothing here waits on you."
 #~ msgstr "El trabajo sigue avanzando — mío o tuyo. Nada aquí te espera."
 
-#: src/components/insights/desk/DeskCards.jsx
 #: src/components/workspace/ActivityRow.jsx
 msgid "Working"
 msgstr "Trabajando"

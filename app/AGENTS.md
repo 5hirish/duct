@@ -430,6 +430,18 @@ ramp. If a screen needs something the frame does not do, change the
 primitive (and its `/preview` entry), never the one screen — that is the
 whole difference between a design system and 139 bordered boxes.
 
+**Generated content fills slots; it never shapes the layout.** Most text on
+an agent screen was written at run time, by a model or by the person (a
+thread's title is its first message, verbatim), so its count, length, mix
+and age are unknown when the screen is built. A page's headline comes from
+its state, lists are ranked and bounded in a pure function, repeated facts
+merge, old ones file away, the person's words are quoted, and the surface
+ships with scenario fixtures across those axes, rendered in `/preview` and
+asserted on in a check. DESIGN.md's "Content awareness" has the rules;
+`arrangeDesk` in `lib/desk.js` with `lib/__fixtures__/deskScenarios.mjs` is
+the worked example. Orange text is `text-brand`, never `text-primary`:
+`--primary` is the fill, and in dark no one orange can be both.
+
 **Four checks hold the design system, and they are not advisory.** The first
 three run in `npm run check:parity`, so CI has them; the fourth is its own CI
 job (`app-layout` in `app.yml`):
@@ -1049,7 +1061,7 @@ nothing else, so a scene's language is in its URL like every other lens.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
-# This is NOT the Next.js you know
+## This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 

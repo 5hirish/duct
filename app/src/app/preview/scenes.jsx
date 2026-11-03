@@ -36,7 +36,7 @@ import { CookieConsent } from "@/components/CookieConsent";
 import LoadError from "@/components/LoadError";
 import CloneFromUrlDialog from "@/components/content/CloneFromUrlDialog";
 import CloneSourceNote from "@/components/content/CloneSourceNote";
-import DeskCards, { DeskConnectFirst } from "@/components/insights/desk/DeskCards";
+import { DeskConnectFirst } from "@/components/insights/desk/DeskCards";
 import FirstSourceCelebration from "@/components/connections/FirstSourceCelebration";
 import DeskActivity, { activityGridClass } from "@/components/insights/desk/DeskActivity";
 import SplitWorkspace from "@/components/workspace/SplitWorkspace";
@@ -48,7 +48,7 @@ import { briefFile } from "@/lib/brief";
 import { saveText } from "@/lib/download";
 import { ArtifactGallery } from "@/components/artifacts/ArtifactCards";
 import { ChartJsonView } from "@/components/artifacts/ArtifactRenderer";
-import { NEEDS_YOU, FOUND, IN_PROGRESS } from "@/lib/desk";
+import { DESK_SCENARIOS, deskScenario } from "@/lib/__fixtures__/deskScenarios.mjs";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
 import ConnectorTile from "@/components/connections/ConnectorTile";
@@ -451,28 +451,11 @@ function DeskComposerScene(props) {
   return <DeskComposer {...props} autonomy={autonomy} onAutonomyChange={setAutonomy} />;
 }
 
-// Long titles on purpose — an agent wrote these, not someone picking a label
-// short enough to fit. This is the case that revealed DeskCards had no
-// line-clamp: a single item could run the card to nine lines and shove its
-// siblings off the bottom.
+// Long on purpose — an agent wrote this, not someone picking a label short
+// enough to fit. The desk's own long titles are in deskScenarios.mjs.
 const LONG_TITLE =
   "North-star window: Next 90 days: get net new MRR positive and keep it there. Measured 30-day position — $219.95 of new MRR against $297.86 lost to failed payments plus $209.88 sitting past-due, so the window is still net negative.";
 
-const DESK_BUCKETS = {
-  [NEEDS_YOU]: [
-    { id: "n1", title: "Audit our Google Search performance please.", detailCode: "resume", tone: "attention", at: "2026-09-09T06:00:00Z" },
-  ],
-  [FOUND]: [
-    { id: "f1", title: "Next growth milestone: 3_repeatable_growth", detailCode: "checked", tone: "sure", at: "2026-09-08T09:00:00Z" },
-    { id: "f2", title: LONG_TITLE, detailCode: "checked", tone: "sure", at: "2026-09-08T09:00:00Z" },
-    { id: "f3", title: "North-star metric: Net new revenue", detailCode: "checked", tone: "sure", at: "2026-09-08T09:00:00Z" },
-  ],
-  [IN_PROGRESS]: [
-    { id: "p1", title: "Audit our Google Search performance please.", detailCode: "working", tone: "running", at: "2026-09-09T06:00:00Z" },
-    { id: "p2", title: "Audit our Google Search performance please.", detailCode: "working", tone: "running", at: "2026-09-09T06:00:00Z" },
-  ],
-};
-const DESK_BUCKETS_SHAPED = { needsYou: DESK_BUCKETS[NEEDS_YOU], found: DESK_BUCKETS[FOUND], inProgress: DESK_BUCKETS[IN_PROGRESS] };
 
 // A brief the way the agent actually writes one: a decision up top, the
 // evidence as a table, the gaps as a list. Enough element kinds to catch a
@@ -792,6 +775,12 @@ function racingLoader() {
  * restart the load forever), and must start over on the next mount, or the
  * scene works once per page load and shows a finished desk ever after.
  */
+/** One generated desk, loaded once per mount like the real one. */
+function DeskScenario({ id }) {
+  const load = useMemo(() => stubLoader(deskScenario(id)), [id]);
+  return <Desk projectIdOverride="preview" loadDeskFn={load} />;
+}
+
 function DeskRaceScene() {
   const load = useMemo(racingLoader, []);
   useEffect(() => {
@@ -2010,14 +1999,17 @@ export const SCENES = [
       </DialogScene>
     ),
   },
-  {
-    id: "desk-cards-long-title",
-    state: "content",
-    group: "Desk",
-    title: "Cards, an agent-length finding title",
-    note: "Drag the frame through the 448–768px band: three columns to two to one. The long title in “What I found” clamps to two lines instead of pushing its siblings out — hover or tab to it for the rest.",
-    render: () => <DeskCards buckets={DESK_BUCKETS_SHAPED} />,
-  },
+  // The desk in every situation it has to survive, generated from
+  // lib/__fixtures__/deskScenarios.mjs: the same payloads the unit tests hold
+  // the arrangement to. Each note is what the scenario holds the page to.
+  ...DESK_SCENARIOS.map((scenario) => ({
+    id: `desk-scenario-${scenario.id}`,
+    state: scenario.title,
+    group: "Desk scenarios",
+    title: `Desk — ${scenario.title}`,
+    note: `${scenario.expect} Content is generated at render time, relative to now; sweep the frame from phone to wide and check the page keeps its shape.`,
+    render: () => <DeskScenario id={scenario.id} />,
+  })),
   {
     id: "desk-connect-first",
     state: "nothing connected",

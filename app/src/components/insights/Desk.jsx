@@ -7,14 +7,18 @@
 // asked the user to classify their problem before describing it and then
 // admitted it had nothing; both are gone.
 //
-// Six reads, issued together (lib/deskApi.js), folded into three cards by one
-// rule (lib/desk.js). A single GET /projects/{id}/desk is the right end state
-// once the shape settles.
+// Six reads, issued together (lib/deskApi.js), arranged by one function
+// (`arrangeDesk` in lib/desk.js) into a fixed shape: a headline picked from
+// the page's state, at most one lead item, a bounded queue, a few notes. The
+// page holds no rule of its own, because everything on it was written at run
+// time and its count, length and age cannot be known when the page is drawn.
+// A single GET /projects/{id}/desk is the right end state once the shape
+// settles.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
-import { HEADLINE_CLEAR, HEADLINE_NEEDS_YOU, buildDesk, headline } from "@/lib/desk";
+import { DESK_STATE, arrangeDesk, elapsed } from "@/lib/desk";
 import { loadDesk, pinArtifact, pinConversation } from "@/lib/deskApi";
 import { getActiveProjectId, getProjectById, PROJECTS_CHANGED } from "@/lib/projects";
 import { pageHidden } from "@/lib/visibility";
@@ -23,7 +27,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Reveal } from "@/components/ui/reveal";
 import { cn } from "@/lib/utils";
 import { Page, PageHeader } from "@/components/ui/page";
-import DeskCards, { DeskConnectFirst } from "./desk/DeskCards";
+import { DeskAllClear, DeskConnectFirst, DeskFreshLook } from "./desk/DeskCards";
+import { DeskFiled, DeskLead, DeskNotes, DeskRows, DeskWorking } from "./desk/DeskQueue";
 import { useGreeting } from "./desk/useGreeting";
 import DeskLists from "./desk/DeskLists";
 import DeskActivity, { activityGridClass } from "./desk/DeskActivity";
@@ -44,7 +49,7 @@ const EMPTY = {
 };
 
 export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }) {
-  const { t } = useLingui();
+  const { t, i18n } = useLingui();
   const relative = useRelativeTime();
   const router = useRouter();
   // `null` until the active project has been read, which is not the same as
@@ -162,26 +167,14 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
     };
   }, [refresh, working]);
 
-  const buckets = useMemo(
-    () => buildDesk({
-      memories: data.memories,
-      changeSets: data.changeSets,
-      conversations: data.conversations,
-    }),
-    [data]
-  );
+  const desk = useMemo(() => arrangeDesk(data), [data]);
+  const { state } = desk;
 
-  const lastRunAt = data.activity[0]?.created_at || "";
-  const head = headline({
-    needsYou: buckets.needsYou.length,
-    found: buckets.found.length,
-    lastRunAt,
-    sourceCount: data.sourceCount,
-  });
-  // Plain identifiers, so the catalogue names them ({needsYou}) rather than
+  // Plain identifiers, so the catalogue names them ({waiting}) rather than
   // numbering them ({0}) — AGENTS.md, "Values in a string".
-  const { needsYou, sourceCount } = head;
-  const lastChecked = relative(head.lastRunAt);
+  const { waiting, sourceCount } = desk;
+  const lastChecked = relative(desk.lookedAt);
+  const since = elapsed(desk.lookedAt, { locale: i18n.locale });
   const hasActivity = data.activity.length > 0;
   const greeting = useGreeting();
 
@@ -191,8 +184,9 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
     !loading &&
     data.conversations.length === 0 &&
     data.artifacts.length === 0 &&
-    buckets.found.length === 0 &&
-    buckets.needsYou.length === 0;
+    desk.notesTotal === 0 &&
+    desk.waiting === 0 &&
+    desk.filed.length === 0;
 
   function ask(question) {
     const params = new URLSearchParams({ q: question });
@@ -234,8 +228,6 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
     }
   }
 
-  const topFinding = buckets.found[0]?.title || "";
-
   // `mt-auto` belongs on the sticky element itself, not on a wrapper around it.
   // A sticky box can only travel inside its parent's content box, and a wrapper
   // sized to exactly one child gives it nowhere to go — so this read as sticky,
@@ -246,11 +238,9 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
         project={project}
         autonomy={autonomy}
         onAutonomyChange={setAutonomy}
-        placeholder={
-          topFinding
-            ? t`Ask about “${topFinding}” — or anything else`
-            : t`Ask me anything about your site`
-        }
+        // Not the top finding's title: that is model-written and any length,
+        // and a placeholder clips it mid-thought.
+        placeholder={t`Ask me anything about your site`}
       />
     </div>
   );
@@ -304,41 +294,46 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
             <PageHeader
               size="hero"
               eyebrow={greeting}
-              title={
-                head.state === HEADLINE_NEEDS_YOU ? (
-                  <Plural value={needsYou} one="# thing needs you." other="# things need you." />
-                ) : head.state === HEADLINE_CLEAR ? (
-                  <Trans>Nothing needs you right now.</Trans>
-                ) : (
-                  <Trans>Nothing to report yet.</Trans>
-                )
-              }
+              title={<DeskHeadline state={state} waiting={waiting} since={since} />}
               status={
-                head.hasRun ? (
+                state === DESK_STATE.STALE || !desk.hasRun ? (
+                  sourceCount ? (
+                    <Plural value={sourceCount} one="# source connected" other="# sources connected" />
+                  ) : (
+                    <Trans>Nothing is connected yet.</Trans>
+                  )
+                ) : (
                   <Trans>
                     Last checked {lastChecked} ·{" "}
                     <Plural value={sourceCount} one="# source connected" other="# sources connected" />
                   </Trans>
-                ) : sourceCount ? (
-                  <Plural
-                    value={sourceCount}
-                    one="# source connected. Ask anything below to start."
-                    other="# sources connected. Ask anything below to start."
-                  />
-                ) : (
-                  <Trans>Nothing is connected yet.</Trans>
                 )
               }
+              actions={desk.working.length ? <DeskWorking items={desk.working} /> : null}
             />
 
-            {sourceCount === 0 && <DeskConnectFirst />}
+            {/* One lead a page, whichever state supplies it. */}
+            {state === DESK_STATE.CONNECT && <DeskConnectFirst returning={desk.hasRun} />}
+            {state === DESK_STATE.STALE && <DeskFreshLook lookedAt={desk.lookedAt} onAsk={ask} />}
+            {desk.lead && <DeskLead item={desk.lead} />}
 
-            <DeskCards
-              buckets={buckets}
-              allClear={head.state === HEADLINE_CLEAR && head.hasRun}
-              lastChecked={lastChecked}
-              quiet={sourceCount === 0}
-            />
+            {desk.rows.length + desk.more.length > 0 ? (
+              <DeskRows
+                rows={desk.rows}
+                more={desk.more}
+                filed={desk.filed}
+                title={desk.lead ? <Trans>Up next</Trans> : <Trans>Still open</Trans>}
+              />
+            ) : (
+              desk.filed.length > 0 && <DeskFiled items={desk.filed} />
+            )}
+
+            {state === DESK_STATE.CLEAR && desk.notes.length === 0 && (
+              <DeskAllClear lastChecked={lastChecked} />
+            )}
+            {desk.notes.length > 0 && (
+              <DeskNotes notes={desk.notes} total={desk.notesTotal} projectId={projectId} />
+            )}
 
             <DeskLists
               conversations={data.conversations}
@@ -360,4 +355,26 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
       </div>
     </Reveal>
   );
+}
+
+/**
+ * The page's one sentence, from its state and never from content: the agent's
+ * words go in the lead below, where a clamp holds them. Each state has one
+ * sentence, so the largest type on the page is always a known length.
+ */
+function DeskHeadline({ state, waiting, since }) {
+  switch (state) {
+    case DESK_STATE.CONNECT:
+      return <Trans>Nothing is connected right now.</Trans>;
+    case DESK_STATE.WORKING:
+      return <Trans>Duct is looking now.</Trans>;
+    case DESK_STATE.STALE:
+      return <Trans>Duct last looked {since}.</Trans>;
+    case DESK_STATE.NEEDS_YOU:
+      return <Plural value={waiting} one="One thing needs you." other="# things need you." />;
+    case DESK_STATE.CLEAR:
+      return <Trans>Nothing needs you right now.</Trans>;
+    default:
+      return <Trans>Nothing to report yet.</Trans>;
+  }
 }

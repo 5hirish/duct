@@ -58,6 +58,11 @@ msgstr "(あなた)"
 msgid "{0, plural, one {# call} other {# calls}}"
 msgstr "{0, plural, other {# 呼び出し}}"
 
+#. placeholder {0}: item.count ?? 0
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "{0, plural, one {# change to approve} other {# changes to approve}}"
+msgstr "{0, plural, other {# 件の変更を承認する}}"
+
 #. placeholder {0}: notice.count
 #: src/components/content/DailyDraftsReminder.jsx
 msgid "{0, plural, one {# draft ready} other {# drafts ready}}"
@@ -82,6 +87,31 @@ msgstr "{0, plural, other {# 一致}}"
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "{0, plural, one {# pull} other {# pulls}}"
 msgstr "{0, plural, other {# プル}}"
+
+#. placeholder {0}: items.length
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "{0, plural, one {Duct filed # older item away.} other {Duct filed # older items away.}}"
+msgstr "{0, plural, other {Duct は # 件の古い項目を整理しました。}}"
+
+#. placeholder {0}: item.copies
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "{0, plural, one {Duct noted this # time} other {Duct noted this # times}}"
+msgstr "{0, plural, other {Duct はこれを # 回記録しました}}"
+
+#. placeholder {0}: more.length
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "{0, plural, one {Show # more} other {Show # more}}"
+msgstr "{0, plural, other {# 件をさらに表示}}"
+
+#. placeholder {0}: items.length
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "{0, plural, one {Working on # thing} other {Working on # things}}"
+msgstr "{0, plural, other {# 件の項目を処理中}}"
+
+#. placeholder {0}: item.copies
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "{0, plural, one {You asked this # time} other {You asked this # times}}"
+msgstr "{0, plural, one {これを # 回尋ねました} other {これを # 回尋ねました}}"
 
 #. placeholder {0}: dial.dial
 #. placeholder {1}: dial.default_native
@@ -176,8 +206,8 @@ msgid "{cost} to make"
 msgstr "{cost} で作成"
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "{count, plural, one {# change to approve} other {# changes to approve}}"
-msgstr "{count, plural, other {# 承認が必要な変更}}"
+#~ msgid "{count, plural, one {# change to approve} other {# changes to approve}}"
+#~ msgstr "{count, plural, other {# 承認が必要な変更}}"
 
 #: src/components/audit/ExecutionOffer.jsx
 msgid "{count, plural, one {# fix we can generate} other {# fixes we can generate}}"
@@ -444,8 +474,8 @@ msgid "{name} was not attached — the limit is {max} MB per file."
 msgstr "{name}は添付されませんでした — ファイルあたりの上限は{max}MBです。"
 
 #: src/components/insights/Desk.jsx
-msgid "{needsYou, plural, one {# thing needs you.} other {# things need you.}}"
-msgstr "{needsYou, plural, other {# 対応が必要な事項。}}"
+#~ msgid "{needsYou, plural, one {# thing needs you.} other {# things need you.}}"
+#~ msgstr "{needsYou, plural, other {# 対応が必要な事項。}}"
 
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "{newCount} new, {resolvedCount} resolved"
@@ -569,8 +599,8 @@ msgid "{removed} no longer has access."
 msgstr "{removed} はアクセス権がなくなりました。"
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "{rest, plural, one {# more not shown} other {# more not shown}}"
-msgstr "{rest, plural, other {# その他は非表示}}"
+#~ msgid "{rest, plural, one {# more not shown} other {# more not shown}}"
+#~ msgstr "{rest, plural, other {# その他は非表示}}"
 
 #: src/components/commands/CommandPalette.jsx
 msgid "{resultCount, plural, one {# command} other {# commands}}"
@@ -626,8 +656,12 @@ msgid "{slideShare} of posts · <0>{slideEng}</0> eng."
 msgstr "{slideShare} の投稿 · <0>{slideEng}</0> エンゲージメント"
 
 #: src/components/insights/Desk.jsx
-msgid "{sourceCount, plural, one {# source connected. Ask anything below to start.} other {# sources connected. Ask anything below to start.}}"
-msgstr "{sourceCount, plural, other {# ソースが接続済みです。開始するには、以下に質問してください。}}"
+#~ msgid "{sourceCount, plural, one {# source connected. Ask anything below to start.} other {# sources connected. Ask anything below to start.}}"
+#~ msgstr "{sourceCount, plural, other {# ソースが接続済みです。開始するには、以下に質問してください。}}"
+
+#: src/components/insights/Desk.jsx
+msgid "{sourceCount, plural, one {# source connected} other {# sources connected}}"
+msgstr "{sourceCount, plural, other {# 件のソースが接続済み}}"
 
 #: src/components/GoogleAdsReport.js
 msgid "{summary} Operator takeaway: {takeaway}"
@@ -673,6 +707,10 @@ msgstr "{tokensIn} 入力 · {tokensOut} 出力"
 msgid "{total, plural, one {Granted} other {All # granted}}"
 msgstr "{total, plural, one {許可済み} other {# 件すべて許可済み}}"
 
+#: src/components/insights/desk/DeskLists.jsx
+msgid "{total, plural, one {Show all #} other {Show all #}}"
+msgstr "{total, plural, one {すべて表示 #} other {すべて表示 #}}"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "{unconfirmed, plural, one {# unconfirmed} other {# unconfirmed}}"
 msgstr "{unconfirmed, plural, one {# 未確認} other {# 未確認}}"
@@ -704,6 +742,10 @@ msgstr "{views, plural, one {# ビュー} other {# ビュー}}"
 #: src/app/(app)/execute/page.jsx
 msgid "{waiting, plural, one {# change set waiting for you} other {# change sets waiting for you}}"
 msgstr "{waiting, plural, other {# 変更セットがあなたを待っています}}"
+
+#: src/components/insights/Desk.jsx
+msgid "{waiting, plural, one {One thing needs you.} other {# things need you.}}"
+msgstr "{waiting, plural, other {# 件の項目で対応が必要です。}}"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "{warnCount, plural, one {# Warning} other {# Warnings}}"
@@ -781,6 +823,10 @@ msgstr "↺ もう一度試す"
 #: src/components/ProjectSwitcher.jsx
 msgid "+ New project"
 msgstr "+ 新しいプロジェクト"
+
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "×{n}"
+msgstr "×{n}"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "< 1 hr"
@@ -971,6 +1017,10 @@ msgstr "Ductの新しいバージョンが利用可能です"
 msgid "A one-off. The report is still saved."
 msgstr "一度限り。レポートは保存されたままです。"
 
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "A problem Duct found"
+msgstr "Duct が発見した問題"
+
 #: src/app/invite/[token]/page.jsx
 msgid "a project"
 msgstr "プロジェクト"
@@ -986,6 +1036,10 @@ msgstr "プロジェクトはサイトから始まります。Ductがそれを�
 #: src/components/content/FormatLibrary.jsx
 msgid "A reusable recipe — slide structure, caption styles, image prompt rules — that the drafting agent follows."
 msgstr "下書きエージェントが従う、再利用可能なレシピ — スライド構造、キャプションスタイル、画像プロンプトルールなど。"
+
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "A run stopped on an error"
+msgstr "実行中にエラーが発生しました"
 
 #: src/components/connections/ProviderCard.jsx
 msgid "A saved key is already in use. Paste a new one to replace it, or choose Remove key to forget it."
@@ -1336,6 +1390,10 @@ msgstr "すべてのドキュメント"
 msgid "All documents in this thread"
 msgstr "このスレッド内のすべてのドキュメント"
 
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "All notes"
+msgstr "すべてのメモ"
+
 #: src/components/content/AnalyticsView.jsx
 msgid "All posts <0>· {rowCount}</0>"
 msgstr "すべての投稿 <0>・ {rowCount}</0>"
@@ -1415,6 +1473,10 @@ msgstr "と"
 #: src/app/(app)/projects/page.jsx
 msgid "another user"
 msgstr "別のユーザー"
+
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "Answer"
+msgstr "回答"
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Answer above, or leave a note for after"
@@ -1515,8 +1577,8 @@ msgid "Applying changes…"
 msgstr "変更を適用中…"
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "Applying now"
-msgstr "今すぐ適用中"
+#~ msgid "Applying now"
+#~ msgstr "今すぐ適用中"
 
 #: src/app/(app)/execute/page.jsx
 #: src/components/execution/ChangeSetCard.jsx
@@ -1524,6 +1586,7 @@ msgid "Applying…"
 msgstr "適用中…"
 
 #: src/components/content/DraftsQueue.jsx
+#: src/components/insights/desk/DeskQueue.jsx
 #: src/components/insights/ToolApproval.jsx
 msgid "Approve"
 msgstr "承認する"
@@ -1553,8 +1616,8 @@ msgid "Approved — ready to apply"
 msgstr "承認済み — 適用準備完了"
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "Approved, waiting to run"
-msgstr "承認済み、実行待ち"
+#~ msgid "Approved, waiting to run"
+#~ msgstr "承認済み、実行待ち"
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Archive"
@@ -1623,8 +1686,8 @@ msgid "Ask a question..."
 msgstr "質問する..."
 
 #: src/components/insights/Desk.jsx
-msgid "Ask about “{topFinding}” — or anything else"
-msgstr "{topFinding}について質問する — またはその他のこと"
+#~ msgid "Ask about “{topFinding}” — or anything else"
+#~ msgstr "{topFinding}について質問する — またはその他のこと"
 
 #: src/components/ChatSidebar.jsx
 msgid "Ask about this insight"
@@ -2139,8 +2202,8 @@ msgid "Check the connection. Behind a corporate proxy, Duct respects HTTPS_PROXY
 msgstr "接続を確認してください。企業プロキシの背後では、DuctはHTTPS_PROXYを尊重します。"
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "Checked"
-msgstr "確認済み"
+#~ msgid "Checked"
+#~ msgstr "確認済み"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Checked connected sources"
@@ -3294,6 +3357,10 @@ msgstr "Duct は組み込みソースを構築・維持し、ブリーフ、ア�
 msgid "Duct can’t call that address."
 msgstr "Duct はそのアドレスを呼び出せません。"
 
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Duct can't read anything right now. What it found before is still below."
+msgstr "現在、Duct は何も読み取ることができません。以前に発見した内容は以下に表示されています。"
+
 #: src/components/onboarding/DocumentPicker.jsx
 msgid "Duct can't read this type yet"
 msgstr "Ductはこのタイプをまだ読み取れません"
@@ -3354,13 +3421,25 @@ msgstr "Ductから簡単な質問があります"
 msgid "duct home"
 msgstr "Ductホーム"
 
+#: src/components/insights/Desk.jsx
+msgid "Duct is looking now."
+msgstr "Duct が現在確認中です。"
+
 #: src/components/connections/FirstSourceCelebration.jsx
 msgid "Duct is reading it now. Ask your first question while it does."
 msgstr "Ductが現在読み込んでいます。その間に最初の質問をしてください。"
 
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "Duct is waiting on your answer"
+msgstr "Duct はあなたの回答を待っています"
+
 #: src/components/insights/desk/DeskCards.jsx
 msgid "Duct last looked {lastChecked} and found nothing worth your time. Enjoy the quiet."
 msgstr "Duct は {lastChecked} に最後に確認しましたが、あなたの時間を費やす価値のあるものを見つけませんでした。静かにお過ごしください。"
+
+#: src/components/insights/Desk.jsx
+msgid "Duct last looked {since}."
+msgstr "Duct が最後に確認したのは {since} です。"
 
 #: src/components/ConnectionBanner.jsx
 msgid "Duct needs a connection. Your work is saved and will still be here."
@@ -3397,6 +3476,10 @@ msgstr "Duct は検索エンジンと同じように、約3分であなたのサ
 #: src/components/onboarding/FrontDoor.jsx
 #~ msgid "Duct reads your site the way a search engine does, then tells you what to fix first."
 #~ msgstr "Ductは検索エンジンと同じようにあなたのサイトを読み込み、最初に修正すべきことを伝えます。"
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Duct reads your sources again and tells you what changed since {since}."
+msgstr "Duct はソースを再度読み込み、{since} 以降の変更点をお知らせします。"
 
 #: src/app/(start)/start/page.jsx
 msgid "Duct runs on your own account, so an audit costs you cents — and Duct never sees your data twice."
@@ -3781,8 +3864,8 @@ msgid "Failed to send"
 msgstr "送信に失敗しました"
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "Fairly sure"
-msgstr "ほぼ確実"
+#~ msgid "Fairly sure"
+#~ msgstr "ほぼ確実"
 
 #: src/components/workspace/ComposerDials.jsx
 #~ msgid "Fast and cheaper. Headings, text and tables; pastes into a doc"
@@ -4355,6 +4438,7 @@ msgid "held in this machine’s keychain"
 msgstr "このマシンのキーチェーンに保持されます"
 
 #: src/app/(app)/execute/page.jsx
+#: src/components/insights/desk/DeskQueue.jsx
 msgid "Hide"
 msgstr "非表示"
 
@@ -4569,7 +4653,6 @@ msgstr "インパクトと収益を最優先、少ないアクション、専門
 msgid "Impressions, clicks and spend. Conversions stay in Ads Manager."
 msgstr "インプレッション、クリック、費用。コンバージョンはAds Managerに残ります。"
 
-#: src/components/insights/desk/DeskCards.jsx
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "In progress"
 msgstr "進行中"
@@ -5084,6 +5167,10 @@ msgstr "メトリクスを記録しました"
 msgid "Longer than the platform allows: {at}"
 msgstr "プラットフォームの上限を超えています：{at}"
 
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "Look into it"
+msgstr "確認する"
+
 #: src/components/connections/McpConnectors.jsx
 msgid "Look up issues and projects, or file a new issue."
 msgstr "課題とプロジェクトを検索、または新しい課題を登録。"
@@ -5109,8 +5196,8 @@ msgid "Low"
 msgstr "低"
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "Low confidence"
-msgstr "信頼度：低"
+#~ msgid "Low confidence"
+#~ msgstr "信頼度：低"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Low effort"
@@ -5469,7 +5556,6 @@ msgid "Needs Work"
 msgstr "要改善"
 
 #: src/app/(app)/audit/seo/page.jsx
-#: src/components/insights/desk/DeskCards.jsx
 #: src/components/insights/desk/DeskLists.jsx
 msgid "Needs you"
 msgstr "あなたが必要です"
@@ -5840,8 +5926,8 @@ msgid "Nobody had compared them"
 msgstr "誰も比較していませんでした"
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "Nobody has closed this"
-msgstr "誰もこれを閉じていません"
+#~ msgid "Nobody has closed this"
+#~ msgstr "誰もこれを閉じていません"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "noindex"
@@ -5880,7 +5966,11 @@ msgid "Not answering"
 msgstr "応答なし"
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "Not confirmed"
+#~ msgid "Not confirmed"
+#~ msgstr "未確認"
+
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "Not confirmed yet"
 msgstr "未確認"
 
 #: src/app/(app)/connections/page.jsx
@@ -5994,6 +6084,7 @@ msgid "Note"
 msgstr "注記"
 
 #: src/components/audit/AuditStepProgress.jsx
+#: src/components/insights/desk/DeskQueue.jsx
 msgid "Notes"
 msgstr "注記"
 
@@ -6040,6 +6131,10 @@ msgstr "ここには何もありません"
 #: src/components/content/PlanKanban.jsx
 msgid "Nothing here yet."
 msgstr "ここにはまだ何もありません。"
+
+#: src/components/insights/Desk.jsx
+msgid "Nothing is connected right now."
+msgstr "現在、何も接続されていません。"
 
 #: src/components/insights/Desk.jsx
 msgid "Nothing is connected yet."
@@ -6302,6 +6397,10 @@ msgstr "{vendor}を開く"
 #: src/components/connections/ProviderCard.jsx
 msgid "Open <0>Settings → Models & providers → OpenAI</0> and choose <1>Continue with ChatGPT</1>."
 msgstr "<0>設定 → モデルとプロバイダー → OpenAI</0>を開き、<1>ChatGPTで続行</1>を選択してください。"
+
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "Open and retry"
+msgstr "開いて再試行"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Open billing"
@@ -6690,8 +6789,8 @@ msgid "Pick the ones Duct may use, up to {MAX_MODELS}. They join the tier picker
 msgstr "Duct が使えるモデルを最大 {MAX_MODELS} 個選んでください。ティアの選択肢に加わり、ティアで指定がないときは最初のモデルが使われます。"
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "Pick up where you left off"
-msgstr "中断したところから再開"
+#~ msgid "Pick up where you left off"
+#~ msgstr "中断したところから再開"
 
 #: src/components/audit/ExecutionOffer.jsx
 msgid "Pick what you’d like done. We’ll scope it and follow up."
@@ -7262,6 +7361,10 @@ msgstr "推奨されるアクション"
 msgid "Reconnect"
 msgstr "再接続"
 
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Reconnect a source"
+msgstr "ソースを再接続"
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "Reconnect this source →"
 msgstr "このソースを再接続 →"
@@ -7578,6 +7681,7 @@ msgid "Result"
 msgstr "結果"
 
 #: src/components/ConnectionBanner.jsx
+#: src/components/insights/desk/DeskQueue.jsx
 msgid "Retry"
 msgstr "再試行"
 
@@ -7600,6 +7704,7 @@ msgstr "許可リストにある元に戻せる変更は自動的に適用され
 
 #: src/app/(app)/execute/page.jsx
 #: src/components/content/PublishReviewPanel.jsx
+#: src/components/insights/desk/DeskQueue.jsx
 msgid "Review"
 msgstr "レビュー"
 
@@ -7610,6 +7715,10 @@ msgstr "再度レビュー"
 #: src/components/content/PostViewport.jsx
 msgid "Review before publishing"
 msgstr "公開前にレビュー"
+
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "Review changes"
+msgstr "変更をレビュー"
 
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Review what changed"
@@ -8303,6 +8412,7 @@ msgid "Short description"
 msgstr "短い説明"
 
 #: src/app/(app)/execute/page.jsx
+#: src/components/insights/desk/DeskQueue.jsx
 msgid "Show"
 msgstr "表示"
 
@@ -8325,6 +8435,11 @@ msgstr "変更を表示"
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Show Duct in"
 msgstr "Ductの表示言語"
+
+#: src/components/insights/desk/DeskLists.jsx
+#: src/components/insights/desk/DeskQueue.jsx
+msgid "Show fewer"
+msgstr "少なく表示"
 
 #: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/ProviderCard.jsx
@@ -8766,6 +8881,10 @@ msgstr "ステップ II/III · あなたのモデル"
 msgid "Still connecting to the session — try again in a moment."
 msgstr "セッションに接続中です。しばらくしてからもう一度お試しください。"
 
+#: src/components/insights/Desk.jsx
+msgid "Still open"
+msgstr "未解決"
+
 #: src/components/workspace/ChatInput.jsx
 msgid "Stop"
 msgstr "停止"
@@ -8780,8 +8899,8 @@ msgid "Stopped"
 msgstr "停止済み"
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "Stopped — pick up where it left off"
-msgstr "停止済み — 中断したところから再開"
+#~ msgid "Stopped — pick up where it left off"
+#~ msgstr "停止済み — 中断したところから再開"
 
 #: src/lib/agentHistory.js
 msgid "Stopped here — the turn was interrupted."
@@ -8940,6 +9059,10 @@ msgstr "テイク {number}"
 #: src/components/content/PostVideo.jsx
 msgid "Take {number}, publishing"
 msgstr "テイク {number}、公開中"
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Take a fresh look"
+msgstr "再確認する"
 
 #: src/components/content/PostVideo.jsx
 msgid "Takes"
@@ -9211,8 +9334,8 @@ msgid "The key works, but the account has no credit"
 msgstr "キーは有効ですが、アカウントにクレジットがありません"
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "The last turn failed"
-msgstr "前回の実行は失敗しました"
+#~ msgid "The last turn failed"
+#~ msgstr "前回の実行は失敗しました"
 
 #: src/components/content/VoiceRulesFields.jsx
 msgid "The list is full"
@@ -9780,7 +9903,7 @@ msgstr "ピン留めを解除 {label}"
 msgid "Untitled"
 msgstr "無題"
 
-#: src/components/insights/desk/DeskCards.jsx
+#: src/components/insights/desk/DeskQueue.jsx
 msgid "Untitled change set"
 msgstr "無題の変更セット"
 
@@ -9793,10 +9916,14 @@ msgstr "無題の投稿"
 msgid "Untitled project"
 msgstr "無題のプロジェクト"
 
-#: src/components/insights/desk/DeskCards.jsx
 #: src/components/insights/desk/DeskLists.jsx
+#: src/components/insights/desk/DeskQueue.jsx
 msgid "Untitled thread"
 msgstr "無題のスレッド"
+
+#: src/components/insights/Desk.jsx
+msgid "Up next"
+msgstr "次"
 
 #: src/components/UpdateToast.jsx
 msgid "Update failed: {error}"
@@ -10080,8 +10207,8 @@ msgid "Waiting for your browser…"
 msgstr "ブラウザを待機しています…"
 
 #: src/components/insights/desk/DeskCards.jsx
-msgid "Waiting on your answer"
-msgstr "回答をお待ちしています"
+#~ msgid "Waiting on your answer"
+#~ msgstr "回答をお待ちしています"
 
 #: src/components/audit/ExecutionOffer.jsx
 msgid "Want Duct to execute these fixes for you?"
@@ -10167,6 +10294,10 @@ msgstr "週"
 msgid "Week {number}"
 msgstr "第{number}週"
 
+#: src/components/insights/desk/DeskCards.jsx
+msgid "Welcome back. Take a fresh look?"
+msgstr "おかえりなさい。再確認しますか？"
+
 #: src/components/content/PlanDayOne.jsx
 msgid "What a freelancer's September actually costs"
 msgstr "フリーランサーの9月の実際の費用"
@@ -10182,6 +10313,10 @@ msgstr "自律性が可能にすること"
 #: src/app/(app)/activity/page.jsx
 msgid "What changed on {projectName}, and who did it"
 msgstr "{projectName}で何が変更され、誰が変更したか"
+
+#: src/components/insights/desk/DeskCards.jsx
+msgid "What changed since {since}?"
+msgstr "{since} 以降、何が変わりましたか？"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "What currently limits this metric most? <0>(optional)</0>"
@@ -10223,7 +10358,6 @@ msgstr "各キャンペーンの費用とその効果。"
 msgid "What happens next"
 msgstr "次に何が起こるか"
 
-#: src/components/insights/desk/DeskCards.jsx
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "What I found"
 msgstr "私が見つけたもの"
@@ -10412,7 +10546,6 @@ msgstr "作業"
 #~ msgid "Work still moving — mine or yours. Nothing here waits on you."
 #~ msgstr "作業は進行中 — あなたのものでも私のものでも。ここでは何もあなたを待ちません。"
 
-#: src/components/insights/desk/DeskCards.jsx
 #: src/components/workspace/ActivityRow.jsx
 msgid "Working"
 msgstr "作業中"
