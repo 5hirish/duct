@@ -17,25 +17,86 @@ this codebase's own measured conventions.
 
 ## North star
 
-Duct is **built for the role that owns the decisions** — an operator drowning
-in five dashboards who wants synthesis and a next step, not more charts. The
-site promises "Stop tab-switching. Start deciding." The app has to keep that
-promise in its bones:
+**Duct should feel like a sharp colleague who has already done the homework:
+warm, brief, and glad when you win.** Every rule below serves that sentence.
+The doc used to open with prohibitions only (two type sizes, quiet shadows,
+no motion, no icons), and an app built faithfully to them came out correct,
+quiet and grey: the 2026-11-02 audit
+([`docs/design/2026-11-02-ui-ux-audit.md`](../docs/design/2026-11-02-ui-ux-audit.md))
+called it soulless, and it was. These five say what to do.
 
-- **The UI's job is to make the user feel ahead of their data.** Lead with
-  what changed and what to do; totals are context, not headline.
-- **Speed is the core delight.** For founders and growth operators, the answer
-  appearing fast beats any animation (Linear: "designed for purpose…
-  say no to busy work"; Raycast's founding complaint: tools "bloated, slow,
-  and miss keyboard shortcuts"). Optimistic where safe, keyboard everywhere,
-  nothing animating on the daily path.
-- **Fun means curiosity, not gamification.** Celebrate *outcome* velocity
-  ("3 weeks of rising branded clicks"), never usage streaks; nudges are
-  opt-in; no guilt copy. Streak mechanics are the documented failure mode of
-  productivity gamification (Duolingo's "streak creep").
-- **Confident, plain, human.** The product already talks like this — "Duct
-  checks a number before it trusts it." Keep that voice; never ship a string
-  a smart coworker wouldn't say out loud.
+1. **Answer first, act second.** A screen opens on what changed and the one
+   thing to do about it, in the title itself ("1 thing needs you."), with the
+   primary action beside it. Totals are context, never the headline
+   (ChatGPT Pulse and Linear Pulse open on what changed).
+2. **Teach at the moment of need, never in a header.** A page has a title and
+   one line of state, not a paragraph about how it works. The explanation
+   lives in a "?" (`help`), in an empty state's one line, or in the agent's
+   answer when someone asks. NN/g: people read about a fifth of the words on
+   a page; Krug: instructions must die.
+3. **One hero per screen; whitespace before boxes.** One element gets the
+   brand tint and the weight, everything else recedes. Group with space
+   first, a border only when space cannot do it, and never a box in a box
+   (NN/g common region). Lists of one kind of thing are rows, not cards.
+4. **Warmth is a material.** The brand orange is the one accent, the
+   neutrals are warm in both themes, the home screen greets you in the
+   wordmark's serif, and the mosaic art marks arrivals. Speak like a person:
+   contractions, the user's words ("Changes", not "Executions").
+5. **Delight where use is rare; speed everywhere else.** Celebrate the first
+   connection, a clean desk, a change that worked (the peak-end rule); keep
+   the daily path instant and still, with nothing animating on it. Celebrate
+   outcomes, never usage streaks.
+
+---
+
+## The page frame
+
+Every screen in the app shell is built from the same five parts in
+`components/ui/`, so that moving between screens never moves the title, the
+gutter or the grid. They exist because their absence was measured: page
+titles at six left edges, three sizes and three weights; 139 bordered boxes
+beside a Card component nothing imported; twelve hand-made textareas at four
+radii.
+
+| Part | What it decides | Use it for |
+|---|---|---|
+| `Page` (`ui/page`) | the vertical rhythm (40px between groups) and, for `width="narrow"` forms, a 42rem cap that stays left-aligned | the root of every routed screen |
+| `PageHeader` | the one `<h1>`: 24px semibold (36px display serif for `size="hero"`, the home screen only), one line of `status`, `actions` on the right, `help` behind a "?", `back` only for nested pages | every title. There is no description slot, on purpose |
+| `Section` | an `<h2>` at body size in semibold, a muted count, actions on the right, 16px to its content | each titled group on a page |
+| `Card` (`ui/card`) | radius, border, 24px padding (16 at `sm`), and a `CardFooter` pinned to the bottom so a row of cards shares a baseline. Variants carry weight: `default`, `interactive` (stretch the title with `cardLinkClass`), `hero` (the one brand-tinted card a screen may have), `quiet` | every bordered group; a list is rows inside one Card (`p-0`, `divide`) |
+| `TileGrid` | columns from the container (`size` sm/md/lg = 13/17/22rem minimum) or a fixed `cols` for a known set, so four starters land 2×2, never three plus an orphan | every grid of cards |
+
+Forms use `Input`, `Textarea` (auto-growing, the field radius) and `Select`.
+A field is a rectangle; capsules are for badges and chips only. Radii are
+concentric: controls `rounded-lg` (8px), cards `rounded-xl`, dialogs
+`rounded-2xl`.
+
+**Spacing is an 8px grid with one meaning per step** (Apple's published 12/24
+control clearances and 16pt card margins; Material's 4dp grid; NN/g's rule
+that space between groups must exceed space within):
+
+| Relationship | Gap |
+|---|---|
+| Icon to label, label to its field, button to button | 8px (`gap-2`) |
+| Inside a card, between its own groups | 16px (`gap-4`); 12px at `sm` |
+| Card to card in a grid | 12px (`gap-3`) |
+| Section heading to its content | 16px |
+| Section to section, header to content | 40px (`Page`) |
+| Page gutter | 16px on a phone growing to 32px, top 32px (`.app-main`) |
+
+**Three type sizes a screen** (NN/g): the title, body 14px with headings in
+its semibold (Apple's Headline is Body's size, heavier), and 12px for
+metadata. Prose is capped at the measure (65–68ch). Left-aligned, always.
+
+**Four checks hold all of this, and none is advisory.**
+`check:design` refuses a hand-made `<h1>`, `.page-toolbar`, a raw
+`<textarea>`, a capsule field, and new hand-rolled cards (a burn-down budget
+that only goes down). `check-page-frame` fails a routed screen without
+`PageHeader`. `check:contrast` holds every token pair. `check:layout` renders
+every screen at 390, 1100 and 1440px and fails on a title out of line, a page
+wider than the window, a status that wraps, or a grid row whose card footers
+disagree; CI runs it as its own job. A screen that needs to break a rule
+changes the primitive, with a sentence saying why, not the screen.
 
 ---
 
@@ -66,13 +127,14 @@ Radix primitives, lucide-react icons, next-themes. Also runs inside the Tauri
 desktop shell — desktop is a first-class surface, not a port.
 
 **Type.** DM Sans (`--font-sans`, also `--font-heading`) + JetBrains Mono
-(`--font-mono`) via `next/font`, `display: swap`. Georgia (`--serif`) is
-reserved for the wordmark and the signed-out hero — do not use it inside the
-app. The app is deliberately a **two-size system**: `text-sm` body,
-`text-xs` secondary; `text-2xl font-semibold tracking-tight` for the page
-title (`.page-toolbar-title`), `text-sm font-semibold` for section headings.
-Do not invent intermediate sizes — and do not write `text-[11px]`
-arbitraries (see Known gaps). Hierarchy comes from weight and color, not a
+(`--font-mono`) via `next/font`, `display: swap`. Georgia (`--serif`, as
+`font-display`) is the wordmark's and the signed-out hero's, and inside the
+app it is the home screen's greeting only (`PageHeader size="hero"`). The
+ramp is **three sizes a screen**: the page title (`text-2xl font-semibold
+tracking-tight`, drawn by `PageHeader`; `text-4xl` display on the hero),
+`text-sm` body with section and card headings in its `font-semibold`, and
+`text-xs` for metadata. Do not invent intermediate sizes, and do not write
+`text-[11px]` arbitraries. Hierarchy comes from weight and color, not a
 parade of sizes (Refactoring UI: 2–3 weights, 2–3 text colors; de-emphasize
 the secondary rather than enlarging the primary).
 
@@ -101,21 +163,25 @@ coral at 2.89:1 while its three neighbours ran 7.8–9.9. Verify a new or
 changed token at `/preview/frame?scene=tokens&theme=dark`, which renders every
 pair with its live ratio — the whole reason it is a screen and not a comment.
 
-The accent rule: **one accent, used semantically.** Status colors are
-reserved for status — green means good movement, amber means waiting, red
-means destructive/failed, and every status color needs a non-color channel
-beside it (WCAG 1.4.1 — the ▲/▼/sign on a delta is not optional). Today
-`--primary` is a shadcn-default violet while the brand is orange; that
-conflict is the top item in Known gaps. Until it is resolved at the token
-level, use `bg-primary` and never spread `bg-[var(--orange)]` ad hoc.
+The accent rule: **one accent, used semantically.** `--primary` is the brand
+orange (the same value as `--brand`, white on it at 4.6:1; lifted with a dark
+partner in dark), and it marks the one primary action and the one hero card
+on a screen. Status colors are reserved for status — green means good
+movement, amber means waiting, red means destructive/failed, blue means
+moving — and every status color needs a non-color channel beside it (WCAG
+1.4.1 — the ▲/▼/sign on a delta is not optional). Use `bg-primary`; never
+spread `bg-[var(--orange)]` ad hoc. The neutrals are warm in both themes
+(hue 55–75, low chroma); dark is warm charcoal, elevation lighter.
 
-**Shape.** Page code's de-facto card is `rounded-xl border bg-card` —
-radius `rounded-md`/`lg`/`xl` for surfaces, `rounded-full` for pills and
-icon buttons. Shadows are quiet: `shadow-sm` + `ring-1 ring-border/40` at
-most; depth comes from borders and background shifts, not glow.
+**Shape.** `--radius` is 8px: controls `rounded-lg`, cards `rounded-xl`,
+dialogs `rounded-2xl`, `rounded-full` only for badges, chips and round icon
+buttons. The card is `ui/card`. Shadows are quiet: `shadow-xs` on the primary
+button and nothing on cards; depth comes from borders and background shifts,
+not glow.
 
-**Spacing.** Tailwind's scale only — the house rhythm is `gap-8` between
-page sections, `gap-3`/`gap-4` inside them, `p-4`/`p-5` card padding.
+**Spacing.** Tailwind's scale only, on the 8px grid in "The page frame"
+above: `Page`'s 40px between groups, 16px inside a section or a card, 12px
+between cards, `p-6`/`p-4` card padding.
 Proximity is grouping: space *between* groups must exceed space *within*
 them — a label sits closer to its field than to the previous field
 (Gestalt; the most-violated spacing rule in form layouts). No arbitrary
@@ -338,7 +404,10 @@ are the canonical choices; migrate the others when a change touches them.
 
 | Job | Canonical | Retire on touch |
 |---|---|---|
-| Card | `rounded-xl border bg-card p-5` (the de-facto shape; restyle `ui/card.tsx` to it and adopt the component, which today has zero importers) | the four other hand-rolled shapes; `.connection-card` CSS |
+| Page frame | `ui/page`'s `Page` + `PageHeader` (title, one line of `status`, `actions`, `help` behind a "?") + `Section`. No paragraph under a title: the explanation goes in `help` | `.page-toolbar` rows, a `<p className="app-subtle">` under an `<h1>`, a back arrow on a top-level page |
+| Card | `ui/card`'s `Card`: `rounded-xl border bg-card p-6`, `CardFooter` pinned with `mt-auto`, variants `default` / `interactive` (+ `cardLinkClass` on the title) / `hero` (one a screen) / `quiet`. Items of one kind are rows in one `Card className="gap-0 p-0"`, not a card each | hand-rolled `rounded-xl border bg-card` boxes (a burn-down budget in `check:design`); `.connection-card` CSS; `.conn-tile` |
+| Grid of cards | `ui/page`'s `TileGrid`: `size` sm/md/lg for open sets, `cols` 2/3/4 for a set of known size | per-page `grid-cols-*` ladders and `minmax()` widths (there were eight) |
+| Multi-line field | `ui/textarea`'s `Textarea`: field radius, auto-grows to `max-h-80` then scrolls | raw `<textarea>` with a pasted class string; `.app-textarea`; any capsule radius on a field |
 | Busy indicator | `ui/spinner` (currentColor, `label` prop for `role="status"`) | `<Loader2 className="animate-spin">` — the fork that grew back after twelve were consolidated |
 | Long-running agent work | `PipelineProgress` (ladder + rotating subtitle) | bare spinners on multi-second waits |
 | Status badge | `ui/badge` with a semantic variant — `success`, `warning`, `info`, `destructive`, which tint the ground and colour the text (4.2–5.5:1 in both themes, no `dark:` for the caller). Solid status colour + its `-foreground` partner ONLY where a tint cannot work, meaning a chip over a photograph (`contentStatus.js`'s `solidClass`); `bg-green-500/90 text-white` measured 2.22:1 | `.status-pill` (lives in `ads-report.css`, hardcodes hexes, used far outside the report) |
@@ -534,6 +603,13 @@ principles rather than pointing at APIs nothing here calls.
 Users scan; they don't read — 79% scan any new page, and at most ~28% of
 the words get read (NN/g eyetracking). So:
 
+- **No paragraph under a title, ever.** `PageHeader` has no slot for one:
+  one line of `status` (what is true now) and a `help` "?" for how the page
+  works. Before 2026-11-02, eight of sixteen screens opened on an
+  explanation, and Connections made you read 53 words before its first tile.
+- **Never explain the UI to the user.** "Each item shows up in one card only,
+  sorted by who's holding it" is a code comment that escaped. If a layout
+  needs a sentence to be understood, change the layout.
 - **Halve the words.** Concise text measurably improves usability more than
   any other content change (Nielsen: "Be Succinct!"). One idea per surface;
   a brief that leads with three findings beats one that leads with twelve.
@@ -612,6 +688,10 @@ before calling a screen done.
 
 ## Screen review checklist
 
+0. Is it built from the page frame (`Page`, `PageHeader`, `Section`,
+   `TileGrid`, `Card`)? Run `npm run check:layout` with the dev server up:
+   it renders the screen at 390, 1100 and 1440px and fails on what eyes
+   miss.
 1. Squint (or blur): is the most important thing visibly heavier than the
    rest, or is everything the same weight?
 2. Does every number carry a comparison (delta/sparkline/benchmark), with
@@ -641,12 +721,11 @@ before calling a screen done.
 
 The tree, measured against this file. Fix each when a change touches it.
 
-- **The violet `--primary` vs brand orange.** The default shadcn violet is
-  the single most-cited "generated app" tell, and it isn't Duct's color.
-  Recommended: re-token `--primary` to the brand orange (proper oklch
-  light/dark pair, desaturated in dark) in `tokens.css`/`theme.css` — one
-  change, every component inherits. Until then: `bg-primary` in code, no ad
-  hoc `bg-[var(--orange)]`.
+- ~~**The violet `--primary` vs brand orange.**~~ **Closed 2026-11-02.**
+  `--primary` is the brand orange in both themes, and the neutrals moved from
+  navy to warm in the same change. Logged here on 2026-09-04 and open for two
+  months because "close on touch" never touches a token: no screen change is
+  ever the change that owns the palette.
 - ~~**Semantic success/warning tokens exist now; most sites still don't use
   them.**~~ **Closed 2026-09-15.** All 247 raw palette classes are on tokens,
   `contentStatus.js` is the one status map, and `scripts/check-design-system.mjs`
@@ -656,8 +735,11 @@ The tree, measured against this file. Fix each when a change touches it.
   literal `#ff5c00` for marks), `--control` (the 3:1 edge that says "this is a
   field", split out of `--border`, which was doing both jobs at 1.27:1 and
   therefore neither), and `--text-2xs` (11px, decoration only).
-- **`ui/card` has zero importers** while five card shapes coexist — restyle
-  it to the canonical shape, then adopt it.
+- ~~**`ui/card` has zero importers**~~ **Closed 2026-11-02** with the page
+  frame: `Card`, `PageHeader`, `Section`, `TileGrid` and `Textarea` exist and
+  every routed screen uses them. Forty hand-rolled boxes remain inside
+  components; `check:design`'s `no-hand-rolled-card` budget counts them down
+  and cannot go up.
 - ~~**`Loader2` spinners (7 files)**~~ **Closed 2026-09-15** — and held by
   `check:design`, which is the only reason it will stay closed; it had already
   been consolidated once.
@@ -667,7 +749,7 @@ The tree, measured against this file. Fix each when a change touches it.
 - ~~**`window.confirm` (3 sites)**~~ **Closed 2026-09-15.** `ui/confirm-dialog`
   is the shared ask now — `useConfirm()` returns `{ confirm, dialog }` and
   reads like the native call it replaces, so moving a site is one line.
-- **Off-scale type.** `npm run check:type` enforces the two-size rule above:
+- **Off-scale type.** `npm run check:type` enforces the type ramp above:
   font sizes must land on Tailwind's scale, and files on its clean list can
   never regress. It runs inside `check:parity`, so CI has it. Currently clean:
   `base`, `connector-tiles`, `forms`, `layout-grids`, `mode-selector`,
@@ -730,6 +812,18 @@ The tree, measured against this file. Fix each when a change touches it.
 ---
 
 ## Sources
+
+- NN/g on visual hierarchy, layer-cake scanning, Gestalt proximity and common
+  region, cards vs lists, progressive disclosure and empty states:
+  nngroup.com/articles/visual-hierarchy-ux-definition,
+  /layer-cake-pattern-scanning, /gestalt-proximity, /common-region,
+  /cards-component, /progressive-disclosure, /empty-state-interface-design
+- Apple Human Interface Guidelines: layout, typography (Headline is Body's
+  size, heavier), accessibility (12/24pt control clearance), widgets (16pt
+  margins), dark mode (follow the system appearance):
+  developer.apple.com/design/human-interface-guidelines
+- Linear, "Behind the latest design refresh" (2026): warmer, less saturated
+  neutrals; "don't compete for attention you haven't earned"
 
 NN/g (delight theory, empty states, skeletons, progressive disclosure,
 complex apps, dashboards & preattentive processing, data tables, sticky

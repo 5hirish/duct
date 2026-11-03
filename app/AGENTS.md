@@ -419,18 +419,42 @@ text size. Device units stay `px`: borders, outlines, shadows, radii, 1px optica
 nudges. Prose gets `max-width: var(--measure)` (68ch) or the `.measure` utility —
 never tables, code, or column layouts.
 
-**Two checks hold the design system, and they are not advisory.** Both run in
-`npm run check:parity`, so CI has them:
+**Every screen is built from the page frame.** `components/ui/page` gives
+`Page`, `PageHeader`, `Section`, `TileGrid` and `HelpTip`; `ui/card` and
+`ui/textarea` are the card and the multi-line field. A routed screen is
+`<Page><PageHeader title=… status=… actions=… help=… />…</Page>`, nothing
+else draws an `<h1>`, and there is no slot for a paragraph under the title:
+one line of state goes in `status`, how the page works goes in `help`.
+DESIGN.md's "The page frame" has the parts, the spacing table and the type
+ramp. If a screen needs something the frame does not do, change the
+primitive (and its `/preview` entry), never the one screen — that is the
+whole difference between a design system and 139 bordered boxes.
+
+**Four checks hold the design system, and they are not advisory.** The first
+three run in `npm run check:parity`, so CI has them; the fourth is its own CI
+job (`app-layout` in `app.yml`):
 
 - `scripts/check-design-system.mjs` (`npm run check:design`) fails on
   `text-[Npx]`, a raw Tailwind palette class, a hex in JSX, `window.confirm`,
   `Loader2`, `text-muted-foreground/NN`, a hand-rolled scrollbar
-  (`::-webkit-scrollbar`, `scrollbar-thin`), and a viewport prefix in a
-  container region. It is a **ratchet**: each rule carries an `allow` map of the files
+  (`::-webkit-scrollbar`, `scrollbar-thin`), a viewport prefix in a
+  container region, an `<h1>` outside `PageHeader`, `.page-toolbar`, a raw
+  `<textarea>`, a capsule-radius field, and a new hand-rolled card (that one
+  is a burn-down `budget` that can only go down). It is a **ratchet**: each rule carries an `allow` map of the files
   that are genuinely exceptions, each with its reason. Removing a name is
   permanent. Adding one is a decision you write a sentence for — it is not how
   you quiet the check, any more than adding a file to
   `test_harness_boundaries.py`'s allowlist is how you fix a red test.
+- `scripts/check-page-frame.mjs` (in `npm run check:design`) fails any routed
+  screen under `app/(app)` that does not render `PageHeader`. Full-bleed agent
+  workspaces are exempt by `FULL_BLEED_PREFIXES` in the layout, read from
+  that file so the two cannot disagree.
+- `scripts/check-layout.mjs` (`npm run check:layout`, needs the dev server)
+  renders every framed screen at 390, 1100 and 1440px against the fixture
+  backend and fails on a title out of line or off-size, a page wider than
+  the window, a status that wraps, and a row of cards whose footers do not
+  share a baseline. **Run it before calling any UI change done**; a worktree
+  without `site/node_modules` passes `PLAYWRIGHT_FROM=<repo>/site`.
 - `scripts/check-contrast.mjs` (`npm run check:contrast`) does the WCAG maths
   on the real oklch values in `tokens.css`/`theme.css` and fails when a pair
   the app paints drops below its threshold. It also asserts that every
@@ -449,6 +473,10 @@ concern rather than growing an existing one, and put page-specific styling with
 the page.
 
 **Shared UI primitives — use them, don't re-fork.**
+
+- Page frame: `ui/page` (`Page`, `PageHeader`, `Section`, `TileGrid`,
+  `HelpTip`), `ui/card` (`Card`, `CardFooter`, `cardLinkClass`),
+  `ui/textarea`. See "Every screen is built from the page frame" above.
 
 - Overlays: `ui/dialog` (Radix — portal, focus trap, Escape, scroll lock) and
   `ui/lightbox`. Never hand-roll a `fixed inset-0` backdrop.
