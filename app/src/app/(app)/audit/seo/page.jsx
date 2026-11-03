@@ -39,7 +39,7 @@ const EFFORT_OPTIONS = [
  *  question or a failure says so before it is opened. Idle says nothing. */
 function auditBadge(conv) {
   switch (conv.run_status) {
-    case "running": return { label: msg`Working…`, className: "text-primary" };
+    case "running": return { label: msg`Working…`, className: "text-brand" };
     case "paused": return { label: msg`Needs you`, className: "text-warning" };
     case "failed": return { label: msg`Failed`, className: "text-destructive" };
     case "cancelled": return { label: msg`Stopped`, className: "text-muted-foreground" };

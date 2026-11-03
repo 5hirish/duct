@@ -185,7 +185,7 @@ export default function AnalyticsView({ projectId, onLinkAccounts }) {
           <div className="grid grid-cols-2 gap-3 @4xl:grid-cols-5">
             <StatCard icon={Eye} label={t`Views`} value={formatNumber(totals.views)} accent="text-info" />
             <StatCard icon={Heart} label={t`Likes`} value={formatNumber(totals.likes)} accent="text-destructive" />
-            <StatCard icon={MessageCircle} label={t`Comments`} value={formatNumber(totals.comments)} accent="text-primary" />
+            <StatCard icon={MessageCircle} label={t`Comments`} value={formatNumber(totals.comments)} accent="text-brand" />
             <StatCard icon={Share2} label={t`Shares`} value={formatNumber(totals.shares)} accent="text-success" />
             <StatCard icon={TrendingUp} label={t`Engagement`} value={`${engagementRate.toFixed(1)}%`} sub={t`${postCount} posts · ${avgViewsText} avg views`} accent="text-warning" />
           </div>
@@ -294,7 +294,7 @@ export default function AnalyticsView({ projectId, onLinkAccounts }) {
                                 <PlatformGlyph platform={r.platform} className="size-3 shrink-0" />
                                 <span className="text-2xs uppercase tracking-wide">{meta.label}</span>
                                 {r.published_via === "duct" && (
-                                  <span className="rounded-full bg-primary/10 px-1.5 py-px text-2xs font-semibold text-primary"><Trans>via Duct</Trans></span>
+                                  <span className="rounded-full bg-primary/10 px-1.5 py-px text-2xs font-semibold text-brand"><Trans>via Duct</Trans></span>
                                 )}
                                 {r.pillar && (
                                   <span className="rounded-full bg-muted px-1.5 py-px text-2xs font-medium text-muted-foreground">{titleCase(r.pillar)}</span>

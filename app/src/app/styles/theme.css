@@ -90,8 +90,16 @@
   --card-foreground: oklch(0.96 0.006 75);
   --popover: oklch(0.225 0.007 60);
   --popover-foreground: oklch(0.96 0.006 75);
-  --primary: oklch(0.72 0.17 48);
-  --primary-foreground: oklch(0.17 0.03 45);
+  /* The same fill as light, white on it, not a lighter orange with dark
+     text. WCAG 2 scored dark-on-0.72 at 7.3:1 and called it the better pair,
+     but it read muddy ("text readability is poor on CTA", 2026-11-03), and
+     APCA agrees with the eye: Lc 53 for that label against Lc 76 for white on
+     this one. Orange is the hue WCAG 2's formula is known to get backwards.
+     A fill dark enough for white is too dark to read as text on this
+     background, so orange *text* uses `--brand` (`text-brand`), which is
+     lifted for dark; `--primary` is for fills, tints and borders. */
+  --primary: oklch(0.58 0.18 45);
+  --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.265 0.007 60);
   --secondary-foreground: oklch(0.96 0.006 75);
   --muted: oklch(0.265 0.007 60);
@@ -116,7 +124,8 @@
   --brand-foreground: oklch(0.16 0.03 45);
   --border: oklch(1 0 0 / 9%);
   --input: oklch(1 0 0 / 12%);
-  --control: oklch(0.52 0.01 60);
+  /* About 2:1, down from 3.5. See `--control` in tokens.css. */
+  --control: oklch(0.4 0.008 60);
   --ring: oklch(0.72 0.17 48);
   --chart-1: oklch(0.72 0.17 48);
   --chart-2: oklch(0.82 0.03 70);
@@ -213,11 +222,11 @@
   .app-main a:not([data-slot="button"]):hover,
   .app-link:hover,
   .signin-split a:not([data-slot="button"]):hover {
-    color: var(--primary);
+    color: var(--brand);
   }
 
   .app-header .logo:hover {
-    color: var(--primary);
+    color: var(--brand);
   }
 }
 

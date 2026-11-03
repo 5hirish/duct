@@ -253,9 +253,9 @@ function WeekView({ byDate, weekStart, setWeekStart, onReviseDay }) {
           const isToday = key === todayKey;
           return (
             <div key={key} className="flex min-w-0 flex-col bg-background">
-              <div className={`sticky top-0 z-10 border-b border-border/60 bg-background/95 px-2 py-1.5 text-center backdrop-blur ${isToday ? "text-primary" : ""}`}>
+              <div className={`sticky top-0 z-10 border-b border-border/60 bg-background/95 px-2 py-1.5 text-center backdrop-blur ${isToday ? "text-brand" : ""}`}>
                 <p className="text-2xs uppercase tracking-wide text-muted-foreground">{weekdayName(date, i18n.locale)}</p>
-                <p className={`text-sm font-semibold tabular-nums ${isToday ? "text-primary" : ""}`}>{date.getDate()}</p>
+                <p className={`text-sm font-semibold tabular-nums ${isToday ? "text-brand" : ""}`}>{date.getDate()}</p>
               </div>
               <div className="flex-1 space-y-2 p-1.5">
                 {entries.map((e) => (

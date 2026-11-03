@@ -286,7 +286,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
             <div key={i} className="rounded-xl border border-border bg-background p-3">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <span className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                  <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-2xs font-semibold text-primary tabular-nums">
+                  <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-2xs font-semibold text-brand tabular-nums">
                     {i + 1}
                   </span>
                   <Trans>Pillar</Trans>

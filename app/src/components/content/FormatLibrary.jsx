@@ -93,7 +93,7 @@ const relTime = (iso, locale) => relativeTime(iso, { fallbackAfterDays: 7, local
 
 const ACCENTS = [
   "from-destructive/25 to-warning/15 text-destructive",
-  "from-primary/25 to-primary/15 text-primary",
+  "from-primary/25 to-primary/15 text-brand",
   "from-success/25 to-success/15 text-success",
   "from-info/25 to-info/15 text-info",
   "from-warning/25 to-warning/15 text-warning",
@@ -170,7 +170,7 @@ export default function FormatLibrary({ projectId }) {
       <div className="mb-4 flex items-end justify-between gap-3">
         <div>
           <h2 className="flex items-center gap-2 text-sm font-semibold">
-            <Layers className="h-4 w-4 text-primary" />
+            <Layers className="h-4 w-4 text-brand" />
             <Trans>Formats</Trans>
             <span className="text-xs font-normal tabular-nums text-muted-foreground">
               {formats.length}
@@ -353,7 +353,7 @@ function FormatCard({ format, onView, onEdit, onDelete }) {
 
       <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2.5 text-2xs text-muted-foreground">
         <span><Trans>Updated {updated}</Trans></span>
-        <span className="text-primary opacity-0 transition-opacity group-hover:opacity-100"><Trans>View →</Trans></span>
+        <span className="text-brand opacity-0 transition-opacity group-hover:opacity-100"><Trans>View →</Trans></span>
       </div>
     </article>
   );
@@ -551,7 +551,7 @@ function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved }) 
                       onClick={() => toggleLinked(s.key)}
                       className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-2xs font-medium transition-colors ${
                         on
-                          ? "border-primary bg-primary/10 text-primary"
+                          ? "border-primary bg-primary/10 text-brand"
                           : "border-border text-muted-foreground hover:bg-muted"
                       }`}
                     >

@@ -195,6 +195,13 @@ const RULES = [
     allow: new Map(),
   },
   {
+    id: "no-primary-text",
+    why: "--primary is the fill: dark enough for a white button label, and in dark mode too dark to read as text on the page (4.2:1). Orange words use --brand, which is the same orange in light and lifted in dark.",
+    fix: "text-brand (and hover:text-brand). Keep bg-primary, border-primary and the bg-primary/NN tints.",
+    re: /(?<![\w-])text-primary(?![\w-])/g,
+    allow: new Map(),
+  },
+  {
     id: "no-hand-rolled-card",
     why: "ui/card is the one card: radius, padding, border, a footer pinned to the bottom so a row of cards lines up. Hand-made `rounded-xl border bg-card` boxes each picked their own.",
     fix: "<Card variant=… size=…> from components/ui/card; lists of one kind of thing are rows in one Card.",

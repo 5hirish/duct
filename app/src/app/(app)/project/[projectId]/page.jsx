@@ -167,7 +167,7 @@ function ProvenanceChip({ source, onConfirm }) {
       <button
         type="button"
         onClick={onConfirm}
-        className="inline-flex items-center gap-0.5 rounded-3xl px-1.5 text-xs font-medium text-primary hover:bg-primary/10"
+        className="inline-flex items-center gap-0.5 rounded-3xl px-1.5 text-xs font-medium text-brand hover:bg-primary/10"
       >
         <Check className="size-3" aria-hidden />
         <Trans>Looks right</Trans>
@@ -526,7 +526,7 @@ export default function ProjectContextPage() {
                 >
                   {i18n._(stepItem.shortLabel)}
                 </button>
-                {isDone && <Check className="size-3.5 text-primary" aria-hidden="true" />}
+                {isDone && <Check className="size-3.5 text-brand" aria-hidden="true" />}
                 {index < TOTAL_STEPS - 1 && (
                   <span className="inline-block h-px w-3 bg-border" aria-hidden="true" />
                 )}

@@ -302,7 +302,7 @@ function PaneTab({ active, onClick, icon: Icon, label, status }) {
       onClick={onClick}
       aria-pressed={active}
       className={`relative flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-        active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/50"
+        active ? "bg-primary/10 text-brand" : "text-muted-foreground hover:bg-muted/50"
       }`}
     >
       <Icon className="size-3.5" />

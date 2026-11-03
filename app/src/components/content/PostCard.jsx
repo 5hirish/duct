@@ -114,7 +114,7 @@ export default function PostCard({ post }) {
 
       {/* Body */}
       <div className="flex flex-1 flex-col gap-2.5 p-3.5">
-        <h3 className="line-clamp-2 text-sm font-semibold leading-snug group-hover:text-primary">
+        <h3 className="line-clamp-2 text-sm font-semibold leading-snug group-hover:text-brand">
           {post.topic || post.post_dir_slug || t`Untitled post`}
         </h3>
 
@@ -130,7 +130,7 @@ export default function PostCard({ post }) {
 
         <div className="flex flex-wrap items-center gap-1.5">
           {post.pillar && (
-            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-2xs font-medium text-primary">
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-2xs font-medium text-brand">
               {titleCase(post.pillar)}
             </span>
           )}

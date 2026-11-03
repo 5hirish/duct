@@ -207,7 +207,7 @@ export default function PostViewport({ payload, canPublish = false, onPublish, o
                 <span className={`size-1.5 rounded-full ${meta.dotClass}`} /> {i18n._(meta.label)}
               </span>
               {post.pillar && (
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 font-medium text-primary">{titleCase(post.pillar)}</span>
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 font-medium text-brand">{titleCase(post.pillar)}</span>
               )}
               {post.format_name && (
                 <span className="rounded-full border border-border/70 px-2 py-0.5">{post.format_name}</span>
@@ -356,9 +356,9 @@ function HashtagInput({ value, onChange }) {
   return (
     <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-input bg-input/40 px-2.5 py-2">
       {value.map((tag, i) => (
-        <span key={i} className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">
+        <span key={i} className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-brand">
           {tag}
-          <button type="button" onClick={() => onChange(value.filter((_, j) => j !== i))} className="text-primary/60 hover:text-primary">×</button>
+          <button type="button" onClick={() => onChange(value.filter((_, j) => j !== i))} className="text-brand/60 hover:text-brand">×</button>
         </span>
       ))}
       <span className="inline-flex min-w-[120px] flex-1 items-center gap-1 text-muted-foreground">

@@ -23,7 +23,7 @@ import { useRelativeTime } from "./useRelativeTime";
 
 // A document says what it is before you read its name.
 const LOOKS = {
-  brief: { Icon: FileText, className: "bg-primary/15 text-primary" },
+  brief: { Icon: FileText, className: "bg-primary/15 text-brand" },
   report: { Icon: FileBarChart2, className: "bg-info/15 text-info" },
   data: { Icon: Table2, className: "bg-success/15 text-success" },
   image: { Icon: ImageIcon, className: "bg-muted text-muted-foreground" },
@@ -51,7 +51,7 @@ function threadState(conv, i18n) {
   if (conv.status === "archived") return { label: i18n._(msg`Closed`), className: "text-muted-foreground" };
   switch (conv.run_status) {
     case "running":
-      return { label: i18n._(msg`Working…`), className: "text-primary animate-pulse" };
+      return { label: i18n._(msg`Working…`), className: "text-brand animate-pulse" };
     case "paused":
       return { label: i18n._(msg`Needs you`), className: "text-warning font-medium" };
     case "failed":
@@ -62,7 +62,7 @@ function threadState(conv, i18n) {
       break;
   }
   if (conv.last_seq === 0) return { label: i18n._(msg`Not started`), className: "text-muted-foreground" };
-  return { label: i18n._(msg`Open`), className: "text-primary" };
+  return { label: i18n._(msg`Open`), className: "text-brand" };
 }
 
 function PinButton({ pinned, onToggle, label }) {

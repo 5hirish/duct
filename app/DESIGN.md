@@ -154,7 +154,7 @@ component writes its own `.dark` rules, and new code must not start.
 Surfaces are dark grey, not black; elevation lightens; accents desaturate in
 dark (Material dark-theme guidance — the tokens already follow it).
 
-**Lifting a colour for dark means darkening its partner.** `--primary`,
+**Lifting a colour for dark means darkening its partner.** `--brand`,
 `--success` and `--warning` each pair a lifted dark-mode colour with a
 darkened `-foreground`; a `-foreground` left out of the `.dark` block does not
 fail loudly, it silently inherits the light-mode value written for a *dark*
@@ -163,10 +163,15 @@ coral at 2.89:1 while its three neighbours ran 7.8–9.9. Verify a new or
 changed token at `/preview/frame?scene=tokens&theme=dark`, which renders every
 pair with its live ratio — the whole reason it is a screen and not a comment.
 
-The accent rule: **one accent, used semantically.** `--primary` is the brand
-orange (the same value as `--brand`, white on it at 4.6:1; lifted with a dark
-partner in dark), and it marks the one primary action and the one hero card
-on a screen. Status colors are reserved for status — green means good
+The accent rule: **one accent, used semantically.** The brand orange marks
+the one primary action and the one hero card on a screen, through two tokens
+with two jobs. `--primary` is the **fill** (buttons, checks, tints, borders):
+the same orange in both themes with a white label, because the lighter orange
+with dark text that dark mode used to carry scored 7.3:1 in WCAG 2 and read
+muddy anyway (APCA Lc 53 against 76; 2026-11-03). `--brand` is the **text**
+(`text-brand`): equal to `--primary` in light, lifted in dark, where the fill
+is too dark to read as words. No single orange can be both in dark, so
+`check:contrast` holds the fill to 3:1 against the page and `--brand` to 4.5. Status colors are reserved for status — green means good
 movement, amber means waiting, red means destructive/failed, blue means
 moving — and every status color needs a non-color channel beside it (WCAG
 1.4.1 — the ▲/▼/sign on a delta is not optional). Use `bg-primary`; never
@@ -732,9 +737,11 @@ The tree, measured against this file. Fix each when a change touches it.
   fails the build on a new one. Four more tokens arrived with that sweep:
   `--info` (a state that is neither a win nor a problem), `--brand` (the brand
   orange at a lightness that can carry a 12px label — `--orange` stays the
-  literal `#ff5c00` for marks), `--control` (the 3:1 edge that says "this is a
+  literal `#ff5c00` for marks), `--control` (the edge that says "this is a
   field", split out of `--border`, which was doing both jobs at 1.27:1 and
-  therefore neither), and `--text-2xs` (11px, decoration only).
+  therefore neither; 3:1 at first, eased to about 2:1 on 2026-11-03 because
+  at 3:1 every field's outline out-shouted its text, with the label, the fill
+  and a 3:1 focus ring carrying the rest), and `--text-2xs` (11px, decoration only).
 - ~~**`ui/card` has zero importers**~~ **Closed 2026-11-02** with the page
   frame: `Card`, `PageHeader`, `Section`, `TileGrid` and `Textarea` exist and
   every routed screen uses them. Forty hand-rolled boxes remain inside

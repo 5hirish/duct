@@ -247,7 +247,7 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
             {/* chips */}
             <div className="flex flex-wrap items-center gap-1 pt-0.5">
               {pillar && (
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-2xs font-medium text-primary">{titleCase(pillar)}</span>
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-2xs font-medium text-brand">{titleCase(pillar)}</span>
               )}
               {format && (
                 <span className="rounded-full border border-border/70 px-2 py-0.5 text-2xs text-muted-foreground">{format}</span>

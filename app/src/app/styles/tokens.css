@@ -74,13 +74,19 @@
   /* Two different jobs, which is why one token could not do both. `--border`
      separates things that are already distinguishable — a card from the page,
      a row from the next row — and is decorative, so a whisper is correct.
-     `--control` is the edge that tells you *this is a field you can type in*,
-     which WCAG 1.4.11 puts at 3:1, and at 1.27:1 the old shared value was not
-     telling anybody anything. `--input` stays the fill behind a field and the
-     track behind a switch; it is a surface, not a boundary. */
+     `--control` is the edge that tells you *this is a field you can type in*.
+     At 1.27:1 the old shared value told nobody anything, so it went to the
+     3:1 WCAG 1.4.11 asks for, and at 3:1 every field on a form drew a bright
+     outline that out-shouted the text inside it ("too intense… focus is
+     scattered", 2026-11-03). It sits near 2:1 now, the band Apple's and
+     GitHub's fields use: every Duct field has a visible label above it and a
+     filled background, and the focused one gets the 3:1 ring. That is a
+     deliberate step below 1.4.11's letter, recorded in check-contrast.mjs.
+     `--input` stays the fill behind a field and the track behind a switch;
+     it is a surface, not a boundary. */
   --border: oklch(0.92 0.005 80);
   --input: oklch(0.92 0.005 80);
-  --control: oklch(0.62 0.012 80);
+  --control: oklch(0.79 0.008 80);
   --ring: oklch(0.62 0.17 45);
   /* Series colours clear 3:1 against the canvas so adjacent marks stay apart
      for a low-vision reader; the old `--chart-3`/`-5` sat at 2.6 and 1.9. */

@@ -151,7 +151,7 @@ function SidebarProjectSwitcher() {
         onClick={() => router.push("/projects")}
         className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
       >
-        <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+        <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-brand">
           <Plus className="size-4" />
         </span>
         <span className="flex-1 truncate font-medium text-sidebar-foreground group-data-[collapsible=icon]:hidden">
@@ -167,7 +167,7 @@ function SidebarProjectSwitcher() {
         <button className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
           <ProjectAvatar
             project={active}
-            wrapperClass="flex size-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary font-semibold text-xs"
+            wrapperClass="flex size-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-brand font-semibold text-xs"
             imgSize={16}
           />
           <span className="flex-1 truncate font-medium text-sidebar-foreground group-data-[collapsible=icon]:hidden">
@@ -185,7 +185,7 @@ function SidebarProjectSwitcher() {
               imgSize={14}
             />
             <span className="ml-2 truncate">{p.name}</span>
-            {p.id === activeId && <Check className="ml-auto size-3.5 text-primary" />}
+            {p.id === activeId && <Check className="ml-auto size-3.5 text-brand" />}
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
@@ -340,7 +340,7 @@ function ProfileMenuItem() {
           <Trans>Profile</Trans>
         </span>
         {set && (
-          <span className="rounded bg-primary/10 px-1.5 py-0.5 text-2xs font-medium text-primary">
+          <span className="rounded bg-primary/10 px-1.5 py-0.5 text-2xs font-medium text-brand">
             <Trans>Set</Trans>
           </span>
         )}
@@ -591,7 +591,7 @@ export default function AppSidebar() {
         <div className="flex items-center gap-2 px-4 py-3 group-data-[collapsible=icon]:hidden">
           <Link
             href="/insights/organic-growth"
-            className="inline-flex items-center gap-1.5 font-serif text-lg tracking-tight text-sidebar-foreground hover:text-primary transition-colors"
+            className="inline-flex items-center gap-1.5 font-serif text-lg tracking-tight text-sidebar-foreground hover:text-brand transition-colors"
           >
             {WORDMARK}
             <span
@@ -606,7 +606,7 @@ export default function AppSidebar() {
         <div className="hidden group-data-[collapsible=icon]:flex justify-center py-3">
           <Link
             href="/insights/organic-growth"
-            className="inline-flex items-end gap-0.5 font-serif text-xl font-bold tracking-tight text-sidebar-foreground hover:text-primary transition-colors leading-none"
+            className="inline-flex items-end gap-0.5 font-serif text-xl font-bold tracking-tight text-sidebar-foreground hover:text-brand transition-colors leading-none"
             aria-label={t`duct home`}
           >
             d
