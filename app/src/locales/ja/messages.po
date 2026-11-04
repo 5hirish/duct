@@ -88,6 +88,11 @@ msgstr "{0, plural, other {# 一致}}"
 msgid "{0, plural, one {# pull} other {# pulls}}"
 msgstr "{0, plural, other {# プル}}"
 
+#. placeholder {0}: results.length
+#: src/components/connections/ConnectorBrowser.jsx
+msgid "{0, plural, one {# source} other {# sources}}"
+msgstr "{0, plural, other {# ソース}}"
+
 #. placeholder {0}: items.length
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "{0, plural, one {Duct filed # older item away.} other {Duct filed # older items away.}}"
@@ -97,6 +102,16 @@ msgstr "{0, plural, other {Duct は # 件の古い項目を整理しました。
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "{0, plural, one {Duct noted this # time} other {Duct noted this # times}}"
 msgstr "{0, plural, other {Duct はこれを # 回記録しました}}"
+
+#. placeholder {0}: view.total
+#: src/components/connections/ConnectorBrowser.jsx
+msgid "{0, plural, one {Search # source} other {Search # sources}}"
+msgstr "{0, plural, other {# ソースを検索}}"
+
+#. placeholder {0}: more.length
+#: src/components/connections/McpConnectors.jsx
+msgid "{0, plural, one {Show # more from other publishers} other {Show # more from other publishers}}"
+msgstr "{0, plural, one {他のパブリッシャーからさらに#件表示} other {他のパブリッシャーからさらに#件表示}}"
 
 #. placeholder {0}: more.length
 #: src/components/insights/desk/DeskQueue.jsx
@@ -112,6 +127,11 @@ msgstr "{0, plural, other {すべて表示 #}}"
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "{0, plural, one {Working on # thing} other {Working on # things}}"
 msgstr "{0, plural, other {# 件の項目を処理中}}"
+
+#. placeholder {0}: res.tools
+#: src/components/connections/McpConnectDialog.jsx
+msgid "{0, plural, one {Working. # tool is ready for the insights chat.} other {Working. # tools are ready for the insights chat.}}"
+msgstr "{0, plural, one {動作中。#個のツールがインサイトチャットの準備ができました。} other {動作中。#個のツールがインサイトチャットの準備ができました。}}"
 
 #. placeholder {0}: item.copies
 #: src/components/insights/desk/DeskQueue.jsx
@@ -1306,6 +1326,10 @@ msgstr "これを <0>opencode.json</0> に追加してください。"
 msgid "Add your site"
 msgstr "サイトを追加"
 
+#: src/components/connections/ConnectorBrowser.jsx
+msgid "Added by you"
+msgstr "あなたが追加しました"
+
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Added to your {draftedName} project"
 msgstr "あなたの{draftedName}プロジェクトに追加されました"
@@ -1341,6 +1365,10 @@ msgstr "Ads は2,310件のコンバージョンをカウントしています。
 #: src/components/models/AdvancedSettings.jsx
 msgid "Advanced"
 msgstr "詳細設定"
+
+#: src/lib/connectorCatalog.js
+msgid "Advertising"
+msgstr "広告"
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Advice only, publish either way"
@@ -1417,6 +1445,7 @@ msgstr "すべて"
 
 #: src/app/(app)/activity/page.jsx
 #: src/app/(app)/artifacts/page.jsx
+#: src/components/connections/ConnectorBrowser.jsx
 #: src/components/content/PlanList.jsx
 #: src/components/memory/MemoryTimeline.jsx
 msgid "All"
@@ -1524,6 +1553,7 @@ msgid "analytics"
 msgstr "アナリティクス"
 
 #: src/components/content/AnalyticsView.jsx
+#: src/lib/connectorCatalog.js
 msgid "Analytics"
 msgstr "アナリティクス"
 
@@ -2088,6 +2118,18 @@ msgstr "スライドHTMLを作成中"
 msgid "Building your plan"
 msgstr "プランを作成中"
 
+#: src/components/connections/ConnectorBrowser.jsx
+msgid "Built by"
+msgstr "作成者"
+
+#: src/components/connections/ConnectorBrowser.jsx
+msgid "Built by anyone"
+msgstr "誰でも構築可能"
+
+#: src/components/connections/ConnectorBrowser.jsx
+msgid "Built by Duct"
+msgstr "Ductが作成"
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "business"
 msgstr "ビジネス"
@@ -2223,6 +2265,10 @@ msgstr "ナレーターを選定中…"
 msgid "casual, punchy"
 msgstr "カジュアル、パンチの効いた"
 
+#: src/components/connections/ConnectorBrowser.jsx
+msgid "Category"
+msgstr "カテゴリ"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "Category Scores"
 msgstr "カテゴリスコア"
@@ -2283,6 +2329,10 @@ msgstr "このアカウントでは現在ChatGPTへのサインインは利用�
 msgid "Check again"
 msgstr "再確認"
 
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Check connection"
+msgstr "接続を確認"
+
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Check connections"
 msgstr "接続を確認"
@@ -2322,6 +2372,7 @@ msgstr "招待を確認中…"
 #: src/components/ConnectionBanner.jsx
 #: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/InstanceProviderCard.jsx
+#: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/ProviderCard.jsx
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Checking…"
@@ -2383,6 +2434,10 @@ msgstr "Claude · 監査あたり数セント"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Clear"
 msgstr "クリア"
+
+#: src/components/connections/ConnectorBrowser.jsx
+msgid "Clear filters"
+msgstr "フィルターをクリア"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Clicks"
@@ -2630,6 +2685,7 @@ msgstr "PostBridgeでLinkedIn、X、TikTok、Instagram、またはYouTubeのア�
 
 #: src/app/(app)/connections/page.jsx
 #: src/app/(auth)/desktop-auth/page.js
+#: src/components/connections/ConnectorBrowser.jsx
 #: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/McpConnectors.jsx
@@ -2912,6 +2968,10 @@ msgstr "保存できませんでした。"
 msgid "Could only read the front page — the audit will use that"
 msgstr "フロントページのみ読み取れました — 監査ではそれを使用します"
 
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Couldn't check it. Try again in a moment."
+msgstr "確認できませんでした。しばらくしてからもう一度お試しください。"
+
 #: src/components/connections/McpConnectors.jsx
 msgid "Couldn't disconnect {name}. {why}"
 msgstr "{name} を切断できませんでした。{why}"
@@ -2967,6 +3027,10 @@ msgstr "Googleアカウントを読み取れませんでした"
 #: src/components/content/BrandContextForm.jsx
 msgid "Couldn't save. Please try again."
 msgstr "保存できませんでした。もう一度お試しください。"
+
+#: src/components/connections/McpConnectors.jsx
+msgid "Couldn't search the MCP Registry."
+msgstr "MCPレジストリを検索できませんでした。"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Couldn't use {name}"
@@ -3223,6 +3287,10 @@ msgstr "ブランドを説明"
 msgid "Deselect all ({selectedCount}/{approvableCount} selected)"
 msgstr "すべて選択解除（{selectedCount}/{approvableCount}件選択済み）"
 
+#: src/lib/connectorCatalog.js
+msgid "Design"
+msgstr "デザイン"
+
 #: src/app/(app)/execute/page.jsx
 #: src/components/execution/ChangeSetCard.jsx
 msgid "destructive"
@@ -3251,6 +3319,10 @@ msgstr "詳細"
 #: src/lib/userProfile.js
 msgid "Deutsch"
 msgstr "ドイツ語"
+
+#: src/lib/connectorCatalog.js
+msgid "Developer"
+msgstr "開発者"
 
 #: src/lib/userProfile.js
 msgid "Developer / Engineer"
@@ -3484,9 +3556,17 @@ msgstr "Duct {version} が利用可能です"
 msgid "Duct asks you before every call to a server added by address."
 msgstr "Ductは、アドレスで追加されたサーバーへのすべての呼び出しの前に確認します。"
 
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Duct asks you before every call to a server from the MCP Registry."
+msgstr "Ductは、MCP Registryからのサーバーへの呼び出しごとに確認を求めます。"
+
 #: src/app/(app)/connections/page.jsx
 msgid "Duct builds and maintains the built-in sources, and they feed briefs, alerts and the chat. MCP sources are each company’s own server; the chat calls their tools. <0>How MCP works</0>"
 msgstr "Duct は組み込みソースを構築・維持し、ブリーフ、アラート、チャットに情報を提供します。MCP ソースは各企業の独自のサーバーであり、チャットがそれらのツールを呼び出します。<0>MCP の仕組み</0>"
+
+#: src/lib/mcpServers.js
+msgid "Duct can no longer read its saved sign-in. Reconnect to use it again."
+msgstr "Ductは保存されたサインインを読み取れなくなりました。再度使用するには再接続してください。"
 
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Duct can’t call that address."
@@ -3914,6 +3994,10 @@ msgstr "{name} のすべてのメンバーは、そのレポート、監査、�
 msgid "Everything above still works. To grant the rest, choose Reconnect and tick them on Google’s consent screen."
 msgstr "上記はすべて引き続き機能します。残りを許可するには、「再接続」を選択し、Googleの同意画面でそれらにチェックを入れてください。"
 
+#: src/components/connections/ConnectorBrowser.jsx
+msgid "Everything else"
+msgstr "その他すべて"
+
 #: src/app/(app)/activity/page.jsx
 #~ msgid "Everything that changed on <0>{projectName}</0> — who proposed it, who approved it, what was applied or rolled back."
 #~ msgstr "<0>{projectName}</0>で変更されたすべての内容 — 誰が提案し、誰が承認し、何が適用またはロールバックされたか。"
@@ -4210,6 +4294,10 @@ msgstr "開始日"
 #: src/components/content/BrandContextForm.jsx
 msgid "From project context"
 msgstr "プロジェクトのコンテキストから"
+
+#: src/components/connections/McpConnectors.jsx
+msgid "From the MCP Registry"
+msgstr "MCP Registryから"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "From your files"
@@ -4783,6 +4871,10 @@ msgstr "アイデンティティ"
 msgid "If a stranger asked what you do, what would you say?"
 msgstr "もし見知らぬ人にあなたの仕事内容を尋ねられたら、何と答えますか？"
 
+#: src/components/connections/McpConnectDialog.jsx
+msgid "If it asks you to sign in, that happens in your browser and you come straight back here."
+msgstr "サインインを求められた場合、それはブラウザで行われ、すぐにここに戻ります。"
+
 #: src/components/insights/desk/DeskLists.jsx
 #: src/lib/contentEnums.js
 msgid "Image"
@@ -4922,9 +5014,25 @@ msgstr "請求"
 msgid "Issue distribution across all findings"
 msgstr "すべての指摘事項における問題の分布"
 
+#: src/lib/mcpServers.js
+msgid "It answered with an error the last time Duct called it. The next chat tries again, or check it now."
+msgstr "Ductが前回呼び出した際、エラーが返されました。次回のチャットで再試行するか、今すぐ確認してください。"
+
 #: src/components/settings/AgentConsent.jsx
 msgid "It can never"
 msgstr "決してできません"
+
+#: src/lib/mcpServers.js
+msgid "It connected without a sign-in and now asks for one. Reconnect to sign in."
+msgstr "サインインなしで接続されましたが、現在サインインを求めています。サインインするには再接続してください。"
+
+#: src/lib/mcpServers.js
+msgid "It didn't answer the last time Duct called it. The next chat tries again, or check it now."
+msgstr "Ductが前回呼び出した際、応答がありませんでした。次回のチャットで再試行するか、今すぐ確認してください。"
+
+#: src/components/connections/McpConnectDialog.jsx
+msgid "It didn't answer. Try again in a moment."
+msgstr "応答がありませんでした。しばらくしてからもう一度お試しください。"
 
 #: src/hooks/useAgentNotifications.js
 msgid "It has a question before it can continue."
@@ -4942,6 +5050,10 @@ msgstr "このブラウザからクリアされた可能性があります。"
 msgid "It reads your README and docs, shows you what it will send, then drafts the project. Review it in Duct afterwards; every field says where it came from."
 msgstr "READMEとドキュメントを読み込み、送信する内容を表示し、その後プロジェクトを下書きします。後でDuctで確認してください。各フィールドにはその情報源が記載されています。"
 
+#: src/lib/mcpServers.js
+msgid "It refused the saved API key. Reconnect with a new one to use it again."
+msgstr "保存されたAPIキーが拒否されました。新しいキーで再接続して、再度使用してください。"
+
 #: src/components/settings/AgentConsent.jsx
 msgid "It will be able to"
 msgstr "できるようになります"
@@ -4958,13 +5070,17 @@ msgstr "当方で記録されました。もう一度お試しください。引
 msgid "Italiano"
 msgstr "イタリア語"
 
+#: src/lib/mcpServers.js
+msgid "Its sign-in expired or was revoked, so Duct can't use it until you reconnect."
+msgstr "サインインの有効期限が切れたか、取り消されました。そのため、再接続するまでDuctは使用できません。"
+
 #: src/app/(auth)/desktop-auth/page.js
 msgid "Its sign-in finished, but it wouldn't hand over access. That's usually temporary. Try again from the app."
 msgstr "サインインは完了しましたが、アクセスを渡しませんでした。これは通常一時的なものです。アプリからもう一度お試しください。"
 
 #: src/components/connections/McpConnectDialog.jsx
-msgid "Its sign-in stopped working, so Duct can’t use it until you reconnect."
-msgstr "サインインが機能しなくなりました。そのため、再接続するまでDuctはそれを使用できません。"
+#~ msgid "Its sign-in stopped working, so Duct can’t use it until you reconnect."
+#~ msgstr "サインインが機能しなくなりました。そのため、再接続するまでDuctはそれを使用できません。"
 
 #: src/components/workspace/ContextRing.jsx
 msgid "Just compacted — recounted on the next call"
@@ -5015,6 +5131,10 @@ msgstr "保持されたもの:"
 #: src/app/(app)/connections/page.jsx
 msgid "Key ID"
 msgstr "キーID"
+
+#: src/lib/mcpServers.js
+msgid "Key refused"
+msgstr "キーが拒否されました"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Keys start with the prefix shown in the field. Copy it again from the console — most consoles show a key only once."
@@ -5464,16 +5584,20 @@ msgstr "MCP"
 
 #. placeholder {0}: source.publisher
 #: src/components/connections/ConnectorTile.jsx
-msgid "MCP · {0}"
-msgstr "MCP · {0}"
+#~ msgid "MCP · {0}"
+#~ msgstr "MCP · {0}"
+
+#: src/components/connections/ConnectorTile.jsx
+msgid "MCP · {publisher}"
+msgstr "MCP · {publisher}"
 
 #: src/components/connections/McpConnectors.jsx
 msgid "MCP connectors"
 msgstr "MCPコネクタ"
 
 #: src/app/(app)/connections/page.jsx
-msgid "MCP servers"
-msgstr "MCPサーバー"
+#~ msgid "MCP servers"
+#~ msgstr "MCPサーバー"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Measured"
@@ -5673,8 +5797,8 @@ msgid "More"
 msgstr "詳細"
 
 #: src/app/(app)/connections/page.jsx
-msgid "More sources"
-msgstr "その他のソース"
+#~ msgid "More sources"
+#~ msgstr "その他のソース"
 
 #: src/lib/modelTiers.js
 msgid "Most of what runs"
@@ -5736,10 +5860,22 @@ msgstr "ネーデルラント語"
 msgid "Needed only if the token lacks business_management (no account discovery)."
 msgstr "トークンにbusiness_managementがない場合（アカウント検出なし）にのみ必要です。"
 
+#: src/components/connections/McpConnectors.jsx
+msgid "Needs an update"
+msgstr "アップデートが必要です"
+
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Needs attention"
+msgstr "注意が必要です"
+
+#: src/components/connections/McpConnectors.jsx
+msgid "Needs attention · {reason}"
+msgstr "注意が必要です · {reason}"
+
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/McpConnectors.jsx
-msgid "Needs reconnecting"
-msgstr "再接続が必要です"
+#~ msgid "Needs reconnecting"
+#~ msgstr "再接続が必要です"
 
 #: src/lib/contentReview.js
 msgid "Needs work"
@@ -6088,6 +6224,11 @@ msgstr "結果が返されませんでした。別のハッシュタグを試す
 msgid "no schema"
 msgstr "スキーマなし"
 
+#. placeholder {0}: registry.query
+#: src/components/connections/McpConnectors.jsx
+msgid "No server run by its own publisher matches “{0}”."
+msgstr "独自のパブリッシャーによって運営されているサーバーで「{0}」に一致するものはありません。"
+
 #: src/components/connections/McpServerRow.jsx
 #~ msgid "No sign-in"
 #~ msgstr "サインインなし"
@@ -6177,6 +6318,7 @@ msgid "Not a key we can use"
 msgstr "使用できないキーです"
 
 #: src/components/connections/InstanceProviderCard.jsx
+#: src/lib/mcpServers.js
 msgid "Not answering"
 msgstr "応答なし"
 
@@ -6189,6 +6331,7 @@ msgid "Not confirmed yet"
 msgstr "未確認"
 
 #: src/app/(app)/connections/page.jsx
+#: src/components/connections/ConnectorBrowser.jsx
 #: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
@@ -6215,6 +6358,10 @@ msgstr "面白くない"
 #: src/app/(start)/start/page.jsx
 msgid "Not it — try another"
 msgstr "違います — 別のものを試してください"
+
+#: src/components/connections/ConnectorBrowser.jsx
+msgid "Not listed? Any remote MCP server connects by its address."
+msgstr "リストにありませんか？任意のリモートMCPサーバーは、そのアドレスで接続します。"
 
 #: src/lib/contentEnums.js
 msgid "Not my voice"
@@ -6323,9 +6470,18 @@ msgstr "変更はありませんでした。このタブを閉じることがで
 #~ msgid "Nothing checked yet."
 #~ msgstr "まだ何もチェックされていません。"
 
+#: src/components/connections/ConnectorBrowser.jsx
+msgid "Nothing connected yet."
+msgstr "まだ何も接続されていません。"
+
 #: src/components/content/PlanList.jsx
 msgid "Nothing discarded."
 msgstr "何も破棄されていません。"
+
+#. placeholder {0}: registry.query
+#: src/components/connections/McpConnectors.jsx
+msgid "Nothing else in the MCP Registry matches “{0}”."
+msgstr "MCP Registryで「{0}」に一致する他のものはありません。"
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Nothing from project memory is read into this session, and nothing it concludes is written back."
@@ -6346,6 +6502,10 @@ msgstr "まだあなたのキーで何も実行されていません"
 #: src/components/audit/AuditReportV1.jsx
 msgid "Nothing here"
 msgstr "ここには何もありません"
+
+#: src/components/connections/ConnectorBrowser.jsx
+msgid "Nothing here with these filters."
+msgstr "これらのフィルターでは何も見つかりません。"
 
 #: src/components/content/PlanKanban.jsx
 #~ msgid "Nothing here yet."
@@ -6370,6 +6530,10 @@ msgstr "あなたを待っているものはありません。"
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Nothing is wrong with the key. Give it a moment and verify again."
 msgstr "キーに問題はありません。しばらくお待ちいただき、もう一度確認してください。"
+
+#: src/components/connections/ConnectorBrowser.jsx
+msgid "Nothing matches “{query}”."
+msgstr "「{query}」に一致するものはありません。"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Nothing matches that filter."
@@ -6451,6 +6615,10 @@ msgstr "通知"
 msgid "now"
 msgstr "今"
 
+#: src/lib/mcpServers.js
+msgid "Now asks for a sign-in"
+msgstr "現在サインインを求めています"
+
 #: src/components/content/AnalyticsView.jsx
 msgid "Numbers arrive once posts go out through PostBridge and the accounts are linked."
 msgstr "投稿がPostBridgeを通じて公開され、アカウントがリンクされると、数値が表示されます。"
@@ -6466,6 +6634,10 @@ msgstr "デフォルトではオフです。Ductはここでバックエンド�
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Off to audit a competitor or another business."
 msgstr "競合他社や他のビジネスの監査に向かいます。"
+
+#: src/components/connections/McpConnectors.jsx
+msgid "Official"
+msgstr "公式"
 
 #: src/components/audit/AuditReport.jsx
 msgid "older version"
@@ -6826,6 +6998,7 @@ msgstr "組織設定 → サービスアカウント → 追加。Ductが読み�
 #: src/app/(app)/project/[projectId]/page.jsx
 #: src/components/models/UsagePanel.jsx
 #: src/components/workspace/QuestionsCard.jsx
+#: src/lib/connectorCatalog.js
 #: src/lib/usageApi.js
 #: src/lib/userProfile.js
 msgid "Other"
@@ -7231,9 +7404,9 @@ msgstr "主要なSEO目標"
 msgid "Print report"
 msgstr "レポートを印刷"
 
-#: src/lib/navigation.js
-#~ msgid "Product"
-#~ msgstr "プロダクト"
+#: src/lib/connectorCatalog.js
+msgid "Product"
+msgstr "プロダクト"
 
 #: src/lib/navigation.js
 #~ msgid "Product Intelligence"
@@ -7250,6 +7423,10 @@ msgstr "プロダクトページ"
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Product-led"
 msgstr "プロダクト主導"
+
+#: src/lib/connectorCatalog.js
+msgid "Productivity"
+msgstr "生産性"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Professional"
@@ -7912,9 +8089,17 @@ msgstr "結果"
 msgid "Retry"
 msgstr "再試行"
 
+#: src/lib/mcpServers.js
+msgid "Returning errors"
+msgstr "エラーを返しています"
+
 #: src/components/content/FormatLibrary.jsx
 msgid "Reusable post recipes the drafting agent pulls at generation time."
 msgstr "ドラフト作成エージェントが生成時に使用する、再利用可能な投稿レシピ。"
+
+#: src/lib/connectorCatalog.js
+msgid "Revenue"
+msgstr "収益"
 
 #: src/app/(app)/connections/page.jsx
 #: src/components/connections/logos.jsx
@@ -8096,6 +8281,24 @@ msgstr "貼り付けたキーで実行しています — このブラウザセ�
 #: src/lib/modelTiers.js
 msgid "Running on your saved key, the one that also funds scheduled runs."
 msgstr "保存済みのキーで実行しています。これはスケジュールされた実行にも資金を提供します。"
+
+#: src/components/connections/McpConnectors.jsx
+msgid "Runs at {site}"
+msgstr "{site}で実行されます"
+
+#: src/components/connections/McpConnectors.jsx
+msgid "Runs at {site} · needs an API key"
+msgstr "{site}で実行されます · APIキーが必要です"
+
+#. placeholder {0}: listing.host
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Runs at <0>{0}</0>, an address its publisher proved to the MCP Registry they own."
+msgstr "<0>{0}</0>で実行されています。これは、パブリッシャーがMCP Registryに所有権を証明したアドレスです。"
+
+#. placeholder {0}: listing.host
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Runs at <0>{0}</0>, which its publisher hasn’t shown they run. What Duct sends it, your sign-in included, goes to whoever does."
+msgstr "<0>{0}</0>で実行されていますが、パブリッシャーはそれが実行されていることを示していません。Ductが送信する情報（サインインを含む）は、実行している人物に送信されます。"
 
 #: src/components/connections/ProviderCard.jsx
 msgid "Runs GPT models on a plan you already pay for. Signing in opens your browser; Duct never sees your password or your chats."
@@ -8332,6 +8535,10 @@ msgstr "検索"
 msgid "Search {many}"
 msgstr "{many}を検索"
 
+#: src/lib/connectorCatalog.js
+msgid "Search & SEO"
+msgstr "検索とSEO"
+
 #: src/components/commands/CommandPalette.jsx
 msgid "Search commands"
 msgstr "コマンドを検索"
@@ -8360,6 +8567,10 @@ msgstr "メモリを検索…"
 msgid "Search queries, clicks, impressions and average position."
 msgstr "クエリ、クリック数、表示回数、平均掲載順位を検索します。"
 
+#: src/components/connections/ConnectorBrowser.jsx
+msgid "Search sources"
+msgstr "ソースを検索"
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "Searched memory"
 msgstr "メモリを検索しました"
@@ -8367,6 +8578,10 @@ msgstr "メモリを検索しました"
 #: src/components/workspace/ActivityRow.jsx
 msgid "Searched the web"
 msgstr "ウェブを検索"
+
+#: src/components/connections/McpConnectors.jsx
+msgid "Searching the MCP Registry"
+msgstr "MCP Registryを検索中"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Secondary color"
@@ -8688,6 +8903,10 @@ msgstr "{widest}日間表示"
 msgid "Show all"
 msgstr "すべて表示"
 
+#: src/components/connections/ConnectorBrowser.jsx
+msgid "Show all {count}"
+msgstr "すべて表示 {count}"
+
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Show changes"
 msgstr "変更を表示"
@@ -8861,6 +9080,10 @@ msgstr "接続するにはGoogleでサインイン"
 msgid "Sign in, and Duct asks you whether to allow it."
 msgstr "サインインすると、Ductが許可するかどうかを尋ねます。"
 
+#: src/lib/mcpServers.js
+msgid "Sign-in expired"
+msgstr "サインインの有効期限が切れました"
+
 #: src/app/(auth)/page.js
 msgid "Sign-in is unavailable on this deployment: no API endpoint is configured. If this is your install, set <0>NEXT_PUBLIC_API_BASE</0> and redeploy."
 msgstr "このデプロイではサインインは利用できません: APIエンドポイントが設定されていません。ご自身のインストールである場合、<0>NEXT_PUBLIC_API_BASE</0>を設定して再デプロイしてください。"
@@ -8872,6 +9095,10 @@ msgstr "サインインが設定されていません"
 #: src/app/(auth)/desktop-auth/page.js
 msgid "Sign-in link expired"
 msgstr "サインインリンクの有効期限が切れました"
+
+#: src/lib/mcpServers.js
+msgid "Sign-in lost"
+msgstr "サインインが失われました"
 
 #: src/components/GoogleAdsReport.js
 #: src/components/insight-blocks/SignalListBlock.jsx
@@ -9041,6 +9268,10 @@ msgstr "こちら側で問題が発生しました"
 msgid "Something interrupted the audit. Your site is fine — this was on our end."
 msgstr "監査が中断されました。サイトは問題ありません。これはこちら側の問題でした。"
 
+#: src/components/connections/ConnectorBrowser.jsx
+msgid "Something needs attention"
+msgstr "対応が必要です"
+
 #: src/components/settings/AgentConsent.jsx
 msgid "Something went wrong"
 msgstr "問題が発生しました"
@@ -9121,7 +9352,7 @@ msgstr "やり直す"
 #~ msgid "Start with a question"
 #~ msgstr "質問から始める"
 
-#: src/app/(app)/connections/page.jsx
+#: src/components/connections/ConnectorBrowser.jsx
 msgid "Start with these"
 msgstr "これらから始める"
 
@@ -9146,6 +9377,7 @@ msgid "Starting…"
 msgstr "開始中…"
 
 #: src/app/(app)/execute/page.jsx
+#: src/components/connections/ConnectorBrowser.jsx
 msgid "Status"
 msgstr "ステータス"
 
@@ -9779,6 +10011,10 @@ msgstr "コンテンツエージェントが作業の基盤とするトーン、
 msgid "The turn the model read was composed from these, on top of your message — the same way every run on this project starts."
 msgstr "モデルが読み込んだターンは、これらの情報とあなたのメッセージに基づいて構成されました。これは、このプロジェクトのすべての実行が開始される方法と同じです。"
 
+#: src/components/connections/ConnectorBrowser.jsx
+msgid "The vendor's MCP server"
+msgstr "ベンダーのMCPサーバー"
+
 #: src/lib/modelTiers.js
 msgid "The work you act on"
 msgstr "お客様が実行する作業"
@@ -9871,6 +10107,10 @@ msgstr "このコネクタは設定されていません"
 #: src/lib/agentSession.js
 msgid "This conversation no longer fits the model's context, even after summarising it. Start fresh, or pick a model with a bigger window."
 msgstr "この会話は、要約してもモデルのコンテキストに収まりません。新しく開始するか、より大きなウィンドウを持つモデルを選択してください。"
+
+#: src/components/connections/McpConnectors.jsx
+msgid "This copy of Duct is older than MCP servers. Update it to connect them."
+msgstr "このDuctはMCPサーバーより古いです。接続するにはアップデートしてください。"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "This device"
@@ -10003,6 +10243,10 @@ msgstr "このサーバーはDuctへのワンクリックサインインを提�
 msgid "This server is set up to run open models on Ollama, but Ollama isn’t answering or holds no model that can call tools."
 msgstr "このサーバーはOllamaでオープンモデルを実行するよう設定されていますが、Ollamaが応答していないか、ツールを呼び出せるモデルがありません。"
 
+#: src/components/connections/McpConnectDialog.jsx
+msgid "This server signs in with an API key rather than a one-click sign-in."
+msgstr "このサーバーはAPIキーでサインインします。ワンクリックサインインではありません。"
+
 #: src/components/workspace/ContextRing.jsx
 msgid "This session"
 msgstr "このセッション"
@@ -10100,8 +10344,8 @@ msgid "Tools from OpenSEO, PostHog and other apps, for the insights chat. Saved 
 msgstr "OpenSEO、PostHog、その他のアプリのツールで、インサイトチャット用です。アカウントに保存されます。"
 
 #: src/app/(app)/connections/page.jsx
-msgid "Tools from other companies’ own servers, for the chat. Pick one of these or paste the address of any remote MCP server."
-msgstr "チャット用の、他社サーバーのツール。これらから1つ選択するか、リモートMCPサーバーのアドレスを貼り付けてください。"
+#~ msgid "Tools from other companies’ own servers, for the chat. Pick one of these or paste the address of any remote MCP server."
+#~ msgstr "チャット用の、他社サーバーのツール。これらから1つ選択するか、リモートMCPサーバーのアドレスを貼り付けてください。"
 
 #: src/components/content/DiscoverPage.jsx
 msgid "Top + recent posts for hashtags you care about. Best for finding what's actually working in the niche."
@@ -10140,6 +10384,7 @@ msgid "Trials, renewals, refunds and MRR across the App Store and Play."
 msgstr "App StoreとPlay全体でのトライアル、更新、払い戻し、MRR。"
 
 #: src/components/AppErrorPanel.jsx
+#: src/components/connections/McpConnectors.jsx
 #: src/components/connections/ProviderCard.jsx
 #: src/components/LoadError.jsx
 msgid "Try again"
@@ -10921,7 +11166,7 @@ msgstr "作業中…"
 msgid "Working…"
 msgstr "作業中…"
 
-#: src/app/(app)/connections/page.jsx
+#: src/components/connections/ConnectorBrowser.jsx
 msgid "Worth adding next"
 msgstr "次に追加すべきもの"
 

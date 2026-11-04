@@ -326,10 +326,25 @@ export const McpAuth = Object.freeze({
   NONE: "none",
 });
 
-/** A server row's `status`. */
+/** A server row's `status`. Anything but CONNECTED needs attention, and the
+ *  row's `problem` says why (`McpProblem`). */
 export const McpServerStatus = Object.freeze({
   CONNECTED: "connected",
+  // Only the person can fix it: sign in again, or paste a new key.
   NEEDS_REAUTH: "needs_reauth",
+  // The server is down or answering with errors; Duct asks again next time.
+  FAILING: "failing",
+});
+
+/** A server row's `problem`: why it needs attention, recorded by the server
+ *  when a listing failed, cleared when a call works (service/mcp/store.py). */
+export const McpProblem = Object.freeze({
+  SIGNED_OUT: "signed_out",
+  KEY_REFUSED: "key_refused",
+  AUTH_REQUIRED: "auth_required",
+  UNREADABLE: "unreadable",
+  UNREACHABLE: "unreachable",
+  FAILING: "failing",
 });
 
 /** `error=` on the sign-in's return, coarse on purpose (it is in the URL). */
@@ -382,4 +397,25 @@ export async function claimMcpServer(code) {
 
 export function deleteMcpServer(id) {
   return authedRequest(`/api/user/mcp/servers/${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
+/**
+ * List a saved server's tools with what is saved. Resolves to `{ server,
+ * tools }`: `tools` is how many it offers, or null when it failed, and then
+ * `server.problem` says why. A vendor's refusal is not the Duct session's.
+ */
+export function checkMcpServer(id) {
+  return authedRequest(`/api/user/mcp/servers/${encodeURIComponent(id)}/check`, {
+    method: "POST",
+    retireSession: false,
+  });
+}
+
+/**
+ * Servers in the MCP Registry matching `query`, best first (see
+ * backend/service/mcp/registry.py). Resolves to `{ available, servers }`;
+ * `available` is false when this instance turned the search off.
+ */
+export function searchMcpRegistry(query) {
+  return authedRequest(`/api/user/mcp/registry?q=${encodeURIComponent(query)}`);
 }

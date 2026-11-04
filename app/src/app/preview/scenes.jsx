@@ -64,8 +64,11 @@ import ConnectorTile from "@/components/connections/ConnectorTile";
 import ManualConnectorCard from "@/components/connections/ManualConnectorCard";
 import OAuthConnectorCard from "@/components/connections/OAuthConnectorCard";
 import McpConnectDialog from "@/components/connections/McpConnectDialog";
-import McpConnectors from "@/components/connections/McpConnectors";
-import { NATIVE_SOURCE } from "@/lib/connectorSource";
+import McpConnectors, { useMcpConnectors } from "@/components/connections/McpConnectors";
+import { NATIVE_SOURCE, mcpSource } from "@/lib/connectorSource";
+import ConnectorBrowser, { NO_FILTERS, StatusTabs } from "@/components/connections/ConnectorBrowser";
+import { CATALOG_SCENARIOS, STARTERS as CATALOG_STARTERS, catalogScenario } from "@/lib/__fixtures__/connectorCatalogs.mjs";
+import { FIGMA_LISTINGS, GATEWAY_ONLY_LISTINGS, STRIPE_LISTINGS } from "@/lib/__fixtures__/mcpRegistry.mjs";
 import PauseCard from "@/components/workspace/PauseCard";
 import { AgentEvent } from "@/lib/agentEvents";
 import ProviderCard from "@/components/connections/ProviderCard";
@@ -649,6 +652,19 @@ const MCP_SERVERS = [
   }),
 ];
 
+// One server per reason the backend records (store.PROBLEM), so every
+// "Needs attention" line is on screen at once.
+const MCP_ATTENTION = [
+  mcpServer("openseo", { url: "https://app.openseo.so/mcp", name: "OpenSEO", preset: "openseo", auth: "key", status: "needs_reauth", problem: "key_refused", problem_at: "2026-11-01T08:12:00Z" }),
+  mcpServer("notion", { url: "https://mcp.notion.com/mcp", name: "Notion", preset: "notion", status: "needs_reauth", problem: "signed_out", problem_at: "2026-10-30T19:40:00Z" }),
+  mcpServer("linear", { url: "https://mcp.linear.app/mcp", name: "Linear", preset: "linear", status: "needs_reauth", problem: "unreadable" }),
+  mcpServer("posthog", { url: "https://mcp.posthog.com/mcp", name: "PostHog", preset: "posthog", status: "failing", problem: "unreachable", problem_at: "2026-11-02T03:05:00Z" }),
+  mcpServer("docs", { url: "https://mcp.docs-search.example.com/mcp", name: "Docs search", auth: "none", status: "needs_reauth", problem: "auth_required" }),
+  mcpServer("acme", { url: "https://mcp.acme-tools.example.com/mcp", name: "Acme CRM", status: "failing", problem: "failing" }),
+  // From a Duct older than recorded reasons: a status alone.
+  mcpServer("railway", { url: "https://mcp.railway.com", name: "Railway", preset: "railway", status: "needs_reauth" }),
+];
+
 // A run's connected-tool traffic as the recorder stores it: what the agent
 // asked each server, and what came back. Every outcome the row has words for.
 const MCP_TRAFFIC = [
@@ -795,6 +811,128 @@ function racingLoader() {
  * restart the load forever), and must start over on the next mount, or the
  * scene works once per page load and shows a finished desk ever after.
  */
+const CATALOG_TONE = { connected: "on", attention: "partial", available: "off" };
+const CATALOG_STATUS = { connected: "Connected", attention: "Needs reconnecting", available: "Not connected" };
+
+/** A fixture entry as the tile the page would draw for it. */
+function catalogTile(entry, extra = {}) {
+  return (
+    <ConnectorTile
+      key={entry.id}
+      logo={<EntityAvatar name={entry.logo} className="conn-favicon" />}
+      title={entry.title}
+      description={entry.description}
+      source={entry.origin === "duct" ? NATIVE_SOURCE : mcpSource(entry.publisher)}
+      tone={CATALOG_TONE[entry.status]}
+      status={CATALOG_STATUS[entry.status]}
+      onClick={() => {}}
+      {...extra}
+    />
+  );
+}
+
+/** One generated catalogue through the real browser, search and filters live. */
+function CatalogScenario({ id, initialFilters }) {
+  const entries = useMemo(
+    () => catalogScenario(id).map((e) => ({ ...e, render: () => catalogTile(e) })),
+    [id],
+  );
+  const byId = useMemo(() => Object.fromEntries(entries.map((e) => [e.id, e])), [entries]);
+  const [filters, setFilters] = useState({ ...NO_FILTERS, ...initialFilters });
+  return (
+    <div className="flex flex-col gap-10">
+      {/* The tabs sit in the page header's actions on the real page. */}
+      <div className="flex justify-end">
+        <StatusTabs entries={entries} filters={filters} onFiltersChange={setFilters} />
+      </div>
+      <ConnectorBrowser
+        entries={entries}
+        filters={filters}
+        onFiltersChange={setFilters}
+        featured={CATALOG_STARTERS}
+        renderFeatured={(fid) => catalogTile(byId[fid], { featured: true, benefit: byId[fid].description })}
+        trailing={
+          <ConnectorTile
+            key="add"
+            logo={<Plus className="mcp-add-icon" aria-hidden="true" />}
+            title="Any MCP server"
+            source={mcpSource("")}
+            description="Paste the address of any remote MCP server."
+            status="Add by address"
+            onClick={() => {}}
+          />
+        }
+      />
+    </div>
+  );
+}
+
+/**
+ * The Connections search with the MCP Registry asked too, over a stub that
+ * answers like `GET /api/user/mcp/registry`: `answer` is "results" (the
+ * fixture matching the query), "gateways", "failed", "off" or "slow". A
+ * connect with a key saves on the spot; Figma's without one waits on the
+ * browser; anything else connects as an open server would. Either way the
+ * server leaves the registry's section for the catalogue's results.
+ */
+function RegistryScenario({ id = "today", query, answer = "results", servers = MCP_NONE }) {
+  const [message, setMessage] = useState({});
+  const entries = useMemo(
+    () => catalogScenario(id).map((e) => ({ ...e, render: () => catalogTile(e) })),
+    [id],
+  );
+  const byId = useMemo(() => Object.fromEntries(entries.map((e) => [e.id, e])), [entries]);
+  const [filters, setFilters] = useState({ ...NO_FILTERS, query });
+  const api = useMemo(() => {
+    let rows = [...servers];
+    return {
+      listPresets: async () => MCP_PRESETS,
+      listServers: async () => rows,
+      systemBrowser: async () => true,
+      openSignIn: async () => "browser",
+      claim: async () => null,
+      remove: async (sid) => {
+        rows = rows.filter((r) => r.id !== sid);
+      },
+      check: async () => ({ server: rows[0], tools: 3 }),
+      searchRegistry: async (q) => {
+        if (answer === "slow") return new Promise(() => {});
+        await new Promise((r) => setTimeout(r, 400));
+        if (answer === "failed") throw new Error("The MCP Registry didn't answer in time.");
+        if (answer === "off") return { available: false, servers: [] };
+        if (answer === "gateways") return { available: true, servers: GATEWAY_ONLY_LISTINGS };
+        const all = [...STRIPE_LISTINGS, ...FIGMA_LISTINGS];
+        const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+        const found = all.filter((l) => words.every((w) => `${l.name} ${l.title} ${l.description}`.toLowerCase().includes(w)));
+        return { available: true, servers: found };
+      },
+      connect: async ({ url, name, apiKey }) => {
+        await new Promise((r) => setTimeout(r, 500));
+        if (!apiKey && url.includes("figma")) return { status: "authorize", authorize_url: "https://example.com/authorize" };
+        const server = mcpServer(`reg-${rows.length}`, { url, name, auth: apiKey ? "key" : "none" });
+        rows = [...rows.filter((r) => r.url !== url), server];
+        return { status: "connected", server };
+      },
+    };
+  }, [servers, answer]);
+  const mcp = useMcpConnectors({ signedIn: true, search: filters.query, api, onMessage: setMessage });
+  return (
+    <div className="flex flex-col gap-10">
+      <McpMessage message={message} />
+      <ConnectorBrowser
+        entries={[...entries, ...mcp.entries]}
+        filters={filters}
+        onFiltersChange={setFilters}
+        featured={CATALOG_STARTERS}
+        renderFeatured={(fid) => catalogTile(byId[fid], { featured: true, benefit: byId[fid].description })}
+        trailing={mcp.phase === "ready" ? mcp.addTile() : mcp.placeholder}
+        moreResults={mcp.registry}
+      />
+      {mcp.overlays}
+    </div>
+  );
+}
+
 /** One generated plan through the real board view, every control live. */
 function PlanScenario({ id, view = PlanView.LIST }) {
   const today = useMemo(() => startOfDay(new Date()), []);
@@ -2007,6 +2145,14 @@ export const SCENES = [
     render: () => <McpScene servers={MCP_SERVERS} answer="needs_key" />,
   },
   {
+    id: "mcp-servers-attention",
+    state: "one server per reason it needs attention",
+    group: "McpConnectors",
+    title: "MCP connectors that need attention",
+    note: "Every reason the server records, on its tile as Needs attention · <reason> in amber: a refused key, an expired sign-in, a sign-in Duct can no longer read, a server not answering, one that now asks for a sign-in, one returning errors, and Railway, from an older Duct that sends a status and no reason (it reads as an expired sign-in). Open any: the dialog says the whole reason and what fixes it. Check connection on PostHog or Acme answers Working with a tool count and the tile goes green; on the others it says the reason again, because only reconnecting fixes a sign-in. OpenSEO opens with its key field showing.",
+    render: () => <McpScene servers={MCP_ATTENTION} answer="needs_key" />,
+  },
+  {
     id: "mcp-servers-needs-key",
     state: "the server asks for a key",
     group: "McpConnectors",
@@ -2133,6 +2279,72 @@ export const SCENES = [
     note: `${scenario.expect} Switch to Kanban and Calendar from the toolbar; sweep the frame from phone to wide.`,
     render: () => <PlanScenario id={scenario.id} />,
   })),
+  // The Connections catalogue at every size it has to hold, from
+  // lib/__fixtures__/connectorCatalogs.mjs, the sets the catalogue tests
+  // arrange. Type, pick a chip, open the two menus: all of it is live.
+  ...CATALOG_SCENARIOS.map((scenario) => ({
+    id: `catalog-${scenario.id}`,
+    state: scenario.title,
+    group: "Connections catalogue",
+    title: `Connections — ${scenario.title}`,
+    note: `${scenario.expect} Press / to search.`,
+    render: () => <CatalogScenario id={scenario.id} />,
+  })),
+  {
+    id: "catalog-connected-tab",
+    state: "Connected tab",
+    group: "Connections catalogue",
+    title: "Connections — the Connected tab",
+    note: "Only what this account has, the source needing attention first, with the amber dot on the tab saying so. No starters and no Any MCP server tile here.",
+    render: () => <CatalogScenario id="hundreds" initialFilters={{ status: "connected" }} />,
+  },
+  {
+    id: "catalog-search",
+    state: "searching \"ads\"",
+    group: "Connections catalogue",
+    title: "Connections — a search",
+    note: "Results ranked: titles that start with the words first, then a word of the title, the vendor and keywords, then the description. The category name counts, so \"advertising\" lists the ads. Chips keep their counts for this search.",
+    render: () => <CatalogScenario id="hundreds" initialFilters={{ query: "ads" }} />,
+  },
+  {
+    id: "mcp-registry-results",
+    state: "searching \"stripe\"",
+    group: "MCP Registry",
+    title: "Connections — a search that reaches the MCP Registry",
+    note: "The catalogue's own Stripe first, then From the MCP Registry: Stripe's own server tagged Official, then the servers whose publishers run their address, each badge naming the site it runs at. Two gateways wait behind Show 2 more from other publishers. Open Stripe Reports: the registry says it takes a key, so the key field is open with the publisher's line about it and a link to its site. Open Stripe and Connect: it saves, and moves up into the catalogue's results as Added by you. Open a gateway after Show more: an amber note says nobody has shown they run that address.",
+    render: () => <RegistryScenario query="stripe" />,
+  },
+  {
+    id: "mcp-registry-figma",
+    state: "nothing local, Figma's own server in the registry",
+    group: "MCP Registry",
+    title: "Connections — the registry finds what the catalogue doesn't",
+    note: "Nothing in the catalogue matches figma, so the way in by address stays, and the registry's section follows with Figma's own server, Official. Connect waits on the browser the way a desktop sign-in does.",
+    render: () => <RegistryScenario query="figma" />,
+  },
+  {
+    id: "mcp-registry-edges",
+    state: "only gateways · searching · failed · nothing found",
+    group: "MCP Registry",
+    title: "The registry's section, when it has little to say",
+    note: "Only gateways: a line says nothing run by its publisher matched, and the button reveals them. Searching holds three tile shapes. A failed search says so with Try again, and never blocks the catalogue's results above it. Nothing found says so in one line. A Duct with the search turned off shows no section at all (not drawn here).",
+    render: () => (
+      <div className="flex flex-col gap-16">
+        <RegistryScenario query="stripe" answer="gateways" />
+        <RegistryScenario query="google ads" answer="slow" />
+        <RegistryScenario query="hubspot" answer="failed" />
+        <RegistryScenario query="hubspot" />
+      </div>
+    ),
+  },
+  {
+    id: "catalog-nothing-found",
+    state: "no match",
+    group: "Connections catalogue",
+    title: "Connections — nothing matches",
+    note: "Says what was searched, offers to clear, and the way in for anything unlisted: any MCP server by its address.",
+    render: () => <CatalogScenario id="today" initialFilters={{ query: "hubspot" }} />,
+  },
   ...["ended-nothing-posted", "mid-month", "long-and-foreign"].map((id) => ({
     id: `plan-scenario-${id}-kanban`,
     state: "Kanban",
@@ -3588,6 +3800,16 @@ function McpScene({ servers, answer, signedIn = true }) {
       claim: async () => null,
       remove: async (id) => {
         rows = rows.filter((r) => r.id !== id);
+      },
+      // A server that was only down answers now; a sign-in or key problem
+      // is still there, because only reconnecting fixes those.
+      check: async (id) => {
+        await new Promise((r) => setTimeout(r, 600));
+        const row = rows.find((r) => r.id === id);
+        const fixed = !row?.status || row.status === "connected" || row.status === "failing";
+        const server = fixed ? { ...row, status: "connected", problem: "", problem_at: null } : row;
+        rows = rows.map((r) => (r.id === id ? server : r));
+        return { server, tools: fixed ? 4 : null };
       },
       connect: async ({ preset, url, name, apiKey }) => {
         await new Promise((r) => setTimeout(r, 500));
