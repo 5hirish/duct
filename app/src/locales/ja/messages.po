@@ -419,8 +419,12 @@ msgid "{label} doesn't publish comments. The post goes out alone; paste your fir
 msgstr "{label}ではコメントは公開されません。投稿は単独で公開されるので、公開後に最初のコメントをその下に貼り付けてください。"
 
 #: src/components/insights/ConnectionRequest.jsx
-msgid "{label} needs an API key rather than a sign-in. Add it on the <0>Connections page</0>, then tell Duct to carry on."
-msgstr "{label} はサインインではなくAPIキーが必要です。<0>接続ページ</0>で追加し、Ductに続行を指示してください。"
+msgid "{label} needs an API key rather than a sign-in. Add it in the <0>Toolbox</0>, then tell Duct to carry on."
+msgstr "{label}はサインインではなくAPIキーが必要です。<0>ツールボックス</0>で追加し、Ductに続行を指示してください。"
+
+#: src/components/insights/ConnectionRequest.jsx
+#~ msgid "{label} needs an API key rather than a sign-in. Add it on the <0>Connections page</0>, then tell Duct to carry on."
+#~ msgstr "{label} はサインインではなくAPIキーが必要です。<0>接続ページ</0>で追加し、Ductに続行を指示してください。"
 
 #: src/components/content/TextPostEditor.jsx
 msgid "{label} only publishes the first reply. Post this one yourself."
@@ -1023,8 +1027,12 @@ msgid "A clearer brief produces sharper content. Skip if you'd rather Duct decid
 msgstr "より明確なブリーフは、よりシャープなコンテンツを生み出します。Ductに任せる場合はスキップしてください。"
 
 #: src/lib/agentSession.js
-msgid "A connected account doesn't have access to that data. Check its permissions under Connections."
-msgstr "接続済みアカウントにはそのデータへのアクセス権がありません。接続設定で権限を確認してください。"
+msgid "A connected account doesn't have access to that data. Check its permissions in the Toolbox."
+msgstr "接続済みのアカウントにはそのデータへのアクセス権がありません。ツールボックスで権限を確認してください。"
+
+#: src/lib/agentSession.js
+#~ msgid "A connected account doesn't have access to that data. Check its permissions under Connections."
+#~ msgstr "接続済みアカウントにはそのデータへのアクセス権がありません。接続設定で権限を確認してください。"
 
 #: src/lib/agentSession.js
 msgid "A connected account needs reconnecting before the agent can read it."
@@ -2334,8 +2342,8 @@ msgid "Check connection"
 msgstr "接続を確認"
 
 #: src/components/insights/InsightsWorkspace.jsx
-msgid "Check connections"
-msgstr "接続を確認"
+#~ msgid "Check connections"
+#~ msgstr "接続を確認"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Check the connection. Behind a corporate proxy, Duct respects HTTPS_PROXY."
@@ -2748,8 +2756,8 @@ msgstr "接続リンクの有効期限が切れました"
 #: src/app/(app)/connections/page.jsx
 #: src/components/AppNav.jsx
 #: src/lib/navigation.js
-msgid "Connections"
-msgstr "接続"
+#~ msgid "Connections"
+#~ msgstr "接続"
 
 #: src/components/AppSidebar.jsx
 #~ msgid "Connections — add a source"
@@ -6802,12 +6810,12 @@ msgid "Open chat"
 msgstr "チャットを開く"
 
 #: src/components/workspace/AgentChat.jsx
-msgid "Open connections"
-msgstr "接続を開く"
+#~ msgid "Open connections"
+#~ msgstr "接続を開く"
 
 #: src/components/workspace/AgentChat.jsx
-msgid "Open connections →"
-msgstr "接続を開く →"
+#~ msgid "Open connections →"
+#~ msgstr "接続を開く →"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Open Discover"
@@ -6861,6 +6869,15 @@ msgstr "プロジェクトタイムラインを開く"
 #: src/hooks/useAgentNotifications.js
 msgid "Open the tab to see what happened and what to do."
 msgstr "何が起こったか、どうすればよいかを確認するにはタブを開いてください。"
+
+#: src/components/insights/InsightsWorkspace.jsx
+#: src/components/workspace/AgentChat.jsx
+msgid "Open the Toolbox"
+msgstr "ツールボックスを開く"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Open the Toolbox →"
+msgstr "ツールボックスを開く →"
 
 #: src/components/connections/McpConnectors.jsx
 msgid "Open to try again"
@@ -10338,6 +10355,12 @@ msgstr "トークン"
 #: src/components/content/BrandContextForm.jsx
 msgid "Tone"
 msgstr "トーン"
+
+#: src/app/(app)/connections/page.jsx
+#: src/components/AppNav.jsx
+#: src/lib/navigation.js
+msgid "Toolbox"
+msgstr "ツールボックス"
 
 #: src/components/connections/McpConnectors.jsx
 msgid "Tools from OpenSEO, PostHog and other apps, for the insights chat. Saved to your account."

@@ -119,8 +119,8 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
     `lib/voiceRules.js`) save into `content_brand`; the rules are stored only
     once changed, so an untouched project keeps following Duct's defaults
   - `execute/` — change-set review queue: diffs, approve, apply, roll back
-  - `connections/` — connector/integration management, as one searchable
-    catalogue of native connectors and MCP servers
+  - `connections/` — the **Toolbox**: one searchable catalogue of native
+    connectors and MCP servers
     (`components/connections/ConnectorBrowser.jsx` over
     `lib/connectorCatalog.js`). A new native connector needs a category in
     `NATIVE_CATEGORY`, a new MCP preset one in `MCP_CATEGORY`; without it the
@@ -129,7 +129,10 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
     (`useMcpConnectors`' `registry`, through `ConnectorBrowser`'s
     `moreResults`), never entries in it: they are not ours to file or rank.
     A connected server that needs attention says why on its tile, from the
-    `problem` the server recorded (`lib/mcpServers.js`, `PROBLEM_SHORT`)
+    `problem` the server recorded (`lib/mcpServers.js`, `PROBLEM_SHORT`).
+    It was called Connections until November 2026; the route kept the old
+    name because every OAuth callback and the desktop shell's deep link land
+    on `/connections`, and a rename would break connects already in flight
   - `artifacts/` + `[artifactId]/`, `activity/`, `usage/`, `memory/` — the
     library, the cross-agent feed, usage, and user-level memory
   - `settings/models/` + `settings/profile/` — tiers, providers, usage; profile

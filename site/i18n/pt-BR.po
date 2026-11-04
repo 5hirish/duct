@@ -2066,11 +2066,6 @@ msgstr ""
 "Metas, decisões e o que aprendeu, em uma linha do tempo que você pode corrigir."
 
 #. img alt
-#: download.html index.html
-msgid "The Connections page with twelve tools, five of them connected"
-msgstr "A página de Conexões com doze ferramentas, cinco delas conectadas"
-
-#. img alt
 #: download.html
 msgid ""
 "The Duct desktop app: an insights session with a proposed change waiting for approval on the left, the brief it wrote on the right"
@@ -2083,6 +2078,11 @@ msgid ""
 "The Memory timeline: a CPA target, a decision, an event, and what the agent learned this week"
 msgstr ""
 "A linha do tempo da Memória: uma meta de CPA, uma decisão, um evento e o que o agente aprendeu esta semana"
+
+#. img alt
+#: download.html index.html
+msgid "The Toolbox with twelve tools, five of them connected"
+msgstr "A Caixa de ferramentas com doze ferramentas, cinco delas conectadas"
 
 #: download.html
 msgid ""
@@ -3747,9 +3747,9 @@ msgstr "Quantas instalações vieram de um toque, e quantas de uma visualizaçã
 
 #: integrations/apple-search-ads.html
 msgid ""
-"In Duct, open Connections, choose Apple Search Ads and paste the three IDs and the private key."
+"In Duct, open the Toolbox, choose Apple Search Ads and paste the three IDs and the private key."
 msgstr ""
-"No Duct, abra Conexões, escolha Apple Search Ads e cole os três IDs e a chave privada."
+"No Duct, abra a Caixa de ferramentas, escolha Apple Search Ads e cole os três IDs e a chave privada."
 
 #. meta twitter:description
 #: integrations/apple-search-ads.html
@@ -4050,8 +4050,8 @@ msgstr ""
 "Toda plataforma de anúncios informa conversões que atribui a si mesma. O Duct as reconcilia com o Stripe, nunca umas contra as outras."
 
 #: integrations/chatgpt-ads.html
-msgid "In Duct, open Connections, choose OpenAI Ads and paste the key."
-msgstr "No Duct, abra Conexões, escolha OpenAI Ads e cole a chave."
+msgid "In Duct, open the Toolbox, choose OpenAI Ads and paste the key."
+msgstr "No Duct, abra a Caixa de ferramentas, escolha OpenAI Ads e cole a chave."
 
 #: integrations/chatgpt-ads.html
 msgid ""
@@ -4348,8 +4348,8 @@ msgstr ""
 "Google Analytics Data API (ga4-data-v1beta) · campos auditados em 24 de setembro de 2026 · <0>ler a fonte</0>"
 
 #: integrations/ga4.html
-msgid "In Duct, open Connections and choose Google Analytics."
-msgstr "No Duct, abra Conexões e escolha Google Analytics."
+msgid "In Duct, open the Toolbox and choose Google Analytics."
+msgstr "No Duct, abra a Caixa de ferramentas e escolha Google Analytics."
 
 #: integrations/ga4.html
 msgid "Link Google Ads account to GA4"
@@ -4685,8 +4685,8 @@ msgstr ""
 "Se alguém alterar o orçamento, lance ou status depois que você aprovou, o Duct se recusa a aplicar sobre isso."
 
 #: integrations/google-ads.html
-msgid "In Duct, open Connections and choose Google Ads."
-msgstr "No Duct, abra Conexões e escolha Google Ads."
+msgid "In Duct, open the Toolbox and choose Google Ads."
+msgstr "No Duct, abra a Caixa de ferramentas e escolha Google Ads."
 
 #: integrations/google-ads.html
 msgid ""
@@ -4903,8 +4903,8 @@ msgstr ""
 "Impressões aumentaram, testes estáveis? Duct lê consulta por página do Search Console ao lado do GA4 e encontra as consultas para as quais você ranqueia e não converte."
 
 #: integrations/google-search-console.html
-msgid "In Duct, open Connections and choose Google Search Console."
-msgstr "No Duct, abra Conexões e escolha Google Search Console."
+msgid "In Duct, open the Toolbox and choose Google Search Console."
+msgstr "No Duct, abra a Caixa de ferramentas e escolha Google Search Console."
 
 #: integrations/google-search-console.html
 msgid "Is organic growth real, or bots?"
@@ -5173,8 +5173,8 @@ msgid "How does rollback work?"
 msgstr "Como funciona a reversão?"
 
 #: integrations/google-tag-manager.html
-msgid "In Duct, open Connections and choose Google Tag Manager."
-msgstr "No Duct, abra Conexões e escolha Google Tag Manager."
+msgid "In Duct, open the Toolbox and choose Google Tag Manager."
+msgstr "No Duct, abra a Caixa de ferramentas e escolha Google Tag Manager."
 
 #: integrations/google-tag-manager.html
 msgid "Is the tag firing, or firing the wrong thing?"
@@ -5456,8 +5456,9 @@ msgstr ""
 
 #: integrations/growthbook.html
 msgid ""
-"In Duct, open Connections, choose GrowthBook and paste the key and the project ID."
-msgstr "No Duct, abra Conexões, escolha GrowthBook e cole a chave e o ID do projeto."
+"In Duct, open the Toolbox, choose GrowthBook and paste the key and the project ID."
+msgstr ""
+"No Duct, abra a Caixa de ferramentas, escolha GrowthBook e cole a chave e o ID do projeto."
 
 #: integrations/growthbook.html
 msgid "In GrowthBook, open Settings, then API Keys, and create a read-only key."
@@ -5901,8 +5902,8 @@ msgid "How much of Meta's credit comes from views, not clicks?"
 msgstr "Quanto do crédito do Meta vem de visualizações, não de cliques?"
 
 #: integrations/meta-ads.html
-msgid "In Duct, open Connections, choose Meta Ads and paste the token."
-msgstr "No Duct, abra Conexões, escolha Meta Ads e cole o token."
+msgid "In Duct, open the Toolbox, choose Meta Ads and paste the token."
+msgstr "No Duct, abra a Caixa de ferramentas, escolha Meta Ads e cole o token."
 
 #: integrations/meta-ads.html
 msgid ""
@@ -6197,8 +6198,9 @@ msgstr ""
 "No Clarity, abra Configurações, depois Exportação de Dados, e gere um token de API."
 
 #: integrations/microsoft-clarity.html
-msgid "In Duct, open Connections, choose Microsoft Clarity and paste the token."
-msgstr "No Duct, abra Conexões, escolha Microsoft Clarity e cole o token."
+msgid "In Duct, open the Toolbox, choose Microsoft Clarity and paste the token."
+msgstr ""
+"No Duct, abra a Caixa de ferramentas, escolha Microsoft Clarity e cole o token."
 
 #. meta twitter:description
 #: integrations/microsoft-clarity.html
@@ -6385,8 +6387,8 @@ msgid "How many signups carry no campaign at all?"
 msgstr "Quantos cadastros não têm nenhuma campanha?"
 
 #: integrations/mixpanel.html
-msgid "In Duct, open Connections, choose Mixpanel and paste them."
-msgstr "No Duct, abra Conexões, escolha Mixpanel e cole-os."
+msgid "In Duct, open the Toolbox, choose Mixpanel and paste them."
+msgstr "No Duct, abra a Caixa de ferramentas, escolha Mixpanel e cole-os."
 
 #: integrations/mixpanel.html
 msgid ""
@@ -6673,8 +6675,8 @@ msgid "How many trials are active right now?"
 msgstr "Quantos testes estão ativos agora?"
 
 #: integrations/revenuecat.html
-msgid "In Duct, open Connections, choose RevenueCat and paste the key."
-msgstr "No Duct, abra Conexões, escolha RevenueCat e cole a chave."
+msgid "In Duct, open the Toolbox, choose RevenueCat and paste the key."
+msgstr "No Duct, abra a Caixa de ferramentas, escolha RevenueCat e cole a chave."
 
 #: integrations/revenuecat.html
 msgid ""
@@ -6949,9 +6951,9 @@ msgstr "Quantos clientes pagantes os anúncios pagos trouxeram este mês?"
 
 #: integrations/stripe.html
 msgid ""
-"In Duct, open Connections, choose Stripe and paste the key. Duct checks each permission and names any that is missing."
+"In Duct, open the Toolbox, choose Stripe and paste the key. Duct checks each permission and names any that is missing."
 msgstr ""
-"No Duct, abra Conexões, escolha Stripe e cole a chave. O Duct verifica cada permissão e nomeia qualquer uma que esteja faltando."
+"No Duct, abra a Caixa de ferramentas, escolha Stripe e cole a chave. O Duct verifica cada permissão e lista as que estão faltando."
 
 #: integrations/stripe.html
 msgid "In Stripe, open Developers, then API keys, and create a restricted key."
@@ -7229,9 +7231,9 @@ msgstr "Como conectar um servidor"
 
 #: mcp.html
 msgid ""
-"In the Duct app, open Connections. The ready-made servers are listed there, and any other connects by its address."
+"In the Duct app, open the Toolbox. The ready-made servers are listed there, and any other connects by its address."
 msgstr ""
-"No app do Duct, abra Conexões. Os servidores prontos estão listados lá, e qualquer outro se conecta pelo seu endereço."
+"No app do Duct, abra a Caixa de ferramentas. Os servidores prontos estão listados lá, e qualquer outro se conecta pelo seu endereço."
 
 #: mcp.html
 msgid "It says “Duct only connects to servers on the public internet”"
@@ -7292,8 +7294,8 @@ msgstr ""
 "Entrar com um clique quando o servidor publica a descoberta OAuth e aceita um documento de metadados do cliente ou permite o registro dinâmico de clientes."
 
 #: mcp.html
-msgid "Open Connections"
-msgstr "Abrir Conexões"
+msgid "Open the Toolbox"
+msgstr "Abrir a Caixa de ferramentas"
 
 #: mcp.html
 msgid "OpenSEO"
@@ -7317,9 +7319,9 @@ msgstr "Escolha um servidor ou cole o endereço"
 
 #: mcp.html
 msgid ""
-"Pick one on Connections and sign in with the account you already have. Each address is here for reference; you never have to type it."
+"Pick one in the Toolbox and sign in with the account you already have. Each address is here for reference; you never have to type it."
 msgstr ""
-"Escolha um em Conexões e entre com a conta que você já tem. Cada endereço está aqui para referência; você nunca precisa digitá-lo."
+"Escolha um na Caixa de ferramentas e entre com a conta que você já tem. Cada endereço está aqui para referência; você nunca precisa digitá-lo."
 
 #. meta og:description
 #: mcp.html
@@ -7408,15 +7410,15 @@ msgstr ""
 
 #: mcp.html
 msgid ""
-"The server offers no sign-in Duct can use. Create an API key in the vendor's settings and paste it on Connections."
+"The server offers no sign-in Duct can use. Create an API key in the vendor's settings and paste it in the Toolbox."
 msgstr ""
-"O servidor não oferece um entrar que o Duct possa usar. Crie uma chave de API nas configurações do fornecedor e cole-a em Conexões."
+"O servidor não oferece um login que o Duct possa usar. Crie uma chave de API nas configurações do fornecedor e cole-a na Caixa de ferramentas."
 
 #: mcp.html
 msgid ""
-"The sign-in expired, or was revoked on the vendor's side. Press Reconnect on Connections and sign in again."
+"The sign-in expired, or was revoked on the vendor's side. Press Reconnect in the Toolbox and sign in again."
 msgstr ""
-"O entrar expirou ou foi revogado no lado do fornecedor. Pressione Reconectar em Conexões e entre novamente."
+"O login expirou ou foi revogado pelo fornecedor. Pressione Reconectar na Caixa de ferramentas e entre novamente."
 
 #: mcp.html
 msgid ""
@@ -8361,9 +8363,9 @@ msgstr ""
 
 #: privacy.html
 msgid ""
-"<0>Disconnect one source:</0> remove it on the Connections page in Duct. Its stored credentials are deleted at that point."
+"<0>Disconnect one source:</0> remove it from the Toolbox in Duct. Its stored credentials are deleted at that point."
 msgstr ""
-"<0>Desconectar uma fonte:</0> remova-a na página Conexões no Duct. Suas credenciais armazenadas são excluídas naquele momento."
+"<0>Desconectar uma fonte:</0> remova-a da Caixa de ferramentas no Duct. Suas credenciais armazenadas são excluídas naquele momento."
 
 #: privacy.html
 msgid "<0>Experimentation:</0> GrowthBook"
@@ -12587,6 +12589,79 @@ msgstr "← Voltar"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← Recomeçar"
+
+#. img alt
+#~ msgid "The Connections page with twelve tools, five of them connected"
+#~ msgstr "A página de Conexões com doze ferramentas, cinco delas conectadas"
+
+#~ msgid ""
+#~ "In Duct, open Connections, choose Apple Search Ads and paste the three IDs and the private key."
+#~ msgstr ""
+#~ "No Duct, abra Conexões, escolha Apple Search Ads e cole os três IDs e a chave privada."
+
+#~ msgid "In Duct, open Connections, choose OpenAI Ads and paste the key."
+#~ msgstr "No Duct, abra Conexões, escolha OpenAI Ads e cole a chave."
+
+#~ msgid "In Duct, open Connections and choose Google Analytics."
+#~ msgstr "No Duct, abra Conexões e escolha Google Analytics."
+
+#~ msgid "In Duct, open Connections and choose Google Ads."
+#~ msgstr "No Duct, abra Conexões e escolha Google Ads."
+
+#~ msgid "In Duct, open Connections and choose Google Search Console."
+#~ msgstr "No Duct, abra Conexões e escolha Google Search Console."
+
+#~ msgid "In Duct, open Connections and choose Google Tag Manager."
+#~ msgstr "No Duct, abra Conexões e escolha Google Tag Manager."
+
+#~ msgid ""
+#~ "In Duct, open Connections, choose GrowthBook and paste the key and the project ID."
+#~ msgstr "No Duct, abra Conexões, escolha GrowthBook e cole a chave e o ID do projeto."
+
+#~ msgid "In Duct, open Connections, choose Meta Ads and paste the token."
+#~ msgstr "No Duct, abra Conexões, escolha Meta Ads e cole o token."
+
+#~ msgid "In Duct, open Connections, choose Microsoft Clarity and paste the token."
+#~ msgstr "No Duct, abra Conexões, escolha Microsoft Clarity e cole o token."
+
+#~ msgid "In Duct, open Connections, choose Mixpanel and paste them."
+#~ msgstr "No Duct, abra Conexões, escolha Mixpanel e cole-os."
+
+#~ msgid "In Duct, open Connections, choose RevenueCat and paste the key."
+#~ msgstr "No Duct, abra Conexões, escolha RevenueCat e cole a chave."
+
+#~ msgid ""
+#~ "In Duct, open Connections, choose Stripe and paste the key. Duct checks each permission and names any that is missing."
+#~ msgstr ""
+#~ "No Duct, abra Conexões, escolha Stripe e cole a chave. O Duct verifica cada permissão e nomeia qualquer uma que esteja faltando."
+
+#~ msgid ""
+#~ "In the Duct app, open Connections. The ready-made servers are listed there, and any other connects by its address."
+#~ msgstr ""
+#~ "No app do Duct, abra Conexões. Os servidores prontos estão listados lá, e qualquer outro se conecta pelo seu endereço."
+
+#~ msgid "Open Connections"
+#~ msgstr "Abrir Conexões"
+
+#~ msgid ""
+#~ "Pick one on Connections and sign in with the account you already have. Each address is here for reference; you never have to type it."
+#~ msgstr ""
+#~ "Escolha um em Conexões e entre com a conta que você já tem. Cada endereço está aqui para referência; você nunca precisa digitá-lo."
+
+#~ msgid ""
+#~ "The server offers no sign-in Duct can use. Create an API key in the vendor's settings and paste it on Connections."
+#~ msgstr ""
+#~ "O servidor não oferece um entrar que o Duct possa usar. Crie uma chave de API nas configurações do fornecedor e cole-a em Conexões."
+
+#~ msgid ""
+#~ "The sign-in expired, or was revoked on the vendor's side. Press Reconnect on Connections and sign in again."
+#~ msgstr ""
+#~ "O entrar expirou ou foi revogado no lado do fornecedor. Pressione Reconectar em Conexões e entre novamente."
+
+#~ msgid ""
+#~ "<0>Disconnect one source:</0> remove it on the Connections page in Duct. Its stored credentials are deleted at that point."
+#~ msgstr ""
+#~ "<0>Desconectar uma fonte:</0> remova-a na página Conexões no Duct. Suas credenciais armazenadas são excluídas naquele momento."
 
 #~ msgid ""
 #~ "For CI, a remote machine or an agent without sign-in. On the same settings page, open Use a token instead and create one. Your agent sends it as a header:"

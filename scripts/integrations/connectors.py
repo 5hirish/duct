@@ -97,7 +97,7 @@ CONNECTORS = [
                 ("meta_ads", "Which platform buys a customer for less?"),
             ],
             "setup": [
-                "In Duct, open Connections and choose Google Ads.",
+                "In Duct, open the Toolbox and choose Google Ads.",
                 "Sign in with Google and allow access.",
                 "Pick the account this project reads. On a manager (MCC) account, add its ID and Duct reads the accounts under it.",
             ],
@@ -164,7 +164,7 @@ CONNECTORS = [
             "setup": [
                 "In Meta Business Settings, open Users, then System users, and give one access to the ad account.",
                 "Generate a token for it with ads_read (and business_management, so Duct can list your accounts).",
-                "In Duct, open Connections, choose Meta Ads and paste the token.",
+                "In Duct, open the Toolbox, choose Meta Ads and paste the token.",
             ],
             "permissions": "Read-only: the token needs ads_read, and Duct has no Meta change operation. A System User token does not expire the way a person's login does.",
             "faq": [
@@ -229,7 +229,7 @@ CONNECTORS = [
             "setup": [
                 "Generate an EC P-256 key pair, and upload the public key in Apple Search Ads under Account Settings, then API.",
                 "Note the client ID, team ID and key ID Apple shows for it.",
-                "In Duct, open Connections, choose Apple Search Ads and paste the three IDs and the private key.",
+                "In Duct, open the Toolbox, choose Apple Search Ads and paste the three IDs and the private key.",
             ],
             "permissions": "Read-only: Duct has no Apple Search Ads change operation, and give the API user a read-only role so the key could not change a campaign either.",
             "faq": [
@@ -293,7 +293,7 @@ CONNECTORS = [
             ],
             "setup": [
                 "In OpenAI Ads Manager, create an Ads API key for the ad account you want read.",
-                "In Duct, open Connections, choose OpenAI Ads and paste the key.",
+                "In Duct, open the Toolbox, choose OpenAI Ads and paste the key.",
                 "Duct shows which ad account the key belongs to, then reads its campaigns and daily totals.",
             ],
             "permissions": "An Ads API key is scoped to one ad account, and OpenAI grants API access per account while the API is in beta. Duct uses the key only to read; it has no ChatGPT Ads change operation.",
@@ -351,7 +351,7 @@ CONNECTORS = [
                 ("stripe", "Do GA4 conversions turn into revenue?"),
             ],
             "setup": [
-                "In Duct, open Connections and choose Google Analytics.",
+                "In Duct, open the Toolbox and choose Google Analytics.",
                 "Sign in with Google and allow access.",
                 "Pick the GA4 property this project reads.",
             ],
@@ -407,7 +407,7 @@ CONNECTORS = [
                 ("clarity", "Pages that rank, then lose people on arrival."),
             ],
             "setup": [
-                "In Duct, open Connections and choose Google Search Console.",
+                "In Duct, open the Toolbox and choose Google Search Console.",
                 "Sign in with Google and allow read access.",
                 "Pick the property this project reads.",
             ],
@@ -471,7 +471,7 @@ CONNECTORS = [
                 ("clarity", "Did the new tag break the page?"),
             ],
             "setup": [
-                "In Duct, open Connections and choose Google Tag Manager.",
+                "In Duct, open the Toolbox and choose Google Tag Manager.",
                 "Sign in with Google and allow access to edit and publish containers.",
                 "Pick the container this project uses.",
             ],
@@ -531,7 +531,7 @@ CONNECTORS = [
             "setup": [
                 "In Mixpanel, open Organization settings, then Service Accounts, and create one with access to this project.",
                 "Note its username and secret, the project ID, and whether the project lives in the US, EU or India.",
-                "In Duct, open Connections, choose Mixpanel and paste them.",
+                "In Duct, open the Toolbox, choose Mixpanel and paste them.",
             ],
             "permissions": "Reading needs a service account with access to the project. The two changes below also need it to edit annotations and Lexicon, and by default each waits for your Apply.",
             "faq": [
@@ -587,7 +587,7 @@ CONNECTORS = [
             "setup": [
                 "In Clarity, open Settings, then Data Export, and generate an API token.",
                 "Make it in the project Duct should read: the token is the project, with no ID beside it.",
-                "In Duct, open Connections, choose Microsoft Clarity and paste the token.",
+                "In Duct, open the Toolbox, choose Microsoft Clarity and paste the token.",
             ],
             "permissions": "Read-only: an export token can only read, and Duct has no Clarity change operation.",
             "faq": [
@@ -644,7 +644,7 @@ CONNECTORS = [
             "setup": [
                 "In GrowthBook, open Settings, then API Keys, and create a read-only key.",
                 "Note the project ID if your organisation runs more than one product.",
-                "In Duct, open Connections, choose GrowthBook and paste the key and the project ID.",
+                "In Duct, open the Toolbox, choose GrowthBook and paste the key and the project ID.",
             ],
             "permissions": "Read-only: a read-only key is enough, Duct has no GrowthBook change operation, and it filters to your project so another product's experiments stay out.",
             "faq": [
@@ -716,7 +716,7 @@ CONNECTORS = [
             "setup": [
                 "In Stripe, open Developers, then API keys, and create a restricted key.",
                 "Give it read access to Subscriptions, Charges, Invoices, Customers, Products and Prices. Nothing else.",
-                "In Duct, open Connections, choose Stripe and paste the key. Duct checks each permission and names any that is missing.",
+                "In Duct, open the Toolbox, choose Stripe and paste the key. Duct checks each permission and names any that is missing.",
             ],
             "permissions": "Read-only by construction: a restricted key with read permissions cannot move money or edit a customer, and Duct has no Stripe change operation at all.",
             "faq": [
@@ -779,7 +779,7 @@ CONNECTORS = [
             "setup": [
                 "In RevenueCat, open Project settings, then API keys, and create a secret API key (V2).",
                 "Give it read access to project configuration, customer information and charts metrics.",
-                "In Duct, open Connections, choose RevenueCat and paste the key.",
+                "In Duct, open the Toolbox, choose RevenueCat and paste the key.",
             ],
             "permissions": "Read-only: a key with read scopes cannot change a product or a subscription, and Duct has no RevenueCat change operation.",
             "faq": [

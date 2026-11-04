@@ -41,10 +41,10 @@
 <!-- The HowTo is the three steps and the FAQPage the troubleshooting <details>, word for word:
      the i18n generator translates these strings through the page's own catalogue entries. -->
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebPage","inLanguage":"pt-BR","name":"Conecte servidores MCP ao agente do Duct: guia de configuração","url":"https://getduct.ai/pt-br/mcp","description":"Conecte OpenSEO, Notion, Linear, PostHog ou qualquer servidor MCP público ao Duct. Entre uma vez, depois pergunte. Ferramentas somente leitura executam; qualquer outra coisa espera seu OK.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"HowTo","name":"Como conectar um servidor","step":[{"@type":"HowToStep","position":1,"name":"Abrir Conexões","text":"No app do Duct, abra Conexões. Os servidores prontos estão listados lá, e qualquer outro se conecta pelo seu endereço."},{"@type":"HowToStep","position":2,"name":"Escolha um servidor ou cole o endereço","text":"Escolha OpenSEO, PostHog, Notion, Linear, Railway ou Cloudflare. Para qualquer outro, cole o endereço https do servidor."},{"@type":"HowToStep","position":3,"name":"Entre uma vez","text":"Um clique onde o servidor suporta o entrar. Onde não suporta, cole uma chave de API do fornecedor. Duct a mantém criptografada."}]}}
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"pt-BR","name":"Conecte servidores MCP ao agente do Duct: guia de configuração","url":"https://getduct.ai/pt-br/mcp","description":"Conecte OpenSEO, Notion, Linear, PostHog ou qualquer servidor MCP público ao Duct. Entre uma vez, depois pergunte. Ferramentas somente leitura executam; qualquer outra coisa espera seu OK.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"HowTo","name":"Como conectar um servidor","step":[{"@type":"HowToStep","position":1,"name":"Abrir a Caixa de ferramentas","text":"No app do Duct, abra a Caixa de ferramentas. Os servidores prontos estão listados lá, e qualquer outro se conecta pelo seu endereço."},{"@type":"HowToStep","position":2,"name":"Escolha um servidor ou cole o endereço","text":"Escolha OpenSEO, PostHog, Notion, Linear, Railway ou Cloudflare. Para qualquer outro, cole o endereço https do servidor."},{"@type":"HowToStep","position":3,"name":"Entre uma vez","text":"Um clique onde o servidor suporta o entrar. Onde não suporta, cole uma chave de API do fornecedor. Duct a mantém criptografada."}]}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"pt-BR","mainEntity":[{"@type":"Question","name":"Diz “Este servidor precisa de uma chave de API”","acceptedAnswer":{"@type":"Answer","text":"O servidor não oferece um entrar que o Duct possa usar. Crie uma chave de API nas configurações do fornecedor e cole-a em Conexões."}},{"@type":"Question","name":"Diz “Precisa reconectar”","acceptedAnswer":{"@type":"Answer","text":"O entrar expirou ou foi revogado no lado do fornecedor. Pressione Reconectar em Conexões e entre novamente."}},{"@type":"Question","name":"Diz “O Duct só se conecta a servidores na internet pública”","acceptedAnswer":{"@type":"Answer","text":"O endereço aponta para seu próprio computador ou uma rede privada. O serviço hospedado só chama endereços públicos da internet, então um servidor local ou interno não pode ser alcançado."}},{"@type":"Question","name":"Por que não consigo conectar Figma ou Slack?","acceptedAnswer":{"@type":"Answer","text":"Ambos só admitem clientes que aprovaram antecipadamente, então o endereço do servidor deles sozinho não é suficiente. Eles ainda não funcionam com o Duct."}},{"@type":"Question","name":"Uma chamada de ferramenta custa algo?","acceptedAnswer":{"@type":"Answer","text":"Alguns sim, no lado do fornecedor. Uma chamada que custa créditos lá, como pesquisa OpenSEO, gasta seus créditos com esse fornecedor, da mesma forma que faria de qualquer outro cliente."}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"pt-BR","mainEntity":[{"@type":"Question","name":"Diz “Este servidor precisa de uma chave de API”","acceptedAnswer":{"@type":"Answer","text":"O servidor não oferece um login que o Duct possa usar. Crie uma chave de API nas configurações do fornecedor e cole-a na Caixa de ferramentas."}},{"@type":"Question","name":"Diz “Precisa reconectar”","acceptedAnswer":{"@type":"Answer","text":"O login expirou ou foi revogado pelo fornecedor. Pressione Reconectar na Caixa de ferramentas e entre novamente."}},{"@type":"Question","name":"Diz “O Duct só se conecta a servidores na internet pública”","acceptedAnswer":{"@type":"Answer","text":"O endereço aponta para seu próprio computador ou uma rede privada. O serviço hospedado só chama endereços públicos da internet, então um servidor local ou interno não pode ser alcançado."}},{"@type":"Question","name":"Por que não consigo conectar Figma ou Slack?","acceptedAnswer":{"@type":"Answer","text":"Ambos só admitem clientes que aprovaram antecipadamente, então o endereço do servidor deles sozinho não é suficiente. Eles ainda não funcionam com o Duct."}},{"@type":"Question","name":"Uma chamada de ferramenta custa algo?","acceptedAnswer":{"@type":"Answer","text":"Alguns sim, no lado do fornecedor. Uma chamada que custa créditos lá, como pesquisa OpenSEO, gasta seus créditos com esse fornecedor, da mesma forma que faria de qualquer outro cliente."}}]}
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"pt-BR","itemListElement":[{"@type":"ListItem","position":1,"name":"Início","item":"https://getduct.ai/pt-br/"},{"@type":"ListItem","position":2,"name":"Servidores MCP","item":"https://getduct.ai/pt-br/mcp"}]}
@@ -256,8 +256,8 @@ team   "Content"</pre>
 <div class="step reveal">
 <span class="step-num">01</span>
 <span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg></span>
-<h3 class="step-title">Abrir Conexões</h3>
-<p class="step-body">No app do Duct, abra Conexões. Os servidores prontos estão listados lá, e qualquer outro se conecta pelo seu endereço.</p>
+<h3 class="step-title">Abrir a Caixa de ferramentas</h3>
+<p class="step-body">No app do Duct, abra a Caixa de ferramentas. Os servidores prontos estão listados lá, e qualquer outro se conecta pelo seu endereço.</p>
 </div>
 <div class="step reveal" style="transition-delay:.1s">
 <span class="step-num">02</span>
@@ -282,7 +282,7 @@ team   "Content"</pre>
 <div class="mcp-head reveal">
 <p class="tag">Pronto</p>
 <h2>Seis servidores. <em>Um clique cada.</em></h2>
-<p class="sub">Escolha um em Conexões e entre com a conta que você já tem. Cada endereço está aqui para referência; você nunca precisa digitá-lo.</p>
+<p class="sub">Escolha um na Caixa de ferramentas e entre com a conta que você já tem. Cada endereço está aqui para referência; você nunca precisa digitá-lo.</p>
 </div>
 <div class="srv-grid">
 <article class="srv reveal">
@@ -404,11 +404,11 @@ team   "Content"</pre>
 <div class="faq-list reveal">
 <details class="faq-item">
 <summary class="faq-q">Diz “Este servidor precisa de uma chave de API”</summary>
-<p class="faq-a">O servidor não oferece um entrar que o Duct possa usar. Crie uma chave de API nas configurações do fornecedor e cole-a em Conexões.</p>
+<p class="faq-a">O servidor não oferece um login que o Duct possa usar. Crie uma chave de API nas configurações do fornecedor e cole-a na Caixa de ferramentas.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">Diz “Precisa reconectar”</summary>
-<p class="faq-a">O entrar expirou ou foi revogado no lado do fornecedor. Pressione Reconectar em Conexões e entre novamente.</p>
+<p class="faq-a">O login expirou ou foi revogado pelo fornecedor. Pressione Reconectar na Caixa de ferramentas e entre novamente.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">Diz “O Duct só se conecta a servidores na internet pública”</summary>

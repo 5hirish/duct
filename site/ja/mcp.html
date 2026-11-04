@@ -41,10 +41,10 @@
 <!-- The HowTo is the three steps and the FAQPage the troubleshooting <details>, word for word:
      the i18n generator translates these strings through the page's own catalogue entries. -->
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebPage","inLanguage":"ja","name":"DuctのエージェントにMCPサーバーを接続：セットアップガイド","url":"https://getduct.ai/ja/mcp","description":"OpenSEO、Notion、Linear、PostHog、または任意の公開MCPサーバーをDuctに接続します。一度サインインしたら、質問してください。読み取り専用ツールは実行されます。それ以外はあなたの承認を待ちます。","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"HowTo","name":"サーバーの接続方法","step":[{"@type":"HowToStep","position":1,"name":"接続を開く","text":"Ductアプリで「接続」を開きます。既製のサーバーがそこにリストされており、その他のサーバーはアドレスで接続します。"},{"@type":"HowToStep","position":2,"name":"サーバーを選択するか、アドレスを貼り付けてください","text":"OpenSEO、PostHog、Notion、Linear、Railway、またはCloudflareを選択してください。その他は、サーバーのHTTPSアドレスを貼り付けてください。"},{"@type":"HowToStep","position":3,"name":"一度サインイン","text":"サーバーがサインインをサポートしている場合はワンクリックです。サポートしていない場合は、ベンダーからAPIキーを貼り付けてください。Ductはそれを暗号化して保持します。"}]}}
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"ja","name":"DuctのエージェントにMCPサーバーを接続：セットアップガイド","url":"https://getduct.ai/ja/mcp","description":"OpenSEO、Notion、Linear、PostHog、または任意の公開MCPサーバーをDuctに接続します。一度サインインしたら、質問してください。読み取り専用ツールは実行されます。それ以外はあなたの承認を待ちます。","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"HowTo","name":"サーバーの接続方法","step":[{"@type":"HowToStep","position":1,"name":"ツールボックスを開く","text":"Ductアプリでツールボックスを開きます。既製のサーバーがそこにリストされており、その他のサーバーはアドレスで接続します。"},{"@type":"HowToStep","position":2,"name":"サーバーを選択するか、アドレスを貼り付けてください","text":"OpenSEO、PostHog、Notion、Linear、Railway、またはCloudflareを選択してください。その他は、サーバーのHTTPSアドレスを貼り付けてください。"},{"@type":"HowToStep","position":3,"name":"一度サインイン","text":"サーバーがサインインをサポートしている場合はワンクリックです。サポートしていない場合は、ベンダーからAPIキーを貼り付けてください。Ductはそれを暗号化して保持します。"}]}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ja","mainEntity":[{"@type":"Question","name":"「このサーバーにはAPIキーが必要です」と表示されます","acceptedAnswer":{"@type":"Answer","text":"サーバーはDuctが使用できるサインインを提供していません。ベンダーの設定でAPIキーを作成し、接続に貼り付けてください。"}},{"@type":"Question","name":"「再接続が必要です」と表示されます","acceptedAnswer":{"@type":"Answer","text":"サインインの有効期限が切れたか、ベンダー側で取り消されました。接続で「再接続」を押し、再度サインインしてください。"}},{"@type":"Question","name":"「Ductはパブリックインターネット上のサーバーにのみ接続します」と表示されます","acceptedAnswer":{"@type":"Answer","text":"アドレスがご自身のコンピューターまたはプライベートネットワークを指している場合、ホスト型サービスは公開インターネットアドレスのみを呼び出すため、ローカルまたは内部サーバーには到達できません。"}},{"@type":"Question","name":"FigmaまたはSlackに接続できないのはなぜですか？","acceptedAnswer":{"@type":"Answer","text":"どちらも事前に承認したクライアントのみを受け入れるため、サーバーアドレスだけでは不十分です。これらはまだDuctでは動作しません。"}},{"@type":"Question","name":"ツール呼び出しに費用はかかりますか？","acceptedAnswer":{"@type":"Answer","text":"ベンダー側で発生するものもあります。OpenSEOのリサーチなど、そこでクレジットを消費する呼び出しは、他のクライアントと同様に、そのベンダーのクレジットを消費します。"}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ja","mainEntity":[{"@type":"Question","name":"「このサーバーにはAPIキーが必要です」と表示されます","acceptedAnswer":{"@type":"Answer","text":"サーバーはDuctが使用できるサインインを提供していません。ベンダーの設定でAPIキーを作成し、ツールボックスに貼り付けます。"}},{"@type":"Question","name":"「再接続が必要です」と表示されます","acceptedAnswer":{"@type":"Answer","text":"サインインの有効期限が切れたか、ベンダー側で取り消されました。ツールボックスで「再接続」を押し、再度サインインします。"}},{"@type":"Question","name":"「Ductはパブリックインターネット上のサーバーにのみ接続します」と表示されます","acceptedAnswer":{"@type":"Answer","text":"アドレスがご自身のコンピューターまたはプライベートネットワークを指している場合、ホスト型サービスは公開インターネットアドレスのみを呼び出すため、ローカルまたは内部サーバーには到達できません。"}},{"@type":"Question","name":"FigmaまたはSlackに接続できないのはなぜですか？","acceptedAnswer":{"@type":"Answer","text":"どちらも事前に承認したクライアントのみを受け入れるため、サーバーアドレスだけでは不十分です。これらはまだDuctでは動作しません。"}},{"@type":"Question","name":"ツール呼び出しに費用はかかりますか？","acceptedAnswer":{"@type":"Answer","text":"ベンダー側で発生するものもあります。OpenSEOのリサーチなど、そこでクレジットを消費する呼び出しは、他のクライアントと同様に、そのベンダーのクレジットを消費します。"}}]}
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"ja","itemListElement":[{"@type":"ListItem","position":1,"name":"ホーム","item":"https://getduct.ai/ja/"},{"@type":"ListItem","position":2,"name":"MCPサーバー","item":"https://getduct.ai/ja/mcp"}]}
@@ -256,8 +256,8 @@ team   "Content"</pre>
 <div class="step reveal">
 <span class="step-num">01</span>
 <span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg></span>
-<h3 class="step-title">接続を開く</h3>
-<p class="step-body">Ductアプリで「接続」を開きます。既製のサーバーがそこにリストされており、その他のサーバーはアドレスで接続します。</p>
+<h3 class="step-title">ツールボックスを開く</h3>
+<p class="step-body">Ductアプリでツールボックスを開きます。既製のサーバーがそこにリストされており、その他のサーバーはアドレスで接続します。</p>
 </div>
 <div class="step reveal" style="transition-delay:.1s">
 <span class="step-num">02</span>
@@ -282,7 +282,7 @@ team   "Content"</pre>
 <div class="mcp-head reveal">
 <p class="tag">既製</p>
 <h2>6つのサーバー。<em>それぞれワンクリック。</em></h2>
-<p class="sub">接続から1つ選択し、既存のアカウントでサインインしてください。各アドレスは参照用であり、入力する必要はありません。</p>
+<p class="sub">ツールボックスで1つ選択し、既存のアカウントでサインインします。各アドレスは参照用にここにあり、入力する必要はありません。</p>
 </div>
 <div class="srv-grid">
 <article class="srv reveal">
@@ -404,11 +404,11 @@ team   "Content"</pre>
 <div class="faq-list reveal">
 <details class="faq-item">
 <summary class="faq-q">「このサーバーにはAPIキーが必要です」と表示されます</summary>
-<p class="faq-a">サーバーはDuctが使用できるサインインを提供していません。ベンダーの設定でAPIキーを作成し、接続に貼り付けてください。</p>
+<p class="faq-a">サーバーはDuctが使用できるサインインを提供していません。ベンダーの設定でAPIキーを作成し、ツールボックスに貼り付けます。</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">「再接続が必要です」と表示されます</summary>
-<p class="faq-a">サインインの有効期限が切れたか、ベンダー側で取り消されました。接続で「再接続」を押し、再度サインインしてください。</p>
+<p class="faq-a">サインインの有効期限が切れたか、ベンダー側で取り消されました。ツールボックスで「再接続」を押し、再度サインインします。</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">「Ductはパブリックインターネット上のサーバーにのみ接続します」と表示されます</summary>

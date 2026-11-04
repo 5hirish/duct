@@ -90,9 +90,9 @@ export default function ConnectionRequest({ request, onAnswer, disabled, signInT
       {isManual ? (
         <p className="text-xs text-muted-foreground">
           <Trans>
-            {label} needs an API key rather than a sign-in. Add it on the{" "}
+            {label} needs an API key rather than a sign-in. Add it in the{" "}
             <a href="/connections" className="underline underline-offset-2 hover:text-foreground">
-              Connections page
+              Toolbox
             </a>
             , then tell Duct to carry on.
           </Trans>
