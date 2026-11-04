@@ -36,10 +36,11 @@
  *   and 12px for metadata.
  */
 
-import Link from "next/link";
-import { ChevronLeft, CircleHelp } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { CircleHelp } from "lucide-react";
 import { useLingui } from "@lingui/react/macro";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { clearPageTitle, publishPageTitle } from "@/lib/pageTitle";
 import { cn } from "@/lib/utils";
 
 const WIDTHS = {
@@ -69,8 +70,10 @@ const STATUS_WORDS = 14;
  * @param actions The page's buttons, right-aligned; the primary one last.
  * @param help    What the page is for and how it works, behind a "?".
  * @param back    `{ href, label }` for a page nested under another (an
- *                artifact under the library). Top-level pages have none: the
- *                breadcrumb and the sidebar already say where you are.
+ *                artifact under the library). It is drawn in the top bar, as
+ *                the way back, never above the title: the bar and the page
+ *                used to say the parent twice and the title twice. Top-level
+ *                pages have none; the sidebar already says where you are.
  * @param size    "default" | "hero". Hero is the home screen's greeting, in
  *                the display serif. One screen uses it.
  * @param eyebrow A short label above a hero title ("Good morning, Maya").
@@ -95,6 +98,35 @@ export function PageHeader({
     }
   }
   const hero = size === "hero";
+  const titleRef = useRef(null);
+
+  // The top bar shows this title only once it has scrolled under the bar
+  // (lib/pageTitle.js). Measured against the bar's own height, so "visible"
+  // means visible to the reader, not merely inside the window.
+  useEffect(() => {
+    const h1 = titleRef.current;
+    if (!h1) return undefined;
+    const bar = document.querySelector(".app-header");
+    const covered = bar ? Math.round(bar.getBoundingClientRect().height) : 0;
+    publishPageTitle({ present: true, visible: true });
+    const observer = new IntersectionObserver(
+      ([entry]) => publishPageTitle({ visible: entry.isIntersecting }),
+      { rootMargin: `-${covered}px 0px 0px 0px` }
+    );
+    observer.observe(h1);
+    return () => {
+      observer.disconnect();
+      clearPageTitle();
+    };
+  }, []);
+
+  // The words can change after mount (the desk's headline follows its data),
+  // so they are read from the rendered title every render; publishing an
+  // unchanged value is a no-op.
+  useEffect(() => {
+    publishPageTitle({ title: titleRef.current?.textContent?.trim() || "", back: back || null });
+  });
+
   return (
     <header
       data-slot="page-header"
@@ -104,18 +136,10 @@ export function PageHeader({
       {/* basis-72: the title column wraps under the actions before it is
           squeezed, instead of being crushed to a sliver beside them. */}
       <div className="min-w-0 flex-1 basis-72">
-        {back && (
-          <Link
-            href={back.href}
-            className="mb-3 inline-flex items-center gap-1 rounded-md text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <ChevronLeft className="size-4" aria-hidden />
-            {back.label}
-          </Link>
-        )}
         {eyebrow && <p className="mb-2 text-sm font-medium text-muted-foreground">{eyebrow}</p>}
         <div className="flex items-center gap-2">
           <h1
+            ref={titleRef}
             className={cn(
               "min-w-0 text-balance",
               hero

@@ -61,10 +61,19 @@ radii.
 | Part | What it decides | Use it for |
 |---|---|---|
 | `Page` (`ui/page`) | the vertical rhythm (40px between groups) and, for `width="narrow"` forms, a 42rem cap that stays left-aligned | the root of every routed screen |
-| `PageHeader` | the one `<h1>`: 24px semibold (36px display serif for `size="hero"`, the home screen only), one line of `status`, `actions` on the right, `help` behind a "?", `back` only for nested pages | every title. There is no description slot, on purpose |
+| `PageHeader` | the one `<h1>`: 24px semibold (36px display serif for `size="hero"`, the home screen only), one line of `status`, `actions` on the right, `help` behind a "?", `back` (the parent, drawn in the top bar) only for nested pages | every title. There is no description slot, on purpose |
 | `Section` | an `<h2>` at body size in semibold, a muted count, actions on the right, 16px to its content | each titled group on a page |
 | `Card` (`ui/card`) | radius, border, 24px padding (16 at `sm`), and a `CardFooter` pinned to the bottom so a row of cards shares a baseline. Variants carry weight: `default`, `interactive` (stretch the title with `cardLinkClass`), `hero` (the one brand-tinted card a screen may have), `quiet` | every bordered group; a list is rows inside one Card (`p-0`, `divide`) |
 | `TileGrid` | columns from the container (`size` sm/md/lg = 13/17/22rem minimum) or a fixed `cols` for a known set, so four starters land 2×2, never three plus an orphan | every grid of cards |
+
+**The page and the top bar take turns naming the page.** A framed screen's
+title is its `<h1>`; the top bar stays empty beside it, holds only the way
+back (`‹ Documents`) on a nested page, and takes the title over once it
+scrolls under the bar, the way a large title does on Apple's platforms. The
+sidebar already says which section you are in, so nothing says it a third
+time. A full-bleed workspace has no page title and keeps the bar's trail.
+`check:layout` fails a bar that repeats a visible title, or does not take it
+over once it has scrolled away.
 
 Forms use `Input`, `Textarea` (auto-growing, the field radius) and `Select`.
 A field is a rectangle; capsules are for badges and chips only. Radii are

@@ -18,6 +18,8 @@
  *     than wrapping (a change set's title read "Ac" on a phone);
  *   - a wide column centred inside a left-aligned page, so the content starts
  *     somewhere other than under its title;
+ *   - the top bar naming the page while the page's own title is on screen,
+ *     or not taking the title over once it has scrolled away;
  *   - on a dev server, the desk in every generated situation: more than one
  *     lead, a headline that wraps, a row or a lead title its clamp let go.
  *
@@ -125,6 +127,25 @@ try {
         }
         for (const text of m.squeezed) {
           fail(where, `"${text.text}" is cut to ${text.width}px — the layout should wrap, not crush it`);
+        }
+        // The top bar and the page take turns naming the page: never both at
+        // rest, and the bar takes over once the title scrolls under it.
+        if (m.barRepeatsTitle) fail(where, `the top bar repeats the page title "${m.titleText}" while it is on screen`);
+        if (m.scrollable) {
+          await page.evaluate(() => {
+            const h1 = document.querySelector('[data-slot="page-header"] h1');
+            window.scrollTo(0, h1.getBoundingClientRect().bottom + window.scrollY + 40);
+          });
+          await page.waitForTimeout(250);
+          const handover = await page.evaluate(() => {
+            const h1 = document.querySelector('[data-slot="page-header"] h1');
+            const bar = document.querySelector(".app-header nav")?.textContent.trim() || "";
+            return { hidden: h1.getBoundingClientRect().bottom <= 60, bar, title: h1.textContent.trim() };
+          });
+          if (handover.hidden && !handover.bar.includes(handover.title)) {
+            fail(where, `scrolled past "${handover.title}", the top bar does not take the title over`);
+          }
+          await page.evaluate(() => window.scrollTo(0, 0));
         }
       }
 
@@ -269,7 +290,13 @@ function measure() {
         .slice(0, 3)
         .map((el) => Math.round(el.getBoundingClientRect().width))
     : [];
+  const titleText = headerEl?.querySelector("h1")?.textContent.trim() || "";
+  const barText = document.querySelector(".app-header nav")?.textContent.trim() || "";
   return {
+    titleText,
+    barRepeatsTitle: Boolean(titleText && barText.includes(titleText)),
+    // Enough page under the title to scroll it away and still fill the window.
+    scrollable: Boolean(titleText) && document.documentElement.scrollHeight > window.innerHeight + 240,
     centred,
     squeezed,
     h1Count: h1s.length,
