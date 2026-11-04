@@ -123,8 +123,10 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
   - `artifacts/` + `[artifactId]/`, `activity/`, `usage/`, `memory/` — the
     library, the cross-agent feed, usage, and user-level memory
   - `settings/models/` + `settings/profile/` — tiers, providers, usage; profile
-  - `settings/agents/` — Connect your AI agent: MCP tokens and the line to
-    paste into Claude Code, Codex or Cursor (`components/settings/AgentAccess.jsx`,
+  - `settings/agents/` — Connect your AI agent: the line to paste into
+    Claude Code, Codex, Cursor, VS Code or OpenCode (no secret in it: the
+    agent signs in through the browser), the agents that did, and personal
+    tokens for one that cannot (`components/settings/AgentAccess.jsx`,
     `lib/mcpTokensApi.js`). A new token's plaintext lives in page state only
   - `generate/` — the retired wizard, now a bare redirect to `/insights/session`
   - `projects/` — project management
@@ -138,9 +140,12 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
   - `project/[projectId]/members/` + `project/[projectId]/memory/` — members
     and invitations (owner/collaborator); project-scoped memory
 
-Plus two top-level routes outside every group, because their visitor is
+Plus three top-level routes outside every group, because their visitor is
 usually signed out and the app shell's guard would lose where they were going:
-`invite/[token]/` (the invitation landing page) and `open/audit/[conversationId]/`
+`invite/[token]/` (the invitation landing page), `authorize/` (where an
+agent's browser sign-in asks the person, `components/settings/AgentConsent.jsx`;
+the backend has checked the agent and parked the request, and the page sends
+the browser back to the agent with the answer) and `open/audit/[conversationId]/`
 (the share link for a report — parks the destination, sends through sign-in,
 then resumes the conversation; the backend hands it only to project members).
 `?kickoff=sources` on that link makes the resumed workspace open by asking

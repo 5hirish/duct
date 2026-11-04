@@ -23,6 +23,12 @@ import ContextCompressionCard from "@/components/ContextCompressionCard.jsx";
 import FrontDoor from "@/components/onboarding/FrontDoor";
 import DocumentPicker, { DocumentState } from "@/components/onboarding/DocumentPicker";
 import AgentAccess from "@/components/settings/AgentAccess";
+import AgentConsent, {
+  CONSENT_ALLOWED,
+  CONSENT_ASK,
+  CONSENT_EXPIRED,
+  CONSENT_SIGN_IN,
+} from "@/components/settings/AgentConsent";
 import { DocumentError } from "@/lib/onboardingApi";
 import Desk from "@/components/insights/Desk";
 import DeskComposer from "@/components/insights/desk/DeskComposer";
@@ -274,12 +280,21 @@ function DocumentPickerScene({ initial = [] }) {
 const PREVIEW_MCP_URL = "https://api.example.com/mcp";
 const AGENT_TOKENS = [
   {
-    id: "t1", name: "Claude Code on the studio Mac", hint: "Q7mz",
+    id: "a1", kind: "agent", name: "Claude Code", hint: "",
+    created_at: "2026-10-30T09:00:00Z", expires_at: "2027-01-28T09:00:00Z",
+    last_used_at: new Date(Date.now() - 20 * 60_000).toISOString(),
+  },
+  {
+    id: "a2", kind: "agent", name: "Visual Studio Code, the Kestrel rebrand workspace with its two landing pages", hint: "",
+    created_at: "2026-11-01T09:00:00Z", expires_at: "2027-01-30T09:00:00Z", last_used_at: null,
+  },
+  {
+    id: "t1", kind: "token", name: "CI on GitHub Actions", hint: "Q7mz",
     created_at: "2026-09-02T09:00:00Z", expires_at: "2027-09-02T09:00:00Z",
     last_used_at: new Date(Date.now() - 3 * 3600_000).toISOString(),
   },
   {
-    id: "t2", name: "Cursor, client laptop for the Kestrel rebrand and its two landing pages", hint: "b81X",
+    id: "t2", kind: "token", name: "Cursor, client laptop for the Kestrel rebrand and its two landing pages", hint: "b81X",
     created_at: "2026-10-20T09:00:00Z", expires_at: "2027-10-20T09:00:00Z", last_used_at: null,
   },
 ];
@@ -295,12 +310,13 @@ const NO_TOKENS = [];
 // would stop it checking every other scene here.
 const previewPlaintext = (hint) => `duct_mcp_preview-only-not-a-real-token-${hint}`;
 
-function AgentAccessScene({ initial = NO_TOKENS, mintedFirst = false, error = "" }) {
+function AgentAccessScene({ initial = NO_TOKENS, mintedFirst = false, error = "", signInAvailable = true }) {
   const [tokens, setTokens] = useState(null);
   useEffect(() => setTokens(initial), [initial]);
-  const [minted, setMinted] = useState(
-    mintedFirst ? { ...initial[0], token: previewPlaintext(initial[0].hint) } : null,
-  );
+  const [minted, setMinted] = useState(() => {
+    const first = initial.find((row) => row.kind === "token");
+    return mintedFirst && first ? { ...first, token: previewPlaintext(first.hint) } : null;
+  });
   return (
     <div className="p-6">
       <AgentAccess
@@ -308,9 +324,10 @@ function AgentAccessScene({ initial = NO_TOKENS, mintedFirst = false, error = ""
         tokens={tokens}
         minted={minted}
         error={error}
+        signInAvailable={signInAvailable}
         onCreate={(name) => {
           const row = {
-            id: `t${Date.now()}`, name, hint: "Zp4c", created_at: new Date().toISOString(),
+            id: `t${Date.now()}`, kind: "token", name, hint: "Zp4c", created_at: new Date().toISOString(),
             expires_at: new Date(Date.now() + 365 * 86400_000).toISOString(), last_used_at: null,
           };
           setTokens((prev) => [row, ...(prev || [])]);
@@ -1336,19 +1353,27 @@ export const SCENES = [
   },
   {
     id: "agent-access",
-    state: "first visit: no tokens, placeholder in every snippet",
+    state: "first visit: nothing connected, no tokens",
     group: "AgentAccess",
     title: "Connect your AI agent",
-    note: "The second paragraph, what an agent cannot do, is the reason a cautious person gets past the first step; it must read before the form. Every snippet shows duct_mcp_… until a token exists. Switch the three tabs: the Codex and Cursor snippets are multi-line and must wrap inside the box, never push the page wider, at 22rem.",
+    note: "The second paragraph, what an agent cannot do, is the reason a cautious person gets past the first step; it must read before the steps. No snippet carries a secret: each is the address alone, and the agent's own sign-in does the rest. Switch the five tabs at 22rem: the tab list wraps rather than scrolling, and the Cursor and OpenCode JSON wraps inside its box, never pushing the page wider. The token section sits below a rule, plainly the second way in.",
     render: () => <AgentAccessScene />,
   },
   {
     id: "agent-access-minted",
-    state: "a token just made: shown once, filled into each snippet; a second token never used, with a name long enough to clip",
+    state: "two agents signed in (one never used, its name long enough to clip), a token just made, a second token",
     group: "AgentAccess",
     title: "Connect your AI agent",
-    note: "The new token sits under the form with its copy button, and the Claude Code command now carries it, so one copy is enough. In the list, the long name truncates and the hint, last use, expiry and Revoke stay on the row or wrap below it as a group. Revoke asks first, in the destructive tint, and the dialog says the projects stay as they are.",
+    note: "Connected agents show when they connected and last called, with no hint (their token changes hourly); tokens show their last four and expiry. The new token sits under its form with the Claude Code command and the bare header, both carrying it. Disconnect and Revoke both ask first, in the destructive tint, and say the projects stay as they are.",
     render: () => <AgentAccessScene initial={AGENT_TOKENS} mintedFirst />,
+  },
+  {
+    id: "agent-access-sidecar",
+    state: "the desktop app's own backend: no browser sign-in, tokens only",
+    group: "AgentAccess",
+    title: "Connect your AI agent",
+    note: "The steps and the Connected agents list are gone, replaced by one boxed sentence saying why. The token section heading drops its 'No browser?' and becomes the way in.",
+    render: () => <AgentAccessScene initial={AGENT_TOKENS.filter((row) => row.kind === "token")} signInAvailable={false} />,
   },
   {
     id: "agent-access-limit",
@@ -1362,6 +1387,63 @@ export const SCENES = [
         error="You have 10 tokens already. Revoke one you no longer use first."
       />
     ),
+  },
+  {
+    id: "agent-consent",
+    state: "signed in, a local agent asking",
+    group: "AgentConsent",
+    title: "Allow an agent",
+    note: "What it can and can't do reads before the buttons, the can'ts in muted ink with an X, never red: nothing is wrong. The destination line says the sign-in goes to this computer. Allow is the filled button on the right, Cancel beside it; both stay one row down to 20rem.",
+    render: () => (
+      <AgentConsent
+        state={CONSENT_ASK}
+        request={{ client_name: "Claude Code", destination: "device", destination_name: "127.0.0.1" }}
+        viewerEmail="ana@kestrel.studio"
+      />
+    ),
+  },
+  {
+    id: "agent-consent-web",
+    state: "signed in, a hosted client with a long self-chosen name",
+    group: "AgentConsent",
+    title: "Allow an agent",
+    note: "A website destination is named in bold, so a page calling itself Claude that sends you to an unknown host is visible. The long name wraps in the heading and in the caution line without breaking the card.",
+    render: () => (
+      <AgentConsent
+        state={CONSENT_ASK}
+        request={{ client_name: "Claude for the Kestrel rebrand workspace", destination: "web", destination_name: "claude.ai" }}
+        viewerEmail="ana@kestrel.studio"
+      />
+    ),
+  },
+  {
+    id: "agent-consent-sign-in",
+    state: "signed out: who is asking, then sign-in",
+    group: "AgentConsent",
+    title: "Allow an agent",
+    note: "The agent's name shows before any sign-in, so the person knows why they are being asked. One line, then the Google button.",
+    render: () => (
+      <AgentConsent
+        state={CONSENT_SIGN_IN}
+        request={{ client_name: "Codex", destination: "device", destination_name: "127.0.0.1" }}
+      />
+    ),
+  },
+  {
+    id: "agent-consent-expired",
+    state: "the request is older than ten minutes",
+    group: "AgentConsent",
+    title: "Allow an agent",
+    note: "No button: nothing on this page can fix it. The way forward is in the agent, so the two commands that restart it are named.",
+    render: () => <AgentConsent state={CONSENT_EXPIRED} />,
+  },
+  {
+    id: "agent-consent-allowed",
+    state: "allowed; the browser is on its way back to the agent",
+    group: "AgentConsent",
+    title: "Allow an agent",
+    note: "Shown for the moment before the agent's own page loads, and left in place for a website or app that takes the hand-off without replacing this tab.",
+    render: () => <AgentConsent state={CONSENT_ALLOWED} request={{ client_name: "Claude Code" }} />,
   },
   {
     id: "desk-composer",
