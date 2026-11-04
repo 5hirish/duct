@@ -533,11 +533,26 @@ Postgres `DATABASE_URL` names.
   re-sync), never a direct column write; a writer the rules do not know is
   how a guess overwrites what someone typed. A draft cannot claim `user`.
 - `routes/mcp_server.py` + `service/mcp_server/` — Duct as an MCP server at
-  `POST /mcp`, for the person's own agent (Claude Code, Codex, Cursor).
-  Stateless JSON-RPC with no SDK: five methods, no sessions, no event
-  stream. Its one credential is a personal token (`service/mcp_tokens.py`,
-  minted at `/api/user/mcp-tokens` by a signed-in session), accepted on
-  `/mcp` only and never by `get_current_user`. Three tools, and adding a
+  `POST /mcp`, for the person's own agent (Claude Code, Codex, Cursor,
+  OpenCode). Stateless JSON-RPC with no SDK: five methods, no sessions, no
+  event stream. Its one credential is an MCP token (`service/mcp_tokens.py`),
+  accepted on `/mcp` only and never by `get_current_user`, and there are two
+  ways to get one. **Browser sign-in** (issue #197, `routes/mcp_oauth.py` +
+  `service/mcp_server/oauth.py`): Duct is the OAuth authorization server, so
+  an agent given only the address finds the sign-in from `/mcp`'s 401
+  (RFC 9728), registers itself (RFC 7591), opens the app's `/authorize`
+  consent page, and trades the code with PKCE for an hour-long access token
+  and a refresh token. Three rules: **registration writes no row** (the
+  client id is the registration, signed with a key derived from
+  `JWT_SECRET`, never the secret itself, or a client id would be a session);
+  **the backend renders no page** (`/oauth/authorize` parks the checked
+  request in `service/auth_exchange` and redirects to the app, and an
+  unverified client or redirect goes to the app's error state, never to the
+  address it named); and **the sidecar has none of it** (`oauth.available()`:
+  its address changes every launch and its app is `tauri://`). A
+  **personal token**, minted at `/api/user/mcp-tokens` by a signed-in
+  session, is the way in for an agent with no browser. Both are rows in
+  `mcp_tokens`, listed together with a `kind`, and DELETE ends either. Three tools, and adding a
   fourth is a scope decision, not a refactor: `list_projects`,
   `get_project`, `draft_project`. Writes go through
   `service/project_writes.apply_draft`, labelled `document` (or `inferred`

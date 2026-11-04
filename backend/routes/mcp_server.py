@@ -1,10 +1,11 @@
 """POST /mcp — Duct's MCP server, for agents outside Duct.
 
 Not under ``/api`` and not behind ``validate_api_key``: an agent is not the
-Duct app and carries no ``X-API-Key``. Its one credential is a personal MCP
-token (``service/mcp_tokens.py``), resolved by ``get_mcp_caller``, and that
-token is accepted here and nowhere else. A sign-in JWT sent here is refused
-the same way a mistyped token is.
+Duct app and carries no ``X-API-Key``. Its one credential is an MCP token
+(``service/mcp_tokens.py``), pasted or minted by browser sign-in
+(``routes/mcp_oauth.py``), resolved by ``get_mcp_caller``, and accepted here
+and nowhere else. A sign-in JWT sent here is refused the same way a mistyped
+token is.
 
 No Origin check, though the transport spec asks local servers for one: it
 guards against a web page reaching a server on the visitor's own machine, and
@@ -34,11 +35,13 @@ from service.analytics import identify_user
 from service.mcp_server.protocol import (
     INTERNAL_ERROR,
     PARSE_ERROR,
+    MCP_PATH,
     PROTOCOL_VERSIONS,
     Caller,
     error,
     handle,
 )
+from service.mcp_server import oauth
 from service.mcp_server.tools import INSTRUCTIONS, TOOLS, TOOLSET_VERSION
 from service.mcp_tokens import resolve
 from service.ratelimit import RateLimit
@@ -46,8 +49,6 @@ from service.ratelimit import RateLimit
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["mcp"])
-
-MCP_PATH = "/mcp"
 
 # Twice the largest draft the project routes accept (128 KB): room for the
 # JSON-RPC envelope, and a bound on what one request makes us parse.
@@ -57,7 +58,16 @@ _MAX_BODY_BYTES = 256_000
 # loop makes thousands, and the cost of each lands on the database.
 _CALL_LIMIT = RateLimit(limit=120, window_seconds=60.0)
 
-_BEARER_CHALLENGE = {"WWW-Authenticate": 'Bearer realm="duct", error="invalid_token"'}
+def _challenge(*, presented: bool) -> dict[str, str]:
+    """RFC 6750 §3, plus the RFC 9728 pointer that lets a client holding only
+    this address find where to sign in. ``error`` only when a credential was
+    sent: a first call carries none, and nothing about it was invalid."""
+    params = ['realm="duct"']
+    if presented:
+        params.append('error="invalid_token"')
+    if oauth.available():
+        params += [f'resource_metadata="{oauth.resource_metadata_url()}"', f'scope="{oauth.SCOPE}"']
+    return {"WWW-Authenticate": "Bearer " + ", ".join(params)}
 
 
 def get_mcp_caller(
@@ -69,9 +79,9 @@ def get_mcp_caller(
     if resolved is None:
         raise HTTPException(
             status_code=HTTP_401_UNAUTHORIZED,
-            detail="Send a Duct MCP token as 'Authorization: Bearer duct_mcp_…'. "
-            "Create one in Duct under Connect your AI agent.",
-            headers=_BEARER_CHALLENGE,
+            detail="Sign in to Duct from your agent, or send a Duct MCP token as "
+            "'Authorization: Bearer duct_mcp_…' (Settings, Connect your AI agent).",
+            headers=_challenge(presented=bool(authorization)),
         )
     token, user = resolved
     identify_user(user)

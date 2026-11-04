@@ -1,35 +1,39 @@
 "use client";
 
 /**
- * Connect your AI agent: a token, the line to paste, the sentence to type.
+ * Connect your AI agent: the line to paste, the sign-in, the sentence to type.
  *
  * Three numbered steps because that is the whole job, and the person doing it
- * is in a terminal with this page beside it. The token is shown once, right
- * where it is made, and dropped into every snippet so one copy is enough; the
- * placeholder before that keeps the snippets readable, never copyable as
- * something that would half-work.
+ * is in a terminal with this page beside it. There is no secret in any of
+ * them: the agent finds Duct's sign-in from the server's first answer and
+ * opens the browser itself, so step 1 is the same line for everyone and step 2
+ * happens on Duct's own consent page (`app/authorize`).
  *
  * The first thing on the page is what an agent cannot do. The person this is
  * for is handing a program write access to Duct, and "it can only draft, and
  * never replaces what you typed" is the sentence that makes that reasonable.
+ *
+ * Below the steps, the agents that signed in, each disconnectable, and the
+ * older way in, a pasted token, for an agent that cannot open a browser. On
+ * the desktop sidecar the token is the only way (`signInAvailable`): its
+ * address changes every launch, and the browser cannot reach its app.
  *
  * Presentational: the page owns the requests, so /preview can render every
  * state from fixtures.
  */
 
 import { useState } from "react";
-import { Check, Copy, KeyRound } from "lucide-react";
+import { Bot, Check, Copy, KeyRound } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { formatDate, relativeTime } from "@/lib/format";
-import { agentSnippets } from "@/lib/mcpTokensApi";
+import { KIND_AGENT, agentSetup, tokenSetup } from "@/lib/mcpTokensApi";
 
 const COPIED_MS = 1600;
-const TOKEN_PLACEHOLDER = "duct_mcp_…";
 
-function CopyBox({ value, label, mono = true, disabled = false }) {
+function CopyBox({ value, label, mono = true }) {
   const { t } = useLingui();
   const [copied, setCopied] = useState(false);
   return (
@@ -45,7 +49,6 @@ function CopyBox({ value, label, mono = true, disabled = false }) {
         variant="ghost"
         size="icon"
         className="absolute right-1 top-1 size-8"
-        disabled={disabled}
         aria-label={copied ? t`Copied` : t`Copy`}
         onClick={() => {
           navigator.clipboard?.writeText(value).catch(() => {});
@@ -78,26 +81,135 @@ function Step({ number, title, children }) {
   );
 }
 
-function TokenRow({ token, onRevoke }) {
+function Hint({ children }) {
+  return <p className="text-xs text-muted-foreground">{children}</p>;
+}
+
+/** One connected agent or one pasted token. An agent's access token changes
+ *  every hour, so it shows no hint; a token's last four tell two apart. */
+function CredentialRow({ row, onRemove }) {
   const { t } = useLingui();
-  const tokenName = token.name;
-  const used = relativeTime(token.last_used_at, { fallbackAfterDays: 7 });
-  const expires = formatDate(token.expires_at);
+  const rowName = row.name;
+  const agent = row.kind === KIND_AGENT;
+  const used = relativeTime(row.last_used_at, { fallbackAfterDays: 7 });
+  const created = formatDate(row.created_at);
+  const expires = formatDate(row.expires_at);
+  const Icon = agent ? Bot : KeyRound;
   return (
     <li className="flex items-start gap-3 border-b border-border/60 py-2.5 last:border-b-0">
-      <KeyRound className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+      <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm text-foreground">{token.name}</p>
+        <p className="truncate text-sm text-foreground">{row.name}</p>
         <p className="flex flex-wrap gap-x-2 text-xs text-muted-foreground">
-          <span className="font-mono">…{token.hint}</span>
-          <span>{token.last_used_at ? <Trans>Used {used}</Trans> : <Trans>Never used</Trans>}</span>
-          <span><Trans>Expires {expires}</Trans></span>
+          {agent ? <span><Trans>Connected {created}</Trans></span> : <span className="font-mono">…{row.hint}</span>}
+          <span>{row.last_used_at ? <Trans>Used {used}</Trans> : <Trans>Never used</Trans>}</span>
+          {!agent && <span><Trans>Expires {expires}</Trans></span>}
         </p>
       </div>
-      <Button type="button" variant="ghost" size="sm" onClick={() => onRevoke(token)} aria-label={t`Revoke ${tokenName}`}>
-        <Trans>Revoke</Trans>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={() => onRemove(row)}
+        aria-label={agent ? t`Disconnect ${rowName}` : t`Revoke ${rowName}`}
+      >
+        {agent ? <Trans>Disconnect</Trans> : <Trans>Revoke</Trans>}
       </Button>
     </li>
+  );
+}
+
+function CredentialList({ rows, empty, onRemove }) {
+  if (rows == null) return <p className="text-sm text-muted-foreground"><Trans>Loading…</Trans></p>;
+  if (rows.length === 0) return <p className="text-sm text-muted-foreground">{empty}</p>;
+  return (
+    <ul>
+      {rows.map((row) => (
+        <CredentialRow key={row.id} row={row} onRemove={onRemove} />
+      ))}
+    </ul>
+  );
+}
+
+function SignInSteps({ serverUrl }) {
+  const { t } = useLingui();
+  const setup = agentSetup(serverUrl);
+  return (
+    <ol className="space-y-8">
+      <Step number={1} title={t`Add Duct to your agent`}>
+        <Tabs defaultValue="claude">
+          {/* Five names do not fit one pill in a narrow column; underlined
+              tabs wrap onto a second row and still read as one set. */}
+          <TabsList variant="line" className="flex-wrap justify-start group-data-horizontal/tabs:h-auto">
+            <TabsTrigger value="claude">Claude Code</TabsTrigger>
+            <TabsTrigger value="codex">Codex</TabsTrigger>
+            <TabsTrigger value="cursor">Cursor</TabsTrigger>
+            <TabsTrigger value="vscode">VS Code</TabsTrigger>
+            <TabsTrigger value="opencode">OpenCode</TabsTrigger>
+          </TabsList>
+          <TabsContent value="claude" className="space-y-1.5">
+            <Hint><Trans>Run this in your terminal.</Trans></Hint>
+            <CopyBox value={setup.claude} label={t`Command for Claude Code`} />
+            <Hint>
+              <Trans>
+                Then, in Claude Code, run <code className="font-mono">/mcp</code>, pick duct and choose
+                Authenticate.
+              </Trans>
+            </Hint>
+          </TabsContent>
+          <TabsContent value="codex" className="space-y-1.5">
+            <Hint><Trans>Run these in your terminal. The second one opens your browser.</Trans></Hint>
+            <CopyBox value={setup.codex} label={t`Commands for Codex`} />
+          </TabsContent>
+          <TabsContent value="cursor" className="space-y-1.5">
+            <Hint>
+              <Trans>Add this to <code className="font-mono">~/.cursor/mcp.json</code>.</Trans>
+            </Hint>
+            <CopyBox value={setup.cursor} label={t`Settings for Cursor`} />
+            <Hint><Trans>Then sign in from duct&apos;s entry in Cursor&apos;s MCP settings.</Trans></Hint>
+          </TabsContent>
+          <TabsContent value="vscode" className="space-y-1.5">
+            <Hint>
+              <Trans>
+                Run <strong className="font-medium text-foreground">MCP: Add Server</strong> from the Command
+                Palette, choose HTTP, paste this address and name it duct.
+              </Trans>
+            </Hint>
+            <CopyBox value={setup.vscode} label={t`Address for VS Code`} />
+          </TabsContent>
+          <TabsContent value="opencode" className="space-y-1.5">
+            <Hint>
+              <Trans>Add this to <code className="font-mono">opencode.json</code>.</Trans>
+            </Hint>
+            <CopyBox value={setup.opencode} label={t`Settings for OpenCode`} />
+            <Hint>
+              <Trans>Then run <code className="font-mono">opencode mcp auth duct</code>.</Trans>
+            </Hint>
+          </TabsContent>
+        </Tabs>
+      </Step>
+
+      <Step number={2} title={t`Sign in when your browser opens`}>
+        <Hint>
+          <Trans>
+            Your agent opens Duct in your browser. Check it names your agent, then choose Allow. No token to copy,
+            and it shows up under Connected agents below.
+          </Trans>
+        </Hint>
+      </Step>
+
+      <Step number={3} title={t`Ask it to set up your project`}>
+        {/* In the reader's language: the agent understands any of them,
+            and a prompt is easier to trust when you can read it. */}
+        <CopyBox value={t`Set up this product in Duct.`} label={t`First prompt`} mono={false} />
+        <Hint>
+          <Trans>
+            It reads your README and docs, shows you what it will send, then drafts the project. Review it in
+            Duct afterwards; every field says where it came from.
+          </Trans>
+        </Hint>
+      </Step>
+    </ol>
   );
 }
 
@@ -107,29 +219,42 @@ export default function AgentAccess({
   minted = null,
   creating = false,
   error = "",
+  signInAvailable = true,
   onCreate,
   onRevoke,
 }) {
   const { t } = useLingui();
-  const [name, setName] = useState("Claude Code");
+  const [name, setName] = useState("");
   const { confirm, dialog } = useConfirm();
-  const snippets = agentSnippets(serverUrl, minted?.token || TOKEN_PLACEHOLDER);
+  const agents = tokens?.filter((row) => row.kind === KIND_AGENT) ?? null;
+  const pasted = tokens?.filter((row) => row.kind !== KIND_AGENT) ?? null;
+  const withToken = minted ? tokenSetup(serverUrl, minted.token) : null;
 
-  async function revoke(token) {
-    const tokenName = token.name;
-    const ok = await confirm({
-      title: t`Revoke “${tokenName}”?`,
-      description: t`Any agent using this token loses access to Duct right away. Your projects stay as they are.`,
-      action: t`Revoke`,
-      destructive: true,
-    });
-    if (ok) onRevoke(token.id);
+  async function remove(row) {
+    const rowName = row.name;
+    const agent = row.kind === KIND_AGENT;
+    const ok = await confirm(
+      agent
+        ? {
+            title: t`Disconnect “${rowName}”?`,
+            description: t`It loses access to Duct on its next request. Your projects stay as they are, and you can add it again any time.`,
+            action: t`Disconnect`,
+            destructive: true,
+          }
+        : {
+            title: t`Revoke “${rowName}”?`,
+            description: t`Any agent using this token loses access to Duct right away. Your projects stay as they are.`,
+            action: t`Revoke`,
+            destructive: true,
+          },
+    );
+    if (ok) onRevoke(row.id);
   }
 
   return (
     <div className="max-w-2xl">
       <p className="mb-1 text-sm text-foreground">
-        <Trans>Let Claude Code, Codex or Cursor set up your projects from the repo you are working in.</Trans>
+        <Trans>Use Duct from Claude Code, Codex, Cursor, VS Code or OpenCode, in the repo you are working in.</Trans>
       </p>
       <p className="mb-8 text-sm text-muted-foreground">
         <Trans>
@@ -138,101 +263,77 @@ export default function AgentAccess({
         </Trans>
       </p>
 
-      <ol className="space-y-8">
-        <Step number={1} title={t`Create a token`}>
-          <form
-            className="flex flex-wrap gap-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (name.trim()) onCreate(name.trim());
-            }}
-          >
-            <label htmlFor="agent-token-name" className="sr-only">
-              <Trans>Token name</Trans>
-            </label>
-            <input
-              id="agent-token-name"
-              className="h-9 min-w-0 flex-1 rounded-lg border border-input bg-transparent px-3 text-sm text-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
-              value={name}
-              maxLength={60}
-              placeholder={t`Claude Code on my laptop`}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <Button type="submit" disabled={creating || !name.trim()}>
-              {creating ? <Trans>Creating…</Trans> : <Trans>Create token</Trans>}
-            </Button>
-          </form>
-          {error && (
-            <p role="alert" className="text-sm text-destructive">
-              {error}
-            </p>
-          )}
-          {minted && (
-            <div className="space-y-1.5" role="status">
-              <p className="text-sm text-foreground">
-                <Trans>Copy it now. Duct shows a token once.</Trans>
-              </p>
-              <CopyBox value={minted.token} label={t`Your new token`} />
-            </div>
-          )}
-        </Step>
-
-        <Step number={2} title={t`Add Duct to your agent`}>
-          {!minted && (
-            <p className="text-xs text-muted-foreground">
-              <Trans>Create a token first. It fills in below, so one copy is all it takes.</Trans>
-            </p>
-          )}
-          <Tabs defaultValue="claude">
-            <TabsList>
-              <TabsTrigger value="claude">Claude Code</TabsTrigger>
-              <TabsTrigger value="codex">Codex</TabsTrigger>
-              <TabsTrigger value="cursor">Cursor</TabsTrigger>
-            </TabsList>
-            <TabsContent value="claude" className="space-y-1.5">
-              <p className="text-xs text-muted-foreground"><Trans>Run this in your terminal.</Trans></p>
-              <CopyBox value={snippets.claude} label={t`Command for Claude Code`} disabled={!minted} />
-            </TabsContent>
-            <TabsContent value="codex" className="space-y-1.5">
-              <p className="text-xs text-muted-foreground">
-                <Trans>Add this to <code className="font-mono">~/.codex/config.toml</code>.</Trans>
-              </p>
-              <CopyBox value={snippets.codex} label={t`Settings for Codex`} disabled={!minted} />
-            </TabsContent>
-            <TabsContent value="cursor" className="space-y-1.5">
-              <p className="text-xs text-muted-foreground">
-                <Trans>Add this to <code className="font-mono">~/.cursor/mcp.json</code>.</Trans>
-              </p>
-              <CopyBox value={snippets.cursor} label={t`Settings for Cursor`} disabled={!minted} />
-            </TabsContent>
-          </Tabs>
-        </Step>
-
-        <Step number={3} title={t`Ask it to set up your project`}>
-          {/* In the reader's language: the agent understands any of them,
-              and a prompt is easier to trust when you can read it. */}
-          <CopyBox value={t`Set up this product in Duct.`} label={t`First prompt`} mono={false} />
-          <p className="text-xs text-muted-foreground">
-            <Trans>
-              It reads your README and docs, shows you what it will send, then drafts the project. Review
-              it in Duct afterwards; every field says where it came from.
-            </Trans>
-          </p>
-        </Step>
-      </ol>
-
-      <h2 className="mb-1 mt-10 text-sm font-semibold text-foreground"><Trans>Your tokens</Trans></h2>
-      {tokens == null ? (
-        <p className="text-sm text-muted-foreground"><Trans>Loading…</Trans></p>
-      ) : tokens.length === 0 ? (
-        <p className="text-sm text-muted-foreground"><Trans>No tokens yet.</Trans></p>
+      {signInAvailable ? (
+        <>
+          <SignInSteps serverUrl={serverUrl} />
+          <h2 className="mb-1 mt-10 text-sm font-semibold text-foreground"><Trans>Connected agents</Trans></h2>
+          <CredentialList
+            rows={agents}
+            empty={t`None yet. An agent shows up here once you allow it.`}
+            onRemove={remove}
+          />
+        </>
       ) : (
-        <ul>
-          {tokens.map((token) => (
-            <TokenRow key={token.id} token={token} onRevoke={revoke} />
-          ))}
-        </ul>
+        <p className="mb-2 rounded-lg border border-border bg-muted/50 p-3 text-sm text-foreground">
+          <Trans>
+            Browser sign-in works with Duct&apos;s hosted service. This Duct runs on your computer, so connect your
+            agent with a token below.
+          </Trans>
+        </p>
       )}
+
+      <section aria-labelledby="agent-token-heading" className="mt-10 border-t border-border pt-6">
+        <h2 id="agent-token-heading" className="mb-1 text-sm font-semibold text-foreground">
+          {signInAvailable ? <Trans>No browser? Use a token</Trans> : <Trans>Use a token</Trans>}
+        </h2>
+        <p className="mb-3 text-xs text-muted-foreground">
+          <Trans>
+            For an agent that can&apos;t open a browser, such as CI or a remote machine. Duct shows a token once, and
+            it works for a year.
+          </Trans>
+        </p>
+        <form
+          className="flex flex-wrap gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (name.trim()) onCreate(name.trim());
+          }}
+        >
+          <label htmlFor="agent-token-name" className="sr-only">
+            <Trans>Token name</Trans>
+          </label>
+          <input
+            id="agent-token-name"
+            className="h-9 min-w-0 flex-1 rounded-lg border border-input bg-transparent px-3 text-sm text-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30"
+            value={name}
+            maxLength={60}
+            placeholder={t`Name it, e.g. CI on GitHub Actions`}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <Button type="submit" variant="outline" disabled={creating || !name.trim()}>
+            {creating ? <Trans>Creating…</Trans> : <Trans>Create token</Trans>}
+          </Button>
+        </form>
+        {error && (
+          <p role="alert" className="mt-2 text-sm text-destructive">
+            {error}
+          </p>
+        )}
+        {withToken && (
+          <div className="mt-4 space-y-2.5" role="status">
+            <p className="text-sm text-foreground">
+              <Trans>Copy it now. Duct shows a token once.</Trans>
+            </p>
+            <CopyBox value={minted.token} label={t`Your new token`} />
+            <Hint><Trans>Add Duct to Claude Code with it:</Trans></Hint>
+            <CopyBox value={withToken.claude} label={t`Command for Claude Code with a token`} />
+            <Hint><Trans>Or have any other agent send this header to the same address:</Trans></Hint>
+            <CopyBox value={withToken.header} label={t`Header for any agent`} />
+          </div>
+        )}
+        <h3 className="mb-1 mt-6 text-xs font-semibold text-muted-foreground"><Trans>Your tokens</Trans></h3>
+        <CredentialList rows={pasted} empty={t`No tokens yet.`} onRemove={remove} />
+      </section>
       {dialog}
     </div>
   );
