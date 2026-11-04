@@ -249,7 +249,10 @@ carries all the code.
   ships a broken app. After the first one you rarely will:
   `scripts/ensure-sidecar-fresh.mjs` is a `pre*` hook on every
   sidecar-shipping script and refreezes in the same command whenever the
-  backend has moved ahead; `DUCT_SKIP_SIDECAR_CHECK=1` opts out. The freeze is
+  backend has moved ahead; `DUCT_SKIP_SIDECAR_CHECK=1` opts out. It refuses
+  while an app is running from the freeze, because a frozen app finds its files
+  by the path it started from and a swap breaks whatever it imports next. Quit
+  the app first; a second launch only hands off to the running one. The freeze is
   **onedir, never onefile**: a onefile binary unpacks to a temp dir at startup
   and does not survive signing + notarization.
 
