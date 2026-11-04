@@ -94,11 +94,17 @@ export function StatusTabs({ entries, filters, onFiltersChange }) {
  * @param featured  ids of the first sources worth connecting, lifted out of
  *                  the list while browsing
  * @param renderFeatured  (id) => the large tile for one of `featured`
- * @param trailing  what ends the list: the "Any MCP server" tile, or the tiles
- *                  standing in while MCP servers load
+ * @param hero      (searchFor) => the card that offers any tool, drawn with the
+ *                  starters while browsing everything. `searchFor(name)` runs
+ *                  a search for it
+ * @param trailing  the way in for anything unlisted where the hero isn't
+ *                  drawn: the "Any MCP server" tile, or the tiles standing in
+ *                  while MCP servers load
  * @param moreResults  what a search finds outside this catalogue (the MCP
  *                  Registry's section), under the results and never mixed
  *                  into them: those sources are not ours to file or rank
+ * @param searchPlaceholder  what the search says it covers, when that is more
+ *                  than the sources listed here
  */
 export default function ConnectorBrowser({
   entries,
@@ -106,8 +112,10 @@ export default function ConnectorBrowser({
   onFiltersChange,
   featured = [],
   renderFeatured,
+  hero = null,
   trailing = null,
   moreResults = null,
+  searchPlaceholder = "",
 }) {
   const { t, i18n } = useLingui();
   const labelOf = useLabelOf();
@@ -118,6 +126,13 @@ export default function ConnectorBrowser({
 
   // "/" finds the search from anywhere on the page, as on most catalogues.
   useShortcut("/", () => searchRef.current?.focus());
+
+  // Scrolled to, not focused: on a phone focus raises the keyboard over the
+  // results this just asked for.
+  const searchFor = (query) => {
+    set({ query });
+    searchRef.current?.scrollIntoView({ block: "nearest" });
+  };
 
   const view = useMemo(
     () => arrangeCatalog(entries, filters, { featured, labelOf }),
@@ -150,7 +165,7 @@ export default function ConnectorBrowser({
               onKeyDown={(e) => {
                 if (e.key === "Escape" && filters.query) set({ query: "" });
               }}
-              placeholder={plural(view.total, { one: "Search # source", other: "Search # sources" })}
+              placeholder={searchPlaceholder || plural(view.total, { one: "Search # source", other: "Search # sources" })}
               aria-label={t`Search sources`}
               className="pl-9 pr-9"
             />
@@ -189,31 +204,43 @@ export default function ConnectorBrowser({
       </div>
 
       {view.mode === "results" ? (
-        <>
-          <Results view={view} filters={filters} trailing={trailing} onClear={clear} />
-          {moreResults}
-        </>
+        <Results view={view} filters={filters} trailing={trailing} moreResults={moreResults} onClear={clear} />
       ) : (
-        <Browse view={view} filters={filters} renderFeatured={renderFeatured} trailing={trailing} labelOf={labelOf} set={set} />
+        <Browse
+          view={view}
+          filters={filters}
+          renderFeatured={renderFeatured}
+          heroCard={hero?.(searchFor) ?? null}
+          trailing={trailing}
+          labelOf={labelOf}
+          set={set}
+        />
       )}
     </>
   );
 }
 
-function Browse({ view, filters, renderFeatured, trailing, labelOf, set }) {
+function Browse({ view, filters, renderFeatured, heroCard, trailing, labelOf, set }) {
   const { featured, groups, counts } = view;
-  // The way in for anything unlisted ends every tab but Connected.
-  const tail = filters.status === ConnectionStatus.CONNECTED ? null : trailing;
+  const connectedTab = filters.status === ConnectionStatus.CONNECTED;
+  // The whole list is where the question "what else?" comes up. A category
+  // or the Connected tab asks something narrower.
+  const showHero = Boolean(heroCard) && !connectedTab && filters.category === ALL;
+  // Otherwise the way in for anything unlisted ends every tab but Connected.
+  const tail = connectedTab || showHero ? null : trailing;
   const sections = groups.length ? groups : tail ? [{ category: ALL, items: [], more: 0 }] : [];
   const anyConnected = counts.status[ConnectionStatus.CONNECTED] > 0;
   return (
     <>
-      {featured.length > 0 && (
+      {featured.length > 0 ? (
         <Section title={anyConnected ? <Trans>Worth adding next</Trans> : <Trans>Start with these</Trans>}>
           {/* Two across at most: a starter tile carries a sentence and a
               button, and four across cut the sentence to an ellipsis. */}
           <TileGrid cols={2}>{featured.map((e) => renderFeatured?.(e.id) ?? e.render())}</TileGrid>
+          {showHero && heroCard}
         </Section>
+      ) : (
+        showHero && heroCard
       )}
 
       {sections.map((group, i) => {
@@ -242,7 +269,7 @@ function Browse({ view, filters, renderFeatured, trailing, labelOf, set }) {
         );
       })}
 
-      {!sections.length && (
+      {!sections.length && !showHero && (
         <p className="text-sm text-muted-foreground">
           <Trans>Nothing connected yet.</Trans>
         </p>
@@ -251,46 +278,50 @@ function Browse({ view, filters, renderFeatured, trailing, labelOf, set }) {
   );
 }
 
-function Results({ view, filters, trailing, onClear }) {
+/**
+ * A search runs out in order: the list, the MCP Registry, then the address.
+ * The address comes last because it is what's left once a name has found
+ * nothing. It sat above the registry's section once, so a search for Figma
+ * answered "paste an address" with Figma's own server below the fold.
+ */
+function Results({ view, filters, trailing, moreResults, onClear }) {
   const { results } = view;
   const query = filters.query.trim();
   // The way in for anything the list does not have, unless the tab asks
   // only for what is already connected.
-  const offerAdd = filters.status !== ConnectionStatus.CONNECTED;
+  const offerAdd = filters.status !== ConnectionStatus.CONNECTED && trailing;
   const clearButton = (
     <Button variant="ghost" size="sm" onClick={onClear}>
       <Trans>Clear filters</Trans>
     </Button>
   );
 
-  if (!results.length) {
-    return (
-      <Section>
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <p className="text-sm text-muted-foreground">
-            {query ? <Trans>Nothing matches “{query}”.</Trans> : <Trans>Nothing here with these filters.</Trans>}
-          </p>
-          {clearButton}
-        </div>
-        {offerAdd && trailing && (
-          <>
-            <p className="text-sm text-muted-foreground">
-              <Trans>Not listed? Any remote MCP server connects by its address.</Trans>
-            </p>
-            <TileGrid>{trailing}</TileGrid>
-          </>
-        )}
-      </Section>
-    );
-  }
-
   return (
-    <Section title={plural(results.length, { one: "# source", other: "# sources" })} actions={clearButton}>
-      <TileGrid>
-        {results.map((e) => e.render())}
-        {offerAdd && trailing}
-      </TileGrid>
-    </Section>
+    <>
+      {results.length ? (
+        <Section title={plural(results.length, { one: "# source", other: "# sources" })} actions={clearButton}>
+          <TileGrid>{results.map((e) => e.render())}</TileGrid>
+        </Section>
+      ) : (
+        <Section>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <p className="text-sm text-muted-foreground">
+              {query ? <Trans>Nothing in this list matches “{query}”.</Trans> : <Trans>Nothing here with these filters.</Trans>}
+            </p>
+            {clearButton}
+          </div>
+        </Section>
+      )}
+      {moreResults}
+      {offerAdd && (
+        <Section>
+          <p className="text-sm text-muted-foreground">
+            <Trans>Not listed? Any remote MCP server connects by its address.</Trans>
+          </p>
+          <TileGrid>{trailing}</TileGrid>
+        </Section>
+      )}
+    </>
   );
 }
 

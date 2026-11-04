@@ -1274,6 +1274,7 @@ msgstr "Add a tag, press Enter…"
 msgid "Add a thought — it goes in at the next step"
 msgstr "Add a thought — it goes in at the next step"
 
+#: src/components/connections/BringAnyTool.jsx
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Add an MCP server"
 msgstr "Add an MCP server"
@@ -2104,6 +2105,10 @@ msgstr "Brief"
 #: src/app/(app)/artifacts/page.jsx
 msgid "Briefs"
 msgstr "Briefs"
+
+#: src/components/connections/BringAnyTool.jsx
+msgid "Bring any tool"
+msgstr "Bring any tool"
 
 #: src/components/connections/logos.jsx
 msgid "Bring your own provider"
@@ -6519,6 +6524,10 @@ msgstr "Nothing here with these filters."
 #~ msgid "Nothing here yet."
 #~ msgstr "Nothing here yet."
 
+#: src/components/connections/ConnectorBrowser.jsx
+msgid "Nothing in this list matches “{query}”."
+msgstr "Nothing in this list matches “{query}”."
+
 #: src/components/insights/Desk.jsx
 msgid "Nothing is connected right now."
 msgstr "Nothing is connected right now."
@@ -6540,8 +6549,8 @@ msgid "Nothing is wrong with the key. Give it a moment and verify again."
 msgstr "Nothing is wrong with the key. Give it a moment and verify again."
 
 #: src/components/connections/ConnectorBrowser.jsx
-msgid "Nothing matches “{query}”."
-msgstr "Nothing matches “{query}”."
+#~ msgid "Nothing matches “{query}”."
+#~ msgstr "Nothing matches “{query}”."
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Nothing matches that filter."
@@ -8556,6 +8565,10 @@ msgstr "Search {many}"
 msgid "Search & SEO"
 msgstr "Search & SEO"
 
+#: src/app/(app)/connections/page.jsx
+msgid "Search any tool or MCP server"
+msgstr "Search any tool or MCP server"
+
 #: src/components/commands/CommandPalette.jsx
 msgid "Search commands"
 msgstr "Search commands"
@@ -8571,6 +8584,10 @@ msgstr "Search Console is the easiest start. Your first brief takes about three 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Search Console, Analytics or Google Ads. Duct can’t check a number it can’t see."
 msgstr "Search Console, Analytics or Google Ads. Duct can’t check a number it can’t see."
+
+#: src/components/connections/BringAnyTool.jsx
+msgid "Search for a tool"
+msgstr "Search for a tool"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Search memory"
@@ -10304,6 +10321,10 @@ msgstr "Those numbers didn’t save. Check them and try again."
 msgid "Thought for {seconds}s"
 msgstr "Thought for {seconds}s"
 
+#: src/components/connections/BringAnyTool.jsx
+msgid "Thousands of tools have an MCP server, and Duct’s chat can use any of them. Find yours by name, or paste its address."
+msgstr "Thousands of tools have an MCP server, and Duct’s chat can use any of them. Find yours by name, or paste its address."
+
 #: src/components/insights/desk/DeskLists.jsx
 msgid "thread"
 msgstr "thread"
@@ -10405,6 +10426,10 @@ msgstr "Trending posts in a region — good for sound + format discovery."
 #: src/app/(app)/connections/page.jsx
 msgid "Trials, renewals, refunds and MRR across the App Store and Play."
 msgstr "Trials, renewals, refunds and MRR across the App Store and Play."
+
+#: src/components/connections/BringAnyTool.jsx
+msgid "Try"
+msgstr "Try"
 
 #: src/components/AppErrorPanel.jsx
 #: src/components/connections/McpConnectors.jsx
