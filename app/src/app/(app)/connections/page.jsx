@@ -28,13 +28,22 @@ import { MCP_GUIDE_URL } from "../../../lib/mcpServers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Page, PageHeader, Section, TileGrid } from "@/components/ui/page";
+import { Page, PageHeader } from "@/components/ui/page";
+import ConnectorBrowser, { NO_FILTERS, StatusTabs } from "../../../components/connections/ConnectorBrowser";
 import ManualConnectorCard from "../../../components/connections/ManualConnectorCard";
-import McpConnectors from "../../../components/connections/McpConnectors";
+import { McpPhase, useMcpConnectors } from "../../../components/connections/McpConnectors";
 import FirstSourceCelebration from "../../../components/connections/FirstSourceCelebration";
 import OAuthConnectorCard from "../../../components/connections/OAuthConnectorCard";
 import { DEFAULT_VALUE } from "../../../components/connections/ProjectAccountSelect";
 import { LOGOS } from "../../../components/connections/logos";
+import {
+  ALL,
+  ConnectionStatus,
+  NATIVE_CATEGORY,
+  NATIVE_KEYWORDS,
+  Origin,
+} from "../../../lib/connectorCatalog";
+import { DUCT_PUBLISHER } from "../../../lib/connectorSource";
 
 // The connectors whose credentials come from a Google sign-in; the rest are
 // pasted keys, stored one row per account.
@@ -49,6 +58,8 @@ const STARTERS = [
   { type: "google_ads", benefit: msg`What each campaign costs and what it brings back.` },
   { type: "stripe", benefit: msg`The revenue every other number should answer to.` },
 ];
+const STARTER_IDS = STARTERS.map((s) => s.type);
+const STARTER_BENEFIT = Object.fromEntries(STARTERS.map((s) => [s.type, s.benefit]));
 
 export default function ConnectionsPage() {
   const { t, i18n } = useLingui();
@@ -70,6 +81,9 @@ export default function ConnectionsPage() {
   const [project, setProject] = useState(null);
   const [bindings, setBindings] = useState({}); // connector_type -> binding row
   const [mappingBusy, setMappingBusy] = useState("");
+  // The catalogue's search and filters. Held here because the status tabs sit
+  // in the page header and the rest under it.
+  const [filters, setFilters] = useState(NO_FILTERS);
 
   async function refreshServerRows() {
     if (!hasAuthToken()) return;
@@ -409,16 +423,38 @@ export default function ConnectionsPage() {
     setConnectError(error);
     setConnectNotice(notice);
   }, []);
+  // The registry is asked only where its servers could answer the question:
+  // none is connected yet, and none is Duct's, a vendor's preset or yours.
+  const registrySearch =
+    filters.status !== ConnectionStatus.CONNECTED && filters.origin === ALL ? filters.query : "";
+  const mcp = useMcpConnectors({ signedIn, search: registrySearch, onMessage: showMcpMessage });
 
   // Every native connector, by type. A function per connector so the page can
   // place each one in the section its state puts it in, and hand the first-run
   // tiles `featured` without a second copy of any card.
+  // Each native connector's name and line, once: its card shows them and the
+  // catalogue searches them, in the reader's language.
+  const copy = {
+    google_ads: { title: t`Google Ads`, description: t`Spend, clicks, impressions, conversions and ROAS, per campaign.` },
+    gsc: { title: t`Google Search Console`, description: t`Search queries, clicks, impressions and average position.` },
+    ga4: { title: t`Google Analytics`, description: t`Traffic, sessions, engagement and conversions.` },
+    gtm: { title: t`Google Tag Manager`, description: t`Tags, variables and container versions — staged, with rollback.` },
+    meta_ads: { title: t`Meta Ads`, description: t`Facebook and Instagram spend, reach, conversions and CPA.` },
+    stripe: { title: "Stripe", description: t`Settled revenue, subscriptions, refunds and payment outcomes.` },
+    apple_ads: { title: t`Apple Search Ads`, description: t`Spend, taps and installs, by campaign and search term.` },
+    revenuecat: { title: t`RevenueCat`, description: t`Trials, renewals, refunds and MRR across the App Store and Play.` },
+    openai_ads: { title: t`OpenAI Ads`, description: t`Impressions, clicks and spend. Conversions stay in Ads Manager.` },
+    mixpanel: { title: "Mixpanel", description: t`Signups, logins and upgrades, one name across web and app.` },
+    clarity: { title: t`Microsoft Clarity`, description: t`Rage clicks, dead clicks, quick-backs and script errors, per page.` },
+    growthbook: { title: "GrowthBook", description: t`Which tests are live, whether they still bucket, per-metric results.` },
+    github: { title: "GitHub", description: t`Merged pull requests, releases, closed issues and doc changes, by date.` },
+  };
+
   const CONNECTORS = {
     google_ads: (extra) => (
         <OAuthConnectorCard
           {...extra}
-          title={t`Google Ads`}
-          description={t`Spend, clicks, impressions, conversions and ROAS, per campaign.`}
+          {...copy.google_ads}
           logo={LOGOS.google_ads}
           connected={gadsAuthorized}
           oauthConnected={gadsAuthorized}
@@ -458,8 +494,7 @@ export default function ConnectionsPage() {
     gsc: (extra) => (
         <OAuthConnectorCard
           {...extra}
-          title={t`Google Search Console`}
-          description={t`Search queries, clicks, impressions and average position.`}
+          {...copy.gsc}
           logo={LOGOS.gsc}
           connected={gscAuthorized}
           oauthConnected={gscAuthorized}
@@ -475,8 +510,7 @@ export default function ConnectionsPage() {
     ga4: (extra) => (
         <OAuthConnectorCard
           {...extra}
-          title={t`Google Analytics`}
-          description={t`Traffic, sessions, engagement and conversions.`}
+          {...copy.ga4}
           logo={LOGOS.ga4}
           connected={ga4Authorized}
           oauthConnected={ga4Authorized}
@@ -492,8 +526,7 @@ export default function ConnectionsPage() {
     gtm: (extra) => (
         <OAuthConnectorCard
           {...extra}
-          title={t`Google Tag Manager`}
-          description={t`Tags, variables and container versions — staged, with rollback.`}
+          {...copy.gtm}
           logo={LOGOS.gtm}
           connected={gtmAuthorized}
           oauthConnected={gtmAuthorized}
@@ -510,8 +543,7 @@ export default function ConnectionsPage() {
         <ManualConnectorCard
           {...extra}
           type="meta_ads"
-          title={t`Meta Ads`}
-          description={t`Facebook and Instagram spend, reach, conversions and CPA.`}
+          {...copy.meta_ads}
           logo={LOGOS.meta_ads}
           fields={[
             {
@@ -544,8 +576,7 @@ export default function ConnectionsPage() {
         <ManualConnectorCard
           {...extra}
           type="stripe"
-          title="Stripe"
-          description={t`Settled revenue, subscriptions, refunds and payment outcomes.`}
+          {...copy.stripe}
           logo={LOGOS.stripe}
           fields={[
             {
@@ -569,8 +600,7 @@ export default function ConnectionsPage() {
         <ManualConnectorCard
           {...extra}
           type="apple_ads"
-          title={t`Apple Search Ads`}
-          description={t`Spend, taps and installs, by campaign and search term.`}
+          {...copy.apple_ads}
           logo={LOGOS.apple_ads}
           fields={[
             { key: "client_id", label: t`Client ID`, placeholder: "SEARCHADS.xxxxxxxx-…" },
@@ -598,8 +628,7 @@ export default function ConnectionsPage() {
         <ManualConnectorCard
           {...extra}
           type="revenuecat"
-          title={t`RevenueCat`}
-          description={t`Trials, renewals, refunds and MRR across the App Store and Play.`}
+          {...copy.revenuecat}
           logo={LOGOS.revenuecat}
           fields={[
             {
@@ -624,8 +653,7 @@ export default function ConnectionsPage() {
         <ManualConnectorCard
           {...extra}
           type="openai_ads"
-          title={t`OpenAI Ads`}
-          description={t`Impressions, clicks and spend. Conversions stay in Ads Manager.`}
+          {...copy.openai_ads}
           logo={LOGOS.openai_ads}
           fields={[
             {
@@ -649,8 +677,7 @@ export default function ConnectionsPage() {
         <ManualConnectorCard
           {...extra}
           type="mixpanel"
-          title="Mixpanel"
-          description={t`Signups, logins and upgrades, one name across web and app.`}
+          {...copy.mixpanel}
           logo={LOGOS.mixpanel}
           fields={[
             { key: "service_account_username", label: t`Service account username`, placeholder: "duct.xxxxxx.mp-service-account" },
@@ -690,8 +717,7 @@ export default function ConnectionsPage() {
         <ManualConnectorCard
           {...extra}
           type="clarity"
-          title={t`Microsoft Clarity`}
-          description={t`Rage clicks, dead clicks, quick-backs and script errors, per page.`}
+          {...copy.clarity}
           logo={LOGOS.clarity}
           fields={[
             {
@@ -723,8 +749,7 @@ export default function ConnectionsPage() {
         <ManualConnectorCard
           {...extra}
           type="growthbook"
-          title="GrowthBook"
-          description={t`Which tests are live, whether they still bucket, per-metric results.`}
+          {...copy.growthbook}
           logo={LOGOS.growthbook}
           fields={[
             {
@@ -755,8 +780,7 @@ export default function ConnectionsPage() {
         <ManualConnectorCard
           {...extra}
           type="github"
-          title="GitHub"
-          description={t`Merged pull requests, releases, closed issues and doc changes, by date.`}
+          {...copy.github}
           logo={LOGOS.github}
           fields={[
             {
@@ -797,9 +821,29 @@ export default function ConnectionsPage() {
     OAUTH_TYPES.has(type) ? !!serverRows[type] : (serverRowsAll[type] || []).length > 0;
   const available = Object.keys(CONNECTORS);
   const connectedTypes = available.filter(isConnected);
-  const startWith = STARTERS.filter((s) => !isConnected(s.type));
-  const rest = available.filter((type) => !isConnected(type) && !STARTERS.some((s) => s.type === type));
   const connectedCount = connectedTypes.length;
+
+  // Every source as one catalogue (lib/connectorCatalog.js): the native
+  // connectors here, the MCP servers from their hook. Each keeps its own card.
+  const statusOf = (type) =>
+    !isConnected(type)
+      ? ConnectionStatus.AVAILABLE
+      : serverRows[type]?.scope_status === "partial"
+        ? ConnectionStatus.ATTENTION
+        : ConnectionStatus.CONNECTED;
+  const catalog = [
+    ...available.map((type) => ({
+      id: type,
+      ...copy[type],
+      category: NATIVE_CATEGORY[type],
+      status: statusOf(type),
+      origin: Origin.DUCT,
+      publisher: DUCT_PUBLISHER,
+      keywords: NATIVE_KEYWORDS[type] || [],
+      render: () => <Fragment key={type}>{CONNECTORS[type]({})}</Fragment>,
+    })),
+    ...mcp.entries,
+  ];
 
   return (
     <Page>
@@ -810,6 +854,7 @@ export default function ConnectionsPage() {
             ? plural(connectedCount, { one: "# source connected", other: "# sources connected" })
             : t`Connect a source and Duct starts reading it the same minute.`
         }
+        actions={<StatusTabs entries={catalog} filters={filters} onFiltersChange={setFilters} />}
         help={
           <div className="flex flex-col gap-2">
             <p>
@@ -844,49 +889,20 @@ export default function ConnectionsPage() {
 
       <FirstSourceCelebration connectedTypes={connectedTypes} ready={signedIn} />
 
-      {connectedTypes.length > 0 && (
-        <Section title={<Trans>Connected</Trans>} count={connectedTypes.length}>
-          <TileGrid>
-            {connectedTypes.map((type) => (
-              <Fragment key={type}>{CONNECTORS[type]({})}</Fragment>
-            ))}
-          </TileGrid>
-        </Section>
-      )}
-
-      {startWith.length > 0 && (
-        <Section title={connectedCount ? <Trans>Worth adding next</Trans> : <Trans>Start with these</Trans>}>
-          {/* Two across at most: a starter tile carries a sentence and a
-              button, and four across cut the sentence to an ellipsis. */}
-          <TileGrid cols={2}>
-            {startWith.map(({ type, benefit }) => (
-              <Fragment key={type}>{CONNECTORS[type]({ featured: true, benefit: i18n._(benefit) })}</Fragment>
-            ))}
-          </TileGrid>
-        </Section>
-      )}
-
-      <Section title={<Trans>More sources</Trans>}>
-        <TileGrid>
-          {rest.map((type) => (
-            <Fragment key={type}>{CONNECTORS[type]({})}</Fragment>
-          ))}
-        </TileGrid>
-      </Section>
-
-      <Section
-        title={<Trans>MCP servers</Trans>}
-        help={
-          <Trans>
-            Tools from other companies&rsquo; own servers, for the chat. Pick one of these or paste the
-            address of any remote MCP server.
-          </Trans>
-        }
-      >
-        <TileGrid>
-          <McpConnectors signedIn={signedIn} onMessage={showMcpMessage} />
-        </TileGrid>
-      </Section>
+      <ConnectorBrowser
+        entries={catalog}
+        filters={filters}
+        onFiltersChange={setFilters}
+        featured={STARTER_IDS}
+        renderFeatured={(type) => (
+          <Fragment key={type}>
+            {CONNECTORS[type]({ featured: true, benefit: i18n._(STARTER_BENEFIT[type]) })}
+          </Fragment>
+        )}
+        trailing={mcp.phase === McpPhase.READY ? mcp.addTile() : mcp.placeholder}
+        moreResults={mcp.registry}
+      />
+      {mcp.overlays}
     </Page>
   );
 }

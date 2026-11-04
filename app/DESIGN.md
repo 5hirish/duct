@@ -180,7 +180,13 @@ of all of them):
    plan board is the second worked example: a plan is read on a day it was
    not written for, so `agendaGroups` and `planState` in
    `lib/contentSchedule.js` decide what is missed, this week, later or done,
-   held to `lib/__fixtures__/planScenarios.mjs` over 500 random plans.
+   held to `lib/__fixtures__/planScenarios.mjs` over 500 random plans. The
+   Connections catalogue is the third: how many sources there are is the
+   server's and the user's business, so `arrangeCatalog` in
+   `lib/connectorCatalog.js` turns any set into one grid below 24 and bounded
+   category sections above, with search and facet counts, held to
+   `lib/__fixtures__/connectorCatalogs.mjs` (today, first day, 200 servers,
+   40 connected, long and foreign names) over 300 random catalogues.
 
 **Personality is visual, not verbal.** When the words are generated, the
 character has to come from what Duct draws. Three layers, each with a job:

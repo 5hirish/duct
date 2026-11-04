@@ -53,6 +53,10 @@ export default function ConnectorTile({
 }) {
   const { t } = useLingui();
   const mcp = source?.kind === ConnectorKind.MCP;
+  // "Notion  MCP · Notion" says the name twice; the publisher is worth a word
+  // only when it is not the product (a vendor's server for someone else's).
+  const publisher =
+    source?.publisher && source.publisher.toLowerCase() !== String(title || "").toLowerCase() ? source.publisher : "";
   const connected = tone === "on" || tone === "info" || tone === "partial";
   return (
     <Card
@@ -82,14 +86,16 @@ export default function ConnectorTile({
                 data-card-link
                 onClick={onClick}
                 aria-label={t`Configure ${title}`}
-                className={cn("truncate text-left text-sm font-semibold", cardLinkClass)}
+                className={cn("min-w-0 truncate text-left text-sm font-semibold", cardLinkClass)}
               >
                 {title}
               </button>
             )}
+            {/* Capped and truncating: a long publisher once took the whole row,
+                pushed past the card and left the title no room at all. */}
             {mcp && (
-              <span className="shrink-0 rounded-full border px-1.5 text-2xs font-medium leading-4 text-muted-foreground">
-                {source.publisher ? <Trans>MCP · {source.publisher}</Trans> : t`MCP`}
+              <span className="min-w-0 max-w-[50%] shrink truncate rounded-full border px-1.5 text-2xs font-medium leading-4 text-muted-foreground">
+                {publisher ? <Trans>MCP · {publisher}</Trans> : t`MCP`}
               </span>
             )}
             {tag && (

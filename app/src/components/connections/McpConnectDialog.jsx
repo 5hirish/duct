@@ -1,6 +1,9 @@
 "use client";
 
-// Connecting one MCP server: a preset by name, or any server by its address.
+// Connecting one MCP server: a preset by name, a server found in the MCP
+// Registry (its address filled in, and where it runs said plainly), or any
+// server by its address. A connected one says whether it works, and why not
+// when it doesn't, with a check that tries it again on the spot.
 //
 // One click is the default and the key is the fallback, the order every
 // connector here follows: Connect asks the server what it needs, and the
@@ -11,14 +14,14 @@
 // pasting something rather than meeting a form they did not ask for.
 
 import { useId, useState } from "react";
-import { ExternalLink, MessageSquare, ShieldCheck } from "lucide-react";
+import { ExternalLink, Globe, MessageSquare, ShieldCheck, TriangleAlert } from "lucide-react";
+import { plural } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
-import { McpServerStatus } from "@/lib/connectorsApi";
-import { MCP_GUIDE_URL } from "@/lib/mcpServers";
+import { MCP_GUIDE_URL, PROBLEM_DETAIL, serverProblem } from "@/lib/mcpServers";
 import ConnectorDialog from "./ConnectorDialog";
 import ConnectorDot from "./ConnectorDot";
 
@@ -34,6 +37,11 @@ const EXAMPLE_SERVER_URL = "https://mcp.example.com/mcp";
  *   null for one added by its address.
  * @param server  The connected server this dialog is about, if any: the
  *   primary action becomes Reconnect and Disconnect joins the footer.
+ * @param listing  A server found in the MCP Registry (`{ url, title, host,
+ *   runs_host, auth, key_hint, website }`), connected by its address with no
+ *   address field to fill.
+ * @param onCheck  `(server) => Promise<{ server, tools }>`: list its tools
+ *   with what is saved; `tools` is null when that failed.
  * @param onConnect  `(target) => Promise<{ done } | { waiting } | { needsKey }>`,
  *   where `target` is `{ preset, apiKey }` or `{ url, name, apiKey }`; a
  *   rejection's message is shown as the reason it did not connect.
@@ -52,14 +60,16 @@ export default function McpConnectDialog({
   source,
   preset = null,
   server = null,
+  listing = null,
   initialUrl = "",
   initialName = "",
   initialNeedsKey = false,
   initialKeyOpen = false,
   onConnect,
+  onCheck,
   onDisconnect,
 }) {
-  const { t } = useLingui();
+  const { t, i18n } = useLingui();
   const formId = useId();
   const [url, setUrl] = useState(initialUrl);
   const [name, setName] = useState(initialName);
@@ -68,24 +78,31 @@ export default function McpConnectDialog({
   const [keyOpen, setKeyOpen] = useState(initialNeedsKey || initialKeyOpen);
   const [phase, setPhase] = useState("");
   const [error, setError] = useState("");
+  // The last check's outcome, `{ ok, text }`, which replaces the recorded
+  // reason: it is newer.
+  const [checking, setChecking] = useState(false);
+  const [checked, setChecked] = useState(null);
 
-  const label = preset?.label || server?.name || initialName || "";
-  const title = preset ? label : server ? label : t`Add an MCP server`;
-  const keyUrl = preset?.key_url || "";
+  const label = preset?.label || server?.name || listing?.title || initialName || "";
+  const title = preset || server || listing ? label : t`Add an MCP server`;
+  // A registry publisher's site is the nearest thing to a key page it names.
+  const keyUrl = preset?.key_url || listing?.website || "";
   // A preset offers the key path only where its vendor issues keys; a server
   // added by address might take one, and only its owner knows.
   const offersKey = preset ? Boolean(keyUrl) : true;
   const showKey = keyOpen || needsKey;
-  const needsReauth = server?.status === McpServerStatus.NEEDS_REAUTH;
-  const tone = !server ? "off" : needsReauth ? "partial" : "on";
-  const statusWords = !server ? t`Not connected` : needsReauth ? t`Needs reconnecting` : t`Connected`;
+  const problem = serverProblem(server);
+  const tone = !server ? "off" : problem ? "partial" : "on";
+  const statusWords = !server ? t`Not connected` : problem ? t`Needs attention` : t`Connected`;
+  // Typing an address belongs to a server nobody named for us.
+  const byAddress = !preset && !listing;
 
   async function submit(event) {
     event?.preventDefault();
     if (phase === PHASE_STARTING) return;
     setError("");
     const apiKey = showKey ? key.trim() : "";
-    if (!preset && !url.trim()) {
+    if (byAddress && !url.trim()) {
       setError(t`Paste the server's address to connect it.`);
       return;
     }
@@ -95,7 +112,11 @@ export default function McpConnectDialog({
     }
     setPhase(PHASE_STARTING);
     try {
-      const target = preset ? { preset: preset.id, apiKey } : { url: url.trim(), name: name.trim(), apiKey };
+      const target = preset
+        ? { preset: preset.id, apiKey }
+        : listing
+          ? { url: listing.url, name: listing.title, apiKey }
+          : { url: url.trim(), name: name.trim(), apiKey };
       const result = (await onConnect(target)) || {};
       if (result.needsKey) {
         setNeedsKey(true);
@@ -118,6 +139,31 @@ export default function McpConnectDialog({
           ? t`Your Duct session has ended. Sign in again, then connect.`
           : err?.message || t`That didn't connect. Try again in a moment.`,
       );
+    }
+  }
+
+  async function check() {
+    if (!server || checking) return;
+    setChecking(true);
+    setChecked(null);
+    try {
+      const res = await onCheck?.(server);
+      const after = serverProblem(res?.server);
+      setChecked(
+        res?.tools == null
+          ? { ok: false, text: after ? i18n._(PROBLEM_DETAIL[after]) : t`It didn't answer. Try again in a moment.` }
+          : {
+              ok: true,
+              text: plural(res.tools, {
+                one: "Working. # tool is ready for the insights chat.",
+                other: "Working. # tools are ready for the insights chat.",
+              }),
+            },
+      );
+    } catch (err) {
+      setChecked({ ok: false, text: err?.message || t`Couldn't check it. Try again in a moment.` });
+    } finally {
+      setChecking(false);
     }
   }
 
@@ -162,13 +208,55 @@ export default function McpConnectDialog({
       }
     >
       <form id={formId} onSubmit={submit} className="conn-dialog-section" noValidate>
-        {needsReauth && (
-          <p className="conn-hint">
-            <Trans>Its sign-in stopped working, so Duct can&rsquo;t use it until you reconnect.</Trans>
+        {/* Why it needs attention, from the server's own record, until a
+            check says otherwise. */}
+        {problem && !checked && <p className="conn-hint">{i18n._(PROBLEM_DETAIL[problem])}</p>}
+        {server && (
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            {checked && (
+              <p role="status" className={checked.ok ? "conn-hint" : "conn-hint conn-hint--alert"}>
+                {checked.text}
+              </p>
+            )}
+            <Button
+              type="button"
+              variant="link"
+              size="sm"
+              className="h-auto px-0"
+              disabled={checking}
+              onClick={check}
+            >
+              {checking && <Spinner className="size-3.5" />}
+              {checking ? <Trans>Checking…</Trans> : <Trans>Check connection</Trans>}
+            </Button>
+          </div>
+        )}
+
+        {listing && !server && (
+          <p className="mcp-listing-host">
+            {listing.runs_host ? (
+              <Globe className="mcp-note-icon" aria-hidden="true" />
+            ) : (
+              <TriangleAlert className="mcp-note-icon mcp-note-icon--warn" aria-hidden="true" />
+            )}
+            <span>
+              {listing.runs_host ? (
+                <Trans>
+                  Runs at <strong className="font-medium text-foreground">{listing.host}</strong>, an address
+                  its publisher proved to the MCP Registry they own.
+                </Trans>
+              ) : (
+                <Trans>
+                  Runs at <strong className="font-medium text-foreground">{listing.host}</strong>, which its
+                  publisher hasn&rsquo;t shown they run. What Duct sends it, your sign-in included, goes to
+                  whoever does.
+                </Trans>
+              )}
+            </span>
           </p>
         )}
 
-        {!preset && (
+        {byAddress && (
           <>
             <div className="conn-field">
               <Label htmlFor={`${formId}-url`}><Trans>Server address</Trans></Label>
@@ -205,12 +293,19 @@ export default function McpConnectDialog({
             <Trans>You&rsquo;ll sign in at {label} in your browser, then come straight back here.</Trans>
           </p>
         )}
+        {listing && !server && !showKey && phase !== PHASE_BROWSER && (
+          <p className="conn-hint">
+            <Trans>If it asks you to sign in, that happens in your browser and you come straight back here.</Trans>
+          </p>
+        )}
 
         {/* Why, before what: a sibling of the field rather than inside it, so
             it sits a section's distance from the label, not a label's. */}
         {needsKey && (
           <p className="conn-hint">
-            {preset ? (
+            {listing ? (
+              <Trans>This server signs in with an API key rather than a one-click sign-in.</Trans>
+            ) : preset ? (
               <Trans>{label} doesn&rsquo;t offer one-click sign-in to Duct, so it needs an API key instead.</Trans>
             ) : (
               <Trans>This server doesn&rsquo;t offer one-click sign-in to Duct, so it needs an API key instead.</Trans>
@@ -230,6 +325,8 @@ export default function McpConnectDialog({
               autoFocus={needsKey}
             />
             <div className="conn-field-notes">
+              {/* The publisher's own words about its key, quoted as theirs. */}
+              {listing?.key_hint && <p className="conn-hint">{listing.key_hint}</p>}
               {keyUrl && (
                 <a className="app-link mcp-key-link" href={keyUrl} target="_blank" rel="noreferrer">
                   <Trans>Get a key from {label}</Trans>
@@ -292,6 +389,8 @@ export default function McpConnectDialog({
                 <Trans>
                   {label} can reach your account&rsquo;s secrets, so Duct asks you before every call to it.
                 </Trans>
+              ) : listing ? (
+                <Trans>Duct asks you before every call to a server from the MCP Registry.</Trans>
               ) : (
                 <Trans>Duct asks you before every call to a server added by address.</Trans>
               )}
