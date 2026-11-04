@@ -183,6 +183,9 @@ export const McpPhase = Object.freeze({
  *                catalogue entry with `render()` for its tile
  *   addTile      `render()` for "Any MCP server", the way in for anything
  *                the catalogue does not list
+ *   addServer    opens the same dialog, for a way in drawn elsewhere
+ *   registryAvailable  false when a search can't reach the MCP Registry:
+ *                signed out, or this Duct turned it off
  *   placeholder  the tiles that stand in until READY: sign in, loading,
  *                couldn't load
  *   overlays     the dialog and the confirm, mounted once by the caller
@@ -257,7 +260,11 @@ export function useMcpConnectors({ signedIn, search = "", api = MCP_API, onMessa
         setRegistry({ query, phase, listings: res?.servers || [], error: "" });
       } catch (err) {
         if (seq !== registrySeq.current) return;
-        setRegistry({ query, phase: RegistryPhase.FAILED, listings: [], error: err?.message || "" });
+        // A status means the server said something worth showing. Without one
+        // the request never landed, or the server crashed on it and its 500 has
+        // no CORS header to be read by. The browser's own words ("Load failed")
+        // tell nobody anything; the section has a sentence for that.
+        setRegistry({ query, phase: RegistryPhase.FAILED, listings: [], error: err?.status ? err.message : "" });
       }
     }, REGISTRY_DEBOUNCE_MS);
     return () => clearTimeout(timer);
@@ -450,6 +457,13 @@ export function useMcpConnectors({ signedIn, search = "", api = MCP_API, onMessa
     />
   );
 
+  const shared = {
+    addTile,
+    addServer: () => openDialog({}),
+    overlays,
+    registryAvailable: signedIn && !registryOff,
+  };
+
   const knownUrls = [...presets.map((p) => p.url), ...servers.map((s) => s.url)];
   const registrySection = renderRegistry();
 
@@ -538,8 +552,7 @@ export function useMcpConnectors({ signedIn, search = "", api = MCP_API, onMessa
     return {
       phase: McpPhase.SIGNED_OUT,
       entries: [],
-      addTile,
-      overlays,
+      ...shared,
       registry: null,
       placeholder: (
         <ConnectorTile
@@ -560,8 +573,7 @@ export function useMcpConnectors({ signedIn, search = "", api = MCP_API, onMessa
     return {
       phase: McpPhase.LOADING,
       entries: [],
-      addTile,
-      overlays,
+      ...shared,
       registry: registrySection,
       placeholder: Array.from({ length: LOADING_TILES }, (_, i) => (
         <Skeleton key={i} className="h-36 rounded-2xl" {...(i === 0 ? loading : {})} />
@@ -573,8 +585,7 @@ export function useMcpConnectors({ signedIn, search = "", api = MCP_API, onMessa
     return {
       phase: McpPhase.FAILED,
       entries: [],
-      addTile,
-      overlays,
+      ...shared,
       registry: registrySection,
       placeholder: (
         <ConnectorTile
@@ -648,8 +659,7 @@ export function useMcpConnectors({ signedIn, search = "", api = MCP_API, onMessa
   return {
     phase: McpPhase.READY,
     entries: [...presetEntries, ...addressEntries],
-    addTile,
-    overlays,
+    ...shared,
     registry: registrySection,
     placeholder: null,
   };

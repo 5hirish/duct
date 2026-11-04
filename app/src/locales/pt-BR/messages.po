@@ -1286,6 +1286,7 @@ msgstr "Adicionar um pensamento — ele entra na próxima etapa"
 msgid "Add accounts in {scheduler}"
 msgstr "Adicionar contas no {scheduler}"
 
+#: src/components/connections/BringAnyTool.jsx
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Add an MCP server"
 msgstr "Adicionar um servidor MCP"
@@ -1345,6 +1346,10 @@ msgstr "Adicione isso a <0>opencode.json</0>."
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Add your site"
 msgstr "Adicione seu site"
+
+#: src/components/connections/BringAnyTool.jsx
+msgid "Add yours"
+msgstr "Adicione o seu"
 
 #: src/components/connections/ConnectorBrowser.jsx
 msgid "Added by you"
@@ -2120,6 +2125,10 @@ msgstr "Resumo"
 #: src/app/(app)/artifacts/page.jsx
 msgid "Briefs"
 msgstr "Resumos"
+
+#: src/components/connections/BringAnyTool.jsx
+msgid "Bring any tool"
+msgstr "Traga qualquer ferramenta"
 
 #: src/components/connections/logos.jsx
 msgid "Bring your own provider"
@@ -6603,6 +6612,10 @@ msgstr "Nada aqui com estes filtros."
 #~ msgid "Nothing here yet."
 #~ msgstr "Nada aqui ainda."
 
+#: src/components/connections/ConnectorBrowser.jsx
+msgid "Nothing in this list matches “{query}”."
+msgstr "Nada nesta lista corresponde a “{query}”."
+
 #: src/components/insights/Desk.jsx
 msgid "Nothing is connected right now."
 msgstr "Nada está conectado agora."
@@ -6624,8 +6637,8 @@ msgid "Nothing is wrong with the key. Give it a moment and verify again."
 msgstr "Nada está errado com a chave. Dê um momento e verifique novamente."
 
 #: src/components/connections/ConnectorBrowser.jsx
-msgid "Nothing matches “{query}”."
-msgstr "Nada corresponde a “{query}”."
+#~ msgid "Nothing matches “{query}”."
+#~ msgstr "Nada corresponde a “{query}”."
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Nothing matches that filter."
@@ -8701,6 +8714,10 @@ msgstr "Pesquisar {many}"
 msgid "Search & SEO"
 msgstr "Busca e SEO"
 
+#: src/app/(app)/connections/page.jsx
+msgid "Search any tool or MCP server"
+msgstr "Pesquise qualquer ferramenta ou servidor MCP"
+
 #: src/components/commands/CommandPalette.jsx
 msgid "Search commands"
 msgstr "Pesquisar comandos"
@@ -8716,6 +8733,10 @@ msgstr "Search Console é o começo mais fácil. Seu primeiro resumo leva cerca 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Search Console, Analytics or Google Ads. Duct can’t check a number it can’t see."
 msgstr "Search Console, Analytics ou Google Ads. Duct não pode verificar um número que não consegue ver."
+
+#: src/components/connections/BringAnyTool.jsx
+msgid "Search for a tool"
+msgstr "Pesquisar por uma ferramenta"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Search memory"
@@ -10485,6 +10506,10 @@ msgstr "Esses números não foram salvos. Verifique-os e tente novamente."
 msgid "Thought for {seconds}s"
 msgstr "Pensou por {seconds}s"
 
+#: src/components/connections/BringAnyTool.jsx
+msgid "Thousands of tools have an MCP server, and Duct’s chat can use any of them. Find yours by name, or paste its address."
+msgstr "Milhares de ferramentas têm um servidor MCP, e o chat do Duct pode usar qualquer um deles. Encontre o seu pelo nome, ou cole o endereço."
+
 #: src/components/insights/desk/DeskLists.jsx
 msgid "thread"
 msgstr "tópico"
@@ -10590,6 +10615,10 @@ msgstr "Posts em alta em uma região — bom para descoberta de som + formato."
 #: src/app/(app)/connections/page.jsx
 msgid "Trials, renewals, refunds and MRR across the App Store and Play."
 msgstr "Testes, renovações, reembolsos e MRR na App Store e Play."
+
+#: src/components/connections/BringAnyTool.jsx
+#~ msgid "Try"
+#~ msgstr "Experimente"
 
 #: src/components/AppErrorPanel.jsx
 #: src/components/connections/McpConnectors.jsx
@@ -11779,6 +11808,10 @@ msgstr "Seu site"
 #: src/app/(start)/start/page.jsx
 msgid "Your website is enough to start. Duct reads it now and keeps reading while you set up the rest."
 msgstr "Seu site é suficiente para começar. O Duct o lê agora e continua lendo enquanto você configura o resto."
+
+#: src/components/connections/BringAnyTool.jsx
+msgid "Yours"
+msgstr "O seu"
 
 #: src/lib/userProfile.js
 msgid "हिन्दी"

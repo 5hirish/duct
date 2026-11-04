@@ -11,12 +11,18 @@ vendor's own server?", into something checked rather than guessed:
 * ``runs_host`` — the publisher owns the address the server runs at: the
   reverse-DNS domain is the host or a parent of it, or a GitHub login names
   the host's site (``getsentry`` for mcp.sentry.dev). A gateway that runs its
-  own host passes; it is honest about being the gateway.
+  own host passes; it is honest about being the gateway. A login says nothing
+  on a platform that hands out subdomains, where the publisher picks both names.
 * ``official`` — that, and the host's site is the tool searched for:
   mcp.stripe.com for "stripe". Compared on the label before the TLD, so
-  stripe.evil.com and stripecheckup.vercel.app are not Stripe's. Someone
-  holding stripe.<another TLD> would pass; the card shows the host either way,
-  and every call to a registry server asks first.
+  stripe.evil.com is not Stripe's. The host must be the site itself or one
+  service label under it (``SERVICE_LABELS``), which fails closed on a tenant
+  of any platform, listed or not: stranger.webflow.io is not Webflow's.
+  ``SHARED_HOSTS`` then covers the names a tenant could still take, so neither
+  mcp.vercel.app nor stripe.vercel.app is anyone's own. Someone holding
+  stripe.<another TLD>, or the name mcp on a platform the list misses, would
+  pass; the card shows the host either way, and every call to a registry server
+  asks first.
 
 Kept: active, latest entries with a streamable-HTTP remote at a fixed public
 https address. Dropped: local packages (npm, PyPI, Docker; the hosted agent
@@ -74,6 +80,62 @@ GITHUB_NAMESPACE = "io.github."
 GENERIC_WORDS = frozenset({"mcp", "server", "remote", "api"})
 _TITLE_SUFFIX = re.compile(r"\s*\b(mcp\s+server|mcp|server)\s*$", re.IGNORECASE)
 _WORD = re.compile(r"[a-z0-9][a-z0-9._-]*")
+# Platforms that hand out subdomains: proving a name under one proves that name
+# and says nothing about the platform. On 2026-11-04 a search for "vercel"
+# tagged 29 strangers Official this way. Counted from the registry's own hosts
+# that day, plus the usual others, and the sites vendors host for their customers
+# (figma.site, webflow.io), because Toolbox suggests searching for those vendors.
+# A miss here is not the whole defence: SERVICE_LABELS already refuses
+# stranger.<any platform>, so what is left is a tenant named like a service.
+SHARED_HOSTS = frozenset(
+    {
+        "amazonaws.com",
+        "apify.actor",
+        "azurecontainerapps.io",
+        "azurestaticapps.net",
+        "azurewebsites.net",
+        "canva.site",
+        "cloudfront.net",
+        "deno.dev",
+        "deno.net",
+        "figma.site",
+        "firebaseapp.com",
+        "fly.dev",
+        "framer.app",
+        "github.io",
+        "gitlab.io",
+        "herokuapp.com",
+        "hf.space",
+        "lovable.app",
+        "modal.run",
+        "netlify.app",
+        "ngrok-free.app",
+        "ngrok-free.dev",
+        "ngrok.app",
+        "ngrok.dev",
+        "ngrok.io",
+        "notion.site",
+        "ondigitalocean.app",
+        "onrender.com",
+        "pages.dev",
+        "replit.app",
+        "replit.dev",
+        "run.app",
+        "supabase.co",
+        "trycloudflare.com",
+        "up.railway.app",
+        "vercel.app",
+        "web.app",
+        "webflow.io",
+        "workers.dev",
+    }
+)
+# Where a vendor's own server sits, besides its bare domain: the labels that
+# account for nearly every host a publisher runs in the registry (2026-11-04:
+# 5,221 bare, then mcp 2,878, api 1,352, www 726, app 486, server 217). Anything
+# else under a domain reads as a tenant of it. A vendor on an unusual label only
+# loses the tag, and stays listed as running its own host.
+SERVICE_LABELS = frozenset({"mcp", "api", "www", "app", "server"})
 
 # A test swaps this for an ``httpx.MockTransport``; None is the real network.
 _transport: httpx.AsyncBaseTransport | None = None
@@ -113,11 +175,17 @@ def words(query: str) -> list[str]:
     return [w for w in _WORD.findall((query or "").lower()) if len(w) >= 2][:MAX_WORDS]
 
 
+def _shared_suffix(host: str) -> str:
+    return next((suffix for suffix in SHARED_HOSTS if host.endswith("." + suffix)), "")
+
+
 def _site(host: str) -> str:
-    """The label before the TLD: ``stripe`` for mcp.stripe.com. Wrong for a
+    """The label before the TLD, or before the platform on a shared host:
+    ``stripe`` for mcp.stripe.com, ``foo`` for foo.vercel.app. Wrong for a
     two-part suffix (co.uk), which only ever costs a server its Official tag."""
-    labels = host.split(".")
-    return labels[-2] if len(labels) >= 2 else labels[0]
+    shared = _shared_suffix(host)
+    labels = host[: -len(shared) - 1].split(".") if shared else host.split(".")[:-1]
+    return labels[-1] if labels else host
 
 
 def _namespace(name: str) -> str:
@@ -127,6 +195,10 @@ def _namespace(name: str) -> str:
 def runs_host(name: str, host: str) -> bool:
     namespace = _namespace(name)
     if namespace.lower().startswith(GITHUB_NAMESPACE):
+        # On a shared host the publisher chooses the login and the subdomain
+        # alike, so one matching the other proves nothing.
+        if _shared_suffix(host):
+            return False
         login = re.sub(r"[^a-z0-9]", "", namespace[len(GITHUB_NAMESPACE):].lower())
         site = _site(host)
         return len(site) >= 3 and site in login
@@ -134,9 +206,20 @@ def runs_host(name: str, host: str) -> bool:
     return bool(domain) and (host == domain or host.endswith("." + domain))
 
 
+def _is_site_root(host: str) -> bool:
+    """The site itself, or one service label under it: not a tenant of it."""
+    above = host.split(".")[:-2]
+    return not above or (len(above) == 1 and above[0] in SERVICE_LABELS)
+
+
 def is_official(name: str, host: str, query_words: list[str]) -> bool:
     wanted = {*query_words, "".join(query_words), "-".join(query_words)}
-    return runs_host(name, host) and _site(host) in wanted
+    return (
+        not _shared_suffix(host)
+        and _is_site_root(host)
+        and runs_host(name, host)
+        and _site(host) in wanted
+    )
 
 
 def _clip(text: str, limit: int) -> str:

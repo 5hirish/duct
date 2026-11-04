@@ -645,7 +645,10 @@ Postgres `DATABASE_URL` names.
     reads the MCP Registry (`MCP_REGISTRY_URL`, empty turns it off) and says
     who runs each server from the name its publisher proved: a reverse-DNS
     namespace that owns the host, or a GitHub login naming its site.
-    Official means that and the site is the tool searched for. A server
+    Official means that, the site is the tool searched for, and the host is
+    the site or one service label under it (`SERVICE_LABELS`), so a tenant of
+    any platform fails closed; nothing on one that hands out subdomains
+    (`SHARED_HOSTS`) qualifies, and a GitHub login vouches for nothing there. A server
     connected from it is a server added by address: every call asks first.
   - **A server says why it needs its owner.** A failed listing or a refused
     refresh records `store.PROBLEM` in the blob (signed out, key refused, not

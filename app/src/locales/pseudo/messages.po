@@ -1280,6 +1280,7 @@ msgstr ""
 msgid "Add accounts in {scheduler}"
 msgstr ""
 
+#: src/components/connections/BringAnyTool.jsx
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Add an MCP server"
 msgstr ""
@@ -1338,6 +1339,10 @@ msgstr ""
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Add your site"
+msgstr ""
+
+#: src/components/connections/BringAnyTool.jsx
+msgid "Add yours"
 msgstr ""
 
 #: src/components/connections/ConnectorBrowser.jsx
@@ -2113,6 +2118,10 @@ msgstr ""
 
 #: src/app/(app)/artifacts/page.jsx
 msgid "Briefs"
+msgstr ""
+
+#: src/components/connections/BringAnyTool.jsx
+msgid "Bring any tool"
 msgstr ""
 
 #: src/components/connections/logos.jsx
@@ -6597,6 +6606,10 @@ msgstr ""
 #~ msgid "Nothing here yet."
 #~ msgstr ""
 
+#: src/components/connections/ConnectorBrowser.jsx
+msgid "Nothing in this list matches “{query}”."
+msgstr ""
+
 #: src/components/insights/Desk.jsx
 msgid "Nothing is connected right now."
 msgstr ""
@@ -6618,8 +6631,8 @@ msgid "Nothing is wrong with the key. Give it a moment and verify again."
 msgstr ""
 
 #: src/components/connections/ConnectorBrowser.jsx
-msgid "Nothing matches “{query}”."
-msgstr ""
+#~ msgid "Nothing matches “{query}”."
+#~ msgstr ""
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Nothing matches that filter."
@@ -8695,6 +8708,10 @@ msgstr ""
 msgid "Search & SEO"
 msgstr ""
 
+#: src/app/(app)/connections/page.jsx
+msgid "Search any tool or MCP server"
+msgstr ""
+
 #: src/components/commands/CommandPalette.jsx
 msgid "Search commands"
 msgstr ""
@@ -8709,6 +8726,10 @@ msgstr ""
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Search Console, Analytics or Google Ads. Duct can’t check a number it can’t see."
+msgstr ""
+
+#: src/components/connections/BringAnyTool.jsx
+msgid "Search for a tool"
 msgstr ""
 
 #: src/components/memory/MemoryTimeline.jsx
@@ -10479,6 +10500,10 @@ msgstr ""
 msgid "Thought for {seconds}s"
 msgstr ""
 
+#: src/components/connections/BringAnyTool.jsx
+msgid "Thousands of tools have an MCP server, and Duct’s chat can use any of them. Find yours by name, or paste its address."
+msgstr ""
+
 #: src/components/insights/desk/DeskLists.jsx
 msgid "thread"
 msgstr ""
@@ -10584,6 +10609,10 @@ msgstr ""
 #: src/app/(app)/connections/page.jsx
 msgid "Trials, renewals, refunds and MRR across the App Store and Play."
 msgstr ""
+
+#: src/components/connections/BringAnyTool.jsx
+#~ msgid "Try"
+#~ msgstr ""
 
 #: src/components/AppErrorPanel.jsx
 #: src/components/connections/McpConnectors.jsx
@@ -11772,6 +11801,10 @@ msgstr ""
 
 #: src/app/(start)/start/page.jsx
 msgid "Your website is enough to start. Duct reads it now and keeps reading while you set up the rest."
+msgstr ""
+
+#: src/components/connections/BringAnyTool.jsx
+msgid "Yours"
 msgstr ""
 
 #: src/lib/userProfile.js
