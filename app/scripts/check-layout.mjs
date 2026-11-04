@@ -47,6 +47,7 @@ const { chromium } = req(req.resolve("playwright", { paths: [process.env.PLAYWRI
 const fixtures = await import(join(REPO, "scripts/shots/fixtures.mjs"));
 const { STORY } = await import(join(REPO, "app/src/lib/__fixtures__/solo-story.mjs"));
 const { DESK_SCENARIOS } = await import(join(REPO, "app/src/lib/__fixtures__/deskScenarios.mjs"));
+const { PLAN_SCENARIOS } = await import(join(REPO, "app/src/lib/__fixtures__/planScenarios.mjs"));
 
 const APP = process.env.APP || "http://localhost:3003";
 const API = process.env.API || "http://localhost:8002";
@@ -165,6 +166,17 @@ try {
           if (d.overflow > PX) fail(where, `page is ${d.overflow}px wider than the window`);
           for (const h of d.tallRows) fail(where, `a row is ${h}px tall: its title is not held to one line`);
           if (d.leadTitleLines > 2) fail(where, `the lead's title runs to ${d.leadTitleLines} lines`);
+        }
+        // The content plan board, in every generated plan, as the agenda and
+        // as the Kanban: nothing wider than the window, nothing crushed.
+        for (const id of PLAN_SCENARIOS.map((s) => s.id)) {
+          const where = `plan scenario ${id} @${viewport.width}`;
+          await page.goto(`${APP}/preview/frame?scene=plan-scenario-${id}&theme=dark`, { waitUntil: "domcontentloaded" });
+          await page.waitForSelector('[aria-label="Plan strategy"], [aria-pressed]', { timeout: 20000 }).catch(() => {});
+          await page.waitForTimeout(300);
+          const m = await page.evaluate(measure);
+          if (m.overflow > PX) fail(where, `page is ${m.overflow}px wider than the window`);
+          for (const text of m.squeezed) fail(where, `"${text.text}" is cut to ${text.width}px`);
         }
       }
 

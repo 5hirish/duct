@@ -135,14 +135,11 @@ export default function ContentLandingPage() {
 // ---------------------------------------------------------------------------
 
 function PlanTab({ projectId, onOpenTab }) {
-  // This tab scrolls inside .app-main-wide, so nothing above gives the board a
-  // height — it is the one caller that has to state one. svh, not vh, to match
-  // the rest of the app's full-height surfaces.
-  return (
-    <div className="h-[calc(100svh-15rem)] min-h-[28rem]">
-      <PlanBoard projectId={projectId} onOpenTab={onOpenTab} />
-    </div>
-  );
+  // The page scrolls, not the board. It used to be a fixed-height frame,
+  // `calc(100svh - 15rem)`, a guess at what sat above it: it ended short of
+  // the window, the page's own padding sat under it, and the lanes scrolled
+  // inside a page that scrolled too.
+  return <PlanBoard projectId={projectId} onOpenTab={onOpenTab} />;
 }
 
 // ---------------------------------------------------------------------------

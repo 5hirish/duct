@@ -49,6 +49,9 @@ import { saveText } from "@/lib/download";
 import { ArtifactGallery } from "@/components/artifacts/ArtifactCards";
 import { ChartJsonView } from "@/components/artifacts/ArtifactRenderer";
 import { DESK_SCENARIOS, deskScenario } from "@/lib/__fixtures__/deskScenarios.mjs";
+import { PLAN_SCENARIOS, planScenario } from "@/lib/__fixtures__/planScenarios.mjs";
+import { PlanBoardView, PlanView } from "@/components/content/PlanBoard";
+import { startOfDay } from "@/lib/contentSchedule";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
 import ConnectorTile from "@/components/connections/ConnectorTile";
@@ -775,6 +778,32 @@ function racingLoader() {
  * restart the load forever), and must start over on the next mount, or the
  * scene works once per page load and shows a finished desk ever after.
  */
+/** One generated plan through the real board view, every control live. */
+function PlanScenario({ id, view = PlanView.LIST }) {
+  const today = useMemo(() => startOfDay(new Date()), []);
+  const data = useMemo(() => planScenario(id, today), [id, today]);
+  const [current, setCurrent] = useState(view);
+  const [calView, setCalView] = useState("month");
+  const [activeId, setActiveId] = useState(data.plan.id);
+  return (
+    <PlanBoardView
+      plans={data.plans}
+      activeId={activeId}
+      onSelectPlan={setActiveId}
+      plan={data.plan}
+      postsById={data.postsById}
+      view={current}
+      onViewChange={setCurrent}
+      calView={calView}
+      onCalViewChange={setCalView}
+      today={today}
+      onStartPlan={() => {}}
+      onRevisePlan={() => {}}
+      onReviseDay={() => {}}
+    />
+  );
+}
+
 /** One generated desk, loaded once per mount like the real one. */
 function DeskScenario({ id }) {
   const load = useMemo(() => stubLoader(deskScenario(id)), [id]);
@@ -2009,6 +2038,26 @@ export const SCENES = [
     title: `Desk — ${scenario.title}`,
     note: `${scenario.expect} Content is generated at render time, relative to now; sweep the frame from phone to wide and check the page keeps its shape.`,
     render: () => <DeskScenario id={scenario.id} />,
+  })),
+  // The content plan board in every situation it has to survive, generated
+  // from lib/__fixtures__/planScenarios.mjs relative to today: the same plans
+  // the schedule tests hold the agenda to. The list is the default view; the
+  // Kanban scenes show the same plan by status.
+  ...PLAN_SCENARIOS.map((scenario) => ({
+    id: `plan-scenario-${scenario.id}`,
+    state: scenario.title,
+    group: "Plan scenarios",
+    title: `Plan — ${scenario.title}`,
+    note: `${scenario.expect} Switch to Kanban and Calendar from the toolbar; sweep the frame from phone to wide.`,
+    render: () => <PlanScenario id={scenario.id} />,
+  })),
+  ...["ended-nothing-posted", "mid-month", "long-and-foreign"].map((id) => ({
+    id: `plan-scenario-${id}-kanban`,
+    state: "Kanban",
+    group: "Plan scenarios",
+    title: `Plan by status — ${PLAN_SCENARIOS.find((s) => s.id === id).title}`,
+    note: "Empty lanes are a header and nothing else; a planned post with no media is its words, not a grey 16:9 box.",
+    render: () => <PlanScenario id={id} view={PlanView.KANBAN} />,
   })),
   {
     id: "desk-connect-first",

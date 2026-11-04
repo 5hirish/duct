@@ -103,6 +103,11 @@ msgstr "{0, plural, other {Duct はこれを # 回記録しました}}"
 msgid "{0, plural, one {Show # more} other {Show # more}}"
 msgstr "{0, plural, other {# 件をさらに表示}}"
 
+#. placeholder {0}: group.items.length
+#: src/components/content/PlanList.jsx
+msgid "{0, plural, one {Show all #} other {Show all #}}"
+msgstr "{0, plural, other {すべて表示 #}}"
+
 #. placeholder {0}: items.length
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "{0, plural, one {Working on # thing} other {Working on # things}}"
@@ -425,6 +430,10 @@ msgstr "{llmsLines} 行"
 msgid "{messageCount, plural, one {# message} other {# messages}}"
 msgstr "{messageCount, plural, other {# メッセージ}}"
 
+#: src/components/content/PlanBoard.jsx
+msgid "{missed, plural, one {# missed} other {# missed}}"
+msgstr "{missed, plural, other {# 件の未投稿}}"
+
 #: src/app/(app)/connections/page.jsx
 msgid "{missing, plural, one {Connected · # permission missing} other {Connected · # permissions missing}}"
 msgstr "{missing, plural, other {接続済み · # 権限が不足}}"
@@ -555,12 +564,20 @@ msgid "{planAccount} — no API key, no extra bill."
 msgstr "{planAccount} — APIキー不要、追加料金なし。"
 
 #: src/components/content/PlanBoard.jsx
-msgid "{postCount, plural, one {# post} other {# posts}}"
-msgstr "{postCount, plural, other {# 投稿}}"
+#~ msgid "{postCount, plural, one {# post} other {# posts}}"
+#~ msgstr "{postCount, plural, other {# 投稿}}"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "{postCount} posts · {avgViewsText} avg views"
 msgstr "{postCount} 投稿 · {avgViewsText} 平均ビュー"
+
+#: src/components/content/PlanBoard.jsx
+msgid "{posted} of {total} posted"
+msgstr "{total} 件中 {posted} 件を投稿済み"
+
+#: src/components/content/PlanBoard.jsx
+msgid "{posted} of its {total} posts went out. The next plan learns from them."
+msgstr "{total} 件の投稿のうち {posted} 件が公開されました。次のプランはそれらから学習します。"
 
 #: src/components/audit/AuditReport.jsx
 msgid "{posts, plural, one {# post} other {# posts}}"
@@ -1469,6 +1486,10 @@ msgstr "アナリティクスの行は生のJSONとしてモデルに到達し�
 #: src/components/memory/MemoryTimeline.jsx
 msgid "and"
 msgstr "と"
+
+#: src/components/content/PlanBoard.jsx
+msgid "Another length"
+msgstr "別の長さ"
 
 #: src/app/(app)/projects/page.jsx
 msgid "another user"
@@ -3281,8 +3302,8 @@ msgid "DONE FOR YOU"
 msgstr "代行します"
 
 #: src/components/content/PlanStrategy.jsx
-msgid "Doubling down on"
-msgstr "注力する"
+#~ msgid "Doubling down on"
+#~ msgstr "注力する"
 
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Download"
@@ -3633,6 +3654,10 @@ msgstr "各リダイレクトホップはクロールバジェットとPageRank�
 msgid "Each source Duct reads shows up here with the period it covers, and the provider’s own words when a pull fails."
 msgstr "Ductが読み取る各ソースは、対象期間とともにここに表示され、プルが失敗した場合はプロバイダー自身の言葉も表示されます。"
 
+#: src/components/content/PlanList.jsx
+msgid "Earlier"
+msgstr "以前"
+
 #: src/app/(app)/connections/page.jsx
 msgid "EC private key (PEM)"
 msgstr "EC秘密鍵 (PEM)"
@@ -3768,8 +3793,8 @@ msgid "Every report Duct writes lands here, with each version kept."
 msgstr "Duct が作成するすべてのレポートはここに保存され、各バージョンが保持されます。"
 
 #: src/components/content/PlanStrategy.jsx
-msgid "Every type has results"
-msgstr "すべてのタイプに結果があります"
+#~ msgid "Every type has results"
+#~ msgstr "すべてのタイプに結果があります"
 
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Every version of it goes with it. This cannot be undone."
@@ -3922,6 +3947,10 @@ msgstr "モデルを探す"
 #: src/components/content/PostViewport.jsx
 msgid "Finding a source…"
 msgstr "情報源を探しています…"
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Finding what works"
+msgstr "効果的なものを見つける"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Findings by Category"
@@ -4458,6 +4487,7 @@ msgid "Helps Duct fit its answers to your job"
 msgstr "Ductがあなたの仕事に合った回答をするのに役立ちます。"
 
 #: src/app/(app)/execute/page.jsx
+#: src/components/content/PlanList.jsx
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "Hide"
 msgstr "非表示"
@@ -5017,6 +5047,10 @@ msgstr "リンク済みスタイル"
 msgid "Links"
 msgstr "リンク"
 
+#: src/components/content/PlanBoard.jsx
+msgid "List"
+msgstr "リスト"
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "Listed this thread's documents"
 msgstr "このスレッドのドキュメントを一覧表示しました"
@@ -5413,6 +5447,11 @@ msgstr "Microsoft Clarity"
 msgid "Mid-market"
 msgstr "ミッドマーケット"
 
+#: src/components/content/PlanList.jsx
+#: src/components/content/PostMiniCard.jsx
+msgid "Missed"
+msgstr "未投稿"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "missing"
 msgstr "不足"
@@ -5622,6 +5661,10 @@ msgstr "{invitee}に新しい招待状を送信しました。"
 msgid "New plan"
 msgstr "新しいプラン"
 
+#: src/components/content/PlanBoard.jsx
+msgid "New plan · <0/>"
+msgstr "新しいプラン · <0/>"
+
 #: src/app/(app)/content/page.jsx
 msgid "New post"
 msgstr "新規投稿"
@@ -5654,6 +5697,7 @@ msgid "Next slide"
 msgstr "次のスライド"
 
 #: src/components/content/PlanCalendar.jsx
+#: src/components/content/PlanList.jsx
 msgid "Next week"
 msgstr "来週"
 
@@ -5737,6 +5781,10 @@ msgstr "まだ会話はありません。"
 #: src/components/content/ReminderSetting.jsx
 msgid "No daily reminder"
 msgstr "毎日のリマインダーなし"
+
+#: src/components/content/PlanList.jsx
+msgid "No date"
+msgstr "日付なし"
 
 #: src/app/(app)/artifacts/page.jsx
 msgid "No documents yet"
@@ -5966,6 +6014,10 @@ msgstr "非営利団体"
 msgid "none"
 msgstr "なし"
 
+#: src/components/content/PlanBoard.jsx
+msgid "None of its {total} posts went out. The ideas are still below if you want them."
+msgstr "{total} 件の投稿はどれも公開されませんでした。必要であれば、アイデアはまだ以下にあります。"
+
 #: src/app/(start)/start/page.jsx
 msgid "None of these — start a new one"
 msgstr "これら以外 — 新しいものを開始する"
@@ -6150,8 +6202,8 @@ msgid "Nothing here"
 msgstr "ここには何もありません"
 
 #: src/components/content/PlanKanban.jsx
-msgid "Nothing here yet."
-msgstr "ここにはまだ何もありません。"
+#~ msgid "Nothing here yet."
+#~ msgstr "ここにはまだ何もありません。"
 
 #: src/components/insights/Desk.jsx
 msgid "Nothing is connected right now."
@@ -6194,8 +6246,8 @@ msgstr "まだ何も提案されていません"
 #~ msgstr "まだ何も提案されていません。監査またはインサイトセッションを実行すると、修正案は承認のためにここに表示されます。"
 
 #: src/components/content/PlanStrategy.jsx
-msgid "Nothing proven yet"
-msgstr "まだ証明されていません"
+#~ msgid "Nothing proven yet"
+#~ msgstr "まだ証明されていません"
 
 #: src/components/models/UsagePanel.jsx
 msgid "Nothing ran in the last {windowDays} days"
@@ -6475,6 +6527,10 @@ msgstr "コマンドパレットを開く"
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Open the console"
 msgstr "コンソールを開く"
+
+#: src/components/content/PlanBoard.jsx
+msgid "Open the current plan"
+msgstr "現在のプランを開く"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Open the document →"
@@ -8016,6 +8072,10 @@ msgstr "保存"
 msgid "Saving…"
 msgstr "保存中…"
 
+#: src/components/content/PlanStrategy.jsx
+msgid "Scaling"
+msgstr "スケール"
+
 #: src/components/audit/AuditReport.jsx
 msgid "Scan couldn't finish"
 msgstr "スキャンが完了できませんでした"
@@ -8433,6 +8493,7 @@ msgid "Short description"
 msgstr "短い説明"
 
 #: src/app/(app)/execute/page.jsx
+#: src/components/content/PlanList.jsx
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "Show"
 msgstr "表示"
@@ -9655,6 +9716,14 @@ msgstr "これはライブアカウントを変更します。適用された変
 msgid "This page stopped working"
 msgstr "このページは動作を停止しました"
 
+#: src/components/content/PlanBoard.jsx
+msgid "This plan ended on {ended}."
+msgstr "このプランは {ended} に終了しました。"
+
+#: src/components/content/PlanList.jsx
+msgid "This plan has no posts yet."
+msgstr "このプランにはまだ投稿がありません。"
+
 #: src/components/content/PlanCalendar.jsx
 msgid "This plan has no start date, so it can't be placed on a calendar yet."
 msgstr "このプランには開始日がないため、まだカレンダーに配置できません。"
@@ -9733,6 +9802,10 @@ msgstr "このタブは古いビルドを実行しています。リロードす
 #: src/app/(auth)/page.js
 msgid "This version of Duct can’t complete sign-in. Update the app from <0>getduct.ai/download</0> and try again."
 msgstr "このバージョンのDuctではサインインを完了できません。<0>getduct.ai/download</0>からアプリを更新して、もう一度お試しください。"
+
+#: src/components/content/PlanList.jsx
+msgid "This week"
+msgstr "今週"
 
 #: src/app/(start)/start/page.jsx
 msgid "This will update <0>{targetProjectName}</0>, the project you already have for this site. Anything you filled in yourself stays as it is."
@@ -10316,8 +10389,12 @@ msgid "Week"
 msgstr "週"
 
 #: src/components/content/PlanList.jsx
-msgid "Week {number}"
-msgstr "第{number}週"
+#~ msgid "Week {number}"
+#~ msgstr "第{number}週"
+
+#: src/components/content/PlanList.jsx
+msgid "Week of {from}"
+msgstr "{from} の週"
 
 #: src/components/insights/desk/DeskCards.jsx
 msgid "Welcome back. Take a fresh look?"
@@ -10534,6 +10611,18 @@ msgstr "成功理由:"
 #: src/components/content/DraftsQueue.jsx
 msgid "Why not? The next draft learns from it."
 msgstr "なぜしないのですか？次の下書きはそれから学びます。"
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Why scale it"
+msgstr "なぜスケールするのか"
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Why test it"
+msgstr "なぜテストするのか"
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Why this plan"
+msgstr "なぜこのプランなのか"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Why we rebuilt onboarding from scratch"

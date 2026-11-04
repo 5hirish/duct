@@ -103,6 +103,11 @@ msgstr "{0, plural, one {Duct observou isso # vez} other {Duct observou isso # v
 msgid "{0, plural, one {Show # more} other {Show # more}}"
 msgstr "{0, plural, one {Mostrar # mais} other {Mostrar # mais}}"
 
+#. placeholder {0}: group.items.length
+#: src/components/content/PlanList.jsx
+msgid "{0, plural, one {Show all #} other {Show all #}}"
+msgstr "{0, plural, one {Mostrar todos #} other {Mostrar todos #}}"
+
 #. placeholder {0}: items.length
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "{0, plural, one {Working on # thing} other {Working on # things}}"
@@ -425,6 +430,10 @@ msgstr "{llmsLines} linhas"
 msgid "{messageCount, plural, one {# message} other {# messages}}"
 msgstr "{messageCount, plural, one {# mensagem} other {# mensagens}}"
 
+#: src/components/content/PlanBoard.jsx
+msgid "{missed, plural, one {# missed} other {# missed}}"
+msgstr "{missed, plural, one {# perdido} other {# perdidos}}"
+
 #: src/app/(app)/connections/page.jsx
 msgid "{missing, plural, one {Connected · # permission missing} other {Connected · # permissions missing}}"
 msgstr "{missing, plural, one {Conectado · # permissão faltando} other {Conectado · # permissões faltando}}"
@@ -555,12 +564,20 @@ msgid "{planAccount} — no API key, no extra bill."
 msgstr "{planAccount} — sem API key, sem cobrança extra."
 
 #: src/components/content/PlanBoard.jsx
-msgid "{postCount, plural, one {# post} other {# posts}}"
-msgstr "{postCount, plural, one {# post} other {# posts}}"
+#~ msgid "{postCount, plural, one {# post} other {# posts}}"
+#~ msgstr "{postCount, plural, one {# post} other {# posts}}"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "{postCount} posts · {avgViewsText} avg views"
 msgstr "{postCount} posts · {avgViewsText} média de visualizações"
+
+#: src/components/content/PlanBoard.jsx
+msgid "{posted} of {total} posted"
+msgstr "{posted} de {total} publicados"
+
+#: src/components/content/PlanBoard.jsx
+msgid "{posted} of its {total} posts went out. The next plan learns from them."
+msgstr "{posted} de seus {total} posts foram publicados. O próximo plano aprende com eles."
 
 #: src/components/audit/AuditReport.jsx
 msgid "{posts, plural, one {# post} other {# posts}}"
@@ -1469,6 +1486,10 @@ msgstr "Linhas de análise chegam ao modelo como JSON bruto. Uma grande extraç�
 #: src/components/memory/MemoryTimeline.jsx
 msgid "and"
 msgstr "e"
+
+#: src/components/content/PlanBoard.jsx
+msgid "Another length"
+msgstr "Outra duração"
 
 #: src/app/(app)/projects/page.jsx
 msgid "another user"
@@ -3281,8 +3302,8 @@ msgid "DONE FOR YOU"
 msgstr "FEITO PARA VOCÊ"
 
 #: src/components/content/PlanStrategy.jsx
-msgid "Doubling down on"
-msgstr "Focando em"
+#~ msgid "Doubling down on"
+#~ msgstr "Focando em"
 
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Download"
@@ -3633,6 +3654,10 @@ msgstr "Cada salto de redirecionamento consome orçamento de rastreamento e Page
 msgid "Each source Duct reads shows up here with the period it covers, and the provider’s own words when a pull fails."
 msgstr "Cada fonte que o Duct lê aparece aqui com o período que abrange, e as próprias palavras do provedor quando uma extração falha."
 
+#: src/components/content/PlanList.jsx
+msgid "Earlier"
+msgstr "Anteriormente"
+
 #: src/app/(app)/connections/page.jsx
 msgid "EC private key (PEM)"
 msgstr "Chave privada EC (PEM)"
@@ -3768,8 +3793,8 @@ msgid "Every report Duct writes lands here, with each version kept."
 msgstr "Todo relatório que Duct escreve chega aqui, com cada versão mantida."
 
 #: src/components/content/PlanStrategy.jsx
-msgid "Every type has results"
-msgstr "Todo tipo tem resultados"
+#~ msgid "Every type has results"
+#~ msgstr "Todo tipo tem resultados"
 
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Every version of it goes with it. This cannot be undone."
@@ -3922,6 +3947,10 @@ msgstr "Buscar modelos"
 #: src/components/content/PostViewport.jsx
 msgid "Finding a source…"
 msgstr "Procurando uma fonte…"
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Finding what works"
+msgstr "Descobrindo o que funciona"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Findings by Category"
@@ -4458,6 +4487,7 @@ msgid "Helps Duct fit its answers to your job"
 msgstr "Ajuda Duct a adaptar suas respostas ao seu trabalho"
 
 #: src/app/(app)/execute/page.jsx
+#: src/components/content/PlanList.jsx
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "Hide"
 msgstr "Ocultar"
@@ -5017,6 +5047,10 @@ msgstr "Estilos vinculados"
 msgid "Links"
 msgstr "Links"
 
+#: src/components/content/PlanBoard.jsx
+msgid "List"
+msgstr "Lista"
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "Listed this thread's documents"
 msgstr "Listou os documentos desta conversa"
@@ -5413,6 +5447,11 @@ msgstr "Microsoft Clarity"
 msgid "Mid-market"
 msgstr "Mercado médio"
 
+#: src/components/content/PlanList.jsx
+#: src/components/content/PostMiniCard.jsx
+msgid "Missed"
+msgstr "Perdidos"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "missing"
 msgstr "ausente"
@@ -5622,6 +5661,10 @@ msgstr "Novo convite enviado para {invitee}."
 msgid "New plan"
 msgstr "Novo plano"
 
+#: src/components/content/PlanBoard.jsx
+msgid "New plan · <0/>"
+msgstr "Novo plano · <0/>"
+
 #: src/app/(app)/content/page.jsx
 msgid "New post"
 msgstr "Novo post"
@@ -5654,6 +5697,7 @@ msgid "Next slide"
 msgstr "Próximo slide"
 
 #: src/components/content/PlanCalendar.jsx
+#: src/components/content/PlanList.jsx
 msgid "Next week"
 msgstr "Próxima semana"
 
@@ -5737,6 +5781,10 @@ msgstr "Nenhuma conversa ainda."
 #: src/components/content/ReminderSetting.jsx
 msgid "No daily reminder"
 msgstr "Nenhum lembrete diário"
+
+#: src/components/content/PlanList.jsx
+msgid "No date"
+msgstr "Sem data"
 
 #: src/app/(app)/artifacts/page.jsx
 msgid "No documents yet"
@@ -5966,6 +6014,10 @@ msgstr "Sem fins lucrativos"
 msgid "none"
 msgstr "nenhum"
 
+#: src/components/content/PlanBoard.jsx
+msgid "None of its {total} posts went out. The ideas are still below if you want them."
+msgstr "Nenhum de seus {total} posts foi publicado. As ideias ainda estão abaixo, se você as quiser."
+
 #: src/app/(start)/start/page.jsx
 msgid "None of these — start a new one"
 msgstr "Nenhum desses — comece um novo"
@@ -6150,8 +6202,8 @@ msgid "Nothing here"
 msgstr "Nada aqui"
 
 #: src/components/content/PlanKanban.jsx
-msgid "Nothing here yet."
-msgstr "Nada aqui ainda."
+#~ msgid "Nothing here yet."
+#~ msgstr "Nada aqui ainda."
 
 #: src/components/insights/Desk.jsx
 msgid "Nothing is connected right now."
@@ -6194,8 +6246,8 @@ msgstr "Nada proposto ainda"
 #~ msgstr "Nada proposto ainda. Execute uma auditoria ou uma sessão de insight e as correções aparecerão aqui para aprovação."
 
 #: src/components/content/PlanStrategy.jsx
-msgid "Nothing proven yet"
-msgstr "Nada provado ainda"
+#~ msgid "Nothing proven yet"
+#~ msgstr "Nada provado ainda"
 
 #: src/components/models/UsagePanel.jsx
 msgid "Nothing ran in the last {windowDays} days"
@@ -6475,6 +6527,10 @@ msgstr "Abrir a paleta de comandos"
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Open the console"
 msgstr "Abrir o console"
+
+#: src/components/content/PlanBoard.jsx
+msgid "Open the current plan"
+msgstr "Abrir o plano atual"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Open the document →"
@@ -8016,6 +8072,10 @@ msgstr "Salvos"
 msgid "Saving…"
 msgstr "Salvando…"
 
+#: src/components/content/PlanStrategy.jsx
+msgid "Scaling"
+msgstr "Escalando"
+
 #: src/components/audit/AuditReport.jsx
 msgid "Scan couldn't finish"
 msgstr "A varredura não pôde ser concluída"
@@ -8433,6 +8493,7 @@ msgid "Short description"
 msgstr "Breve descrição"
 
 #: src/app/(app)/execute/page.jsx
+#: src/components/content/PlanList.jsx
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "Show"
 msgstr "Mostrar"
@@ -9655,6 +9716,14 @@ msgstr "Isso muda a conta ativa. As alterações aplicadas registram um identifi
 msgid "This page stopped working"
 msgstr "Esta página parou de funcionar"
 
+#: src/components/content/PlanBoard.jsx
+msgid "This plan ended on {ended}."
+msgstr "Este plano terminou em {ended}."
+
+#: src/components/content/PlanList.jsx
+msgid "This plan has no posts yet."
+msgstr "Este plano não tem posts ainda."
+
 #: src/components/content/PlanCalendar.jsx
 msgid "This plan has no start date, so it can't be placed on a calendar yet."
 msgstr "Este plano não tem data de início, então ainda não pode ser colocado em um calendário."
@@ -9733,6 +9802,10 @@ msgstr "Esta aba está executando uma versão mais antiga. Recarregar pega a nov
 #: src/app/(auth)/page.js
 msgid "This version of Duct can’t complete sign-in. Update the app from <0>getduct.ai/download</0> and try again."
 msgstr "Esta versão do Duct não consegue completar o entrar. Atualize o app em <0>getduct.ai/download</0> e tente novamente."
+
+#: src/components/content/PlanList.jsx
+msgid "This week"
+msgstr "Esta semana"
 
 #: src/app/(start)/start/page.jsx
 msgid "This will update <0>{targetProjectName}</0>, the project you already have for this site. Anything you filled in yourself stays as it is."
@@ -10316,8 +10389,12 @@ msgid "Week"
 msgstr "Semana"
 
 #: src/components/content/PlanList.jsx
-msgid "Week {number}"
-msgstr "Semana {number}"
+#~ msgid "Week {number}"
+#~ msgstr "Semana {number}"
+
+#: src/components/content/PlanList.jsx
+msgid "Week of {from}"
+msgstr "Semana de {from}"
 
 #: src/components/insights/desk/DeskCards.jsx
 msgid "Welcome back. Take a fresh look?"
@@ -10534,6 +10611,18 @@ msgstr "Por que funcionou:"
 #: src/components/content/DraftsQueue.jsx
 msgid "Why not? The next draft learns from it."
 msgstr "Por que não? O próximo rascunho aprende com isso."
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Why scale it"
+msgstr "Por que escalá-lo"
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Why test it"
+msgstr "Por que testá-lo"
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Why this plan"
+msgstr "Por que este plano"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Why we rebuilt onboarding from scratch"

@@ -176,7 +176,11 @@ of all of them):
    is the model: named situations plus a seeded `randomDesk`). They render as
    `/preview` scenes, and the arrangement's invariants (at most one lead,
    bounded rows, nothing shown twice, the headline count equal to the queue)
-   are asserted over a thousand random desks in `check:desk`.
+   are asserted over a thousand random desks in `check:desk`. The content
+   plan board is the second worked example: a plan is read on a day it was
+   not written for, so `agendaGroups` and `planState` in
+   `lib/contentSchedule.js` decide what is missed, this week, later or done,
+   held to `lib/__fixtures__/planScenarios.mjs` over 500 random plans.
 
 **Personality is visual, not verbal.** When the words are generated, the
 character has to come from what Duct draws. Three layers, each with a job:
