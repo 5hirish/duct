@@ -253,6 +253,14 @@ carries all the code.
   **onedir, never onefile**: a onefile binary unpacks to a temp dir at startup
   and does not survive signing + notarization.
 
+  **A dev build runs any freeze it finds**, through the working-copy fallback
+  in `sidecar_path`, and the web app then talks to it instead of the API it
+  was configured for. That is the self-host shape, not the one users get, and
+  it costs the refreeze above on every backend change. `DUCT_NO_DEV_SIDECAR=1`
+  in the app's environment switches the fallback off (a bundled sidecar is
+  unaffected), which is how the "Desktop + API" launches run the thin client
+  against the local API. It reaches a bundle only through `open --env`.
+
   **Never run `pyinstaller duct_sidecar.spec` at this directory directly.** It
   deletes its output directory before rebuilding, and a dev build ships no
   sidecar of its own — `tauri.dev.conf.json` sets no `bundle.resources`, so

@@ -142,7 +142,7 @@ export default function StyleGallery() {
     <section className="space-y-6">
       <div className="rounded-lg border border-border/60 bg-muted/30 px-4 py-3">
         <p className="flex items-center gap-2 text-sm font-medium">
-          <Sparkles className="h-4 w-4 text-primary" /> <Trans>Base styles</Trans>
+          <Sparkles className="h-4 w-4 text-brand" /> <Trans>Base styles</Trans>
         </p>
         <p className="mt-0.5 text-xs text-muted-foreground">
           <Trans>

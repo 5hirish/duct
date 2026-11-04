@@ -54,7 +54,7 @@ msgid ""
 msgstr ""
 "ボード上の計画、カードごとの投稿、それぞれに生成されたスライドと画像、ワンクリックで9つのネットワークに公開。結果はカードに戻ってきて、次の計画は前回の計画から学びます。"
 
-#: about.html compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
+#: about.html compare.html connect-agent.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
 msgid "About"
 msgstr "について"
 
@@ -109,7 +109,7 @@ msgid ""
 msgstr "設計上の決定は公開の場で議論されます。私を見つけるにはGitHubが最適です。"
 
 #. link title
-#: about.html compare.html doctrine.html index.html mcp.html open-source.html
+#: about.html compare.html connect-agent.html doctrine.html index.html mcp.html open-source.html
 msgid "Duct Blog"
 msgstr "Ductブログ"
 
@@ -166,7 +166,7 @@ msgstr ""
 msgid "FONS. The spring, before anything has run. The app’s front door."
 msgstr "FONS。何も実行される前の泉。アプリの玄関。"
 
-#: about.html compare.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/nav-simple.html privacy.html seo-audit.html terms.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+#: about.html compare.html connect-agent.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/nav-simple.html privacy.html seo-audit.html terms.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Home"
 msgstr "ホーム"
 
@@ -247,7 +247,7 @@ msgstr ""
 msgid "Principles, not <0>platitudes</0>"
 msgstr "<0>決まり文句</0>ではなく、原則を"
 
-#: about.html compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
+#: about.html compare.html connect-agent.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
 msgid "Privacy Policy"
 msgstr "プライバシーポリシー"
 
@@ -300,7 +300,7 @@ msgstr "GitHubでスターを付ける →"
 msgid "Substance over ceremony"
 msgstr "形式よりも実質を"
 
-#: about.html compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
+#: about.html compare.html connect-agent.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
 msgid "Terms of Service"
 msgstr "利用規約"
 
@@ -954,7 +954,7 @@ msgstr "Ductが優れている点を見る"
 msgid "Self-host, no licence fee"
 msgstr "セルフホスト、ライセンス料なし"
 
-#: compare.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html seo-audit.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+#: compare.html connect-agent.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html seo-audit.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Skip to content"
 msgstr "コンテンツへスキップ"
 
@@ -1080,6 +1080,439 @@ msgstr "それを書き上げる"
 #: compare.html
 msgid "“Why did this move?”"
 msgstr "「なぜこれが移動したのですか？」"
+
+#: connect-agent.html
+msgid "<0></0> Duct's MCP server · Browser sign-in"
+msgstr "<0></0> DuctのMCPサーバー · ブラウザサインイン"
+
+#: connect-agent.html
+msgid "<0>Claude Code</0> wants to use your Duct account"
+msgstr "<0>Claude Code</0>があなたのDuctアカウントの使用を希望しています"
+
+#: connect-agent.html
+msgid ""
+"A draft never overwrites what you typed in Duct. It only fills blank fields or replaces an earlier draft. Check the project page in Duct."
+msgstr ""
+"下書きはDuctで入力した内容を上書きすることはありません。空白のフィールドを埋めるか、以前の下書きを置き換えるだけです。Ductのプロジェクトページをご確認ください。"
+
+#: connect-agent.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
+msgid "Access"
+msgstr "アクセス"
+
+#: connect-agent.html
+msgid "Add Duct to <0>opencode.json</0>:"
+msgstr "<0>opencode.json</0>にDuctを追加します:"
+
+#: connect-agent.html
+msgid "Add Duct to <0>~/.cursor/mcp.json</0>:"
+msgstr "<0>~/.cursor/mcp.json</0>にDuctを追加します:"
+
+#: connect-agent.html
+msgid "Add Duct to your agent"
+msgstr "エージェントにDuctを追加"
+
+#. meta description
+#: connect-agent.html
+msgid ""
+"Add Duct's MCP server to Claude Code, Codex, Cursor, VS Code or ChatGPT. Sign in with your browser, click Allow, and your agent can read and set up projects."
+msgstr ""
+"DuctのMCPサーバーをClaude Code、Codex、Cursor、VS Code、またはChatGPTに追加します。ブラウザでサインインし、「許可」をクリックすると、エージェントがプロジェクトを読み取り、設定できるようになります。"
+
+#: connect-agent.html
+msgid "Add a connector with this address, and choose OAuth for authentication:"
+msgstr "このアドレスでコネクタを追加し、認証にはOAuthを選択します:"
+
+#: connect-agent.html
+msgid "Add it, allow it, <0>ask it.</0>"
+msgstr "追加し、許可し、<0>質問します。</0>"
+
+#: connect-agent.html
+msgid ""
+"Add this address to Claude Code, Codex, Cursor, VS Code, OpenCode, Claude or ChatGPT. Your browser opens on Duct, you click Allow, and your agent can read your projects and draft their details."
+msgstr ""
+"このアドレスをClaude Code、Codex、Cursor、VS Code、OpenCode、Claude、またはChatGPTに追加します。Ductでブラウザが開き、「許可」をクリックすると、エージェントがプロジェクトを読み取り、その詳細を下書きできるようになります。"
+
+#: connect-agent.html
+msgid "Allow"
+msgstr "許可する"
+
+#: connect-agent.html
+msgid ""
+"Another agent? If it can add a remote MCP server by its address, give it the same one. If it can't sign in, <0>use a token</0>."
+msgstr ""
+"他のエージェントですか？アドレスでリモートMCPサーバーを追加できる場合は、同じアドレスを与えてください。サインインできない場合は、<0>トークンを使用してください</0>。"
+
+#: connect-agent.html
+msgid "Approve or apply changes."
+msgstr "変更を承認または適用します。"
+
+#: connect-agent.html
+msgid "Ask it something"
+msgstr "何か質問します"
+
+#: connect-agent.html
+msgid "Cancel"
+msgstr "キャンセル"
+
+#: connect-agent.html
+msgid "ChatGPT"
+msgstr "ChatGPT"
+
+#: connect-agent.html
+msgid "Choose HTTP, paste the address and name it <0>duct</0>:"
+msgstr "HTTPを選択し、アドレスを貼り付け、<0>duct</0>と名付けます:"
+
+#: connect-agent.html
+msgid "Claude"
+msgstr "Claude"
+
+#: connect-agent.html
+msgid "Claude Code"
+msgstr "Claude Code"
+
+#. meta twitter:description
+#: connect-agent.html
+msgid ""
+"Claude Code, Codex, Cursor, VS Code, OpenCode, Claude and ChatGPT all connect to Duct by one address. No token to copy or paste."
+msgstr ""
+"Claude Code、Codex、Cursor、VS Code、OpenCode、Claude、およびChatGPTはすべて、1つのアドレスでDuctに接続します。コピー＆ペーストするトークンはありません。"
+
+#: connect-agent.html
+msgid "Claude, on claude.ai or Claude Desktop"
+msgstr "Claude (claude.aiまたはClaude Desktop)"
+
+#: connect-agent.html
+msgid "Codex"
+msgstr "Codex"
+
+#: connect-agent.html
+msgid "Connect tools."
+msgstr "ツールを接続します。"
+
+#: connect-agent.html
+msgid "Copied"
+msgstr "コピーしました"
+
+#: connect-agent.html
+msgid "Copy"
+msgstr "コピー"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the Claude Code command"
+msgstr "Claude Codeコマンドをコピー"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the Claude Code command with a token"
+msgstr "トークン付きClaude Codeコマンドをコピー"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the Codex command"
+msgstr "Codexコマンドをコピー"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the Cursor settings"
+msgstr "Cursor設定をコピー"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the OpenCode settings"
+msgstr "OpenCode設定をコピー"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the server address"
+msgstr "サーバーアドレスをコピー"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the sign-in command"
+msgstr "サインインコマンドをコピー"
+
+#: connect-agent.html
+msgid "Cursor"
+msgstr "Cursor"
+
+#: connect-agent.html
+msgid ""
+"Draft a project's description, audience and competitors from your repo or files."
+msgstr "リポジトリまたはファイルから、プロジェクトの説明、オーディエンス、競合を下書きします。"
+
+#: connect-agent.html
+msgid ""
+"Drafted the description, audience and competitors from the repo. They're on the project in Duct."
+msgstr "リポジトリから説明、オーディエンス、競合を下書きしました。それらはDuctのプロジェクトにあります。"
+
+#: connect-agent.html
+msgid ""
+"Duct gives your agent three tools today. Approving, applying and connecting stay with you, in Duct."
+msgstr "Ductは現在、エージェントに3つのツールを提供しています。承認、適用、接続はDuctであなたが行います。"
+
+#: connect-agent.html
+msgid "Duct opens in your browser. Click Allow."
+msgstr "Ductがブラウザで開きます。「許可」をクリックしてください。"
+
+#: connect-agent.html
+msgid "Every agent connects to the same server. Pick yours for the exact steps."
+msgstr "すべてのエージェントは同じサーバーに接続します。正確な手順については、お使いのエージェントを選択してください。"
+
+#: connect-agent.html
+msgid "Every agent is listed. <0>Disconnect any one.</0>"
+msgstr "すべてのエージェントが一覧表示されています。<0>いずれかを切断します。</0>"
+
+#: connect-agent.html
+msgid "Every change shows in the project's activity."
+msgstr "すべての変更はプロジェクトのアクティビティに表示されます。"
+
+#: connect-agent.html
+msgid ""
+"For CI, a remote machine or an agent without sign-in. Create one on the same settings page, under No browser? Use a token. Your agent sends it as a header:"
+msgstr ""
+"CI、リモートマシン、またはサインインなしのエージェント向けです。同じ設定ページの「ブラウザなし？トークンを使用」の下で作成してください。エージェントはこれをヘッダーとして送信します。"
+
+#: connect-agent.html
+msgid ""
+"Give your agent the address above, with one command or one line of settings. The exact steps for each agent are below."
+msgstr "上記のアドレスを、1つのコマンドまたは1行の設定でエージェントに与えてください。各エージェントの正確な手順は以下にあります。"
+
+#: connect-agent.html
+msgid "How to connect your agent"
+msgstr "エージェントの接続方法"
+
+#: connect-agent.html
+msgid "I asked it to set up the project and nothing changed"
+msgstr "プロジェクトの設定を依頼しましたが、何も変更されませんでした"
+
+#: connect-agent.html
+msgid "I host Duct myself"
+msgstr "自分でDuctをホストしています"
+
+#: connect-agent.html
+msgid "In ChatGPT's settings, turn on developer mode."
+msgstr "ChatGPTの設定で、開発者モードをオンにします。"
+
+#: connect-agent.html
+msgid ""
+"In Claude Code, run <0>/mcp</0>, pick <1>duct</1> and choose <2>Authenticate</2>."
+msgstr "Claude Codeで<0>/mcp</0>を実行し、<1>duct</1>を選択して<2>Authenticate</2>を選びます。"
+
+#: connect-agent.html
+msgid "In Claude Code:"
+msgstr "Claude Codeで："
+
+#: connect-agent.html
+msgid "In Cursor's MCP settings, press the login prompt on the duct server."
+msgstr "CursorのMCP設定で、ductサーバーのログインプロンプトを押します。"
+
+#: connect-agent.html
+msgid ""
+"In Duct, open Settings → Connect your AI agent. Every agent you allowed is there, and you can disconnect it. A disconnected agent stops on its next call."
+msgstr ""
+"Ductで「設定」→「AIエージェントを接続」を開きます。許可したすべてのエージェントがここに表示され、切断できます。切断されたエージェントは次回の呼び出しで停止します。"
+
+#: connect-agent.html
+msgid "In your terminal, run:"
+msgstr "ターミナルで実行："
+
+#: connect-agent.html
+msgid "It can never"
+msgstr "決してできません"
+
+#: connect-agent.html
+msgid "It reads and drafts. <0>You decide.</0>"
+msgstr "読み取りと下書きを行います。<0>決定するのはあなたです。</0>"
+
+#: connect-agent.html
+msgid ""
+"It says it couldn't register, or “does not support dynamic client registration”"
+msgstr "登録できなかった、または「動的クライアント登録をサポートしていません」と表示されます"
+
+#: connect-agent.html
+msgid "It worked, and now it gets a 401"
+msgstr "動作しましたが、401エラーが発生します"
+
+#: connect-agent.html
+msgid "List your projects."
+msgstr "プロジェクトを一覧表示します。"
+
+#: connect-agent.html
+msgid "My browser never opened"
+msgstr "ブラウザが開きませんでした"
+
+#: connect-agent.html
+msgid "Name it Duct and paste the address:"
+msgstr "Ductと名付けてアドレスを貼り付けます："
+
+#: connect-agent.html
+msgid "No browser? Use a token."
+msgstr "ブラウザがない場合：トークンを使用します。"
+
+#: connect-agent.html
+msgid ""
+"On claude.ai or in Claude Desktop, open Settings → Connectors and choose Add custom connector."
+msgstr "claude.aiまたはClaude Desktopで、「設定」→「コネクタ」を開き、「カスタムコネクタを追加」を選択します。"
+
+#. meta og:description
+#: connect-agent.html
+msgid ""
+"One address in your agent, one Allow in your browser. It can read your Duct projects and draft their details, never approve a change."
+msgstr "エージェントに1つのアドレス、ブラウザで1つの「許可」。Ductのプロジェクトを読み取り、詳細を下書きできますが、変更を承認することはありません。"
+
+#: connect-agent.html
+msgid "Open the Command Palette and run <0>MCP: Add Server</0>."
+msgstr "コマンドパレットを開き、<0>MCP: Add Server</0>を実行します。"
+
+#: connect-agent.html
+msgid "OpenCode"
+msgstr "OpenCode"
+
+#: connect-agent.html
+msgid ""
+"Overwrite what you typed in Duct. A draft only fills blanks or replaces an earlier draft."
+msgstr "Ductに入力した内容を上書きします。下書きは空白を埋めるか、以前の下書きを置き換えるだけです。"
+
+#: connect-agent.html
+msgid "Press Connect. Duct opens in your browser. Click Allow."
+msgstr "「接続」を押します。Ductがブラウザで開きます。「許可」をクリックします。"
+
+#: connect-agent.html
+msgid "Read one project."
+msgstr "1つのプロジェクトを読み取ります。"
+
+#: connect-agent.html
+msgid "See keys or credentials."
+msgstr "キーまたは認証情報を表示します。"
+
+#: connect-agent.html mcp.html
+msgid "Server address"
+msgstr "サーバーアドレス"
+
+#: connect-agent.html
+msgid "Set up this product in Duct."
+msgstr "Ductでこの製品を設定します。"
+
+#: connect-agent.html
+msgid "Setup by agent"
+msgstr "エージェントによる設定"
+
+#: connect-agent.html
+msgid "Seven agents. <0>One address.</0>"
+msgstr "7つのエージェント。<0>1つのアドレス。</0>"
+
+#: connect-agent.html
+msgid "Sign in and click Allow"
+msgstr "サインインして「許可」をクリック"
+
+#: connect-agent.html
+msgid ""
+"Start the sign-in yourself: run /mcp in Claude Code, codex mcp login duct in Codex, or opencode mcp auth duct in OpenCode."
+msgstr ""
+"自分でサインインを開始します：Claude Codeで/mcp、Codexでcodex mcp login duct、またはOpenCodeでopencode mcp auth ductを実行します。"
+
+#: connect-agent.html
+msgid ""
+"Start the sign-in yourself: run <0>/mcp</0> in Claude Code, <1>codex mcp login duct</1> in Codex, or <2>opencode mcp auth duct</2> in OpenCode."
+msgstr ""
+"自分でサインインを開始します：Claude Codeで<0>/mcp</0>、Codexで<1>codex mcp login duct</1>、またはOpenCodeで<2>opencode mcp auth duct</2>を実行します。"
+
+#: connect-agent.html
+msgid "Stuck? <0>Start here.</0>"
+msgstr "行き詰まりましたか？<0>ここから始めましょう。</0>"
+
+#: connect-agent.html
+msgid "Then sign in:"
+msgstr "次にサインイン："
+
+#: connect-agent.html mcp.html
+msgid "Troubleshooting"
+msgstr "トラブルシューティング"
+
+#: connect-agent.html
+msgid ""
+"Try “Set up this product in Duct.” Your agent reads your repo and drafts the project's description, audience and competitors."
+msgstr "「Ductでこの製品を設定」を試してください。エージェントがリポジトリを読み取り、プロジェクトの説明、ターゲット層、競合他社を下書きします。"
+
+#: connect-agent.html
+msgid ""
+"Update your agent to its latest version and try again. If it still fails, connect with a token instead."
+msgstr "エージェントを最新バージョンに更新して、もう一度お試しください。それでも失敗する場合は、代わりにトークンで接続してください。"
+
+#. meta og:title
+#. meta twitter:title
+#: connect-agent.html
+msgid "Use Duct from Claude Code, Codex or Cursor"
+msgstr "Claude Code、Codex、またはCursorからDuctを使用"
+
+#: connect-agent.html partials/footer-expanded.html
+msgid "Use Duct from your agent"
+msgstr "エージェントからDuctを使用"
+
+#: connect-agent.html
+msgid "Use Duct from your agent.<0/><1>No token to copy.</1>"
+msgstr "エージェントからDuctを使用します。<0/><1>コピーするトークンはありません。</1>"
+
+#: connect-agent.html
+msgid ""
+"Use your own API address followed by /mcp, in place of https://api.getduct.ai/mcp."
+msgstr "https://api.getduct.ai/mcpの代わりに、ご自身のAPIアドレスに/mcpを続けて使用します。"
+
+#: connect-agent.html
+msgid ""
+"Use your own API address followed by <0>/mcp</0>, in place of <1>https://api.getduct.ai/mcp</1>."
+msgstr "<1>https://api.getduct.ai/mcp</1>の代わりに、ご自身のAPIアドレスに<0>/mcp</0>を続けて使用します。"
+
+#: connect-agent.html
+msgid "VS Code"
+msgstr "VS Code"
+
+#: connect-agent.html
+msgid ""
+"VS Code asks you to sign in the first time it uses Duct. Your browser opens on Duct. Click Allow."
+msgstr "VS Codeは、Ductを初めて使用する際にサインインを求めます。ブラウザでDuctが開き、「許可」をクリックします。"
+
+#: connect-agent.html
+msgid ""
+"Want Duct's own agent to call your MCP servers instead? That is the other direction: <0>Your MCP servers in Duct →</0>"
+msgstr "Duct自身のエージェントにMCPサーバーを呼び出させたいですか？それは逆方向です：<0>Duct内のMCPサーバー →</0>"
+
+#: connect-agent.html
+msgid "What your agent can do"
+msgstr "エージェントができること"
+
+#: connect-agent.html
+msgid ""
+"You disconnected it in Duct, or its sign-in lapsed after 90 days without use. Sign in again from your agent."
+msgstr "Ductで接続を切断したか、90日間使用されなかったためサインインが失効しました。エージェントから再度サインインしてください。"
+
+#: connect-agent.html
+msgid "You see every connected agent"
+msgstr "接続されているすべてのエージェントが表示されます"
+
+#. div aria-label
+#: connect-agent.html
+msgid "Your agent"
+msgstr "あなたのエージェント"
+
+#: connect-agent.html
+msgid "Your agent can"
+msgstr "あなたのエージェントは"
+
+#: connect-agent.html
+msgid ""
+"Your browser opens on Duct and asks whether your agent may use your account. Click Allow. There is no token to copy."
+msgstr ""
+"ブラウザでDuctが開かれ、あなたのアカウントをエージェントが使用することを許可するか尋ねられます。「許可」をクリックしてください。コピーするトークンはありません。"
+
+#: connect-agent.html
+msgid "Your browser opens on Duct. Click Allow."
+msgstr "ブラウザでDuctが開きます。「許可」をクリックしてください。"
+
+#: connect-agent.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-seo-audit.html partials/nav-simple.html
+msgid "duct <0></0>"
+msgstr "Duct <0></0>"
 
 #: doctrine.html
 msgid ""
@@ -1571,11 +2004,6 @@ msgid "Targets, decisions and what it learned, on a timeline you can correct."
 msgstr "目標、決定、学習内容が、修正可能なタイムラインで表示されます。"
 
 #. img alt
-#: download.html index.html
-msgid "The Connections page with twelve tools, five of them connected"
-msgstr "12個のツールがあり、そのうち5個が接続済みの接続ページ"
-
-#. img alt
 #: download.html
 msgid ""
 "The Duct desktop app: an insights session with a proposed change waiting for approval on the left, the brief it wrote on the right"
@@ -1586,6 +2014,11 @@ msgstr "Duct デスクトップアプリ：左側には承認待ちの変更セ�
 msgid ""
 "The Memory timeline: a CPA target, a decision, an event, and what the agent learned this week"
 msgstr "メモリタイムライン：CPA目標、決定、イベント、および今週エージェントが学習した内容"
+
+#. img alt
+#: download.html index.html
+msgid "The Toolbox with twelve tools, five of them connected"
+msgstr "12個のツールがあるツールボックス、そのうち5個が接続済み"
 
 #: download.html
 msgid ""
@@ -3054,10 +3487,6 @@ msgid "API key pair"
 msgstr "APIキーペア"
 
 #: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
-msgid "Access"
-msgstr "アクセス"
-
-#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
 msgid "All integrations"
 msgstr "全ての連携"
 
@@ -3200,8 +3629,8 @@ msgstr "タップから何件のインストールがあり、ビューから何
 
 #: integrations/apple-search-ads.html
 msgid ""
-"In Duct, open Connections, choose Apple Search Ads and paste the three IDs and the private key."
-msgstr "Ductで「接続」を開き、Apple Search Adsを選択し、3つのIDと秘密キーを貼り付けてください。"
+"In Duct, open the Toolbox, choose Apple Search Ads and paste the three IDs and the private key."
+msgstr "Ductでツールボックスを開き、Apple Search Adsを選択し、3つのIDと秘密鍵を貼り付けます。"
 
 #. meta twitter:description
 #: integrations/apple-search-ads.html
@@ -3331,10 +3760,6 @@ msgid ""
 "Yes. Duct is free with your own model keys or the ChatGPT plan you already have, and the core is MIT licensed. A paid plan later bundles the models; nothing open today moves behind it. What will cost money."
 msgstr ""
 "はい。Ductは、お客様ご自身のモデルキーまたは既存のChatGPTプランで無料でご利用いただけ、コアはMITライセンスです。有料プランでは後日モデルがバンドルされますが、現在オープンなものが有料になることはありません。費用がかかるもの。"
-
-#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-seo-audit.html partials/nav-simple.html
-msgid "duct <0></0>"
-msgstr "Duct <0></0>"
 
 #: integrations/chatgpt-ads.html
 msgid ""
@@ -3500,8 +3925,8 @@ msgid ""
 msgstr "すべての広告プラットフォームは、自身に起因するコンバージョンを報告します。DuctはそれらをStripeと照合し、互いに照合することはありません。"
 
 #: integrations/chatgpt-ads.html
-msgid "In Duct, open Connections, choose OpenAI Ads and paste the key."
-msgstr "Ductで「接続」を開き、OpenAI Adsを選択してキーを貼り付けます。"
+msgid "In Duct, open the Toolbox, choose OpenAI Ads and paste the key."
+msgstr "Ductでツールボックスを開き、OpenAI Adsを選択し、キーを貼り付けます。"
 
 #: integrations/chatgpt-ads.html
 msgid ""
@@ -3789,8 +4214,8 @@ msgstr ""
 "Google Analytics Data API (ga4-data-v1beta) · 2026年9月24日監査済みフィールド · <0>ソースを読む</0>"
 
 #: integrations/ga4.html
-msgid "In Duct, open Connections and choose Google Analytics."
-msgstr "Ductで、接続を開き、Google Analyticsを選択します。"
+msgid "In Duct, open the Toolbox and choose Google Analytics."
+msgstr "Ductでツールボックスを開き、Google Analyticsを選択します。"
 
 #: integrations/ga4.html
 msgid "Link Google Ads account to GA4"
@@ -4115,8 +4540,8 @@ msgid ""
 msgstr "お客様が承認した後に誰かが予算、入札単価、またはステータスを変更した場合、Ductはその変更を適用しません。"
 
 #: integrations/google-ads.html
-msgid "In Duct, open Connections and choose Google Ads."
-msgstr "Ductで、接続を開き、Google Adsを選択します。"
+msgid "In Duct, open the Toolbox and choose Google Ads."
+msgstr "Ductでツールボックスを開き、Google Adsを選択します。"
 
 #: integrations/google-ads.html
 msgid ""
@@ -4327,8 +4752,8 @@ msgstr ""
 "表示回数が増加しているのに、トライアルは横ばいですか？DuctはGA4に加えてSearch Consoleのページ別クエリを読み取り、ランクインしているのにコンバージョンしないクエリを発見します。"
 
 #: integrations/google-search-console.html
-msgid "In Duct, open Connections and choose Google Search Console."
-msgstr "Ductで、接続を開き、Google Search Consoleを選択します。"
+msgid "In Duct, open the Toolbox and choose Google Search Console."
+msgstr "Ductでツールボックスを開き、Google Search Consoleを選択します。"
 
 #: integrations/google-search-console.html
 msgid "Is organic growth real, or bots?"
@@ -4590,8 +5015,8 @@ msgid "How does rollback work?"
 msgstr "ロールバックはどのように機能しますか？"
 
 #: integrations/google-tag-manager.html
-msgid "In Duct, open Connections and choose Google Tag Manager."
-msgstr "Ductで、接続を開き、Google Tag Managerを選択します。"
+msgid "In Duct, open the Toolbox and choose Google Tag Manager."
+msgstr "Ductでツールボックスを開き、Google Tag Managerを選択します。"
 
 #: integrations/google-tag-manager.html
 msgid "Is the tag firing, or firing the wrong thing?"
@@ -4862,8 +5287,8 @@ msgstr ""
 
 #: integrations/growthbook.html
 msgid ""
-"In Duct, open Connections, choose GrowthBook and paste the key and the project ID."
-msgstr "Ductで「接続」を開き、GrowthBookを選択し、キーとプロジェクトIDを貼り付けます。"
+"In Duct, open the Toolbox, choose GrowthBook and paste the key and the project ID."
+msgstr "Ductでツールボックスを開き、GrowthBookを選択し、キーとプロジェクトIDを貼り付けます。"
 
 #: integrations/growthbook.html
 msgid "In GrowthBook, open Settings, then API Keys, and create a read-only key."
@@ -5294,8 +5719,8 @@ msgid "How much of Meta's credit comes from views, not clicks?"
 msgstr "Metaのクレジットのどれくらいが、クリックではなく表示から来ていますか？"
 
 #: integrations/meta-ads.html
-msgid "In Duct, open Connections, choose Meta Ads and paste the token."
-msgstr "Ductで、接続を開き、Meta Adsを選択し、トークンを貼り付けます。"
+msgid "In Duct, open the Toolbox, choose Meta Ads and paste the token."
+msgstr "Ductでツールボックスを開き、Meta Adsを選択し、トークンを貼り付けます。"
 
 #: integrations/meta-ads.html
 msgid ""
@@ -5579,8 +6004,8 @@ msgid "In Clarity, open Settings, then Data Export, and generate an API token."
 msgstr "Clarityで、設定を開き、データエクスポートを選択してAPIトークンを生成します。"
 
 #: integrations/microsoft-clarity.html
-msgid "In Duct, open Connections, choose Microsoft Clarity and paste the token."
-msgstr "Ductで、接続を開き、Microsoft Clarityを選択してトークンを貼り付けます。"
+msgid "In Duct, open the Toolbox, choose Microsoft Clarity and paste the token."
+msgstr "Ductでツールボックスを開き、Microsoft Clarityを選択し、トークンを貼り付けます。"
 
 #. meta twitter:description
 #: integrations/microsoft-clarity.html
@@ -5758,8 +6183,8 @@ msgid "How many signups carry no campaign at all?"
 msgstr "キャンペーンタグが全くない登録数はいくつですか？"
 
 #: integrations/mixpanel.html
-msgid "In Duct, open Connections, choose Mixpanel and paste them."
-msgstr "Ductで「接続」を開き、Mixpanelを選択して貼り付けます。"
+msgid "In Duct, open the Toolbox, choose Mixpanel and paste them."
+msgstr "Ductでツールボックスを開き、Mixpanelを選択し、それらを貼り付けます。"
 
 #: integrations/mixpanel.html
 msgid ""
@@ -6036,8 +6461,8 @@ msgid "How many trials are active right now?"
 msgstr "現在、アクティブなトライアルはいくつありますか？"
 
 #: integrations/revenuecat.html
-msgid "In Duct, open Connections, choose RevenueCat and paste the key."
-msgstr "Ductで「接続」を開き、RevenueCatを選択してキーを貼り付けます。"
+msgid "In Duct, open the Toolbox, choose RevenueCat and paste the key."
+msgstr "Ductでツールボックスを開き、RevenueCatを選択し、キーを貼り付けます。"
 
 #: integrations/revenuecat.html
 msgid ""
@@ -6300,8 +6725,8 @@ msgstr "今月、有料広告が獲得した有料顧客の数は？"
 
 #: integrations/stripe.html
 msgid ""
-"In Duct, open Connections, choose Stripe and paste the key. Duct checks each permission and names any that is missing."
-msgstr "Ductで、接続を開き、Stripeを選択してキーを貼り付けます。Ductは各権限を確認し、不足しているものがあればその名前を伝えます。"
+"In Duct, open the Toolbox, choose Stripe and paste the key. Duct checks each permission and names any that is missing."
+msgstr "Ductでツールボックスを開き、Stripeを選択し、キーを貼り付けます。Ductは各権限を確認し、不足しているものを表示します。"
 
 #: integrations/stripe.html
 msgid "In Stripe, open Developers, then API keys, and create a restricted key."
@@ -6567,8 +6992,8 @@ msgstr "サーバーの接続方法"
 
 #: mcp.html
 msgid ""
-"In the Duct app, open Connections. The ready-made servers are listed there, and any other connects by its address."
-msgstr "Ductアプリで「接続」を開きます。既製のサーバーがそこにリストされており、その他のサーバーはアドレスで接続します。"
+"In the Duct app, open the Toolbox. The ready-made servers are listed there, and any other connects by its address."
+msgstr "Ductアプリでツールボックスを開きます。既製のサーバーがそこにリストされており、その他のサーバーはアドレスで接続します。"
 
 #: mcp.html
 msgid "It says “Duct only connects to servers on the public internet”"
@@ -6594,7 +7019,7 @@ msgstr "Linear"
 msgid "Local servers that run over stdio on your own computer."
 msgstr "ご自身のコンピューターでstdio経由で実行されるローカルサーバー。"
 
-#: mcp.html partials/footer-expanded.html
+#: mcp.html
 msgid "MCP servers"
 msgstr "MCPサーバー"
 
@@ -6628,8 +7053,8 @@ msgstr ""
 "サーバーがOAuthディスカバリーを公開し、クライアントメタデータドキュメントを受け入れるか、動的クライアント登録を許可する場合に、ワンクリックでサインインできます。"
 
 #: mcp.html
-msgid "Open Connections"
-msgstr "接続を開く"
+msgid "Open the Toolbox"
+msgstr "ツールボックスを開く"
 
 #: mcp.html
 msgid "OpenSEO"
@@ -6652,8 +7077,8 @@ msgstr "サーバーを選択するか、アドレスを貼り付けてくださ
 
 #: mcp.html
 msgid ""
-"Pick one on Connections and sign in with the account you already have. Each address is here for reference; you never have to type it."
-msgstr "接続から1つ選択し、既存のアカウントでサインインしてください。各アドレスは参照用であり、入力する必要はありません。"
+"Pick one in the Toolbox and sign in with the account you already have. Each address is here for reference; you never have to type it."
+msgstr "ツールボックスで1つ選択し、既存のアカウントでサインインします。各アドレスは参照用にここにあり、入力する必要はありません。"
 
 #. meta og:description
 #: mcp.html
@@ -6684,10 +7109,6 @@ msgstr "既製"
 #: mcp.html
 msgid "Replies are data, not orders"
 msgstr "応答はデータであり、命令ではありません"
-
-#: mcp.html
-msgid "Server address"
-msgstr "サーバーアドレス"
 
 #: mcp.html
 msgid ""
@@ -6742,13 +7163,13 @@ msgstr "接続するすべてのサーバーに同じルールが適用されま
 
 #: mcp.html
 msgid ""
-"The server offers no sign-in Duct can use. Create an API key in the vendor's settings and paste it on Connections."
-msgstr "サーバーはDuctが使用できるサインインを提供していません。ベンダーの設定でAPIキーを作成し、接続に貼り付けてください。"
+"The server offers no sign-in Duct can use. Create an API key in the vendor's settings and paste it in the Toolbox."
+msgstr "サーバーはDuctが使用できるサインインを提供していません。ベンダーの設定でAPIキーを作成し、ツールボックスに貼り付けます。"
 
 #: mcp.html
 msgid ""
-"The sign-in expired, or was revoked on the vendor's side. Press Reconnect on Connections and sign in again."
-msgstr "サインインの有効期限が切れたか、ベンダー側で取り消されました。接続で「再接続」を押し、再度サインインしてください。"
+"The sign-in expired, or was revoked on the vendor's side. Press Reconnect in the Toolbox and sign in again."
+msgstr "サインインの有効期限が切れたか、ベンダー側で取り消されました。ツールボックスで「再接続」を押し、再度サインインします。"
 
 #: mcp.html
 msgid ""
@@ -6764,10 +7185,6 @@ msgstr "3つのステップ。 <0>その後、質問してください。</0>"
 msgid ""
 "Today, connected servers are used in the insights chat. Scheduled briefs and Content Studio do not call them yet."
 msgstr "現在、接続されたサーバーはインサイトチャットで使用されます。スケジュールされたブリーフとContent Studioはまだそれらを呼び出しません。"
-
-#: mcp.html
-msgid "Troubleshooting"
-msgstr "トラブルシューティング"
 
 #: mcp.html
 msgid "Try: <0>Did yesterday's deploy go out cleanly?</0>"
@@ -6801,6 +7218,11 @@ msgstr "事前に承認されたクライアントのみを受け入れるベン
 #: mcp.html
 msgid "Waiting for you"
 msgstr "あなたを待機中"
+
+#: mcp.html
+msgid ""
+"Want to use Duct from your own agent instead, like Claude Code or Cursor? <0>Use Duct from your agent →</0>"
+msgstr "Claude CodeやCursorのような独自のエージェントからDuctを使用したいですか？<0>エージェントからDuctを使用する →</0>"
 
 #: mcp.html
 msgid ""
@@ -7414,6 +7836,10 @@ msgid "X / Twitter"
 msgstr "X / Twitter"
 
 #: partials/footer-expanded.html
+msgid "Your MCP servers in Duct"
+msgstr "Duct内のあなたのMCPサーバー"
+
+#: partials/footer-expanded.html
 msgid "© 2026 Alleviate Lab · Spain · Built in the open by <0>Shirish Kadam</0>."
 msgstr "© 2026 Alleviate Lab · スペイン · <0>Shirish Kadam</0>によってオープンソースで構築。"
 
@@ -7657,8 +8083,8 @@ msgstr ""
 
 #: privacy.html
 msgid ""
-"<0>Disconnect one source:</0> remove it on the Connections page in Duct. Its stored credentials are deleted at that point."
-msgstr "<0>1つのソースを切断する:</0> Ductの接続ページで削除してください。その時点で保存されている認証情報は削除されます。"
+"<0>Disconnect one source:</0> remove it from the Toolbox in Duct. Its stored credentials are deleted at that point."
+msgstr "<0>ソースを1つ切断する：</0> Ductのツールボックスから削除します。その時点で保存されている認証情報は削除されます。"
 
 #: privacy.html
 msgid "<0>Experimentation:</0> GrowthBook"
@@ -11677,6 +12103,77 @@ msgstr "← 戻る"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← 最初からやり直す"
+
+#. img alt
+#~ msgid "The Connections page with twelve tools, five of them connected"
+#~ msgstr "12個のツールがあり、そのうち5個が接続済みの接続ページ"
+
+#~ msgid ""
+#~ "In Duct, open Connections, choose Apple Search Ads and paste the three IDs and the private key."
+#~ msgstr "Ductで「接続」を開き、Apple Search Adsを選択し、3つのIDと秘密キーを貼り付けてください。"
+
+#~ msgid "In Duct, open Connections, choose OpenAI Ads and paste the key."
+#~ msgstr "Ductで「接続」を開き、OpenAI Adsを選択してキーを貼り付けます。"
+
+#~ msgid "In Duct, open Connections and choose Google Analytics."
+#~ msgstr "Ductで、接続を開き、Google Analyticsを選択します。"
+
+#~ msgid "In Duct, open Connections and choose Google Ads."
+#~ msgstr "Ductで、接続を開き、Google Adsを選択します。"
+
+#~ msgid "In Duct, open Connections and choose Google Search Console."
+#~ msgstr "Ductで、接続を開き、Google Search Consoleを選択します。"
+
+#~ msgid "In Duct, open Connections and choose Google Tag Manager."
+#~ msgstr "Ductで、接続を開き、Google Tag Managerを選択します。"
+
+#~ msgid ""
+#~ "In Duct, open Connections, choose GrowthBook and paste the key and the project ID."
+#~ msgstr "Ductで「接続」を開き、GrowthBookを選択し、キーとプロジェクトIDを貼り付けます。"
+
+#~ msgid "In Duct, open Connections, choose Meta Ads and paste the token."
+#~ msgstr "Ductで、接続を開き、Meta Adsを選択し、トークンを貼り付けます。"
+
+#~ msgid "In Duct, open Connections, choose Microsoft Clarity and paste the token."
+#~ msgstr "Ductで、接続を開き、Microsoft Clarityを選択してトークンを貼り付けます。"
+
+#~ msgid "In Duct, open Connections, choose Mixpanel and paste them."
+#~ msgstr "Ductで「接続」を開き、Mixpanelを選択して貼り付けます。"
+
+#~ msgid "In Duct, open Connections, choose RevenueCat and paste the key."
+#~ msgstr "Ductで「接続」を開き、RevenueCatを選択してキーを貼り付けます。"
+
+#~ msgid ""
+#~ "In Duct, open Connections, choose Stripe and paste the key. Duct checks each permission and names any that is missing."
+#~ msgstr "Ductで、接続を開き、Stripeを選択してキーを貼り付けます。Ductは各権限を確認し、不足しているものがあればその名前を伝えます。"
+
+#~ msgid ""
+#~ "In the Duct app, open Connections. The ready-made servers are listed there, and any other connects by its address."
+#~ msgstr "Ductアプリで「接続」を開きます。既製のサーバーがそこにリストされており、その他のサーバーはアドレスで接続します。"
+
+#~ msgid "Open Connections"
+#~ msgstr "接続を開く"
+
+#~ msgid ""
+#~ "Pick one on Connections and sign in with the account you already have. Each address is here for reference; you never have to type it."
+#~ msgstr "接続から1つ選択し、既存のアカウントでサインインしてください。各アドレスは参照用であり、入力する必要はありません。"
+
+#~ msgid ""
+#~ "The server offers no sign-in Duct can use. Create an API key in the vendor's settings and paste it on Connections."
+#~ msgstr "サーバーはDuctが使用できるサインインを提供していません。ベンダーの設定でAPIキーを作成し、接続に貼り付けてください。"
+
+#~ msgid ""
+#~ "The sign-in expired, or was revoked on the vendor's side. Press Reconnect on Connections and sign in again."
+#~ msgstr "サインインの有効期限が切れたか、ベンダー側で取り消されました。接続で「再接続」を押し、再度サインインしてください。"
+
+#~ msgid ""
+#~ "<0>Disconnect one source:</0> remove it on the Connections page in Duct. Its stored credentials are deleted at that point."
+#~ msgstr "<0>1つのソースを切断する:</0> Ductの接続ページで削除してください。その時点で保存されている認証情報は削除されます。"
+
+#~ msgid ""
+#~ "For CI, a remote machine or an agent without sign-in. On the same settings page, open Use a token instead and create one. Your agent sends it as a header:"
+#~ msgstr ""
+#~ "CI、リモートマシン、またはサインインなしのエージェント向け。同じ設定ページで、「代わりにトークンを使用」を開いて作成します。エージェントはそれをヘッダーとして送信します:"
 
 #~ msgid "No — email address and report content only"
 #~ msgstr "いいえ — メールアドレスとレポートコンテンツのみ"

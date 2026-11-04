@@ -1,86 +1,175 @@
+// Run and Debug for Duct.
+//
+// The menu lists only what a session starts from, grouped by area: web app,
+// desktop, site, debugging. The single processes those are assembled from are
+// hidden (`presentation.hidden`): none is worth starting alone, and listing
+// each one beside the compounds doubled the menu. Compounds still find them by
+// name.
+//
+// Stopping: every process carries its own postDebugTask, because VS Code
+// ignores one on a compound and `stopAll` fires only on a manual stop. The
+// desktop dev app is the exception (see "Desktop dev app" below): end a
+// desktop session with the "Duct: stop everything" task.
+//
+// One-shot jobs are tasks or make targets, not launches: the first sidecar
+// freeze is the "Desktop: Build sidecar" task, the site's smoke tests run in
+// `make check-site`. Zed ignores this file while .zed/debug.json exists; its
+// sessions are .zed/tasks.json.
 {
   "version": "0.2.0",
   "compounds": [
+    // Web app
     {
-      "name": "Duct: App + API + Jaeger (verbose)",
-      "configurations": [
-        "Backend: FastAPI (uvicorn verbose)",
-        "App: dev server",
-        "Jaeger: traces UI (:16686)"
-      ],
-      "stopAll": true
+      "name": "App + API",
+      "configurations": ["API :8002", "App :3003"],
+      "stopAll": true,
+      "presentation": { "group": "1-web", "order": 1 }
     },
     {
-      "//": "Cleanup lives on each configuration, not here: VS Code ignores postDebugTask on a compound (the compound schema accepts only name, presentation, configurations, stopAll, preLaunchTask). stopAll is session-level and fires only on a *manual* stop.",
-      "name": "Duct: App + API",
-      "configurations": [
-        "Backend: FastAPI (uvicorn)",
-        "App: dev server"
-      ],
-      "stopAll": true
+      // Every agent turn, model call and tool call lands in Jaeger, whose own
+      // MCP (.mcp.json) lets an agent read the traces back.
+      "name": "App + API + Jaeger",
+      "configurations": ["Jaeger :16686", "API :8002, traced", "App :3003"],
+      "stopAll": true,
+      "presentation": { "group": "1-web", "order": 2 }
+    },
+
+    // Desktop
+    {
+      // The shell as users get it, a thin client, with the window on this
+      // launch's API instead of the hosted one. Registered bundle, so the
+      // sign-in deep link works.
+      "name": "Desktop + API",
+      "configurations": ["API :8002", "App :3003", "Desktop dev app"],
+      "stopAll": true,
+      "presentation": { "group": "2-desktop", "order": 1 }
     },
     {
-      "//": "The desktop stack with every agent turn, model call and tool call traced into Jaeger, and Jaeger's own MCP (.mcp.json → http://localhost:16686/api/ai/mcp/) up for an agent to query the traces. Jaeger is listed first so it is listening before the sidecar's first batch; the exporter would retry anyway, but the first turn's spans are the ones you launched this for. The API is the traced uvicorn variant so a browser tab against :8002 lands in the same trace store as the sidecar.",
-      "name": "Duct: Desktop + API + Jaeger",
-      "configurations": [
-        "Jaeger: traces UI (:16686)",
-        "Backend: FastAPI (uvicorn verbose)",
-        "App: dev server",
-        "Desktop: Duct Dev app (local env, traced)"
-      ],
-      "stopAll": true
+      // Jaeger first, so the first turn's spans have somewhere to land. The
+      // window's requests go to the traced API, so the desktop needs no
+      // exporter of its own.
+      "name": "Desktop + API + Jaeger",
+      "configurations": ["Jaeger :16686", "API :8002, traced", "App :3003", "Desktop dev app"],
+      "stopAll": true,
+      "presentation": { "group": "2-desktop", "order": 2 }
     },
     {
-      "//": "Dev-variant bundle against a locally-run Railway-shaped API. Registered .app, so the sign-in deep link works.",
-      "name": "Duct: Desktop + API",
-      "configurations": [
-        "Backend: FastAPI (uvicorn)",
-        "App: dev server",
-        "Desktop: Duct Dev app (local env)"
-      ],
-      "stopAll": true
+      // The sidecar embodies backend/.env.prod, so it reads and WRITES the
+      // production database. For reproducing what only happens on prod data;
+      // everything else belongs on the local env. The window stays on the
+      // local app on purpose: the deployed build registers the release scheme,
+      // not this bundle's `.dev` one, so the sign-in deep link would break.
+      "name": "Desktop on prod data (writes prod)",
+      "configurations": ["App :3003", "Desktop dev app, prod data"],
+      "stopAll": true,
+      "presentation": { "group": "2-desktop", "order": 3 }
+    },
+
+    // Site
+    {
+      // Served from localhost, the site's forms post to :8002
+      // (site/assets/config.js).
+      "name": "Site + API",
+      "configurations": ["API :8002", "Site :8090"],
+      "stopAll": true,
+      "presentation": { "group": "3-site", "order": 1 }
     },
     {
-      "name": "Duct: Site + API",
-      "configurations": [
-        "Backend: FastAPI (uvicorn)",
-        "Site: dev server"
-      ],
-      "stopAll": true
+      // The whole funnel: locally, the site's sign-up links go to :3003.
+      "name": "Site + App + API",
+      "configurations": ["API :8002", "App :3003", "Site :8090"],
+      "stopAll": true,
+      "presentation": { "group": "3-site", "order": 2 }
     },
+
+    // Debugging
     {
-      "name": "Duct: Site + App + API",
-      "configurations": [
-        "Backend: FastAPI (uvicorn)",
-        "App: dev server",
-        "Site: dev server"
-      ],
-      "stopAll": true
+      "name": "App + API with breakpoints",
+      "configurations": ["API :8002, breakpoints", "App :3003"],
+      "stopAll": true,
+      "presentation": { "group": "4-debug", "order": 1 }
     }
   ],
   "configurations": [
+    // Shown: sessions that need nothing else running
+
     {
-      "name": "Backend: FastAPI (uvicorn)",
+      // Local-first, the way a self-hoster runs it: the shell spawns the frozen
+      // sidecar on a loopback port and the web app repoints at it, so no
+      // uvicorn, no Railway and no sign-in. `dev:local` starts the Next dev
+      // server itself (beforeDevCommand). The first time, run the "Desktop:
+      // Build sidecar" task; after that `predev:local` refreezes whenever the
+      // backend has moved ahead, which costs ~3 min on that run.
+      "name": "Desktop, self-host (sidecar)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev:local",
+      "cwd": "${workspaceFolder}/desktop",
+      "presentation": { "group": "2-desktop", "order": 4 }
+    },
+    {
+      // The same set as `make test`: `live` tests need real keys and network.
+      "name": "Pytest with breakpoints",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["tests", "-m", "not live", "-v", "--tb=short"],
+      "cwd": "${workspaceFolder}/backend",
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "python": "${workspaceFolder}/backend/.venv/bin/python",
+      "presentation": { "group": "4-debug", "order": 2 }
+    },
+
+    // Hidden: the processes the compounds above are built from
+
+    {
+      "name": "API :8002",
       "type": "node-terminal",
       "request": "launch",
       "command": "poetry run uvicorn server:app --reload --reload-dir \"${workspaceFolder}/backend\" --reload-exclude \"${workspaceFolder}/backend/.venv\" --reload-exclude \"${workspaceFolder}/backend/data\" --reload-exclude \"${workspaceFolder}/backend/alembic\" --reload-exclude \"${workspaceFolder}/backend/tests\" --reload-delay 1 --timeout-graceful-shutdown 10 --host 127.0.0.1 --port 8002",
       "cwd": "${workspaceFolder}/backend",
       "env": { "NODE_OPTIONS": "", "DUCT_LOG_FILE": "${workspaceFolder}/backend/dev.log" },
-      "postDebugTask": "Backend: stop uvicorn (8002)"
+      "postDebugTask": "Backend: stop uvicorn (8002)",
+      "presentation": { "hidden": true }
     },
     {
-      "//": "OTEL_EXPORTER_OTLP_ENDPOINT is what turns agent tracing on (agents/core/telemetry.py::configure_tracing). Without it the Jaeger compound starts a trace UI that receives nothing.",
-      "name": "Backend: FastAPI (uvicorn verbose)",
+      // OTEL_EXPORTER_OTLP_ENDPOINT is what turns agent tracing on
+      // (agents/core/telemetry.py::configure_tracing). Without it Jaeger comes
+      // up and receives nothing.
+      "name": "API :8002, traced",
       "type": "node-terminal",
       "request": "launch",
       "command": "AUDIT_VERBOSE_LOGGING=1 poetry run uvicorn server:app --timeout-graceful-shutdown 10 --host 127.0.0.1 --port 8002",
       "cwd": "${workspaceFolder}/backend",
       "env": { "NODE_OPTIONS": "", "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4318", "DUCT_LOG_FILE": "${workspaceFolder}/backend/dev.log" },
-      "postDebugTask": "Backend: stop uvicorn (8002)"
+      "postDebugTask": "Backend: stop uvicorn (8002)",
+      "presentation": { "hidden": true }
     },
     {
-      "//": "Opens the traces UI in a Simple Browser tab once the server is actually listening, which is the whole reason you picked a Jaeger launch. Not the Live Preview extension: every livePreview command is `.atFile` and serves static workspace files from its own server, so it cannot front a running server. `openIntegratedBrowser` is the built-in equivalent — debug-server-ready matches this terminal by shell pid and opens the captured URL. scripts/jaeger.sh prints its ready line only once the UI answers, which is what the pattern waits for. Zed ignores all of this: it reads .zed/debug.json, and serverReadyAction is VS Code only.",
-      "name": "Jaeger: traces UI (:16686)",
+      // No `--reload`: the reloader serves from a child process the debugger
+      // does not own, so a breakpoint set there silently never binds. Restart
+      // the session after a backend change instead.
+      "name": "API :8002, breakpoints",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": ["server:app", "--timeout-graceful-shutdown", "10", "--host", "127.0.0.1", "--port", "8002"],
+      "cwd": "${workspaceFolder}/backend",
+      "env": { "DUCT_LOG_FILE": "${workspaceFolder}/backend/dev.log" },
+      "console": "integratedTerminal",
+      "justMyCode": true,
+      "python": "${workspaceFolder}/backend/.venv/bin/python",
+      "presentation": { "hidden": true }
+    },
+    {
+      // Opens the traces UI in a Simple Browser tab once the server is
+      // actually listening, which is the reason to pick a Jaeger launch.
+      // `openIntegratedBrowser` is built in; the Live Preview extension is no
+      // substitute, because it serves static workspace files from its own
+      // server and cannot front a running one. scripts/jaeger.sh prints its
+      // ready line only once the UI answers, which is what the pattern waits for.
+      "name": "Jaeger :16686",
       "type": "node-terminal",
       "request": "launch",
       "command": "./scripts/jaeger.sh",
@@ -90,81 +179,68 @@
         "pattern": "Jaeger ready: (https?://\\S+)",
         "uriFormat": "%s"
       },
-      "postDebugTask": "Jaeger: stop (16686)"
+      "postDebugTask": "Jaeger: stop (16686)",
+      "presentation": { "hidden": true }
     },
     {
-      "name": "App: dev server",
+      "name": "App :3003",
       "type": "node-terminal",
       "request": "launch",
       "command": "npm run dev",
       "cwd": "${workspaceFolder}/app",
-      "postDebugTask": "App: stop dev server (3003)"
+      "postDebugTask": "App: stop dev server (3003)",
+      "presentation": { "hidden": true }
     },
     {
-      "//": "Freezes the backend into backend/dist/duct-sidecar. Run this once, before the first desktop launch: a missing build ships a broken app. After that the desktop configurations refreeze it themselves when the backend has moved ahead (the npm pre* hooks), so this is for the first freeze and for forcing one. NOT plain `pyinstaller`: that deletes its output directory before rebuilding, which strips the binary and dylibs from under a sidecar the running app is executing. The script stages the freeze and swaps it in instead. Takes ~3 min.",
-      "name": "Desktop: Build sidecar",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "npm run sidecar",
-      "cwd": "${workspaceFolder}/desktop"
-    },
-    {
-      "//": "Local-first desktop: the shell spawns the frozen sidecar on a loopback port and the web app repoints at it, so no uvicorn and no Railway. `dev:local` starts the Next dev server itself via beforeDevCommand. sidecar.rs falls back to backend/dist/duct-sidecar, so that freeze is what you get — `predev:local` refreezes it first when the backend is ahead, which costs ~3 min on the run after a backend change.",
-      "name": "Desktop: Tauri dev (sidecar backend)",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "npm run dev:local",
-      "cwd": "${workspaceFolder}/desktop"
-    },
-    {
-      "//": "Builds the dev-variant bundle (own identifier + ai.getduct.desktop.dev scheme, so it coexists with TestFlight), waits for the Next dev server, then opens it against backend/.env.local. Unlike `tauri dev` this is a registered .app, so the sign-in deep link works. Rebuild is incremental (~15s); web changes still hot-reload. A backend change costs ~3 min more on the next run, because `prebuild:dev` refreezes the sidecar rather than bundling the old one. `open` hands the app to launchd, which does NOT inherit this shell's environment — hence `--env`, the only way the sidecar learns which env to embody. Keep that argument quoted: VS Code substitutes ${workspaceFolder} as literal text before the shell parses the line, so a workspace path containing a space otherwise splits into a bogus second file operand and a DUCT_ENV_FILE truncated at the space — which every Configs default then silently papers over. `--stderr` captures the app's log (including the sidecar's, relayed by sidecar.rs) where you can actually read it. NOTE: this session ends immediately, so Stop cannot close the app and no postDebugTask can be attached — quit it yourself, or run the 'Desktop: stop Duct Dev app' task. Force-quitting skips RunEvent::Exit and orphans its Python sidecar.",
-      "name": "Desktop: Duct Dev app (local env)",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "npm run build:dev && until curl -sf http://localhost:3003 >/dev/null 2>&1; do sleep 1; done && open --env \"DUCT_ENV_FILE=${workspaceFolder}/backend/.env.local\" --stderr /tmp/duct-desktop.log 'src-tauri/target/debug/bundle/macos/Duct Dev.app' && echo 'log: tail -f /tmp/duct-desktop.log'",
-      "cwd": "${workspaceFolder}/desktop"
-    },
-    {
-      "//": "The local-env launch above, with the sidecar exporting spans to Jaeger on :4318. A second `--env` is the only way in: launchd does not inherit this shell, and putting OTEL_EXPORTER_OTLP_ENDPOINT in .env.local would turn tracing on for every desktop launch and log an export failure per batch whenever Jaeger is not running. `open --env` may be repeated (it rejects only single-letter names). Part of the 'Duct: Desktop + API + Jaeger' compound; on its own, start Jaeger first or the spans go nowhere.",
-      "name": "Desktop: Duct Dev app (local env, traced)",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "npm run build:dev && until curl -sf http://localhost:3003 >/dev/null 2>&1; do sleep 1; done && open --env \"DUCT_ENV_FILE=${workspaceFolder}/backend/.env.local\" --env \"OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318\" --stderr /tmp/duct-desktop.log 'src-tauri/target/debug/bundle/macos/Duct Dev.app' && echo 'log: tail -f /tmp/duct-desktop.log · traces: http://localhost:16686'",
-      "cwd": "${workspaceFolder}/desktop"
-    },
-    {
-      "//": "Same bundle, same window (localhost:3003), but the sidecar embodies backend/.env.prod — so it reads and WRITES the production database. The frontend stays local on purpose: the deployed app.getduct.ai build registers the `ai.getduct.desktop` scheme, not this bundle's `.dev` one, so pointing the window at it would break the sign-in deep link. Use this to reproduce something that only happens on prod data; prefer the local env for everything else.",
-      "name": "Desktop: Duct Dev app (prod env)",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "npm run build:dev && until curl -sf http://localhost:3003 >/dev/null 2>&1; do sleep 1; done && open --env \"DUCT_ENV_FILE=${workspaceFolder}/backend/.env.prod\" --stderr /tmp/duct-desktop.log 'src-tauri/target/debug/bundle/macos/Duct Dev.app' && echo 'log: tail -f /tmp/duct-desktop.log'",
-      "cwd": "${workspaceFolder}/desktop"
-    },
-    {
-      "name": "Site: dev server",
+      "name": "Site :8090",
       "type": "node-terminal",
       "request": "launch",
       "command": "python3 dev_server.py --port 8090",
       "cwd": "${workspaceFolder}/site",
-      "postDebugTask": "Site: stop dev server (8090)"
+      "postDebugTask": "Site: stop dev server (8090)",
+      "presentation": { "hidden": true }
     },
     {
-      "name": "Site: Playwright smoke tests",
+      // Builds the dev-variant bundle (own identifier and `.dev` scheme, so it
+      // coexists with a released install), waits for the Next dev server, then
+      // opens it. Unlike `tauri dev` this is a registered .app, so the sign-in
+      // deep link works. Rebuilds are incremental (~15 s) and web changes still
+      // hot-reload.
+      //
+      // DUCT_NO_DEV_SIDECAR keeps the shell off the frozen backend in
+      // backend/dist (desktop/src-tauri/src/sidecar.rs), so the window talks
+      // to the same API as a browser tab on :3003, and DUCT_SKIP_SIDECAR_CHECK
+      // skips refreezing a sidecar this run will not start. It has to reach
+      // the app through `open --env`: launchd does not inherit this shell.
+      //
+      // This session ends at once, so Stop cannot close the app and no
+      // postDebugTask can attach: quit it, or run "Desktop: stop Duct Dev app".
+      "name": "Desktop dev app",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npm run test:e2e",
-      "cwd": "${workspaceFolder}/site"
+      "command": "DUCT_SKIP_SIDECAR_CHECK=1 npm run build:dev && until curl -sf http://localhost:3003 >/dev/null 2>&1; do sleep 1; done && open --env DUCT_NO_DEV_SIDECAR=1 --stderr /tmp/duct-desktop.log 'src-tauri/target/debug/bundle/macos/Duct Dev.app' && echo 'log: tail -f /tmp/duct-desktop.log'",
+      "cwd": "${workspaceFolder}/desktop",
+      "presentation": { "hidden": true }
     },
     {
-      "name": "Backend: Pytest (all)", 
-      "type": "debugpy",
+      // The one desktop launch that still runs the sidecar, because the
+      // sidecar is how it reaches prod: the shell spawns the frozen backend in
+      // backend/dist, which embodies backend/.env.prod. `prebuild:dev`
+      // refreezes it first when the backend has moved ahead (~3 min).
+      //
+      // `open --env` is the only way the sidecar learns which env file to
+      // read, since launchd does not inherit this shell. Keep that argument
+      // quoted: VS Code substitutes ${workspaceFolder} as literal text before
+      // the shell parses the line, so a workspace path with a space otherwise
+      // splits into a bogus second operand and a truncated DUCT_ENV_FILE that
+      // every Configs default then silently papers over. Quit with "Desktop:
+      // stop Duct Dev app"; this session ends at once, so Stop cannot.
+      "name": "Desktop dev app, prod data",
+      "type": "node-terminal",
       "request": "launch",
-      "module": "pytest",
-      "args": ["tests", "-v", "--tb=short"],
-      "cwd": "${workspaceFolder}/backend",
-      "console": "integratedTerminal",
-      "justMyCode": true,
-      "python": "${workspaceFolder}/backend/.venv/bin/python"
+      "command": "npm run build:dev && until curl -sf http://localhost:3003 >/dev/null 2>&1; do sleep 1; done && open --env \"DUCT_ENV_FILE=${workspaceFolder}/backend/.env.prod\" --stderr /tmp/duct-desktop.log 'src-tauri/target/debug/bundle/macos/Duct Dev.app' && echo 'log: tail -f /tmp/duct-desktop.log'",
+      "cwd": "${workspaceFolder}/desktop",
+      "presentation": { "hidden": true }
     }
   ]
 }

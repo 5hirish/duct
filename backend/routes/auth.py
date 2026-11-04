@@ -67,7 +67,7 @@ GOOGLE_CONNECTOR_FLOWS = tuple(
 # Said by every connect that arrives without a live link or state: the link
 # lasts five minutes and the state is spent once, so starting over is the fix.
 CONNECT_EXPIRED_DETAIL = (
-    "The connect link is missing or expired. Start again from the Connections page."
+    "The connect link is missing or expired. Start again from the Toolbox."
 )
 
 # GitHub App (service/github/app.py has the whole flow). Three legs, each with

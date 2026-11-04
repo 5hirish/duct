@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LayoutGrid, CalendarDays, CalendarPlus, PencilLine, Plus } from "lucide-react";
+import { LayoutGrid, CalendarDays, CalendarCheck, CalendarPlus, List, PencilLine, Plus } from "lucide-react";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import {
   Select,
@@ -24,12 +24,26 @@ import {
 import LoadError from "@/components/LoadError";
 import { Button } from "@/components/ui/button";
 import PlanKanban from "@/components/content/PlanKanban";
+import PlanList from "@/components/content/PlanList";
 import PlanCalendar from "@/components/content/PlanCalendar";
 import PlanStrategy from "@/components/content/PlanStrategy";
 import PlanDayOne from "@/components/content/PlanDayOne";
-import { dayKey, nextPlanStart, planCovering, planEndOf, planPeriodOptions, planStartOf } from "@/lib/contentSchedule";
-import { formatDateRange } from "@/lib/format";
-import { PlanPeriodMenu } from "@/components/content/PlanPeriodPicker";
+import {
+  PlanState,
+  dayKey,
+  nextPlanStart,
+  planCovering,
+  planEndOf,
+  planItems,
+  planPeriodOptions,
+  planProgress,
+  planStartOf,
+  planState,
+} from "@/lib/contentSchedule";
+import { formatDate, formatDateRange } from "@/lib/format";
+import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { PeriodName, PlanPeriodMenu } from "@/components/content/PlanPeriodPicker";
 
 // Where a plan is made or managed: a plan_month session in the split
 // workspace. Nothing linked here before #274, so a new project had no way in
@@ -58,21 +72,28 @@ function startOfToday() {
   return new Date(now.getFullYear(), now.getMonth(), now.getDate());
 }
 
+// The view a person last chose, per browser: a viewing preference, so
+// localStorage, read after mount so the first render matches the server's.
+const VIEW_KEY = "duct_plan_view";
+export const PlanView = Object.freeze({ LIST: "list", KANBAN: "kanban", CALENDAR: "calendar" });
+
 /**
- * Inline plan board — plan selector + Kanban/Calendar toggle. Renders directly
- * inside the Content "Plan" tab (no separate route hop). Pass `initialPlanId`
- * to preselect (e.g. from a query param). Before the first plan it is
- * `PlanDayOne`, whose "fix this" links call `onOpenTab(tab)`; a caller
+ * The plan board: loads the project's plans and hands them to PlanBoardView.
+ * Renders directly inside the Content "Plan" tab (no separate route hop). Pass
+ * `initialPlanId` to preselect (e.g. from a query param). Before the first plan
+ * it is `PlanDayOne`, whose "fix this" links call `onOpenTab(tab)`; a caller
  * outside Content Studio's tabs leaves it out and the links navigate there.
+ * `fill` is the full-bleed /content/plan route: the board is a framed box that
+ * scrolls itself; on the Content Studio page the page scrolls.
  */
-export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab }) {
+export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab, fill = false }) {
   const { t, i18n } = useLingui();
   const router = useRouter();
   const [plans, setPlans] = useState([]);
   const [activeId, setActiveId] = useState(initialPlanId || "");
   const [plan, setPlan] = useState(null); // full plan (days + posts)
   const [postsById, setPostsById] = useState({}); // full posts by id
-  const [view, setView] = useState("kanban"); // "kanban" | "calendar"
+  const [view, setViewState] = useState(PlanView.LIST);
   const [calView, setCalView] = useState("month"); // "month" | "week"
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -82,6 +103,23 @@ export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab }) 
   // Bumped by the retry button. Both loads below key off it, because a
   // failure in either leaves the same empty board.
   const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(VIEW_KEY);
+      if (Object.values(PlanView).includes(saved)) setViewState(saved);
+    } catch {
+      // Blocked storage: the agenda stands.
+    }
+  }, []);
+  const setView = useCallback((next) => {
+    setViewState(next);
+    try {
+      window.localStorage.setItem(VIEW_KEY, next);
+    } catch {
+      // Not worth failing a click over.
+    }
+  }, []);
 
   useEffect(() => {
     if (!projectId) return;
@@ -137,24 +175,8 @@ export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab }) 
     return () => { cancelled = true; };
   }, [activeId, projectId, reloadKey]);
 
-  const activeMeta = useMemo(
-    () => plans.find((p) => p.id === activeId) || plan || null,
-    [plans, activeId, plan]
-  );
-  const postCount = Array.isArray(plan?.days) ? plan.days.length : 0;
-
-  // What the toolbar offers follows the period, not the button's history: a
-  // plan still running (or ahead) is revised in place; with no plan for today
-  // there is a new one to make; and while one runs, the days after the last
-  // plan can be planned ahead. Both new-plan buttons ask how far ahead.
   const today = startOfToday();
-  const selectedEnd = planEndOf(activeMeta);
-  const selectedLive = Boolean(selectedEnd && selectedEnd >= today);
-  const newOptions = planCovering(plans, today) ? [] : planPeriodOptions(today, plans);
-  const aheadFrom = nextPlanStart(plans, today);
-  const aheadOptions = aheadFrom ? planPeriodOptions(aheadFrom, plans) : [];
-  const startPlan = (period) => router.push(planSessionHref(period));
-  const periodLabel = formatDateRange(planStartOf(activeMeta), selectedEnd, { locale: i18n.locale });
+  const startPlan = useCallback((period) => router.push(planSessionHref(period)), [router]);
 
   // A key pasted into the first-run checklist. The save answers with the new
   // status, so the row turns over without a second read; a refusal throws
@@ -201,12 +223,79 @@ export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab }) 
   }
 
   return (
-    <div className="flex h-full min-h-[28rem] flex-col overflow-hidden rounded-2xl border border-border">
-      {/* Sub-toolbar */}
-      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border/60 px-4 py-2.5">
-        <div className="flex min-w-0 items-center gap-3">
+    <PlanBoardView
+      plans={plans}
+      activeId={activeId}
+      onSelectPlan={setActiveId}
+      plan={plan}
+      postsById={postsById}
+      view={view}
+      onViewChange={setView}
+      calView={calView}
+      onCalViewChange={setCalView}
+      today={today}
+      onStartPlan={startPlan}
+      onRevisePlan={() => router.push(planSessionHref({ planId: activeId }))}
+      onReviseDay={reviseDay}
+      fill={fill}
+    />
+  );
+}
+
+/**
+ * The board itself, from data alone, so /preview can render every plan
+ * situation without a backend (lib/__fixtures__/planScenarios.mjs).
+ *
+ * What it leads with follows the plan's dates, not the button's history: a
+ * plan still running (or ahead) is revised in place, and one that has ended
+ * says so and offers the next one, instead of showing a past month's posts as
+ * if they were still to come.
+ */
+export function PlanBoardView({
+  plans,
+  activeId,
+  onSelectPlan,
+  plan,
+  postsById = {},
+  view = PlanView.LIST,
+  onViewChange,
+  calView = "month",
+  onCalViewChange,
+  today,
+  onStartPlan,
+  onRevisePlan,
+  onReviseDay,
+  fill = false,
+}) {
+  const { t, i18n } = useLingui();
+  const activeMeta = plans.find((p) => p.id === activeId) || plan || null;
+  const items = useMemo(
+    () => planItems(plan, postsById, { locale: i18n.locale, today }),
+    [plan, postsById, i18n.locale, today]
+  );
+  const progress = planProgress(items);
+  const state = planState(activeMeta, today);
+  const ended = state === PlanState.ENDED;
+  const current = planCovering(plans, today);
+  const newOptions = current ? [] : planPeriodOptions(today, plans);
+  const aheadFrom = nextPlanStart(plans, today);
+  const aheadOptions = aheadFrom ? planPeriodOptions(aheadFrom, plans) : [];
+  const selectedEnd = planEndOf(activeMeta);
+  const periodLabel = formatDateRange(planStartOf(activeMeta), selectedEnd, { locale: i18n.locale });
+  const scroll = fill ? "self" : "page";
+  const { total, posted, missed } = progress;
+
+  return (
+    <div
+      className={cn(
+        "@container flex min-w-0 flex-col",
+        fill ? "h-full min-h-[28rem] overflow-hidden rounded-2xl border border-border" : "gap-5"
+      )}
+    >
+      <div className={cn("flex shrink-0 flex-wrap items-center justify-between gap-3", fill && "border-b border-border/60 px-4 py-2.5")}>
+        <div className="flex min-w-0 flex-col gap-0.5">
           {plans.length > 1 ? (
-            <Select value={activeId} onValueChange={setActiveId}>
+            <Select value={activeId} onValueChange={onSelectPlan}>
               <SelectTrigger className="h-8 w-[220px]">
                 <SelectValue placeholder={t`Select a plan`} />
               </SelectTrigger>
@@ -222,53 +311,130 @@ export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab }) 
               </SelectContent>
             </Select>
           ) : (
-            <span className="truncate text-sm font-medium">
+            <h2 className="truncate text-sm font-semibold">
               {activeMeta?.name || <Trans>Monthly plan</Trans>}
-            </span>
+            </h2>
           )}
-          {Array.isArray(plan?.days) && (
-            <span className="hidden text-xs text-muted-foreground tabular-nums @md:inline">
+          {total > 0 && (
+            <p className="text-xs tabular-nums text-muted-foreground">
               {periodLabel && <>{periodLabel} · </>}
-              <Plural value={postCount} one="# post" other="# posts" />
-            </span>
+              <Trans>{posted} of {total} posted</Trans>
+              {missed > 0 && (
+                <>
+                  {" · "}
+                  <span className="text-warning"><Plural value={missed} one="# missed" other="# missed" /></span>
+                </>
+              )}
+            </p>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          {view === "calendar" && (
+        <div className="flex flex-wrap items-center gap-2">
+          {view === PlanView.CALENDAR && (
             <Segmented
               value={calView}
-              onChange={setCalView}
+              onChange={onCalViewChange}
               options={[{ key: "month", label: t`Month` }, { key: "week", label: t`Week` }]}
             />
           )}
-          <ViewToggle view={view} onChange={setView} />
-          <PlanPeriodMenu options={aheadOptions} onPick={startPlan} icon={CalendarPlus} variant="outline">
-            <Trans>Plan ahead</Trans>
-          </PlanPeriodMenu>
-          <PlanPeriodMenu options={newOptions} onPick={startPlan} icon={Plus} variant={selectedLive ? "outline" : "default"}>
-            <Trans>New plan</Trans>
-          </PlanPeriodMenu>
-          {selectedLive && (
-            <Button size="sm" className="h-8" onClick={() => router.push(planSessionHref({ planId: activeId }))}>
-              <PencilLine className="size-3.5" aria-hidden /> <Trans>Revise plan</Trans>
-            </Button>
+          <ViewToggle view={view} onChange={onViewChange} />
+          {!ended && (
+            <>
+              {/* Nothing covers today while a later plan is open: the gap
+                  can still be planned. An ended plan offers it in its card. */}
+              <PlanPeriodMenu options={newOptions} onPick={onStartPlan} icon={Plus} variant="outline">
+                <Trans>New plan</Trans>
+              </PlanPeriodMenu>
+              <PlanPeriodMenu options={aheadOptions} onPick={onStartPlan} icon={CalendarPlus} variant="outline">
+                <Trans>Plan ahead</Trans>
+              </PlanPeriodMenu>
+              <Button size="sm" className="h-8" onClick={onRevisePlan}>
+                <PencilLine className="size-3.5" aria-hidden /> <Trans>Revise plan</Trans>
+              </Button>
+            </>
           )}
         </div>
       </div>
 
-      {plan && <PlanStrategy strategy={plan.strategy} />}
+      {ended && (
+        <PlanEnded
+          end={selectedEnd}
+          posted={posted}
+          total={total}
+          next={newOptions[0] || null}
+          others={newOptions.slice(1)}
+          current={current}
+          onStartPlan={onStartPlan}
+          onOpenCurrent={() => current && onSelectPlan(current.id)}
+          className={fill ? "m-4 mb-0" : undefined}
+        />
+      )}
 
-      {/* Board body */}
+      {plan && (
+        <PlanStrategy
+          strategy={plan.strategy}
+          days={plan.days}
+          className={fill ? "border-b border-border/60 px-4 py-3" : ""}
+        />
+      )}
+
       {!plan ? (
-        <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
+        <div className="flex flex-1 items-center justify-center py-10 text-sm text-muted-foreground">
           <Trans>Loading plan…</Trans>
         </div>
-      ) : view === "kanban" ? (
-        <PlanKanban plan={plan} postsById={postsById} onReviseDay={reviseDay} />
+      ) : view === PlanView.KANBAN ? (
+        <PlanKanban plan={plan} postsById={postsById} onReviseDay={onReviseDay} scroll={scroll} today={today} />
+      ) : view === PlanView.CALENDAR ? (
+        <PlanCalendar plan={plan} postsById={postsById} view={calView} onViewChange={onCalViewChange} onReviseDay={onReviseDay} />
       ) : (
-        <PlanCalendar plan={plan} postsById={postsById} view={calView} onViewChange={setCalView} onReviseDay={reviseDay} />
+        <PlanList plan={plan} postsById={postsById} onReviseDay={onReviseDay} scroll={scroll} today={today} />
       )}
     </div>
+  );
+}
+
+/**
+ * A plan whose dates are behind us. It says so, counts what went out, and
+ * leads with the next plan; when one already covers today, with that one.
+ */
+function PlanEnded({ end, posted, total, next, others, current, onStartPlan, onOpenCurrent, className }) {
+  const { i18n } = useLingui();
+  const ended = formatDate(end, { withYear: false, locale: i18n.locale });
+  return (
+    <Card variant="hero" className={cn("gap-4 @2xl:flex-row @2xl:items-center", className)}>
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-brand" aria-hidden>
+        <CalendarCheck className="size-5" />
+      </span>
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <p className="text-sm font-semibold">
+          <Trans>This plan ended on {ended}.</Trans>
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {posted === 0 ? (
+            <Trans>None of its {total} posts went out. The ideas are still below if you want them.</Trans>
+          ) : (
+            <Trans>{posted} of its {total} posts went out. The next plan learns from them.</Trans>
+          )}
+        </p>
+      </div>
+      <div className="flex shrink-0 flex-wrap items-center gap-2">
+        {current ? (
+          <Button size="sm" onClick={onOpenCurrent}>
+            <Trans>Open the current plan</Trans>
+          </Button>
+        ) : (
+          next && (
+            <>
+              <Button size="sm" onClick={() => onStartPlan(next)}>
+                <Plus className="size-3.5" aria-hidden /> <Trans>New plan · <PeriodName option={next} /></Trans>
+              </Button>
+              <PlanPeriodMenu options={others} onPick={onStartPlan} icon={CalendarPlus} variant="outline">
+                <Trans>Another length</Trans>
+              </PlanPeriodMenu>
+            </>
+          )
+        )}
+      </div>
+    </Card>
   );
 }
 
@@ -294,8 +460,9 @@ function Segmented({ value, onChange, options }) {
 function ViewToggle({ view, onChange }) {
   const { t } = useLingui();
   const options = [
-    { key: "kanban", label: t`Kanban`, Icon: LayoutGrid },
-    { key: "calendar", label: t`Calendar`, Icon: CalendarDays },
+    { key: PlanView.LIST, label: t`List`, Icon: List },
+    { key: PlanView.KANBAN, label: t`Kanban`, Icon: LayoutGrid },
+    { key: PlanView.CALENDAR, label: t`Calendar`, Icon: CalendarDays },
   ];
   return (
     <div className="flex shrink-0 items-center gap-1 rounded-lg border border-border/60 bg-muted/40 p-0.5">

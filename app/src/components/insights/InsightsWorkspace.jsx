@@ -33,6 +33,7 @@ import AgentChat from "@/components/workspace/AgentChat";
 import EmptyState from "@/components/ui/empty-state";
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { SkeletonDocument } from "@/components/ui/skeleton";
 import ComposerDials, { TierDial } from "@/components/workspace/ComposerDials";
 import SplitWorkspace from "@/components/workspace/SplitWorkspace";
@@ -427,6 +428,7 @@ export default function InsightsWorkspace({
       leftLabel={t`Chat`}
       rightLabel={t`Artifact`}
       rightStatus={writing || agent.isRunning || loadingBrief ? "busy" : hasBrief ? "ready" : "idle"}
+      rightEmpty={!hasBrief && !loadingBrief && docs.length === 0 && sources.length === 0}
     />
   );
 }
@@ -460,18 +462,30 @@ function AutonomyBadge({ autonomy, level: current = "" }) {
     return option ? i18n._(option.label) : value;
   };
   const configured = word(configuredLevel);
+  const meaning = AUTONOMY_LABELS[level] ? i18n._(AUTONOMY_LABELS[level]) : "";
+  // The mode's word, and its meaning on hover and focus: the strip held a
+  // sentence and a half of policy beside the phase, and wrapped onto three
+  // lines in a narrow pane.
   return (
-    <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-2xs">
-      <span className="rounded-full bg-muted px-2 py-0.5 font-medium uppercase tracking-wide">{word(level)}</span>
-      <span className="hidden text-muted-foreground @md:inline">
-        {AUTONOMY_LABELS[level] ? i18n._(AUTONOMY_LABELS[level]) : ""}
-      </span>
-      {steppedDown && (
-        <span className="text-muted-foreground">
-          <Trans>· set to <strong>{configured}</strong>, stepped down for this model</Trans>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span
+          tabIndex={0}
+          className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium outline-none focus-visible:ring-3 focus-visible:ring-ring/40"
+        >
+          {word(level)}
+          {steppedDown && <span className="text-muted-foreground">*</span>}
         </span>
-      )}
-    </span>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" className="max-w-64 flex-col items-start gap-0.5">
+        <span>{meaning}</span>
+        {steppedDown && (
+          <span className="opacity-80">
+            <Trans>Set to {configured}, stepped down for this model.</Trans>
+          </span>
+        )}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -766,7 +780,7 @@ export function DataPane({ sources }) {
           title={t`No sources pulled yet`}
           actions={
             <Button size="sm" variant="outline" asChild>
-              <Link href="/connections"><Trans>Check connections</Trans></Link>
+              <Link href="/connections"><Trans>Open the Toolbox</Trans></Link>
             </Button>
           }
         >

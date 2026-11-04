@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import ChatSidebar from "./ChatSidebar";
@@ -11,9 +10,9 @@ import {
   getInsightEntry,
   patchInsightRefresh,
 } from "../lib/localInsights";
-import { REPORT_NAV_TRANSITION_TYPES } from "../lib/reportNavTransition";
 import { InsightContextProvider } from "./InsightContext";
 import { formatTitle } from "@/lib/format";
+import { Page, PageHeader } from "@/components/ui/page";
 
 export default function LocalInsightDetail({ slug }) {
   const { t } = useLingui();
@@ -95,27 +94,23 @@ export default function LocalInsightDetail({ slug }) {
 
   if (notFound) {
     return (
-      <section>
-        <p style={{ marginTop: 0, marginBottom: 10 }}>
-          <Link href="/insights/organic-growth" transitionTypes={REPORT_NAV_TRANSITION_TYPES}>
-            <Trans>&larr; Back to insights</Trans>
-          </Link>
-        </p>
-        <h1 className="report-detail-title" style={{ marginTop: 0, marginBottom: 6 }}>
-          <Trans>Insight not found</Trans>
-        </h1>
-        <p><Trans>This locally-stored insight may have been cleared from your browser.</Trans></p>
-      </section>
+      <Page>
+        <PageHeader
+          back={{ href: "/insights/organic-growth", label: t`Home` }}
+          title={<Trans>Insight not found</Trans>}
+          status={<Trans>It may have been cleared from this browser.</Trans>}
+        />
+      </Page>
     );
   }
 
   if (!entry?.payload) {
     return (
-      <section>
+      <Page>
         <p className="app-subtle" role="status" aria-live="polite">
           <Trans>Loading insight…</Trans>
         </p>
-      </section>
+      </Page>
     );
   }
 
@@ -162,18 +157,12 @@ export default function LocalInsightDetail({ slug }) {
   }
 
   return (
-    <section>
-      <p style={{ marginTop: 0, marginBottom: 10 }}>
-        <Link href="/insights/organic-growth" transitionTypes={REPORT_NAV_TRANSITION_TYPES}>
-          <Trans>&larr; Back to insights</Trans>
-        </Link>
-      </p>
-      <h1 className="report-detail-title" style={{ marginTop: 0, marginBottom: 6 }}>
-        {title} <span className="report-badge-local"><Trans>Local</Trans></span>
-      </h1>
-      <p className="report-meta" style={{ marginTop: 0, marginBottom: 14 }}>
-        {generatedAt ? <Trans>{theme} · Generated: {generatedAt}</Trans> : theme}
-      </p>
+    <Page>
+      <PageHeader
+        back={{ href: "/insights/organic-growth", label: t`Home` }}
+        title={title}
+        status={generatedAt ? <Trans>{theme} · Generated {generatedAt} · Saved in this browser</Trans> : theme}
+      />
       {canRefresh && (
         <div className="generate-alert" style={{ marginBottom: 14 }}>
           <p className="app-subtle" style={{ marginTop: 0, marginBottom: 8 }}>
@@ -220,6 +209,6 @@ export default function LocalInsightDetail({ slug }) {
           </aside>
         </div>
       </InsightContextProvider>
-    </section>
+    </Page>
   );
 }

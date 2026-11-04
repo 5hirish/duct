@@ -228,10 +228,10 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   agent turn, model call and tool call (`agents/core/telemetry.py`), shipped
   over OTLP/HTTP to whatever `OTEL_EXPORTER_OTLP_ENDPOINT` names and off when
   it is unset. Locally that is Jaeger (`scripts/jaeger.sh`, Apache-2.0; it
-  replaced Phoenix, whose Elastic licence is not open source): the "Duct: App +
-  API + Jaeger" and "Duct: Desktop + API + Jaeger" launch compounds start it
-  and point the API (and, for the desktop one, the sidecar via a second
-  `open --env`) at `http://localhost:4318`, and every FetchData and verifier
+  replaced Phoenix, whose Elastic licence is not open source): the "App + API
+  + Jaeger" and "Desktop + API + Jaeger" launch compounds start it
+  and point the API at `http://localhost:4318` (the desktop window talks to
+  that same API, so it needs no exporter of its own), and every FetchData and verifier
   dispatch is a span with its own latency. Jaeger reads the `gen_ai.*`
   attributes, lists the spans under the `duct-backend` service, and keeps them
   on disk for a week. Its MCP server is registered in `.mcp.json` at
@@ -533,11 +533,26 @@ Postgres `DATABASE_URL` names.
   re-sync), never a direct column write; a writer the rules do not know is
   how a guess overwrites what someone typed. A draft cannot claim `user`.
 - `routes/mcp_server.py` + `service/mcp_server/` — Duct as an MCP server at
-  `POST /mcp`, for the person's own agent (Claude Code, Codex, Cursor).
-  Stateless JSON-RPC with no SDK: five methods, no sessions, no event
-  stream. Its one credential is a personal token (`service/mcp_tokens.py`,
-  minted at `/api/user/mcp-tokens` by a signed-in session), accepted on
-  `/mcp` only and never by `get_current_user`. Three tools, and adding a
+  `POST /mcp`, for the person's own agent (Claude Code, Codex, Cursor,
+  OpenCode). Stateless JSON-RPC with no SDK: five methods, no sessions, no
+  event stream. Its one credential is an MCP token (`service/mcp_tokens.py`),
+  accepted on `/mcp` only and never by `get_current_user`, and there are two
+  ways to get one. **Browser sign-in** (issue #197, `routes/mcp_oauth.py` +
+  `service/mcp_server/oauth.py`): Duct is the OAuth authorization server, so
+  an agent given only the address finds the sign-in from `/mcp`'s 401
+  (RFC 9728), registers itself (RFC 7591), opens the app's `/authorize`
+  consent page, and trades the code with PKCE for an hour-long access token
+  and a refresh token. Three rules: **registration writes no row** (the
+  client id is the registration, signed with a key derived from
+  `JWT_SECRET`, never the secret itself, or a client id would be a session);
+  **the backend renders no page** (`/oauth/authorize` parks the checked
+  request in `service/auth_exchange` and redirects to the app, and an
+  unverified client or redirect goes to the app's error state, never to the
+  address it named); and **the sidecar has none of it** (`oauth.available()`:
+  its address changes every launch and its app is `tauri://`). A
+  **personal token**, minted at `/api/user/mcp-tokens` by a signed-in
+  session, is the way in for an agent with no browser. Both are rows in
+  `mcp_tokens`, listed together with a `kind`, and DELETE ends either. Three tools, and adding a
   fourth is a scope decision, not a refactor: `list_projects`,
   `get_project`, `draft_project`. Writes go through
   `service/project_writes.apply_draft`, labelled `document` (or `inferred`
@@ -594,7 +609,7 @@ Postgres `DATABASE_URL` names.
   identical across every other audit.
 - `service/mcp/` + `routes/mcp_servers.py` + `agents/core/mcp_tools.py` —
   MCP servers a user connects (issue #345). Duct is the *client* here; Duct as
-  a server is #197. Six rules, each held by `tests/test_mcp_*.py`:
+  a server is #197. Eight rules, each held by `tests/test_mcp_*.py`:
   - **Our runtime, not the provider's.** Anthropic's `mcp_servers` and
     OpenAI's Responses `mcp` tool serve only their own models, so the client
     is the reference `mcp` SDK (2.x) in-process, the capability rule above,
@@ -626,6 +641,21 @@ Postgres `DATABASE_URL` names.
   - **Every request goes to a public https address**, redirects included:
     `service/mcp/http.guarded_client` runs the crawl fetcher's resolved-address
     check. No stdio servers on the hosted API.
+  - **The registry is searched, never trusted.** `service/mcp/registry.py`
+    reads the MCP Registry (`MCP_REGISTRY_URL`, empty turns it off) and says
+    who runs each server from the name its publisher proved: a reverse-DNS
+    namespace that owns the host, or a GitHub login naming its site.
+    Official means that, the site is the tool searched for, and the host is
+    the site or one service label under it (`SERVICE_LABELS`), so a tenant of
+    any platform fails closed; nothing on one that hands out subdomains
+    (`SHARED_HOSTS`) qualifies, and a GitHub login vouches for nothing there. A server
+    connected from it is a server added by address: every call asks first.
+  - **A server says why it needs its owner.** A failed listing or a refused
+    refresh records `store.PROBLEM` in the blob (signed out, key refused, not
+    answering…); any call that works clears it, a reconnect replaces it. A
+    failed tool call records nothing, because a slow job or one tool's 403
+    says nothing about the server. `POST /servers/{id}/check` is the
+    listing on demand.
   - **Two fixed agent tools, never one per server tool.** `ListConnectedTools`
     (a menu, then one tool's schema on request) and `CallConnectedTool`; a
     call that asks first pauses on `TOOL_APPROVAL_REQUIRED`. Insights

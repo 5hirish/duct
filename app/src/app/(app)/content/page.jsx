@@ -30,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DRAFT_CHANNELS, PostStatus } from "@/lib/contentEnums";
+import { Page, PageHeader } from "@/components/ui/page";
 
 // One tab shows at a time and the hub opens on the plan. Analytics brings
 // Recharts and Discover is the largest tab, so neither is downloaded until
@@ -68,7 +69,7 @@ export default function ContentLandingPage() {
 
   if (projectId === "") {
     return (
-      <div className="max-w-2xl mx-auto py-12 px-6 text-center">
+      <div className="max-w-2xl py-12 text-center">
         <p className="text-sm text-muted-foreground"><Trans>Select a project in the sidebar to use the content agent.</Trans></p>
       </div>
     );
@@ -85,15 +86,10 @@ export default function ContentLandingPage() {
   }
 
   return (
-    <div className="w-full">
-      <header className="mb-6">
-        <h1 className="text-2xl font-semibold"><Trans>Content Studio</Trans></h1>
-        <p className="text-sm text-muted-foreground">
-          <Trans>Monthly plans, post drafts, formats, and analytics for {projectName}.</Trans>
-        </p>
-      </header>
+    <Page className="gap-6">
+      <PageHeader title={<Trans>Content Studio</Trans>} status={projectName} />
 
-      <nav className="border-b border-border/60 mb-6">
+      <nav className="-mt-2 border-b border-border/60">
         {/* Seven tabs are ~500px of text: on a phone, or a tablet with the
             sidebar open, they scroll in place instead of widening the page. */}
         <div className="flex items-center gap-1 overflow-x-auto">
@@ -130,7 +126,7 @@ export default function ContentLandingPage() {
         {tab === "brand"     && <BrandTab     projectId={projectId} />}
         {tab === "accounts"  && <AccountsTab  projectId={projectId} />}
       </div>
-    </div>
+    </Page>
   );
 }
 
@@ -139,14 +135,11 @@ export default function ContentLandingPage() {
 // ---------------------------------------------------------------------------
 
 function PlanTab({ projectId, onOpenTab }) {
-  // This tab scrolls inside .app-main-wide, so nothing above gives the board a
-  // height — it is the one caller that has to state one. svh, not vh, to match
-  // the rest of the app's full-height surfaces.
-  return (
-    <div className="h-[calc(100svh-15rem)] min-h-[28rem]">
-      <PlanBoard projectId={projectId} onOpenTab={onOpenTab} />
-    </div>
-  );
+  // The page scrolls, not the board. It used to be a fixed-height frame,
+  // `calc(100svh - 15rem)`, a guess at what sat above it: it ended short of
+  // the window, the page's own padding sat under it, and the lanes scrolled
+  // inside a page that scrolled too.
+  return <PlanBoard projectId={projectId} onOpenTab={onOpenTab} />;
 }
 
 // ---------------------------------------------------------------------------

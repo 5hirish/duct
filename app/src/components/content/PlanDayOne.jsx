@@ -203,7 +203,7 @@ function Sources({ brand, accounts, vendors, onOpenTab, onConnectVendor }) {
           {pillars.length > 0 ? (
             <div className="flex flex-wrap gap-1">
               {pillars.slice(0, SHOWN_PILLARS).map((name) => (
-                <span key={name} className="rounded-full bg-primary/10 px-2 py-0.5 text-2xs font-medium text-primary">
+                <span key={name} className="rounded-full bg-primary/10 px-2 py-0.5 text-2xs font-medium text-brand">
                   {name}
                 </span>
               ))}

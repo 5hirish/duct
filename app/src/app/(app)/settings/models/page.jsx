@@ -44,12 +44,10 @@
  * here; DEFAULT_ENGINE is what goes over the wire.
  */
 
-import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Anvil, ArrowRight, Feather, Scale } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ProviderCard from "@/components/connections/ProviderCard";
 import InstanceProviderCard from "@/components/connections/InstanceProviderCard";
@@ -74,6 +72,7 @@ import {
 } from "@/lib/modelTiers";
 import { fetchModelSettings, saveModelSettings } from "@/lib/modelSettings";
 import { DEFAULT_ENGINE } from "@/lib/engines";
+import { Page, PageHeader } from "@/components/ui/page";
 
 /**
  * The tab lives in the URL so a refresh lands where you were.
@@ -309,32 +308,18 @@ function ModelSettings() {
   );
 
   return (
-    <section>
-      <div className="page-toolbar-back">
-        <Button variant="ghost" size="icon" className="connection-back-btn shrink-0 rounded-full" asChild>
-          <Link href="/insights/organic-growth" aria-label={t`Back to Insights`} title={t`Back to Insights`}>
-            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                d="M15 18 9 12l6-6"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </Link>
-        </Button>
-        {/* Same words as the menu item that leads here — a menu reading
-            "Models & providers" that lands on a page headed "Models" reads as
-            the wrong page for half a second, every time. */}
-        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">
-          <Trans>Models &amp; providers</Trans>
-        </h1>
-        <span aria-live="polite" className={`mt-saved${saved ? " mt-saved--on" : ""}`}>
-          {saved}
-        </span>
-      </div>
+    <Page>
+      {/* Same words as the menu item that leads here — a menu reading
+          "Models & providers" that lands on a page headed "Models" reads as
+          the wrong page for half a second, every time. */}
+      <PageHeader
+        title={<Trans>Models &amp; providers</Trans>}
+        actions={
+          <span aria-live="polite" className={`mt-saved${saved ? " mt-saved--on" : ""}`}>
+            {saved}
+          </span>
+        }
+      />
 
       <Tabs value={tab} onValueChange={selectTab}>
         <TabsList>
@@ -493,7 +478,7 @@ function ModelSettings() {
           <UsagePanel catalogue={catalogue} />
         </TabsContent>
       </Tabs>
-    </section>
+    </Page>
   );
 }
 
@@ -504,14 +489,10 @@ export default function ModelSettingsPage() {
   return (
     <Suspense
       fallback={
-        <section>
-          <div className="page-toolbar-back">
-            <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">
-              <Trans>Models &amp; providers</Trans>
-            </h1>
-          </div>
-          <p className="app-subtle"><Trans>Loading&hellip;</Trans></p>
-        </section>
+        <Page>
+          <PageHeader title={<Trans>Models &amp; providers</Trans>} />
+          <p className="text-sm text-muted-foreground"><Trans>Loading&hellip;</Trans></p>
+        </Page>
       }
     >
       <ModelSettings />

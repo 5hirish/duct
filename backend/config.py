@@ -102,6 +102,11 @@ class Configs(BaseSettings):
     # URIs when GOOGLE_OAUTH_REDIRECT_URI / GOOGLE_SIGNIN_REDIRECT_URI are unset.
     api_public_url: str = Field(default="http://localhost:8002")
 
+    # The MCP Registry the Connections search reads (service/mcp/registry.py).
+    # An operator's choice, not a user's, so it may be a private registry on an
+    # internal network. Empty turns the search off and the app hides it.
+    mcp_registry_url: str = Field(default="https://registry.modelcontextprotocol.io")
+
     # Desktop (local) mode: the backend runs as a sidecar on the user's own
     # machine rather than on Railway. Flips the persistence defaults to a
     # per-user SQLite file and a writable data dir — see the model validator

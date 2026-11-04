@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { Folder, Moon, Plug, Plus, Brain, Settings, Sun } from "lucide-react";
+import { Folder, Gauge, Moon, Plus, Brain, Settings, Sun } from "lucide-react";
 import { useLingui } from "@lingui/react/macro";
 import { navigableItems } from "@/lib/navigation";
 import { getProjects, resolveActiveProjectId, setActiveProjectId } from "@/lib/projects";
@@ -57,12 +57,12 @@ export default function AppCommands() {
       }),
 
       {
-        id: "nav:connections",
-        label: t`Go to Connections`,
+        id: "nav:usage",
+        label: t`Go to Usage`,
         group: t`Navigate`,
-        keywords: ["integrations", "connectors", "sources", "oauth"],
-        icon: Plug,
-        run: () => router.push("/connections"),
+        keywords: ["cost", "spend", "tokens", "billing"],
+        icon: Gauge,
+        run: () => router.push("/usage"),
       },
       {
         id: "nav:memory",

@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 640" width="1000" height="640" role="img" aria-labelledby="t d">
+  <title id="t">Chatbot, automation and agent: the same five steps, decided by different things</title>
+  <desc id="d">Three rows, one per form, each with five boxes: trigger, input, decides, reads, changes. The chatbot row is triggered by you typing, takes your words, decides what to say, reads nothing outside the chat and changes nothing. The automation row is triggered by the clock, takes the same fields every time, decides nothing because its steps are fixed, reads one tool per step and changes things without asking. The agent row is triggered by a question or a schedule, takes a goal, decides its own next step, reads every connected tool, loops back to decide again, and proposes changes that a person approves.</desc>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#4b5068"/></marker>
+    <marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#ff5c00"/></marker>
+    <style>
+      .serif { font-family: Georgia, 'Times New Roman', serif; }
+      .sans { font-family: -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+      .lane { font-size: 26px; font-weight: bold; fill: #0d0f1a; }
+      .col { font-size: 16px; font-weight: bold; letter-spacing: 2px; fill: #6b7086; }
+      .cell { font-size: 19px; fill: #0d0f1a; }
+      .dim { font-size: 19px; fill: #9ea3b8; }
+      .hot { font-size: 19px; fill: #c2410c; font-weight: bold; }
+      .box { fill: #ffffff; stroke: #d9dbe3; stroke-width: 2; }
+      .boxdim { fill: #faf8f5; stroke: #d9dbe3; stroke-width: 2; stroke-dasharray: 7 6; }
+      .boxhot { fill: #fff4ec; stroke: #ff5c00; stroke-width: 2.5; }
+      .flow { stroke: #4b5068; stroke-width: 2.5; fill: none; marker-end: url(#ah); }
+      .loop { stroke: #ff5c00; stroke-width: 3; fill: none; marker-end: url(#ao); }
+    </style>
+  </defs>
+  <rect width="1000" height="640" fill="#ffffff"/>
+  <text x="20" y="44" class="serif" font-size="32" fill="#0d0f1a">The same five steps, decided by different things</text>
+  <text x="20" y="74" class="sans" font-size="19" fill="#4b5068">Cover the row labels: the orange loop is the only thing that makes the third row an agent.</text>
+
+  <!-- column headers -->
+  <g class="sans col" text-anchor="middle">
+    <text x="255" y="118">TRIGGER</text>
+    <text x="410" y="118">INPUT</text>
+    <text x="565" y="118">DECIDES</text>
+    <text x="720" y="118">READS</text>
+    <text x="875" y="118">CHANGES</text>
+  </g>
+
+  <!-- Chatbot row: y 140-220 -->
+  <text x="20" y="188" class="serif lane">Chatbot</text>
+  <rect x="185" y="140" width="140" height="80" rx="10" class="box"/>
+  <text x="255" y="174" text-anchor="middle" class="sans cell">you type</text>
+  <text x="255" y="198" text-anchor="middle" class="sans cell">a message</text>
+  <rect x="340" y="140" width="140" height="80" rx="10" class="box"/>
+  <text x="410" y="186" text-anchor="middle" class="sans cell">your words</text>
+  <rect x="495" y="140" width="140" height="80" rx="10" class="box"/>
+  <text x="565" y="186" text-anchor="middle" class="sans cell">what to say</text>
+  <rect x="650" y="140" width="140" height="80" rx="10" class="boxdim"/>
+  <text x="720" y="174" text-anchor="middle" class="sans dim">nothing outside</text>
+  <text x="720" y="198" text-anchor="middle" class="sans dim">the chat</text>
+  <rect x="805" y="140" width="140" height="80" rx="10" class="boxdim"/>
+  <text x="875" y="186" text-anchor="middle" class="sans dim">nothing</text>
+  <path class="flow" d="M325 180H338"/><path class="flow" d="M480 180H493"/><path class="flow" d="M635 180H648"/><path class="flow" d="M790 180H803"/>
+
+  <!-- Automation row: y 300-380 -->
+  <text x="20" y="348" class="serif lane">Automation</text>
+  <rect x="185" y="300" width="140" height="80" rx="10" class="box"/>
+  <text x="255" y="334" text-anchor="middle" class="sans cell">the clock,</text>
+  <text x="255" y="358" text-anchor="middle" class="sans cell">Monday 8:00</text>
+  <rect x="340" y="300" width="140" height="80" rx="10" class="box"/>
+  <text x="410" y="334" text-anchor="middle" class="sans cell">the same fields</text>
+  <text x="410" y="358" text-anchor="middle" class="sans cell">every week</text>
+  <rect x="495" y="300" width="140" height="80" rx="10" class="boxdim"/>
+  <text x="565" y="334" text-anchor="middle" class="sans dim">nothing: the</text>
+  <text x="565" y="358" text-anchor="middle" class="sans dim">steps are fixed</text>
+  <rect x="650" y="300" width="140" height="80" rx="10" class="box"/>
+  <text x="720" y="334" text-anchor="middle" class="sans cell">one tool</text>
+  <text x="720" y="358" text-anchor="middle" class="sans cell">per step</text>
+  <rect x="805" y="300" width="140" height="80" rx="10" class="box"/>
+  <text x="875" y="334" text-anchor="middle" class="sans cell">yes, every time,</text>
+  <text x="875" y="358" text-anchor="middle" class="sans cell">nobody asked</text>
+  <path class="flow" d="M325 340H338"/><path class="flow" d="M480 340H493"/><path class="flow" d="M635 340H648"/><path class="flow" d="M790 340H803"/>
+
+  <!-- Agent row: y 480-560 -->
+  <text x="20" y="528" class="serif lane">Agent</text>
+  <rect x="185" y="480" width="140" height="80" rx="10" class="box"/>
+  <text x="255" y="514" text-anchor="middle" class="sans cell">a question</text>
+  <text x="255" y="538" text-anchor="middle" class="sans cell">or a schedule</text>
+  <rect x="340" y="480" width="140" height="80" rx="10" class="box"/>
+  <text x="410" y="514" text-anchor="middle" class="sans cell">a goal, not</text>
+  <text x="410" y="538" text-anchor="middle" class="sans cell">a step list</text>
+  <rect x="495" y="480" width="140" height="80" rx="10" class="boxhot"/>
+  <text x="565" y="514" text-anchor="middle" class="sans hot">its own</text>
+  <text x="565" y="538" text-anchor="middle" class="sans hot">next step</text>
+  <rect x="650" y="480" width="140" height="80" rx="10" class="box"/>
+  <text x="720" y="514" text-anchor="middle" class="sans cell">every tool</text>
+  <text x="720" y="538" text-anchor="middle" class="sans cell">you connected</text>
+  <rect x="805" y="480" width="140" height="80" rx="10" class="boxhot"/>
+  <text x="875" y="514" text-anchor="middle" class="sans hot">proposes;</text>
+  <text x="875" y="538" text-anchor="middle" class="sans hot">you approve</text>
+  <path class="flow" d="M325 520H338"/><path class="flow" d="M480 520H493"/><path class="flow" d="M635 520H648"/><path class="flow" d="M790 520H803"/>
+  <!-- the loop: reads back to decides -->
+  <path class="loop" d="M720 480 C720 440, 565 440, 565 476"/>
+  <text x="642" y="440" text-anchor="middle" class="sans hot">reads, then decides again</text>
+
+  <text x="20" y="612" class="sans" font-size="15" fill="#6b7086">Definitions: Anthropic (Dec 2024), Zapier (Sep 2026). The agent row is Duct's own pipeline since Aug 31 2026.</text>
+</svg>

@@ -1,9 +1,11 @@
 """The MCP servers the Connections page offers by name.
 
-A short, curated list rather than the official MCP Registry: searching the
-registry for "hubspot" returns eight servers and none of them is HubSpot's.
-Each entry here is the vendor's own hosted server, at the address the vendor
-publishes. Anything else connects by URL.
+A short, curated list, and the only servers whose ``readOnlyHint`` Duct
+believes. The MCP Registry is searchable too (``registry.py``), but a search
+there is mostly gateways: "hubspot" returns servers and none of them is
+HubSpot's. Each entry here is the vendor's own hosted server, at the address
+the vendor publishes; a registry server, or one added by URL, asks before
+every call.
 
 ``key_url`` is where the vendor issues a key for clients that cannot sign in,
 or empty when one-click sign-in is the only way. ``publisher`` is who runs the

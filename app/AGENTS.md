@@ -119,12 +119,30 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
     `lib/voiceRules.js`) save into `content_brand`; the rules are stored only
     once changed, so an untouched project keeps following Duct's defaults
   - `execute/` — change-set review queue: diffs, approve, apply, roll back
-  - `connections/` — connector/integration management
+  - `connections/` — the **Toolbox**: one searchable catalogue of native
+    connectors and MCP servers
+    (`components/connections/ConnectorBrowser.jsx` over
+    `lib/connectorCatalog.js`). A new native connector needs a category in
+    `NATIVE_CATEGORY`, a new MCP preset one in `MCP_CATEGORY`; without it the
+    source is filed under Other. A search also asks the MCP Registry, whose
+    results are a section of their own under the catalogue's
+    (`useMcpConnectors`' `registry`, through `ConnectorBrowser`'s
+    `moreResults`), never entries in it: they are not ours to file or rank.
+    A search runs out in that order, then to adding by address. While browsing
+    the whole list, `BringAnyTool` is that way in, beside the starters: the same
+    offer as the last tile in the list went unseen.
+    A connected server that needs attention says why on its tile, from the
+    `problem` the server recorded (`lib/mcpServers.js`, `PROBLEM_SHORT`).
+    It was called Connections until November 2026; the route kept the old
+    name because every OAuth callback and the desktop shell's deep link land
+    on `/connections`, and a rename would break connects already in flight
   - `artifacts/` + `[artifactId]/`, `activity/`, `usage/`, `memory/` — the
     library, the cross-agent feed, usage, and user-level memory
   - `settings/models/` + `settings/profile/` — tiers, providers, usage; profile
-  - `settings/agents/` — Connect your AI agent: MCP tokens and the line to
-    paste into Claude Code, Codex or Cursor (`components/settings/AgentAccess.jsx`,
+  - `settings/agents/` — Connect your AI agent: the line to paste into
+    Claude Code, Codex, Cursor, VS Code or OpenCode (no secret in it: the
+    agent signs in through the browser), the agents that did, and personal
+    tokens for one that cannot (`components/settings/AgentAccess.jsx`,
     `lib/mcpTokensApi.js`). A new token's plaintext lives in page state only
   - `generate/` — the retired wizard, now a bare redirect to `/insights/session`
   - `projects/` — project management
@@ -138,9 +156,12 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
   - `project/[projectId]/members/` + `project/[projectId]/memory/` — members
     and invitations (owner/collaborator); project-scoped memory
 
-Plus two top-level routes outside every group, because their visitor is
+Plus three top-level routes outside every group, because their visitor is
 usually signed out and the app shell's guard would lose where they were going:
-`invite/[token]/` (the invitation landing page) and `open/audit/[conversationId]/`
+`invite/[token]/` (the invitation landing page), `authorize/` (where an
+agent's browser sign-in asks the person, `components/settings/AgentConsent.jsx`;
+the backend has checked the agent and parked the request, and the page sends
+the browser back to the agent with the answer) and `open/audit/[conversationId]/`
 (the share link for a report — parks the destination, sends through sign-in,
 then resumes the conversation; the backend hands it only to project members).
 `?kickoff=sources` on that link makes the resumed workspace open by asking
@@ -419,18 +440,54 @@ text size. Device units stay `px`: borders, outlines, shadows, radii, 1px optica
 nudges. Prose gets `max-width: var(--measure)` (68ch) or the `.measure` utility —
 never tables, code, or column layouts.
 
-**Two checks hold the design system, and they are not advisory.** Both run in
-`npm run check:parity`, so CI has them:
+**Every screen is built from the page frame.** `components/ui/page` gives
+`Page`, `PageHeader`, `Section`, `TileGrid` and `HelpTip`; `ui/card` and
+`ui/textarea` are the card and the multi-line field. A routed screen is
+`<Page><PageHeader title=… status=… actions=… help=… />…</Page>`, nothing
+else draws an `<h1>`, and there is no slot for a paragraph under the title:
+one line of state goes in `status`, how the page works goes in `help`.
+DESIGN.md's "The page frame" has the parts, the spacing table and the type
+ramp. If a screen needs something the frame does not do, change the
+primitive (and its `/preview` entry), never the one screen — that is the
+whole difference between a design system and 139 bordered boxes.
+
+**Generated content fills slots; it never shapes the layout.** Most text on
+an agent screen was written at run time, by a model or by the person (a
+thread's title is its first message, verbatim), so its count, length, mix
+and age are unknown when the screen is built. A page's headline comes from
+its state, lists are ranked and bounded in a pure function, repeated facts
+merge, old ones file away, the person's words are quoted, and the surface
+ships with scenario fixtures across those axes, rendered in `/preview` and
+asserted on in a check. DESIGN.md's "Content awareness" has the rules;
+`arrangeDesk` in `lib/desk.js` with `lib/__fixtures__/deskScenarios.mjs` is
+the worked example. Orange text is `text-brand`, never `text-primary`:
+`--primary` is the fill, and in dark no one orange can be both.
+
+**Four checks hold the design system, and they are not advisory.** The first
+three run in `npm run check:parity`, so CI has them; the fourth is its own CI
+job (`app-layout` in `app.yml`):
 
 - `scripts/check-design-system.mjs` (`npm run check:design`) fails on
   `text-[Npx]`, a raw Tailwind palette class, a hex in JSX, `window.confirm`,
   `Loader2`, `text-muted-foreground/NN`, a hand-rolled scrollbar
-  (`::-webkit-scrollbar`, `scrollbar-thin`), and a viewport prefix in a
-  container region. It is a **ratchet**: each rule carries an `allow` map of the files
+  (`::-webkit-scrollbar`, `scrollbar-thin`), a viewport prefix in a
+  container region, an `<h1>` outside `PageHeader`, `.page-toolbar`, a raw
+  `<textarea>`, a capsule-radius field, and a new hand-rolled card (that one
+  is a burn-down `budget` that can only go down). It is a **ratchet**: each rule carries an `allow` map of the files
   that are genuinely exceptions, each with its reason. Removing a name is
   permanent. Adding one is a decision you write a sentence for — it is not how
   you quiet the check, any more than adding a file to
   `test_harness_boundaries.py`'s allowlist is how you fix a red test.
+- `scripts/check-page-frame.mjs` (in `npm run check:design`) fails any routed
+  screen under `app/(app)` that does not render `PageHeader`. Full-bleed agent
+  workspaces are exempt by `FULL_BLEED_PREFIXES` in the layout, read from
+  that file so the two cannot disagree.
+- `scripts/check-layout.mjs` (`npm run check:layout`, needs the dev server)
+  renders every framed screen at 390, 1100 and 1440px against the fixture
+  backend and fails on a title out of line or off-size, a page wider than
+  the window, a status that wraps, and a row of cards whose footers do not
+  share a baseline. **Run it before calling any UI change done**; a worktree
+  without `site/node_modules` passes `PLAYWRIGHT_FROM=<repo>/site`.
 - `scripts/check-contrast.mjs` (`npm run check:contrast`) does the WCAG maths
   on the real oklch values in `tokens.css`/`theme.css` and fails when a pair
   the app paints drops below its threshold. It also asserts that every
@@ -449,6 +506,10 @@ concern rather than growing an existing one, and put page-specific styling with
 the page.
 
 **Shared UI primitives — use them, don't re-fork.**
+
+- Page frame: `ui/page` (`Page`, `PageHeader`, `Section`, `TileGrid`,
+  `HelpTip`), `ui/card` (`Card`, `CardFooter`, `cardLinkClass`),
+  `ui/textarea`. See "Every screen is built from the page frame" above.
 
 - Overlays: `ui/dialog` (Radix — portal, focus trap, Escape, scroll lock) and
   `ui/lightbox`. Never hand-roll a `fixed inset-0` backdrop.
@@ -1021,7 +1082,7 @@ nothing else, so a scene's language is in its URL like every other lens.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
-# This is NOT the Next.js you know
+## This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 

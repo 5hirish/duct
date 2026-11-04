@@ -280,7 +280,7 @@ def installation_token(installation_id: str, repo_name: str) -> str:
     """
     installation_id = str(installation_id).strip()
     if not installation_id.isdigit():
-        raise ValueError("GitHub App grant is malformed. Reconnect GitHub on the Connections page.")
+        raise ValueError("GitHub App grant is malformed. Reconnect GitHub in the Toolbox.")
     key = (installation_id, repo_name)
     with _tokens_lock:
         cached = _tokens.get(key)
@@ -325,7 +325,7 @@ def _mint_failure(exc: gh.ApiError) -> str:
     if exc.status == 404:
         return (
             "The Duct app is no longer installed where this repository lives. Reconnect "
-            "GitHub on the Connections page."
+            "GitHub in the Toolbox."
         )
     if exc.status == 422:
         return (

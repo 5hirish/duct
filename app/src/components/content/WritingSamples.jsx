@@ -5,6 +5,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import { MAX_SAMPLE_CHARS, MAX_SAMPLES } from "@/lib/voiceRules";
+import { Textarea } from "@/components/ui/textarea";
 
 /**
  * Posts the brand already wrote, pasted on the Brand tab (issue #271). The
@@ -46,13 +47,12 @@ export default function WritingSamples({ samples, onChange }) {
                 </Button>
               )}
             </div>
-            <textarea
+            <Textarea
               id={`${baseId}-${i}`}
               value={sample}
               onChange={(e) => update(i, e.target.value)}
               rows={4}
               placeholder={t`Paste a post you wrote and liked, exactly as it went out.`}
-              className="flex w-full resize-y rounded-3xl border border-input bg-input/50 px-4 py-2.5 text-sm outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
             />
             <p className="text-right text-2xs text-muted-foreground">
               <span className="numeric">{used.toLocaleString(i18n.locale)}</span> / {MAX_SAMPLE_CHARS.toLocaleString(i18n.locale)}

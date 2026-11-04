@@ -21,6 +21,8 @@ import { listActivity } from "../../../lib/activityApi";
 import { Button } from "@/components/ui/button";
 import { SkeletonList } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
+import { Page, PageHeader } from "@/components/ui/page";
 
 const CATEGORY_TABS = [
   { value: "", label: msg`All` },
@@ -156,43 +158,36 @@ function ActivityFeed() {
   const projectName = project?.name || t`this project`;
 
   return (
-    <section>
-      <div className="page-toolbar-back">
-        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight"><Trans>Activity</Trans></h1>
-      </div>
-
-      <p className="app-subtle" style={{ marginTop: 0, marginBottom: 14 }}>
-        <Trans>
-          Everything that changed on <strong>{projectName}</strong> — who
-          proposed it, who approved it, what was applied or rolled back.
-        </Trans>
-      </p>
-
-      {conversationId && (
-        <p style={{ marginBottom: 12 }}>
-          <span className="status-pill grey">
+    <Page>
+      <PageHeader
+        title={<Trans>Activity</Trans>}
+        status={
+          conversationId ? (
             <Trans>
-              Filtered to one conversation ·{" "}
+              One conversation ·{" "}
               <Link href="/activity" className="underline underline-offset-2">
                 show all
               </Link>
             </Trans>
-          </span>
-        </p>
-      )}
-
-      <Tabs value={category} onValueChange={setCategory}>
-        <TabsList>
-          {CATEGORY_TABS.map((tab) => (
-            <TabsTrigger key={tab.value || "all"} value={tab.value}>
-              {i18n._(tab.label)}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+          ) : (
+            <Trans>What changed on {projectName}, and who did it</Trans>
+          )
+        }
+        actions={
+          <Tabs value={category} onValueChange={setCategory}>
+            <TabsList>
+              {CATEGORY_TABS.map((tab) => (
+                <TabsTrigger key={tab.value || "all"} value={tab.value}>
+                  {i18n._(tab.label)}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        }
+      />
 
       {!signedIn && (
-        <div style={{ marginTop: 18 }}>
+        <div>
           <EmptyState
             icon={LockKeyhole}
             title={t`Sign in to see project activity`}
@@ -211,7 +206,7 @@ function ActivityFeed() {
       )}
 
       {signedIn && items === null && (
-        <SkeletonList rows={5} label={t`Loading activity`} style={{ marginTop: 18 }} />
+        <SkeletonList rows={5} label={t`Loading activity`} />
       )}
 
       {signedIn && error && (
@@ -219,7 +214,7 @@ function ActivityFeed() {
       )}
 
       {signedIn && !error && items && items.length === 0 && (
-        <div style={{ marginTop: 18 }}>
+        <div>
           <EmptyState
             icon={History}
             title={t`No activity yet`}
@@ -234,32 +229,27 @@ function ActivityFeed() {
               </Button>
             }
           >
-            <Trans>
-              Proposals, approvals, rollbacks and artifact versions land here, each with who
-              did it.
-            </Trans>
+            <Trans>Proposals, approvals and rollbacks land here.</Trans>
           </EmptyState>
         </div>
       )}
 
       {signedIn && items && items.length > 0 && (
-        <div className="rounded-lg border border-border/60" style={{ marginTop: 18 }}>
+        <Card className="gap-0 overflow-hidden p-0">
           <ul>
             {items.map((row) => (
               <ActivityRow key={row.id} row={row} />
             ))}
           </ul>
-        </div>
+        </Card>
       )}
 
       {signedIn && nextBefore && (
-        <div style={{ marginTop: 12 }}>
-          <Button variant="outline" size="sm" onClick={loadMore} disabled={loadingMore}>
-            {loadingMore ? <Trans>Loading…</Trans> : <Trans>Load older activity</Trans>}
-          </Button>
-        </div>
+        <Button variant="outline" size="sm" className="self-start" onClick={loadMore} disabled={loadingMore}>
+          {loadingMore ? <Trans>Loading…</Trans> : <Trans>Load older activity</Trans>}
+        </Button>
       )}
-    </section>
+    </Page>
   );
 }
 
@@ -270,15 +260,10 @@ export default function ActivityPage() {
   return (
     <Suspense
       fallback={
-        <section>
-          <div className="page-toolbar-back">
-            <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">
-              <History size={20} className="inline-block mr-2 align-[-3px]" aria-hidden="true" />
-              <Trans>Activity</Trans>
-            </h1>
-          </div>
-          <SkeletonList rows={5} label={t`Loading activity`} style={{ marginTop: 18 }} />
-        </section>
+        <Page>
+          <PageHeader title={<Trans>Activity</Trans>} />
+          <SkeletonList rows={5} label={t`Loading activity`} />
+        </Page>
       }
     >
       <ActivityFeed />

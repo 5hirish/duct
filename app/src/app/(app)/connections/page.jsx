@@ -1,10 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { Trans, useLingui } from "@lingui/react/macro";
-import { plural } from "@lingui/core/macro";
+import { msg, plural } from "@lingui/core/macro";
 import {
   bindProjectConnector,
   claimConnectorGrant,
@@ -26,20 +25,45 @@ import {
 import { trackEvent, AnalyticsEvent } from "../../../lib/analytics";
 import { getActiveProject } from "../../../lib/projects";
 import { MCP_GUIDE_URL } from "../../../lib/mcpServers";
-import { NATIVE_SOURCE } from "../../../lib/connectorSource";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import ConnectorTile from "../../../components/connections/ConnectorTile";
+import { Page, PageHeader } from "@/components/ui/page";
+import BringAnyTool from "../../../components/connections/BringAnyTool";
+import ConnectorBrowser, { NO_FILTERS, StatusTabs } from "../../../components/connections/ConnectorBrowser";
 import ManualConnectorCard from "../../../components/connections/ManualConnectorCard";
-import McpConnectors from "../../../components/connections/McpConnectors";
+import { McpPhase, useMcpConnectors } from "../../../components/connections/McpConnectors";
+import FirstSourceCelebration from "../../../components/connections/FirstSourceCelebration";
 import OAuthConnectorCard from "../../../components/connections/OAuthConnectorCard";
 import { DEFAULT_VALUE } from "../../../components/connections/ProjectAccountSelect";
 import { LOGOS } from "../../../components/connections/logos";
+import {
+  ALL,
+  ConnectionStatus,
+  NATIVE_CATEGORY,
+  NATIVE_KEYWORDS,
+  Origin,
+} from "../../../lib/connectorCatalog";
+import { DUCT_PUBLISHER } from "../../../lib/connectorSource";
+
+// The connectors whose credentials come from a Google sign-in; the rest are
+// pasted keys, stored one row per account.
+const OAUTH_TYPES = new Set(["google_ads", "gsc", "ga4", "gtm"]);
+
+// What a new project should connect first, and what each one lets Duct answer.
+// Search and analytics before ads before revenue: the order most sites can
+// actually say yes to on day one.
+const STARTERS = [
+  { type: "gsc", benefit: msg`Which searches bring people in, and which ones stopped.` },
+  { type: "ga4", benefit: msg`Where visitors come from and what they do next.` },
+  { type: "google_ads", benefit: msg`What each campaign costs and what it brings back.` },
+  { type: "stripe", benefit: msg`The revenue every other number should answer to.` },
+];
+const STARTER_IDS = STARTERS.map((s) => s.type);
+const STARTER_BENEFIT = Object.fromEntries(STARTERS.map((s) => [s.type, s.benefit]));
 
 export default function ConnectionsPage() {
-  const { t } = useLingui();
+  const { t, i18n } = useLingui();
   const router = useRouter();
   const notSignedInHere = t`Google approved the connection, but you're not signed in to Duct here, so it wasn't saved. Sign in, then connect again.`;
   // What the person is typing into the MCC field; null follows the stored value.
@@ -58,6 +82,9 @@ export default function ConnectionsPage() {
   const [project, setProject] = useState(null);
   const [bindings, setBindings] = useState({}); // connector_type -> binding row
   const [mappingBusy, setMappingBusy] = useState("");
+  // The catalogue's search and filters. Held here because the status tabs sit
+  // in the page header and the rest under it.
+  const [filters, setFilters] = useState(NO_FILTERS);
 
   async function refreshServerRows() {
     if (!hasAuthToken()) return;
@@ -397,439 +424,493 @@ export default function ConnectionsPage() {
     setConnectError(error);
     setConnectNotice(notice);
   }, []);
+  // The registry is asked only where its servers could answer the question:
+  // none is connected yet, and none is Duct's, a vendor's preset or yours.
+  const registryAsked = filters.status !== ConnectionStatus.CONNECTED && filters.origin === ALL;
+  const mcp = useMcpConnectors({ signedIn, search: registryAsked ? filters.query : "", onMessage: showMcpMessage });
+
+  // Every native connector, by type. A function per connector so the page can
+  // place each one in the section its state puts it in, and hand the first-run
+  // tiles `featured` without a second copy of any card.
+  // Each native connector's name and line, once: its card shows them and the
+  // catalogue searches them, in the reader's language.
+  const copy = {
+    google_ads: { title: t`Google Ads`, description: t`Spend, clicks, impressions, conversions and ROAS, per campaign.` },
+    gsc: { title: t`Google Search Console`, description: t`Search queries, clicks, impressions and average position.` },
+    ga4: { title: t`Google Analytics`, description: t`Traffic, sessions, engagement and conversions.` },
+    gtm: { title: t`Google Tag Manager`, description: t`Tags, variables and container versions — staged, with rollback.` },
+    meta_ads: { title: t`Meta Ads`, description: t`Facebook and Instagram spend, reach, conversions and CPA.` },
+    stripe: { title: "Stripe", description: t`Settled revenue, subscriptions, refunds and payment outcomes.` },
+    apple_ads: { title: t`Apple Search Ads`, description: t`Spend, taps and installs, by campaign and search term.` },
+    revenuecat: { title: t`RevenueCat`, description: t`Trials, renewals, refunds and MRR across the App Store and Play.` },
+    openai_ads: { title: t`OpenAI Ads`, description: t`Impressions, clicks and spend. Conversions stay in Ads Manager.` },
+    mixpanel: { title: "Mixpanel", description: t`Signups, logins and upgrades, one name across web and app.` },
+    clarity: { title: t`Microsoft Clarity`, description: t`Rage clicks, dead clicks, quick-backs and script errors, per page.` },
+    growthbook: { title: "GrowthBook", description: t`Which tests are live, whether they still bucket, per-metric results.` },
+    github: { title: "GitHub", description: t`Merged pull requests, releases, closed issues and doc changes, by date.` },
+  };
+
+  const CONNECTORS = {
+    google_ads: (extra) => (
+        <OAuthConnectorCard
+          {...extra}
+          {...copy.google_ads}
+          logo={LOGOS.google_ads}
+          connected={gadsAuthorized}
+          oauthConnected={gadsAuthorized}
+          tone={toneFor(gadsAuthorized, "google_ads")}
+          {...scopeProps("google_ads")}
+          status={connectionStatusFor(gadsAuthorized, "google_ads")}
+          connectorType="google_ads"
+          onDisconnect={() => disconnect("google_ads")}
+          rows={serverRowsAll.google_ads || []}
+          {...mappingProps("google_ads")}
+        >
+          <form onSubmit={saveGadsManagerAccount} style={{ display: "grid", gap: 10 }}>
+            <p className="conn-hint">
+              <Trans>
+                Signing in with Google is all Duct needs. If your accounts sit under a manager
+                account, name it here so Duct reads the child accounts through it.
+              </Trans>
+            </p>
+            <div className="conn-field">
+              <Label htmlFor="gads-mcc"><Trans>Manager account ID (MCC, optional)</Trans></Label>
+              <Input
+                id="gads-mcc"
+                inputMode="numeric"
+                placeholder="e.g. 1234567890"
+                value={mccInput}
+                onChange={(e) => setMccDraft(e.target.value)}
+              />
+            </div>
+            <div>
+              <Button type="submit" size="sm" variant="secondary" disabled={!gadsAuthorized}>
+                <Trans>Save manager account</Trans>
+              </Button>
+            </div>
+          </form>
+        </OAuthConnectorCard>
+    ),
+    gsc: (extra) => (
+        <OAuthConnectorCard
+          {...extra}
+          {...copy.gsc}
+          logo={LOGOS.gsc}
+          connected={gscAuthorized}
+          oauthConnected={gscAuthorized}
+          tone={toneFor(gscAuthorized, "gsc")}
+          status={connectionStatusFor(gscAuthorized, "gsc")}
+          {...scopeProps("gsc")}
+          connectorType="gsc"
+          onDisconnect={() => disconnect("gsc")}
+          rows={serverRowsAll.gsc || []}
+          {...mappingProps("gsc")}
+        />
+    ),
+    ga4: (extra) => (
+        <OAuthConnectorCard
+          {...extra}
+          {...copy.ga4}
+          logo={LOGOS.ga4}
+          connected={ga4Authorized}
+          oauthConnected={ga4Authorized}
+          tone={toneFor(ga4Authorized, "ga4")}
+          status={connectionStatusFor(ga4Authorized, "ga4")}
+          {...scopeProps("ga4")}
+          connectorType="ga4"
+          onDisconnect={() => disconnect("ga4")}
+          rows={serverRowsAll.ga4 || []}
+          {...mappingProps("ga4")}
+        />
+    ),
+    gtm: (extra) => (
+        <OAuthConnectorCard
+          {...extra}
+          {...copy.gtm}
+          logo={LOGOS.gtm}
+          connected={gtmAuthorized}
+          oauthConnected={gtmAuthorized}
+          tone={toneFor(gtmAuthorized, "gtm")}
+          status={connectionStatusFor(gtmAuthorized, "gtm")}
+          {...scopeProps("gtm")}
+          connectorType="gtm"
+          onDisconnect={() => disconnect("gtm")}
+          rows={serverRowsAll.gtm || []}
+          {...mappingProps("gtm")}
+        />
+    ),
+    meta_ads: (extra) => (
+        <ManualConnectorCard
+          {...extra}
+          type="meta_ads"
+          {...copy.meta_ads}
+          logo={LOGOS.meta_ads}
+          fields={[
+            {
+              key: "access_token",
+              label: t`System User access token`,
+              placeholder: "EAA…",
+              secret: true,
+              hint: t`Business settings → Users → System users → Generate token with scope ads_read (+ business_management for account discovery). System User tokens don't expire; regular user tokens die in ~60 days.`,
+            },
+            {
+              key: "account_id",
+              label: t`Ad account id`,
+              placeholder: "act_1234567890",
+              optional: true,
+              hint: t`Needed only if the token lacks business_management (no account discovery).`,
+            },
+            { key: "app_secret", label: t`App secret`, placeholder: t`Only if 'Require App Secret' is on`, secret: true, optional: true },
+          ]}
+          accountField="account_id"
+          docsUrl="https://business.facebook.com/settings/system-users"
+          docsLabel={t`Create a System User token (Business settings)`}
+          signedIn={signedIn}
+          serverRowList={serverRowsAll.meta_ads || []}
+          onSaved={refreshServerRows}
+          onRemoveRow={removeServerRowById}
+          {...mappingProps("meta_ads")}
+        />
+    ),
+    stripe: (extra) => (
+        <ManualConnectorCard
+          {...extra}
+          type="stripe"
+          {...copy.stripe}
+          logo={LOGOS.stripe}
+          fields={[
+            {
+              key: "api_key",
+              label: t`Restricted API key`,
+              placeholder: "rk_live_…",
+              secret: true,
+              hint: t`Create a RESTRICTED key with read access to Subscriptions, Charges, Invoices, Customers, Products and Prices. Duct only ever reads.`,
+            },
+          ]}
+          docsUrl="https://dashboard.stripe.com/apikeys"
+          docsLabel={t`Create a restricted key (Stripe dashboard)`}
+          signedIn={signedIn}
+          serverRowList={serverRowsAll.stripe || []}
+          onSaved={refreshServerRows}
+          onRemoveRow={removeServerRowById}
+          {...mappingProps("stripe")}
+        />
+    ),
+    apple_ads: (extra) => (
+        <ManualConnectorCard
+          {...extra}
+          type="apple_ads"
+          {...copy.apple_ads}
+          logo={LOGOS.apple_ads}
+          fields={[
+            { key: "client_id", label: t`Client ID`, placeholder: "SEARCHADS.xxxxxxxx-…" },
+            { key: "team_id", label: t`Team ID`, placeholder: "SEARCHADS.xxxxxxxx-…" },
+            { key: "key_id", label: t`Key ID`, placeholder: "xxxxxxxx-xxxx-…" },
+            {
+              key: "private_key",
+              label: t`EC private key (PEM)`,
+              placeholder: "-----BEGIN PRIVATE KEY-----…",
+              multiline: true,
+              hint: t`Generate an EC P-256 key pair, upload the PUBLIC half at ads.apple.com → Account Settings → API, then paste the private key here. Apple has no browser sign-in for this — key material is the official method.`,
+            },
+          ]}
+          accountField="org_id"
+          docsUrl="https://searchads.apple.com/help/campaigns/0022-use-the-campaign-management-api"
+          docsLabel={t`Apple's API access guide`}
+          signedIn={signedIn}
+          serverRowList={serverRowsAll.apple_ads || []}
+          onSaved={refreshServerRows}
+          onRemoveRow={removeServerRowById}
+          {...mappingProps("apple_ads")}
+        />
+    ),
+    revenuecat: (extra) => (
+        <ManualConnectorCard
+          {...extra}
+          type="revenuecat"
+          {...copy.revenuecat}
+          logo={LOGOS.revenuecat}
+          fields={[
+            {
+              key: "api_key",
+              label: t`Secret API key (V2)`,
+              placeholder: "sk_…",
+              secret: true,
+              hint: t`Project settings → API keys → Secret API key (V2) with the read scopes. Public SDK keys (appl_/goog_) cannot read the REST API.`,
+            },
+          ]}
+          accountField="project_id"
+          docsUrl="https://www.revenuecat.com/docs/projects/authentication"
+          docsLabel={t`RevenueCat API keys guide`}
+          signedIn={signedIn}
+          serverRowList={serverRowsAll.revenuecat || []}
+          onSaved={refreshServerRows}
+          onRemoveRow={removeServerRowById}
+          {...mappingProps("revenuecat")}
+        />
+    ),
+    openai_ads: (extra) => (
+        <ManualConnectorCard
+          {...extra}
+          type="openai_ads"
+          {...copy.openai_ads}
+          logo={LOGOS.openai_ads}
+          fields={[
+            {
+              key: "api_key",
+              label: t`Ads API key`,
+              placeholder: t`From Ads Manager → Settings → API keys`,
+              secret: true,
+              hint: t`A key is scoped to ONE ad account — make sure it's the right one.`,
+            },
+          ]}
+          docsUrl="https://developers.openai.com/ads/api-quickstart"
+          docsLabel={t`OpenAI Ads API quickstart`}
+          signedIn={signedIn}
+          serverRowList={serverRowsAll.openai_ads || []}
+          onSaved={refreshServerRows}
+          onRemoveRow={removeServerRowById}
+          {...mappingProps("openai_ads")}
+        />
+    ),
+    mixpanel: (extra) => (
+        <ManualConnectorCard
+          {...extra}
+          type="mixpanel"
+          {...copy.mixpanel}
+          logo={LOGOS.mixpanel}
+          fields={[
+            { key: "service_account_username", label: t`Service account username`, placeholder: "duct.xxxxxx.mp-service-account" },
+            {
+              key: "service_account_secret",
+              label: t`Service account secret`,
+              placeholder: t`Shown once when the account is created`,
+              secret: true,
+              hint: t`Organization settings → Service Accounts → Add. Grant it the project(s) Duct should read. Project tokens and API secrets cannot read the Query API.`,
+            },
+            {
+              key: "region",
+              label: t`Data residency`,
+              placeholder: "us | eu | in",
+              optional: true,
+              hint: t`EU and India projects live on their own hosts — a wrong region looks like a bad secret.`,
+            },
+            {
+              key: "internal_patterns",
+              label: t`Internal-traffic patterns`,
+              placeholder: t`qa-, @yourcompany.com, test-account`,
+              optional: true,
+              hint: t`Comma-separated distinct_id substrings to exclude. Mixpanel has no internal-traffic filter — QA accounts corrupt every funnel until excluded.`,
+            },
+          ]}
+          accountField="project_id"
+          docsUrl="https://docs.mixpanel.com/docs/other-bits/service-accounts"
+          docsLabel={t`Mixpanel service accounts guide`}
+          signedIn={signedIn}
+          serverRowList={serverRowsAll.mixpanel || []}
+          onSaved={refreshServerRows}
+          onRemoveRow={removeServerRowById}
+          {...mappingProps("mixpanel")}
+        />
+    ),
+    clarity: (extra) => (
+        <ManualConnectorCard
+          {...extra}
+          type="clarity"
+          {...copy.clarity}
+          logo={LOGOS.clarity}
+          fields={[
+            {
+              key: "api_token",
+              label: t`Data Export API token`,
+              placeholder: t`From Clarity → Settings → Data Export`,
+              secret: true,
+              hint: t`The token IS the project. Clarity allows 10 API requests per project per day; verifying spends 1 and each Duct pull spends 2.`,
+            },
+            {
+              key: "project_id",
+              label: t`Project id`,
+              placeholder: t`e.g. tbnrkp3gk9 (from the Clarity URL)`,
+              optional: true,
+              hint: t`Label only — the token already selects the project.`,
+            },
+          ]}
+          accountField="project_id"
+          docsUrl="https://learn.microsoft.com/en-us/clarity/setup-and-installation/clarity-data-export-api"
+          docsLabel={t`Clarity Data Export API docs`}
+          signedIn={signedIn}
+          serverRowList={serverRowsAll.clarity || []}
+          onSaved={refreshServerRows}
+          onRemoveRow={removeServerRowById}
+          {...mappingProps("clarity")}
+        />
+    ),
+    growthbook: (extra) => (
+        <ManualConnectorCard
+          {...extra}
+          type="growthbook"
+          {...copy.growthbook}
+          logo={LOGOS.growthbook}
+          fields={[
+            {
+              key: "api_key",
+              label: t`API key`,
+              placeholder: "secret_…",
+              secret: true,
+              hint: t`Settings → API Keys. A read-only key is enough — Duct never flips flags.`,
+            },
+            {
+              key: "base_url",
+              label: t`Self-hosted API URL`,
+              placeholder: t`https://growthbook.example.com (leave empty for GrowthBook Cloud)`,
+              optional: true,
+            },
+          ]}
+          accountField="project_id"
+          docsUrl="https://docs.growthbook.io/api"
+          docsLabel={t`GrowthBook REST API docs`}
+          signedIn={signedIn}
+          serverRowList={serverRowsAll.growthbook || []}
+          onSaved={refreshServerRows}
+          onRemoveRow={removeServerRowById}
+          {...mappingProps("growthbook")}
+        />
+    ),
+    github: (extra) => (
+        <ManualConnectorCard
+          {...extra}
+          type="github"
+          {...copy.github}
+          logo={LOGOS.github}
+          fields={[
+            {
+              key: "token",
+              label: t`Fine-grained personal access token`,
+              placeholder: "github_pat_…",
+              secret: true,
+              hint: t`Choose "Only select repositories", then read-only access to Contents, Pull requests, Issues and Metadata. Duct only ever reads.`,
+            },
+          ]}
+          accountField="repo"
+          docsUrl="https://github.com/settings/personal-access-tokens/new"
+          docsLabel={t`Create a fine-grained token (GitHub settings)`}
+          oneClick={
+            githubApp?.available
+              ? {
+                  label: t`Connect GitHub`,
+                  againLabel: t`Refresh from GitHub`,
+                  blurb: t`Choose the repositories on GitHub. Duct gets read-only access to those and nothing else.`,
+                  waiting: t`Finish on GitHub in your browser. Your repositories appear here when you come back.`,
+                  onStart: connectGitHub,
+                  manageUrl: githubApp.manage_url,
+                  manageLabel: t`Choose repositories on GitHub`,
+                  tokenLabel: t`Use a token instead`,
+                }
+              : null
+          }
+          signedIn={signedIn}
+          serverRowList={serverRowsAll.github || []}
+          onSaved={refreshServerRows}
+          onRemoveRow={removeServerRowById}
+          {...mappingProps("github")}
+        />
+    ),
+  };
+
+  const isConnected = (type) =>
+    OAUTH_TYPES.has(type) ? !!serverRows[type] : (serverRowsAll[type] || []).length > 0;
+  const available = Object.keys(CONNECTORS);
+  const connectedTypes = available.filter(isConnected);
+  const connectedCount = connectedTypes.length;
+
+  // Every source as one catalogue (lib/connectorCatalog.js): the native
+  // connectors here, the MCP servers from their hook. Each keeps its own card.
+  const statusOf = (type) =>
+    !isConnected(type)
+      ? ConnectionStatus.AVAILABLE
+      : serverRows[type]?.scope_status === "partial"
+        ? ConnectionStatus.ATTENTION
+        : ConnectionStatus.CONNECTED;
+  const catalog = [
+    ...available.map((type) => ({
+      id: type,
+      ...copy[type],
+      category: NATIVE_CATEGORY[type],
+      status: statusOf(type),
+      origin: Origin.DUCT,
+      publisher: DUCT_PUBLISHER,
+      keywords: NATIVE_KEYWORDS[type] || [],
+      render: () => <Fragment key={type}>{CONNECTORS[type]({})}</Fragment>,
+    })),
+    ...mcp.entries,
+  ];
 
   return (
-    <section>
-      <div className="page-toolbar-back">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="connection-back-btn shrink-0 rounded-full"
-          asChild
-        >
-          <Link href="/insights/organic-growth" aria-label={t`Back to Insights`} title={t`Back to Insights`}>
-            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                d="M15 18 9 12l6-6"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </Link>
-        </Button>
-        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight"><Trans>Connections</Trans></h1>
-      </div>
-
-      <Tabs defaultValue="connections">
-        <TabsContent value="connections">
-          <p className="app-subtle" style={{ marginTop: 0, marginBottom: 8, maxWidth: 720 }}>
-            <Trans>
-              Connect an account once — it&rsquo;s saved for your whole account. Open a card
-              to set it up and to pick which of your accounts{" "}
-              <strong className="font-medium text-foreground">{projectName}</strong>{" "}
-              reads from.
-            </Trans>
-          </p>
-          <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18, maxWidth: 720 }}>
-            <Trans>
-              <strong className="font-medium text-foreground">Native</strong> connectors are built by Duct and feed
-              briefs, alerts and the chat. <strong className="font-medium text-foreground">MCP</strong> connectors
-              are each company&rsquo;s own server; the insights chat calls their tools.{" "}
-              <a className="app-link underline underline-offset-2" href={MCP_GUIDE_URL} target="_blank" rel="noreferrer">
-                How MCP works
-              </a>
-            </Trans>
-          </p>
-
-          {connectError && (
-            <p
-              role="alert"
-              className="text-sm text-destructive"
-              style={{ marginTop: -8, marginBottom: 18, maxWidth: 720 }}
-            >
-              {connectError}
+    <Page>
+      <PageHeader
+        title={<Trans>Toolbox</Trans>}
+        status={
+          connectedCount
+            ? plural(connectedCount, { one: "# source connected", other: "# sources connected" })
+            : t`Connect a source and Duct starts reading it the same minute.`
+        }
+        actions={<StatusTabs entries={catalog} filters={filters} onFiltersChange={setFilters} />}
+        help={
+          <div className="flex flex-col gap-2">
+            <p>
+              <Trans>
+                Connect an account once and every project can use it. Open a source to pick which of
+                your accounts {projectName} reads from.
+              </Trans>
             </p>
-          )}
-          {connectNotice && !connectError && (
-            <p
-              role="status"
-              className="text-sm text-muted-foreground"
-              style={{ marginTop: -8, marginBottom: 18, maxWidth: 720 }}
-            >
-              {connectNotice}
+            <p>
+              <Trans>
+                Duct builds and maintains the built-in sources, and they feed briefs, alerts and the
+                chat. MCP sources are each company&rsquo;s own server; the chat calls their tools.{" "}
+                <a className="app-link underline underline-offset-2" href={MCP_GUIDE_URL} target="_blank" rel="noreferrer">
+                  How MCP works
+                </a>
+              </Trans>
             </p>
-          )}
-
-          <div className="conn-grid">
-            <OAuthConnectorCard
-              title={t`Google Ads`}
-              description={t`Spend, clicks, impressions, conversions and ROAS, per campaign.`}
-              logo={LOGOS.google_ads}
-              connected={gadsAuthorized}
-              oauthConnected={gadsAuthorized}
-              tone={toneFor(gadsAuthorized, "google_ads")}
-              {...scopeProps("google_ads")}
-              status={connectionStatusFor(gadsAuthorized, "google_ads")}
-              connectorType="google_ads"
-              onDisconnect={() => disconnect("google_ads")}
-              rows={serverRowsAll.google_ads || []}
-              {...mappingProps("google_ads")}
-            >
-              <form onSubmit={saveGadsManagerAccount} style={{ display: "grid", gap: 10 }}>
-                <p className="conn-hint">
-                  <Trans>
-                    Signing in with Google is all Duct needs. If your accounts sit under a manager
-                    account, name it here so Duct reads the child accounts through it.
-                  </Trans>
-                </p>
-                <div className="conn-field">
-                  <Label htmlFor="gads-mcc"><Trans>Manager account ID (MCC, optional)</Trans></Label>
-                  <Input
-                    id="gads-mcc"
-                    inputMode="numeric"
-                    placeholder="e.g. 1234567890"
-                    value={mccInput}
-                    onChange={(e) => setMccDraft(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Button type="submit" size="sm" variant="secondary" disabled={!gadsAuthorized}>
-                    <Trans>Save manager account</Trans>
-                  </Button>
-                </div>
-              </form>
-            </OAuthConnectorCard>
-
-            <OAuthConnectorCard
-              title={t`Google Search Console`}
-              description={t`Search queries, clicks, impressions and average position.`}
-              logo={LOGOS.gsc}
-              connected={gscAuthorized}
-              oauthConnected={gscAuthorized}
-              tone={toneFor(gscAuthorized, "gsc")}
-              status={connectionStatusFor(gscAuthorized, "gsc")}
-              {...scopeProps("gsc")}
-              connectorType="gsc"
-              onDisconnect={() => disconnect("gsc")}
-              rows={serverRowsAll.gsc || []}
-              {...mappingProps("gsc")}
-            />
-
-            <OAuthConnectorCard
-              title={t`Google Analytics`}
-              description={t`Traffic, sessions, engagement and conversions.`}
-              logo={LOGOS.ga4}
-              connected={ga4Authorized}
-              oauthConnected={ga4Authorized}
-              tone={toneFor(ga4Authorized, "ga4")}
-              status={connectionStatusFor(ga4Authorized, "ga4")}
-              {...scopeProps("ga4")}
-              connectorType="ga4"
-              onDisconnect={() => disconnect("ga4")}
-              rows={serverRowsAll.ga4 || []}
-              {...mappingProps("ga4")}
-            />
-
-            <OAuthConnectorCard
-              title={t`Google Tag Manager`}
-              description={t`Tags, variables and container versions — staged, with rollback.`}
-              logo={LOGOS.gtm}
-              connected={gtmAuthorized}
-              oauthConnected={gtmAuthorized}
-              tone={toneFor(gtmAuthorized, "gtm")}
-              status={connectionStatusFor(gtmAuthorized, "gtm")}
-              {...scopeProps("gtm")}
-              connectorType="gtm"
-              onDisconnect={() => disconnect("gtm")}
-              rows={serverRowsAll.gtm || []}
-              {...mappingProps("gtm")}
-            />
-
-            <ManualConnectorCard
-              type="meta_ads"
-              title={t`Meta Ads`}
-              description={t`Facebook and Instagram spend, reach, conversions and CPA.`}
-              logo={LOGOS.meta_ads}
-              fields={[
-                {
-                  key: "access_token",
-                  label: t`System User access token`,
-                  placeholder: "EAA…",
-                  secret: true,
-                  hint: t`Business settings → Users → System users → Generate token with scope ads_read (+ business_management for account discovery). System User tokens don't expire; regular user tokens die in ~60 days.`,
-                },
-                {
-                  key: "account_id",
-                  label: t`Ad account id`,
-                  placeholder: "act_1234567890",
-                  optional: true,
-                  hint: t`Needed only if the token lacks business_management (no account discovery).`,
-                },
-                { key: "app_secret", label: t`App secret`, placeholder: t`Only if 'Require App Secret' is on`, secret: true, optional: true },
-              ]}
-              accountField="account_id"
-              docsUrl="https://business.facebook.com/settings/system-users"
-              docsLabel={t`Create a System User token (Business settings)`}
-              signedIn={signedIn}
-              serverRowList={serverRowsAll.meta_ads || []}
-              onSaved={refreshServerRows}
-              onRemoveRow={removeServerRowById}
-              {...mappingProps("meta_ads")}
-            />
-
-            <ManualConnectorCard
-              type="stripe"
-              title="Stripe"
-              description={t`Settled revenue, subscriptions, refunds and payment outcomes.`}
-              logo={LOGOS.stripe}
-              fields={[
-                {
-                  key: "api_key",
-                  label: t`Restricted API key`,
-                  placeholder: "rk_live_…",
-                  secret: true,
-                  hint: t`Create a RESTRICTED key with read access to Subscriptions, Charges, Invoices, Customers, Products and Prices. Duct only ever reads.`,
-                },
-              ]}
-              docsUrl="https://dashboard.stripe.com/apikeys"
-              docsLabel={t`Create a restricted key (Stripe dashboard)`}
-              signedIn={signedIn}
-              serverRowList={serverRowsAll.stripe || []}
-              onSaved={refreshServerRows}
-              onRemoveRow={removeServerRowById}
-              {...mappingProps("stripe")}
-            />
-
-            <ManualConnectorCard
-              type="apple_ads"
-              title={t`Apple Search Ads`}
-              description={t`Spend, taps and installs, by campaign and search term.`}
-              logo={LOGOS.apple_ads}
-              fields={[
-                { key: "client_id", label: t`Client ID`, placeholder: "SEARCHADS.xxxxxxxx-…" },
-                { key: "team_id", label: t`Team ID`, placeholder: "SEARCHADS.xxxxxxxx-…" },
-                { key: "key_id", label: t`Key ID`, placeholder: "xxxxxxxx-xxxx-…" },
-                {
-                  key: "private_key",
-                  label: t`EC private key (PEM)`,
-                  placeholder: "-----BEGIN PRIVATE KEY-----…",
-                  multiline: true,
-                  hint: t`Generate an EC P-256 key pair, upload the PUBLIC half at ads.apple.com → Account Settings → API, then paste the private key here. Apple has no browser sign-in for this — key material is the official method.`,
-                },
-              ]}
-              accountField="org_id"
-              docsUrl="https://searchads.apple.com/help/campaigns/0022-use-the-campaign-management-api"
-              docsLabel={t`Apple's API access guide`}
-              signedIn={signedIn}
-              serverRowList={serverRowsAll.apple_ads || []}
-              onSaved={refreshServerRows}
-              onRemoveRow={removeServerRowById}
-              {...mappingProps("apple_ads")}
-            />
-
-            <ManualConnectorCard
-              type="revenuecat"
-              title={t`RevenueCat`}
-              description={t`Trials, renewals, refunds and MRR across the App Store and Play.`}
-              logo={LOGOS.revenuecat}
-              fields={[
-                {
-                  key: "api_key",
-                  label: t`Secret API key (V2)`,
-                  placeholder: "sk_…",
-                  secret: true,
-                  hint: t`Project settings → API keys → Secret API key (V2) with the read scopes. Public SDK keys (appl_/goog_) cannot read the REST API.`,
-                },
-              ]}
-              accountField="project_id"
-              docsUrl="https://www.revenuecat.com/docs/projects/authentication"
-              docsLabel={t`RevenueCat API keys guide`}
-              signedIn={signedIn}
-              serverRowList={serverRowsAll.revenuecat || []}
-              onSaved={refreshServerRows}
-              onRemoveRow={removeServerRowById}
-              {...mappingProps("revenuecat")}
-            />
-
-            <ManualConnectorCard
-              type="openai_ads"
-              title={t`OpenAI Ads`}
-              description={t`Impressions, clicks and spend. Conversions stay in Ads Manager.`}
-              logo={LOGOS.openai_ads}
-              fields={[
-                {
-                  key: "api_key",
-                  label: t`Ads API key`,
-                  placeholder: t`From Ads Manager → Settings → API keys`,
-                  secret: true,
-                  hint: t`A key is scoped to ONE ad account — make sure it's the right one.`,
-                },
-              ]}
-              docsUrl="https://developers.openai.com/ads/api-quickstart"
-              docsLabel={t`OpenAI Ads API quickstart`}
-              signedIn={signedIn}
-              serverRowList={serverRowsAll.openai_ads || []}
-              onSaved={refreshServerRows}
-              onRemoveRow={removeServerRowById}
-              {...mappingProps("openai_ads")}
-            />
-
-            <ManualConnectorCard
-              type="mixpanel"
-              title="Mixpanel"
-              description={t`Signups, logins and upgrades, one name across web and app.`}
-              logo={LOGOS.mixpanel}
-              fields={[
-                { key: "service_account_username", label: t`Service account username`, placeholder: "duct.xxxxxx.mp-service-account" },
-                {
-                  key: "service_account_secret",
-                  label: t`Service account secret`,
-                  placeholder: t`Shown once when the account is created`,
-                  secret: true,
-                  hint: t`Organization settings → Service Accounts → Add. Grant it the project(s) Duct should read. Project tokens and API secrets cannot read the Query API.`,
-                },
-                {
-                  key: "region",
-                  label: t`Data residency`,
-                  placeholder: "us | eu | in",
-                  optional: true,
-                  hint: t`EU and India projects live on their own hosts — a wrong region looks like a bad secret.`,
-                },
-                {
-                  key: "internal_patterns",
-                  label: t`Internal-traffic patterns`,
-                  placeholder: t`qa-, @yourcompany.com, test-account`,
-                  optional: true,
-                  hint: t`Comma-separated distinct_id substrings to exclude. Mixpanel has no internal-traffic filter — QA accounts corrupt every funnel until excluded.`,
-                },
-              ]}
-              accountField="project_id"
-              docsUrl="https://docs.mixpanel.com/docs/other-bits/service-accounts"
-              docsLabel={t`Mixpanel service accounts guide`}
-              signedIn={signedIn}
-              serverRowList={serverRowsAll.mixpanel || []}
-              onSaved={refreshServerRows}
-              onRemoveRow={removeServerRowById}
-              {...mappingProps("mixpanel")}
-            />
-
-            <ManualConnectorCard
-              type="clarity"
-              title={t`Microsoft Clarity`}
-              description={t`Rage clicks, dead clicks, quick-backs and script errors, per page.`}
-              logo={LOGOS.clarity}
-              fields={[
-                {
-                  key: "api_token",
-                  label: t`Data Export API token`,
-                  placeholder: t`From Clarity → Settings → Data Export`,
-                  secret: true,
-                  hint: t`The token IS the project. Clarity allows 10 API requests per project per day; verifying spends 1 and each Duct pull spends 2.`,
-                },
-                {
-                  key: "project_id",
-                  label: t`Project id`,
-                  placeholder: t`e.g. tbnrkp3gk9 (from the Clarity URL)`,
-                  optional: true,
-                  hint: t`Label only — the token already selects the project.`,
-                },
-              ]}
-              accountField="project_id"
-              docsUrl="https://learn.microsoft.com/en-us/clarity/setup-and-installation/clarity-data-export-api"
-              docsLabel={t`Clarity Data Export API docs`}
-              signedIn={signedIn}
-              serverRowList={serverRowsAll.clarity || []}
-              onSaved={refreshServerRows}
-              onRemoveRow={removeServerRowById}
-              {...mappingProps("clarity")}
-            />
-
-            <ManualConnectorCard
-              type="growthbook"
-              title="GrowthBook"
-              description={t`Which tests are live, whether they still bucket, per-metric results.`}
-              logo={LOGOS.growthbook}
-              fields={[
-                {
-                  key: "api_key",
-                  label: t`API key`,
-                  placeholder: "secret_…",
-                  secret: true,
-                  hint: t`Settings → API Keys. A read-only key is enough — Duct never flips flags.`,
-                },
-                {
-                  key: "base_url",
-                  label: t`Self-hosted API URL`,
-                  placeholder: t`https://growthbook.example.com (leave empty for GrowthBook Cloud)`,
-                  optional: true,
-                },
-              ]}
-              accountField="project_id"
-              docsUrl="https://docs.growthbook.io/api"
-              docsLabel={t`GrowthBook REST API docs`}
-              signedIn={signedIn}
-              serverRowList={serverRowsAll.growthbook || []}
-              onSaved={refreshServerRows}
-              onRemoveRow={removeServerRowById}
-              {...mappingProps("growthbook")}
-            />
-
-            <ManualConnectorCard
-              type="github"
-              title="GitHub"
-              description={t`Merged pull requests, releases, closed issues and doc changes, by date.`}
-              logo={LOGOS.github}
-              fields={[
-                {
-                  key: "token",
-                  label: t`Fine-grained personal access token`,
-                  placeholder: "github_pat_…",
-                  secret: true,
-                  hint: t`Choose "Only select repositories", then read-only access to Contents, Pull requests, Issues and Metadata. Duct only ever reads.`,
-                },
-              ]}
-              accountField="repo"
-              docsUrl="https://github.com/settings/personal-access-tokens/new"
-              docsLabel={t`Create a fine-grained token (GitHub settings)`}
-              oneClick={
-                githubApp?.available
-                  ? {
-                      label: t`Connect GitHub`,
-                      againLabel: t`Refresh from GitHub`,
-                      blurb: t`Choose the repositories on GitHub. Duct gets read-only access to those and nothing else.`,
-                      waiting: t`Finish on GitHub in your browser. Your repositories appear here when you come back.`,
-                      onStart: connectGitHub,
-                      manageUrl: githubApp.manage_url,
-                      manageLabel: t`Choose repositories on GitHub`,
-                      tokenLabel: t`Use a token instead`,
-                    }
-                  : null
-              }
-              signedIn={signedIn}
-              serverRowList={serverRowsAll.github || []}
-              onSaved={refreshServerRows}
-              onRemoveRow={removeServerRowById}
-              {...mappingProps("github")}
-            />
-
-            <ConnectorTile
-              logo={LOGOS.hubspot}
-              title="HubSpot"
-              source={NATIVE_SOURCE}
-              description={t`CRM lifecycle stages, pipeline and closed revenue.`}
-              tone="off"
-              status={t`Coming soon`}
-              disabled
-            />
-
-            <McpConnectors signedIn={signedIn} onMessage={showMcpMessage} />
           </div>
-        </TabsContent>
+        }
+      />
 
-      </Tabs>
-    </section>
+      {connectError && (
+        <p role="alert" className="-mt-6 text-sm text-destructive">
+          {connectError}
+        </p>
+      )}
+      {connectNotice && !connectError && (
+        <p role="status" className="-mt-6 text-sm text-muted-foreground">
+          {connectNotice}
+        </p>
+      )}
+
+      <FirstSourceCelebration connectedTypes={connectedTypes} ready={signedIn} />
+
+      <ConnectorBrowser
+        entries={catalog}
+        filters={filters}
+        onFiltersChange={setFilters}
+        featured={STARTER_IDS}
+        renderFeatured={(type) => (
+          <Fragment key={type}>
+            {CONNECTORS[type]({ featured: true, benefit: i18n._(STARTER_BENEFIT[type]) })}
+          </Fragment>
+        )}
+        hero={
+          mcp.phase === McpPhase.READY
+            ? (searchFor) => (
+                <BringAnyTool onAdd={mcp.addServer} onSearch={mcp.registryAvailable ? searchFor : null} />
+              )
+            : null
+        }
+        trailing={mcp.phase === McpPhase.READY ? mcp.addTile() : mcp.placeholder}
+        moreResults={mcp.registry}
+        searchPlaceholder={registryAsked && mcp.registryAvailable ? t`Search any tool or MCP server` : ""}
+      />
+      {mcp.overlays}
+    </Page>
   );
 }

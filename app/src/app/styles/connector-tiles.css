@@ -151,7 +151,7 @@
      the reason someone picks this provider at all — and in muted grey on a grey
      tint it was the least prominent thing in the row. Green/amber/red stay
      reserved for state in the foot (DESIGN.md, the accent rule). */
-  color: var(--primary);
+  color: var(--brand);
   border-color: color-mix(in oklch, var(--primary) 35%, transparent);
   background: color-mix(in oklch, var(--primary) 12%, transparent);
 }

@@ -213,7 +213,7 @@ async def fetch_connector_payload(
             raise HTTPException(status_code=422, detail="ga4_property_id is required when GA4 is selected.")
         if not token:
             raise HTTPException(
-                status_code=422, detail="Google Analytics is not connected. Connect it on the Connections page."
+                status_code=422, detail="Google Analytics is not connected. Connect it in the Toolbox."
             )
         if not ga_client_id or not ga_client_secret:
             raise HTTPException(
@@ -247,7 +247,7 @@ async def fetch_connector_payload(
             raise HTTPException(status_code=422, detail="gsc_site_url is required when GSC is selected.")
         if not token:
             raise HTTPException(
-                status_code=422, detail="Search Console is not connected. Connect it on the Connections page."
+                status_code=422, detail="Search Console is not connected. Connect it in the Toolbox."
             )
         if not ga_client_id or not ga_client_secret:
             raise HTTPException(

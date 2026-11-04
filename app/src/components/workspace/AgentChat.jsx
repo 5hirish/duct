@@ -70,7 +70,7 @@ function SendErrorBubble({ text, content, code = "", onRetry, retryable = true }
           <p className="text-xs text-destructive/80">{errorText(i18n, text)}</p>
         </div>
         {action === ErrorAction.SETTINGS && <Link href="/settings/models" className={link}><Trans>Open model settings →</Trans></Link>}
-        {action === ErrorAction.CONNECTIONS && <Link href="/connections" className={link}><Trans>Open connections →</Trans></Link>}
+        {action === ErrorAction.CONNECTIONS && <Link href="/connections" className={link}><Trans>Open the Toolbox →</Trans></Link>}
         {action === ErrorAction.RETRY && content && onRetry && retryable && (
           <button type="button" onClick={() => onRetry(content)} className={link}>
             <Trans>↺ Retry</Trans>
@@ -121,7 +121,7 @@ function ThinkingBlock({ thinking, streaming, startedAt, endedAt }) {
         <span>
           {running ? (
             seconds !== null ? <Trans>Thinking · {seconds}s</Trans> : <Trans>Thinking…</Trans>
-          ) : seconds !== null ? (
+          ) : seconds ? (
             <Trans>Thought for {seconds}s</Trans>
           ) : (
             <Trans>Reasoning</Trans>
@@ -440,7 +440,7 @@ function FailedAction({ action, retryable, onRetry, retryLabel, onStartFresh }) 
     case ErrorAction.SETTINGS:
       return <Link href="/settings/models" className={button}><Trans>Open model settings</Trans></Link>;
     case ErrorAction.CONNECTIONS:
-      return <Link href="/connections" className={button}><Trans>Open connections</Trans></Link>;
+      return <Link href="/connections" className={button}><Trans>Open the Toolbox</Trans></Link>;
     case ErrorAction.FRESH:
       if (onStartFresh) return <button type="button" onClick={onStartFresh} className={button}><Trans>Start a fresh conversation</Trans></button>;
       return null;
@@ -734,7 +734,7 @@ export default function AgentChat({
           waiting ? "border-warning/70 bg-warning/5" : "border-border/60"
         }`}
       >
-        <span className="text-sm font-medium">{titleText}</span>
+        <span className="shrink-0 text-sm font-medium">{titleText}</span>
         {waiting && (
           <span className="relative flex size-2" aria-hidden="true">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75" />
@@ -750,13 +750,13 @@ export default function AgentChat({
         <span
           role="status"
           aria-live="polite"
-          className={`text-xs ${
+          className={`min-w-0 truncate text-xs ${
             waiting ? "text-warning font-medium" : isFailed ? "text-destructive" : "text-muted-foreground"
           } ${status.pulse && !waiting && !working ? "animate-pulse" : ""}`}
         >
-          — {statusLabel}
+          {statusLabel}
         </span>
-        <span className="ml-auto flex items-center gap-2">
+        <span className="ml-auto flex shrink-0 items-center gap-2">
           {headerExtra}
           {tierStepDown && (
             <span

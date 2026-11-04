@@ -10,9 +10,10 @@
 import {
   NEEDS_YOU, FOUND, IN_PROGRESS,
   buildDesk, routeMemory, routeChangeSet, routeConversation,
-  certainty, artifactLook, pinnedFirst, relativeTime, headline,
-  HEADLINE_NEEDS_YOU, HEADLINE_CLEAR, HEADLINE_NOTHING,
+  certainty, artifactLook, pinnedFirst, relativeTime,
+  arrangeDesk, sameFinding, DESK_STATE, QUEUE_LIMIT, NOTES_LIMIT,
 } from "../src/lib/desk.js";
+import { DESK_SCENARIOS, deskScenario, randomDesk } from "../src/lib/__fixtures__/deskScenarios.mjs";
 
 const NOW = Date.parse("2026-09-01T12:00:00Z");
 const ago = (ms) => new Date(NOW - ms).toISOString();
@@ -102,16 +103,52 @@ check("under a minute is the caller's word, not a number", at(20e3), "");
 check("a clock skew never reads as the future", relativeTime(new Date(NOW + 5e3).toISOString(), { now: NOW, locale: "en" }), "");
 check("no timestamp, no guess", relativeTime("", { now: NOW }), "");
 
-// --- the headline's facts ---------------------------------------------------
-check("something needing you is the sentence, with its count",
-  headline({ needsYou: 1, lastRunAt: ago(60e3), sourceCount: 3 }),
-  { state: HEADLINE_NEEDS_YOU, needsYou: 1, found: 0, hasRun: true, lastRunAt: ago(60e3), sourceCount: 3 });
-check("a clear desk says so",
-  headline({ needsYou: 0, found: 4, lastRunAt: ago(60e3), sourceCount: 3 }).state,
-  HEADLINE_CLEAR);
-check("a zero is never reported as a result",
-  headline({ needsYou: 0, found: 0, sourceCount: 0 }),
-  { state: HEADLINE_NOTHING, needsYou: 0, found: 0, hasRun: false, lastRunAt: "", sourceCount: 0 });
+// --- the arrangement --------------------------------------------------------
+// The page's shape is fixed whatever the agent wrote: these hold it there.
+const states = Object.fromEntries(
+  DESK_SCENARIOS.map((sc) => [sc.id, arrangeDesk(deskScenario(sc.id, { now: NOW }), { now: NOW }).state])
+);
+check("each scenario lands in the state it was written for", states, {
+  "first-check": DESK_STATE.WORKING, "one-thing": DESK_STATE.NEEDS_YOU, busy: DESK_STATE.NEEDS_YOU,
+  "all-clear": DESK_STATE.CLEAR, "all-clear-empty": DESK_STATE.CLEAR, stale: DESK_STATE.STALE,
+  "long-and-foreign": DESK_STATE.NEEDS_YOU, repeats: DESK_STATE.NEEDS_YOU, disconnected: DESK_STATE.CONNECT,
+});
+{
+  const stale = arrangeDesk(deskScenario("stale", { now: NOW }), { now: NOW });
+  check("six weeks away: nothing old is shown as news", [stale.lead, stale.rows.length, stale.notes.length], [null, 0, 0]);
+  check("...and what was put away is counted", stale.filed.length, 7);
+}
+{
+  const repeats = arrangeDesk(deskScenario("repeats", { now: NOW }), { now: NOW });
+  const all = [repeats.lead, ...repeats.rows];
+  check("one fact said three ways is one item", all.find((i) => i.type === "memory").copies, 3);
+  check("one thread opened twice is one item", all.find((i) => i.type === "conversation").copies, 2);
+  check("same words, different numbers stay two notes", repeats.notes.length, 2);
+}
+check("restatements merge", sameFinding(
+  { title: "Inconsistent conversion definitions across landing pages invalidate comparisons" },
+  { title: "Inconsistent conversion event definitions distort landing page performance" }), true);
+check("different numbers veto a merge", sameFinding(
+  { title: "Organic sessions fell 12% week over week" }, { title: "Organic sessions fell 8% week over week" }), false);
+check("a stored subject decides over the words", sameFinding(
+  { title: "a", subject: "metric|ga4:sessions||week", hasSubject: true },
+  { title: "b", subject: "metric|ga4:sessions||week", hasSubject: true }), true);
+{
+  // 1,000 seeded random desks across every axis: the bounds never move.
+  const broken = [];
+  for (let seed = 1; seed <= 1000; seed += 1) {
+    const a = arrangeDesk(randomDesk(seed, { now: NOW }), { now: NOW });
+    const shown = [a.lead, ...a.rows, ...a.notes].filter(Boolean);
+    const ids = shown.map((i) => i.id);
+    if (a.rows.length > QUEUE_LIMIT || a.notes.length > NOTES_LIMIT) broken.push(`${seed}: over the limit`);
+    if (new Set(ids).size !== ids.length) broken.push(`${seed}: an item shown twice`);
+    if (a.lead && a.state !== DESK_STATE.NEEDS_YOU) broken.push(`${seed}: a lead item in state ${a.state}`);
+    if (a.state === DESK_STATE.NEEDS_YOU && !a.lead) broken.push(`${seed}: needs you with nothing leading`);
+    if (a.waiting !== (a.lead ? 1 : 0) + a.rows.length + a.more.length) broken.push(`${seed}: the headline count disagrees with the queue`);
+    if (!Object.values(DESK_STATE).includes(a.state)) broken.push(`${seed}: unknown state ${a.state}`);
+  }
+  check("1,000 random desks keep the shape", broken.slice(0, 5), []);
+}
 
 let failed = 0;
 for (const { name, got, want } of cases) {

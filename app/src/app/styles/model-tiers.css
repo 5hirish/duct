@@ -123,7 +123,7 @@
 .mt-setup {
   padding: 1.125rem 1.25rem;
   border: 1px solid color-mix(in oklch, var(--primary) 22%, var(--border));
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   background:
     linear-gradient(
       180deg,
@@ -171,6 +171,10 @@
    pair of <span>s would not. */
 .mt-setup-list {
   display: grid;
+  /* minmax(0, 1fr), not the implicit `auto` track: an auto track grows to
+     its widest row's min-content, and the picker rows pushed it past a
+     phone's edge. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.3125rem;
   margin: 0.875rem 0 0;
 }
@@ -226,6 +230,20 @@
 .mt-setup-row--aside dd {
   flex: 1 1 auto;
   max-width: 22rem;
+}
+
+/* The picker fills the row and truncates its label, rather than keeping its
+   whole "Auto — whichever key can draw" on one line and pushing the page
+   56px past a phone's edge (2026-11-02 audit). */
+.mt-setup-row--aside dd > button {
+  width: 100%;
+  min-width: 0;
+}
+
+.mt-setup-row--aside .mt-selected {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* A tier that cannot run, struck through in the same language the chain uses
