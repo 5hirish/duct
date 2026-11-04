@@ -30,7 +30,7 @@ from service.connector_store import upsert_credential
 from service.credentials import decrypt_credentials, encrypt_credentials
 from service.mcp.oauth import AUTH_KEY, AUTH_NONE, AUTH_OAUTH, ClientRegistration, Tokens
 from service.mcp.presets import preset_for_url
-from utils.dates import utcnow
+from utils.dates import now_iso, utcnow
 from utils.strings import slugify
 
 logger = logging.getLogger(__name__)
@@ -53,9 +53,25 @@ ISSUER = "issuer"
 # Set when a refresh is refused: nothing works until the user signs in again,
 # and the Connections page says so without a round trip to the server.
 NEEDS_REAUTH = "needs_reauth"
+# Why the server needs its owner, for the card's "Needs attention" line.
+# Written by the client (``client.py``) when a listing fails or a refresh is
+# refused, cleared by the next call that works or by a reconnect, which
+# replaces the blob. Beside NEEDS_REAUTH rather than in a column because it
+# changes when the credentials do, and the listing already reads them. Unlike
+# NEEDS_REAUTH it stops nothing: a server that was down at 3am is asked again.
+PROBLEM = "problem"
+PROBLEM_AT = "problem_at"
+PROBLEM_SIGNED_OUT = "signed_out"  # the sign-in expired or was revoked
+PROBLEM_KEY_REFUSED = "key_refused"
+PROBLEM_AUTH_REQUIRED = "auth_required"  # connected with no sign-in, now wants one
+PROBLEM_UNREADABLE = "unreadable"  # the saved blob no longer decrypts
+PROBLEM_UNREACHABLE = "unreachable"
+PROBLEM_FAILING = "failing"  # it answers, with an error
+_REAUTH_PROBLEMS = frozenset({PROBLEM_SIGNED_OUT, PROBLEM_KEY_REFUSED, PROBLEM_AUTH_REQUIRED, PROBLEM_UNREADABLE})
 
 STATUS_CONNECTED = "connected"
-STATUS_NEEDS_REAUTH = "needs_reauth"
+STATUS_NEEDS_REAUTH = "needs_reauth"  # only the person can fix it: sign in, or a new key
+STATUS_FAILING = "failing"  # nothing to fix on our side yet; the server is down or erring
 
 
 @dataclass(frozen=True)
@@ -142,6 +158,26 @@ def with_tokens(credentials: dict, tokens: Tokens) -> dict:
     }
 
 
+def with_problem(credentials: dict, problem: str) -> dict:
+    return {**credentials, PROBLEM: problem, PROBLEM_AT: now_iso()}
+
+
+def without_problem(credentials: dict) -> dict:
+    return {k: v for k, v in credentials.items() if k not in (PROBLEM, PROBLEM_AT)}
+
+
+def problem_of(credentials: dict) -> str:
+    """The recorded reason, or "signed_out" for a blob flagged before reasons
+    were recorded, or "" when nothing is wrong."""
+    return str(credentials.get(PROBLEM) or (PROBLEM_SIGNED_OUT if credentials.get(NEEDS_REAUTH) else ""))
+
+
+def status_of(problem: str) -> str:
+    if not problem:
+        return STATUS_CONNECTED
+    return STATUS_NEEDS_REAUTH if problem in _REAUTH_PROBLEMS else STATUS_FAILING
+
+
 def default_name(url: str) -> str:
     preset = preset_for_url(url)
     if preset:
@@ -177,7 +213,7 @@ def _readable(row: ConnectorCredential) -> dict:
         return decrypt_credentials(row.credentials_enc)
     except Exception:  # noqa: BLE001 — decrypt raises an HTTPException on a bad token
         logger.warning("mcp: server %s no longer decrypts", row.id)
-        return {AUTH: AUTH_OAUTH, NEEDS_REAUTH: True}
+        return {AUTH: AUTH_OAUTH, NEEDS_REAUTH: True, PROBLEM: PROBLEM_UNREADABLE}
 
 
 def _rows(db: Session, user_id: UUID) -> list[ConnectorCredential]:
@@ -199,6 +235,7 @@ def list_servers(db: Session, user_id: UUID) -> list[dict]:
     for row in sorted(rows, key=lambda r: (r.created_at, str(r.id))):
         creds = _readable(row)
         preset = preset_for_url(row.account_id)
+        problem = problem_of(creds)
         out.append({
             "id": str(row.id),
             "key": keys[row.id],
@@ -206,7 +243,9 @@ def list_servers(db: Session, user_id: UUID) -> list[dict]:
             "name": row.account_name,
             "preset": preset.id if preset else "",
             "auth": str(creds.get(AUTH) or AUTH_NONE),
-            "status": STATUS_NEEDS_REAUTH if creds.get(NEEDS_REAUTH) else STATUS_CONNECTED,
+            "status": status_of(problem),
+            "problem": problem,
+            "problem_at": creds.get(PROBLEM_AT) if problem else None,
             "last_validated_at": row.last_validated_at.isoformat() if row.last_validated_at else None,
             "created_at": row.created_at.isoformat(),
         })
@@ -261,6 +300,11 @@ def servers_for_user(db: Session, user_id: UUID) -> list[ServerAccess]:
         )
         for row in sorted(rows, key=lambda r: (r.created_at, str(r.id)))
     ]
+
+
+def server_for_user(db: Session, user_id: UUID, row_id: UUID) -> ServerAccess | None:
+    """One of the user's own servers, or None for anyone else's."""
+    return next((s for s in servers_for_user(db, user_id) if s.row_id == row_id), None)
 
 
 def has_servers(db: Session, user_id: UUID) -> bool:

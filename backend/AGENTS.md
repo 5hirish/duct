@@ -594,7 +594,7 @@ Postgres `DATABASE_URL` names.
   identical across every other audit.
 - `service/mcp/` + `routes/mcp_servers.py` + `agents/core/mcp_tools.py` —
   MCP servers a user connects (issue #345). Duct is the *client* here; Duct as
-  a server is #197. Six rules, each held by `tests/test_mcp_*.py`:
+  a server is #197. Eight rules, each held by `tests/test_mcp_*.py`:
   - **Our runtime, not the provider's.** Anthropic's `mcp_servers` and
     OpenAI's Responses `mcp` tool serve only their own models, so the client
     is the reference `mcp` SDK (2.x) in-process, the capability rule above,
@@ -626,6 +626,18 @@ Postgres `DATABASE_URL` names.
   - **Every request goes to a public https address**, redirects included:
     `service/mcp/http.guarded_client` runs the crawl fetcher's resolved-address
     check. No stdio servers on the hosted API.
+  - **The registry is searched, never trusted.** `service/mcp/registry.py`
+    reads the MCP Registry (`MCP_REGISTRY_URL`, empty turns it off) and says
+    who runs each server from the name its publisher proved: a reverse-DNS
+    namespace that owns the host, or a GitHub login naming its site.
+    Official means that and the site is the tool searched for. A server
+    connected from it is a server added by address: every call asks first.
+  - **A server says why it needs its owner.** A failed listing or a refused
+    refresh records `store.PROBLEM` in the blob (signed out, key refused, not
+    answering…); any call that works clears it, a reconnect replaces it. A
+    failed tool call records nothing, because a slow job or one tool's 403
+    says nothing about the server. `POST /servers/{id}/check` is the
+    listing on demand.
   - **Two fixed agent tools, never one per server tool.** `ListConnectedTools`
     (a menu, then one tool's schema on request) and `CallConnectedTool`; a
     call that asks first pauses on `TOOL_APPROVAL_REQUIRED`. Insights
