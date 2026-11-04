@@ -1515,6 +1515,10 @@ msgstr ""
 msgid "App secret"
 msgstr ""
 
+#: src/components/AppSidebar.jsx
+msgid "Appearance"
+msgstr ""
+
 #: src/app/(app)/connections/page.jsx
 #: src/components/connections/logos.jsx
 msgid "Apple Search Ads"
@@ -2961,8 +2965,12 @@ msgid "Daily reminder"
 msgstr ""
 
 #: src/components/AppSidebar.jsx
-msgid "Dark mode"
+msgid "Dark"
 msgstr ""
+
+#: src/components/AppSidebar.jsx
+#~ msgid "Dark mode"
+#~ msgstr ""
 
 #: src/components/insights/desk/DeskLists.jsx
 #: src/components/insights/InsightsWorkspace.jsx
@@ -2986,8 +2994,12 @@ msgid "Dates"
 msgstr ""
 
 #: src/app/(app)/settings/profile/page.jsx
-msgid "Dates resolve in UTC{offsetSuffix}. Pick your zone so \"last week\" means your week."
+msgid "Dates resolve in UTC. Pick your zone so \"last week\" means your week."
 msgstr ""
+
+#: src/app/(app)/settings/profile/page.jsx
+#~ msgid "Dates resolve in UTC{offsetSuffix}. Pick your zone so \"last week\" means your week."
+#~ msgstr ""
 
 #: src/components/content/PostCard.jsx
 msgid "Day {dayNumber}"
@@ -3452,8 +3464,12 @@ msgid "Duct posts through the OS — open System Settings to turn them on or off
 msgstr ""
 
 #: src/app/(app)/settings/profile/page.jsx
-msgid "Duct reads \"last week\" and \"yesterday\" in {chosenZone}{offsetSuffix}."
+msgid "Duct reads \"last week\" and \"yesterday\" in {chosenZone}."
 msgstr ""
+
+#: src/app/(app)/settings/profile/page.jsx
+#~ msgid "Duct reads \"last week\" and \"yesterday\" in {chosenZone}{offsetSuffix}."
+#~ msgstr ""
 
 #: src/components/onboarding/FrontDoor.jsx
 msgid "Duct reads it the way a search engine does."
@@ -3661,8 +3677,8 @@ msgid "Empty dataset."
 msgstr ""
 
 #: src/components/AppSidebar.jsx
-msgid "Enable notifications"
-msgstr ""
+#~ msgid "Enable notifications"
+#~ msgstr ""
 
 #: src/lib/credentialStorage.js
 msgid "Encrypted on Duct's servers, so any device — and any report that runs while you are away — can use it."
@@ -4431,6 +4447,10 @@ msgstr ""
 msgid "held in this machine’s keychain"
 msgstr ""
 
+#: src/app/(app)/settings/profile/page.jsx
+msgid "Helps Duct fit its answers to your job"
+msgstr ""
+
 #: src/app/(app)/execute/page.jsx
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "Hide"
@@ -4940,6 +4960,7 @@ msgstr ""
 msgid "Lifecycle/CRM"
 msgstr ""
 
+#: src/components/AppSidebar.jsx
 #: src/lib/modelTiers.js
 msgid "Light"
 msgstr ""
@@ -4949,8 +4970,8 @@ msgid "Light — the cheap one"
 msgstr ""
 
 #: src/components/AppSidebar.jsx
-msgid "Light mode"
-msgstr ""
+#~ msgid "Light mode"
+#~ msgstr ""
 
 #: src/components/content/AnalyticsView.jsx
 #: src/components/content/PostMetricsForm.jsx
@@ -6040,8 +6061,8 @@ msgid "Not saved to your account. It is kept on this device; try again in a mome
 msgstr ""
 
 #: src/lib/userProfile.js
-msgid "Not saying"
-msgstr ""
+#~ msgid "Not saying"
+#~ msgstr ""
 
 #: src/components/content/PostViewport.jsx
 msgid "Not scheduled"
@@ -6215,8 +6236,8 @@ msgid "Nothing yet. Set your preferences from the sidebar, or add a rule here �
 msgstr ""
 
 #: src/components/AppSidebar.jsx
-msgid "Notification settings"
-msgstr ""
+#~ msgid "Notification settings"
+#~ msgstr ""
 
 #: src/components/AppSidebar.jsx
 msgid "Notifications"
@@ -6231,8 +6252,8 @@ msgid "Numbers arrive once posts go out through PostBridge and the accounts are 
 msgstr ""
 
 #: src/components/AppSidebar.jsx
-msgid "Off"
-msgstr ""
+#~ msgid "Off"
+#~ msgstr ""
 
 #: src/components/TelemetryCard.jsx
 msgid "Off by default — Duct runs its backend here, and nothing leaves unless you say so."
@@ -9840,6 +9861,10 @@ msgstr ""
 #: src/app/(app)/audit/seo/page.jsx
 #~ msgid "Turn off to audit a different business or competitor — only the fields below are used."
 #~ msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "Turn on notifications"
+msgstr ""
 
 #: src/components/onboarding/FrontDoor.jsx
 #~ msgid "Type your address — that’s the whole setup. Duct reads your site the way a search engine does, then tells you what to fix first."

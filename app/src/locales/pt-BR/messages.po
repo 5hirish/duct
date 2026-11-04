@@ -1521,6 +1521,10 @@ msgstr "Apify está conectado. Posts que você salva no Discover moldam os tópi
 msgid "App secret"
 msgstr "Segredo do app"
 
+#: src/components/AppSidebar.jsx
+msgid "Appearance"
+msgstr "Aparência"
+
 #: src/app/(app)/connections/page.jsx
 #: src/components/connections/logos.jsx
 msgid "Apple Search Ads"
@@ -2967,8 +2971,12 @@ msgid "Daily reminder"
 msgstr "Lembrete diário"
 
 #: src/components/AppSidebar.jsx
-msgid "Dark mode"
-msgstr "Modo escuro"
+msgid "Dark"
+msgstr "Escuro"
+
+#: src/components/AppSidebar.jsx
+#~ msgid "Dark mode"
+#~ msgstr "Modo escuro"
 
 #: src/components/insights/desk/DeskLists.jsx
 #: src/components/insights/InsightsWorkspace.jsx
@@ -2992,8 +3000,12 @@ msgid "Dates"
 msgstr "Datas"
 
 #: src/app/(app)/settings/profile/page.jsx
-msgid "Dates resolve in UTC{offsetSuffix}. Pick your zone so \"last week\" means your week."
-msgstr "As datas são resolvidas em UTC{offsetSuffix}. Escolha seu fuso horário para que \"semana passada\" signifique sua semana."
+msgid "Dates resolve in UTC. Pick your zone so \"last week\" means your week."
+msgstr "Datas são resolvidas em UTC. Escolha seu fuso horário para que \"semana passada\" signifique a sua semana."
+
+#: src/app/(app)/settings/profile/page.jsx
+#~ msgid "Dates resolve in UTC{offsetSuffix}. Pick your zone so \"last week\" means your week."
+#~ msgstr "As datas são resolvidas em UTC{offsetSuffix}. Escolha seu fuso horário para que \"semana passada\" signifique sua semana."
 
 #: src/components/content/PostCard.jsx
 msgid "Day {dayNumber}"
@@ -3458,8 +3470,12 @@ msgid "Duct posts through the OS — open System Settings to turn them on or off
 msgstr "Duct envia notificações pelo SO — abra as Configurações do Sistema para ativá-las ou desativá-las"
 
 #: src/app/(app)/settings/profile/page.jsx
-msgid "Duct reads \"last week\" and \"yesterday\" in {chosenZone}{offsetSuffix}."
-msgstr "Duct lê \"semana passada\" e \"ontem\" em {chosenZone}{offsetSuffix}."
+msgid "Duct reads \"last week\" and \"yesterday\" in {chosenZone}."
+msgstr "Duct lê \"semana passada\" e \"ontem\" em {chosenZone}."
+
+#: src/app/(app)/settings/profile/page.jsx
+#~ msgid "Duct reads \"last week\" and \"yesterday\" in {chosenZone}{offsetSuffix}."
+#~ msgstr "Duct lê \"semana passada\" e \"ontem\" em {chosenZone}{offsetSuffix}."
 
 #: src/components/onboarding/FrontDoor.jsx
 msgid "Duct reads it the way a search engine does."
@@ -3667,8 +3683,8 @@ msgid "Empty dataset."
 msgstr "Conjunto de dados vazio."
 
 #: src/components/AppSidebar.jsx
-msgid "Enable notifications"
-msgstr "Ativar notificações"
+#~ msgid "Enable notifications"
+#~ msgstr "Ativar notificações"
 
 #: src/lib/credentialStorage.js
 msgid "Encrypted on Duct's servers, so any device — and any report that runs while you are away — can use it."
@@ -4437,6 +4453,10 @@ msgstr "mantido para esta sessão do navegador"
 msgid "held in this machine’s keychain"
 msgstr "mantido no chaveiro desta máquina"
 
+#: src/app/(app)/settings/profile/page.jsx
+msgid "Helps Duct fit its answers to your job"
+msgstr "Ajuda Duct a adaptar suas respostas ao seu trabalho"
+
 #: src/app/(app)/execute/page.jsx
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "Hide"
@@ -4946,6 +4966,7 @@ msgstr "Biblioteca"
 msgid "Lifecycle/CRM"
 msgstr "Ciclo de vida/CRM"
 
+#: src/components/AppSidebar.jsx
 #: src/lib/modelTiers.js
 msgid "Light"
 msgstr "Leve"
@@ -4955,8 +4976,8 @@ msgid "Light — the cheap one"
 msgstr "Leve — o mais barato"
 
 #: src/components/AppSidebar.jsx
-msgid "Light mode"
-msgstr "Modo claro"
+#~ msgid "Light mode"
+#~ msgstr "Modo claro"
 
 #: src/components/content/AnalyticsView.jsx
 #: src/components/content/PostMetricsForm.jsx
@@ -6046,8 +6067,8 @@ msgid "Not saved to your account. It is kept on this device; try again in a mome
 msgstr "Não salvo em sua conta. É mantido neste dispositivo; tente novamente em um momento."
 
 #: src/lib/userProfile.js
-msgid "Not saying"
-msgstr "Não dizendo"
+#~ msgid "Not saying"
+#~ msgstr "Não dizendo"
 
 #: src/components/content/PostViewport.jsx
 msgid "Not scheduled"
@@ -6221,8 +6242,8 @@ msgid "Nothing yet. Set your preferences from the sidebar, or add a rule here �
 msgstr "Nada ainda. Defina suas preferências na barra lateral, ou adicione uma regra aqui — 'me dê o número primeiro, depois o porquê' é um bom começo."
 
 #: src/components/AppSidebar.jsx
-msgid "Notification settings"
-msgstr "Configurações de notificação"
+#~ msgid "Notification settings"
+#~ msgstr "Configurações de notificação"
 
 #: src/components/AppSidebar.jsx
 msgid "Notifications"
@@ -6237,8 +6258,8 @@ msgid "Numbers arrive once posts go out through PostBridge and the accounts are 
 msgstr "Os números chegam assim que os posts são publicados via PostBridge e as contas são vinculadas."
 
 #: src/components/AppSidebar.jsx
-msgid "Off"
-msgstr "Desativado"
+#~ msgid "Off"
+#~ msgstr "Desativado"
 
 #: src/components/TelemetryCard.jsx
 msgid "Off by default — Duct runs its backend here, and nothing leaves unless you say so."
@@ -9846,6 +9867,10 @@ msgstr "Tentar novamente não vai resolver. Conecte o GitHub com um token fine-g
 #: src/app/(app)/audit/seo/page.jsx
 #~ msgid "Turn off to audit a different business or competitor — only the fields below are used."
 #~ msgstr "Desative para auditar um negócio ou concorrente diferente — apenas os campos abaixo são usados."
+
+#: src/components/AppSidebar.jsx
+msgid "Turn on notifications"
+msgstr "Ativar notificações"
 
 #: src/components/onboarding/FrontDoor.jsx
 #~ msgid "Type your address — that’s the whole setup. Duct reads your site the way a search engine does, then tells you what to fix first."

@@ -27,6 +27,9 @@ export function AuthProvider({ children }) {
       setUser({
         email: payload.sub,
         name: payload.name,
+        // Absent on a token minted before the claim existed; firstName() in
+        // lib/userProfile.js falls back to the first word of `name`.
+        givenName: payload.given_name || "",
         picture: payload.picture,
         // A guest holds a real token for a real row (lib/guest.js); this is
         // what lets the shell say "save your work" instead of an email

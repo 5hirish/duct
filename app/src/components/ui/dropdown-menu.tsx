@@ -237,7 +237,8 @@ function DropdownMenuSubTrigger({
       {...props}
     >
       {children}
-      <ChevronRightIcon className="ml-auto size-4" />
+      {/* Muted: the chevron says "opens", and the row's words come first. */}
+      <ChevronRightIcon className="ml-auto size-4 text-muted-foreground" />
     </DropdownMenuPrimitive.SubTrigger>
   )
 }

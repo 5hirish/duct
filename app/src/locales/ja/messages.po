@@ -1521,6 +1521,10 @@ msgstr "Apify が接続されました。Discover で保存した投稿がプラ
 msgid "App secret"
 msgstr "アプリシークレット"
 
+#: src/components/AppSidebar.jsx
+msgid "Appearance"
+msgstr "外観"
+
 #: src/app/(app)/connections/page.jsx
 #: src/components/connections/logos.jsx
 msgid "Apple Search Ads"
@@ -2967,8 +2971,12 @@ msgid "Daily reminder"
 msgstr "毎日のリマインダー"
 
 #: src/components/AppSidebar.jsx
-msgid "Dark mode"
-msgstr "ダークモード"
+msgid "Dark"
+msgstr "ダーク"
+
+#: src/components/AppSidebar.jsx
+#~ msgid "Dark mode"
+#~ msgstr "ダークモード"
 
 #: src/components/insights/desk/DeskLists.jsx
 #: src/components/insights/InsightsWorkspace.jsx
@@ -2992,8 +3000,12 @@ msgid "Dates"
 msgstr "日付"
 
 #: src/app/(app)/settings/profile/page.jsx
-msgid "Dates resolve in UTC{offsetSuffix}. Pick your zone so \"last week\" means your week."
-msgstr "日付はUTC{offsetSuffix}で解決されます。「先週」があなたの週を意味するように、タイムゾーンを選択してください。"
+msgid "Dates resolve in UTC. Pick your zone so \"last week\" means your week."
+msgstr "日付はUTCで解決されます。「先週」があなたの週を意味するよう、タイムゾーンを選択してください。"
+
+#: src/app/(app)/settings/profile/page.jsx
+#~ msgid "Dates resolve in UTC{offsetSuffix}. Pick your zone so \"last week\" means your week."
+#~ msgstr "日付はUTC{offsetSuffix}で解決されます。「先週」があなたの週を意味するように、タイムゾーンを選択してください。"
 
 #: src/components/content/PostCard.jsx
 msgid "Day {dayNumber}"
@@ -3458,8 +3470,12 @@ msgid "Duct posts through the OS — open System Settings to turn them on or off
 msgstr "DuctはOSを介して投稿します。オン/オフはシステム設定で切り替えてください。"
 
 #: src/app/(app)/settings/profile/page.jsx
-msgid "Duct reads \"last week\" and \"yesterday\" in {chosenZone}{offsetSuffix}."
-msgstr "Ductは{chosenZone}{offsetSuffix}で「先週」と「昨日」を読み取ります。"
+msgid "Duct reads \"last week\" and \"yesterday\" in {chosenZone}."
+msgstr "Ductは{chosenZone}で「先週」と「昨日」を読み取ります。"
+
+#: src/app/(app)/settings/profile/page.jsx
+#~ msgid "Duct reads \"last week\" and \"yesterday\" in {chosenZone}{offsetSuffix}."
+#~ msgstr "Ductは{chosenZone}{offsetSuffix}で「先週」と「昨日」を読み取ります。"
 
 #: src/components/onboarding/FrontDoor.jsx
 msgid "Duct reads it the way a search engine does."
@@ -3667,8 +3683,8 @@ msgid "Empty dataset."
 msgstr "空のデータセット。"
 
 #: src/components/AppSidebar.jsx
-msgid "Enable notifications"
-msgstr "通知を有効にする"
+#~ msgid "Enable notifications"
+#~ msgstr "通知を有効にする"
 
 #: src/lib/credentialStorage.js
 msgid "Encrypted on Duct's servers, so any device — and any report that runs while you are away — can use it."
@@ -4437,6 +4453,10 @@ msgstr "このブラウザセッション中に保持されます"
 msgid "held in this machine’s keychain"
 msgstr "このマシンのキーチェーンに保持されます"
 
+#: src/app/(app)/settings/profile/page.jsx
+msgid "Helps Duct fit its answers to your job"
+msgstr "Ductがあなたの仕事に合った回答をするのに役立ちます。"
+
 #: src/app/(app)/execute/page.jsx
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "Hide"
@@ -4946,6 +4966,7 @@ msgstr "ライブラリ"
 msgid "Lifecycle/CRM"
 msgstr "ライフサイクル/CRM"
 
+#: src/components/AppSidebar.jsx
 #: src/lib/modelTiers.js
 msgid "Light"
 msgstr "ライト"
@@ -4955,8 +4976,8 @@ msgid "Light — the cheap one"
 msgstr "ライト — 安価なプラン"
 
 #: src/components/AppSidebar.jsx
-msgid "Light mode"
-msgstr "ライトモード"
+#~ msgid "Light mode"
+#~ msgstr "ライトモード"
 
 #: src/components/content/AnalyticsView.jsx
 #: src/components/content/PostMetricsForm.jsx
@@ -6046,8 +6067,8 @@ msgid "Not saved to your account. It is kept on this device; try again in a mome
 msgstr "アカウントに保存されていません。このデバイスに保存されています。しばらくしてからもう一度お試しください。"
 
 #: src/lib/userProfile.js
-msgid "Not saying"
-msgstr "未指定"
+#~ msgid "Not saying"
+#~ msgstr "未指定"
 
 #: src/components/content/PostViewport.jsx
 msgid "Not scheduled"
@@ -6221,8 +6242,8 @@ msgid "Nothing yet. Set your preferences from the sidebar, or add a rule here �
 msgstr "まだ何もありません。サイドバーから設定を行うか、ここにルールを追加してください。「まず数字を、次に理由を」が良い出発点です。"
 
 #: src/components/AppSidebar.jsx
-msgid "Notification settings"
-msgstr "通知設定"
+#~ msgid "Notification settings"
+#~ msgstr "通知設定"
 
 #: src/components/AppSidebar.jsx
 msgid "Notifications"
@@ -6237,8 +6258,8 @@ msgid "Numbers arrive once posts go out through PostBridge and the accounts are 
 msgstr "投稿がPostBridgeを通じて公開され、アカウントがリンクされると、数値が表示されます。"
 
 #: src/components/AppSidebar.jsx
-msgid "Off"
-msgstr "オフ"
+#~ msgid "Off"
+#~ msgstr "オフ"
 
 #: src/components/TelemetryCard.jsx
 msgid "Off by default — Duct runs its backend here, and nothing leaves unless you say so."
@@ -9846,6 +9867,10 @@ msgstr "もう一度試しても解決しません。代わりにGitHubカード
 #: src/app/(app)/audit/seo/page.jsx
 #~ msgid "Turn off to audit a different business or competitor — only the fields below are used."
 #~ msgstr "別のビジネスや競合他社を監査するにはオフにしてください — 以下のフィールドのみが使用されます。"
+
+#: src/components/AppSidebar.jsx
+msgid "Turn on notifications"
+msgstr "通知をオンにする"
 
 #: src/components/onboarding/FrontDoor.jsx
 #~ msgid "Type your address — that’s the whole setup. Duct reads your site the way a search engine does, then tells you what to fix first."

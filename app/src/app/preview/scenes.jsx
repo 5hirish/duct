@@ -103,7 +103,7 @@ import VoiceSample from "@/components/profile/VoiceSample";
 import { UsageEmpty } from "@/components/models/UsagePanel";
 import { TIERS } from "@/lib/modelTiers";
 import { Button } from "@/components/ui/button";
-import { NotificationRow } from "@/components/AppSidebar";
+import { AccountMenuItems, NotificationRow } from "@/components/AppSidebar";
 import { LanguageMenuItem } from "@/components/LanguageMenu";
 import {
   DropdownMenu,
@@ -2421,7 +2421,7 @@ export const SCENES = [
     state: "all four permission states",
     group: "AppSidebar",
     title: "The notification row, in every state it has",
-    note: "Lives in the user footer menu. Two of these are unreachable from a browser — \"System\" only happens inside the desktop shell, and \"Blocked\" needs a site permission you have to deny by hand — so this is the only place they get looked at. Clickability is the thing to check: \"Off\" asks the browser for permission and \"Notification settings\" opens the OS pane, while \"On\" and \"Blocked\" are statements and are dimmed to say so. The last row is a desktop shell too old to have `open_notification_settings`, or Linux, where there is no single page to open.",
+    note: "Lives in the preferences group of the account menu. Two of these are unreachable from a browser — \"System\" only happens inside the desktop shell, and \"Blocked\" needs a site permission you have to deny by hand — so this is the only place they get looked at. Every state but the first is \"Notifications\" with its value in muted text on the right, the shape Language and Appearance use. Clickability is the thing to check: \"Turn on notifications\" asks the browser, and the \"System\" row with an arrow opens the OS pane, while \"On\" and \"Blocked\" are statements and are dimmed to say so. The last row is a desktop shell too old to have `open_notification_settings`, or Linux, where there is no single page to open.",
     render: () => (
       <DropdownMenu defaultOpen modal={false}>
         <DropdownMenuTrigger asChild>
@@ -2442,7 +2442,7 @@ export const SCENES = [
     state: "sub-menu open on the current language",
     group: "AppSidebar",
     title: "The language row in the account menu",
-    note: "Sits under Profile in the user footer menu. The trigger shows the current language's own name; the sub-menu lists all five as a radio group, each in its own script, so someone who landed in the wrong language can still find theirs. Picking one switches this whole preview, the same way it switches the app: cookie, profile when signed in, then a refresh in place.",
+    note: "Opens the preferences group of the account menu. The trigger shows the current language's own name; the sub-menu lists all five as a radio group, each in its own script, so someone who landed in the wrong language can still find theirs. Picking one switches this whole preview, the same way it switches the app: cookie, profile when signed in, then a refresh in place.",
     render: () => (
       <DropdownMenu defaultOpen modal={false}>
         <DropdownMenuTrigger asChild>
@@ -2450,6 +2450,40 @@ export const SCENES = [
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-64">
           <LanguageMenuItem />
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+  },
+  {
+    id: "account-menu",
+    state: "signed in, open",
+    group: "AppSidebar",
+    title: "The account menu, whole",
+    note: "Five groups in the order people look: you (Profile, Your memory), what runs your work (models, usage, your own agent), how the app looks and talks to you (language, appearance, notifications, cookies), feedback, then Log out alone. Check that every setting shows its current value the same way, muted on the right, and that no row wraps at this width in German. Manage projects is in the project switcher now, beside the projects.",
+    render: () => (
+      <DropdownMenu defaultOpen modal={false}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm">Open the account menu</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-64">
+          <AccountMenuItems onSignOut={() => {}} />
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+  },
+  {
+    id: "account-menu-guest",
+    state: "guest, open",
+    group: "AppSidebar",
+    title: "The account menu for a guest",
+    note: "The same menu with one row in front of it: sign in to keep what the audit made. It is the only thing a guest is missing, so it comes first and stands alone.",
+    render: () => (
+      <DropdownMenu defaultOpen modal={false}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm">Open the account menu</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-64">
+          <AccountMenuItems guest onSignOut={() => {}} />
         </DropdownMenuContent>
       </DropdownMenu>
     ),

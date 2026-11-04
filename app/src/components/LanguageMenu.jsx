@@ -71,8 +71,12 @@ export default function LanguageMenu({ value, compact = false, id, className, on
         aria-label={t`Interface language`}
         className={cn(compact ? "h-8 w-auto gap-1.5 border-0 bg-transparent px-2 shadow-none" : "", className)}
       >
-        <Languages className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-        {compact ? null : <SelectValue />}
+        {/* The icon is the whole trigger in a header, and nothing in a form
+            row. Beside the value it was a third child of a justify-between
+            trigger, so "English" sat centred, and the list, which Radix aligns
+            on the value's text, opened shifted right of the control. The row's
+            label names it, as it does for every other select on the page. */}
+        {compact ? <Languages className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" /> : <SelectValue />}
       </SelectTrigger>
       {/* `popper` for the icon-only trigger, and it is not a preference.
           Radix's default `item-aligned` positions the menu by aligning the
@@ -105,12 +109,14 @@ export function LanguageMenuItem({ value, onChange }) {
 
   return (
     <DropdownMenuSub>
-      <DropdownMenuSubTrigger className="flex items-center justify-between gap-2">
-        <span className="flex items-center gap-2">
+      <DropdownMenuSubTrigger>
+        {/* The label takes the free space, so the value sits against the
+            chevron. Two `ml-auto`s split it and left the value floating. */}
+        <span className="flex flex-1 items-center gap-2">
           <Languages className="size-4 text-muted-foreground" aria-hidden="true" />
           <span><Trans>Language</Trans></span>
         </span>
-        <span className="ml-auto truncate text-xs text-muted-foreground">{label}</span>
+        <span className="truncate text-xs text-muted-foreground">{label}</span>
       </DropdownMenuSubTrigger>
       <DropdownMenuSubContent>
         <DropdownMenuRadioGroup value={current} onValueChange={change}>
