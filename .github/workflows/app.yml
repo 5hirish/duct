@@ -49,7 +49,7 @@ jobs:
           fi
 
       - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ steps.node-version.outputs.value }}
           cache: npm
@@ -95,6 +95,70 @@ jobs:
         run: npm run build
 
   # ---------------------------------------------------------------------------
+  # The page frame, measured in a browser (app/scripts/check-layout.mjs): every
+  # framed screen at a phone, the desktop app's width and a laptop, signed in
+  # against the fixture backend. Fails on a page title out of line with the
+  # others, a page wider than the window, a header status that wraps, and a
+  # row of cards whose footers do not share a baseline — the defects the
+  # 2026-11-02 UI audit found by looking, which no source check can see.
+  # Its own job so the main checks do not wait on a build and a browser.
+  # ---------------------------------------------------------------------------
+  app-layout:
+    name: App layout (browser)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        working-directory: app
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Resolve Node version
+        id: node-version
+        run: |
+          if [ -f .nvmrc ]; then
+            echo "value=$(tr -d '[:space:]' < .nvmrc)" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=20" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: ${{ steps.node-version.outputs.value }}
+          cache: npm
+          cache-dependency-path: |
+            app/package-lock.json
+            site/package-lock.json
+
+      - name: Install dependencies (app, and site for Playwright)
+        run: |
+          npm ci
+          npm --prefix ../site ci
+
+      - name: Install Playwright browser
+        run: npx --prefix ../site playwright install --with-deps chromium
+
+      # The API base is baked in at build time; the check reroutes it to the
+      # fixture backend it starts, so nothing here reaches a real server.
+      - name: Build app
+        env:
+          NEXT_PUBLIC_API_BASE: http://localhost:8002
+        run: npm run build
+
+      - name: Check the page frame in a browser
+        run: |
+          npx next start -p 3003 > next.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf -o /dev/null http://localhost:3003/ && break
+            sleep 1
+          done
+          npm run check:layout
+
+  # ---------------------------------------------------------------------------
   # Deploy the Worker (OpenNext → wrangler) on merge to main, only after the
   # checks above pass. Replaces the Cloudflare "Workers Builds" git integration,
   # which failed because its Node 20 builder can't run wrangler@4.99 (needs >=22;
@@ -132,7 +196,7 @@ jobs:
           fi
 
       - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: ${{ steps.node-version.outputs.value }}
           cache: npm
@@ -152,15 +216,17 @@ jobs:
           NEXT_PUBLIC_BUILD_ID: ${{ github.sha }}
           NEXT_PUBLIC_API_BASE: ${{ secrets.NEXT_PUBLIC_API_BASE }}
           NEXT_PUBLIC_DUCT_API_KEY: ${{ secrets.NEXT_PUBLIC_DUCT_API_KEY }}
-          NEXT_PUBLIC_GTM_ID: ${{ secrets.NEXT_PUBLIC_GTM_ID }}
           NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ secrets.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
-          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
-          # Without this the Sentry build plugin cannot upload source maps, and
-          # every production stack trace and profile frame in Sentry names a
-          # minified chunk instead of a file. The plugin skips the upload and
-          # carries on when it is absent, which is why this went unnoticed —
-          # nothing failed, the reports were just unreadable.
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          # The public project token (phc_…), a repository variable rather than
+          # a secret because every browser receives it anyway. Unset, the build
+          # measures nothing and reports no errors.
+          NEXT_PUBLIC_POSTHOG_KEY: ${{ vars.POSTHOG_PROJECT_TOKEN }}
+          # Source maps for readable stack traces. Unlike the token this is a
+          # personal key with write access, so it is a secret; unset, the build
+          # skips the upload (next.config.mjs) and the reports name minified
+          # chunks.
+          POSTHOG_PERSONAL_API_KEY: ${{ secrets.POSTHOG_PERSONAL_API_KEY }}
+          POSTHOG_PROJECT_ID: ${{ vars.POSTHOG_PROJECT_ID }}
 
       - name: Deploy to Cloudflare Workers
         run: npx wrangler deploy

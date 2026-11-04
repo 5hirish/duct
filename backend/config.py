@@ -102,6 +102,11 @@ class Configs(BaseSettings):
     # URIs when GOOGLE_OAUTH_REDIRECT_URI / GOOGLE_SIGNIN_REDIRECT_URI are unset.
     api_public_url: str = Field(default="http://localhost:8002")
 
+    # The MCP Registry the Connections search reads (service/mcp/registry.py).
+    # An operator's choice, not a user's, so it may be a private registry on an
+    # internal network. Empty turns the search off and the app hides it.
+    mcp_registry_url: str = Field(default="https://registry.modelcontextprotocol.io")
+
     # Desktop (local) mode: the backend runs as a sidecar on the user's own
     # machine rather than on Railway. Flips the persistence defaults to a
     # per-user SQLite file and a writable data dir — see the model validator
@@ -242,6 +247,8 @@ class Configs(BaseSettings):
     # Accounts; a hosted instance never spends this one, because it is the
     # operator's account and every signup would be publishing through it.
     postbridge_api_key: str = ""
+    # Zernio, the other scheduler (service/zernio/), on the same terms.
+    zernio_api_key: str = ""
 
     # Apify API token, for TikTok discovery (service/apify/). Like PostBridge's:
     # users save their own in Content → Discover, and this one is spent only
@@ -249,13 +256,22 @@ class Configs(BaseSettings):
     # a hosted instance, where it would pay for every signup's scraping.
     apify_api_key: str = ""
 
-    # Which email provider delivers everything: "cloudflare", "resend" or
+    # Which email provider delivers everything: "cloudflare", "smtp" or
     # "console". Empty picks the first one whose credentials are present, and
     # "console" when none are — so local dev, CI and a self-hosted install run
     # every mail flow with no vendor account, logging what they would have sent.
     # See service/email/sender.py; adding a provider does not touch this file.
     email_provider: str = ""
-    resend_api_key: str = ""
+    # SMTP, the open-standard provider (service/email/providers/smtp.py): any
+    # mail server or vendor relay, or Mailpit on :1025 with security "none" to
+    # catch mail locally. Port 0 means the security mode's standard port
+    # (587, 465 or 25). Security is "starttls" (empty means this), "tls" for
+    # implicit TLS, or "none", which is plain text and only for this machine.
+    smtp_host: str = ""
+    smtp_port: int = Field(default=0, ge=0, le=65535)
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_security: str = ""
     # Default From address. Must be on a domain verified with the active
     # provider, otherwise sends are rejected.
     email_from: str = Field(default="noreply@getduct.ai")
@@ -291,7 +307,8 @@ class Configs(BaseSettings):
     anthropic_api_key: str = ""
     # Kill switch for "Continue with ChatGPT" — the desktop shell's sign-in to
     # the user's own ChatGPT plan, which runs on an undocumented backend that
-    # can change without notice. False hides the path in the app; the API-key
+    # can change without notice. False hides the path in the app and the
+    # server ignores a plan token it is sent (service/auth.py); the API-key
     # path is untouched. Read by /api/providers/status.
     chatgpt_auth_enabled: bool = True
     # xAI (Grok), on its own LangChain integration.
@@ -309,30 +326,49 @@ class Configs(BaseSettings):
     # that, because the provider was ChatOpenAI aimed elsewhere; it is now
     # ChatOpenRouter, which speaks OpenRouter's API rather than plain
     # chat-completions. A self-hosted router (LiteLLM, Bifrost, Portkey) or a
-    # local model server (Ollama http://localhost:11434/v1, vLLM, llama.cpp) is
-    # a new GATEWAY_BASE_URL entry in agents/models.py — which takes the
-    # OpenAI-shape branch — plus its own key field here.
+    # model server (vLLM, llama.cpp) is an OpenAI-compatible endpoint, which a
+    # user brings in Settings (Provider.OPENAI_COMPATIBLE). Ollama has a
+    # provider of its own, below.
     openrouter_base_url: str = ""
+    # An Ollama server this instance runs open models on (agents/models.py,
+    # Provider.OLLAMA), e.g. http://localhost:11434. Not a key: whoever sets it
+    # offers that server to every user of the instance. Empty means no Ollama,
+    # and nothing probes for one; the hosted deployment leaves it empty.
+    ollama_base_url: str = ""
+    # The context Duct asks Ollama to load, and the window it budgets a thread
+    # in. Ollama's own default is 4,096 tokens on a machine without a large GPU,
+    # which silently cuts Duct's system prompt and tools short; a model trained
+    # on less is held to its own length. Same name as Ollama's server setting,
+    # because it means the same thing.
+    ollama_context_length: int = Field(default=32_768, ge=4_096, le=1_048_576)
+    # Whether a user's OpenAI-compatible endpoint may be on a private network
+    # (a vLLM box on the LAN, LM Studio on localhost). Off by default because
+    # the address is user input: on a hosted instance it would let anyone aim
+    # Duct at its own internal network. A desktop sidecar and local dev allow
+    # it regardless (``allow_server_provider_keys``); a self-hosted server
+    # whose model server is internal turns this on.
+    private_model_endpoints: bool = False
     # Engine selection. One engine ("v1") since the Claude Agent SDK was
     # removed; the field stays because stored preferences and requests still
     # carry the string.
     generate_engine: str = Field(default="v1")
 
-    # Sentry observability
+    # Product analytics and error tracking (service/analytics.py). No key, no
+    # PostHog: a self-hosted instance measures nothing unless it opts in. A
+    # loopback deployment (a developer, the desktop sidecar) stays quiet even
+    # with a key unless POSTHOG_ENABLE_LOCALHOST says otherwise.
+    posthog_api_key: str = ""
+    posthog_host: str = "https://us.i.posthog.com"
+    posthog_enable_localhost: bool = False
+
+    # Which deployment this is; tags every analytics event and agent trace.
     app_env: str = Field(
         default="local",
         validation_alias=AliasChoices("APP_ENV", "ENVIRONMENT"),
     )
-    sentry_dsn: str = ""
-    sentry_send_default_pii: bool = True
-    sentry_enable_logs: bool = True
-    sentry_traces_sample_rate: float = 1.0
-    sentry_profile_session_sample_rate: float = 1.0
-    sentry_profile_lifecycle: str = "trace"
-    sentry_enable_localhost: bool = False
     # Where the agent's OpenTelemetry spans go (agents/core/telemetry.py).
-    # The standard OTel variable name, so Phoenix locally and a collector in
-    # production are the same setting. Unset means tracing is off.
+    # The standard OTel variable name, so Jaeger locally (scripts/jaeger.sh)
+    # and a collector in production are the same setting. Unset means tracing is off.
     otel_exporter_otlp_endpoint: str = ""
 
     model_config = SettingsConfigDict(

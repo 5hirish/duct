@@ -47,8 +47,17 @@ class ConnectorMeta:
     #: for any installation id it is handed — stores the grant it verified
     #: under one of these, and a browser that could write the same key could
     #: name someone else's grant. Every route that accepts credentials from a
-    #: request refuses them (:func:`server_only_keys_in`).
+    #: request refuses them (:func:`server_only_keys_in`). A Google
+    #: connector's refresh token is one too: only its OAuth callback has it,
+    #: so no token a browser holds can be planted on an account.
     server_only_keys: frozenset[str] = frozenset()
+    #: Non-secret keys in the stored blob that the user may read and change
+    #: after connecting, without connecting again — the Google Ads manager
+    #: (MCC) id. An allow-list rather than "anything not server-only" because
+    #: some blob keys are neither secret nor the user's to edit: a GitHub App
+    #: row's ``repo`` is what GitHub granted, and renaming it would read a
+    #: repository the grant never covered.
+    settings_keys: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True)

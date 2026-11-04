@@ -13,6 +13,7 @@ import {
   storeConsentChoice,
 } from "../lib/consent";
 import { isDesktopShell } from "../lib/shell";
+import { getTelemetrySettings } from "../lib/telemetry";
 
 /**
  * Decides whether Duct measures, and asks when it has to.
@@ -67,12 +68,26 @@ export function ProductAnalytics() {
   }, []);
 
   useEffect(() => {
-    // False on a developer's host, and false inside the desktop shell, where
-    // the provider refuses to load at all (`lib/analytics/` carries why). So
-    // the shell measures nothing and is never asked; its Preferences switch
-    // governs crash reports alone, and the sidebar hides the cookie settings
-    // item there for the same reason.
+    // False on a developer's host and in a build with no provider configured.
     if (!analytics.isConfigured()) return undefined;
+
+    // The desktop shell never shows a consent bar: a question in front of a
+    // window someone just opened is not worth the interruption, and the shell
+    // stores nothing that would need one (`lib/analytics/posthog.js`). Its
+    // Preferences switch is the decision, on by default in the builds we
+    // distribute; the sidebar hides the cookie settings item there.
+    if (isDesktopShell()) {
+      let cancelled = false;
+      getTelemetrySettings().then((settings) => {
+        if (cancelled || !settings.enabled) return;
+        analytics.setConsent(true);
+        analytics.start();
+        trackAppOpened();
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
 
     analytics.setDefaults();
 

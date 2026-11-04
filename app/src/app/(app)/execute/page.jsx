@@ -58,17 +58,28 @@ import {
 } from "../../../lib/executionApi";
 import { Spinner } from "@/components/ui/spinner";
 import { SkeletonList } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import EmptyState from "@/components/ui/empty-state";
+import { HelpTip, Page, PageHeader, Section } from "@/components/ui/page";
+import { LOGOS } from "@/components/connections/logos";
+import { relativeTime } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import { ShieldCheck } from "lucide-react";
 
-const STATUS_PILL = {
-  proposed: "yellow",
-  approved: "yellow",
-  applying: "yellow",
-  applied: "green",
-  partial: "yellow",
-  failed: "red",
-  rejected: "grey",
-  rolled_back: "grey",
-  blocked: "red",
+// The status as a Badge tone: amber waits on someone, blue is moving, green
+// landed, red failed, grey is over.
+const STATUS_TONE = {
+  proposed: "warning",
+  approved: "info",
+  applying: "info",
+  applied: "success",
+  partial: "warning",
+  failed: "destructive",
+  rejected: "secondary",
+  rolled_back: "secondary",
+  blocked: "destructive",
 };
 
 const STATUS_LABEL = {
@@ -111,17 +122,20 @@ const GUARDRAIL_CONNECTORS = ["google_ads", "ga4", "gtm", "mixpanel"];
 function Pill({ status }) {
   const { i18n } = useLingui();
   return (
-    <span className={`status-pill ${STATUS_PILL[status] || "grey"}`}>
+    <Badge variant={STATUS_TONE[status] || "secondary"}>
       {STATUS_LABEL[status] ? i18n._(STATUS_LABEL[status]) : status}
-    </span>
+    </Badge>
   );
 }
 
 function ProvenanceBadges({ cs }) {
   return (
     <>
-      {cs.source === "agent" && <span className="status-pill green"><Trans>agent</Trans></span>}
-      {cs.applied_by === "auto" && <span className="status-pill yellow"><Trans>auto-applied</Trans></span>}
+      {cs.applied_by === "auto" && (
+        <Badge variant="outline">
+          <Trans>Applied automatically</Trans>
+        </Badge>
+      )}
     </>
   );
 }
@@ -444,62 +458,65 @@ function ConfirmDialog({ confirm, destructiveMap, onCancel, onConfirm }) {
 // Autonomy panel — the human-owned dial for what may skip this queue
 // ---------------------------------------------------------------------------
 
-function AutonomyPanel({ project, level, onChange, saving, error }) {
+/**
+ * How much the agents may do without asking, as a segmented control in the
+ * page header. It was a card of its own with 65 words around three buttons;
+ * the invariant that makes the top setting safe is still one click away, in
+ * the "?" beside it, where someone deciding to turn the dial will look.
+ */
+function AutonomyControl({ project, level, onChange, saving, error }) {
   const { t, i18n } = useLingui();
   if (!project || !level) return null;
-  const current = AUTONOMY_OPTIONS.find((o) => o.value === level) || AUTONOMY_OPTIONS[0];
-  const projectName = project.name;
   return (
-    <article className="connection-card" style={{ display: "grid", gap: 10, marginBottom: 16 }}>
-      <div>
-        <h2 className="connection-title" style={{ marginBottom: 2 }}>
-          <Trans>Autonomy — {projectName}</Trans>
-        </h2>
-        <p className="app-subtle" style={{ margin: 0, fontSize: "var(--text-sm)" }}>{i18n._(current.blurb)}</p>
+    <div className="flex flex-col items-end gap-1">
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">
+          <Trans>Autonomy</Trans>
+        </span>
+        <div
+          role="radiogroup"
+          aria-label={t`Execution autonomy`}
+          className="inline-flex rounded-lg bg-muted p-0.5"
+        >
+          {AUTONOMY_OPTIONS.map((opt) => {
+            const selected = opt.value === level;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                title={i18n._(opt.blurb)}
+                disabled={saving || selected}
+                onClick={() => onChange(opt.value)}
+                className={cn(
+                  "h-7 rounded-md px-3 text-sm font-medium transition-colors disabled:cursor-default",
+                  selected
+                    ? "bg-background text-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {i18n._(opt.label)}
+              </button>
+            );
+          })}
+        </div>
+        <HelpTip label={t`What autonomy allows`}>
+          <Trans>
+            Destructive work always waits for you: Tag Manager publishes, archives, unlinks,
+            anything touching budget or status, and new keywords. Assisted and Auto may apply only
+            negative keywords, Analytics key events and audiences, and Tag Manager workspace edits.
+          </Trans>
+        </HelpTip>
       </div>
-
-      <div role="radiogroup" aria-label={t`Execution autonomy`} style={{ display: "flex", gap: 8 }}>
-        {AUTONOMY_OPTIONS.map((opt) => {
-          const selected = opt.value === level;
-          return (
-            <button
-              key={opt.value}
-              type="button"
-              role="radio"
-              aria-checked={selected}
-              disabled={saving || selected}
-              onClick={() => onChange(opt.value)}
-              className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-default ${
-                selected
-                  ? "border-primary bg-primary/10 text-foreground"
-                  : "border-border text-muted-foreground hover:text-foreground hover:border-border/80"
-              }`}
-            >
-              {i18n._(opt.label)}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* The invariant, stated where the dial is turned. It is the reason the
-          top of the ladder is safe to offer at all, and a user who does not
-          know it will read "Auto" as "anything". */}
-      <p className="app-subtle" style={{ margin: 0, fontSize: "var(--text-xs)" }}>
-        <Trans>
-          Destructive work waits here at every level — GTM publishes, archives, unlinks,
-          anything touching budget or status. Assisted and Auto share one narrow allowlist:
-          keywords, GA4 key events and audiences, GTM workspace edits.
-        </Trans>
-      </p>
-
       {error && (
-        <p style={{ margin: 0, fontSize: "var(--text-xs)", color: "var(--destructive)" }}>
+        <p role="alert" className="text-xs text-destructive">
           {error.includes("404") || error.toLowerCase().includes("owner")
             ? <Trans>Only the project owner can change autonomy.</Trans>
             : error}
         </p>
       )}
-    </article>
+    </div>
   );
 }
 
@@ -571,126 +588,117 @@ function GuardrailsPanel() {
     }
   }
 
+  const count = Array.isArray(rows) ? rows.length : null;
   return (
-    <div style={{ marginTop: 28 }}>
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="text-sm font-semibold text-muted-foreground uppercase tracking-wider"
-        style={{ background: "none", border: 0, padding: 0, cursor: "pointer" }}
-      >
-        {open ? "▾" : "▸"} <Trans>Guardrails</Trans>{Array.isArray(rows) && rows.length ? ` (${rows.length})` : ""}
-      </button>
+    <Section
+      title={<Trans>Guardrails</Trans>}
+      count={count || null}
+      help={
+        <Trans>
+          A change that matches a guardrail arrives blocked and can never apply on its own. Agents see
+          the rules and propose around them. A rule with no matcher is guidance only.
+        </Trans>
+      }
+      actions={
+        <Button type="button" size="sm" variant="ghost" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+          {open ? <Trans>Hide</Trans> : <Trans>Show</Trans>}
+        </Button>
+      }
+    >
       {open && (
-        <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
-          <p className="app-subtle" style={{ margin: 0, fontSize: "var(--text-sm)" }}>
-            <Trans>
-              A change that matches a guardrail arrives <em>blocked</em> and can never
-              auto-apply; agents see the rules and propose around them. A rule with no matcher
-              is guidance only.
-            </Trans>
-          </p>
-
+        <div className="flex flex-col gap-4">
           {error && (
-            <p style={{ margin: 0, fontSize: "var(--text-sm)", color: "var(--destructive)" }}>{error}</p>
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
           )}
 
           {rows === null ? (
             <SkeletonList rows={2} label={t`Loading guardrails`} />
           ) : rows.length === 0 ? (
-            <p className="app-subtle" style={{ fontSize: "var(--text-sm)" }}><Trans>No guardrails yet.</Trans></p>
+            <p className="text-sm text-muted-foreground">
+              <Trans>No guardrails yet.</Trans>
+            </p>
           ) : (
-            <div style={{ display: "grid", gap: 6 }}>
+            <Card className="gap-0 overflow-hidden p-0">
               {rows.map((g) => {
                 const blockedOps = (g.match?.op_types || []).join(", ");
                 const targetContains = g.match?.target_contains;
                 return (
-                <div
-                  key={g.id}
-                  className="connection-card"
-                  style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center", padding: "10px 12px" }}
-                >
-                  <div style={{ minWidth: 0 }}>
-                    <p style={{ margin: 0, fontSize: "var(--text-sm)" }}>{g.rule}</p>
-                    <p className="app-subtle" style={{ margin: 0, fontSize: "var(--text-xs)" }}>
-                      {CONNECTOR_LABEL[g.connector_type] || g.connector_type}
-                      {g.account_id ? ` · ${g.account_id}` : <> · <Trans>all accounts</Trans></>}
-                      {blockedOps ? <> · <Trans>blocks: {blockedOps}</Trans></> : ""}
-                      {targetContains ? <> · <Trans>target contains “{targetContains}”</Trans></> : ""}
-                    </p>
+                  <div key={g.id} className="flex items-center justify-between gap-3 border-b px-4 py-3 last:border-0">
+                    <div className="min-w-0">
+                      <p className="text-sm">{g.rule}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {CONNECTOR_LABEL[g.connector_type] || g.connector_type}
+                        {g.account_id ? ` · ${g.account_id}` : <> · <Trans>all accounts</Trans></>}
+                        {blockedOps ? <> · <Trans>blocks: {blockedOps}</Trans></> : ""}
+                        {targetContains ? <> · <Trans>target contains “{targetContains}”</Trans></> : ""}
+                      </p>
+                    </div>
+                    <Button type="button" size="sm" variant="ghost" onClick={() => onDelete(g.id)}>
+                      <Trans>Remove</Trans>
+                    </Button>
                   </div>
-                  <Button type="button" size="sm" variant="ghost" onClick={() => onDelete(g.id)}>
-                    <Trans>Remove</Trans>
-                  </Button>
-                </div>
                 );
               })}
-            </div>
+            </Card>
           )}
 
-          <form onSubmit={onCreate} className="connection-card" style={{ display: "grid", gap: 8, padding: 12 }}>
-            <strong style={{ fontSize: "var(--text-sm)" }}><Trans>Add a guardrail</Trans></strong>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <Select
-                value={form.connector_type}
-                onValueChange={(v) => setForm((f) => ({ ...f, connector_type: v }))}
-              >
-                <SelectTrigger size="sm" style={{ width: 180 }}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {GUARDRAIL_CONNECTORS.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {CONNECTOR_LABEL[c]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <input
-                value={form.account_id}
-                aria-label={t`Account id`}
-                onChange={(e) => setForm((f) => ({ ...f, account_id: e.target.value }))}
-                placeholder={t`Account id (blank = all)`}
-                className="rounded-md border border-input bg-transparent px-2 text-sm"
-                style={{ height: 32, width: 200 }}
+          <Card size="sm">
+            <form onSubmit={onCreate} className="flex flex-col gap-3">
+              <p className="text-sm font-semibold">
+                <Trans>Add a guardrail</Trans>
+              </p>
+              <Input
+                value={form.rule}
+                aria-label={t`Guardrail rule`}
+                onChange={(e) => setForm((f) => ({ ...f, rule: e.target.value }))}
+                placeholder={t`Never pause the Brand campaign`}
+                required
               />
-            </div>
-            <input
-              value={form.rule}
-              aria-label={t`Guardrail rule`}
-              onChange={(e) => setForm((f) => ({ ...f, rule: e.target.value }))}
-              placeholder={t`Rule, e.g. “Never pause the Brand campaign”`}
-              className="rounded-md border border-input bg-transparent px-2 text-sm"
-              style={{ height: 32 }}
-              required
-            />
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <input
-                value={form.op_types}
-                aria-label={t`Operation types`}
-                onChange={(e) => setForm((f) => ({ ...f, op_types: e.target.value }))}
-                placeholder={t`Op types to block, comma-separated (optional)`}
-                className="rounded-md border border-input bg-transparent px-2 text-sm"
-                style={{ height: 32, flex: 1, minWidth: 220 }}
-              />
-              <input
-                value={form.target_contains}
-                aria-label={t`Target contains`}
-                onChange={(e) => setForm((f) => ({ ...f, target_contains: e.target.value }))}
-                placeholder={t`Target contains (optional)`}
-                className="rounded-md border border-input bg-transparent px-2 text-sm"
-                style={{ height: 32, width: 200 }}
-              />
-            </div>
-            <div>
-              <Button type="submit" size="sm" disabled={saving || !form.rule.trim()}>
+              <div className="grid gap-3 @xl:grid-cols-2">
+                <Select
+                  value={form.connector_type}
+                  onValueChange={(v) => setForm((f) => ({ ...f, connector_type: v }))}
+                >
+                  <SelectTrigger aria-label={t`Source`} className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {GUARDRAIL_CONNECTORS.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {CONNECTOR_LABEL[c]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input
+                  value={form.account_id}
+                  aria-label={t`Account id`}
+                  onChange={(e) => setForm((f) => ({ ...f, account_id: e.target.value }))}
+                  placeholder={t`Account id (blank = all)`}
+                />
+                <Input
+                  value={form.op_types}
+                  aria-label={t`Operation types`}
+                  onChange={(e) => setForm((f) => ({ ...f, op_types: e.target.value }))}
+                  placeholder={t`Op types to block, comma-separated (optional)`}
+                />
+                <Input
+                  value={form.target_contains}
+                  aria-label={t`Target contains`}
+                  onChange={(e) => setForm((f) => ({ ...f, target_contains: e.target.value }))}
+                  placeholder={t`Target contains (optional)`}
+                />
+              </div>
+              <Button type="submit" size="sm" className="self-start" disabled={saving || !form.rule.trim()}>
                 {saving ? <Trans>Adding…</Trans> : <Trans>Add guardrail</Trans>}
               </Button>
-            </div>
-          </form>
+            </form>
+          </Card>
         </div>
       )}
-    </div>
+    </Section>
   );
 }
 
@@ -765,8 +773,8 @@ export default function ExecutePage() {
     try {
       if (action === "approve") await approveChangeSet(cs.id, changeIds);
       if (action === "reject") await rejectChangeSet(cs.id);
-      if (action === "apply") await applyChangeSet(cs.id, cs.connector_type);
-      if (action === "rollback") await rollbackChangeSet(cs.id, cs.connector_type);
+      if (action === "apply") await applyChangeSet(cs.id);
+      if (action === "rollback") await rollbackChangeSet(cs.id);
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -820,138 +828,176 @@ export default function ExecutePage() {
 
   const drawerCs = drawerId ? (changeSets || []).find((cs) => cs.id === drawerId) : null;
 
-  return (
-    <section>
-      <div className="page-toolbar-back">
-        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight"><Trans>Executions</Trans></h1>
-      </div>
-      <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18 }}>
-        <Trans>
-          Agents propose, you approve. Every change is previewed against your guardrails, and
-          anything applied can be rolled back.
-        </Trans>
-      </p>
+  const waiting = (changeSets || []).filter((cs) => cs.status === "proposed").length;
 
-      <AutonomyPanel
-        project={activeProject}
-        level={autonomy}
-        onChange={onChangeAutonomy}
-        saving={autonomySaving}
-        error={autonomyError}
+  return (
+    <Page>
+      <PageHeader
+        title={<Trans>Changes</Trans>}
+        status={
+          changeSets === null ? null : waiting ? (
+            <Plural value={waiting} one="# change set waiting for you" other="# change sets waiting for you" />
+          ) : (
+            <Trans>Nothing is waiting for you.</Trans>
+          )
+        }
+        help={
+          <Trans>
+            Agents propose changes to your accounts and you approve them. Every change is checked
+            against your guardrails first, and anything applied can be rolled back.
+          </Trans>
+        }
+        actions={
+          <AutonomyControl
+            project={activeProject}
+            level={autonomy}
+            onChange={onChangeAutonomy}
+            saving={autonomySaving}
+            error={autonomyError}
+          />
+        }
       />
 
       {error && <LoadError what={t`the execution queue`} detail={error} onRetry={load} />}
 
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
-        <Select value={statusFilter || "all"} onValueChange={(v) => setStatusFilter(v === "all" ? "" : v)}>
-          <SelectTrigger size="sm" style={{ width: 180 }}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_FILTERS.map((f) => (
-              <SelectItem key={f.value || "all"} value={f.value || "all"}>
-                {i18n._(f.label)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={sourceFilter || "all"} onValueChange={(v) => setSourceFilter(v === "all" ? "" : v)}>
-          <SelectTrigger size="sm" style={{ width: 170 }}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {SOURCE_FILTERS.map((f) => (
-              <SelectItem key={f.value || "all"} value={f.value || "all"}>
-                {i18n._(f.label)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {projectOptions.length > 0 && (
-          <Select
-            value={projectFilter || "all"}
-            onValueChange={(v) => setProjectFilter(v === "all" ? "" : v)}
-          >
-            <SelectTrigger size="sm" style={{ width: 190 }}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all"><Trans>All projects</Trans></SelectItem>
-              {projectOptions.map((p) => (
-                <SelectItem key={p.id} value={p.id}>
-                  {p.name}
-                </SelectItem>
-              ))}
-              <SelectItem value="none"><Trans>No project</Trans></SelectItem>
-            </SelectContent>
-          </Select>
-        )}
-      </div>
-
-      {error ? null : changeSets === null ? (
-        <SkeletonList rows={3} label={t`Loading change sets`} />
-      ) : filtered.length === 0 ? (
-        <p className="app-subtle">
-          {changeSets.length === 0
-            ? <Trans>Nothing proposed yet. Run an audit or an insight session and the fixes land here for approval.</Trans>
-            : <Trans>Nothing matches these filters.</Trans>}
-        </p>
-      ) : (
-        <div style={{ display: "grid", gap: 10 }}>
-          {filtered.map((cs) => {
-            const account = cs.account_name || cs.account_id;
-            const changeCount = cs.changes.length;
-            return (
-              <article key={cs.id} className="connection-card" style={{ display: "grid", gap: 6 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
-                  <div style={{ minWidth: 0 }}>
-                    <h2 className="connection-title" style={{ marginBottom: 2 }}>{cs.title}</h2>
-                    <p className="app-subtle" style={{ margin: 0, fontSize: "var(--text-sm)" }}>
+      <Section
+        title={<Trans>All changes</Trans>}
+        actions={
+          <div className="flex flex-wrap justify-end gap-2">
+            <Select value={statusFilter || "all"} onValueChange={(v) => setStatusFilter(v === "all" ? "" : v)}>
+              <SelectTrigger size="sm" aria-label={t`Status`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_FILTERS.map((f) => (
+                  <SelectItem key={f.value || "all"} value={f.value || "all"}>
+                    {i18n._(f.label)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={sourceFilter || "all"} onValueChange={(v) => setSourceFilter(v === "all" ? "" : v)}>
+              <SelectTrigger size="sm" aria-label={t`Proposed by`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SOURCE_FILTERS.map((f) => (
+                  <SelectItem key={f.value || "all"} value={f.value || "all"}>
+                    {i18n._(f.label)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {projectOptions.length > 1 && (
+              <Select
+                value={projectFilter || "all"}
+                onValueChange={(v) => setProjectFilter(v === "all" ? "" : v)}
+              >
+                <SelectTrigger size="sm" aria-label={t`Project`}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all"><Trans>All projects</Trans></SelectItem>
+                  {projectOptions.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="none"><Trans>No project</Trans></SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        }
+      >
+        {error ? null : changeSets === null ? (
+          <SkeletonList rows={3} label={t`Loading change sets`} />
+        ) : filtered.length === 0 ? (
+          changeSets.length === 0 ? (
+            <EmptyState icon={ShieldCheck} title={t`Nothing proposed yet`}>
+              <Trans>Fixes from an audit or a conversation land here for you to approve.</Trans>
+            </EmptyState>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              <Trans>Nothing matches these filters.</Trans>
+            </p>
+          )
+        ) : (
+          // A list, not a card per change set: these are items of one kind,
+          // read to compare and act on (NN/g, cards vs lists). One row each,
+          // the same columns in the same places.
+          <Card className="gap-0 overflow-hidden p-0">
+            {filtered.map((cs) => {
+              const account = cs.account_name || cs.account_id;
+              const changeCount = cs.changes.length;
+              const when = relativeTime(cs.created_at, { fallbackAfterDays: 7, locale: i18n.locale });
+              return (
+                // A grid, so a narrow pane puts the status and actions on a
+                // second line under the title instead of squeezing the title
+                // to two letters beside them.
+                <article
+                  key={cs.id}
+                  className="grid grid-cols-[2.25rem_minmax(0,1fr)] items-center gap-x-4 gap-y-3 border-b px-4 py-4 last:border-0 @2xl:grid-cols-[2.25rem_minmax(0,1fr)_auto]"
+                >
+                  <span
+                    className="flex size-9 shrink-0 items-center justify-center rounded-lg border bg-background [&_img]:size-5 [&_svg]:size-5"
+                    aria-hidden
+                  >
+                    {LOGOS[cs.connector_type]}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate text-sm font-medium">
+                      <button
+                        type="button"
+                        onClick={() => setDrawerId(cs.id)}
+                        className="text-left outline-none hover:underline focus-visible:underline"
+                      >
+                        {cs.title}
+                      </button>
+                    </h3>
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
                       {CONNECTOR_LABEL[cs.connector_type] || cs.connector_type}
                       {account ? ` · ${account}` : ""}
-                      {cs.project_id && projectNames[cs.project_id]
+                      {projectOptions.length > 1 && cs.project_id && projectNames[cs.project_id]
                         ? ` · ${projectNames[cs.project_id]}`
-                        : ""}{" "}
-                      · {new Date(cs.created_at).toLocaleString()} ·{" "}
+                        : ""}
+                      {" · "}
+                      <time dateTime={cs.created_at} title={new Date(cs.created_at).toLocaleString(i18n.locale)}>
+                        {when}
+                      </time>
+                      {" · "}
                       <Plural value={changeCount} one="# change" other="# changes" />
                     </p>
                   </div>
-                  <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", justifyContent: "flex-end" }}>
+                  <div className="col-start-2 flex flex-wrap items-center gap-2 @2xl:col-start-3">
                     <ProvenanceBadges cs={cs} />
                     <Pill status={cs.status} />
+                    {busyId === cs.id && <Spinner className="size-4 text-muted-foreground" />}
+                    <Button type="button" size="sm" variant="ghost" onClick={() => setDrawerId(cs.id)}>
+                      <Trans>Review</Trans>
+                    </Button>
+                    {cs.status === "proposed" && (
+                      <Button size="sm" disabled={busyId === cs.id} onClick={() => onAction("approve", cs)}>
+                        <Trans>Approve all</Trans>
+                      </Button>
+                    )}
+                    {cs.status === "approved" && (
+                      <Button size="sm" disabled={busyId === cs.id} onClick={() => onAction("apply", cs)}>
+                        <Trans>Apply now</Trans>
+                      </Button>
+                    )}
+                    {(cs.status === "applied" || cs.status === "partial") && (
+                      <Button size="sm" variant="outline" disabled={busyId === cs.id} onClick={() => onAction("rollback", cs)}>
+                        <Trans>Roll back</Trans>
+                      </Button>
+                    )}
                   </div>
-                </div>
-
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <Button type="button" size="sm" variant="secondary" onClick={() => setDrawerId(cs.id)}>
-                    <Trans>Review</Trans>
-                  </Button>
-                  {cs.status === "proposed" && (
-                    <Button size="sm" disabled={busyId === cs.id} onClick={() => onAction("approve", cs)}>
-                      <Trans>Approve all</Trans>
-                    </Button>
-                  )}
-                  {cs.status === "approved" && (
-                    <Button size="sm" disabled={busyId === cs.id} onClick={() => onAction("apply", cs)}>
-                      <Trans>Apply now</Trans>
-                    </Button>
-                  )}
-                  {(cs.status === "applied" || cs.status === "partial") && (
-                    <Button size="sm" variant="outline" disabled={busyId === cs.id} onClick={() => onAction("rollback", cs)}>
-                      <Trans>Roll back</Trans>
-                    </Button>
-                  )}
-                  {busyId === cs.id && (
-                    <span className="app-subtle" style={{ fontSize: "var(--text-sm)", alignSelf: "center" }}>
-                      <Trans>Working…</Trans>
-                    </span>
-                  )}
-                </div>
-              </article>
-            );
-          })}
-        </div>
-      )}
+                </article>
+              );
+            })}
+          </Card>
+        )}
+      </Section>
 
       <GuardrailsPanel />
 
@@ -974,6 +1020,6 @@ export default function ExecutePage() {
           if (pending) runAction(pending.action, pending.cs);
         }}
       />
-    </section>
+    </Page>
   );
 }

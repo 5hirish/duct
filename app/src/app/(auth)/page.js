@@ -24,6 +24,7 @@ import { analytics, trackEvent, AnalyticsEvent, AnalyticsParam } from "@/lib/ana
 import { isGuestToken } from "@/lib/guest";
 import { guestLinkCode } from "@/lib/onboardingApi";
 import { consumeSignInSources, peekSignInSources } from "@/lib/signInSources";
+import { clearSessionHint } from "@/lib/sessionHint";
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
 const DEFAULT_LANDING = "/insights/organic-growth";
@@ -99,7 +100,11 @@ function SignInContent() {
   const searchParams = useSearchParams();
   const { resolvedTheme } = useTheme();
   const [turnstileToken, setTurnstileToken] = useState("");
-  const [ready, setReady] = useState(false);
+  // Whether to show the front door. The server renders it for everyone but an
+  // OAuth callback, which it can see in the URL; a member on their way into
+  // the app is hidden before paint by `lib/sessionHint.js` and taken off here
+  // once the effect below confirms it.
+  const [ready, setReady] = useState(() => !searchParams.get("auth_code"));
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [awaitingBrowser, setAwaitingBrowser] = useState(false);
   // "" when fine; "outdated" or "browser" when the shell cannot carry a
@@ -148,7 +153,12 @@ function SignInContent() {
   // Nothing is lost by skipping it: the sidecar is bound to 127.0.0.1 and gated
   // by a per-install API key, so there is no bot surface to protect, and
   // `verify_turnstile` already no-ops when the sidecar has no secret configured.
-  const requiresTurnstile = Boolean(TURNSTILE_SITE_KEY) && !isLocalBackendActive();
+  // State, corrected after mount: hydration has to render what the server did,
+  // and the server never has a sidecar.
+  const [requiresTurnstile, setRequiresTurnstile] = useState(Boolean(TURNSTILE_SITE_KEY));
+  useEffect(() => {
+    if (isLocalBackendActive()) setRequiresTurnstile(false);
+  }, []);
   const turnstileContainerRef = useRef(null);
   const turnstileWidgetIdRef = useRef(null);
   const getTurnstileResponseToken = useCallback(() => {
@@ -195,10 +205,12 @@ function SignInContent() {
     // guest comes to become an account, so their token must not bounce them.
     const existing = authToken();
     if (isTokenValid(existing) && !isGuestToken(existing)) {
+      setReady(false);
       router.replace(consumePostSignInRedirect());
       return;
     }
 
+    clearSessionHint();
     setSourcesArmed(Boolean(peekSignInSources()));
     setReady(true);
   }, [searchParams, router]);

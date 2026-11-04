@@ -32,11 +32,36 @@ export async function rememberProviderKey(providerId, key) {
     headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({ api_key: key }),
   });
-  if (!res.ok) {
-    const detail = await res.text();
-    throw new Error(detail || `Could not save the key (${res.status})`);
-  }
+  if (!res.ok) throw new Error(await serverMessage(res));
   return res.json();
+}
+
+/**
+ * Ask what the server at `baseUrl` offers, and with `model` whether that model
+ * calls tools. Saves nothing. Resolves to the backend's answer, `ok` false with
+ * a `code` included; throws only when the request itself failed.
+ */
+export async function probeEndpoint({ baseUrl, apiKey = "", model = "" }) {
+  const res = await fetch(`${BASE}/api/providers/openai_compatible/probe`, {
+    method: "POST",
+    headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({ base_url: baseUrl, api_key: apiKey, model }),
+  });
+  if (res.status === 429) return { ok: false, code: "rate_limited" };
+  if (!res.ok) throw new Error(await serverMessage(res));
+  return res.json();
+}
+
+/** FastAPI's `{"detail": "…"}` as its sentence, or the raw text when it is not one. */
+export async function serverMessage(res) {
+  const text = await res.text();
+  try {
+    const detail = JSON.parse(text)?.detail;
+    if (typeof detail === "string") return detail;
+  } catch {
+    /* not JSON */
+  }
+  return text || `Request failed (${res.status})`;
 }
 
 /** Forget the saved key for `providerId`. Idempotent; the row is deleted. */

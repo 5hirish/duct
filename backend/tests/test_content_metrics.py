@@ -22,7 +22,6 @@ from sqlmodel import Session
 
 import routes.content as content_routes
 import service.auth as auth_service
-import service.post_bridge as post_bridge
 from db.session import get_session as get_session_dep
 from models.auth import User
 from models.content import ContentPost
@@ -38,9 +37,9 @@ from service.content_metrics import (
     save_rate,
 )
 from service.membership import ROLE_OWNER
-from service.post_bridge import PostBridgeClient
 from service.post_bridge.schema import PostBridgeAnalytics
 from tests.conftest import make_sqlite_engine
+from tests.fakes import connect_scheduler, post_bridge_on
 
 APP_METRICS = Path(__file__).resolve().parents[2] / "app" / "src" / "lib" / "contentMetrics.js"
 _ROW = re.compile(r"^\s*([a-z_]+)\s*:\s*\[([^\]]*)\]", re.M)
@@ -183,7 +182,7 @@ def post(db, owner):
         project_id=project.id,
         post_dir_slug="launch-day",
         status="posted",
-        post_bridge_post_id="pb_post_1",
+        publisher="post_bridge", publisher_post_id="pb_post_1",
         perf={"view_count": 100},
     )
     db.add(row)
@@ -205,7 +204,7 @@ def test_a_member_enters_saves_and_reads_them_back_under_the_same_name(db, post,
     assert res.status_code == 200
     body = res.json()
     assert body["perf"]["saves"] == 12 and body["perf"][MANUAL_KEYS] == ["saves"]
-    assert body["post_bridge_post_id"] == "pb_post_1"
+    assert body["publisher_post_id"] == "pb_post_1"
     db.refresh(post)
     assert metric_value(post.perf, "saves") == 12
 
@@ -253,6 +252,8 @@ def test_typed_saves_survive_the_next_postbridge_sync(db, post, owner, monkeypat
                 "id": "res_1", "post_id": "pb_post_1", "success": True,
                 "social_account_id": 101, "error": None, "platform_data": None,
             }], "meta": {"total": 1, "offset": 0, "limit": 10, "next": None}})
+        if req.url.path == "/v1/analytics/ana_1/daily":
+            return httpx.Response(200, json={"snapshots": [], "deltas": []})
         if req.url.path == "/v1/analytics":
             return httpx.Response(200, json={"data": [{
                 "id": "ana_1", "post_result_id": "res_1", "platform": "tiktok",
@@ -261,13 +262,7 @@ def test_typed_saves_survive_the_next_postbridge_sync(db, post, owner, monkeypat
             }], "meta": {"total": 1, "offset": 0, "limit": 1, "next": None}})
         raise AssertionError(req.url.path)
 
-    monkeypatch.setattr(
-        post_bridge,
-        "client_for_user",
-        lambda _user_id, _db: PostBridgeClient(
-            "sk-fake", client=httpx.AsyncClient(transport=httpx.MockTransport(respond)),
-        ),
-    )
+    connect_scheduler(monkeypatch, db, owner.id, post_bridge_on(respond))
     c = client(db, owner)
     typed = {"saves": 12, "views": 500}
     assert c.post(f"/api/content/posts/{post.id}/metrics", json=typed).status_code == 200

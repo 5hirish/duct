@@ -134,7 +134,7 @@ def _error(exc: McpCallError, server: ServerAccess) -> dict:
     out = {"server": server.key, "name": server.name, "status": exc.code, "message": exc.message}
     if exc.code == mcp_client.CODE_REAUTH:
         out["next"] = (
-            "Nothing on this server works until the user reconnects it on the Connections page. "
+            "Nothing on this server works until the user reconnects it in the Toolbox. "
             "Say so once, and do not call it again this session."
         )
     return out

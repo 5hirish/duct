@@ -815,7 +815,7 @@ const ERROR_COPY = Object.freeze({
   [ErrorCode.CONTEXT_WINDOW]:      { text: msg`This conversation no longer fits the model's context, even after summarising it. Start fresh, or pick a model with a bigger window.`, action: ErrorAction.FRESH },
   [ErrorCode.BAD_REQUEST]:         { text: msg`The model provider rejected the request. Try rephrasing.`, action: ErrorAction.NONE },
   [ErrorCode.CONNECTOR_EXPIRED]:   { text: msg`A connected account needs reconnecting before the agent can read it.`, action: ErrorAction.CONNECTIONS },
-  [ErrorCode.CONNECTOR_FORBIDDEN]: { text: msg`A connected account doesn't have access to that data. Check its permissions under Connections.`, action: ErrorAction.CONNECTIONS },
+  [ErrorCode.CONNECTOR_FORBIDDEN]: { text: msg`A connected account doesn't have access to that data. Check its permissions in the Toolbox.`, action: ErrorAction.CONNECTIONS },
   // A clone's TikTok could not be read. Retrying the same link rarely helps
   // (private, deleted, taken down), so the way on is another link.
   [ErrorCode.REFERENCE_UNAVAILABLE]: { text: msg`Duct couldn't read that TikTok. Check it opens in a browser without signing in, or try another post.`, action: ErrorAction.NONE },

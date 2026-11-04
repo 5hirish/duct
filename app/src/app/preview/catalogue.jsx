@@ -30,6 +30,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Page, PageHeader, Section, TileGrid } from "@/components/ui/page";
+import { Textarea } from "@/components/ui/textarea";
 import { Button, buttonVariants } from "@/components/ui/button";
 import EmptyState from "@/components/ui/empty-state";
 import { ClampText, ClampTooltipContent, clampClass } from "@/components/ui/clamp-text";
@@ -53,13 +56,50 @@ function Specimen({ label, children }) {
 }
 
 const EXAMPLES = {
+  // The specimens render the primitives, never a copy of their markup: a
+  // catalogue entry that hand-rolls the thing it documents is how forks start.
+  "Page frame": () => (
+    <Page>
+      <PageHeader title="Changes" status="1 change set waiting for you" help="Agents propose, you approve." />
+      <Section title="All changes">
+        <Card className="gap-0 p-0">
+          <div className="border-b px-4 py-3 text-sm">Pause Performance Max, keep brand search</div>
+          <div className="px-4 py-3 text-sm">Add negatives from last week&rsquo;s search terms</div>
+        </Card>
+      </Section>
+    </Page>
+  ),
+
   Card: () => (
-    <div className="rounded-xl border bg-card p-5">
-      <p className="text-sm font-medium">Organic Growth</p>
-      <p className="mt-1 text-xs text-muted-foreground">
-        Nine sources connected. Last brief two days ago.
-      </p>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Home</CardTitle>
+        <CardDescription>Nine sources connected. Last brief two days ago.</CardDescription>
+      </CardHeader>
+      <CardFooter className="text-xs text-muted-foreground">Updated 2 hours ago</CardFooter>
+    </Card>
+  ),
+
+  "Grid of cards": () => (
+    <TileGrid cols={2}>
+      <Card size="sm">
+        <CardTitle>Search Console</CardTitle>
+        <CardDescription>Which searches bring people in, and which ones stopped.</CardDescription>
+        <CardFooter className="text-xs text-muted-foreground">Not connected</CardFooter>
+      </Card>
+      <Card size="sm">
+        <CardTitle>Stripe</CardTitle>
+        <CardDescription>The revenue every other number should answer to.</CardDescription>
+        <CardFooter className="text-xs text-muted-foreground">Not connected</CardFooter>
+      </Card>
+    </TileGrid>
+  ),
+
+  "Multi-line field": () => (
+    <Textarea
+      aria-label="Short description"
+      defaultValue="AI interior design and virtual staging. Upload a photo of any room and get a photorealistic redesign in seconds."
+    />
   ),
 
   "Busy indicator": () => (

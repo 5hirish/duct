@@ -56,7 +56,7 @@ msgid ""
 msgstr ""
 "Um plano em um quadro, um post por cartão, slides e imagens gerados para cada um, um clique para publicar em nove redes. Os resultados voltam para o cartão, para que o próximo plano aprenda com o anterior."
 
-#: about.html compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
+#: about.html compare.html connect-agent.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
 msgid "About"
 msgstr "Sobre"
 
@@ -113,7 +113,7 @@ msgstr ""
 "Decisões de design são discutidas abertamente. O GitHub é o melhor lugar para me encontrar."
 
 #. link title
-#: about.html compare.html doctrine.html index.html mcp.html open-source.html
+#: about.html compare.html connect-agent.html doctrine.html index.html mcp.html open-source.html
 msgid "Duct Blog"
 msgstr "Blog do Duct"
 
@@ -170,7 +170,7 @@ msgstr ""
 msgid "FONS. The spring, before anything has run. The app’s front door."
 msgstr "FONS. A nascente, antes que algo tenha corrido. A porta de entrada do app."
 
-#: about.html compare.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/nav-simple.html privacy.html seo-audit.html terms.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+#: about.html compare.html connect-agent.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/nav-simple.html privacy.html seo-audit.html terms.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Home"
 msgstr "Início"
 
@@ -252,7 +252,7 @@ msgstr ""
 msgid "Principles, not <0>platitudes</0>"
 msgstr "Princípios, não <0>clichês</0>"
 
-#: about.html compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
+#: about.html compare.html connect-agent.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
 msgid "Privacy Policy"
 msgstr "Política de privacidade"
 
@@ -305,7 +305,7 @@ msgstr "Marcar com estrela no GitHub →"
 msgid "Substance over ceremony"
 msgstr "Substância acima da cerimônia"
 
-#: about.html compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
+#: about.html compare.html connect-agent.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
 msgid "Terms of Service"
 msgstr "Termos de serviço"
 
@@ -520,9 +520,9 @@ msgstr "Universal · Apple silicon e Intel"
 #: assets/*.js
 msgctxt "js"
 msgid ""
-"We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same."
+"We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same."
 msgstr ""
-"Usamos o Google Analytics para ver quais páginas geram um cadastro. Esse é o único uso — sem segmentação de anúncios, sem perfis, nada vendido. Recuse e o site se comporta exatamente da mesma forma."
+"Usamos o PostHog para ver quais páginas geram um cadastro e onde o Duct atrapalha você, incluindo replays de visitas com tudo o que você digita oculto. Esse é o único uso — sem direcionamento de anúncios, nada vendido. Recuse e o Duct funciona exatamente da mesma forma."
 
 #: assets/*.js
 msgctxt "js"
@@ -977,7 +977,7 @@ msgstr "Veja onde o Duct ganha"
 msgid "Self-host, no licence fee"
 msgstr "Auto-hospede, sem taxa de licença"
 
-#: compare.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html seo-audit.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+#: compare.html connect-agent.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html seo-audit.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Skip to content"
 msgstr "Pular para o conteúdo"
 
@@ -1110,6 +1110,457 @@ msgstr "escreve"
 #: compare.html
 msgid "“Why did this move?”"
 msgstr "“Por que isso se moveu?”"
+
+#: connect-agent.html
+msgid "<0></0> Duct's MCP server · Browser sign-in"
+msgstr "<0></0> Servidor MCP do Duct · Entrar pelo navegador"
+
+#: connect-agent.html
+msgid "<0>Claude Code</0> wants to use your Duct account"
+msgstr "<0>Claude Code</0> quer usar sua conta do Duct"
+
+#: connect-agent.html
+msgid ""
+"A draft never overwrites what you typed in Duct. It only fills blank fields or replaces an earlier draft. Check the project page in Duct."
+msgstr ""
+"Um rascunho nunca sobrescreve o que você digitou no Duct. Ele apenas preenche campos em branco ou substitui um rascunho anterior. Verifique a página do projeto no Duct."
+
+#: connect-agent.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
+msgid "Access"
+msgstr "Acesso"
+
+#: connect-agent.html
+msgid "Add Duct to <0>opencode.json</0>:"
+msgstr "Adicione Duct a <0>opencode.json</0>:"
+
+#: connect-agent.html
+msgid "Add Duct to <0>~/.cursor/mcp.json</0>:"
+msgstr "Adicione Duct a <0>~/.cursor/mcp.json</0>:"
+
+#: connect-agent.html
+msgid "Add Duct to your agent"
+msgstr "Adicione o Duct ao seu agente"
+
+#. meta description
+#: connect-agent.html
+msgid ""
+"Add Duct's MCP server to Claude Code, Codex, Cursor, VS Code or ChatGPT. Sign in with your browser, click Allow, and your agent can read and set up projects."
+msgstr ""
+"Adicione o servidor MCP do Duct a Claude Code, Codex, Cursor, VS Code ou ChatGPT. Entre com seu navegador, clique em Permitir, e seu agente poderá ler e configurar projetos."
+
+#: connect-agent.html
+msgid "Add a connector with this address, and choose OAuth for authentication:"
+msgstr "Adicione um conector com este endereço, e escolha OAuth para autenticação:"
+
+#: connect-agent.html
+msgid "Add it, allow it, <0>ask it.</0>"
+msgstr "Adicione-o, permita-o, <0>pergunte a ele.</0>"
+
+#: connect-agent.html
+msgid ""
+"Add this address to Claude Code, Codex, Cursor, VS Code, OpenCode, Claude or ChatGPT. Your browser opens on Duct, you click Allow, and your agent can read your projects and draft their details."
+msgstr ""
+"Adicione este endereço a Claude Code, Codex, Cursor, VS Code, OpenCode, Claude ou ChatGPT. Seu navegador abre no Duct, você clica em Permitir, e seu agente poderá ler seus projetos e rascunhar seus detalhes."
+
+#: connect-agent.html
+msgid "Allow"
+msgstr "Permitir"
+
+#: connect-agent.html
+msgid ""
+"Another agent? If it can add a remote MCP server by its address, give it the same one. If it can't sign in, <0>use a token</0>."
+msgstr ""
+"Outro agente? Se ele puder adicionar um servidor MCP remoto pelo seu endereço, dê a ele o mesmo. Se ele não conseguir entrar, <0>use um token</0>."
+
+#: connect-agent.html
+msgid "Approve or apply changes."
+msgstr "Aprove ou aplique as alterações."
+
+#: connect-agent.html
+msgid "Ask it something"
+msgstr "Pergunte algo a ele"
+
+#: connect-agent.html
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: connect-agent.html
+msgid "ChatGPT"
+msgstr "ChatGPT"
+
+#: connect-agent.html
+msgid "Choose HTTP, paste the address and name it <0>duct</0>:"
+msgstr "Escolha HTTP, cole o endereço e nomeie-o <0>duct</0>:"
+
+#: connect-agent.html
+msgid "Claude"
+msgstr "Claude"
+
+#: connect-agent.html
+msgid "Claude Code"
+msgstr "Claude Code"
+
+#. meta twitter:description
+#: connect-agent.html
+msgid ""
+"Claude Code, Codex, Cursor, VS Code, OpenCode, Claude and ChatGPT all connect to Duct by one address. No token to copy or paste."
+msgstr ""
+"Claude Code, Codex, Cursor, VS Code, OpenCode, Claude e ChatGPT todos se conectam ao Duct por um endereço. Nenhum token para copiar ou colar."
+
+#: connect-agent.html
+msgid "Claude, on claude.ai or Claude Desktop"
+msgstr "Claude, em claude.ai ou Claude Desktop"
+
+#: connect-agent.html
+msgid "Codex"
+msgstr "Codex"
+
+#: connect-agent.html
+msgid "Connect tools."
+msgstr "Conecte ferramentas."
+
+#: connect-agent.html
+msgid "Copied"
+msgstr "Copiado"
+
+#: connect-agent.html
+msgid "Copy"
+msgstr "Copiar"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the Claude Code command"
+msgstr "Copiar o comando do Claude Code"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the Claude Code command with a token"
+msgstr "Copiar o comando do Claude Code com um token"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the Codex command"
+msgstr "Copiar o comando do Codex"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the Cursor settings"
+msgstr "Copiar as configurações do Cursor"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the OpenCode settings"
+msgstr "Copiar as configurações do OpenCode"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the server address"
+msgstr "Copiar o endereço do servidor"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the sign-in command"
+msgstr "Copiar o comando de entrada"
+
+#: connect-agent.html
+msgid "Cursor"
+msgstr "Cursor"
+
+#: connect-agent.html
+msgid ""
+"Draft a project's description, audience and competitors from your repo or files."
+msgstr ""
+"Rascunhe a descrição, público e concorrentes de um projeto do seu repositório ou arquivos."
+
+#: connect-agent.html
+msgid ""
+"Drafted the description, audience and competitors from the repo. They're on the project in Duct."
+msgstr ""
+"Rascunhou a descrição, público e concorrentes do repositório. Eles estão no projeto no Duct."
+
+#: connect-agent.html
+msgid ""
+"Duct gives your agent three tools today. Approving, applying and connecting stay with you, in Duct."
+msgstr ""
+"Duct oferece três ferramentas ao seu agente hoje. Aprovar, aplicar e conectar permanecem com você, no Duct."
+
+#: connect-agent.html
+msgid "Duct opens in your browser. Click Allow."
+msgstr "Duct abre no seu navegador. Clique em Permitir."
+
+#: connect-agent.html
+msgid "Every agent connects to the same server. Pick yours for the exact steps."
+msgstr ""
+"Todo agente se conecta ao mesmo servidor. Escolha o seu para os passos exatos."
+
+#: connect-agent.html
+msgid "Every agent is listed. <0>Disconnect any one.</0>"
+msgstr "Todo agente está listado. <0>Desconecte qualquer um.</0>"
+
+#: connect-agent.html
+msgid "Every change shows in the project's activity."
+msgstr "Toda alteração aparece na atividade do projeto."
+
+#: connect-agent.html
+msgid ""
+"For CI, a remote machine or an agent without sign-in. Create one on the same settings page, under No browser? Use a token. Your agent sends it as a header:"
+msgstr ""
+"Para CI, uma máquina remota ou um agente sem precisar entrar. Crie um na mesma página de configurações, em \"Sem navegador? Use um token.\". Seu agente o envia como um cabeçalho:"
+
+#: connect-agent.html
+msgid ""
+"Give your agent the address above, with one command or one line of settings. The exact steps for each agent are below."
+msgstr ""
+"Dê ao seu agente o endereço acima, com um comando ou uma linha de configurações. Os passos exatos para cada agente estão abaixo."
+
+#: connect-agent.html
+msgid "How to connect your agent"
+msgstr "Como conectar seu agente"
+
+#: connect-agent.html
+msgid "I asked it to set up the project and nothing changed"
+msgstr "Eu pedi para ele configurar o projeto e nada mudou"
+
+#: connect-agent.html
+msgid "I host Duct myself"
+msgstr "Eu hospedo o Duct"
+
+#: connect-agent.html
+msgid "In ChatGPT's settings, turn on developer mode."
+msgstr "Nas configurações do ChatGPT, ative o modo de desenvolvedor."
+
+#: connect-agent.html
+msgid ""
+"In Claude Code, run <0>/mcp</0>, pick <1>duct</1> and choose <2>Authenticate</2>."
+msgstr ""
+"No Claude Code, execute <0>/mcp</0>, selecione <1>duct</1> e escolha <2>Autenticar</2>."
+
+#: connect-agent.html
+msgid "In Claude Code:"
+msgstr "No Claude Code:"
+
+#: connect-agent.html
+msgid "In Cursor's MCP settings, press the login prompt on the duct server."
+msgstr ""
+"Nas configurações de MCP do Cursor, pressione o prompt de login no servidor duct."
+
+#: connect-agent.html
+msgid ""
+"In Duct, open Settings → Connect your AI agent. Every agent you allowed is there, and you can disconnect it. A disconnected agent stops on its next call."
+msgstr ""
+"No Duct, abra Configurações → Conecte seu agente de IA. Todos os agentes que você permitiu estão lá, e você pode desconectá-lo. Um agente desconectado para na sua próxima chamada."
+
+#: connect-agent.html
+msgid "In your terminal, run:"
+msgstr "No seu terminal, execute:"
+
+#: connect-agent.html
+msgid "It can never"
+msgstr "Ele nunca pode"
+
+#: connect-agent.html
+msgid "It reads and drafts. <0>You decide.</0>"
+msgstr "Ele lê e rascunha. <0>Você decide.</0>"
+
+#: connect-agent.html
+msgid ""
+"It says it couldn't register, or “does not support dynamic client registration”"
+msgstr ""
+"Ele diz que não conseguiu registrar, ou “não suporta registro dinâmico de cliente”"
+
+#: connect-agent.html
+msgid "It worked, and now it gets a 401"
+msgstr "Funcionou, e agora ele recebe um 401"
+
+#: connect-agent.html
+msgid "List your projects."
+msgstr "Liste seus projetos."
+
+#: connect-agent.html
+msgid "My browser never opened"
+msgstr "Meu navegador nunca abriu"
+
+#: connect-agent.html
+msgid "Name it Duct and paste the address:"
+msgstr "Nomeie-o Duct e cole o endereço:"
+
+#: connect-agent.html
+msgid "No browser? Use a token."
+msgstr "Sem navegador? Use um token."
+
+#: connect-agent.html
+msgid ""
+"On claude.ai or in Claude Desktop, open Settings → Connectors and choose Add custom connector."
+msgstr ""
+"Em claude.ai ou no Claude Desktop, abra Configurações → Conectores e escolha Adicionar conector personalizado."
+
+#. meta og:description
+#: connect-agent.html
+msgid ""
+"One address in your agent, one Allow in your browser. It can read your Duct projects and draft their details, never approve a change."
+msgstr ""
+"Um endereço no seu agente, um Permitir no seu navegador. Ele pode ler seus projetos Duct e rascunhar seus detalhes, nunca aprovar uma alteração."
+
+#: connect-agent.html
+msgid "Open the Command Palette and run <0>MCP: Add Server</0>."
+msgstr "Abra a Paleta de Comandos e execute <0>MCP: Adicionar Servidor</0>."
+
+#: connect-agent.html
+msgid "OpenCode"
+msgstr "OpenCode"
+
+#: connect-agent.html
+msgid ""
+"Overwrite what you typed in Duct. A draft only fills blanks or replaces an earlier draft."
+msgstr ""
+"Sobrescreva o que você digitou no Duct. Um rascunho apenas preenche espaços em branco ou substitui um rascunho anterior."
+
+#: connect-agent.html
+msgid "Press Connect. Duct opens in your browser. Click Allow."
+msgstr "Pressione Conectar. Duct abre no seu navegador. Clique em Permitir."
+
+#: connect-agent.html
+msgid "Read one project."
+msgstr "Leia um projeto."
+
+#: connect-agent.html
+msgid "See keys or credentials."
+msgstr "Veja chaves ou credenciais."
+
+#: connect-agent.html mcp.html
+msgid "Server address"
+msgstr "Endereço do servidor"
+
+#: connect-agent.html
+msgid "Set up this product in Duct."
+msgstr "Configure este produto no Duct."
+
+#: connect-agent.html
+msgid "Setup by agent"
+msgstr "Configuração por agente"
+
+#: connect-agent.html
+msgid "Seven agents. <0>One address.</0>"
+msgstr "Sete agentes. <0>Um endereço.</0>"
+
+#: connect-agent.html
+msgid "Sign in and click Allow"
+msgstr "Entrar e clique em Permitir"
+
+#: connect-agent.html
+msgid ""
+"Start the sign-in yourself: run /mcp in Claude Code, codex mcp login duct in Codex, or opencode mcp auth duct in OpenCode."
+msgstr ""
+"Inicie o login você mesmo: execute /mcp no Claude Code, codex mcp login duct no Codex, ou opencode mcp auth duct no OpenCode."
+
+#: connect-agent.html
+msgid ""
+"Start the sign-in yourself: run <0>/mcp</0> in Claude Code, <1>codex mcp login duct</1> in Codex, or <2>opencode mcp auth duct</2> in OpenCode."
+msgstr ""
+"Inicie o login você mesmo: execute <0>/mcp</0> no Claude Code, <1>codex mcp login duct</1> no Codex, ou <2>opencode mcp auth duct</2> no OpenCode."
+
+#: connect-agent.html
+msgid "Stuck? <0>Start here.</0>"
+msgstr "Preso? <0>Comece aqui.</0>"
+
+#: connect-agent.html
+msgid "Then sign in:"
+msgstr "Então entre:"
+
+#: connect-agent.html mcp.html
+msgid "Troubleshooting"
+msgstr "Solução de problemas"
+
+#: connect-agent.html
+msgid ""
+"Try “Set up this product in Duct.” Your agent reads your repo and drafts the project's description, audience and competitors."
+msgstr ""
+"Experimente “Configure este produto no Duct.” Seu agente lê seu repositório e rascunha a descrição, público e concorrentes do projeto."
+
+#: connect-agent.html
+msgid ""
+"Update your agent to its latest version and try again. If it still fails, connect with a token instead."
+msgstr ""
+"Atualize seu agente para a versão mais recente e tente novamente. Se ainda falhar, conecte-se com um token em vez disso."
+
+#. meta og:title
+#. meta twitter:title
+#: connect-agent.html
+msgid "Use Duct from Claude Code, Codex or Cursor"
+msgstr "Use o Duct de Claude Code, Codex ou Cursor"
+
+#: connect-agent.html partials/footer-expanded.html
+msgid "Use Duct from your agent"
+msgstr "Use o Duct do seu agente"
+
+#: connect-agent.html
+msgid "Use Duct from your agent.<0/><1>No token to copy.</1>"
+msgstr "Use o Duct do seu agente.<0/><1>Nenhum token para copiar.</1>"
+
+#: connect-agent.html
+msgid ""
+"Use your own API address followed by /mcp, in place of https://api.getduct.ai/mcp."
+msgstr ""
+"Use seu próprio endereço de API seguido por /mcp, no lugar de https://api.getduct.ai/mcp."
+
+#: connect-agent.html
+msgid ""
+"Use your own API address followed by <0>/mcp</0>, in place of <1>https://api.getduct.ai/mcp</1>."
+msgstr ""
+"Use seu próprio endereço de API seguido por <0>/mcp</0>, no lugar de <1>https://api.getduct.ai/mcp</1>."
+
+#: connect-agent.html
+msgid "VS Code"
+msgstr "VS Code"
+
+#: connect-agent.html
+msgid ""
+"VS Code asks you to sign in the first time it uses Duct. Your browser opens on Duct. Click Allow."
+msgstr ""
+"O VS Code pede para você entrar na primeira vez que usa o Duct. Seu navegador abre no Duct. Clique em Permitir."
+
+#: connect-agent.html
+msgid ""
+"Want Duct's own agent to call your MCP servers instead? That is the other direction: <0>Your MCP servers in Duct →</0>"
+msgstr ""
+"Quer que o próprio agente do Duct chame seus servidores MCP em vez disso? Essa é a outra direção: <0>Seus servidores MCP no Duct →</0>"
+
+#: connect-agent.html
+msgid "What your agent can do"
+msgstr "O que seu agente pode fazer"
+
+#: connect-agent.html
+msgid ""
+"You disconnected it in Duct, or its sign-in lapsed after 90 days without use. Sign in again from your agent."
+msgstr ""
+"Você o desconectou no Duct, ou seu acesso expirou após 90 dias sem uso. Entre novamente pelo seu agente."
+
+#: connect-agent.html
+msgid "You see every connected agent"
+msgstr "Você vê cada agente conectado"
+
+#. div aria-label
+#: connect-agent.html
+msgid "Your agent"
+msgstr "Seu agente"
+
+#: connect-agent.html
+msgid "Your agent can"
+msgstr "Seu agente pode"
+
+#: connect-agent.html
+msgid ""
+"Your browser opens on Duct and asks whether your agent may use your account. Click Allow. There is no token to copy."
+msgstr ""
+"Seu navegador abre no Duct e pergunta se seu agente pode usar sua conta. Clique em Permitir. Não há token para copiar."
+
+#: connect-agent.html
+msgid "Your browser opens on Duct. Click Allow."
+msgstr "Seu navegador abre no Duct. Clique em Permitir."
+
+#: connect-agent.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-seo-audit.html partials/nav-simple.html
+msgid "duct <0></0>"
+msgstr "duct <0></0>"
 
 #: doctrine.html
 msgid ""
@@ -1615,11 +2066,6 @@ msgstr ""
 "Metas, decisões e o que aprendeu, em uma linha do tempo que você pode corrigir."
 
 #. img alt
-#: download.html index.html
-msgid "The Connections page with twelve tools, five of them connected"
-msgstr "A página de Conexões com doze ferramentas, cinco delas conectadas"
-
-#. img alt
 #: download.html
 msgid ""
 "The Duct desktop app: an insights session with a proposed change waiting for approval on the left, the brief it wrote on the right"
@@ -1632,6 +2078,11 @@ msgid ""
 "The Memory timeline: a CPA target, a decision, an event, and what the agent learned this week"
 msgstr ""
 "A linha do tempo da Memória: uma meta de CPA, uma decisão, um evento e o que o agente aprendeu esta semana"
+
+#. img alt
+#: download.html index.html
+msgid "The Toolbox with twelve tools, five of them connected"
+msgstr "A Caixa de ferramentas com doze ferramentas, cinco delas conectadas"
 
 #: download.html
 msgid ""
@@ -3151,10 +3602,6 @@ msgid "API key pair"
 msgstr "Par de chaves da API"
 
 #: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
-msgid "Access"
-msgstr "Acesso"
-
-#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
 msgid "All integrations"
 msgstr "Todas as integrações"
 
@@ -3300,9 +3747,9 @@ msgstr "Quantas instalações vieram de um toque, e quantas de uma visualizaçã
 
 #: integrations/apple-search-ads.html
 msgid ""
-"In Duct, open Connections, choose Apple Search Ads and paste the three IDs and the private key."
+"In Duct, open the Toolbox, choose Apple Search Ads and paste the three IDs and the private key."
 msgstr ""
-"No Duct, abra Conexões, escolha Apple Search Ads e cole os três IDs e a chave privada."
+"No Duct, abra a Caixa de ferramentas, escolha Apple Search Ads e cole os três IDs e a chave privada."
 
 #. meta twitter:description
 #: integrations/apple-search-ads.html
@@ -3434,10 +3881,6 @@ msgid ""
 "Yes. Duct is free with your own model keys or the ChatGPT plan you already have, and the core is MIT licensed. A paid plan later bundles the models; nothing open today moves behind it. What will cost money."
 msgstr ""
 "Sim. Duct é gratuito com suas próprias chaves de modelo ou o plano ChatGPT que você já tem, e o núcleo tem licença MIT. Um plano pago posteriormente agrupará os modelos; nada que é aberto hoje passará a ser pago. O que vai custar dinheiro."
-
-#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-seo-audit.html partials/nav-simple.html
-msgid "duct <0></0>"
-msgstr "duct <0></0>"
 
 #: integrations/chatgpt-ads.html
 msgid ""
@@ -3607,8 +4050,8 @@ msgstr ""
 "Toda plataforma de anúncios informa conversões que atribui a si mesma. O Duct as reconcilia com o Stripe, nunca umas contra as outras."
 
 #: integrations/chatgpt-ads.html
-msgid "In Duct, open Connections, choose OpenAI Ads and paste the key."
-msgstr "No Duct, abra Conexões, escolha OpenAI Ads e cole a chave."
+msgid "In Duct, open the Toolbox, choose OpenAI Ads and paste the key."
+msgstr "No Duct, abra a Caixa de ferramentas, escolha OpenAI Ads e cole a chave."
 
 #: integrations/chatgpt-ads.html
 msgid ""
@@ -3905,8 +4348,8 @@ msgstr ""
 "Google Analytics Data API (ga4-data-v1beta) · campos auditados em 24 de setembro de 2026 · <0>ler a fonte</0>"
 
 #: integrations/ga4.html
-msgid "In Duct, open Connections and choose Google Analytics."
-msgstr "No Duct, abra Conexões e escolha Google Analytics."
+msgid "In Duct, open the Toolbox and choose Google Analytics."
+msgstr "No Duct, abra a Caixa de ferramentas e escolha Google Analytics."
 
 #: integrations/ga4.html
 msgid "Link Google Ads account to GA4"
@@ -4242,8 +4685,8 @@ msgstr ""
 "Se alguém alterar o orçamento, lance ou status depois que você aprovou, o Duct se recusa a aplicar sobre isso."
 
 #: integrations/google-ads.html
-msgid "In Duct, open Connections and choose Google Ads."
-msgstr "No Duct, abra Conexões e escolha Google Ads."
+msgid "In Duct, open the Toolbox and choose Google Ads."
+msgstr "No Duct, abra a Caixa de ferramentas e escolha Google Ads."
 
 #: integrations/google-ads.html
 msgid ""
@@ -4460,8 +4903,8 @@ msgstr ""
 "Impressões aumentaram, testes estáveis? Duct lê consulta por página do Search Console ao lado do GA4 e encontra as consultas para as quais você ranqueia e não converte."
 
 #: integrations/google-search-console.html
-msgid "In Duct, open Connections and choose Google Search Console."
-msgstr "No Duct, abra Conexões e escolha Google Search Console."
+msgid "In Duct, open the Toolbox and choose Google Search Console."
+msgstr "No Duct, abra a Caixa de ferramentas e escolha Google Search Console."
 
 #: integrations/google-search-console.html
 msgid "Is organic growth real, or bots?"
@@ -4730,8 +5173,8 @@ msgid "How does rollback work?"
 msgstr "Como funciona a reversão?"
 
 #: integrations/google-tag-manager.html
-msgid "In Duct, open Connections and choose Google Tag Manager."
-msgstr "No Duct, abra Conexões e escolha Google Tag Manager."
+msgid "In Duct, open the Toolbox and choose Google Tag Manager."
+msgstr "No Duct, abra a Caixa de ferramentas e escolha Google Tag Manager."
 
 #: integrations/google-tag-manager.html
 msgid "Is the tag firing, or firing the wrong thing?"
@@ -5013,8 +5456,9 @@ msgstr ""
 
 #: integrations/growthbook.html
 msgid ""
-"In Duct, open Connections, choose GrowthBook and paste the key and the project ID."
-msgstr "No Duct, abra Conexões, escolha GrowthBook e cole a chave e o ID do projeto."
+"In Duct, open the Toolbox, choose GrowthBook and paste the key and the project ID."
+msgstr ""
+"No Duct, abra a Caixa de ferramentas, escolha GrowthBook e cole a chave e o ID do projeto."
 
 #: integrations/growthbook.html
 msgid "In GrowthBook, open Settings, then API Keys, and create a read-only key."
@@ -5458,8 +5902,8 @@ msgid "How much of Meta's credit comes from views, not clicks?"
 msgstr "Quanto do crédito do Meta vem de visualizações, não de cliques?"
 
 #: integrations/meta-ads.html
-msgid "In Duct, open Connections, choose Meta Ads and paste the token."
-msgstr "No Duct, abra Conexões, escolha Meta Ads e cole o token."
+msgid "In Duct, open the Toolbox, choose Meta Ads and paste the token."
+msgstr "No Duct, abra a Caixa de ferramentas, escolha Meta Ads e cole o token."
 
 #: integrations/meta-ads.html
 msgid ""
@@ -5754,8 +6198,9 @@ msgstr ""
 "No Clarity, abra Configurações, depois Exportação de Dados, e gere um token de API."
 
 #: integrations/microsoft-clarity.html
-msgid "In Duct, open Connections, choose Microsoft Clarity and paste the token."
-msgstr "No Duct, abra Conexões, escolha Microsoft Clarity e cole o token."
+msgid "In Duct, open the Toolbox, choose Microsoft Clarity and paste the token."
+msgstr ""
+"No Duct, abra a Caixa de ferramentas, escolha Microsoft Clarity e cole o token."
 
 #. meta twitter:description
 #: integrations/microsoft-clarity.html
@@ -5942,8 +6387,8 @@ msgid "How many signups carry no campaign at all?"
 msgstr "Quantos cadastros não têm nenhuma campanha?"
 
 #: integrations/mixpanel.html
-msgid "In Duct, open Connections, choose Mixpanel and paste them."
-msgstr "No Duct, abra Conexões, escolha Mixpanel e cole-os."
+msgid "In Duct, open the Toolbox, choose Mixpanel and paste them."
+msgstr "No Duct, abra a Caixa de ferramentas, escolha Mixpanel e cole-os."
 
 #: integrations/mixpanel.html
 msgid ""
@@ -6230,8 +6675,8 @@ msgid "How many trials are active right now?"
 msgstr "Quantos testes estão ativos agora?"
 
 #: integrations/revenuecat.html
-msgid "In Duct, open Connections, choose RevenueCat and paste the key."
-msgstr "No Duct, abra Conexões, escolha RevenueCat e cole a chave."
+msgid "In Duct, open the Toolbox, choose RevenueCat and paste the key."
+msgstr "No Duct, abra a Caixa de ferramentas, escolha RevenueCat e cole a chave."
 
 #: integrations/revenuecat.html
 msgid ""
@@ -6506,9 +6951,9 @@ msgstr "Quantos clientes pagantes os anúncios pagos trouxeram este mês?"
 
 #: integrations/stripe.html
 msgid ""
-"In Duct, open Connections, choose Stripe and paste the key. Duct checks each permission and names any that is missing."
+"In Duct, open the Toolbox, choose Stripe and paste the key. Duct checks each permission and names any that is missing."
 msgstr ""
-"No Duct, abra Conexões, escolha Stripe e cole a chave. O Duct verifica cada permissão e nomeia qualquer uma que esteja faltando."
+"No Duct, abra a Caixa de ferramentas, escolha Stripe e cole a chave. O Duct verifica cada permissão e lista as que estão faltando."
 
 #: integrations/stripe.html
 msgid "In Stripe, open Developers, then API keys, and create a restricted key."
@@ -6786,9 +7231,9 @@ msgstr "Como conectar um servidor"
 
 #: mcp.html
 msgid ""
-"In the Duct app, open Connections. The ready-made servers are listed there, and any other connects by its address."
+"In the Duct app, open the Toolbox. The ready-made servers are listed there, and any other connects by its address."
 msgstr ""
-"No app do Duct, abra Conexões. Os servidores prontos estão listados lá, e qualquer outro se conecta pelo seu endereço."
+"No app do Duct, abra a Caixa de ferramentas. Os servidores prontos estão listados lá, e qualquer outro se conecta pelo seu endereço."
 
 #: mcp.html
 msgid "It says “Duct only connects to servers on the public internet”"
@@ -6814,7 +7259,7 @@ msgstr "Linear"
 msgid "Local servers that run over stdio on your own computer."
 msgstr "Servidores locais que executam via stdio no seu próprio computador."
 
-#: mcp.html partials/footer-expanded.html
+#: mcp.html
 msgid "MCP servers"
 msgstr "Servidores MCP"
 
@@ -6849,8 +7294,8 @@ msgstr ""
 "Entrar com um clique quando o servidor publica a descoberta OAuth e aceita um documento de metadados do cliente ou permite o registro dinâmico de clientes."
 
 #: mcp.html
-msgid "Open Connections"
-msgstr "Abrir Conexões"
+msgid "Open the Toolbox"
+msgstr "Abrir a Caixa de ferramentas"
 
 #: mcp.html
 msgid "OpenSEO"
@@ -6874,9 +7319,9 @@ msgstr "Escolha um servidor ou cole o endereço"
 
 #: mcp.html
 msgid ""
-"Pick one on Connections and sign in with the account you already have. Each address is here for reference; you never have to type it."
+"Pick one in the Toolbox and sign in with the account you already have. Each address is here for reference; you never have to type it."
 msgstr ""
-"Escolha um em Conexões e entre com a conta que você já tem. Cada endereço está aqui para referência; você nunca precisa digitá-lo."
+"Escolha um na Caixa de ferramentas e entre com a conta que você já tem. Cada endereço está aqui para referência; você nunca precisa digitá-lo."
 
 #. meta og:description
 #: mcp.html
@@ -6885,7 +7330,7 @@ msgid ""
 msgstr ""
 "Conecte os servidores MCP que você já usa ao agente do Duct. Ferramentas somente leitura são executadas imediatamente; qualquer outra coisa espera sua aprovação primeiro."
 
-#: mcp.html
+#: mcp.html privacy.html
 msgid "PostHog"
 msgstr "PostHog"
 
@@ -6908,10 +7353,6 @@ msgstr "Pronto"
 #: mcp.html
 msgid "Replies are data, not orders"
 msgstr "Respostas são dados, não ordens"
-
-#: mcp.html
-msgid "Server address"
-msgstr "Endereço do servidor"
 
 #: mcp.html
 msgid ""
@@ -6969,15 +7410,15 @@ msgstr ""
 
 #: mcp.html
 msgid ""
-"The server offers no sign-in Duct can use. Create an API key in the vendor's settings and paste it on Connections."
+"The server offers no sign-in Duct can use. Create an API key in the vendor's settings and paste it in the Toolbox."
 msgstr ""
-"O servidor não oferece um entrar que o Duct possa usar. Crie uma chave de API nas configurações do fornecedor e cole-a em Conexões."
+"O servidor não oferece um login que o Duct possa usar. Crie uma chave de API nas configurações do fornecedor e cole-a na Caixa de ferramentas."
 
 #: mcp.html
 msgid ""
-"The sign-in expired, or was revoked on the vendor's side. Press Reconnect on Connections and sign in again."
+"The sign-in expired, or was revoked on the vendor's side. Press Reconnect in the Toolbox and sign in again."
 msgstr ""
-"O entrar expirou ou foi revogado no lado do fornecedor. Pressione Reconectar em Conexões e entre novamente."
+"O login expirou ou foi revogado pelo fornecedor. Pressione Reconectar na Caixa de ferramentas e entre novamente."
 
 #: mcp.html
 msgid ""
@@ -6994,10 +7435,6 @@ msgid ""
 "Today, connected servers are used in the insights chat. Scheduled briefs and Content Studio do not call them yet."
 msgstr ""
 "Hoje, servidores conectados são usados no chat de insights. Resumos agendados e Content Studio ainda não os chamam."
-
-#: mcp.html
-msgid "Troubleshooting"
-msgstr "Solução de problemas"
 
 #: mcp.html
 msgid "Try: <0>Did yesterday's deploy go out cleanly?</0>"
@@ -7034,6 +7471,12 @@ msgstr ""
 #: mcp.html
 msgid "Waiting for you"
 msgstr "Aguardando você"
+
+#: mcp.html
+msgid ""
+"Want to use Duct from your own agent instead, like Claude Code or Cursor? <0>Use Duct from your agent →</0>"
+msgstr ""
+"Quer usar o Duct do seu próprio agente, como Claude Code ou Cursor? <0>Use o Duct do seu agente →</0>"
 
 #: mcp.html
 msgid ""
@@ -7659,6 +8102,10 @@ msgid "X / Twitter"
 msgstr "X / Twitter"
 
 #: partials/footer-expanded.html
+msgid "Your MCP servers in Duct"
+msgstr "Seus servidores MCP no Duct"
+
+#: partials/footer-expanded.html
 msgid "© 2026 Alleviate Lab · Spain · Built in the open by <0>Shirish Kadam</0>."
 msgstr ""
 "© 2026 Alleviate Lab · Espanha · Construído em código aberto por <0>Shirish Kadam</0>."
@@ -7775,6 +8222,10 @@ msgid "How Duct works"
 msgstr "Como o Duct funciona"
 
 #: privacy.html
+msgid "1 year"
+msgstr "1 ano"
+
+#: privacy.html
 msgid "1. Google User Data We Access"
 msgstr "1. Dados de Usuário do Google que Acessamos"
 
@@ -7819,16 +8270,16 @@ msgid "19. Contact"
 msgstr "19. Contato"
 
 #: privacy.html
-msgid "2 years"
-msgstr "2 anos"
-
-#: privacy.html
 msgid "2. Changes Duct Makes on Your Behalf"
 msgstr "2. Alterações que o Duct Faz em Seu Nome"
 
 #: privacy.html
 msgid "3. How We Use Google User Data"
 msgstr "3. Como Usamos os Dados de Usuário do Google"
+
+#: privacy.html
+msgid "30 days"
+msgstr "30 dias"
 
 #: privacy.html
 msgid "4. Limited Use of Google User Data"
@@ -7863,10 +8314,6 @@ msgid "9. Website Audits and Lead Reports"
 msgstr "9. Auditorias de Site e Relatórios de Leads"
 
 #: privacy.html
-msgid "90 days"
-msgstr "90 dias"
-
-#: privacy.html
 msgid "<0>Advertising:</0> Meta Ads, Apple Search Ads, OpenAI Ads"
 msgstr "<0>Publicidade:</0> Meta Ads, Apple Search Ads, OpenAI Ads"
 
@@ -7898,9 +8345,9 @@ msgstr ""
 
 #: privacy.html
 msgid ""
-"<0>Crash reports and usage data are on by default in the app we distribute, and one switch in Preferences turns both off.</0> Once you touch it your answer is kept and no default applies again. A crash report contains the error and the stack trace that caused it; usage data is which screens and features you open — never your provider API keys, your data, or anything you generate. If you build Duct yourself both are off by default instead, because then we are not the ones running it."
+"<0>Crash reports and usage data are on by default in the app we distribute, and one switch in Preferences turns both off.</0> Once you touch it your answer is kept and no default applies again. A crash report contains the error and the stack trace that caused it; usage data is which screens and features you open — never your provider API keys, your data, or anything you generate. If you are signed in, both carry your account ID. If you build Duct yourself both are off by default instead, because then we are not the ones running it."
 msgstr ""
-"<0>Relatórios de falhas e dados de uso vêm ativados por padrão no app que distribuímos, e um único botão em Preferências desativa ambos.</0> Depois de tocar nele, sua resposta é mantida e nenhum padrão se aplica novamente. Um relatório de falhas contém o erro e o rastreamento de pilha que o causou; dados de uso são as telas e recursos que você abre — nunca suas chaves de API de provedor, seus dados ou qualquer coisa que você gere. Se você construir o Duct por conta própria, ambos vêm desativados por padrão, porque então não somos nós que o estamos executando."
+"<0>Relatórios de falhas e dados de uso estão ativados por padrão no app que distribuímos, e um único interruptor em Preferências desativa ambos.</0> Depois de tocar nele, sua resposta é mantida e nenhum padrão se aplica novamente. Um relatório de falha contém o erro e o rastreamento de pilha que o causou; dados de uso são as telas e recursos que você abre — nunca suas chaves de API de provedor, seus dados ou qualquer coisa que você gera. Se você estiver conectado, ambos carregam seu ID de conta. Se você construir o Duct por conta própria, ambos estarão desativados por padrão, porque então não somos nós que o estamos executando."
 
 #: privacy.html
 msgid ""
@@ -7916,9 +8363,9 @@ msgstr ""
 
 #: privacy.html
 msgid ""
-"<0>Disconnect one source:</0> remove it on the Connections page in Duct. Its stored credentials are deleted at that point."
+"<0>Disconnect one source:</0> remove it from the Toolbox in Duct. Its stored credentials are deleted at that point."
 msgstr ""
-"<0>Desconectar uma fonte:</0> remova-a na página Conexões no Duct. Suas credenciais armazenadas são excluídas naquele momento."
+"<0>Desconectar uma fonte:</0> remova-a da Caixa de ferramentas no Duct. Suas credenciais armazenadas são excluídas naquele momento."
 
 #: privacy.html
 msgid "<0>Experimentation:</0> GrowthBook"
@@ -7950,6 +8397,12 @@ msgstr ""
 
 #: privacy.html
 msgid ""
+"<0>In the web app,</0> everything you type, and also all text on screen, images, embedded documents, charts and video. A replay of the app shows the layout, your clicks and where you went, never the data on the page. When PostHog counts a click in the app, it records which element was clicked, not the text on it."
+msgstr ""
+"<0>No app web,</0> tudo o que você digita, e também todo o texto na tela, imagens, documentos incorporados, gráficos e vídeos. Uma reprodução do app mostra o layout, seus cliques e por onde você navegou, nunca os dados da página. Quando o PostHog contabiliza um clique no app, ele registra qual elemento foi clicado, não o texto nele."
+
+#: privacy.html
+msgid ""
 "<0>Nothing is written automatically.</0> Duct proposes a change set, shows you the exact before-and-after for every individual change, and applies nothing until you explicitly approve it in the app."
 msgstr ""
 "<0>Nada é gravado automaticamente.</0> O Duct propõe um conjunto de alterações, mostra o antes e o depois exato para cada alteração individual e não aplica nada até que você o aprove explicitamente no app."
@@ -7961,10 +8414,20 @@ msgstr ""
 "<0>Tokens OAuth e chaves de provedor salvas são criptografados em repouso</0> usando criptografia simétrica Fernet, armazenados no servidor por usuário e nunca expostos ao navegador"
 
 #: privacy.html
+msgid "<0>On our website,</0> everything you type into a field."
+msgstr "<0>No nosso site,</0> tudo o que você digita em um campo."
+
+#: privacy.html
 msgid ""
 "<0>OpenRouter is a router, not a model provider,</0> and it warrants a specific note. It forwards a request to whichever underlying provider the routing configuration selects, and those providers differ in whether they log or train on what they receive. Where you supply your own OpenRouter key, that routing configuration is yours: the retention and training behaviour of a request is governed by the data policy set on your OpenRouter account, and you should set it to match the commitments you need. We recommend enabling OpenRouter's zero-logging and no-training data policy before connecting a key. Duct does not use your data for training regardless of which route is taken."
 msgstr ""
 "<0>OpenRouter é um roteador, não um provedor de modelo,</0> e merece uma nota específica. Ele encaminha uma solicitação para o provedor subjacente que a configuração de roteamento selecionar, e esses provedores diferem quanto ao registro ou treinamento com base no que recebem. Onde você fornece sua própria chave OpenRouter, essa configuração de roteamento é sua: o comportamento de retenção e treinamento de uma solicitação é regido pela política de dados definida em sua conta OpenRouter, e você deve configurá-la para corresponder aos compromissos de que precisa. Recomendamos ativar a política de dados de zero registro e sem treinamento do OpenRouter antes de conectar uma chave. O Duct não usa seus dados para treinamento, independentemente da rota que for tomada."
+
+#: privacy.html
+msgid ""
+"<0>PostHog, Inc. is a US company, and stores what it receives in its US region.</0> Sending it data from the EU relies on the EU Standard Contractual Clauses in PostHog's data processing agreement."
+msgstr ""
+"<0>PostHog, Inc. é uma empresa dos EUA e armazena o que recebe em sua região nos EUA.</0> O envio de dados da UE para ele depende das Cláusulas Contratuais Padrão da UE no acordo de processamento de dados do PostHog."
 
 #: privacy.html
 msgid "<0>Product and behavioural analytics:</0> Mixpanel, Microsoft Clarity"
@@ -8030,9 +8493,15 @@ msgstr ""
 
 #: privacy.html
 msgid ""
-"<0>The desktop app sets no cookies, and is never going to ask you about them.</0> It reports usage through the same Google Tag Manager container as the rest of Duct, but with storage switched off permanently: Google Analytics receives the event and writes nothing to your machine, so none of the cookies in section 11 exist there and there is nothing to consent to. A consent bar in front of an application you just opened is not a question worth interrupting anyone for."
+"<0>The desktop app never records a replay of your session.</0> Session replay (section 11) exists only on our website and in the web app in a browser."
 msgstr ""
-"<0>O app para desktop não define cookies e nunca vai perguntar sobre eles.</0> Ele relata o uso através do mesmo contêiner do Google Tag Manager que o restante do Duct, mas com o armazenamento desativado permanentemente: o Google Analytics recebe o evento e não escreve nada na sua máquina, então nenhum dos cookies da seção 11 existe lá e não há nada para consentir. Uma barra de consentimento na frente de um aplicativo que você acabou de abrir não é uma pergunta que valha a pena interromper alguém."
+"<0>O app para desktop nunca grava um replay da sua sessão.</0> O replay de sessão (seção 11) existe apenas em nosso site e no app web em um navegador."
+
+#: privacy.html
+msgid ""
+"<0>The desktop app sets no cookies, and is never going to ask you about them.</0> Its usage events and crash reports go to PostHog, which in the desktop app holds everything in memory and writes nothing to your machine, so none of the cookies in section 11 exist there and there is nothing to consent to. A consent bar in front of an application you just opened is not a question worth interrupting anyone for."
+msgstr ""
+"<0>O app para desktop não define cookies e nunca vai perguntar sobre eles.</0> Seus eventos de uso e relatórios de falhas vão para o PostHog, que no app para desktop mantém tudo na memória e não escreve nada em sua máquina, então nenhum dos cookies da seção 11 existe lá e não há nada para consentir. Uma barra de consentimento na frente de um aplicativo que você acabou de abrir não é uma pergunta que valha a pena interromper alguém."
 
 #: privacy.html
 msgid ""
@@ -8061,6 +8530,10 @@ msgstr ""
 #: privacy.html
 msgid "A stable Google account identifier"
 msgstr "Um identificador estável de conta Google"
+
+#: privacy.html
+msgid "AI model calls"
+msgstr "Chamadas de modelo de IA"
 
 #: privacy.html
 msgid ""
@@ -8111,10 +8584,6 @@ msgstr "Apify"
 #: privacy.html
 msgid "Application hosting and the primary database"
 msgstr "Hospedagem de aplicativo e o banco de dados principal"
-
-#: privacy.html
-msgid "Attributes a signup to the ad or link that led to it"
-msgstr "Atribui um cadastro ao anúncio ou link que o gerou"
 
 #: privacy.html
 msgid "Audit tool submissions"
@@ -8171,9 +8640,9 @@ msgstr ""
 
 #: privacy.html
 msgid ""
-"Declining means Google Tag Manager is never loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we delete the cookies below and reload the page."
+"Declining means PostHog is not loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we stop PostHog, delete the cookies below and PostHog's copy of them in your browser's storage, and reload the page."
 msgstr ""
-"Recusar significa que o Google Tag Manager nunca é carregado, em vez de ser carregado em modo restrito. Se você recusar após ter aceitado anteriormente, excluímos os cookies abaixo e recarregamos a página."
+"Recusar significa que o PostHog não é carregado, em vez de ser carregado em um modo restrito. Se você recusar depois de ter aceitado anteriormente, paramos o PostHog, excluímos os cookies abaixo e a cópia deles do PostHog no armazenamento do seu navegador, e recarregamos a página."
 
 #: privacy.html
 msgid ""
@@ -8191,9 +8660,9 @@ msgstr "Diagnósticos"
 
 #: privacy.html
 msgid ""
-"Distinguishes one visitor from another so a returning visit is not counted twice"
+"Distinguishes one visitor from another, and carries the same visit across <0>getduct.ai</0> and <1>app.getduct.ai</1> so it counts as one person, not two. PostHog may keep the same value in your browser's local storage"
 msgstr ""
-"Distingue um visitante de outro para que uma visita de retorno não seja contada duas vezes"
+"Distingue um visitante de outro e leva a mesma visita através de <0>getduct.ai</0> e <1>app.getduct.ai</1> para que conte como uma pessoa, não duas. O PostHog pode manter o mesmo valor no armazenamento local do seu navegador"
 
 #: privacy.html
 msgid ""
@@ -8269,16 +8738,14 @@ msgid "End of session"
 msgstr "Fim da sessão"
 
 #: privacy.html
-msgid "Error diagnostics"
-msgstr "Diagnóstico de erros"
-
-#: privacy.html
-msgid "Error monitoring and crash reporting"
-msgstr "Monitoramento de erros e relatórios de falhas"
-
-#: privacy.html
 msgid "Expires"
 msgstr "Expira"
+
+#: privacy.html
+msgid ""
+"For each call Duct makes to an AI model we record metadata only: the model, the number of tokens, how long it took, what it cost, and any error. Never the prompt or the response text."
+msgstr ""
+"Para cada chamada que o Duct faz a um modelo de IA, registramos apenas metadados: o modelo, o número de tokens, quanto tempo levou, quanto custou e qualquer erro. Nunca o prompt ou o texto da resposta."
 
 #: privacy.html
 msgid "For privacy questions, data access or deletion requests:"
@@ -8312,10 +8779,6 @@ msgid "Google Search Console queries, pages, impressions, clicks and positions"
 msgstr "Consultas, páginas, impressões, cliques e posições do Google Search Console"
 
 #: privacy.html
-msgid "Google Tag Manager (Conversion Linker)"
-msgstr "Google Tag Manager (Vinculador de Conversões)"
-
-#: privacy.html
 msgid "Google Tag Manager accounts, containers, tags and triggers"
 msgstr "Contas, contêineres, tags e acionadores do Google Tag Manager"
 
@@ -8334,10 +8797,6 @@ msgstr ""
 "O Google é uma das várias fontes que o Duct pode conectar. Cada uma é opcional, conectada individualmente por você e acessada através da API oficial do provedor usando credenciais que você autoriza. O Duct lê as métricas necessárias para construir seus relatórios e escreve apenas as alterações que você aprovou explicitamente."
 
 #: privacy.html
-msgid "Holds the state of the current session for our specific property"
-msgstr "Mantém o estado da sessão atual para nossa propriedade específica"
-
-#: privacy.html
 msgid "If you use Duct's content features:"
 msgstr "Se você usa os recursos de conteúdo do Duct:"
 
@@ -8350,18 +8809,14 @@ msgid "In transit"
 msgstr "Em trânsito"
 
 #: privacy.html
-msgid "Incidentally, in error context only"
-msgstr "Incidentalmente, apenas no contexto de erro"
-
-#: privacy.html
 msgid ""
 "It does not cover an instance of the software that someone else runs. If you use a Duct deployment operated by a third party, or one you run yourself, the operator of that deployment is the data controller and this policy does not apply to it. Publishing the code does not give us access to any data held in a deployment we do not operate."
 msgstr ""
 "Não cobre uma instância do software que outra pessoa executa. Se você usa uma implantação do Duct operada por terceiros, ou uma que você mesmo executa, o operador dessa implantação é o controlador de dados e esta política não se aplica a ela. A publicação do código não nos dá acesso a quaisquer dados mantidos em uma implantação que não operamos."
 
 #: privacy.html terms.html
-msgid "Last updated: September 7, 2026"
-msgstr "Última atualização: 7 de setembro de 2026"
+msgid "Last updated: October 29, 2026"
+msgstr "Última atualização: 29 de outubro de 2026"
 
 #. meta og:description
 #. meta twitter:description
@@ -8382,8 +8837,10 @@ msgid "No"
 msgstr "Não"
 
 #: privacy.html
-msgid "No — email address and report content only"
-msgstr "Não — apenas endereço de e-mail e conteúdo do relatório"
+msgid ""
+"No — usage events, session replays masked as described in section 11, error reports, page timing and AI call metadata; never your connected tools' data or your prompts. An error report may incidentally contain an identifier, as described in section 11"
+msgstr ""
+"Não — eventos de uso, reproduções de sessão mascaradas conforme descrito na seção 11, relatórios de erro, tempo de carregamento da página e metadados de chamadas de IA; nunca os dados das suas ferramentas conectadas ou seus prompts. Um relatório de erro pode, incidentalmente, conter um identificador, conforme descrito na seção 11."
 
 #: privacy.html
 msgid "OAuth refresh tokens and saved provider keys"
@@ -8396,14 +8853,32 @@ msgstr ""
 "O nosso auditor de SEO público coleta o endereço de e-mail e o URL do site que você envia, recupera páginas desse site para analisá-las e envia o relatório resultante por e-mail. Armazenamos o envio e o relatório para que possamos reenviá-lo e para que possamos contatá-lo sobre o Duct. Envie apenas um site que você possui ou está autorizado a auditar. Peça-nos em <0>hello@getduct.ai</0> para excluir um envio."
 
 #: privacy.html
+msgid ""
+"Our servers report their own errors to PostHog the same way, along with a few log lines recording when a server starts and stops. We configure error reporting to avoid capturing Google user data, but a report may incidentally contain an identifier such as a property ID."
+msgstr ""
+"Nossos servidores reportam seus próprios erros ao PostHog da mesma forma, juntamente com algumas linhas de log registrando quando um servidor inicia e para. Configuramos o relatório de erros para evitar a captura de dados de usuário do Google, mas um relatório pode incidentalmente conter um identificador, como um ID de propriedade."
+
+#: privacy.html
 msgid "PostBridge"
 msgstr "PostBridge"
+
+#: privacy.html
+msgid ""
+"PostHog also records session replays: a reconstruction of the page and where you clicked, so we can watch where a visit went wrong. What a replay hides is hidden in your browser, before anything leaves it:"
+msgstr ""
+"O PostHog também registra reproduções de sessão: uma reconstrução da página e onde você clicou, para que possamos ver onde uma visita deu errado. O que uma reprodução oculta é escondido no seu navegador, antes que qualquer coisa o deixe:"
 
 #. meta og:title
 #. meta twitter:title
 #: privacy.html
 msgid "Privacy Policy — Duct"
 msgstr "Política de Privacidade — Duct"
+
+#: privacy.html
+msgid ""
+"Product and web analytics, session replay, error and crash reporting, page-speed measurement, AI call metadata"
+msgstr ""
+"Análise de produto e web, replay de sessão, relatório de erros e falhas, medição de velocidade da página, metadados de chamadas de IA"
 
 #: privacy.html
 msgid "Prompts and reference media only"
@@ -8427,13 +8902,15 @@ msgstr "Recebe dados de fontes conectadas?"
 
 #: privacy.html
 msgid ""
-"Remembers your choice, so you are not asked on every page. Set on <0>getduct.ai</0> and all its subdomains, so answering once in your browser also answers for the app. The desktop app never sets it, because it loads no analytics at all. Strictly necessary — it exists whether you accept or decline"
+"Remembers your choice, so you are not asked on every page. Set on <0>getduct.ai</0> and all its subdomains, so answering once in your browser also answers for the app. The desktop app never sets it, because it never asks (section 7). Strictly necessary — it exists whether you accept or decline"
 msgstr ""
-"Lembra sua escolha, para que você não seja perguntado em todas as páginas. Definido em <0>getduct.ai</0> e todos os seus subdomínios, assim, responder uma vez no seu navegador também responde para o app. O app para desktop nunca o define, porque ele não carrega nenhuma análise. Estritamente necessário — ele existe independentemente de você aceitar ou recusar"
+"Lembra sua escolha, para que você não seja perguntado em todas as páginas. Definido em <0>getduct.ai</0> e todos os seus subdomínios, então responder uma vez no seu navegador também responde para o app. O app para desktop nunca o define, porque nunca pergunta (seção 7). Estritamente necessário — ele existe quer você aceite ou recuse"
 
 #: privacy.html
-msgid "Resend"
-msgstr "Reenviar"
+msgid ""
+"Replays never include your browser's console logs. We do not record keystrokes or form contents."
+msgstr ""
+"As reproduções nunca incluem os logs do console do seu navegador. Não registramos digitações ou conteúdos de formulários."
 
 #: privacy.html
 msgid ""
@@ -8460,8 +8937,14 @@ msgstr ""
 "Vender, alugar ou transferir dados de usuário do Google para corretores de dados, revendedores de informações ou qualquer terceiro para seus próprios propósitos"
 
 #: privacy.html
-msgid "Sentry"
-msgstr "Sentry"
+msgid "Session replays (PostHog)"
+msgstr "Replays de sessão (PostHog)"
+
+#: privacy.html
+msgid ""
+"Session replays and click analytics in the web app never record Google user data: all text on screen is masked in your browser before anything is sent (section 11)."
+msgstr ""
+"As reproduções de sessão e a análise de cliques no app web nunca registram dados de usuário do Google: todo o texto na tela é mascarado no seu navegador antes que qualquer coisa seja enviada (seção 11)."
 
 #: privacy.html
 msgid "Set by"
@@ -8555,10 +9038,6 @@ msgstr ""
 "Para relatar sobre tráfego, conversão e retenção juntamente com suas outras ferramentas"
 
 #: privacy.html
-msgid "Transactional email (report delivery, project invitations)"
-msgstr "E-mail transacional (entrega de relatório, convites de projeto)"
-
-#: privacy.html
 msgid "Until you ask us to delete them"
 msgstr "Até que você nos peça para excluí-los"
 
@@ -8569,8 +9048,16 @@ msgstr ""
 "Até que você desconecte a fonte, exclua a chave, exclua sua conta ou revogue o acesso no provedor — o que ocorrer primeiro"
 
 #: privacy.html
+msgid "Up to 7 years, the retention of our PostHog plan"
+msgstr "Até 7 anos, a retenção do nosso plano PostHog"
+
+#: privacy.html
 msgid "Usage data"
 msgstr "Dados de uso"
+
+#: privacy.html
+msgid "Usage events, error reports and AI call metadata (PostHog)"
+msgstr "Eventos de uso, relatórios de erros e metadados de chamadas de IA (PostHog)"
 
 #: privacy.html
 msgid "Use Google user data to build or enrich independent databases or profiles"
@@ -8596,21 +9083,27 @@ msgstr ""
 
 #: privacy.html
 msgid ""
-"We are based in Spain and process personal data under the EU GDPR. You have the right to access, correct, export, restrict the processing of, or delete your personal data, and to object to processing. Our legal basis is the performance of our contract with you for operating the product, and legitimate interest for security and diagnostics. Exercise any of these rights at <0>hello@getduct.ai</0>; you also have the right to lodge a complaint with your local supervisory authority (in Spain, the AEPD)."
+"We are based in Spain and process personal data under the EU GDPR. You have the right to access, correct, export, restrict the processing of, or delete your personal data, and to object to processing. Our legal basis is the performance of our contract with you for operating the product; legitimate interest for security and diagnostics, including the error reports and server-side events in section 11; and your consent for analytics cookies and session replays where we ask for it. Exercise any of these rights at <0>hello@getduct.ai</0>; you also have the right to lodge a complaint with your local supervisory authority (in Spain, the AEPD)."
 msgstr ""
-"Estamos sediados na Espanha e processamos dados pessoais sob o GDPR da UE. Você tem o direito de acessar, corrigir, exportar, restringir o processamento ou excluir seus dados pessoais, e de se opor ao processamento. Nossa base legal é a execução do nosso contrato com você para operar o produto, e o interesse legítimo para segurança e diagnósticos. Exerça qualquer um desses direitos em <0>hello@getduct.ai</0>; você também tem o direito de apresentar uma reclamação à sua autoridade supervisora local (na Espanha, a AEPD)."
+"Estamos sediados na Espanha e processamos dados pessoais sob o GDPR da UE. Você tem o direito de acessar, corrigir, exportar, restringir o processamento ou excluir seus dados pessoais, e de se opor ao processamento. Nossa base legal é a execução do nosso contrato com você para operar o produto; interesse legítimo para segurança e diagnósticos, incluindo os relatórios de erros e eventos do lado do servidor na seção 11; e seu consentimento para cookies de análise e replays de sessão onde o solicitamos. Exerça qualquer um desses direitos em <0>hello@getduct.ai</0>; você também tem o direito de apresentar uma reclamação à sua autoridade supervisora local (na Espanha, a AEPD)."
 
 #: privacy.html
 msgid ""
-"We collect basic product analytics — pages visited, features used, general interaction patterns — to understand how Duct is used. This runs through Google Tag Manager, which loads Google Analytics 4. We do not record keystrokes or form contents."
+"We collect product analytics — pages visited, features used, what you click, how fast pages load — to see which pages earn a signup and where Duct gets in your way. On our website and in the web app in a browser this runs through PostHog, which follows the cookie choice described below."
 msgstr ""
-"Coletamos análises básicas do produto — páginas visitadas, recursos usados, padrões gerais de interação — para entender como o Duct é utilizado. Isso é feito através do Google Tag Manager, que carrega o Google Analytics 4. Não registramos teclas digitadas ou conteúdo de formulários."
+"Coletamos análises de produto — páginas visitadas, recursos usados, o que você clica, quão rápido as páginas carregam — para ver quais páginas geram um cadastro e onde o Duct atrapalha você. Em nosso site e no app web em um navegador, isso é feito pelo PostHog, que segue a escolha de cookies descrita abaixo."
 
 #: privacy.html
 msgid ""
 "We do not sell your data. We share it only with the service providers below, only as needed to operate Duct, and only under terms that restrict them to that purpose:"
 msgstr ""
 "Não vendemos seus dados. Compartilhamos apenas com os provedores de serviço abaixo, somente conforme necessário para operar o Duct, e apenas sob termos que os restringem a essa finalidade:"
+
+#: privacy.html
+msgid ""
+"We do not use Google Analytics, Google Tag Manager or any other tag manager. We stopped in October 2026, and our website deletes the cookies they set before then (<0>_ga</0>, <1>_gcl_au</1>) on your next visit."
+msgstr ""
+"Não usamos Google Analytics, Google Tag Manager nem qualquer outro gerenciador de tags. Paramos em outubro de 2026, e nosso site exclui na sua próxima visita os cookies que eles definiram antes disso (<0>_ga</0>, <1>_gcl_au</1>)."
 
 #: privacy.html
 msgid "We follow the principle of least privilege for internal data access"
@@ -8644,9 +9137,15 @@ msgstr "O que ele acessa"
 
 #: privacy.html
 msgid ""
-"When something breaks, we collect error reports containing the technical context of the failure (stack trace, browser, the operation attempted). We configure our error monitoring to avoid capturing Google user data, but a report may incidentally contain an identifier such as a property ID."
+"When something breaks in the web app, it sends PostHog an error report: the stack trace, your browser, the page's path without its query string, and, if you are signed in, your account ID. The web app also sends how long each page took to load and respond (web vitals), which is timing and nothing else. <0>Error reports and page timing in the web app are sent whether or not you accept analytics cookies,</0> because they store nothing on your device: they are held in memory for that page and gone when you leave it. On our website, both are part of analytics and follow your cookie choice."
 msgstr ""
-"Quando algo falha, coletamos relatórios de erro contendo o contexto técnico da falha (rastreamento de pilha, navegador, a operação tentada). Configuramos nosso monitoramento de erros para evitar a captura de dados de usuário do Google, mas um relatório pode incidentalmente conter um identificador, como um ID de propriedade."
+"Quando algo falha no app web, ele envia ao PostHog um relatório de erro: o stack trace, seu navegador, o caminho da página sem sua string de consulta e, se você estiver conectado, seu ID de conta. O app web também envia quanto tempo cada página levou para carregar e responder (web vitals), o que é apenas tempo e nada mais. <0>Relatórios de erro e tempo de carregamento da página no app web são enviados independentemente de você aceitar cookies de análise,</0> porque eles não armazenam nada no seu dispositivo: são mantidos na memória para aquela página e desaparecem quando você a deixa. No nosso site, ambos fazem parte da análise e seguem sua escolha de cookies."
+
+#: privacy.html
+msgid ""
+"When you are signed in, our servers also record the actions you take in Duct, such as starting a content plan or approving or applying a change, with your account ID. Your PostHog profile keeps your email address and name, so we can contact you about a problem you hit."
+msgstr ""
+"Quando você está conectado, nossos servidores também registram as ações que você realiza no Duct, como iniciar um plano de conteúdo ou aprovar ou aplicar uma alteração, com seu account ID. Seu perfil PostHog mantém seu email address e nome, para que possamos contatá-lo sobre um problema que você encontrou."
 
 #: privacy.html
 msgid ""
@@ -8691,18 +9190,6 @@ msgid "Your name and profile picture"
 msgstr "Seu nome e foto de perfil"
 
 #: privacy.html
-msgid "_ga"
-msgstr "_ga"
-
-#: privacy.html
-msgid "_ga_SXH5LYVTJ8"
-msgstr "_ga_SXH5LYVTJ8"
-
-#: privacy.html
-msgid "_gcl_au"
-msgstr "_gcl_au"
-
-#: privacy.html
 msgid "adwords"
 msgstr "adwords"
 
@@ -8725,6 +9212,10 @@ msgstr "duct_consent_region"
 #: privacy.html
 msgid "openid"
 msgstr "openid"
+
+#: privacy.html
+msgid "ph_phc_…_posthog"
+msgstr "ph_phc_…_posthog"
 
 #: privacy.html
 msgid "tagmanager.edit.containers"
@@ -9132,13 +9623,15 @@ msgstr ""
 
 #: terms.html
 msgid ""
+"<0>Crash reports and usage data are on by default</0> in the app we distribute, and one switch in Preferences turns both off. In a build you compile yourself they are off by default. The <1>Privacy Policy</1> says what each contains"
+msgstr ""
+"<0>Relatórios de falha e dados de uso estão ativados por padrão</0> no app que distribuímos, e um único interruptor em Preferências desativa ambos. Em uma compilação que você mesmo compila, eles estão desativados por padrão. A <1>Política de Privacidade</1> diz o que cada um contém."
+
+#: terms.html
+msgid ""
 "<0>Creating and publishing content</0> — drafts, images and video you review before anything is published (see section 8)"
 msgstr ""
 "<0>Criando e publicando conteúdo</0> — rascunhos, imagens e vídeos que você revisa antes que algo seja publicado (veja a seção 8)"
-
-#: terms.html
-msgid "<0>Diagnostics are opt-in</0> and off by default"
-msgstr "<0>Os diagnósticos são opcionais</0> e desativados por padrão"
 
 #: terms.html
 msgid ""
@@ -12096,6 +12589,220 @@ msgstr "← Voltar"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← Recomeçar"
+
+#. img alt
+#~ msgid "The Connections page with twelve tools, five of them connected"
+#~ msgstr "A página de Conexões com doze ferramentas, cinco delas conectadas"
+
+#~ msgid ""
+#~ "In Duct, open Connections, choose Apple Search Ads and paste the three IDs and the private key."
+#~ msgstr ""
+#~ "No Duct, abra Conexões, escolha Apple Search Ads e cole os três IDs e a chave privada."
+
+#~ msgid "In Duct, open Connections, choose OpenAI Ads and paste the key."
+#~ msgstr "No Duct, abra Conexões, escolha OpenAI Ads e cole a chave."
+
+#~ msgid "In Duct, open Connections and choose Google Analytics."
+#~ msgstr "No Duct, abra Conexões e escolha Google Analytics."
+
+#~ msgid "In Duct, open Connections and choose Google Ads."
+#~ msgstr "No Duct, abra Conexões e escolha Google Ads."
+
+#~ msgid "In Duct, open Connections and choose Google Search Console."
+#~ msgstr "No Duct, abra Conexões e escolha Google Search Console."
+
+#~ msgid "In Duct, open Connections and choose Google Tag Manager."
+#~ msgstr "No Duct, abra Conexões e escolha Google Tag Manager."
+
+#~ msgid ""
+#~ "In Duct, open Connections, choose GrowthBook and paste the key and the project ID."
+#~ msgstr "No Duct, abra Conexões, escolha GrowthBook e cole a chave e o ID do projeto."
+
+#~ msgid "In Duct, open Connections, choose Meta Ads and paste the token."
+#~ msgstr "No Duct, abra Conexões, escolha Meta Ads e cole o token."
+
+#~ msgid "In Duct, open Connections, choose Microsoft Clarity and paste the token."
+#~ msgstr "No Duct, abra Conexões, escolha Microsoft Clarity e cole o token."
+
+#~ msgid "In Duct, open Connections, choose Mixpanel and paste them."
+#~ msgstr "No Duct, abra Conexões, escolha Mixpanel e cole-os."
+
+#~ msgid "In Duct, open Connections, choose RevenueCat and paste the key."
+#~ msgstr "No Duct, abra Conexões, escolha RevenueCat e cole a chave."
+
+#~ msgid ""
+#~ "In Duct, open Connections, choose Stripe and paste the key. Duct checks each permission and names any that is missing."
+#~ msgstr ""
+#~ "No Duct, abra Conexões, escolha Stripe e cole a chave. O Duct verifica cada permissão e nomeia qualquer uma que esteja faltando."
+
+#~ msgid ""
+#~ "In the Duct app, open Connections. The ready-made servers are listed there, and any other connects by its address."
+#~ msgstr ""
+#~ "No app do Duct, abra Conexões. Os servidores prontos estão listados lá, e qualquer outro se conecta pelo seu endereço."
+
+#~ msgid "Open Connections"
+#~ msgstr "Abrir Conexões"
+
+#~ msgid ""
+#~ "Pick one on Connections and sign in with the account you already have. Each address is here for reference; you never have to type it."
+#~ msgstr ""
+#~ "Escolha um em Conexões e entre com a conta que você já tem. Cada endereço está aqui para referência; você nunca precisa digitá-lo."
+
+#~ msgid ""
+#~ "The server offers no sign-in Duct can use. Create an API key in the vendor's settings and paste it on Connections."
+#~ msgstr ""
+#~ "O servidor não oferece um entrar que o Duct possa usar. Crie uma chave de API nas configurações do fornecedor e cole-a em Conexões."
+
+#~ msgid ""
+#~ "The sign-in expired, or was revoked on the vendor's side. Press Reconnect on Connections and sign in again."
+#~ msgstr ""
+#~ "O entrar expirou ou foi revogado no lado do fornecedor. Pressione Reconectar em Conexões e entre novamente."
+
+#~ msgid ""
+#~ "<0>Disconnect one source:</0> remove it on the Connections page in Duct. Its stored credentials are deleted at that point."
+#~ msgstr ""
+#~ "<0>Desconectar uma fonte:</0> remova-a na página Conexões no Duct. Suas credenciais armazenadas são excluídas naquele momento."
+
+#~ msgid ""
+#~ "For CI, a remote machine or an agent without sign-in. On the same settings page, open Use a token instead and create one. Your agent sends it as a header:"
+#~ msgstr ""
+#~ "Para CI, uma máquina remota ou um agente sem entrada. Na mesma página de configurações, abra Usar um token em vez disso e crie um. Seu agente o envia como um cabeçalho:"
+
+#~ msgid "No — email address and report content only"
+#~ msgstr "Não — apenas endereço de e-mail e conteúdo do relatório"
+
+#~ msgid "Resend"
+#~ msgstr "Reenviar"
+
+#~ msgid "Transactional email (report delivery, project invitations)"
+#~ msgstr "E-mail transacional (entrega de relatório, convites de projeto)"
+
+#~ msgctxt "js"
+#~ msgid ""
+#~ "We use PostHog and Google Analytics to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same."
+#~ msgstr ""
+#~ "Usamos PostHog e Google Analytics para ver quais páginas geram um cadastro e onde o Duct atrapalha você, incluindo replays de visitas com tudo o que você digita oculto. Esse é o único uso — sem direcionamento de anúncios, nada vendido. Recuse e o Duct funciona exatamente da mesma forma."
+
+#~ msgid "2 years"
+#~ msgstr "2 anos"
+
+#~ msgid "90 days"
+#~ msgstr "90 dias"
+
+#~ msgid ""
+#~ "<0>The desktop app sets no cookies, and is never going to ask you about them.</0> It loads no Google Tag Manager and no Google Analytics at all. Its usage events and crash reports go to PostHog, which in the desktop app holds everything in memory and writes nothing to your machine, so none of the cookies in section 11 exist there and there is nothing to consent to. A consent bar in front of an application you just opened is not a question worth interrupting anyone for."
+#~ msgstr ""
+#~ "<0>O app para desktop não define cookies e nunca vai perguntar sobre eles.</0> Ele não carrega Google Tag Manager nem Google Analytics. Seus eventos de uso e relatórios de falhas vão para o PostHog, que no app para desktop mantém tudo na memória e não escreve nada em sua máquina, então nenhum dos cookies da seção 11 existe lá e não há nada para consentir. Uma barra de consentimento na frente de um aplicativo que você acabou de abrir não é uma pergunta que valha a pena interromper alguém."
+
+#~ msgid "Attributes a signup to the ad or link that led to it"
+#~ msgstr "Atribui um cadastro ao anúncio ou link que o gerou"
+
+#~ msgid ""
+#~ "Declining means neither Google Tag Manager nor PostHog is loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we stop PostHog, delete the cookies below and PostHog's copy of them in your browser's storage, and reload the page."
+#~ msgstr ""
+#~ "Recusar significa que nem o Google Tag Manager nem o PostHog são carregados, em vez de serem carregados em um modo restrito. Se você recusar depois de ter aceitado anteriormente, paramos o PostHog, excluímos os cookies abaixo e a cópia deles do PostHog no armazenamento do seu navegador, e recarregamos a página."
+
+#~ msgid ""
+#~ "Distinguishes one visitor from another so a returning visit is not counted twice"
+#~ msgstr ""
+#~ "Distingue um visitante de outro para que uma visita de retorno não seja contada duas vezes"
+
+#~ msgid "Google Tag Manager (Conversion Linker)"
+#~ msgstr "Google Tag Manager (Vinculador de Conversões)"
+
+#~ msgid "Holds the state of the current session for our specific property"
+#~ msgstr "Mantém o estado da sessão atual para nossa propriedade específica"
+
+#~ msgid ""
+#~ "We collect product analytics — pages visited, features used, what you click, how fast pages load — to see which pages earn a signup and where Duct gets in your way. On our website and in the web app in a browser this runs through two tools: Google Analytics 4, loaded by Google Tag Manager, and PostHog. Both follow the cookie choice described below."
+#~ msgstr ""
+#~ "Coletamos análises de produto — páginas visitadas, recursos usados, o que você clica, quão rápido as páginas carregam — para ver quais páginas geram um cadastro e onde o Duct atrapalha você. Em nosso site e no app web em um navegador, isso é executado através de duas ferramentas: Google Analytics 4, carregado pelo Google Tag Manager, e PostHog. Ambos seguem a escolha de cookies descrita abaixo."
+
+#~ msgid "_ga"
+#~ msgstr "_ga"
+
+#~ msgid "_ga_SXH5LYVTJ8"
+#~ msgstr "_ga_SXH5LYVTJ8"
+
+#~ msgid "_gcl_au"
+#~ msgstr "_gcl_au"
+
+#~ msgid "3 months"
+#~ msgstr "3 meses"
+
+#~ msgid ""
+#~ "No — usage events, session replays with inputs hidden, error reports and AI call metadata; never your connected tools' data or your prompts. An error report may incidentally contain an identifier, as described in section 11"
+#~ msgstr ""
+#~ "Não — eventos de uso, replays de sessão com entradas ocultas, relatórios de erros e metadados de chamadas de IA; nunca os dados das suas ferramentas conectadas ou seus prompts. Um relatório de erro pode incidentalmente conter um identificador, conforme descrito na seção 11"
+
+#~ msgid ""
+#~ "PostHog also records session replays: a reconstruction of what was on the page and where you clicked, so we can watch where a visit went wrong. <0>Everything typed into a field is hidden in your browser before the replay leaves it.</0> We do not record keystrokes or form contents."
+#~ msgstr ""
+#~ "O PostHog também grava replays de sessão: uma reconstrução do que estava na página e onde você clicou, para que possamos ver onde uma visita deu errado. <0>Tudo o que é digitado em um campo é ocultado no seu navegador antes que o replay saia dele.</0> Não registramos toques de tecla ou conteúdo de formulário."
+
+#~ msgid ""
+#~ "When something breaks in the web app, it sends PostHog an error report: the stack trace, your browser, the page's path without its query string, and, if you are signed in, your account ID. <0>Error reports in the web app are sent whether or not you accept analytics cookies,</0> because they store nothing on your device: they are held in memory for that page and gone when you leave it. On our website, error reports are part of analytics and follow your cookie choice."
+#~ msgstr ""
+#~ "Quando algo falha no web app, ele envia um relatório de erro ao PostHog: o stack trace, seu navegador, o caminho da página sem sua query string e, se você estiver conectado, seu account ID. <0>Relatórios de erro no web app são enviados independentemente de você aceitar ou não analytics cookies,</0> porque eles não armazenam nada no seu dispositivo: são mantidos na memória para aquela página e desaparecem quando você a deixa. No nosso site, relatórios de erro fazem parte da análise e seguem sua escolha de cookies."
+
+#~ msgctxt "js"
+#~ msgid ""
+#~ "We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same."
+#~ msgstr ""
+#~ "Usamos o Google Analytics para ver quais páginas geram um cadastro. Esse é o único uso — sem segmentação de anúncios, sem perfis, nada vendido. Recuse e o site se comporta exatamente da mesma forma."
+
+#~ msgid ""
+#~ "<0>Crash reports and usage data are on by default in the app we distribute, and one switch in Preferences turns both off.</0> Once you touch it your answer is kept and no default applies again. A crash report contains the error and the stack trace that caused it; usage data is which screens and features you open — never your provider API keys, your data, or anything you generate. If you build Duct yourself both are off by default instead, because then we are not the ones running it."
+#~ msgstr ""
+#~ "<0>Relatórios de falhas e dados de uso vêm ativados por padrão no app que distribuímos, e um único botão em Preferências desativa ambos.</0> Depois de tocar nele, sua resposta é mantida e nenhum padrão se aplica novamente. Um relatório de falhas contém o erro e o rastreamento de pilha que o causou; dados de uso são as telas e recursos que você abre — nunca suas chaves de API de provedor, seus dados ou qualquer coisa que você gere. Se você construir o Duct por conta própria, ambos vêm desativados por padrão, porque então não somos nós que o estamos executando."
+
+#~ msgid ""
+#~ "<0>The desktop app sets no cookies, and is never going to ask you about them.</0> It reports usage through the same Google Tag Manager container as the rest of Duct, but with storage switched off permanently: Google Analytics receives the event and writes nothing to your machine, so none of the cookies in section 11 exist there and there is nothing to consent to. A consent bar in front of an application you just opened is not a question worth interrupting anyone for."
+#~ msgstr ""
+#~ "<0>O app para desktop não define cookies e nunca vai perguntar sobre eles.</0> Ele relata o uso através do mesmo contêiner do Google Tag Manager que o restante do Duct, mas com o armazenamento desativado permanentemente: o Google Analytics recebe o evento e não escreve nada na sua máquina, então nenhum dos cookies da seção 11 existe lá e não há nada para consentir. Uma barra de consentimento na frente de um aplicativo que você acabou de abrir não é uma pergunta que valha a pena interromper alguém."
+
+#~ msgid ""
+#~ "Declining means Google Tag Manager is never loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we delete the cookies below and reload the page."
+#~ msgstr ""
+#~ "Recusar significa que o Google Tag Manager nunca é carregado, em vez de ser carregado em modo restrito. Se você recusar após ter aceitado anteriormente, excluímos os cookies abaixo e recarregamos a página."
+
+#~ msgid "Error diagnostics"
+#~ msgstr "Diagnóstico de erros"
+
+#~ msgid "Error monitoring and crash reporting"
+#~ msgstr "Monitoramento de erros e relatórios de falhas"
+
+#~ msgid "Incidentally, in error context only"
+#~ msgstr "Incidentalmente, apenas no contexto de erro"
+
+#~ msgid "Last updated: September 7, 2026"
+#~ msgstr "Última atualização: 7 de setembro de 2026"
+
+#~ msgid ""
+#~ "Remembers your choice, so you are not asked on every page. Set on <0>getduct.ai</0> and all its subdomains, so answering once in your browser also answers for the app. The desktop app never sets it, because it loads no analytics at all. Strictly necessary — it exists whether you accept or decline"
+#~ msgstr ""
+#~ "Lembra sua escolha, para que você não seja perguntado em todas as páginas. Definido em <0>getduct.ai</0> e todos os seus subdomínios, assim, responder uma vez no seu navegador também responde para o app. O app para desktop nunca o define, porque ele não carrega nenhuma análise. Estritamente necessário — ele existe independentemente de você aceitar ou recusar"
+
+#~ msgid "Sentry"
+#~ msgstr "Sentry"
+
+#~ msgid ""
+#~ "We are based in Spain and process personal data under the EU GDPR. You have the right to access, correct, export, restrict the processing of, or delete your personal data, and to object to processing. Our legal basis is the performance of our contract with you for operating the product, and legitimate interest for security and diagnostics. Exercise any of these rights at <0>hello@getduct.ai</0>; you also have the right to lodge a complaint with your local supervisory authority (in Spain, the AEPD)."
+#~ msgstr ""
+#~ "Estamos sediados na Espanha e processamos dados pessoais sob o GDPR da UE. Você tem o direito de acessar, corrigir, exportar, restringir o processamento ou excluir seus dados pessoais, e de se opor ao processamento. Nossa base legal é a execução do nosso contrato com você para operar o produto, e o interesse legítimo para segurança e diagnósticos. Exerça qualquer um desses direitos em <0>hello@getduct.ai</0>; você também tem o direito de apresentar uma reclamação à sua autoridade supervisora local (na Espanha, a AEPD)."
+
+#~ msgid ""
+#~ "We collect basic product analytics — pages visited, features used, general interaction patterns — to understand how Duct is used. This runs through Google Tag Manager, which loads Google Analytics 4. We do not record keystrokes or form contents."
+#~ msgstr ""
+#~ "Coletamos análises básicas do produto — páginas visitadas, recursos usados, padrões gerais de interação — para entender como o Duct é utilizado. Isso é feito através do Google Tag Manager, que carrega o Google Analytics 4. Não registramos teclas digitadas ou conteúdo de formulários."
+
+#~ msgid ""
+#~ "When something breaks, we collect error reports containing the technical context of the failure (stack trace, browser, the operation attempted). We configure our error monitoring to avoid capturing Google user data, but a report may incidentally contain an identifier such as a property ID."
+#~ msgstr ""
+#~ "Quando algo falha, coletamos relatórios de erro contendo o contexto técnico da falha (rastreamento de pilha, navegador, a operação tentada). Configuramos nosso monitoramento de erros para evitar a captura de dados de usuário do Google, mas um relatório pode incidentalmente conter um identificador, como um ID de propriedade."
+
+#~ msgid "<0>Diagnostics are opt-in</0> and off by default"
+#~ msgstr "<0>Os diagnósticos são opcionais</0> e desativados por padrão"
 
 #~ msgid "<0/>Most tools ask first"
 #~ msgstr "<0/>A maioria das ferramentas pergunta primeiro"

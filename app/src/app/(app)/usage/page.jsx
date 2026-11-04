@@ -12,18 +12,17 @@
 // the heading; the tab supplies its own. Nothing renders twice — there is one
 // implementation, and the tab reads the same six-field shape this does.
 
-import { Gauge } from "lucide-react";
 import { Trans } from "@lingui/react/macro";
 import UsagePanel from "@/components/models/UsagePanel";
+import { Page, PageHeader } from "@/components/ui/page";
 
 export default function UsagePage() {
   return (
-    <>
-      <h1 className="app-title">
-        <Gauge size={20} strokeWidth={1.75} aria-hidden="true" />
-        <Trans>Usage</Trans>
-      </h1>
-      <UsagePanel standalone />
-    </>
+    <Page>
+      <PageHeader title={<Trans>Usage</Trans>} />
+      <div>
+        <UsagePanel standalone />
+      </div>
+    </Page>
   );
 }

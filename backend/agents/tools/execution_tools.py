@@ -260,7 +260,7 @@ def _propose_sync(
         if not connected:
             raise ValueError(
                 f"No stored credentials for {connector_type}. Ask the user to "
-                "connect it (signed in) on the Connections page first."
+                "connect it (signed in) in the Toolbox first."
             )
         return propose_change_set(
             db,

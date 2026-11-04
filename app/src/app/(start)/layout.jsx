@@ -28,7 +28,7 @@ export default async function StartLayout({ children }) {
   await activateRequestI18n();
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border/70 bg-background/90 px-4 backdrop-blur-xl">
+      <header className="flex h-[calc(3.5rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] shrink-0 items-center gap-3 border-b border-border/70 bg-background/90 px-4 backdrop-blur-xl">
         <Link
           href="/start"
           className="flex items-center gap-2 text-sm font-semibold text-foreground transition-opacity hover:opacity-80"

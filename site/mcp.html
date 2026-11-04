@@ -40,10 +40,10 @@
 <!-- The HowTo is the three steps and the FAQPage the troubleshooting <details>, word for word:
      the i18n generator translates these strings through the page's own catalogue entries. -->
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebPage","inLanguage":"en","name":"Connect MCP servers to Duct's agent: setup guide","url":"https://getduct.ai/mcp","description":"Connect OpenSEO, Notion, Linear, PostHog or any public MCP server to Duct. Sign in once, then ask. Read-only tools run; anything else waits for your OK.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"HowTo","name":"How to connect a server","step":[{"@type":"HowToStep","position":1,"name":"Open Connections","text":"In the Duct app, open Connections. The ready-made servers are listed there, and any other connects by its address."},{"@type":"HowToStep","position":2,"name":"Pick a server or paste its address","text":"Choose OpenSEO, PostHog, Notion, Linear, Railway or Cloudflare. For anything else, paste the server's https address."},{"@type":"HowToStep","position":3,"name":"Sign in once","text":"One click where the server supports sign-in. Where it does not, paste an API key from the vendor. Duct keeps it encrypted."}]}}
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"en","name":"Connect MCP servers to Duct's agent: setup guide","url":"https://getduct.ai/mcp","description":"Connect OpenSEO, Notion, Linear, PostHog or any public MCP server to Duct. Sign in once, then ask. Read-only tools run; anything else waits for your OK.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"HowTo","name":"How to connect a server","step":[{"@type":"HowToStep","position":1,"name":"Open the Toolbox","text":"In the Duct app, open the Toolbox. The ready-made servers are listed there, and any other connects by its address."},{"@type":"HowToStep","position":2,"name":"Pick a server or paste its address","text":"Choose OpenSEO, PostHog, Notion, Linear, Railway or Cloudflare. For anything else, paste the server's https address."},{"@type":"HowToStep","position":3,"name":"Sign in once","text":"One click where the server supports sign-in. Where it does not, paste an API key from the vendor. Duct keeps it encrypted."}]}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"en","mainEntity":[{"@type":"Question","name":"It says “This server needs an API key”","acceptedAnswer":{"@type":"Answer","text":"The server offers no sign-in Duct can use. Create an API key in the vendor's settings and paste it on Connections."}},{"@type":"Question","name":"It says “Needs reconnecting”","acceptedAnswer":{"@type":"Answer","text":"The sign-in expired, or was revoked on the vendor's side. Press Reconnect on Connections and sign in again."}},{"@type":"Question","name":"It says “Duct only connects to servers on the public internet”","acceptedAnswer":{"@type":"Answer","text":"The address points at your own computer or a private network. The hosted service only calls public internet addresses, so a local or internal server cannot be reached."}},{"@type":"Question","name":"Why can't I connect Figma or Slack?","acceptedAnswer":{"@type":"Answer","text":"Both only admit clients they have approved in advance, so their server address alone is not enough. They do not work with Duct yet."}},{"@type":"Question","name":"Does a tool call cost anything?","acceptedAnswer":{"@type":"Answer","text":"Some do, on the vendor's side. A call that costs credits there, such as OpenSEO research, spends your credits with that vendor, the same as it would from any other client."}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"en","mainEntity":[{"@type":"Question","name":"It says “This server needs an API key”","acceptedAnswer":{"@type":"Answer","text":"The server offers no sign-in Duct can use. Create an API key in the vendor's settings and paste it in the Toolbox."}},{"@type":"Question","name":"It says “Needs reconnecting”","acceptedAnswer":{"@type":"Answer","text":"The sign-in expired, or was revoked on the vendor's side. Press Reconnect in the Toolbox and sign in again."}},{"@type":"Question","name":"It says “Duct only connects to servers on the public internet”","acceptedAnswer":{"@type":"Answer","text":"The address points at your own computer or a private network. The hosted service only calls public internet addresses, so a local or internal server cannot be reached."}},{"@type":"Question","name":"Why can't I connect Figma or Slack?","acceptedAnswer":{"@type":"Answer","text":"Both only admit clients they have approved in advance, so their server address alone is not enough. They do not work with Duct yet."}},{"@type":"Question","name":"Does a tool call cost anything?","acceptedAnswer":{"@type":"Answer","text":"Some do, on the vendor's side. A call that costs credits there, such as OpenSEO research, spends your credits with that vendor, the same as it would from any other client."}}]}
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"en","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://getduct.ai/"},{"@type":"ListItem","position":2,"name":"MCP servers","item":"https://getduct.ai/mcp"}]}
@@ -54,6 +54,9 @@
 /* Two lines at desktop: at the default 76px the first beat broke into three. */
 .mcp-hero h1 { font-size: clamp(40px, 5.2vw, 68px); max-width: 1040px; }
 .mcp-hero .hero-sub { max-width: 580px; }
+/* The other direction lives on /connect-agent; the two pages share a protocol and nothing else */
+.mcp-other { margin-top: 20px; font-size: 14px; line-height: 1.6; color: var(--navy-3); max-width: 60ch; animation: fadeUp .5s .4s ease both; }
+.mcp-other a { white-space: nowrap; color: var(--navy); font-weight: 500; text-decoration: underline; text-decoration-color: var(--orange); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
 
 /* The flow: the page's one heavy element. No shot of the app's MCP screens exists yet, so this
    is a diagram of the rule rather than a copy of a screen: the servers you connect, the question,
@@ -179,10 +182,6 @@
 
 <a href="#main-content" class="skip-link">Skip to content</a>
 
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-
 <!-- EXPERIMENT: the setup guide for MCP servers, the reverse of a vendor's "add our server to Claude"
      page. Hypothesis: a founder who already lives in OpenSEO, Notion, Linear or PostHog downloads
      Duct at a higher rate once they see their tool plugs straight into the agent and that anything
@@ -203,6 +202,7 @@
 <a class="btn btn-ghost btn-lg" href="#steps">Set it up in three steps</a>
 </div>
 <p class="hero-footnote">Free with your own keys · No credit card · macOS, Windows and Linux</p>
+<p class="mcp-other">Want to use Duct from your own agent instead, like Claude Code or Cursor? <a href="/connect-agent">Use Duct from your agent →</a></p>
 </section>
 
 <!-- FLOW: the servers, the question, the two outcomes of a tool call -->
@@ -255,8 +255,8 @@ team   "Content"</pre>
 <div class="step reveal">
 <span class="step-num">01</span>
 <span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg></span>
-<h3 class="step-title">Open Connections</h3>
-<p class="step-body">In the Duct app, open Connections. The ready-made servers are listed there, and any other connects by its address.</p>
+<h3 class="step-title">Open the Toolbox</h3>
+<p class="step-body">In the Duct app, open the Toolbox. The ready-made servers are listed there, and any other connects by its address.</p>
 </div>
 <div class="step reveal" style="transition-delay:.1s">
 <span class="step-num">02</span>
@@ -281,7 +281,7 @@ team   "Content"</pre>
 <div class="mcp-head reveal">
 <p class="tag">Ready-made</p>
 <h2>Six servers. <em>One click each.</em></h2>
-<p class="sub">Pick one on Connections and sign in with the account you already have. Each address is here for reference; you never have to type it.</p>
+<p class="sub">Pick one in the Toolbox and sign in with the account you already have. Each address is here for reference; you never have to type it.</p>
 </div>
 <div class="srv-grid">
 <article class="srv reveal">
@@ -403,11 +403,11 @@ team   "Content"</pre>
 <div class="faq-list reveal">
 <details class="faq-item">
 <summary class="faq-q">It says “This server needs an API key”</summary>
-<p class="faq-a">The server offers no sign-in Duct can use. Create an API key in the vendor's settings and paste it on Connections.</p>
+<p class="faq-a">The server offers no sign-in Duct can use. Create an API key in the vendor's settings and paste it in the Toolbox.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">It says “Needs reconnecting”</summary>
-<p class="faq-a">The sign-in expired, or was revoked on the vendor's side. Press Reconnect on Connections and sign in again.</p>
+<p class="faq-a">The sign-in expired, or was revoked on the vendor's side. Press Reconnect in the Toolbox and sign in again.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">It says “Duct only connects to servers on the public internet”</summary>

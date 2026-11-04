@@ -118,13 +118,21 @@ async def insight_chat(
 
     history = [{"role": msg.role, "content": msg.content} for msg in req.messages]
     history.append({"role": "user", "content": req.message})
+    # Insight chat has no persisted conversation id, so this request is its
+    # complete one-turn conversation.
+    chat_session_id = f"insight-chat-{uuid.uuid4()}"
 
     async def stream_response():
         from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
         from agents.core.lc import resolve_chat_model
+        from service.analytics import langchain_callback
 
         llm = resolve_chat_model(run.provider, run.model, run.api_key, temperature=0.7)
+        callback = langchain_callback(
+            session_id=chat_session_id,
+            distinct_id=str(user.id),
+        )
 
         lc_messages = [SystemMessage(content=system)]
         for msg in history[:-1]:
@@ -135,7 +143,14 @@ async def insight_chat(
         lc_messages.append(HumanMessage(content=req.message))
 
         try:
-            async for chunk in llm.astream(lc_messages):
+            # Only with a callback: a bare `config=None` is not the same call to
+            # every chat model, and analytics off must mean the call unchanged.
+            stream = (
+                llm.astream(lc_messages, config={"callbacks": [callback]})
+                if callback is not None
+                else llm.astream(lc_messages)
+            )
+            async for chunk in stream:
                 token = chunk.content
                 if token:
                     yield f"data: {json.dumps({'token': token})}\n\n"

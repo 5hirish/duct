@@ -31,13 +31,13 @@ const ASSISTANT_COMPONENTS = {
     const { language, isBlock } = resolveCode(className, children);
     if (isBlock) return <CodeBlock language={language}>{children}</CodeBlock>;
     return (
-      <code className="bg-primary/10 text-primary dark:bg-primary/20 px-1.5 py-0.5 rounded text-[0.8em] font-mono before:content-none after:content-none">
+      <code className="bg-primary/10 text-brand dark:bg-primary/20 px-1.5 py-0.5 rounded text-[0.8em] font-mono before:content-none after:content-none">
         {children}
       </code>
     );
   },
   a: ({ href, children }) => (
-    <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:no-underline">
+    <a href={href} target="_blank" rel="noopener noreferrer" className="text-brand underline underline-offset-2 hover:no-underline">
       {children}
     </a>
   ),

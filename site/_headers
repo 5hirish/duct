@@ -3,7 +3,9 @@
 # a <form>, <base> or <object>. script-src is deliberately absent: every page
 # runs inline scripts, and GTM injects tags whose origins live in the container
 # rather than this repository, so an allowlist written here would be a guess
-# that fails silently as lost measurement. HSTS leaves out includeSubDomains
+# that fails silently as lost measurement. PostHog loads its library and sends
+# its events through app.getduct.ai/ingest; a script-src or connect-src added
+# here must allow that origin, or PostHog stops without a visible error. HSTS leaves out includeSubDomains
 # until every record in the zone is known to answer over HTTPS: browsers keep
 # an HSTS max-age for its full year, even after the header is removed.
 /*

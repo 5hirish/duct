@@ -11,7 +11,9 @@
   width: 100%;
   padding: 0.5rem 1rem;
   border: 1px solid var(--input);
-  border-radius: var(--radius-3xl);
+  /* The field radius, not a capsule: a capsule is for a one-line control,
+     and `.app-textarea` inherits this. */
+  border-radius: var(--radius-lg);
   font-size: 0.875rem;
   font-family: inherit;
   background: color-mix(in oklch, var(--input) 50%, transparent);

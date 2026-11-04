@@ -163,8 +163,16 @@ GOOGLE_CONNECTORS = ("google_ads", "ga4", "gsc")
 
 @pytest.mark.parametrize("connector", GOOGLE_CONNECTORS)
 def test_connector_oauth_authorize_redirects_to_google(server_client, connector):
+    from service.auth_exchange import store_connect_link_code
+
+    # A connect needs a link naming the signed-in user (POST
+    # /api/user/connectors/connect-link); without one it stops before Google.
+    assert server_client.get(
+        f"/auth/connectors/{connector}/oauth/authorize", follow_redirects=False
+    ).status_code == 400
     res = server_client.get(
         f"/auth/connectors/{connector}/oauth/authorize",
+        params={"link": store_connect_link_code(str(uuid.uuid4()))},
         follow_redirects=False,
     )
     assert res.status_code == 307
@@ -195,7 +203,7 @@ def test_unknown_connector_oauth_authorize_returns_404(server_client):
 
 
 def test_accounts_missing_api_key_returns_403(server_client):
-    res = server_client.get("/api/connectors/google_ads/accounts")
+    res = server_client.post("/api/connectors/stripe/accounts", json={})
     assert res.status_code == 403
     assert "API key is required" in res.json().get("detail", "")
 
@@ -203,25 +211,27 @@ def test_accounts_missing_api_key_returns_403(server_client):
 def test_accounts_with_only_the_api_key_returns_401(server_client):
     """The key ships in the browser bundle, so it cannot be the whole gate.
 
-    This route lists a vendor's accounts for a refresh token in the request —
-    the caller has to be somebody, not just "the Duct app".
+    This route lists a vendor's accounts for keys in the request — the caller
+    has to be somebody, not just "the Duct app".
     """
-    res = server_client.get(
-        "/api/connectors/google_ads/accounts", headers={"X-API-Key": TEST_DUCT_API_KEY}
+    res = server_client.post(
+        "/api/connectors/stripe/accounts", json={}, headers={"X-API-Key": TEST_DUCT_API_KEY}
     )
     assert res.status_code == 401
 
 
-def test_accounts_missing_refresh_token_returns_422(signed_in_client):
+@pytest.mark.parametrize("connector", GOOGLE_CONNECTORS)
+def test_accounts_take_no_google_token_from_a_request(signed_in_client, connector):
+    """A sign-in connector's token lives only on the server (issue #456), so
+    neither a body field nor a credential key can carry one in."""
     headers = {"X-API-Key": TEST_DUCT_API_KEY}
-    res = signed_in_client.get("/api/connectors/google_ads/accounts", headers=headers)
-    assert res.status_code == 422
-    detail = res.json().get("detail", "")
-    assert "refresh_token" in (detail if isinstance(detail, str) else str(detail)).lower()
+    for body in ({"refresh_token": "rt"}, {"credentials": {"refresh_token": "rt"}}):
+        res = signed_in_client.post(f"/api/connectors/{connector}/accounts", json=body, headers=headers)
+        assert res.status_code == 422
 
 
 def test_unknown_connector_accounts_returns_404(signed_in_client):
     headers = {"X-API-Key": TEST_DUCT_API_KEY}
-    res = signed_in_client.get("/api/connectors/unknown_source/accounts", headers=headers)
+    res = signed_in_client.post("/api/connectors/unknown_source/accounts", json={}, headers=headers)
     assert res.status_code == 404
     assert res.json().get("detail") == "Unknown connector"

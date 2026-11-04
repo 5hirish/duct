@@ -40,6 +40,7 @@ import StorageBadge from "./StorageBadge";
 import ProjectBinding from "./ProjectBinding";
 import { trackEvent, AnalyticsEvent } from "@/lib/analytics";
 import { NATIVE_SOURCE } from "../../lib/connectorSource";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function ManualConnectorCard({
   type,            // connector id: "apple_ads" | "meta_ads" | ...
@@ -65,6 +66,9 @@ export default function ManualConnectorCard({
   onMappingChange,
   onEntityChange,
   mappingBusy,
+  // The large first-run tile (ConnectorTile `featured`) and what it unlocks.
+  featured = false,
+  benefit,
 }) {
   const { t } = useLingui();
   const [open, setOpen] = useState(false);
@@ -219,6 +223,8 @@ export default function ManualConnectorCard({
         status={status}
         storage={storage}
         onClick={() => setOpen(true)}
+        featured={featured}
+        benefit={benefit}
       />
 
       <ConnectorDialog
@@ -331,14 +337,14 @@ export default function ManualConnectorCard({
                   {f.optional ? <Trans>{fieldLabel} (optional)</Trans> : fieldLabel}
                 </Label>
                 {f.multiline ? (
-                  <textarea
+                  <Textarea
                     id={`${type}-${f.key}`}
                     rows={4}
                     autoComplete="off"
                     placeholder={f.placeholder}
                     value={values[f.key] || ""}
                     onChange={(e) => setValue(f.key, e.target.value)}
-                    className="rounded-md border border-input bg-transparent px-3 py-2 text-sm font-mono"
+                    className="font-mono"
                     spellCheck={false}
                   />
                 ) : (

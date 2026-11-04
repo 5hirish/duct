@@ -39,9 +39,10 @@ export function CookieConsent({ onAccept, onDecline }) {
         </h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
           <Trans>
-            We use Google Analytics to see which pages earn a signup. That is the whole
-            use — no ad targeting, no profiles, nothing sold. Decline and Duct behaves
-            exactly the same.{" "}
+            We use PostHog to see which pages earn a signup and
+            where Duct gets in your way, including replays of visits with everything
+            you type hidden. That is the whole use — no ad targeting, nothing sold.
+            Decline and Duct works exactly the same.{" "}
             <a
               href="https://getduct.ai/privacy"
               target="_blank"

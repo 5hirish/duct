@@ -10,6 +10,8 @@ import {
   Palette,
   Pencil,
   Plus,
+  Quote,
+  ShieldCheck,
   Trash2,
 } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
@@ -17,8 +19,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getBrandContext, putBrandContext } from "@/lib/contentApi";
+import { RULES_KEY, SAMPLES_KEY, cleanSamples } from "@/lib/voiceRules";
+import WritingSamples from "@/components/content/WritingSamples";
+import VoiceRulesFields from "@/components/content/VoiceRulesFields";
 import { getActiveProject } from "@/lib/projects";
 import { slugify } from "@/lib/slug";
+import { Textarea } from "@/components/ui/textarea";
+import { Card } from "@/components/ui/card";
 
 /**
  * Structured form for editing a project's content brand context.
@@ -30,6 +37,7 @@ import { slugify } from "@/lib/slug";
  *   - Identity (tagline, url, description)
  *   - Audience + voice (who + how)
  *   - Value proposition + content goal
+ *   - Writing samples + voice rules — the text writer's own voice (#271)
  *   - Pillars — repeating-row editor (add/remove)
  *   - Visual identity (primary/secondary color, style)
  */
@@ -52,6 +60,16 @@ export default function BrandContextForm({ projectId, onSaved }) {
   const [contentGoal, setContentGoal] = useState("");
   const [doSay, setDoSay]       = useState("");
   const [doNotSay, setDoNotSay] = useState("");
+  // Everything content_brand held when it loaded, so a save keeps the keys
+  // this form has no field for (features, anything newer) instead of
+  // replacing the whole object with the five it knows.
+  const [brandBlob, setBrandBlob] = useState({});
+  // Voice (#271). A project that never set the rules follows Duct's defaults,
+  // and keeps following them across a save until someone changes one.
+  const [samples, setSamples] = useState([]);
+  const [rules, setRules] = useState(null);
+  const [rulesDefault, setRulesDefault] = useState(null);
+  const [rulesCustomised, setRulesCustomised] = useState(false);
   // Pillars
   const [pillars, setPillars]   = useState([]);
   // Visual
@@ -74,6 +92,11 @@ export default function BrandContextForm({ projectId, onSaved }) {
         setContentGoal(b.content_brand?.content_goal || "");
         setDoSay(b.content_brand?.do_say || "");
         setDoNotSay(b.content_brand?.do_not_say || "");
+        setBrandBlob(b.content_brand || {});
+        setSamples(Array.isArray(b.content_brand?.[SAMPLES_KEY]) ? b.content_brand[SAMPLES_KEY] : []);
+        setRules(b.voice_rules || null);
+        setRulesDefault(b.voice_rules_default || null);
+        setRulesCustomised(Boolean(b.content_brand?.[RULES_KEY]));
         const items = Array.isArray(b.content_pillars?.items) ? b.content_pillars.items : [];
         setPillars(items.length ? items : [{ id: "", name: "", description: "" }]);
         setPrimaryColor(b.content_visual_assets?.primary_color || "");
@@ -109,16 +132,24 @@ export default function BrandContextForm({ projectId, onSaved }) {
           description: (p.description || "").trim(),
           ...(p.research_hint ? { research_hint: p.research_hint } : {}),
         }));
+      // Stored rules go out only while customised: "back to defaults" has to
+      // clear them, or the project would freeze today's default list.
+      const kept = { ...brandBlob };
+      delete kept[RULES_KEY];
+      const contentBrand = {
+        ...kept,
+        tone:         tone.trim(),
+        value_prop:   valueProp.trim(),
+        content_goal: contentGoal.trim(),
+        do_say:       doSay.trim(),
+        do_not_say:   doNotSay.trim(),
+        [SAMPLES_KEY]: cleanSamples(samples),
+        ...(rulesCustomised && rules ? { [RULES_KEY]: rules } : {}),
+      };
       const updated = await putBrandContext(projectId, {
         tagline:     tagline.trim(),
         description: description.trim(),
-        content_brand: {
-          tone:         tone.trim(),
-          value_prop:   valueProp.trim(),
-          content_goal: contentGoal.trim(),
-          do_say:       doSay.trim(),
-          do_not_say:   doNotSay.trim(),
-        },
+        content_brand: contentBrand,
         content_pillars:       { items: cleanedPillars },
         content_visual_assets: {
           primary_color:   primaryColor.trim(),
@@ -126,6 +157,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
           style:           style.trim(),
         },
       });
+      setBrandBlob(updated?.content_brand || contentBrand);
       setSavedAt(new Date());
       onSaved?.(updated);
     } catch (e) {
@@ -142,7 +174,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-5 pb-24">
+    <div className="max-w-4xl space-y-5 pb-24">
       <div>
         <h2 className="text-lg font-semibold tracking-tight"><Trans>Brand context</Trans></h2>
         <p className="text-sm text-muted-foreground">
@@ -157,7 +189,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
       )}
 
       {/* Inherited from project context — single source of truth for shared fields */}
-      <section className="rounded-2xl border border-dashed border-border bg-muted/20 p-5 @2xl:p-6">
+      <Card variant="quiet">
         <div className="grid gap-x-8 gap-y-4 @2xl:grid-cols-[240px_1fr]">
           <header className="space-y-2">
             <h3 className="flex items-center gap-2 text-sm font-semibold">
@@ -181,15 +213,15 @@ export default function BrandContextForm({ projectId, onSaved }) {
             <ReadOnly label={t`Audience`} value={project?.audience?.primary_segment} className="@lg:col-span-2" />
           </dl>
         </div>
-      </section>
+      </Card>
 
       <Section icon={Building2} title={t`Identity`} hint={t`Tagline and description used across posts.`}>
         <Field label={t`Tagline`} hint={t`One memorable line.`}>
-          <Input value={tagline} onChange={e => setTagline(e.target.value)} placeholder={t`One memorable line`} />
+          <Input value={tagline} onChange={e => setTagline(e.target.value)} placeholder={t`e.g. Numbers you can trust`} />
         </Field>
         <Field label={t`Short description`} hint={t`One sentence on what you do.`}>
           <Textarea value={description} onChange={e => setDescription(e.target.value)}
-            rows={2} placeholder={t`One sentence on what you do.`} />
+            rows={2} placeholder={t`e.g. Duct reads your marketing data and says what changed.`} />
         </Field>
       </Section>
 
@@ -222,6 +254,29 @@ export default function BrandContextForm({ projectId, onSaved }) {
       </Section>
 
       <Section
+        icon={Quote}
+        title={t`Writing samples`}
+        hint={t`Paste a few posts you wrote. Duct matches their voice on X and LinkedIn, never their topics.`}
+      >
+        <WritingSamples samples={samples} onChange={setSamples} />
+      </Section>
+
+      {rules && (
+        <Section
+          icon={ShieldCheck}
+          title={t`Voice rules`}
+          hint={t`What an X or LinkedIn draft never does. Duct's defaults until you change them.`}
+        >
+          <VoiceRulesFields
+            rules={rules}
+            customised={rulesCustomised}
+            onChange={(next) => { setRules(next); setRulesCustomised(true); }}
+            onReset={rulesDefault ? () => { setRules(rulesDefault); setRulesCustomised(false); } : undefined}
+          />
+        </Section>
+      )}
+
+      <Section
         icon={Layers}
         title={t`Content pillars`}
         hint={t`Your core themes. The agent runs one research sub-agent per pillar.`}
@@ -231,7 +286,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
             <div key={i} className="rounded-xl border border-border bg-background p-3">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <span className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                  <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-2xs font-semibold text-primary tabular-nums">
+                  <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-2xs font-semibold text-brand tabular-nums">
                     {i + 1}
                   </span>
                   <Trans>Pillar</Trans>
@@ -306,7 +361,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
 /** Two-column settings section: label + description on the left, fields on the right. */
 function Section({ icon: Icon, title, hint, children }) {
   return (
-    <section className="rounded-2xl border border-border bg-card p-5 @2xl:p-6">
+    <Card>
       <div className="grid gap-x-8 gap-y-4 @2xl:grid-cols-[240px_1fr]">
         <header className="space-y-1">
           <h3 className="flex items-center gap-2 text-sm font-semibold">
@@ -315,9 +370,9 @@ function Section({ icon: Icon, title, hint, children }) {
           </h3>
           {hint && <p className="text-xs leading-relaxed text-muted-foreground">{hint}</p>}
         </header>
-        <div className="space-y-4">{children}</div>
+        <div className="space-y-5">{children}</div>
       </div>
-    </section>
+    </Card>
   );
 }
 
@@ -334,10 +389,10 @@ function ReadOnly({ label, value, className = "" }) {
 
 function Field({ label, hint, children }) {
   return (
-    <div className="grid gap-1.5">
-      <Label className="text-xs font-medium">{label}</Label>
+    <div className="grid gap-2">
+      <Label className="text-sm font-medium">{label}</Label>
       {children}
-      {hint && <span className="text-2xs text-muted-foreground">{hint}</span>}
+      {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
     </div>
   );
 }
@@ -370,15 +425,6 @@ function ColorField({ label, value, onChange, placeholder }) {
         <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
       </div>
     </Field>
-  );
-}
-
-function Textarea({ className = "", ...props }) {
-  return (
-    <textarea
-      {...props}
-      className={`flex w-full rounded-3xl border border-input bg-input/50 px-4 py-2.5 text-sm transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 resize-y ${className}`}
-    />
   );
 }
 

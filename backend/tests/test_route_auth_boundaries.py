@@ -76,6 +76,12 @@ UNGATED: dict[str, str] = {
     # Invitation preview. The recipient has not signed in yet, and the token in
     # the URL is the secret. Accepting an invitation (POST) does require a JWT.
     "GET /api/invitations/{token}": "pre-sign-in preview; the token is the credential",
+    # An agent's sign-in request, parked for the consent page. The person may
+    # arrive signed out and should see who is asking first; declining grants
+    # nothing. The request code is the credential, and allowing it (approve)
+    # requires a JWT.
+    "GET /api/oauth/requests/{request_code}": "consent preview; the request code is the credential",
+    "POST /api/oauth/requests/{request_code}/deny": "declining grants nothing; the request code is the credential",
     # Lead magnet capture. Deliberately public rather than API-key gated: these
     # are hit from the marketing site by people with no account at all. Every
     # one sits behind the router's per-address limit.

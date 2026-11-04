@@ -42,6 +42,17 @@ export function matchesCombo(event, combo) {
   );
 }
 
+/**
+ * True while an input method is still composing the text — Japanese, Chinese
+ * or Korean, and many phone keyboards. Enter there confirms the candidate,
+ * and treating it as Send posted half-written messages. Safari reports the
+ * confirming keydown with `isComposing` false and keyCode 229, so both count.
+ */
+export function isComposing(event) {
+  const native = event?.nativeEvent || event;
+  return Boolean(native?.isComposing) || native?.keyCode === 229;
+}
+
 /** True when the event came from somewhere the user is typing. */
 export function isTypingTarget(target) {
   if (!target) return false;

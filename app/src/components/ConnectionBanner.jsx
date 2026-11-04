@@ -87,7 +87,9 @@ export default function ConnectionBanner() {
       // shell's scroll containers (app-shell.css) to pad exactly this much,
       // and only while the banner is mounted.
       data-connection-banner=""
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 px-4 py-3 shadow-lg backdrop-blur-xl sm:inset-x-auto sm:bottom-4 sm:left-4 sm:max-w-md sm:rounded-lg sm:border"
+      // Fixed, so it clears the safe areas itself: as a bar, its text stays off
+      // the home indicator and a landscape notch; as a card, it sits that far in.
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-background/95 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] shadow-lg backdrop-blur-xl sm:inset-x-auto sm:bottom-[max(1rem,env(safe-area-inset-bottom))] sm:left-[max(1rem,env(safe-area-inset-left))] sm:max-w-md sm:rounded-lg sm:border sm:px-4 sm:py-3"
     >
       <div className="flex items-start gap-3">
         <WifiOff className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden />

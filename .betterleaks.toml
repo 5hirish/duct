@@ -56,6 +56,12 @@ matchesAny(attributes["path"], [
 # none. Each entry corresponds to a real false positive from the first run
 # against this repo: `docs:PASSWORD` in a runbook, `postgres` as a CI service
 # password, `pw` in a Postgres URL fixture, `secret-docs-pass` in a test.
+#
+# One exact value is allowed on purpose: Duct's own PostHog *project* token.
+# It is public by design — every browser that loads the site receives it, and
+# it can only send events, never read them — and the static site has no build
+# step to inject it from. Pinned to the one value, so a project token pasted
+# from another project, or a personal key (`phx_`), is still caught.
 filter = '''
 containsAny(finding["secret"], [
   "your-token", "your-key", "your_token", "your_key", "your-api-key",
@@ -64,6 +70,7 @@ containsAny(finding["secret"], [
 ]) || matchesAny(finding["secret"], [
   `^(?i:pw|pass|password|postgres|secret|test|dummy|fake|localhost)$`,
   `^(?i:[a-z]+-)*(?i:docs|test|tests|dummy|fake|example|sample)(?i:-[a-z]+)*$`,
+  `^phc_zeaCYQ3SbcNouD6T2LsVVnjNR4JLrS23CjgZxcu47MtU$`,
 ])
 '''
 

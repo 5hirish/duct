@@ -10,38 +10,73 @@
  * should be able to drop that or replace it without reading our consent logic.
  *
  * A provider may still refuse a surface on its own account, when the risk is
- * what the provider *is* rather than measurement as such: `gtm` reports itself
- * unconfigured inside the desktop shell because a tag container is a loader for
- * scripts configured elsewhere. A provider that bundles its own code need not.
+ * what the provider *is* rather than measurement as such. A tag manager would:
+ * it runs scripts configured outside this repository, with the session token
+ * and the desktop shell's IPC in reach. Google Tag Manager and GA4 ran here
+ * until October 2026 and went for that reason, and because an open-source
+ * product measures itself with open-source tools.
  *
- * Selected by `NEXT_PUBLIC_ANALYTICS_PROVIDER`. Unset falls back to `gtm` when
- * a container is configured and `none` otherwise — so an existing deploy keeps
- * its behaviour, and a self-host build that sets neither variable measures
- * nothing without having to opt out of anything.
+ * Selected by `NEXT_PUBLIC_ANALYTICS_PROVIDER`, a comma-separated list. Unset
+ * means every provider whose own variable is set (`NEXT_PUBLIC_POSTHOG_KEY`
+ * today), so a self-host build that sets none of them measures
+ * nothing without having to opt out of anything. More than one runs as one:
+ * every call goes to each, so the consent flow above never learns how many.
  *
- * Adding a provider is one file exporting the ten members below, plus a line
- * in `PROVIDERS`. No other file should need to change.
+ * Adding a provider is one file exporting the twelve members below, plus a
+ * line in `PROVIDERS`. No other file should need to change. Error reporting
+ * (`startErrorReporting`, `captureException`) lives on the same seam because
+ * the vendor that measures is also the vendor that collects crashes, and two
+ * seams would name it twice.
  */
 
-import { gtm } from "./gtm";
 import { none } from "./none";
+import { posthog } from "./posthog";
 
-const PROVIDERS = { gtm, none };
+const PROVIDERS = { posthog, none };
+
+const CONFIGURED_BY = {
+  posthog: () => Boolean(process.env.NEXT_PUBLIC_POSTHOG_KEY),
+};
+
+/** Several providers behind the one interface: each call fans out, any running counts. */
+function combine(list) {
+  if (list.length === 0) return none;
+  if (list.length === 1) return list[0];
+  const each = (method) => (...args) => {
+    for (const provider of list) provider[method](...args);
+  };
+  return {
+    id: list.map((p) => p.id).join("+"),
+    isConfigured: () => list.some((p) => p.isConfigured()),
+    startErrorReporting: each("startErrorReporting"),
+    setDefaults: each("setDefaults"),
+    setConsent: each("setConsent"),
+    forgetStoredData: each("forgetStoredData"),
+    start: each("start"),
+    isRunning: () => list.some((p) => p.isRunning()),
+    track: each("track"),
+    identify: each("identify"),
+    reset: each("reset"),
+    captureException: each("captureException"),
+  };
+}
 
 function resolve() {
   const requested = process.env.NEXT_PUBLIC_ANALYTICS_PROVIDER;
   if (requested) {
-    const chosen = PROVIDERS[requested];
-    if (chosen) return chosen;
-    // A typo here would otherwise measure nothing and say nothing, which is the
-    // failure you find out about a quarter later from an empty dashboard.
-    console.warn(
-      `[analytics] unknown NEXT_PUBLIC_ANALYTICS_PROVIDER "${requested}" — measuring nothing. ` +
-        `Known providers: ${Object.keys(PROVIDERS).join(", ")}.`,
-    );
-    return none;
+    const names = requested.split(",").map((name) => name.trim()).filter(Boolean);
+    const unknown = names.filter((name) => !PROVIDERS[name]);
+    if (unknown.length) {
+      // A typo here would otherwise measure nothing and say nothing, which is the
+      // failure you find out about a quarter later from an empty dashboard.
+      console.warn(
+        `[analytics] unknown NEXT_PUBLIC_ANALYTICS_PROVIDER "${unknown.join(", ")}" — ignored. ` +
+          `Known providers: ${Object.keys(PROVIDERS).join(", ")}.`,
+      );
+    }
+    return combine(names.filter((name) => PROVIDERS[name] && name !== "none").map((name) => PROVIDERS[name]));
   }
-  return process.env.NEXT_PUBLIC_GTM_ID ? gtm : none;
+  return combine(Object.keys(CONFIGURED_BY).filter((name) => CONFIGURED_BY[name]()).map((name) => PROVIDERS[name]));
 }
 
 export const analytics = resolve();
@@ -57,9 +92,8 @@ export const analytics = resolve();
  * automatically measures the router, not the user.
  *
  * `download_started` lives on the marketing site (`site/assets/duct-download.js`),
- * which shares no code with this app. Both feed the trigger list in
- * `scripts/gtm-container-setup.ts`, which is what actually forwards them to GA4 —
- * an event missing from that list reaches the dataLayer and stops there.
+ * which shares no code with this app. PostHog takes every event by name, as
+ * sent.
  */
 export const AnalyticsEvent = {
   // Acquisition — the denominator for everything below.
@@ -102,9 +136,8 @@ export const AnalyticsEvent = {
 };
 
 /**
- * The parameter vocabulary. GA4 cannot wildcard event parameters — each one is
- * mapped by name in the container — so a param outside this set is silently
- * dropped on arrival. Adding one means adding it here and in the setup script.
+ * The parameter vocabulary: one name per idea, so a filter on `provider` finds
+ * every event that carries one. Adding a param means adding it here.
  */
 export const AnalyticsParam = {
   Method: "method",       // how they signed up: "google"; how an MCP server signs in: "oauth" | "key" | "none"
@@ -120,10 +153,31 @@ export const AnalyticsParam = {
 };
 
 /**
- * Push a custom event. Safe before the provider starts — GTM's dataLayer queues,
- * and a provider that never starts drops it, which is the intent.
+ * Push a custom event. Safe before consent resolves: PostHog holds a few events
+ * until the answer and sends them only on a yes, and a provider that never
+ * starts drops them, which is the intent.
  */
 export function trackEvent(event, params = {}) {
   if (typeof window === "undefined") return;
   analytics.track(event, params);
+}
+
+/**
+ * Start error reporting, from the first client module (`instrumentation-client`).
+ * Light by design: it listens for errors at once and loads the reporter when
+ * the page is idle, so a crash during hydration is still caught and the first
+ * paint carries none of the reporter's weight.
+ */
+export function startErrorReporting() {
+  if (typeof window === "undefined") return;
+  analytics.startErrorReporting();
+}
+
+/**
+ * Report an error something caught: an error boundary, a failed save worth
+ * knowing about. Uncaught errors need no call; they are reported already.
+ */
+export function reportError(error, properties = {}) {
+  if (typeof window === "undefined" || !error) return;
+  analytics.captureException(error, properties);
 }

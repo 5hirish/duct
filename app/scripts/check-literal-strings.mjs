@@ -32,7 +32,7 @@ const EXEMPT = [
   "src/i18n/",              // the plumbing itself
   "src/locales/",
   "src/components/ui/",     // shadcn primitives take their copy as children
-  "src/instrumentation",    // Sentry
+  "src/instrumentation",    // error reporting bootstrap, no UI copy
 ];
 
 /** Attributes whose value a person reads. */
@@ -49,7 +49,7 @@ const COPY_ATTRIBUTES = new Set([
 const NAMES = new Set([
   "Duct", "duct", "GA4", "GSC", "GTM", "GitHub", "Google", "Stripe", "Mixpanel",
   "Clarity", "GrowthBook", "PostHog", "TikTok", "YouTube", "ChatGPT", "Claude",
-  "Codex", "Claude Code", "Cursor", "OpenAI", "Anthropic", "Gemini", "Ollama", "MIT", "OK", "URL", "API",
+  "Codex", "Claude Code", "Cursor", "VS Code", "OpenCode", "OpenAI", "Anthropic", "Gemini", "Ollama", "MIT", "OK", "URL", "API",
   "JSON", "CSV", "SEO", "ROAS", "CPA", "CPC", "CPM", "CTR", "LTV", "CAC", "MRR",
   "macOS", "Windows", "Linux", "iOS", "Android", "Safari", "Chrome", "Firefox",
   "X", "v", "•", "·", "—", "–", "→", "←", "↑", "↓", "…", "%", "/", "|", "&",

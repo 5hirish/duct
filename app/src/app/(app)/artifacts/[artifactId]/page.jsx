@@ -25,6 +25,8 @@ import {
 } from "../../../../lib/artifactsApi";
 import { startAuditResume } from "../../../../lib/auditResume";
 import { createMemory } from "@/lib/memoryApi";
+import { Page, PageHeader } from "@/components/ui/page";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 function exportFormatsFor(artifact) {
   if (!artifact) return [];
@@ -185,38 +187,31 @@ export default function ArtifactViewerPage() {
   const resolvedFindings = resolvedCount > 0 ? diff.summary.resolved_findings.slice(0, 6).join(" · ") : "";
 
   return (
-    <section>
+    <Page>
       {dialog}
-      <div className="page-toolbar-back" style={{ gap: 10, flexWrap: "wrap" }}>
-        <Button variant="ghost" size="sm" asChild>
-          <Link href="/artifacts"><Trans>← Artifacts</Trans></Link>
-        </Button>
-        <div style={{ minWidth: 0 }}>
-          <h1 className="page-toolbar-title text-xl font-semibold tracking-tight truncate">
-            {artifact?.title || t`Artifact`}
-          </h1>
-          {artifact?.slug && (
-            <p className="app-subtle" style={{ margin: 0, fontSize: 12 }}>
-              {artifact.slug} · v{artifact.version}
-              {artifact.meta?.label ? ` — ${artifact.meta.label}` : ""}
-            </p>
-          )}
-        </div>
-        <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+      <PageHeader
+        back={{ href: "/artifacts", label: t`Documents` }}
+        title={artifact?.title || t`Document`}
+        status={
+          artifact?.slug
+            ? `${artifact.slug} · v${artifact.version}${artifact.meta?.label ? ` · ${artifact.meta.label}` : ""}`
+            : null
+        }
+        actions={
+        <>
           {versions.length > 1 && (
-            <select
-              className="app-subtle"
-              style={{ fontSize: 13, padding: "4px 6px", borderRadius: 6 }}
-              value={artifact?.id || ""}
-              onChange={(e) => router.push(`/artifacts/${e.target.value}`)}
-              aria-label={t`Version`}
-            >
-              {versions.map((v) => (
-                <option key={v.id} value={v.id}>
-                  v{v.version} — {v.meta?.label || v.created_at.slice(0, 10)}
-                </option>
-              ))}
-            </select>
+            <Select value={artifact?.id || ""} onValueChange={(id) => router.push(`/artifacts/${id}`)}>
+              <SelectTrigger size="sm" aria-label={t`Version`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent position="popper" align="end">
+                {versions.map((v) => (
+                  <SelectItem key={v.id} value={v.id}>
+                    v{v.version} · {v.meta?.label || v.created_at.slice(0, 10)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
           {versions.length > 1 && (
             <Button size="sm" variant={showChanges ? "default" : "ghost"} onClick={toggleChanges}>
@@ -263,20 +258,21 @@ export default function ArtifactViewerPage() {
               <Trans>Download</Trans>
             </Button>
           )}
-          <Button size="sm" variant="outline" onClick={handleDelete} disabled={busy || !artifact}>
+          <Button size="sm" variant="destructive" onClick={handleDelete} disabled={busy || !artifact}>
             <Trans>Delete</Trans>
           </Button>
-        </div>
-      </div>
+        </>
+        }
+      />
 
       {error && (
-        <p className="app-subtle" style={{ color: "var(--destructive, var(--destructive))" }}>{error}</p>
+        <p role="alert" className="text-sm text-destructive">{error}</p>
       )}
       {!artifact && !error && <SkeletonDocument label={t`Loading the artifact`} />}
 
       {showChanges && diff && (
-        <div style={{ marginBottom: 14 }}>
-          <p className="app-subtle" style={{ fontSize: 13, marginBottom: 6 }}>
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-muted-foreground">
             <Trans>Changes v{baseVersion} → v{targetVersion}</Trans>
             {diff.summary && (
               <>
@@ -286,12 +282,12 @@ export default function ArtifactViewerPage() {
             )}
           </p>
           {newFindings && (
-            <p className="app-subtle" style={{ fontSize: 12 }}>
+            <p className="text-xs text-muted-foreground">
               <Trans>New: {newFindings}</Trans>
             </p>
           )}
           {resolvedFindings && (
-            <p className="app-subtle" style={{ fontSize: 12 }}>
+            <p className="text-xs text-muted-foreground">
               <Trans>Resolved: {resolvedFindings}</Trans>
             </p>
           )}
@@ -300,6 +296,6 @@ export default function ArtifactViewerPage() {
       )}
 
       {artifact && !showChanges && <ArtifactRenderer artifact={artifact} content={content} />}
-    </section>
+    </Page>
   );
 }

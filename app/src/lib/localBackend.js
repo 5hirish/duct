@@ -12,6 +12,7 @@
  */
 
 import { useLocalBackend } from "./api.js";
+import { reconcileStoredSession } from "./authFetch.js";
 import { getShellInfo, isDesktopShell } from "./shell.js";
 
 /** A frozen Python app takes ~20s to boot on first run; allow generous headroom. */
@@ -25,15 +26,36 @@ let pending = null;
 /** Last resolved result, for synchronous reads after the gate has run. */
 let resolved = null;
 
+/** The server's answer. It never talks to a sidecar, and has no window to ask. */
+const HOSTED = Object.freeze({ active: false });
+
 /**
  * Whether requests are going to a local sidecar rather than the hosted API.
  *
  * Synchronous, so it can be read during render. Only meaningful *after*
  * `initLocalBackend()` has settled — `LocalBackendGate` guarantees that for
  * everything it wraps, which is why this is safe to call from a page inside it.
+ * The server always answers false, so anything rendered from it in the
+ * self-host shell has to be corrected after hydration, not during it.
  */
 export function isLocalBackendActive() {
   return Boolean(resolved?.active);
+}
+
+/**
+ * The settled answer, synchronously, or null while a desktop shell is still
+ * being asked.
+ *
+ * Only a shell has a sidecar to wait for, so a browser knows on the first
+ * client render and `LocalBackendGate` can hydrate at once instead of a tick
+ * later. The server answers "hosted" without recording it: module state there
+ * is shared by every request.
+ */
+export function settledBackend() {
+  if (resolved) return resolved;
+  if (typeof window === "undefined") return HOSTED;
+  if (!isDesktopShell()) return settle(HOSTED);
+  return null;
 }
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -75,8 +97,24 @@ async function isListening(url) {
  * UI, not an unhandled rejection during boot.
  */
 export function initLocalBackend() {
-  if (!pending) pending = resolve().then((result) => (resolved = result));
+  if (!pending) pending = resolved ? Promise.resolve(resolved) : resolve().then(settle);
   return pending;
+}
+
+/**
+ * Record the answer and, in the same step, drop a stored session minted by
+ * the other backend, so nothing can read the token between the two.
+ * `reconcileStoredSession` says why. Skipped on error: the base never moved,
+ * so it does not describe the backend this shell meant to use, and judging
+ * the session against it would throw away one that is still good for the
+ * sidecar that failed to start.
+ */
+function settle(result) {
+  if (!resolved) {
+    resolved = result;
+    if (!result.error) reconcileStoredSession();
+  }
+  return resolved;
 }
 
 async function resolve() {

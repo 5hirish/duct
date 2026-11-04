@@ -11,6 +11,7 @@ import sys
 import os
 import glob
 import json
+from urllib.parse import urlsplit
 from html.parser import HTMLParser
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -60,6 +61,17 @@ CANONICAL_BASE = "https://getduct.ai"
 
 # ── HTML parser ───────────────────────────────────────────────────────────────
 
+
+GTM_HOST = "googletagmanager.com"
+
+
+def _is_gtm_host(src: str) -> bool:
+    """Whether a script or frame loads from Google Tag Manager. Read off the
+    parsed host, not the raw string, so a path that merely mentions the domain
+    does not count and a lookalike host does not slip past."""
+    host = (urlsplit(src).hostname or "").lower()
+    return host == GTM_HOST or host.endswith("." + GTM_HOST)
+
 class PageChecker(HTMLParser):
     def __init__(self, path):
         super().__init__()
@@ -77,9 +89,7 @@ class PageChecker(HTMLParser):
         self.has_config_js = False
         self.has_duct_js = False
         self.duct_js_defer = False
-        self.has_gtm_noscript = False
-        self._in_noscript = False
-        self._saw_body = False
+        self.loads_google_tags = False
         self.ld_blocks = []
         self._in_ld = False
         # Every local image the page references, src and srcset alike. A shot
@@ -89,16 +99,8 @@ class PageChecker(HTMLParser):
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
 
-        if tag == "body":
-            self._saw_body = True
-
-        if tag == "noscript":
-            self._in_noscript = True
-
-        if tag == "iframe" and self._in_noscript:
-            src = attrs.get("src", "")
-            if "googletagmanager.com/ns.html" in src:
-                self.has_gtm_noscript = True
+        if tag in ("script", "iframe") and _is_gtm_host(attrs.get("src") or ""):
+            self.loads_google_tags = True
 
         if tag == "link":
             rel = attrs.get("rel", "")
@@ -146,8 +148,6 @@ class PageChecker(HTMLParser):
             self.ld_blocks.append(data)
 
     def handle_endtag(self, tag):
-        if tag == "noscript":
-            self._in_noscript = False
         if tag == "script":
             self._in_ld = False
 
@@ -261,9 +261,10 @@ class PageChecker(HTMLParser):
         elif not self.duct_js_defer:
             self.errors.append("duct.js script tag is missing the 'defer' attribute")
 
-        # GTM noscript
-        if not self.has_gtm_noscript:
-            self.errors.append("Missing GTM <noscript><iframe> immediately after <body>")
+        # GTM and GA4 were removed: a tag container runs scripts configured
+        # outside this repository, and outside the consent gate in duct.js.
+        if self.loads_google_tags:
+            self.errors.append("Loads Google Tag Manager; the site measures with PostHog behind the consent gate in duct.js")
 
 
 # ── Runner ────────────────────────────────────────────────────────────────────

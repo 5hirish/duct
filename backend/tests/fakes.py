@@ -597,3 +597,275 @@ class FakeMcpServer:
                 yield self
 
         return run()
+
+
+class FakeSMTP:
+    """Stands in for ``smtplib.SMTP`` and ``SMTP_SSL`` in the email seam's SMTP
+    provider: records the conversation instead of opening a socket.
+
+    ``sessions`` is shared by both classes ``install`` patches in, one entry per
+    connection, so a test reads which class was opened, on which port, and what
+    was said, in order. ``fail_with`` makes the first command raise, the way a
+    refused login or a dropped connection would.
+    """
+
+    def __init__(self, fail_with: Exception | None = None):
+        self.sessions: list[dict] = []
+        self.fail_with = fail_with
+
+    def install(self, monkeypatch, module) -> None:
+        fake = self
+
+        class _Client:
+            implicit_tls = False
+
+            def __init__(self, host, port, timeout=None, context=None):  # noqa: ARG002
+                self.session = {"host": host, "port": port, "tls": self.implicit_tls, "calls": []}
+                fake.sessions.append(self.session)
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *exc):
+                return False
+
+            def _record(self, name, *args):
+                if fake.fail_with is not None:
+                    raise fake.fail_with
+                self.session["calls"].append((name, *args))
+
+            def starttls(self, context=None):  # noqa: ARG002
+                self._record("starttls")
+
+            def login(self, user, password):
+                self._record("login", user, password)
+
+            def send_message(self, message):
+                self._record("send_message", message)
+
+        class _ClientSSL(_Client):
+            implicit_tls = True
+
+        monkeypatch.setattr(module.smtplib, "SMTP", _Client)
+        monkeypatch.setattr(module.smtplib, "SMTP_SSL", _ClientSSL)
+
+
+# ---------------------------------------------------------------------------
+# PostBridge
+# ---------------------------------------------------------------------------
+#
+# Faked beneath the real ``PostBridgeClient``, at the httpx transport, so the
+# client's own request building, error parsing and response models run: a fake
+# client would have passed while ``scheduled_at`` went out without its zone.
+
+import json as _json  # noqa: E402
+
+import httpx  # noqa: E402
+
+
+def post_bridge_on(transport):
+    """A factory for the real ``PostBridgePublisher`` over the real client,
+    answering from ``transport``."""
+    from service.post_bridge import PostBridgeClient
+    from service.post_bridge.publisher import PostBridgePublisher
+
+    return lambda api_key: PostBridgePublisher(
+        api_key, client=PostBridgeClient(api_key, client=httpx.AsyncClient(transport=httpx.MockTransport(transport))),
+    )
+
+
+def connect_scheduler(monkeypatch, db, owner_id, make, *, publisher_id: str = "post_bridge") -> None:
+    """Connect a scheduler for ``owner_id`` the way a person does — a saved
+    key — and open ``make(api_key)`` wherever Duct opens that scheduler
+    (``service/publishers/registry.open_publisher``)."""
+    import service.credentials as credentials
+    import service.publishers.registry as registry
+    from cryptography.fernet import Fernet
+
+    if not credentials.get_configs().credentials_encryption_key:
+        cfg = credentials.get_configs().model_copy(update={"credentials_encryption_key": Fernet.generate_key().decode()})
+        monkeypatch.setattr(credentials, "get_configs", lambda: cfg)
+    registry.spec_for(publisher_id).key.save(owner_id, "sk-fake", db)
+    db.commit()
+    real = registry.open_publisher
+    monkeypatch.setattr(
+        registry, "open_publisher",
+        lambda pid, key: make(key) if pid == publisher_id else real(pid, key),
+    )
+
+
+class PostBridgeQueue:
+    """PostBridge's posts, media and post-results endpoints over dicts,
+    recording every request.
+
+    ``posts`` is the queue by id; ``results`` maps a post id to the post
+    results PostBridge would list for it; ``uploads`` holds what reached each
+    signed upload URL, in order. ``create_status`` is the status a new post
+    comes back with, and ``down`` makes every call a 503.
+    """
+
+    POST_ID = "pb_post_1"
+    UPLOAD_HOST = "uploads.postbridge.test"
+
+    def __init__(self) -> None:
+        self.posts: dict[str, dict] = {}
+        self.results: dict[str, list[dict]] = {}
+        self.uploads: list[dict] = []
+        self.requests: list[tuple[str, str, dict | None]] = []
+        self.create_status = "scheduled"
+        self.down = False
+
+    def __call__(self, req: httpx.Request) -> httpx.Response:
+        if req.url.host == self.UPLOAD_HOST:
+            upload = next(u for u in self.uploads if u["media_id"] == req.url.path.strip("/"))
+            upload["bytes"] = req.read()
+            upload["content_type"] = req.headers.get("content-type", "")
+            self.requests.append((req.method, "<upload>", None))
+            return httpx.Response(200)
+        body = _json.loads(req.read()) if req.content else None
+        self.requests.append((req.method, req.url.path, body))
+        if self.down:
+            return httpx.Response(503, json={"message": "maintenance"})
+        if req.method == "POST" and req.url.path == "/v1/media/create-upload-url":
+            media_id = f"m{len(self.uploads) + 1}"
+            self.uploads.append({"media_id": media_id, **body})
+            return httpx.Response(200, json={
+                "media_id": media_id, "name": body["name"],
+                "upload_url": f"https://{self.UPLOAD_HOST}/{media_id}",
+            })
+        if req.method == "POST" and req.url.path == "/v1/posts":
+            post = {"id": self.POST_ID, "caption": body["caption"], "status": self.create_status,
+                    "scheduled_at": body.get("scheduled_at"), "social_accounts": body["social_accounts"],
+                    "media": body.get("media")}
+            if self.create_status == "failed":
+                post["warnings"] = ["The X account needs reconnecting."]
+            self.posts[self.POST_ID] = post
+            return httpx.Response(200, json=post)
+        if req.method == "GET" and req.url.path == "/v1/post-results":
+            return httpx.Response(200, json={"data": self.results.get(req.url.params.get("post_id"), [])})
+        post_id = req.url.path.removeprefix("/v1/posts/")
+        post = self.posts.get(post_id)
+        if post is None:
+            return httpx.Response(404, json={"message": "Post not found"})
+        if req.method == "GET":
+            return httpx.Response(200, json=post)
+        if req.method == "PATCH":
+            post.update(body)
+            return httpx.Response(200, json=post)
+        if req.method == "DELETE":
+            if post["status"] not in ("scheduled", "draft"):
+                return httpx.Response(400, json={"message": "Can only delete scheduled or draft posts"})
+            del self.posts[post_id]
+            return httpx.Response(200, json={})
+        raise AssertionError(f"unexpected PostBridge call: {req.method} {req.url.path}")
+
+    def client(self, *_args):
+        from service.post_bridge import PostBridgeClient
+
+        return PostBridgeClient("sk-fake", client=httpx.AsyncClient(transport=httpx.MockTransport(self)))
+
+    def publisher(self, api_key: str = "sk-fake"):
+        return post_bridge_on(self)(api_key)
+
+    def calls(self) -> list[tuple[str, str]]:
+        return [(method, path) for method, path, _ in self.requests]
+
+    def created(self) -> dict:
+        """The body of the last create-post request."""
+        return next(body for method, path, body in reversed(self.requests)
+                    if (method, path) == ("POST", "/v1/posts"))
+
+
+# ---------------------------------------------------------------------------
+# Zernio
+# ---------------------------------------------------------------------------
+#
+# Same layer as the PostBridge fake: beneath the real ``ZernioClient``, so its
+# request building, error envelope and response models run.
+
+
+class ZernioQueue:
+    """Zernio's accounts, media, posts and analytics endpoints over dicts,
+    recording every request. ``accounts`` is what GET /accounts lists;
+    ``posts`` the posts by id; ``analytics`` a post id's single-post answer
+    (None answers 202, still syncing); ``timeline`` its daily rows."""
+
+    POST_ID = "zp_post_1"
+    UPLOAD_HOST = "uploads.zernio.test"
+    MEDIA_HOST = "media.zernio.test"
+
+    def __init__(self) -> None:
+        self.accounts: list[dict] = [
+            {"_id": "acc_li", "platform": "linkedin", "username": "kestrel", "displayName": "Kestrel Studio",
+             "profilePicture": "https://media.zernio.test/li.png", "isActive": True},
+            {"_id": "acc_x", "platform": "twitter", "username": "kestrelhq", "isActive": True,
+             "needsReconnection": True},
+        ]
+        self.posts: dict[str, dict] = {}
+        self.analytics: dict[str, dict | None] = {}
+        self.timeline: dict[str, list[dict]] = {}
+        self.uploads: list[dict] = []
+        self.requests: list[tuple[str, str, dict | None]] = []
+        self.create_status = "scheduled"
+
+    def __call__(self, req: httpx.Request) -> httpx.Response:
+        if req.url.host == self.UPLOAD_HOST:
+            self.uploads.append({"key": req.url.path, "bytes": req.read(), "content_type": req.headers.get("content-type")})
+            self.requests.append((req.method, "<upload>", None))
+            return httpx.Response(200)
+        body = _json.loads(req.read()) if req.content else None
+        path = req.url.path.removeprefix("/api/v1")
+        self.requests.append((req.method, path, body))
+        if req.method == "GET" and path == "/accounts":
+            return httpx.Response(200, json={"accounts": self.accounts, "hasAnalyticsAccess": True})
+        if req.method == "POST" and path == "/media/presign":
+            key = f"/{len(self.uploads) + 1}-{body['filename']}"
+            return httpx.Response(200, json={
+                "uploadUrl": f"https://{self.UPLOAD_HOST}{key}", "publicUrl": f"https://{self.MEDIA_HOST}{key}",
+                "key": key, "expiresIn": 3600,
+            })
+        if req.method == "POST" and path == "/posts":
+            post = {"_id": self.POST_ID, "content": body["content"], "status": self.create_status,
+                    "scheduledFor": body.get("scheduledFor"), "mediaItems": body.get("mediaItems", []),
+                    "platforms": [{**p, "status": "pending"} for p in body["platforms"]]}
+            if self.create_status == "failed":
+                for p in post["platforms"]:
+                    p.update(status="failed", errorMessage="The account needs reconnecting.")
+            self.posts[self.POST_ID] = post
+            return httpx.Response(201, json={"message": "ok", "post": post})
+        if req.method == "GET" and path == "/analytics":
+            post_id = req.url.params.get("postId")
+            if post_id is None:
+                return httpx.Response(200, json={"posts": [], "pagination": {"page": 1, "pages": 1}})
+            found = self.analytics.get(post_id)
+            if found is None:
+                return httpx.Response(202, json={"postId": post_id, "syncStatus": "pending"})
+            return httpx.Response(200, json=found)
+        if req.method == "GET" and path == "/analytics/post-timeline":
+            return httpx.Response(200, json={"timeline": self.timeline.get(req.url.params.get("postId"), [])})
+        post_id = path.removeprefix("/posts/")
+        post = self.posts.get(post_id)
+        if post is None:
+            return httpx.Response(404, json={"error": "Post not found", "type": "not_found", "code": "post_not_found"})
+        if req.method == "GET":
+            return httpx.Response(200, json={"post": post})
+        if req.method == "PUT":
+            post.update({k: v for k, v in body.items() if k in ("content", "scheduledFor")})
+            post["platforms"] = [{**p, "status": "pending"} for p in body.get("platforms", post["platforms"])]
+            return httpx.Response(200, json={"message": "ok", "post": post})
+        if req.method == "DELETE":
+            if post["status"] == "published":
+                return httpx.Response(400, json={"error": "Cannot delete published posts.", "type": "invalid_request_error"})
+            del self.posts[post_id]
+            return httpx.Response(200, json={"message": "deleted"})
+        raise AssertionError(f"unexpected Zernio call: {req.method} {path}")
+
+    def publisher(self, api_key: str = "sk-fake"):
+        from service.zernio.client import ZernioClient
+        from service.zernio.publisher import ZernioPublisher
+
+        return ZernioPublisher(api_key, client=ZernioClient(api_key, client=httpx.AsyncClient(transport=httpx.MockTransport(self))))
+
+    def created(self) -> dict:
+        (body,) = [b for m, p, b in self.requests if m == "POST" and p == "/posts"]
+        return body

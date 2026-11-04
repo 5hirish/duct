@@ -65,9 +65,9 @@ def test_no_credentials_means_console(clean_env):
 
 
 def test_the_first_configured_provider_wins_and_cloudflare_leads(clean_env):
-    """Unset EMAIL_PROVIDER picks whichever vendor has credentials, preferring
+    """Unset EMAIL_PROVIDER picks whichever provider has credentials, preferring
     Cloudflare — the sending domain is managed alongside the rest of the stack."""
-    assert active_backend(Configs(resend_api_key="re_test")) == "resend"
+    assert active_backend(Configs(smtp_host="mail.acme.com")) == "smtp"
     assert (
         active_backend(Configs(cloudflare_email_api_token="cf", cloudflare_account_id="a"))
         == "cloudflare"
@@ -75,7 +75,7 @@ def test_the_first_configured_provider_wins_and_cloudflare_leads(clean_env):
     assert (
         active_backend(
             Configs(
-                resend_api_key="re_test",
+                smtp_host="mail.acme.com",
                 cloudflare_email_api_token="cf",
                 cloudflare_account_id="a",
             )
@@ -146,10 +146,10 @@ async def test_an_empty_recipient_list_is_refused_before_it_reaches_a_provider(c
 
 def test_each_provider_encodes_one_attachment_its_own_way(clean_env):
     """One `Attachment` of raw bytes, two wire formats — the divergence the seam
-    exists to hide. Cloudflare keys it `type`, Resend keys it `content_type`,
-    and Resend alone takes a display name in `from`."""
+    exists to hide. Cloudflare takes JSON with the file base64'd under `type`;
+    SMTP takes a MIME part, and alone carries a display name in From."""
     from service.email.message import Attachment
-    from service.email.providers import cloudflare, resend
+    from service.email.providers import cloudflare, smtp
 
     message = EmailMessage(
         to="ana@acme.com",
@@ -169,25 +169,34 @@ def test_each_provider_encodes_one_attachment_its_own_way(clean_env):
         {"filename": "r.pdf", "content": encoded, "type": "application/pdf"}
     ]
 
-    rs = resend.build_payload(message, cfg)
-    assert rs["from"] == "Duct <noreply@getduct.ai>"
-    assert rs["attachments"] == [
-        {"filename": "r.pdf", "content": encoded, "content_type": "application/pdf"}
-    ]
+    mime = smtp.build_message(message, cfg)
+    assert mime["From"] == "Duct <noreply@getduct.ai>"
+    assert mime["To"] == "ana@acme.com" and mime["Cc"] == "team@getduct.ai"
+    assert mime["Message-ID"].endswith("@getduct.ai>")
+    body = mime.get_body(preferencelist=("html", "plain"))
+    assert body.get_content_type() == "text/html" and "<p>h</p>" in body.get_content()
+    (pdf,) = mime.iter_attachments()
+    assert pdf.get_filename() == "r.pdf"
+    assert pdf.get_content_type() == "application/pdf"
+    assert pdf.get_content() == b"%PDF-1.4"
 
 
 def test_optional_headers_are_omitted_rather_than_sent_empty(clean_env):
-    """An empty `cc` or `reply_to` in the body is rejected by one provider and
-    silently accepted by the other; sending neither is the only portable move."""
-    from service.email.providers import cloudflare, resend
+    """An empty `cc` or `reply_to` is rejected by some servers and silently
+    accepted by others; sending neither is the only portable move."""
+    from service.email.providers import cloudflare, smtp
 
     message = EmailMessage(to="ana@acme.com", subject="s", html="<p>h</p>", text="t")
     cfg = Configs(email_from="noreply@getduct.ai")
 
-    for payload in (cloudflare.build_payload(message, cfg), resend.build_payload(message, cfg)):
-        assert "cc" not in payload
-        assert "reply_to" not in payload
-        assert "attachments" not in payload
+    payload = cloudflare.build_payload(message, cfg)
+    assert "cc" not in payload
+    assert "reply_to" not in payload
+    assert "attachments" not in payload
+
+    mime = smtp.build_message(message, cfg)
+    assert mime["Cc"] is None and mime["Reply-To"] is None
+    assert list(mime.iter_attachments()) == []
 
 
 def test_a_message_sender_overrides_the_configured_default(clean_env):
@@ -200,6 +209,93 @@ def test_a_message_sender_overrides_the_configured_default(clean_env):
 
     assert sender_address(default, cfg) == "noreply@getduct.ai"
     assert sender_address(override, cfg) == "hello@getduct.ai"
+
+
+# ---------------------------------------------------------------------------
+# SMTP: what is said to the server, in what order
+# ---------------------------------------------------------------------------
+
+_SMTP_MESSAGE = EmailMessage(to="ana@acme.com", subject="s", html="<p>h</p>", text="t")
+
+
+def _fake_smtp(monkeypatch, fail_with=None):
+    from service.email.providers import smtp
+    from tests.fakes import FakeSMTP
+
+    fake = FakeSMTP(fail_with=fail_with)
+    fake.install(monkeypatch, smtp)
+    return fake
+
+
+def _smtp(**settings) -> Configs:
+    return Configs(email_provider="smtp", smtp_host="mail.acme.com", **settings)
+
+
+@pytest.mark.asyncio
+async def test_smtp_upgrades_to_tls_before_it_sends_the_password(clean_env, monkeypatch):
+    """STARTTLS on 587 is the default, and the login comes after the upgrade:
+    the other order sends the password in the clear on every message."""
+    fake = _fake_smtp(monkeypatch)
+    result = await send_email(_SMTP_MESSAGE, _smtp(smtp_username="duct", smtp_password="pw"))
+
+    assert result.delivered is True and result.backend == "smtp"
+    (session,) = fake.sessions
+    assert (session["host"], session["port"], session["tls"]) == ("mail.acme.com", 587, False)
+    assert [call[0] for call in session["calls"]] == ["starttls", "login", "send_message"]
+    assert session["calls"][1] == ("login", "duct", "pw")
+    assert result.provider_id == session["calls"][2][1]["Message-ID"]
+
+
+@pytest.mark.asyncio
+async def test_each_security_mode_takes_its_own_transport_and_port(clean_env, monkeypatch):
+    """Implicit TLS opens an encrypted socket on 465; "none" talks plain text and
+    is what Mailpit on :1025 takes. No username means no login at all."""
+    fake = _fake_smtp(monkeypatch)
+    await send_email(_SMTP_MESSAGE, _smtp(smtp_security="tls"))
+    await send_email(_SMTP_MESSAGE, _smtp(smtp_security="none", smtp_port=1025))
+
+    implicit, plain = fake.sessions
+    assert (implicit["port"], implicit["tls"]) == (465, True)
+    assert [call[0] for call in implicit["calls"]] == ["send_message"]
+    assert (plain["port"], plain["tls"]) == (1025, False)
+    assert [call[0] for call in plain["calls"]] == ["send_message"]
+
+
+@pytest.mark.asyncio
+async def test_an_unknown_security_mode_refuses_rather_than_falling_back(clean_env, monkeypatch):
+    """A typo must never become plain text with the password in it."""
+    fake = _fake_smtp(monkeypatch)
+    result = await send_email(_SMTP_MESSAGE, _smtp(smtp_security="starrtls", smtp_password="pw"))
+
+    assert result.delivered is False
+    assert result.error == "unknown SMTP_SECURITY"
+    assert fake.sessions == []
+
+
+@pytest.mark.asyncio
+async def test_a_refusing_server_is_a_result_not_an_exception(clean_env, monkeypatch):
+    """A provider never raises: a refused login or a dropped connection comes
+    back as an undelivered result the caller can report."""
+    import smtplib
+
+    _fake_smtp(monkeypatch, fail_with=smtplib.SMTPAuthenticationError(535, b"bad credentials"))
+    result = await send_email(_SMTP_MESSAGE, _smtp(smtp_username="duct", smtp_password="pw"))
+
+    assert result.delivered is False
+    assert result.error == "SMTPAuthenticationError"
+
+
+@pytest.mark.asyncio
+async def test_a_line_break_in_a_header_is_refused_not_sent(clean_env, monkeypatch):
+    """An invitation's subject carries a project name somebody typed; a line
+    break in it must not become a header of its own."""
+    fake = _fake_smtp(monkeypatch)
+    message = EmailMessage(to="ana@acme.com", subject="Join Acme\nBcc: x@evil.test", html="", text="")
+    result = await send_email(message, _smtp())
+
+    assert result.delivered is False
+    assert result.error == "invalid header"
+    assert fake.sessions == []
 
 
 # ---------------------------------------------------------------------------

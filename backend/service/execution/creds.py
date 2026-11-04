@@ -2,13 +2,14 @@
 
 The executor-shaped specialization of ``service/connector_access.py``: that
 module answers "what are this project's credentials for connector X" for reads
-and writes alike; this one folds in a request override and the server env
-fallback, and returns the exact dict the Google clients expect.
+and writes alike; this one folds in the server env fallback and returns the
+exact dict the Google clients expect.
 
-Per-field priority: request override (browser BYO — unchanged behavior) →
-project connector binding (``project_connectors``) → stored
-``connector_credentials`` row (Fernet-encrypted, saved from the Connections
-page) → server env fallback.
+Per-field priority: project connector binding (``project_connectors``) →
+stored ``connector_credentials`` row (Fernet-encrypted, saved from the
+Connections page) → server env fallback. There is no request override any
+more: it was a refresh token the browser held, and a write applied with a
+token only one tab had is a write nobody else could roll back.
 
 Stored rows are what make *agent-initiated* execution possible: an agent
 running server-side has no browser session to hand it a refresh token.
@@ -26,7 +27,6 @@ never widens access beyond the project. User-level lookups try the exact
 from __future__ import annotations
 
 import logging
-from collections.abc import Mapping
 from uuid import UUID
 
 from sqlmodel import Session
@@ -42,30 +42,22 @@ def resolve_execution_creds(
     user_id: UUID,
     connector_type: str,
     account_id: str = "",
-    override: Mapping[str, str] | None = None,
     project_id: UUID | None = None,
 ) -> dict[str, str]:
     """Resolve the credentials dict executors expect."""
     cfg = get_configs()
-    override = override or {}
-
-    def _ov(key: str) -> str:
-        return str(override.get(key) or "").strip()
-
     stored = _stored_credentials(
         session, user_id, connector_type, account_id.strip(), project_id=project_id
     )
 
     def _pick(key: str, env_fallback: str = "") -> str:
-        return _ov(key) or str(stored.get(key) or "").strip() or env_fallback
+        return str(stored.get(key) or "").strip() or env_fallback
 
     if connector_type not in _GOOGLE_SHAPED:
         # Manual-credential connectors (Mixpanel …) carry their own shape —
-        # stored blob under the request override, no env fallback (there is
-        # no server-wide service account to fall back to).
-        merged = {str(k): str(v).strip() for k, v in stored.items() if v}
-        merged.update({str(k): str(v).strip() for k, v in override.items() if v and str(v).strip()})
-        return merged
+        # the stored blob, no env fallback (there is no server-wide service
+        # account to fall back to).
+        return {str(k): str(v).strip() for k, v in stored.items() if v}
 
     return {
         "refresh_token": _pick("refresh_token"),

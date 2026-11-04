@@ -105,7 +105,7 @@ tip the bowl toward the viewer. The Capitoline Doves mosaic does the same.
 ## Generating one
 
 Use `mcp__gemini-image-generation__generate_image` with
-`model: gemini-3-pro-image-preview`, `aspect_ratio: 1:1`, `image_size: 2K`.
+`model: gemini-3-pro-image`, `aspect_ratio: 1:1`, `image_size: 2K`.
 These models take no seed, so a regenerated panel is a *different* panel — which
 is why masters are committed rather than regenerated.
 

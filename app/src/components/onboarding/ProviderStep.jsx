@@ -247,7 +247,7 @@ export default function ProviderStep({ onVerified, onSkip, className }) {
         <div className="start-plan">
           <div className="start-plan-text">
             <p className="text-sm font-semibold">
-              <Sparkles className="mr-1.5 inline size-4 text-primary" aria-hidden />
+              <Sparkles className="mr-1.5 inline size-4 text-brand" aria-hidden />
               {connectedPlan ? (
                 <Trans>Signed in to {planName}</Trans>
               ) : (

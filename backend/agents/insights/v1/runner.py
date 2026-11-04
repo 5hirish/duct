@@ -665,6 +665,7 @@ class AutonomousInsightsRunner:
             if payload is not None:
                 written.append(payload)
 
+        thread_id = str(conversation_id or uuid4())
         await stream_agent(
             agent,
             build_insights_user_prompt(
@@ -680,12 +681,13 @@ class AutonomousInsightsRunner:
             on_artifact_close=_on_artifact,
             log_prefix="insights-v1",
             config={
-                "configurable": {"thread_id": str(conversation_id or uuid4())},
+                "configurable": {"thread_id": thread_id},
                 "recursion_limit": LIMITS.recursion,
             },
             provider=self.provider,
             model=self.model,
-            conversation_id=str(conversation_id or ""),
+            conversation_id=thread_id,
+            user_id=str(user_id or ""),
         )
         await emit({"event": AgentEvent.PIPELINE_FINISHED, "status": StepStatus.SUCCESS})
         # A run that reached no conclusion worth keeping is reported as such

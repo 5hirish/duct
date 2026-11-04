@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { lazy, Suspense, useMemo, useRef } from "react";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { msg } from "@lingui/core/macro";
 import { Phase } from "../workspace/agentPhase";
@@ -9,7 +9,11 @@ import { StepStatus } from "../../lib/agentSteps";
 import { errorText } from "../../lib/agentSession";
 import { saveText } from "../../lib/download";
 import PipelineProgress from "../PipelineProgress";
-import AuditReportV1 from "./AuditReportV1";
+import { SkeletonDocument } from "@/components/ui/skeleton";
+
+// Recharts comes with it, and the workspace spends its first minutes on the
+// progress ladder; the template report is fetched when a run produces one.
+const AuditReportV1 = lazy(() => import("./AuditReportV1"));
 
 // ---------------------------------------------------------------------------
 // Version history — pill toggles
@@ -331,7 +335,9 @@ export default function AuditReport({
           <>
             {reportMode === "template" && structuredData ? (
               <div className="h-full overflow-auto">
-                <AuditReportV1 data={structuredData} leadToken={leadToken} email={leadEmail} />
+                <Suspense fallback={<SkeletonDocument className="p-6" label={t`Loading the report`} />}>
+                  <AuditReportV1 data={structuredData} leadToken={leadToken} email={leadEmail} />
+                </Suspense>
               </div>
             ) : (
               <iframe

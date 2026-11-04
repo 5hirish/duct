@@ -56,8 +56,8 @@ def _translate(exc: Exception) -> Exception:
     if isinstance(exc, HttpError):
         if exc.resp.status in (401, 403):
             return ValueError(
-                "GTM access denied — reconnect Google Tag Manager from the Connections "
-                "page (the edit/publish scopes are requested there)."
+                "GTM access denied — reconnect Google Tag Manager from the Toolbox "
+                "(the edit/publish scopes are requested there)."
             )
         if exc.resp.status == 429:
             return RuntimeError(

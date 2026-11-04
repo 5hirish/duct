@@ -76,11 +76,25 @@ KIND_HELP = (
 )
 
 
+# A memory's title is what the desk, the timeline and every recall show, at
+# one line in a row and two in the desk's lead (app/DESIGN.md, "Content
+# awareness"). The service stores up to 200 characters and cuts the rest,
+# which ends a sentence wherever the cut lands; refusing a long one here lets
+# the model rewrite it as a headline instead, and the detail goes in `body`.
+TITLE_HEADLINE_MAX = 90
+
+
 class RememberFactArgs(BaseModel):
     """Arguments for RememberFact (LangChain transport)."""
 
     kind: str = Field(description=KIND_HELP)
-    title: str = Field(description="The fact in one line, with its number or date if it has one.")
+    title: str = Field(
+        description=(
+            f"A headline of at most {TITLE_HEADLINE_MAX} characters: the subject first, with its "
+            "number or date if it has one ('Pricing page sessions fell 9% week over week'). "
+            "Everything else goes in body."
+        ),
+    )
     body: str = Field(
         default="",
         description=(
@@ -184,6 +198,17 @@ def _remember_sync(args: dict, *, project_id, user_id, conversation_id, agent_ty
     from db.session import get_session as db_session
     from service.memory import remember, short_id
 
+    title = str(args.get("title") or "").strip()
+    if len(title) > TITLE_HEADLINE_MAX:
+        return {
+            "status": "not_stored",
+            "message": (
+                f"Rejected — the title is {len(title)} characters and a title is a headline of at "
+                f"most {TITLE_HEADLINE_MAX}. Lead with the subject and its number, and move the "
+                "rest into body. Nothing was written."
+            ),
+        }
+
     refs: list[dict] = []
     if conversation_id:
         refs.append({"conversation_id": str(conversation_id)})
@@ -193,7 +218,7 @@ def _remember_sync(args: dict, *, project_id, user_id, conversation_id, agent_ty
             db,
             scope=scope,
             kind=str(args.get("kind") or "").strip(),
-            title=str(args.get("title") or "").strip(),
+            title=title,
             body=str(args.get("body") or ""),
             project_id=project_id,
             user_id=user_id,

@@ -14,6 +14,7 @@ import {
   getPost,
   listLinkedAccounts,
   listSocialAccounts,
+  localPickerValue,
   publishPost,
 } from "@/lib/contentApi";
 import { PLATFORM_LABELS, Platform, PostType } from "@/lib/contentEnums";
@@ -26,17 +27,24 @@ import PublishReviewPanel from "./PublishReviewPanel";
  *      the agent's last score. Advice — nothing below waits on it.
  *   1. Pick one or more connected accounts
  *   2. (Optional) pick a schedule time
- *   3. Submit → backend uploads images to PostBridge + creates the post; a
- *      text post goes as words alone, and the dialog says which of its
- *      replies go with it (the channel's rule, from `post.channel`)
+ *   3. Submit → backend uploads images to the accounts' scheduler + creates the
+ *      post there; a text post goes as words alone, and the dialog says which
+ *      of its replies go with it (the scheduler's rule, from `post.channel`)
  *
  * Props:
  *   - open        : boolean
  *   - onClose     : () => void
  *   - post        : { id, project_id, topic, caption, platforms[], post_type, replies[], channel }
  *   - onPublished : (updatedPost) => void  — fired after successful publish
+ *   - suggestedAt : ISO instant to open on as the schedule (the drafts queue's
+ *                   best slot); absent, the dialog opens on "Post now"
+ *   - suggestion  : a line saying why that time, shown while it is still the pick
  */
-export default function PublishModal({ open, onClose, post, onPublished }) {
+// Accounts are unique per scheduler, not overall: two schedulers can number
+// theirs the same.
+const accountKey = (a) => `${a.publisher || ""}:${a.id ?? a.account_id}`;
+
+export default function PublishModal({ open, onClose, post, onPublished, suggestedAt, suggestion }) {
   const { t, i18n } = useLingui();
   const [accounts, setAccounts]     = useState([]);
   const [selected, setSelected]     = useState(new Set());
@@ -57,9 +65,15 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
     return out;
   }, [accounts]);
 
+  // The picker's own format, in the reader's zone like minDateTime below: the
+  // UTC slice this used to take showed a 9:00 Madrid slot as 07:00, and
+  // absoluteTime then sent 07:00 Madrid.
+  const suggestedValue = suggestedAt ? localPickerValue(suggestedAt) : "";
+
   useEffect(() => {
     if (!open || !post?.project_id) return;
     setStage("loading"); setError("");
+    if (suggestedValue) { setScheduledAt(suggestedValue); setTiktokDraft(false); }
     let cancelled = false;
     (async () => {
       try {
@@ -73,18 +87,21 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
         if (cancelled) return;
         setAccounts(list || []);
         setAssessment(fresh?.assessment || null);
-        const availableIds = new Set((list || []).map(a => a.id));
-        const linkedIds = (linked || [])
-          .map(a => Number(a.account_id))
-          .filter(id => availableIds.has(id));
-        if (linkedIds.length > 0) {
-          // Prefer the project's linked accounts.
-          setSelected(new Set(linkedIds));
-        } else if (primary) {
-          // Fall back to the accounts on the post's own platform.
-          const ids = (list || []).filter(a => a.platform === primary).map(a => a.id);
-          setSelected(new Set(ids));
-        }
+        const available = new Set((list || []).map(accountKey));
+        // Prefer the project's linked account for the post's platform, else
+        // the accounts on that platform at one scheduler: a post goes out
+        // through one.
+        const onPlatform = (list || []).filter(a => a.platform === primary);
+        const linkedHere = (linked || [])
+          .filter(a => a.platform === primary)
+          .map(accountKey)
+          .filter(k => available.has(k));
+        const firstAt = onPlatform[0]?.publisher;
+        setSelected(new Set(
+          linkedHere.length > 0
+            ? linkedHere
+            : onPlatform.filter(a => a.publisher === firstAt).map(accountKey),
+        ));
       } catch (e) {
         if (!cancelled) setError(friendlyError(e));
       } finally {
@@ -106,11 +123,14 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
 
   async function handlePublish() {
     if (selected.size === 0) { setError(t`Pick at least one account.`); return; }
+    const chosen = accounts.filter(a => selected.has(accountKey(a)));
+    const publishers = [...new Set(chosen.map(a => a.publisher))];
+    if (publishers.length > 1) { setError(t`Pick accounts at one scheduler at a time.`); return; }
     setLoading(true); setError(""); setStage("publishing");
     try {
-      const ids = [...selected].map(Number);
       const updated = await publishPost(post.id, {
-        socialAccountIds: ids,
+        socialAccountIds: chosen.map(a => a.id),
+        publisher: publishers[0],
         scheduledAt: scheduledAt || null,
         tiktokDraft,
       });
@@ -127,7 +147,7 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
   }
 
   const hasAccounts = accounts.length > 0;
-  const minDateTime = new Date(Date.now() + 5 * 60_000).toISOString().slice(0, 16);
+  const minDateTime = localPickerValue(new Date(Date.now() + 5 * 60_000));
 
   // A publish in flight must not be dismissable — hence the guards on
   // onOpenChange, outside-click and Escape rather than a bare onClose.
@@ -173,8 +193,8 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
               {!hasAccounts && (
                 <div className="rounded-md border border-warning/40 bg-warning/5 p-3 text-xs">
                   <Trans>
-                    You don't have any social accounts connected yet. Connect the
-                    account you want to post from in the Accounts tab.
+                    There's no account to post from yet. In the Accounts tab, connect a
+                    scheduler and link the account you want to post from.
                   </Trans>
                 </div>
               )}
@@ -193,18 +213,21 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
                         <div className="grid grid-cols-1 gap-1.5">
                           {list.map(a => (
                             <label
-                              key={a.id}
+                              key={accountKey(a)}
                               className="flex items-center gap-2 rounded border border-border bg-background hover:bg-muted/40 px-2 py-1.5 text-xs cursor-pointer"
                             >
                               <input
                                 type="checkbox"
-                                checked={selected.has(a.id)}
-                                onChange={() => toggle(a.id)}
+                                checked={selected.has(accountKey(a))}
+                                onChange={() => toggle(accountKey(a))}
                                 className="accent-primary"
                               />
                               <span className="font-medium">@{a.username}</span>
+                              {a.needs_reconnect && (
+                                <span className="text-2xs text-warning"><Trans>Reconnect it</Trans></span>
+                              )}
                               <span className="text-2xs text-muted-foreground ml-auto">
-                                #{a.id}
+                                {a.publisher_label ? <Via scheduler={a.publisher_label} /> : `#${a.id}`}
                               </span>
                             </label>
                           ))}
@@ -248,6 +271,9 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
                       className="rounded border border-input bg-background px-2 py-0.5 text-xs"
                     />
                   </label>
+                  {suggestion && scheduledAt && scheduledAt === suggestedValue && (
+                    <p className="pl-5 text-2xs text-muted-foreground">{suggestion}</p>
+                  )}
                   {offersTiktokDraft && (
                     <label className="flex items-center gap-2 text-xs">
                       <input
@@ -294,9 +320,10 @@ export default function PublishModal({ open, onClose, post, onPublished }) {
   );
 }
 
-// What a text post takes with it. PostBridge posts one reply on X (as the
-// post's first reply) and none on LinkedIn; the rest are the author's to
-// paste. Said before Publish, rather than learned from a refusal after it.
+// What a text post takes with it. The scheduler decides how many replies go
+// out (PostBridge one on X, none on LinkedIn; Zernio a whole thread on X and
+// a first comment on LinkedIn); the rest are the author's to paste. Said
+// before Publish, rather than learned from a refusal after it.
 function WhatPublishes({ post }) {
   const channel = post?.channel;
   if (post?.post_type !== PostType.TEXT || !channel) return null;
@@ -308,7 +335,9 @@ function WhatPublishes({ post }) {
   if (extra <= 0) {
     return (
       <p className="rounded-md border border-border bg-muted/40 p-3 text-xs">
-        <Trans>The post and its first reply go out together.</Trans>
+        {replies.length > 1
+          ? <Trans>The post and all its replies go out together.</Trans>
+          : <Trans>The post and its first reply go out together.</Trans>}
       </p>
     );
   }
@@ -319,6 +348,10 @@ function WhatPublishes({ post }) {
         : <Trans>{label} doesn't publish comments. The post goes out alone; paste your first comment under it once it's live.</Trans>}
     </p>
   );
+}
+
+function Via({ scheduler }) {
+  return <Trans>via {scheduler}</Trans>;
 }
 
 // A near-copy of `friendlyErrorMessage` used to live here — same four classes,

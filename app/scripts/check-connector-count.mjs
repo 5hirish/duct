@@ -3,8 +3,8 @@
 // The badge used to count two hardcoded sessionStorage keys (GA4, GSC), so it
 // could never read past 2 and never saw Google Ads, GTM, or any of the twelve
 // server-stored connector types. These cases pin the replacement's rule:
-// union the two credential sources, count DISTINCT connector types, and hold
-// Google Ads to the same two-part test the Connections page applies.
+// count DISTINCT connector types among the stored rows, and nothing else — a
+// Google token no longer lives in the browser to be counted (issue #456).
 //
 // Run: node scripts/check-connector-count.mjs
 
@@ -13,7 +13,7 @@ import { resolveConnectedTypes } from "../src/lib/connectorCount.js";
 const CASES = [
   {
     name: "the reported bug: three connected, badge showed two",
-    input: { sessionTypes: ["ga4", "gsc"], serverTypes: ["ga4", "gsc", "mixpanel"] },
+    input: { serverTypes: ["ga4", "gsc", "mixpanel"] },
     expect: 3,
   },
   {
@@ -32,22 +32,19 @@ const CASES = [
     expect: 1,
   },
   {
-    name: "session token and server row for the same type are not double counted",
-    input: { sessionTypes: ["ga4"], serverTypes: ["ga4"] },
-    expect: 1,
-  },
-  {
-    name: "signed out: session tokens alone still count",
-    input: { sessionTypes: ["ga4", "gsc", "gtm"] },
-    expect: 3,
-  },
-  {
     // Google Ads used to need a developer token on top of OAuth to count.
     // Google sunset those on 2026-09-09, so OAuth alone is the whole answer
     // and Ads counts exactly like GA4 next to it.
     name: "google ads counts on OAuth alone",
-    input: { sessionTypes: ["google_ads", "ga4"] },
+    input: { serverTypes: ["google_ads", "ga4"] },
     expect: 2,
+  },
+  {
+    // What a caller from before #456 still passes: a tab's session tokens are
+    // no evidence of a connection anywhere else, so they count for nothing.
+    name: "session-only tokens are not a connection",
+    input: { sessionTypes: ["ga4", "gsc"] },
+    expect: 0,
   },
   { name: "nothing connected", input: {}, expect: 0 },
 ];
