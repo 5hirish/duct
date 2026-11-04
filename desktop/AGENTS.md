@@ -275,6 +275,16 @@ carries all the code.
   whole for whatever is still running from it and is swept on the next
   refreeze.
 
+  **E0463 "can't find crate" for a macro crate is macOS refusing its library,
+  not a stale cache.** rustc swallows the loader's reason, so ask for it:
+  `python3 -c "import ctypes,sys; ctypes.CDLL(sys.argv[1])" <path to the .dylib>`,
+  with the path from `cargo build --verbose`'s `--extern`. "mis-aligned LINKEDIT
+  string pool" is rust-objcopy's strip dropping the padding after an odd number
+  of indirect symbols, refused once a library is built against SDK 27, which is
+  why `[profile.dev.package."*"]` sets `strip = "none"`. It looked intermittent
+  because `tauri dev` and `tauri build` use different features, so each loads
+  its own copy of the library.
+
   **Stop what you started.** `open` hands the dev bundle to launchd, so no
   debug session owns it, VS Code's Stop cannot close it, and no `postDebugTask`
   can attach — every launch outlives the thing that launched it. The

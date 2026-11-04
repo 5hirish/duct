@@ -111,6 +111,13 @@ debug = "line-tables-only"
 [profile.dev.package."*"]
 # The 606 dependencies. Nothing here is ever a debugging target.
 debug = false
+# Left unset, `debug = false` makes Cargo strip whatever it links, and on a Mac
+# that has rust-objcopy rewrite every proc-macro library. A library with an odd
+# number of indirect symbols loses the padding before its string table, macOS
+# 27's loader refuses it, and rustc reports that only as E0463 "can't find crate
+# for `tauri_macros`". The count moves with the code, so any version bump could
+# break any macro crate. `desktop/AGENTS.md` has the one-line diagnosis.
+strip = "none"
 # Dependencies compile once and then run on every launch; `desktop_lib` is the
 # opposite. Optimising them costs a single rebuild and makes a debug build
 # responsive rather than sluggish.
