@@ -50,6 +50,12 @@ const STAGING = join(DIST, ".staging");
 /** The freeze a swap displaces, swept once nothing is running from it. */
 const SUPERSEDED_PREFIX = ".superseded-";
 
+/**
+ * PyInstaller's INFO runs for minutes and buries the build's own output. A
+ * failure still shows at this level, and its message offers the full command.
+ */
+const FREEZE_LOG_LEVEL = "WARN";
+
 /** Directories that never reach the freeze, or that the freeze itself writes. */
 const SKIP_DIRS = new Set([
   ".venv", "dist", "build", "__pycache__", ".pytest_cache", ".ruff_cache", "data", "tests",
@@ -141,11 +147,13 @@ function refreeze() {
   sweepSuperseded();
   rmSync(STAGING, { recursive: true, force: true });
 
+  console.log("Freezing the sidecar. It stays quiet for a few minutes unless something is wrong.\n");
+
   // Default --workpath on purpose: PyInstaller's analysis cache lives in
   // backend/build, and redirecting it turns every refreeze into a cold one.
   const { status, signal, error } = spawnSync(
     "poetry",
-    ["run", "pyinstaller", "duct_sidecar.spec", "--noconfirm", "--distpath", STAGING],
+    ["run", "pyinstaller", "duct_sidecar.spec", "--noconfirm", "--distpath", STAGING, "--log-level", FREEZE_LOG_LEVEL],
     { cwd: BACKEND, stdio: "inherit" },
   );
   if (status !== 0) {
