@@ -1335,6 +1335,10 @@ msgstr "これを <0>opencode.json</0> に追加してください。"
 msgid "Add your site"
 msgstr "サイトを追加"
 
+#: src/components/connections/BringAnyTool.jsx
+msgid "Add yours"
+msgstr "自分のツールを追加"
+
 #: src/components/connections/ConnectorBrowser.jsx
 msgid "Added by you"
 msgstr "あなたが追加しました"
@@ -10428,8 +10432,8 @@ msgid "Trials, renewals, refunds and MRR across the App Store and Play."
 msgstr "App StoreとPlay全体でのトライアル、更新、払い戻し、MRR。"
 
 #: src/components/connections/BringAnyTool.jsx
-msgid "Try"
-msgstr "試す"
+#~ msgid "Try"
+#~ msgstr "試す"
 
 #: src/components/AppErrorPanel.jsx
 #: src/components/connections/McpConnectors.jsx
@@ -11586,6 +11590,10 @@ msgstr "ウェブサイト"
 #: src/app/(start)/start/page.jsx
 msgid "Your website is enough to start. Duct reads it now and keeps reading while you set up the rest."
 msgstr "あなたのウェブサイトがあれば開始できます。Ductは今すぐそれを読み込み、残りの設定中も読み込みを続けます。"
+
+#: src/components/connections/BringAnyTool.jsx
+msgid "Yours"
+msgstr "自分のツール"
 
 #: src/lib/userProfile.js
 msgid "हिन्दी"

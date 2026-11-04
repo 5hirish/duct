@@ -1335,6 +1335,10 @@ msgstr "Füge dies zu <0>opencode.json</0> hinzu."
 msgid "Add your site"
 msgstr "Füge deine Website hinzu"
 
+#: src/components/connections/BringAnyTool.jsx
+msgid "Add yours"
+msgstr "Deins hinzufügen"
+
 #: src/components/connections/ConnectorBrowser.jsx
 msgid "Added by you"
 msgstr "Von dir hinzugefügt"
@@ -10427,8 +10431,8 @@ msgid "Trials, renewals, refunds and MRR across the App Store and Play."
 msgstr "Testphasen, Verlängerungen, Rückerstattungen und MRR im App Store und Play."
 
 #: src/components/connections/BringAnyTool.jsx
-msgid "Try"
-msgstr "Versuchen"
+#~ msgid "Try"
+#~ msgstr "Versuchen"
 
 #: src/components/AppErrorPanel.jsx
 #: src/components/connections/McpConnectors.jsx
@@ -11585,6 +11589,10 @@ msgstr "Deine Website"
 #: src/app/(start)/start/page.jsx
 msgid "Your website is enough to start. Duct reads it now and keeps reading while you set up the rest."
 msgstr "Deine Website reicht für den Anfang. Duct liest sie jetzt und liest weiter, während du den Rest einrichtest."
+
+#: src/components/connections/BringAnyTool.jsx
+msgid "Yours"
+msgstr "Deins"
 
 #: src/lib/userProfile.js
 msgid "हिन्दी"

@@ -1329,6 +1329,10 @@ msgstr ""
 msgid "Add your site"
 msgstr ""
 
+#: src/components/connections/BringAnyTool.jsx
+msgid "Add yours"
+msgstr ""
+
 #: src/components/connections/ConnectorBrowser.jsx
 msgid "Added by you"
 msgstr ""
@@ -10422,8 +10426,8 @@ msgid "Trials, renewals, refunds and MRR across the App Store and Play."
 msgstr ""
 
 #: src/components/connections/BringAnyTool.jsx
-msgid "Try"
-msgstr ""
+#~ msgid "Try"
+#~ msgstr ""
 
 #: src/components/AppErrorPanel.jsx
 #: src/components/connections/McpConnectors.jsx
@@ -11579,6 +11583,10 @@ msgstr ""
 
 #: src/app/(start)/start/page.jsx
 msgid "Your website is enough to start. Duct reads it now and keeps reading while you set up the rest."
+msgstr ""
+
+#: src/components/connections/BringAnyTool.jsx
+msgid "Yours"
 msgstr ""
 
 #: src/lib/userProfile.js

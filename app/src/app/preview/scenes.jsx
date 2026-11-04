@@ -2313,7 +2313,7 @@ export const SCENES = [
     state: "with names to try · search turned off",
     group: "Toolbox catalogue",
     title: "Bring any tool",
-    note: "The one brand-tinted card on Toolbox, drawn with the starters while browsing everything. It replaced the Any MCP server tile at the end of the list. A name runs that search; each one returned its vendor's own server when written. A Duct that turned the registry off keeps the button and loses the names, which would find nothing.",
+    note: "The one brand-tinted card on Toolbox, drawn with the starters while browsing everything. It replaced the Any MCP server tile at the end of the list. The tiles are the picture and the controls: a name runs that search and each returned its vendor's own server when written, Yours opens the add dialog, and pointing at one lights its channel. A Duct that turned the registry off keeps the picture but its names stop being buttons, since they would find nothing. Sweep the width: the drawing sits beside the words from @2xl, under them below that, and gives way to wrapped tiles below @xs.",
     render: () => (
       <div className="flex flex-col gap-6">
         <BringAnyTool onAdd={() => {}} onSearch={() => {}} />
