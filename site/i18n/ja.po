@@ -2004,11 +2004,6 @@ msgid "Targets, decisions and what it learned, on a timeline you can correct."
 msgstr "目標、決定、学習内容が、修正可能なタイムラインで表示されます。"
 
 #. img alt
-#: download.html index.html
-msgid "The Connections page with twelve tools, five of them connected"
-msgstr "12個のツールがあり、そのうち5個が接続済みの接続ページ"
-
-#. img alt
 #: download.html
 msgid ""
 "The Duct desktop app: an insights session with a proposed change waiting for approval on the left, the brief it wrote on the right"
@@ -2019,6 +2014,11 @@ msgstr "Duct デスクトップアプリ：左側には承認待ちの変更セ�
 msgid ""
 "The Memory timeline: a CPA target, a decision, an event, and what the agent learned this week"
 msgstr "メモリタイムライン：CPA目標、決定、イベント、および今週エージェントが学習した内容"
+
+#. img alt
+#: download.html index.html
+msgid "The Toolbox with twelve tools, five of them connected"
+msgstr "12個のツールがあるツールボックス、そのうち5個が接続済み"
 
 #: download.html
 msgid ""
@@ -3629,8 +3629,8 @@ msgstr "タップから何件のインストールがあり、ビューから何
 
 #: integrations/apple-search-ads.html
 msgid ""
-"In Duct, open Connections, choose Apple Search Ads and paste the three IDs and the private key."
-msgstr "Ductで「接続」を開き、Apple Search Adsを選択し、3つのIDと秘密キーを貼り付けてください。"
+"In Duct, open the Toolbox, choose Apple Search Ads and paste the three IDs and the private key."
+msgstr "Ductでツールボックスを開き、Apple Search Adsを選択し、3つのIDと秘密鍵を貼り付けます。"
 
 #. meta twitter:description
 #: integrations/apple-search-ads.html
@@ -3925,8 +3925,8 @@ msgid ""
 msgstr "すべての広告プラットフォームは、自身に起因するコンバージョンを報告します。DuctはそれらをStripeと照合し、互いに照合することはありません。"
 
 #: integrations/chatgpt-ads.html
-msgid "In Duct, open Connections, choose OpenAI Ads and paste the key."
-msgstr "Ductで「接続」を開き、OpenAI Adsを選択してキーを貼り付けます。"
+msgid "In Duct, open the Toolbox, choose OpenAI Ads and paste the key."
+msgstr "Ductでツールボックスを開き、OpenAI Adsを選択し、キーを貼り付けます。"
 
 #: integrations/chatgpt-ads.html
 msgid ""
@@ -4214,8 +4214,8 @@ msgstr ""
 "Google Analytics Data API (ga4-data-v1beta) · 2026年9月24日監査済みフィールド · <0>ソースを読む</0>"
 
 #: integrations/ga4.html
-msgid "In Duct, open Connections and choose Google Analytics."
-msgstr "Ductで、接続を開き、Google Analyticsを選択します。"
+msgid "In Duct, open the Toolbox and choose Google Analytics."
+msgstr "Ductでツールボックスを開き、Google Analyticsを選択します。"
 
 #: integrations/ga4.html
 msgid "Link Google Ads account to GA4"
@@ -4540,8 +4540,8 @@ msgid ""
 msgstr "お客様が承認した後に誰かが予算、入札単価、またはステータスを変更した場合、Ductはその変更を適用しません。"
 
 #: integrations/google-ads.html
-msgid "In Duct, open Connections and choose Google Ads."
-msgstr "Ductで、接続を開き、Google Adsを選択します。"
+msgid "In Duct, open the Toolbox and choose Google Ads."
+msgstr "Ductでツールボックスを開き、Google Adsを選択します。"
 
 #: integrations/google-ads.html
 msgid ""
@@ -4752,8 +4752,8 @@ msgstr ""
 "表示回数が増加しているのに、トライアルは横ばいですか？DuctはGA4に加えてSearch Consoleのページ別クエリを読み取り、ランクインしているのにコンバージョンしないクエリを発見します。"
 
 #: integrations/google-search-console.html
-msgid "In Duct, open Connections and choose Google Search Console."
-msgstr "Ductで、接続を開き、Google Search Consoleを選択します。"
+msgid "In Duct, open the Toolbox and choose Google Search Console."
+msgstr "Ductでツールボックスを開き、Google Search Consoleを選択します。"
 
 #: integrations/google-search-console.html
 msgid "Is organic growth real, or bots?"
@@ -5015,8 +5015,8 @@ msgid "How does rollback work?"
 msgstr "ロールバックはどのように機能しますか？"
 
 #: integrations/google-tag-manager.html
-msgid "In Duct, open Connections and choose Google Tag Manager."
-msgstr "Ductで、接続を開き、Google Tag Managerを選択します。"
+msgid "In Duct, open the Toolbox and choose Google Tag Manager."
+msgstr "Ductでツールボックスを開き、Google Tag Managerを選択します。"
 
 #: integrations/google-tag-manager.html
 msgid "Is the tag firing, or firing the wrong thing?"
@@ -5287,8 +5287,8 @@ msgstr ""
 
 #: integrations/growthbook.html
 msgid ""
-"In Duct, open Connections, choose GrowthBook and paste the key and the project ID."
-msgstr "Ductで「接続」を開き、GrowthBookを選択し、キーとプロジェクトIDを貼り付けます。"
+"In Duct, open the Toolbox, choose GrowthBook and paste the key and the project ID."
+msgstr "Ductでツールボックスを開き、GrowthBookを選択し、キーとプロジェクトIDを貼り付けます。"
 
 #: integrations/growthbook.html
 msgid "In GrowthBook, open Settings, then API Keys, and create a read-only key."
@@ -5719,8 +5719,8 @@ msgid "How much of Meta's credit comes from views, not clicks?"
 msgstr "Metaのクレジットのどれくらいが、クリックではなく表示から来ていますか？"
 
 #: integrations/meta-ads.html
-msgid "In Duct, open Connections, choose Meta Ads and paste the token."
-msgstr "Ductで、接続を開き、Meta Adsを選択し、トークンを貼り付けます。"
+msgid "In Duct, open the Toolbox, choose Meta Ads and paste the token."
+msgstr "Ductでツールボックスを開き、Meta Adsを選択し、トークンを貼り付けます。"
 
 #: integrations/meta-ads.html
 msgid ""
@@ -6004,8 +6004,8 @@ msgid "In Clarity, open Settings, then Data Export, and generate an API token."
 msgstr "Clarityで、設定を開き、データエクスポートを選択してAPIトークンを生成します。"
 
 #: integrations/microsoft-clarity.html
-msgid "In Duct, open Connections, choose Microsoft Clarity and paste the token."
-msgstr "Ductで、接続を開き、Microsoft Clarityを選択してトークンを貼り付けます。"
+msgid "In Duct, open the Toolbox, choose Microsoft Clarity and paste the token."
+msgstr "Ductでツールボックスを開き、Microsoft Clarityを選択し、トークンを貼り付けます。"
 
 #. meta twitter:description
 #: integrations/microsoft-clarity.html
@@ -6183,8 +6183,8 @@ msgid "How many signups carry no campaign at all?"
 msgstr "キャンペーンタグが全くない登録数はいくつですか？"
 
 #: integrations/mixpanel.html
-msgid "In Duct, open Connections, choose Mixpanel and paste them."
-msgstr "Ductで「接続」を開き、Mixpanelを選択して貼り付けます。"
+msgid "In Duct, open the Toolbox, choose Mixpanel and paste them."
+msgstr "Ductでツールボックスを開き、Mixpanelを選択し、それらを貼り付けます。"
 
 #: integrations/mixpanel.html
 msgid ""
@@ -6461,8 +6461,8 @@ msgid "How many trials are active right now?"
 msgstr "現在、アクティブなトライアルはいくつありますか？"
 
 #: integrations/revenuecat.html
-msgid "In Duct, open Connections, choose RevenueCat and paste the key."
-msgstr "Ductで「接続」を開き、RevenueCatを選択してキーを貼り付けます。"
+msgid "In Duct, open the Toolbox, choose RevenueCat and paste the key."
+msgstr "Ductでツールボックスを開き、RevenueCatを選択し、キーを貼り付けます。"
 
 #: integrations/revenuecat.html
 msgid ""
@@ -6725,8 +6725,8 @@ msgstr "今月、有料広告が獲得した有料顧客の数は？"
 
 #: integrations/stripe.html
 msgid ""
-"In Duct, open Connections, choose Stripe and paste the key. Duct checks each permission and names any that is missing."
-msgstr "Ductで、接続を開き、Stripeを選択してキーを貼り付けます。Ductは各権限を確認し、不足しているものがあればその名前を伝えます。"
+"In Duct, open the Toolbox, choose Stripe and paste the key. Duct checks each permission and names any that is missing."
+msgstr "Ductでツールボックスを開き、Stripeを選択し、キーを貼り付けます。Ductは各権限を確認し、不足しているものを表示します。"
 
 #: integrations/stripe.html
 msgid "In Stripe, open Developers, then API keys, and create a restricted key."
@@ -6992,8 +6992,8 @@ msgstr "サーバーの接続方法"
 
 #: mcp.html
 msgid ""
-"In the Duct app, open Connections. The ready-made servers are listed there, and any other connects by its address."
-msgstr "Ductアプリで「接続」を開きます。既製のサーバーがそこにリストされており、その他のサーバーはアドレスで接続します。"
+"In the Duct app, open the Toolbox. The ready-made servers are listed there, and any other connects by its address."
+msgstr "Ductアプリでツールボックスを開きます。既製のサーバーがそこにリストされており、その他のサーバーはアドレスで接続します。"
 
 #: mcp.html
 msgid "It says “Duct only connects to servers on the public internet”"
@@ -7053,8 +7053,8 @@ msgstr ""
 "サーバーがOAuthディスカバリーを公開し、クライアントメタデータドキュメントを受け入れるか、動的クライアント登録を許可する場合に、ワンクリックでサインインできます。"
 
 #: mcp.html
-msgid "Open Connections"
-msgstr "接続を開く"
+msgid "Open the Toolbox"
+msgstr "ツールボックスを開く"
 
 #: mcp.html
 msgid "OpenSEO"
@@ -7077,8 +7077,8 @@ msgstr "サーバーを選択するか、アドレスを貼り付けてくださ
 
 #: mcp.html
 msgid ""
-"Pick one on Connections and sign in with the account you already have. Each address is here for reference; you never have to type it."
-msgstr "接続から1つ選択し、既存のアカウントでサインインしてください。各アドレスは参照用であり、入力する必要はありません。"
+"Pick one in the Toolbox and sign in with the account you already have. Each address is here for reference; you never have to type it."
+msgstr "ツールボックスで1つ選択し、既存のアカウントでサインインします。各アドレスは参照用にここにあり、入力する必要はありません。"
 
 #. meta og:description
 #: mcp.html
@@ -7163,13 +7163,13 @@ msgstr "接続するすべてのサーバーに同じルールが適用されま
 
 #: mcp.html
 msgid ""
-"The server offers no sign-in Duct can use. Create an API key in the vendor's settings and paste it on Connections."
-msgstr "サーバーはDuctが使用できるサインインを提供していません。ベンダーの設定でAPIキーを作成し、接続に貼り付けてください。"
+"The server offers no sign-in Duct can use. Create an API key in the vendor's settings and paste it in the Toolbox."
+msgstr "サーバーはDuctが使用できるサインインを提供していません。ベンダーの設定でAPIキーを作成し、ツールボックスに貼り付けます。"
 
 #: mcp.html
 msgid ""
-"The sign-in expired, or was revoked on the vendor's side. Press Reconnect on Connections and sign in again."
-msgstr "サインインの有効期限が切れたか、ベンダー側で取り消されました。接続で「再接続」を押し、再度サインインしてください。"
+"The sign-in expired, or was revoked on the vendor's side. Press Reconnect in the Toolbox and sign in again."
+msgstr "サインインの有効期限が切れたか、ベンダー側で取り消されました。ツールボックスで「再接続」を押し、再度サインインします。"
 
 #: mcp.html
 msgid ""
@@ -8083,8 +8083,8 @@ msgstr ""
 
 #: privacy.html
 msgid ""
-"<0>Disconnect one source:</0> remove it on the Connections page in Duct. Its stored credentials are deleted at that point."
-msgstr "<0>1つのソースを切断する:</0> Ductの接続ページで削除してください。その時点で保存されている認証情報は削除されます。"
+"<0>Disconnect one source:</0> remove it from the Toolbox in Duct. Its stored credentials are deleted at that point."
+msgstr "<0>ソースを1つ切断する：</0> Ductのツールボックスから削除します。その時点で保存されている認証情報は削除されます。"
 
 #: privacy.html
 msgid "<0>Experimentation:</0> GrowthBook"
@@ -12103,6 +12103,72 @@ msgstr "← 戻る"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← 最初からやり直す"
+
+#. img alt
+#~ msgid "The Connections page with twelve tools, five of them connected"
+#~ msgstr "12個のツールがあり、そのうち5個が接続済みの接続ページ"
+
+#~ msgid ""
+#~ "In Duct, open Connections, choose Apple Search Ads and paste the three IDs and the private key."
+#~ msgstr "Ductで「接続」を開き、Apple Search Adsを選択し、3つのIDと秘密キーを貼り付けてください。"
+
+#~ msgid "In Duct, open Connections, choose OpenAI Ads and paste the key."
+#~ msgstr "Ductで「接続」を開き、OpenAI Adsを選択してキーを貼り付けます。"
+
+#~ msgid "In Duct, open Connections and choose Google Analytics."
+#~ msgstr "Ductで、接続を開き、Google Analyticsを選択します。"
+
+#~ msgid "In Duct, open Connections and choose Google Ads."
+#~ msgstr "Ductで、接続を開き、Google Adsを選択します。"
+
+#~ msgid "In Duct, open Connections and choose Google Search Console."
+#~ msgstr "Ductで、接続を開き、Google Search Consoleを選択します。"
+
+#~ msgid "In Duct, open Connections and choose Google Tag Manager."
+#~ msgstr "Ductで、接続を開き、Google Tag Managerを選択します。"
+
+#~ msgid ""
+#~ "In Duct, open Connections, choose GrowthBook and paste the key and the project ID."
+#~ msgstr "Ductで「接続」を開き、GrowthBookを選択し、キーとプロジェクトIDを貼り付けます。"
+
+#~ msgid "In Duct, open Connections, choose Meta Ads and paste the token."
+#~ msgstr "Ductで、接続を開き、Meta Adsを選択し、トークンを貼り付けます。"
+
+#~ msgid "In Duct, open Connections, choose Microsoft Clarity and paste the token."
+#~ msgstr "Ductで、接続を開き、Microsoft Clarityを選択してトークンを貼り付けます。"
+
+#~ msgid "In Duct, open Connections, choose Mixpanel and paste them."
+#~ msgstr "Ductで「接続」を開き、Mixpanelを選択して貼り付けます。"
+
+#~ msgid "In Duct, open Connections, choose RevenueCat and paste the key."
+#~ msgstr "Ductで「接続」を開き、RevenueCatを選択してキーを貼り付けます。"
+
+#~ msgid ""
+#~ "In Duct, open Connections, choose Stripe and paste the key. Duct checks each permission and names any that is missing."
+#~ msgstr "Ductで、接続を開き、Stripeを選択してキーを貼り付けます。Ductは各権限を確認し、不足しているものがあればその名前を伝えます。"
+
+#~ msgid ""
+#~ "In the Duct app, open Connections. The ready-made servers are listed there, and any other connects by its address."
+#~ msgstr "Ductアプリで「接続」を開きます。既製のサーバーがそこにリストされており、その他のサーバーはアドレスで接続します。"
+
+#~ msgid "Open Connections"
+#~ msgstr "接続を開く"
+
+#~ msgid ""
+#~ "Pick one on Connections and sign in with the account you already have. Each address is here for reference; you never have to type it."
+#~ msgstr "接続から1つ選択し、既存のアカウントでサインインしてください。各アドレスは参照用であり、入力する必要はありません。"
+
+#~ msgid ""
+#~ "The server offers no sign-in Duct can use. Create an API key in the vendor's settings and paste it on Connections."
+#~ msgstr "サーバーはDuctが使用できるサインインを提供していません。ベンダーの設定でAPIキーを作成し、接続に貼り付けてください。"
+
+#~ msgid ""
+#~ "The sign-in expired, or was revoked on the vendor's side. Press Reconnect on Connections and sign in again."
+#~ msgstr "サインインの有効期限が切れたか、ベンダー側で取り消されました。接続で「再接続」を押し、再度サインインしてください。"
+
+#~ msgid ""
+#~ "<0>Disconnect one source:</0> remove it on the Connections page in Duct. Its stored credentials are deleted at that point."
+#~ msgstr "<0>1つのソースを切断する:</0> Ductの接続ページで削除してください。その時点で保存されている認証情報は削除されます。"
 
 #~ msgid ""
 #~ "For CI, a remote machine or an agent without sign-in. On the same settings page, open Use a token instead and create one. Your agent sends it as a header:"

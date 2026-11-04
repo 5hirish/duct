@@ -848,7 +848,7 @@ export default function ConnectionsPage() {
   return (
     <Page>
       <PageHeader
-        title={<Trans>Connections</Trans>}
+        title={<Trans>Toolbox</Trans>}
         status={
           connectedCount
             ? plural(connectedCount, { one: "# source connected", other: "# sources connected" })

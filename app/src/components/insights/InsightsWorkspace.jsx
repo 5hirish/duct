@@ -780,7 +780,7 @@ export function DataPane({ sources }) {
           title={t`No sources pulled yet`}
           actions={
             <Button size="sm" variant="outline" asChild>
-              <Link href="/connections"><Trans>Check connections</Trans></Link>
+              <Link href="/connections"><Trans>Open the Toolbox</Trans></Link>
             </Button>
           }
         >

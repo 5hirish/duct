@@ -82,12 +82,12 @@ class ApiError(BaseApiError):
         if self.status == 401:
             return (
                 "GitHub rejected the credentials: the token has expired or been "
-                "revoked. Reconnect GitHub on the Connections page."
+                "revoked. Reconnect GitHub in the Toolbox."
             )
         if self.status == 301:
             return (
-                "The repository was renamed or transferred. Pick it again on the "
-                "Connections page."
+                "The repository was renamed or transferred. Pick it again in the "
+                "Toolbox."
             )
         if self.rate_limited:
             return (
@@ -128,7 +128,7 @@ def require_repo(creds: dict[str, str]) -> tuple[str, str]:
     if not _REPO_RE.match(repo):
         raise ValueError(
             "GitHub repository missing or malformed — expected owner/name. Pick the "
-            "repository on the Connections page."
+            "repository in the Toolbox."
         )
     owner, name = repo.split("/", 1)
     return owner, name

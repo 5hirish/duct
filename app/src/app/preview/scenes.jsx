@@ -545,7 +545,7 @@ const TOOL_TRAFFIC = [
   use("FetchData", "t3", { entity_id: "google_ads_campaigns" }),
   returned("FetchData", "t3", {
     status: "reauth_required", entity_id: "google_ads_campaigns", connector_id: "google_ads",
-    message: "google_ads rejected its stored credential (expired or revoked). Nothing from this source can be fetched until the user reconnects it on the Connections page.",
+    message: "google_ads rejected its stored credential (expired or revoked). Nothing from this source can be fetched until the user reconnects it in the Toolbox.",
   }),
   use("WebSearch", "t4", { query: "self-hosted AI gateway 2026 alternatives" }),
   returned("WebSearch", "t4", {
@@ -679,7 +679,7 @@ const MCP_TRAFFIC = [
   use("CallConnectedTool", "m4b", { server: "notion", tool: "update_page" }),
   returned("CallConnectedTool", "m4b", { status: "arguments_too_long", server: "notion", name: "Notion", tool: "update_page", message: "Too long to show for approval, so nothing was sent." }),
   use("CallConnectedTool", "m5", { server: "notion", tool: "search" }),
-  returned("CallConnectedTool", "m5", { server: "notion", name: "Notion", status: "reauth_required", message: "Notion refused the stored sign-in. Reconnect it on the Connections page." }),
+  returned("CallConnectedTool", "m5", { server: "notion", name: "Notion", status: "reauth_required", message: "Notion refused the stored sign-in. Reconnect it in the Toolbox." }),
   use("CallConnectedTool", "m6", { server: "posthog", tool: "query_insights" }),
   returned("CallConnectedTool", "m6", { server: "posthog", name: "PostHog", status: "unreachable", message: "mcp.posthog.com did not answer within 30 seconds." }),
   use("CallConnectedTool", "m7", { server: "openseo", tool: "research_keywords" }),
@@ -868,7 +868,7 @@ function CatalogScenario({ id, initialFilters }) {
 }
 
 /**
- * The Connections search with the MCP Registry asked too, over a stub that
+ * The Toolbox search with the MCP Registry asked too, over a stub that
  * answers like `GET /api/user/mcp/registry`: `answer` is "results" (the
  * fixture matching the query), "gateways", "failed", "off" or "slow". A
  * connect with a key saves on the spot; Figma's without one waits on the
@@ -2133,7 +2133,7 @@ export const SCENES = [
     state: "nothing connected yet",
     group: "McpConnectors",
     title: "MCP connectors, before the first connect",
-    note: "The MCP tiles join the native ones in Connections' one grid, two native tiles ahead of them here. Every tile says its kind and publisher under its name: Native · by Duct, or MCP · by the company that runs the server. A tile per preset plus one for any server by address, each opening the connect dialog. Open OpenSEO and press Connect: this stub answers the way a sign-in does on the desktop shell, so the dialog waits on your browser. Open Notion's dialog: no key path, because Notion issues none. Open Railway's: it asks before every call, read-only or not, because its reads return secrets. The two notes at the dialog's foot are the facts worth knowing before connecting one.",
+    note: "The MCP tiles join the native ones in the Toolbox's one grid, two native tiles ahead of them here. Every tile says its kind and publisher under its name: Native · by Duct, or MCP · by the company that runs the server. A tile per preset plus one for any server by address, each opening the connect dialog. Open OpenSEO and press Connect: this stub answers the way a sign-in does on the desktop shell, so the dialog waits on your browser. Open Notion's dialog: no key path, because Notion issues none. Open Railway's: it asks before every call, read-only or not, because its reads return secrets. The two notes at the dialog's foot are the facts worth knowing before connecting one.",
     render: () => <McpScene servers={MCP_NONE} answer="authorize" />,
   },
   {
@@ -2198,7 +2198,7 @@ export const SCENES = [
     state: "checked · used · skipped · needs approval · too long to show · signed out · unreachable · the server's error · unknown tool · running",
     group: "AgentChat",
     title: "Tools on connected servers, in the transcript",
-    note: "Built by lib/toolActivity from recorded traffic, the path a reopened thread takes. A skip is the person's choice and is not painted red, and neither is a call held back because it was too long to show first. A protocol or tool error carries no text of the server's: the row says the server returned an error, in our words. Signed out links to Connections; unreachable and an unknown tool keep Duct's own sentence behind the chevron.",
+    note: "Built by lib/toolActivity from recorded traffic, the path a reopened thread takes. A skip is the person's choice and is not painted red, and neither is a call held back because it was too long to show first. A protocol or tool error carries no text of the server's: the row says the server returned an error, in our words. Signed out links to the Toolbox; unreachable and an unknown tool keep Duct's own sentence behind the chevron.",
     render: () => (
       <div className="max-w-xl space-y-6">
         <ActivityGroup activities={MCP_ACTIVITIES} />
@@ -2279,30 +2279,30 @@ export const SCENES = [
     note: `${scenario.expect} Switch to Kanban and Calendar from the toolbar; sweep the frame from phone to wide.`,
     render: () => <PlanScenario id={scenario.id} />,
   })),
-  // The Connections catalogue at every size it has to hold, from
+  // The Toolbox catalogue at every size it has to hold, from
   // lib/__fixtures__/connectorCatalogs.mjs, the sets the catalogue tests
   // arrange. Type, pick a chip, open the two menus: all of it is live.
   ...CATALOG_SCENARIOS.map((scenario) => ({
     id: `catalog-${scenario.id}`,
     state: scenario.title,
-    group: "Connections catalogue",
-    title: `Connections — ${scenario.title}`,
+    group: "Toolbox catalogue",
+    title: `Toolbox — ${scenario.title}`,
     note: `${scenario.expect} Press / to search.`,
     render: () => <CatalogScenario id={scenario.id} />,
   })),
   {
     id: "catalog-connected-tab",
     state: "Connected tab",
-    group: "Connections catalogue",
-    title: "Connections — the Connected tab",
+    group: "Toolbox catalogue",
+    title: "Toolbox — the Connected tab",
     note: "Only what this account has, the source needing attention first, with the amber dot on the tab saying so. No starters and no Any MCP server tile here.",
     render: () => <CatalogScenario id="hundreds" initialFilters={{ status: "connected" }} />,
   },
   {
     id: "catalog-search",
     state: "searching \"ads\"",
-    group: "Connections catalogue",
-    title: "Connections — a search",
+    group: "Toolbox catalogue",
+    title: "Toolbox — a search",
     note: "Results ranked: titles that start with the words first, then a word of the title, the vendor and keywords, then the description. The category name counts, so \"advertising\" lists the ads. Chips keep their counts for this search.",
     render: () => <CatalogScenario id="hundreds" initialFilters={{ query: "ads" }} />,
   },
@@ -2310,7 +2310,7 @@ export const SCENES = [
     id: "mcp-registry-results",
     state: "searching \"stripe\"",
     group: "MCP Registry",
-    title: "Connections — a search that reaches the MCP Registry",
+    title: "Toolbox — a search that reaches the MCP Registry",
     note: "The catalogue's own Stripe first, then From the MCP Registry: Stripe's own server tagged Official, then the servers whose publishers run their address, each badge naming the site it runs at. Two gateways wait behind Show 2 more from other publishers. Open Stripe Reports: the registry says it takes a key, so the key field is open with the publisher's line about it and a link to its site. Open Stripe and Connect: it saves, and moves up into the catalogue's results as Added by you. Open a gateway after Show more: an amber note says nobody has shown they run that address.",
     render: () => <RegistryScenario query="stripe" />,
   },
@@ -2318,7 +2318,7 @@ export const SCENES = [
     id: "mcp-registry-figma",
     state: "nothing local, Figma's own server in the registry",
     group: "MCP Registry",
-    title: "Connections — the registry finds what the catalogue doesn't",
+    title: "Toolbox — the registry finds what the catalogue doesn't",
     note: "Nothing in the catalogue matches figma, so the way in by address stays, and the registry's section follows with Figma's own server, Official. Connect waits on the browser the way a desktop sign-in does.",
     render: () => <RegistryScenario query="figma" />,
   },
@@ -2340,8 +2340,8 @@ export const SCENES = [
   {
     id: "catalog-nothing-found",
     state: "no match",
-    group: "Connections catalogue",
-    title: "Connections — nothing matches",
+    group: "Toolbox catalogue",
+    title: "Toolbox — nothing matches",
     note: "Says what was searched, offers to clear, and the way in for anything unlisted: any MCP server by its address.",
     render: () => <CatalogScenario id="today" initialFilters={{ query: "hubspot" }} />,
   },
@@ -2364,7 +2364,7 @@ export const SCENES = [
   {
     id: "connections-first-source",
     state: "the first source just connected",
-    group: "Connections",
+    group: "Toolbox",
     title: "First source celebration",
     note: "Shown once per browser, only while exactly one source is connected. Clear localStorage key duct_first_source_celebrated to see it again; the tesserae burst once and are skipped under reduced motion.",
     render: () => <FirstSourceCelebration connectedTypes={["gsc"]} ready />,

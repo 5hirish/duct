@@ -31,8 +31,8 @@ def resolve_ads_credentials(
             status_code=422,
             detail=(
                 "Missing Google Ads credentials. Set GOOGLE_OAUTH_CLIENT_ID and "
-                "GOOGLE_OAUTH_CLIENT_SECRET, and connect Google Ads on the "
-                "Connections page."
+                "GOOGLE_OAUTH_CLIENT_SECRET, and connect Google Ads in the "
+                "Toolbox."
             ),
         )
     return cid, secret, rt

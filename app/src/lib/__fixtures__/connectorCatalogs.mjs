@@ -1,4 +1,4 @@
-// The Connections catalogue at every size it has to survive.
+// The Toolbox catalogue at every size it has to survive.
 //
 // Today it is thirteen native connectors and six MCP presets. Presets grow on
 // the server and anyone can add a server by address, so these are that list

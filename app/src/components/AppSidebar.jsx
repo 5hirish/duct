@@ -572,7 +572,7 @@ function AppearanceMenuItem() {
 // AppSidebar
 // ---------------------------------------------------------------------------
 
-/** How many sources are connected, for the count beside Connections.
+/** How many sources are connected, for the count beside the Toolbox.
  *
  * It used to count two hardcoded sessionStorage keys — GA4 and GSC — so the
  * badge could never read higher than 2 and never saw Google Ads, GTM, or any

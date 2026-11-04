@@ -74,7 +74,7 @@ def fetch_meta_ads(
     meta.require_credentials(creds)
     acct = meta.normalize_account_id(creds.get("account_id") or "")
     if not acct:
-        raise ValueError("Meta account_id missing — pick an ad account on the Connections page.")
+        raise ValueError("Meta account_id missing — pick an ad account in the Toolbox.")
 
     start, end = meta.date_window(days)
     prior_end = date.fromisoformat(start) - timedelta(days=1)

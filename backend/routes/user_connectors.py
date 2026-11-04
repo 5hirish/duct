@@ -302,7 +302,7 @@ def _refuse_server_only_keys(connector_type: str, credentials: dict) -> None:
             status_code=422,
             detail=(
                 f"{', '.join(reserved)} is set by Duct's own connect flow, never by a "
-                "request. Use Connect on the Connections page."
+                "request. Use Connect in the Toolbox."
             ),
         )
 
@@ -374,7 +374,7 @@ def update_connector_settings(
     if refused:
         raise HTTPException(
             status_code=422,
-            detail=f"{', '.join(refused)} cannot be changed here. Reconnect on the Connections page.",
+            detail=f"{', '.join(refused)} cannot be changed here. Reconnect in the Toolbox.",
         )
     merge_settings(row, body.settings)
     session.add(row)
@@ -425,7 +425,7 @@ def _mint_connect_link(connector_type: str, user: User) -> dict:
         if entry is None or not entry[0].oauth_scope:
             raise HTTPException(
                 status_code=422,
-                detail=f"{connector_type!r} does not connect with a sign-in. Add its keys on the Connections page.",
+                detail=f"{connector_type!r} does not connect with a sign-in. Add its keys in the Toolbox.",
             )
     return {"link": store_connect_link_code(str(user.id))}
 

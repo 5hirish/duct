@@ -32,7 +32,7 @@ const SEGMENT_LABELS = {
   seo: msg`SEO Audit`,
   execute: msg`Changes`,
   artifacts: msg`Documents`,
-  connections: msg`Connections`,
+  connections: msg`Toolbox`,
   projects: msg`Projects`,
   project: msg`Project`,
   start: msg`Get started`,

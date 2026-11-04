@@ -419,8 +419,12 @@ msgid "{label} doesn't publish comments. The post goes out alone; paste your fir
 msgstr "{label} no publica comentarios. La publicación sale sola; pega tu primer comentario debajo cuando esté en línea."
 
 #: src/components/insights/ConnectionRequest.jsx
-msgid "{label} needs an API key rather than a sign-in. Add it on the <0>Connections page</0>, then tell Duct to carry on."
-msgstr "{label} necesita una clave API en lugar de iniciar sesión. Añádela en la <0>página de Conexiones</0> y luego dile a Duct que continúe."
+msgid "{label} needs an API key rather than a sign-in. Add it in the <0>Toolbox</0>, then tell Duct to carry on."
+msgstr "{label} necesita una clave API en lugar de un inicio de sesión. Añádelo en la <0>Caja de herramientas</0>, luego dile a Duct que continúe."
+
+#: src/components/insights/ConnectionRequest.jsx
+#~ msgid "{label} needs an API key rather than a sign-in. Add it on the <0>Connections page</0>, then tell Duct to carry on."
+#~ msgstr "{label} necesita una clave API en lugar de iniciar sesión. Añádela en la <0>página de Conexiones</0> y luego dile a Duct que continúe."
 
 #: src/components/content/TextPostEditor.jsx
 msgid "{label} only publishes the first reply. Post this one yourself."
@@ -1023,8 +1027,12 @@ msgid "A clearer brief produces sharper content. Skip if you'd rather Duct decid
 msgstr "Un informe más claro produce contenido más preciso. Omite si prefieres que Duct decida."
 
 #: src/lib/agentSession.js
-msgid "A connected account doesn't have access to that data. Check its permissions under Connections."
-msgstr "Una cuenta conectada no tiene acceso a esos datos. Revisa sus permisos en Conexiones."
+msgid "A connected account doesn't have access to that data. Check its permissions in the Toolbox."
+msgstr "Una cuenta conectada no tiene acceso a esos datos. Revisa sus permisos en la Caja de herramientas."
+
+#: src/lib/agentSession.js
+#~ msgid "A connected account doesn't have access to that data. Check its permissions under Connections."
+#~ msgstr "Una cuenta conectada no tiene acceso a esos datos. Revisa sus permisos en Conexiones."
 
 #: src/lib/agentSession.js
 msgid "A connected account needs reconnecting before the agent can read it."
@@ -2334,8 +2342,8 @@ msgid "Check connection"
 msgstr "Comprobar conexión"
 
 #: src/components/insights/InsightsWorkspace.jsx
-msgid "Check connections"
-msgstr "Revisar conexiones"
+#~ msgid "Check connections"
+#~ msgstr "Revisar conexiones"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Check the connection. Behind a corporate proxy, Duct respects HTTPS_PROXY."
@@ -2748,8 +2756,8 @@ msgstr "Enlace de conexión caducado"
 #: src/app/(app)/connections/page.jsx
 #: src/components/AppNav.jsx
 #: src/lib/navigation.js
-msgid "Connections"
-msgstr "Conexiones"
+#~ msgid "Connections"
+#~ msgstr "Conexiones"
 
 #: src/components/AppSidebar.jsx
 #~ msgid "Connections — add a source"
@@ -6801,12 +6809,12 @@ msgid "Open chat"
 msgstr "Abrir chat"
 
 #: src/components/workspace/AgentChat.jsx
-msgid "Open connections"
-msgstr "Abrir conexiones"
+#~ msgid "Open connections"
+#~ msgstr "Abrir conexiones"
 
 #: src/components/workspace/AgentChat.jsx
-msgid "Open connections →"
-msgstr "Abrir conexiones →"
+#~ msgid "Open connections →"
+#~ msgstr "Abrir conexiones →"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Open Discover"
@@ -6860,6 +6868,15 @@ msgstr "Abrir la línea de tiempo del proyecto"
 #: src/hooks/useAgentNotifications.js
 msgid "Open the tab to see what happened and what to do."
 msgstr "Abre la pestaña para ver qué pasó y qué hacer."
+
+#: src/components/insights/InsightsWorkspace.jsx
+#: src/components/workspace/AgentChat.jsx
+msgid "Open the Toolbox"
+msgstr "Abrir la Caja de herramientas"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Open the Toolbox →"
+msgstr "Abrir la Caja de herramientas →"
 
 #: src/components/connections/McpConnectors.jsx
 msgid "Open to try again"
@@ -10337,6 +10354,12 @@ msgstr "Tokens"
 #: src/components/content/BrandContextForm.jsx
 msgid "Tone"
 msgstr "Tono"
+
+#: src/app/(app)/connections/page.jsx
+#: src/components/AppNav.jsx
+#: src/lib/navigation.js
+msgid "Toolbox"
+msgstr "Caja de herramientas"
 
 #: src/components/connections/McpConnectors.jsx
 msgid "Tools from OpenSEO, PostHog and other apps, for the insights chat. Saved to your account."

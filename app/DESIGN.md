@@ -181,7 +181,7 @@ of all of them):
    not written for, so `agendaGroups` and `planState` in
    `lib/contentSchedule.js` decide what is missed, this week, later or done,
    held to `lib/__fixtures__/planScenarios.mjs` over 500 random plans. The
-   Connections catalogue is the third: how many sources there are is the
+   Toolbox catalogue is the third: how many sources there are is the
    server's and the user's business, so `arrangeCatalog` in
    `lib/connectorCatalog.js` turns any set into one grid below 24 and bounded
    category sections above, with search and facet counts, held to

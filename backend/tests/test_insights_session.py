@@ -164,7 +164,7 @@ def test_user_turn_carries_what_the_project_can_reach():
     assert 'google_ads: bound → 123-456 "Acme"' in out
     assert "gsc: available" in out and "SelectAccount" in out
     assert "ga4: not_connected" in out and "RequestConnection" in out
-    assert "mixpanel: not_connected" in out and "Connections page" in out
+    assert "mixpanel: not_connected" in out and "Toolbox" in out
     # The prefix names the block so the agent reads it; the block itself is
     # per-project and never enters the cached system prompt.
     assert "<data_sources>" in build_insights_system_prompt()

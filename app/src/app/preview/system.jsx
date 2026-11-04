@@ -387,7 +387,7 @@ export const PRIMITIVES = [
     render: () => (
       <Page>
         <PageHeader
-          title="Connections"
+          title="Toolbox"
           status="3 sources connected"
           help="Connect an account once and every project can use it."
           actions={<Button size="sm">Add a source</Button>}

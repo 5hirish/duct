@@ -22,6 +22,7 @@
     "change set": { "es": "conjunto de cambios", "pt-BR": "conjunto de alterações", "de": "Änderungssatz", "ja": "変更セット", "note": "A proposed, previewable batch of edits to an ad account or property." },
     "connector": { "es": "conector", "pt-BR": "conector", "de": "Connector", "ja": "コネクタ", "note": "An integration with one tool." },
     "connection": { "es": "conexión", "pt-BR": "conexão", "de": "Verbindung", "ja": "接続" },
+    "toolbox": { "es": "Caja de herramientas", "pt-BR": "Caixa de ferramentas", "de": "Werkzeugkasten", "ja": "ツールボックス", "note": "The page where every connector and MCP server is added; called Connections until November 2026." },
     "project": { "es": "proyecto", "pt-BR": "projeto", "de": "Projekt", "ja": "プロジェクト", "note": "One client or product; the unit everything is scoped to." },
     "insight": { "es": "hallazgo", "pt-BR": "insight", "de": "Erkenntnis", "ja": "インサイト" },
     "audit": { "es": "auditoría", "pt-BR": "auditoria", "de": "Audit", "ja": "監査" },

@@ -70,7 +70,7 @@ function SendErrorBubble({ text, content, code = "", onRetry, retryable = true }
           <p className="text-xs text-destructive/80">{errorText(i18n, text)}</p>
         </div>
         {action === ErrorAction.SETTINGS && <Link href="/settings/models" className={link}><Trans>Open model settings →</Trans></Link>}
-        {action === ErrorAction.CONNECTIONS && <Link href="/connections" className={link}><Trans>Open connections →</Trans></Link>}
+        {action === ErrorAction.CONNECTIONS && <Link href="/connections" className={link}><Trans>Open the Toolbox →</Trans></Link>}
         {action === ErrorAction.RETRY && content && onRetry && retryable && (
           <button type="button" onClick={() => onRetry(content)} className={link}>
             <Trans>↺ Retry</Trans>
@@ -440,7 +440,7 @@ function FailedAction({ action, retryable, onRetry, retryLabel, onStartFresh }) 
     case ErrorAction.SETTINGS:
       return <Link href="/settings/models" className={button}><Trans>Open model settings</Trans></Link>;
     case ErrorAction.CONNECTIONS:
-      return <Link href="/connections" className={button}><Trans>Open connections</Trans></Link>;
+      return <Link href="/connections" className={button}><Trans>Open the Toolbox</Trans></Link>;
     case ErrorAction.FRESH:
       if (onStartFresh) return <button type="button" onClick={onStartFresh} className={button}><Trans>Start a fresh conversation</Trans></button>;
       return null;

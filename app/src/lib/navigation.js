@@ -63,7 +63,7 @@ export const NAV_SECTIONS = [
       },
       {
         key: "connections",
-        label: msg`Connections`,
+        label: msg`Toolbox`,
         icon: Plug,
         href: "/connections",
         available: true,
