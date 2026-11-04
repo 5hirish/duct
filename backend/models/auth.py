@@ -132,9 +132,18 @@ class McpToken(SQLModel, table=True):
     SHA-256 is stored. A token is high-entropy and random, so a fast hash is
     the right one (a password hash buys nothing against a 256-bit secret), and
     the plaintext exists once, in the response that minted it.
+
+    An agent that signed in through the browser (``service/mcp_server/oauth``)
+    holds the same kind of row, so ``/mcp`` resolves both one way and either
+    is revoked with one button. Its row names the client it registered as and
+    adds a refresh token: its access token lives an hour, and the connection
+    as long as the agent keeps renewing it.
     """
 
     __tablename__ = "mcp_tokens"
+    # Unique as an index rather than a constraint: SQLite cannot add a column
+    # that carries one, and the desktop sidecar migrates on SQLite.
+    __table_args__ = (Index("uq_mcp_tokens_refresh_hash", "refresh_hash", unique=True),)
 
     id: UUID = Field(default_factory=uuid4, primary_key=True, nullable=False)
     user_id: UUID = Field(
@@ -155,5 +164,14 @@ class McpToken(SQLModel, table=True):
         default=None, sa_column=Column(utc_datetime(), nullable=True)
     )
     revoked_at: datetime | None = Field(
+        default=None, sa_column=Column(utc_datetime(), nullable=True)
+    )
+    # Null for a pasted token. For a signed-in agent, the client id it
+    # registered (which carries its name and redirect addresses), so a refresh
+    # token works only for the client it was issued to.
+    client_id: str | None = Field(default=None, sa_column=Column(String, nullable=True))
+    refresh_hash: str | None = Field(default=None, sa_column=Column(String, nullable=True))
+    # When the connection lapses unless the agent renews it first.
+    refresh_expires_at: datetime | None = Field(
         default=None, sa_column=Column(utc_datetime(), nullable=True)
     )

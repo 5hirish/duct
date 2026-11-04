@@ -158,6 +158,7 @@ const RULES = [
       ["app/(start)", "onboarding has its own composition"],
       ["app/(public)", "a public marketing page"],
       ["app/invite", "signed-out landing page"],
+      ["components/settings/AgentConsent.jsx", "the agent sign-in page, signed out and outside the app shell like app/invite"],
       ["app/preview", "the preview harness"],
       ["components/onboarding", "the front door and onboarding"],
       ["components/AppErrorPanel.jsx", "the error boundary renders outside any page"],

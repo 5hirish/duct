@@ -55,6 +55,9 @@
 /* Two lines at desktop: at the default 76px the first beat broke into three. */
 .mcp-hero h1 { font-size: clamp(40px, 5.2vw, 68px); max-width: 1040px; }
 .mcp-hero .hero-sub { max-width: 580px; }
+/* The other direction lives on /connect-agent; the two pages share a protocol and nothing else */
+.mcp-other { margin-top: 20px; font-size: 14px; line-height: 1.6; color: var(--navy-3); max-width: 60ch; animation: fadeUp .5s .4s ease both; }
+.mcp-other a { white-space: nowrap; color: var(--navy); font-weight: 500; text-decoration: underline; text-decoration-color: var(--orange); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
 
 /* The flow: the page's one heavy element. No shot of the app's MCP screens exists yet, so this
    is a diagram of the rule rather than a copy of a screen: the servers you connect, the question,
@@ -200,6 +203,7 @@
 <a class="btn btn-ghost btn-lg" href="#steps">In drei Schritten einrichten</a>
 </div>
 <p class="hero-footnote">Kostenlos mit deinen eigenen Schlüsseln · Keine Kreditkarte · macOS, Windows und Linux</p>
+<p class="mcp-other">Möchtest du Duct stattdessen von deinem eigenen Agenten nutzen, wie Claude Code oder Cursor? <a href="/de/connect-agent">Duct von deinem Agenten nutzen →</a></p>
 </section>
 
 <!-- FLOW: the servers, the question, the two outcomes of a tool call -->

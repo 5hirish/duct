@@ -181,6 +181,18 @@ msgstr "{0} linhas"
 msgid "{0} sources"
 msgstr "{0} fontes"
 
+#: src/components/settings/AgentConsent.jsx
+msgid "{agent} is connected"
+msgstr "{agent} está conectado"
+
+#: src/components/settings/AgentConsent.jsx
+msgid "{agent} is the name the agent gave itself. Allow it only if you just added Duct to an agent."
+msgstr "{agent} é o nome que o agente deu a si mesmo. Permita-o apenas se você acabou de adicionar o Duct a um agente."
+
+#: src/components/settings/AgentConsent.jsx
+msgid "{agent} wasn't connected"
+msgstr "{agent} não foi conectado"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{blogPosts, plural, one {# blog post} other {# blog posts}}"
 msgstr "{blogPosts, plural, one {# post de blog} other {# posts de blog}}"
@@ -869,6 +881,10 @@ msgstr "×{n}"
 msgid "< 1 hr"
 msgstr "< 1 hora"
 
+#: src/components/settings/AgentConsent.jsx
+msgid "<0>{agent}</0> wants to use your Duct account"
+msgstr "<0>{agent}</0> quer usar sua conta Duct"
+
 #: src/components/content/AccountsTab.jsx
 msgid "<0>{count}</0> linked"
 msgstr "<0>{count}</0> conectado(s)"
@@ -1082,6 +1098,10 @@ msgstr "Uma execução parou com um erro"
 msgid "A saved key is already in use. Paste a new one to replace it, or choose Remove key to forget it."
 msgstr "Uma chave salva já está em uso. Cole uma nova para substituí-la, ou escolha Remover chave para esquecê-la."
 
+#: src/components/settings/AgentConsent.jsx
+msgid "A sign-in request lasts ten minutes. Start again from your agent."
+msgstr "Uma solicitação de entrada dura dez minutos. Comece novamente a partir do seu agente."
+
 #: src/components/workspace/ComposerDials.jsx
 #~ msgid "A styled page with its own charts and sortable tables. Costs more to write, reads better, forwards as one file"
 #~ msgstr "Uma página estilizada com seus próprios gráficos e tabelas classificáveis. Mais cara para escrever, melhor para ler, encaminha como um único arquivo"
@@ -1263,6 +1283,10 @@ msgid "Add documents"
 msgstr "Adicionar documentos"
 
 #: src/components/settings/AgentAccess.jsx
+msgid "Add Duct to Claude Code with it:"
+msgstr "Adicione o Duct ao Claude Code com ele:"
+
+#: src/components/settings/AgentAccess.jsx
 msgid "Add Duct to your agent"
 msgstr "Adicione o Duct ao seu agente"
 
@@ -1287,12 +1311,16 @@ msgid "Add something about how you work"
 msgstr "Adicione algo sobre como você trabalha"
 
 #: src/components/settings/AgentAccess.jsx
-msgid "Add this to <0>~/.codex/config.toml</0>."
-msgstr "Adicione isso a <0>~/.codex/config.toml</0>."
+#~ msgid "Add this to <0>~/.codex/config.toml</0>."
+#~ msgstr "Adicione isso a <0>~/.codex/config.toml</0>."
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Add this to <0>~/.cursor/mcp.json</0>."
 msgstr "Adicione isso a <0>~/.cursor/mcp.json</0>."
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Add this to <0>opencode.json</0>."
+msgstr "Adicione isso a <0>opencode.json</0>."
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Add your site"
@@ -1318,6 +1346,10 @@ msgstr "Adicionando…"
 msgid "Additional business context"
 msgstr "Contexto de negócio adicional"
 
+#: src/components/settings/AgentAccess.jsx
+msgid "Address for VS Code"
+msgstr "Endereço para VS Code"
+
 #: src/app/(app)/connections/page.jsx
 msgid "Ads API key"
 msgstr "Chave da API de anúncios"
@@ -1341,6 +1373,18 @@ msgstr "Publicidade"
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Advice only, publish either way"
 msgstr "Apenas conselho, publique de qualquer forma"
+
+#: src/components/settings/AgentConsent.jsx
+msgid "After you allow it, Duct hands {agent} its sign-in on this computer."
+msgstr "Depois de permitir, o Duct entrega a entrada de {agent} neste computador."
+
+#: src/components/settings/AgentConsent.jsx
+msgid "After you allow it, you go to <0>{name}</0>."
+msgstr "Depois de permitir, você vai para <0>{name}</0>."
+
+#: src/components/settings/AgentConsent.jsx
+msgid "After you allow it, your browser opens the <0>{name}</0> app."
+msgstr "Depois de permitir, seu navegador abre o app <0>{name}</0>."
 
 #: src/app/(app)/activity/page.jsx
 msgid "agent"
@@ -1456,9 +1500,17 @@ msgstr "Todas as fontes"
 msgid "All statuses"
 msgstr "Todos os status"
 
+#: src/components/settings/AgentConsent.jsx
+msgid "Allow"
+msgstr "Permitir"
+
 #: src/components/content/VoiceRulesFields.jsx
 msgid "Allow \"{word}\" again"
 msgstr "Permitir \"{word}\" novamente"
+
+#: src/components/settings/AgentConsent.jsx
+msgid "Allow <0>{agent}</0> to use your Duct account?"
+msgstr "Permitir que <0>{agent}</0> use sua conta Duct?"
 
 #: src/lib/contentEnums.js
 msgid "Already said"
@@ -1479,6 +1531,10 @@ msgstr "Sempre diga"
 #: src/components/insights/desk/DeskDayOne.jsx
 #~ msgid "An A/B test live 74 days with nobody in it."
 #~ msgstr "Um teste A/B ativo há 74 dias sem ninguém nele."
+
+#: src/components/settings/AgentConsent.jsx
+msgid "An AI agent"
+msgstr "Um agente de IA"
 
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "An answer worth keeping becomes an artifact here, and versions pile up as it is rewritten."
@@ -1657,6 +1713,10 @@ msgstr "Aprovar e aplicar"
 #: src/app/(app)/execute/page.jsx
 msgid "Approve all"
 msgstr "Aprovar tudo"
+
+#: src/components/settings/AgentConsent.jsx
+msgid "Approve or apply changes, or connect tools"
+msgstr "Aprove ou aplique alterações, ou conecte ferramentas"
 
 #: src/components/content/DailyDraftsReminder.jsx
 msgid "Approve, edit or skip them on Content Studio's Posts tab."
@@ -2041,6 +2101,10 @@ msgstr "Resumos"
 msgid "Bring your own provider"
 msgstr "Traga seu próprio provedor"
 
+#: src/components/settings/AgentAccess.jsx
+msgid "Browser sign-in works with Duct's hosted service. This Duct runs on your computer, so connect your agent with a token below."
+msgstr "A entrada pelo navegador funciona com o serviço hospedado do Duct. Este Duct roda no seu computador, então conecte seu agente com um token abaixo."
+
 #: src/components/audit/AuditReport.jsx
 #: src/components/PipelineProgress.jsx
 msgid "Building report"
@@ -2169,6 +2233,7 @@ msgstr "Não foi possível ler sua chave"
 #: src/components/memory/MemoryTimeline.jsx
 #: src/components/onboarding/ProviderStep.jsx
 #: src/components/ProjectMembers.jsx
+#: src/components/settings/AgentConsent.jsx
 msgid "Cancel"
 msgstr "Cancelar"
 
@@ -2296,6 +2361,10 @@ msgstr "Verificando cobertura de dados estruturados…"
 msgid "Checking the numbers"
 msgstr "Verificando os números"
 
+#: src/components/settings/AgentConsent.jsx
+msgid "Checking the request…"
+msgstr "Verificando a solicitação…"
+
 #: src/app/invite/[token]/page.jsx
 msgid "Checking your invitation…"
 msgstr "Verificando seu convite…"
@@ -2358,8 +2427,8 @@ msgid "Claude · a few cents per audit"
 msgstr "Claude · alguns centavos por auditoria"
 
 #: src/components/settings/AgentAccess.jsx
-msgid "Claude Code on my laptop"
-msgstr "Claude Code no meu laptop"
+#~ msgid "Claude Code on my laptop"
+#~ msgstr "Claude Code no meu laptop"
 
 #: src/components/connections/ProjectEntitySelect.jsx
 #: src/components/memory/MemoryTimeline.jsx
@@ -2427,6 +2496,10 @@ msgstr "Substrings de distinct_id separadas por vírgulas para excluir. O Mixpan
 msgid "Command for Claude Code"
 msgstr "Comando para Claude Code"
 
+#: src/components/settings/AgentAccess.jsx
+msgid "Command for Claude Code with a token"
+msgstr "Comando para Claude Code com um token"
+
 #: src/components/commands/CommandPalette.jsx
 msgid "Command palette"
 msgstr "Paleta de comandos"
@@ -2434,6 +2507,10 @@ msgstr "Paleta de comandos"
 #: src/components/commands/CommandPalette.jsx
 msgid "Commands"
 msgstr "Comandos"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Commands for Codex"
+msgstr "Comandos para Codex"
 
 #: src/components/content/AnalyticsView.jsx
 #: src/components/content/PostMetricsForm.jsx
@@ -2561,6 +2638,10 @@ msgstr "Conecte uma fonte e Duct começa a lê-la no mesmo minuto."
 msgid "Connect an account once and every project can use it. Open a source to pick which of your accounts {projectName} reads from."
 msgstr "Conecte uma conta uma vez e cada projeto pode usá-la. Abra uma fonte para escolher de quais de suas contas {projectName} lê."
 
+#: src/components/settings/AgentConsent.jsx
+msgid "Connect an agent"
+msgstr "Conectar um agente"
+
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Connect anyway"
 msgstr "Conectar mesmo assim"
@@ -2626,6 +2707,14 @@ msgstr "Conectado · {host}"
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Connected · {verifiedModel} · {verifiedLatencyMs} ms"
 msgstr "Conectado · {verifiedModel} · {verifiedLatencyMs} ms"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Connected {created}"
+msgstr "Conectado {created}"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Connected agents"
+msgstr "Agentes conectados"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "connected sources"
@@ -2988,12 +3077,12 @@ msgid "Create a System User token (Business settings)"
 msgstr "Crie um token de Usuário do Sistema (Configurações de negócios)"
 
 #: src/components/settings/AgentAccess.jsx
-msgid "Create a token"
-msgstr "Criar um token"
+#~ msgid "Create a token"
+#~ msgstr "Criar um token"
 
 #: src/components/settings/AgentAccess.jsx
-msgid "Create a token first. It fills in below, so one copy is all it takes."
-msgstr "Crie um token primeiro. Ele será preenchido abaixo, então basta uma cópia."
+#~ msgid "Create a token first. It fills in below, so one copy is all it takes."
+#~ msgstr "Crie um token primeiro. Ele será preenchido abaixo, então basta uma cópia."
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Create format"
@@ -3274,12 +3363,17 @@ msgstr "Descartado"
 #: src/components/connections/ProviderCard.jsx
 #: src/components/content/AccountsTab.jsx
 #: src/components/content/DiscoverPage.jsx
+#: src/components/settings/AgentAccess.jsx
 msgid "Disconnect"
 msgstr "Desconectar"
 
 #: src/components/connections/McpConnectors.jsx
 msgid "Disconnect “{name}”?"
 msgstr "Desconectar “{name}”?"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Disconnect “{rowName}”?"
+msgstr "Desconectar “{rowName}”?"
 
 #: src/components/connections/OAuthConnectorCard.jsx
 msgid "Disconnect “{title}”?"
@@ -3288,6 +3382,10 @@ msgstr "Desconectar “{title}”?"
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Disconnect {host}?"
 msgstr "Desconectar {host}?"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Disconnect {rowName}"
+msgstr "Desconectar {rowName}"
 
 #: src/components/content/DiscoverPage.jsx
 msgid "Disconnect Apify"
@@ -3401,6 +3499,10 @@ msgstr "Rascunho"
 msgid "Draft a clone"
 msgstr "Rascunhar um clone"
 
+#: src/components/settings/AgentConsent.jsx
+msgid "Draft a project's description, audience and competitors"
+msgstr "Rascunhe a descrição, público e concorrentes de um projeto"
+
 #: src/components/content/PostMiniCard.jsx
 msgid "Draft post"
 msgstr "Rascunho de post"
@@ -3489,6 +3591,10 @@ msgstr "Duct não conseguiu abrir seu navegador para finalizar o entrar. Verifiq
 #: src/lib/agentSession.js
 msgid "Duct couldn't read that TikTok. Check it opens in a browser without signing in, or try another post."
 msgstr "Duct não conseguiu ler aquele TikTok. Verifique se ele abre em um navegador sem precisar entrar, ou tente outro post."
+
+#: src/components/settings/AgentConsent.jsx
+msgid "Duct couldn't read this request. Try again in a moment."
+msgstr "O Duct não conseguiu ler esta solicitação. Tente novamente em um momento."
 
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Duct filled in what it learned from your site. Anything you had entered yourself was left alone, and every drafted field is marked."
@@ -4100,6 +4206,10 @@ msgstr "Correções de uma auditoria ou conversa chegam aqui para você aprovar.
 msgid "Follows"
 msgstr "Seguidores"
 
+#: src/components/settings/AgentAccess.jsx
+msgid "For an agent that can't open a browser, such as CI or a remote machine. Duct shows a token once, and it works for a year."
+msgstr "Para um agente que não consegue abrir um navegador, como CI ou uma máquina remota. O Duct mostra um token uma vez, e ele funciona por um ano."
+
 #: src/components/workspace/MemoryRows.jsx
 msgid "Forget"
 msgstr "Esquecer"
@@ -4530,6 +4640,10 @@ msgstr "Hashtags"
 msgid "Have Duct execute your fixes"
 msgstr "Deixe o Duct executar suas correções"
 
+#: src/components/settings/AgentAccess.jsx
+msgid "Header for any agent"
+msgstr "Cabeçalho para qualquer agente"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "Healthy"
 msgstr "Saudável"
@@ -4795,6 +4909,10 @@ msgstr "Impacto e dinheiro primeiro, poucas ações, sem jargão"
 msgid "Impressions, clicks and spend. Conversions stay in Ads Manager."
 msgstr "Impressões, cliques e gastos. As conversões permanecem no Ads Manager."
 
+#: src/components/settings/AgentConsent.jsx
+msgid "In Claude Code, run <0>/mcp</0> and choose Authenticate. In Codex, run <1>codex mcp login duct</1>."
+msgstr "No Claude Code, execute <0>/mcp</0> e escolha Autenticar. No Codex, execute <1>codex mcp login duct</1>."
+
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "In progress"
 msgstr "Em andamento"
@@ -4900,6 +5018,10 @@ msgstr "Distribuição de problemas em todas as constatações"
 msgid "It answered with an error the last time Duct called it. The next chat tries again, or check it now."
 msgstr "Ele respondeu com um erro da última vez que Duct o chamou. O próximo chat tenta novamente, ou verifique agora."
 
+#: src/components/settings/AgentConsent.jsx
+msgid "It can never"
+msgstr "Ele nunca pode"
+
 #: src/lib/mcpServers.js
 msgid "It connected without a sign-in and now asks for one. Reconnect to sign in."
 msgstr "Ele conectou sem uma entrada e agora pede uma. Reconecte para entrar."
@@ -4916,6 +5038,10 @@ msgstr "Ele não respondeu. Tente novamente em um momento."
 msgid "It has a question before it can continue."
 msgstr "Ele tem uma pergunta antes que possa continuar."
 
+#: src/components/settings/AgentAccess.jsx
+msgid "It loses access to Duct on its next request. Your projects stay as they are, and you can add it again any time."
+msgstr "Ele perde acesso ao Duct na próxima solicitação. Seus projetos permanecem como estão, e você pode adicioná-lo novamente a qualquer momento."
+
 #: src/components/LocalInsightDetail.jsx
 msgid "It may have been cleared from this browser."
 msgstr "Pode ter sido limpo deste navegador."
@@ -4927,6 +5053,10 @@ msgstr "Ele lê seu README e documentos, mostra o que vai enviar, depois rascunh
 #: src/lib/mcpServers.js
 msgid "It refused the saved API key. Reconnect with a new one to use it again."
 msgstr "Ele recusou a chave de API salva. Reconecte com uma nova para usá-la novamente."
+
+#: src/components/settings/AgentConsent.jsx
+msgid "It will be able to"
+msgstr "Poderá"
 
 #: src/components/AppErrorPanel.jsx
 msgid "It’s logged on our side. Copy the details below if you report it."
@@ -5089,8 +5219,8 @@ msgstr "Sair deste projeto?"
 #~ msgstr "Deixe Claude Code, Codex ou Cursor configurar seus projetos do repositório em que você está trabalhando."
 
 #: src/app/(app)/settings/agents/page.jsx
-msgid "Let Claude Code, Codex or Cursor set up your projects from your repo."
-msgstr "Deixe Claude Code, Codex ou Cursor configurar seus projetos do seu repositório."
+#~ msgid "Let Claude Code, Codex or Cursor set up your projects from your repo."
+#~ msgstr "Deixe Claude Code, Codex ou Cursor configurar seus projetos do seu repositório."
 
 #: src/components/workspace/QuestionsCard.jsx
 msgid "Let Duct decide"
@@ -5702,6 +5832,10 @@ msgstr "Nome — ex: Análise do Formato do Rosto"
 msgid "Name (optional)"
 msgstr "Nome (opcional)"
 
+#: src/components/settings/AgentAccess.jsx
+msgid "Name it, e.g. CI on GitHub Actions"
+msgstr "Nomeie-o, ex: CI no GitHub Actions"
+
 #: src/components/content/PlanViewport.jsx
 msgid "Narrator: {narrator}"
 msgstr "Narrador: {narrator}"
@@ -5880,6 +6014,10 @@ msgstr "Nenhuma chave de API necessária"
 #: src/components/content/FormatLibrary.jsx
 msgid "No base styles available."
 msgstr "Nenhum estilo base disponível."
+
+#: src/components/settings/AgentAccess.jsx
+msgid "No browser? Use a token"
+msgstr "Sem navegador? Use um token"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "no canonical"
@@ -6163,6 +6301,10 @@ msgstr "Nenhum de seus {total} posts foi publicado. As ideias ainda estão abaix
 msgid "None of these — start a new one"
 msgstr "Nenhum desses — comece um novo"
 
+#: src/components/settings/AgentAccess.jsx
+msgid "None yet. An agent shows up here once you allow it."
+msgstr "Nenhum ainda. Um agente aparece aqui depois que você o permite."
+
 #: src/components/content/PlanDayOne.jsx
 msgid "None yet. Duct asks what you want to be known for."
 msgstr "Nenhum ainda. Duct pergunta pelo que você quer ser conhecido."
@@ -6319,6 +6461,10 @@ msgstr "Nada banido. Rascunhos seguem uma boa escrita simples."
 #: src/components/models/TierCard.jsx
 msgid "Nothing below this tier can run either — add a key to use {tierName}."
 msgstr "Nada abaixo deste nível pode ser executado — adicione uma chave para usar {tierName}."
+
+#: src/components/settings/AgentConsent.jsx
+msgid "Nothing changed. You can close this tab."
+msgstr "Nada mudou. Você pode fechar esta aba."
 
 #: src/components/insights/desk/DeskCards.jsx
 #~ msgid "Nothing checked yet."
@@ -6824,6 +6970,10 @@ msgstr "Opcional. Conecte o PostBridge e vincule uma conta, e o plano aprende co
 #: src/components/content/PlanDayOne.jsx
 msgid "Optional. Link one and the plan learns from your own results and posting times."
 msgstr "Opcional. Vincule um e o plano aprende com seus próprios resultados e horários de postagem."
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Or have any other agent send this header to the same address:"
+msgstr "Ou faça com que qualquer outro agente envie este cabeçalho para o mesmo endereço:"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "or paste an API key"
@@ -8011,12 +8161,20 @@ msgid "Revoke"
 msgstr "Revogar"
 
 #: src/components/settings/AgentAccess.jsx
-msgid "Revoke “{tokenName}”?"
-msgstr "Revogar “{tokenName}”?"
+msgid "Revoke “{rowName}”?"
+msgstr "Revogar “{rowName}”?"
 
 #: src/components/settings/AgentAccess.jsx
-msgid "Revoke {tokenName}"
-msgstr "Revogar {tokenName}"
+#~ msgid "Revoke “{tokenName}”?"
+#~ msgstr "Revogar “{tokenName}”?"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Revoke {rowName}"
+msgstr "Revogar {rowName}"
+
+#: src/components/settings/AgentAccess.jsx
+#~ msgid "Revoke {tokenName}"
+#~ msgstr "Revogar {tokenName}"
 
 #: src/components/ProjectMembers.jsx
 msgid "Revoke invitation to {invitee}"
@@ -8072,6 +8230,10 @@ msgstr "Revertendo…"
 msgid "Run {toolName} on {serverName}?"
 msgstr "Executar {toolName} em {serverName}?"
 
+#: src/components/settings/AgentAccess.jsx
+msgid "Run <0>MCP: Add Server</0> from the Command Palette, choose HTTP, paste this address and name it duct."
+msgstr "Execute <0>MCP: Adicionar Servidor</0> na Paleta de Comandos, escolha HTTP, cole este endereço e nomeie-o duct."
+
 #: src/app/(app)/artifacts/page.jsx
 #~ msgid "Run an audit with your project selected and its report lands here — versioned, so you can read what changed between two runs of the same check."
 #~ msgstr "Execute uma auditoria com seu projeto selecionado e o relatório aparecerá aqui — versionado, para que você possa ler o que mudou entre duas execuções da mesma verificação."
@@ -8087,6 +8249,10 @@ msgstr "Executar auditoria"
 #: src/app/(app)/audit/seo/page.jsx
 #~ msgid "Run SEO Audit →"
 #~ msgstr "Executar Auditoria de SEO →"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Run these in your terminal. The second one opens your browser."
+msgstr "Execute estes no seu terminal. O segundo abre seu navegador."
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Run this in your terminal."
@@ -8445,6 +8611,14 @@ msgstr "ver mais"
 msgid "See what we’d do"
 msgstr "Veja o que faríamos"
 
+#: src/components/settings/AgentConsent.jsx
+msgid "See your keys, or replace anything you typed"
+msgstr "Ver suas chaves, ou substituir o que você digitou"
+
+#: src/components/settings/AgentConsent.jsx
+msgid "See your projects and what Duct knows about each"
+msgstr "Ver seus projetos e o que o Duct sabe sobre cada um"
+
 #: src/components/content/PlanBoard.jsx
 msgid "Select a plan"
 msgstr "Selecione um plano"
@@ -8642,12 +8816,16 @@ msgid "Settings → API Keys. A read-only key is enough — Duct never flips fla
 msgstr "Configurações → Chaves de API. Uma chave somente leitura é suficiente — Duct nunca altera sinalizadores."
 
 #: src/components/settings/AgentAccess.jsx
-msgid "Settings for Codex"
-msgstr "Configurações para Codex"
+#~ msgid "Settings for Codex"
+#~ msgstr "Configurações para Codex"
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Settings for Cursor"
 msgstr "Configurações para Cursor"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Settings for OpenCode"
+msgstr "Configurações para OpenCode"
 
 #: src/app/(app)/connections/page.jsx
 msgid "Settled revenue, subscriptions, refunds and payment outcomes."
@@ -8814,8 +8992,12 @@ msgid "Sign in first — the connection is saved to your account."
 msgstr "Entre primeiro — a conexão fica salva na sua conta."
 
 #: src/app/(app)/settings/agents/page.jsx
-msgid "Sign in first. A token works on your account, so there has to be one."
-msgstr "Entre primeiro. Um token funciona na sua conta, então precisa haver um."
+#~ msgid "Sign in first. A token works on your account, so there has to be one."
+#~ msgstr "Entre primeiro. Um token funciona na sua conta, então precisa haver um."
+
+#: src/app/(app)/settings/agents/page.jsx
+msgid "Sign in first. Your agent works on your account, so there has to be one."
+msgstr "Entre primeiro. Seu agente funciona na sua conta, então precisa haver uma."
 
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Sign in instead"
@@ -8877,6 +9059,10 @@ msgstr "Entre para ver seus documentos salvos"
 msgid "Sign in to share this"
 msgstr "Entrar para compartilhar isso"
 
+#: src/components/settings/AgentAccess.jsx
+msgid "Sign in when your browser opens"
+msgstr "Entre quando seu navegador abrir"
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Sign in with ChatGPT again"
 msgstr "Entrar com ChatGPT novamente"
@@ -8889,6 +9075,10 @@ msgstr "Entrar com Google"
 #: src/components/insights/ConnectionRequest.jsx
 msgid "Sign in with Google to connect"
 msgstr "Entrar com Google para conectar"
+
+#: src/components/settings/AgentConsent.jsx
+msgid "Sign in, and Duct asks you whether to allow it."
+msgstr "Entre, e o Duct perguntará se você permite."
 
 #: src/lib/mcpServers.js
 msgid "Sign-in expired"
@@ -8922,6 +9112,10 @@ msgstr "Sinais"
 #: src/components/connections/ProviderCard.jsx
 msgid "Signed in as <0>{planAccount}</0>"
 msgstr "Logado como <0>{planAccount}</0>"
+
+#: src/components/settings/AgentConsent.jsx
+msgid "Signed in as <0>{viewerEmail}</0>."
+msgstr "Conectado como <0>{viewerEmail}</0>."
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Signed in to {planName}"
@@ -9078,6 +9272,10 @@ msgstr "Algo interrompeu a auditoria. Seu site está bem — isso foi um problem
 msgid "Something needs attention"
 msgstr "Algo precisa de atenção"
 
+#: src/components/settings/AgentConsent.jsx
+msgid "Something went wrong"
+msgstr "Algo deu errado"
+
 #: src/components/AppSidebar.jsx
 #~ msgid "Soon"
 #~ msgstr "Em breve"
@@ -9133,6 +9331,10 @@ msgstr "Padrão — o modelo do dia a dia"
 #: src/components/workspace/AgentChat.jsx
 msgid "Start a fresh conversation"
 msgstr "Iniciar uma nova conversa"
+
+#: src/components/settings/AgentConsent.jsx
+msgid "Start again from your agent, so it can send a fresh one."
+msgstr "Comece novamente do seu agente, para que ele possa enviar um novo."
 
 #: src/components/content/DiscoverPage.jsx
 msgid "Start discovery"
@@ -9285,6 +9487,7 @@ msgid "Superseded"
 msgstr "Substituído"
 
 #: src/app/invite/[token]/page.jsx
+#: src/components/settings/AgentConsent.jsx
 msgid "Switch account"
 msgstr "Trocar de conta"
 
@@ -9476,6 +9679,7 @@ msgid "That didn't disconnect. Try again."
 msgstr "Não deu para desconectar. Tente de novo."
 
 #: src/app/(app)/settings/agents/page.jsx
+#: src/app/authorize/page.jsx
 msgid "That didn't go through. Try again in a moment."
 msgstr "Isso não funcionou. Tente novamente em um momento."
 
@@ -9819,6 +10023,18 @@ msgstr "O trabalho em que você age"
 msgid "Theme: {themeLabel}"
 msgstr "Tema: {themeLabel}"
 
+#: src/components/settings/AgentAccess.jsx
+msgid "Then run <0>opencode mcp auth duct</0>."
+msgstr "Então execute <0>opencode mcp auth duct</0>."
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Then sign in from duct's entry in Cursor's MCP settings."
+msgstr "Então entre pela entrada do Duct nas configurações de MCP do Cursor."
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Then, in Claude Code, run <0>/mcp</0>, pick duct and choose Authenticate."
+msgstr "Então, no Claude Code, execute <0>/mcp</0>, selecione duct e escolha Autenticar."
+
 #: src/components/ProjectMembers.jsx
 msgid "They lose access immediately. Anything they already created stays with the project. You can invite them again later."
 msgstr "Eles perdem o acesso imediatamente. Tudo o que já criaram permanece com o projeto. Você pode convidá-los novamente mais tarde."
@@ -10007,6 +10223,10 @@ msgstr "memória deste projeto"
 msgid "This removes the project and its configuration from this browser, and cannot be undone. Saved reports stay where they are."
 msgstr "Isso remove o projeto e sua configuração deste navegador, e não pode ser desfeito. Os relatórios salvos permanecem onde estão."
 
+#: src/components/settings/AgentConsent.jsx
+msgid "This request has expired"
+msgstr "Esta solicitação expirou"
+
 #: src/app/(app)/audit/seo/page.jsx
 #~ msgid "This run reads project memory, and what it concludes is written back."
 #~ msgstr "Esta execução lê a memória do projeto, e o que ela conclui é gravado de volta."
@@ -10034,6 +10254,10 @@ msgstr "Esta sessão"
 #: src/lib/credentialStorage.js
 msgid "This session only"
 msgstr "Apenas esta sessão"
+
+#: src/components/settings/AgentConsent.jsx
+msgid "This sign-in link doesn't work"
+msgstr "Este link de entrada não funciona"
 
 #: src/components/content/PostViewport.jsx
 msgid "This slide is outdated — regenerate"
@@ -10306,6 +10530,10 @@ msgstr "Usar o contexto de {projectName}"
 msgid "Use a different PostBridge key"
 msgstr "Usar outra chave do PostBridge"
 
+#: src/components/settings/AgentAccess.jsx
+msgid "Use a token"
+msgstr "Use um token"
+
 #: src/app/(app)/connections/page.jsx
 msgid "Use a token instead"
 msgstr "Usar um token"
@@ -10313,6 +10541,10 @@ msgstr "Usar um token"
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Use an API key instead"
 msgstr "Usar uma chave de API em vez disso"
+
+#: src/app/(app)/settings/agents/page.jsx
+msgid "Use Duct from Claude Code, Codex, Cursor, VS Code or OpenCode, in the repo you are working in."
+msgstr "Use o Duct de Claude Code, Codex, Cursor, VS Code ou OpenCode, no repositório em que você está trabalhando."
 
 #: src/components/connections/ProjectBinding.jsx
 msgid "Use for {projectName}"
@@ -11003,6 +11235,10 @@ msgstr "Você aprovou isso"
 msgid "You build in public: drafts may show exactly how it works."
 msgstr "Você constrói em público: rascunhos podem mostrar exatamente como funciona."
 
+#: src/components/settings/AgentConsent.jsx
+msgid "You can close this tab and go back to your agent."
+msgstr "Você pode fechar esta aba e voltar para seu agente."
+
 #: src/app/(auth)/desktop-auth/page.js
 msgid "You can close this tab."
 msgstr "Você pode fechar esta aba."
@@ -11079,6 +11315,14 @@ msgstr "Suas contas"
 #: src/app/(app)/settings/agents/page.jsx
 msgid "Your agent can read your projects and draft their profile. It can't approve changes, connect tools, or replace anything you typed or confirmed."
 msgstr "Seu agente pode ler seus projetos e rascunhar o perfil deles. Ele não pode aprovar alterações, conectar ferramentas ou substituir qualquer coisa que você digitou ou confirmou."
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Your agent opens Duct in your browser. Check it names your agent, then choose Allow. No token to copy, and it shows up under Connected agents below."
+msgstr "Seu agente abre o Duct no seu navegador. Verifique se ele nomeia seu agente, então escolha Permitir. Nenhum token para copiar, e ele aparece em Agentes conectados abaixo."
+
+#: src/app/(app)/settings/agents/page.jsx
+msgid "your agents and tokens"
+msgstr "seus agentes e tokens"
 
 #: src/components/workspace/QuestionsCard.jsx
 msgid "Your answer"
@@ -11275,8 +11519,8 @@ msgid "Your three tiers run on different keys — open Customise to see which."
 msgstr "Seus três níveis funcionam com chaves diferentes — abra Personalizar para ver qual."
 
 #: src/app/(app)/settings/agents/page.jsx
-msgid "your tokens"
-msgstr "seus tokens"
+#~ msgid "your tokens"
+#~ msgstr "seus tokens"
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Your tokens"
