@@ -66,6 +66,7 @@ import OAuthConnectorCard from "@/components/connections/OAuthConnectorCard";
 import McpConnectDialog from "@/components/connections/McpConnectDialog";
 import McpConnectors, { useMcpConnectors } from "@/components/connections/McpConnectors";
 import { NATIVE_SOURCE, mcpSource } from "@/lib/connectorSource";
+import BringAnyTool from "@/components/connections/BringAnyTool";
 import ConnectorBrowser, { NO_FILTERS, StatusTabs } from "@/components/connections/ConnectorBrowser";
 import { CATALOG_SCENARIOS, STARTERS as CATALOG_STARTERS, catalogScenario } from "@/lib/__fixtures__/connectorCatalogs.mjs";
 import { FIGMA_LISTINGS, GATEWAY_ONLY_LISTINGS, STRIPE_LISTINGS } from "@/lib/__fixtures__/mcpRegistry.mjs";
@@ -851,6 +852,7 @@ function CatalogScenario({ id, initialFilters }) {
         onFiltersChange={setFilters}
         featured={CATALOG_STARTERS}
         renderFeatured={(fid) => catalogTile(byId[fid], { featured: true, benefit: byId[fid].description })}
+        hero={(searchFor) => <BringAnyTool onAdd={() => {}} onSearch={searchFor} />}
         trailing={
           <ConnectorTile
             key="add"
@@ -870,7 +872,8 @@ function CatalogScenario({ id, initialFilters }) {
 /**
  * The Toolbox search with the MCP Registry asked too, over a stub that
  * answers like `GET /api/user/mcp/registry`: `answer` is "results" (the
- * fixture matching the query), "gateways", "failed", "off" or "slow". A
+ * fixture matching the query), "gateways", "failed" (the server says so),
+ * "unreachable" (the request never landed), "off" or "slow". A
  * connect with a key saves on the spot; Figma's without one waits on the
  * browser; anything else connects as an open server would. Either way the
  * server leaves the registry's section for the catalogue's results.
@@ -898,7 +901,8 @@ function RegistryScenario({ id = "today", query, answer = "results", servers = M
       searchRegistry: async (q) => {
         if (answer === "slow") return new Promise(() => {});
         await new Promise((r) => setTimeout(r, 400));
-        if (answer === "failed") throw new Error("The MCP Registry didn't answer in time.");
+        if (answer === "failed") throw Object.assign(new Error("The MCP Registry didn't answer in time."), { status: 502 });
+        if (answer === "unreachable") throw new TypeError("Load failed");
         if (answer === "off") return { available: false, servers: [] };
         if (answer === "gateways") return { available: true, servers: GATEWAY_ONLY_LISTINGS };
         const all = [...STRIPE_LISTINGS, ...FIGMA_LISTINGS];
@@ -925,8 +929,14 @@ function RegistryScenario({ id = "today", query, answer = "results", servers = M
         onFiltersChange={setFilters}
         featured={CATALOG_STARTERS}
         renderFeatured={(fid) => catalogTile(byId[fid], { featured: true, benefit: byId[fid].description })}
+        hero={
+          mcp.phase === "ready"
+            ? (searchFor) => <BringAnyTool onAdd={mcp.addServer} onSearch={mcp.registryAvailable ? searchFor : null} />
+            : null
+        }
         trailing={mcp.phase === "ready" ? mcp.addTile() : mcp.placeholder}
         moreResults={mcp.registry}
+        searchPlaceholder={mcp.registryAvailable ? "Search any tool or MCP server" : ""}
       />
       {mcp.overlays}
     </div>
@@ -2299,6 +2309,19 @@ export const SCENES = [
     render: () => <CatalogScenario id="hundreds" initialFilters={{ status: "connected" }} />,
   },
   {
+    id: "bring-any-tool",
+    state: "with names to try · search turned off",
+    group: "Toolbox catalogue",
+    title: "Bring any tool",
+    note: "The one brand-tinted card on Toolbox, drawn with the starters while browsing everything. It replaced the Any MCP server tile at the end of the list. The tiles are the picture and the controls: a name runs that search and each returned its vendor's own server when written, Yours opens the add dialog, and pointing at one lights its channel. A Duct that turned the registry off keeps the picture but its names stop being buttons, since they would find nothing. Sweep the width: the drawing sits beside the words from @2xl, under them below that, and gives way to wrapped tiles below @xs.",
+    render: () => (
+      <div className="flex flex-col gap-6">
+        <BringAnyTool onAdd={() => {}} onSearch={() => {}} />
+        <BringAnyTool onAdd={() => {}} />
+      </div>
+    ),
+  },
+  {
     id: "catalog-search",
     state: "searching \"ads\"",
     group: "Toolbox catalogue",
@@ -2319,20 +2342,21 @@ export const SCENES = [
     state: "nothing local, Figma's own server in the registry",
     group: "MCP Registry",
     title: "Toolbox — the registry finds what the catalogue doesn't",
-    note: "Nothing in the catalogue matches figma, so the way in by address stays, and the registry's section follows with Figma's own server, Official. Connect waits on the browser the way a desktop sign-in does.",
+    note: "Nothing in the catalogue matches figma, so the registry's section comes straight after with Figma's own server, Official, and the way in by address waits at the end. Connect waits on the browser the way a desktop sign-in does.",
     render: () => <RegistryScenario query="figma" />,
   },
   {
     id: "mcp-registry-edges",
-    state: "only gateways · searching · failed · nothing found",
+    state: "only gateways · searching · failed · unreachable · nothing found",
     group: "MCP Registry",
     title: "The registry's section, when it has little to say",
-    note: "Only gateways: a line says nothing run by its publisher matched, and the button reveals them. Searching holds three tile shapes. A failed search says so with Try again, and never blocks the catalogue's results above it. Nothing found says so in one line. A Duct with the search turned off shows no section at all (not drawn here).",
+    note: "Only gateways: a line says nothing run by its publisher matched, and the button reveals them. Searching holds three tile shapes. A failed search says so with Try again, and never blocks the catalogue's results above it. One that never reached the server gets the same row in Duct's words, never the browser's Load failed. Nothing found says so in one line. A Duct with the search turned off shows no section at all (not drawn here).",
     render: () => (
       <div className="flex flex-col gap-16">
         <RegistryScenario query="stripe" answer="gateways" />
         <RegistryScenario query="google ads" answer="slow" />
         <RegistryScenario query="hubspot" answer="failed" />
+        <RegistryScenario query="hubspot" answer="unreachable" />
         <RegistryScenario query="hubspot" />
       </div>
     ),

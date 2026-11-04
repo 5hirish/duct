@@ -29,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Page, PageHeader } from "@/components/ui/page";
+import BringAnyTool from "../../../components/connections/BringAnyTool";
 import ConnectorBrowser, { NO_FILTERS, StatusTabs } from "../../../components/connections/ConnectorBrowser";
 import ManualConnectorCard from "../../../components/connections/ManualConnectorCard";
 import { McpPhase, useMcpConnectors } from "../../../components/connections/McpConnectors";
@@ -425,9 +426,8 @@ export default function ConnectionsPage() {
   }, []);
   // The registry is asked only where its servers could answer the question:
   // none is connected yet, and none is Duct's, a vendor's preset or yours.
-  const registrySearch =
-    filters.status !== ConnectionStatus.CONNECTED && filters.origin === ALL ? filters.query : "";
-  const mcp = useMcpConnectors({ signedIn, search: registrySearch, onMessage: showMcpMessage });
+  const registryAsked = filters.status !== ConnectionStatus.CONNECTED && filters.origin === ALL;
+  const mcp = useMcpConnectors({ signedIn, search: registryAsked ? filters.query : "", onMessage: showMcpMessage });
 
   // Every native connector, by type. A function per connector so the page can
   // place each one in the section its state puts it in, and hand the first-run
@@ -899,8 +899,16 @@ export default function ConnectionsPage() {
             {CONNECTORS[type]({ featured: true, benefit: i18n._(STARTER_BENEFIT[type]) })}
           </Fragment>
         )}
+        hero={
+          mcp.phase === McpPhase.READY
+            ? (searchFor) => (
+                <BringAnyTool onAdd={mcp.addServer} onSearch={mcp.registryAvailable ? searchFor : null} />
+              )
+            : null
+        }
         trailing={mcp.phase === McpPhase.READY ? mcp.addTile() : mcp.placeholder}
         moreResults={mcp.registry}
+        searchPlaceholder={registryAsked && mcp.registryAvailable ? t`Search any tool or MCP server` : ""}
       />
       {mcp.overlays}
     </Page>

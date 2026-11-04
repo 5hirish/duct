@@ -1274,6 +1274,7 @@ msgstr "タグを追加、Enterキーを押してください…"
 msgid "Add a thought — it goes in at the next step"
 msgstr "思考を追加 — 次のステップで反映されます"
 
+#: src/components/connections/BringAnyTool.jsx
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Add an MCP server"
 msgstr "MCPサーバーを追加"
@@ -1333,6 +1334,10 @@ msgstr "これを <0>opencode.json</0> に追加してください。"
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Add your site"
 msgstr "サイトを追加"
+
+#: src/components/connections/BringAnyTool.jsx
+msgid "Add yours"
+msgstr "自分のツールを追加"
 
 #: src/components/connections/ConnectorBrowser.jsx
 msgid "Added by you"
@@ -2104,6 +2109,10 @@ msgstr "ブリーフ"
 #: src/app/(app)/artifacts/page.jsx
 msgid "Briefs"
 msgstr "ブリーフ"
+
+#: src/components/connections/BringAnyTool.jsx
+msgid "Bring any tool"
+msgstr "任意のツールを連携"
 
 #: src/components/connections/logos.jsx
 msgid "Bring your own provider"
@@ -6519,6 +6528,10 @@ msgstr "これらのフィルターでは何も見つかりません。"
 #~ msgid "Nothing here yet."
 #~ msgstr "ここにはまだ何もありません。"
 
+#: src/components/connections/ConnectorBrowser.jsx
+msgid "Nothing in this list matches “{query}”."
+msgstr "このリストには「{query}」に一致するものがありません。"
+
 #: src/components/insights/Desk.jsx
 msgid "Nothing is connected right now."
 msgstr "現在、何も接続されていません。"
@@ -6540,8 +6553,8 @@ msgid "Nothing is wrong with the key. Give it a moment and verify again."
 msgstr "キーに問題はありません。しばらくお待ちいただき、もう一度確認してください。"
 
 #: src/components/connections/ConnectorBrowser.jsx
-msgid "Nothing matches “{query}”."
-msgstr "「{query}」に一致するものはありません。"
+#~ msgid "Nothing matches “{query}”."
+#~ msgstr "「{query}」に一致するものはありません。"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Nothing matches that filter."
@@ -8556,6 +8569,10 @@ msgstr "{many}を検索"
 msgid "Search & SEO"
 msgstr "検索とSEO"
 
+#: src/app/(app)/connections/page.jsx
+msgid "Search any tool or MCP server"
+msgstr "任意のツールまたはMCPサーバーを検索"
+
 #: src/components/commands/CommandPalette.jsx
 msgid "Search commands"
 msgstr "コマンドを検索"
@@ -8571,6 +8588,10 @@ msgstr "Search Consoleが最も簡単な開始方法です。最初のブリー�
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Search Console, Analytics or Google Ads. Duct can’t check a number it can’t see."
 msgstr "Search Console、Analytics、またはGoogle Ads。Ductは、見えない数値をチェックできません。"
+
+#: src/components/connections/BringAnyTool.jsx
+msgid "Search for a tool"
+msgstr "ツールを検索"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Search memory"
@@ -10304,6 +10325,10 @@ msgstr "数値が保存されませんでした。確認してもう一度お試
 msgid "Thought for {seconds}s"
 msgstr "{seconds}秒間思考しました"
 
+#: src/components/connections/BringAnyTool.jsx
+msgid "Thousands of tools have an MCP server, and Duct’s chat can use any of them. Find yours by name, or paste its address."
+msgstr "数千ものツールがMCPサーバーを持っており、Ductのチャットはそれらのどれでも使用できます。名前で検索するか、アドレスを貼り付けてください。"
+
 #: src/components/insights/desk/DeskLists.jsx
 msgid "thread"
 msgstr "スレッド"
@@ -10405,6 +10430,10 @@ msgstr "地域でトレンドの投稿 — サウンドとフォーマットの�
 #: src/app/(app)/connections/page.jsx
 msgid "Trials, renewals, refunds and MRR across the App Store and Play."
 msgstr "App StoreとPlay全体でのトライアル、更新、払い戻し、MRR。"
+
+#: src/components/connections/BringAnyTool.jsx
+#~ msgid "Try"
+#~ msgstr "試す"
 
 #: src/components/AppErrorPanel.jsx
 #: src/components/connections/McpConnectors.jsx
@@ -11561,6 +11590,10 @@ msgstr "ウェブサイト"
 #: src/app/(start)/start/page.jsx
 msgid "Your website is enough to start. Duct reads it now and keeps reading while you set up the rest."
 msgstr "あなたのウェブサイトがあれば開始できます。Ductは今すぐそれを読み込み、残りの設定中も読み込みを続けます。"
+
+#: src/components/connections/BringAnyTool.jsx
+msgid "Yours"
+msgstr "自分のツール"
 
 #: src/lib/userProfile.js
 msgid "हिन्दी"

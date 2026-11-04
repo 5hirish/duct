@@ -347,6 +347,14 @@ panel and a large icon in the same surface. And **the panel is always
 real HTML text beside it (`CDIV` in the tiles, "That page doesn't exist" in the
 markup).
 
+A small drawing is not a second system when it keeps the panels' stones and
+their rule that blue is water. The aqueduct strip on `/start` is one, and
+`BringAnyTool`'s channel map on Toolbox is the other: real logos set as tiles,
+water running from each into Duct. Both show how something works, so they can
+stay on a surface a panel would be too large for. Neither loops: a screen left
+open all day has nothing moving on it, and the map lights one channel, by
+opacity, only while someone points at its tile.
+
 The strongest empty state in the app has no art at all: `DeskDayOne` replaced
 "No insights yet" with what Duct already knows, and information beat a picture.
 Reach for a panel when there is genuinely nothing useful to say, not to decorate
