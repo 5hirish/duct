@@ -117,6 +117,41 @@ export function formatPercent(ratio, { locale, digits = 1 } = {}) {
     .format(Number.isFinite(v) ? v : 0);
 }
 
+/**
+ * A number an agent stored with its unit, for a chip: "€2.1K", "11.2%",
+ * "1.8K clicks". The unit is model-written, so every shape is handled: an ISO
+ * currency code, "%" with the value either as a ratio (0.112) or as points
+ * (11.2), any other word as a suffix, or none.
+ */
+export function formatMeasure(value, unit = "", { locale } = {}) {
+  const v = Number(value);
+  if (!Number.isFinite(v)) return "";
+  if (unit === "%") {
+    return Math.abs(v) <= 1
+      ? formatPercent(v, { locale })
+      : `${new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(v)}%`;
+  }
+  if (/^[A-Z]{3}$/.test(unit)) {
+    try {
+      return new Intl.NumberFormat(locale, {
+        style: "currency", currency: unit, notation: "compact", maximumFractionDigits: 1,
+      }).format(v);
+    } catch {
+      // Not a currency Intl knows: fall through to the plain suffix.
+    }
+  }
+  const n = new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 1 }).format(v);
+  return unit ? `${n} ${unit}` : n;
+}
+
+/** A change as a signed percentage: 0.14 → "+14%", -0.091 → "-9.1%", 0 → "0%". */
+export function formatDelta(ratio, { locale } = {}) {
+  const v = Number(ratio);
+  return new Intl.NumberFormat(locale, {
+    style: "percent", signDisplay: "exceptZero", maximumFractionDigits: 1,
+  }).format(Number.isFinite(v) ? v : 0);
+}
+
 /** "938" / "1.2k" / "3M" — for metric chips where width is tight. */
 export function compactNumber(value) {
   const v = Number(value) || 0;

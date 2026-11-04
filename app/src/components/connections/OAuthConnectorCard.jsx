@@ -63,6 +63,9 @@ export default function OAuthConnectorCard({
   onMappingChange,
   onEntityChange,
   mappingBusy,
+  // The large first-run tile (ConnectorTile `featured`) and what it unlocks.
+  featured = false,
+  benefit,
 }) {
   const { t } = useLingui();
   // Where the stored row lives: the cloud, or this machine for a self-hosted
@@ -108,6 +111,8 @@ export default function OAuthConnectorCard({
         status={status}
         storage={storage}
         onClick={() => setOpen(true)}
+        featured={featured}
+        benefit={benefit}
       />
 
       <ConnectorDialog

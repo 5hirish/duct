@@ -18,6 +18,7 @@
 import { AppWindow, Check, Globe, Laptop, X } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 import { DESTINATION_APP, DESTINATION_DEVICE } from "@/lib/mcpTokensApi";
@@ -42,13 +43,13 @@ function Shell({ children }) {
       className="flex min-h-dvh items-center justify-center bg-background px-4 py-10"
       tabIndex={-1}
     >
-      <div className="w-full max-w-md rounded-3xl border border-border bg-card p-7 shadow-sm ring-1 ring-foreground/5">
+      <Card size="lg" className="w-full max-w-md gap-0">
         <div className="mb-6 flex items-center gap-1.5">
           <span className="font-serif text-lg tracking-tight text-foreground">{WORDMARK}</span>
           <span className="size-2 rounded-full bg-[var(--orange)]" aria-hidden />
         </div>
         {children}
-      </div>
+      </Card>
     </main>
   );
 }

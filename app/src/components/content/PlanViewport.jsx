@@ -84,7 +84,7 @@ export default function PlanViewport({ payload, steps = [], building = false, on
         </span>
       </div>
 
-      <PlanStrategy strategy={payload.strategy} />
+      <PlanStrategy strategy={payload.strategy} days={payload.days} />
       <PlanList plan={payload} onReviseDay={onReviseDay} />
     </div>
   );

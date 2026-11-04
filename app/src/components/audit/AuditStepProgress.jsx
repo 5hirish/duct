@@ -424,7 +424,7 @@ function StepRow({ step, expanded, onToggle }) {
 
         {/* Extended thinking indicator */}
         {isSynthesize && isDone && payload?.reasoned && (
-          <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-1.5 py-px text-2xs font-medium text-primary">
+          <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-1.5 py-px text-2xs font-medium text-brand">
             <Trans>✦ Reasoned</Trans>
           </span>
         )}

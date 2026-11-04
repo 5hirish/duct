@@ -42,7 +42,8 @@ import { CookieConsent } from "@/components/CookieConsent";
 import LoadError from "@/components/LoadError";
 import CloneFromUrlDialog from "@/components/content/CloneFromUrlDialog";
 import CloneSourceNote from "@/components/content/CloneSourceNote";
-import DeskCards from "@/components/insights/desk/DeskCards";
+import { DeskConnectFirst } from "@/components/insights/desk/DeskCards";
+import FirstSourceCelebration from "@/components/connections/FirstSourceCelebration";
 import DeskActivity, { activityGridClass } from "@/components/insights/desk/DeskActivity";
 import SplitWorkspace from "@/components/workspace/SplitWorkspace";
 import { ArtifactPaneHeader, BriefPane, DataPane, DocumentFocus } from "@/components/insights/InsightsWorkspace";
@@ -53,7 +54,10 @@ import { briefFile } from "@/lib/brief";
 import { saveText } from "@/lib/download";
 import { ArtifactGallery } from "@/components/artifacts/ArtifactCards";
 import { ChartJsonView } from "@/components/artifacts/ArtifactRenderer";
-import { NEEDS_YOU, FOUND, IN_PROGRESS } from "@/lib/desk";
+import { DESK_SCENARIOS, deskScenario } from "@/lib/__fixtures__/deskScenarios.mjs";
+import { PLAN_SCENARIOS, planScenario } from "@/lib/__fixtures__/planScenarios.mjs";
+import { PlanBoardView, PlanView } from "@/components/content/PlanBoard";
+import { startOfDay } from "@/lib/contentSchedule";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
 import ConnectorTile from "@/components/connections/ConnectorTile";
@@ -108,7 +112,7 @@ import VoiceSample from "@/components/profile/VoiceSample";
 import { UsageEmpty } from "@/components/models/UsagePanel";
 import { TIERS } from "@/lib/modelTiers";
 import { Button } from "@/components/ui/button";
-import { NotificationRow } from "@/components/AppSidebar";
+import { AccountMenuItems, NotificationRow } from "@/components/AppSidebar";
 import { LanguageMenuItem } from "@/components/LanguageMenu";
 import {
   DropdownMenu,
@@ -467,28 +471,11 @@ function DeskComposerScene(props) {
   return <DeskComposer {...props} autonomy={autonomy} onAutonomyChange={setAutonomy} />;
 }
 
-// Long titles on purpose — an agent wrote these, not someone picking a label
-// short enough to fit. This is the case that revealed DeskCards had no
-// line-clamp: a single item could run the card to nine lines and shove its
-// siblings off the bottom.
+// Long on purpose — an agent wrote this, not someone picking a label short
+// enough to fit. The desk's own long titles are in deskScenarios.mjs.
 const LONG_TITLE =
   "North-star window: Next 90 days: get net new MRR positive and keep it there. Measured 30-day position — $219.95 of new MRR against $297.86 lost to failed payments plus $209.88 sitting past-due, so the window is still net negative.";
 
-const DESK_BUCKETS = {
-  [NEEDS_YOU]: [
-    { id: "n1", title: "Audit our Google Search performance please.", detailCode: "resume", tone: "attention", at: "2026-09-09T06:00:00Z" },
-  ],
-  [FOUND]: [
-    { id: "f1", title: "Next growth milestone: 3_repeatable_growth", detailCode: "checked", tone: "sure", at: "2026-09-08T09:00:00Z" },
-    { id: "f2", title: LONG_TITLE, detailCode: "checked", tone: "sure", at: "2026-09-08T09:00:00Z" },
-    { id: "f3", title: "North-star metric: Net new revenue", detailCode: "checked", tone: "sure", at: "2026-09-08T09:00:00Z" },
-  ],
-  [IN_PROGRESS]: [
-    { id: "p1", title: "Audit our Google Search performance please.", detailCode: "working", tone: "running", at: "2026-09-09T06:00:00Z" },
-    { id: "p2", title: "Audit our Google Search performance please.", detailCode: "working", tone: "running", at: "2026-09-09T06:00:00Z" },
-  ],
-};
-const DESK_BUCKETS_SHAPED = { needsYou: DESK_BUCKETS[NEEDS_YOU], found: DESK_BUCKETS[FOUND], inProgress: DESK_BUCKETS[IN_PROGRESS] };
 
 // A brief the way the agent actually writes one: a decision up top, the
 // evidence as a table, the gaps as a list. Enough element kinds to catch a
@@ -808,6 +795,38 @@ function racingLoader() {
  * restart the load forever), and must start over on the next mount, or the
  * scene works once per page load and shows a finished desk ever after.
  */
+/** One generated plan through the real board view, every control live. */
+function PlanScenario({ id, view = PlanView.LIST }) {
+  const today = useMemo(() => startOfDay(new Date()), []);
+  const data = useMemo(() => planScenario(id, today), [id, today]);
+  const [current, setCurrent] = useState(view);
+  const [calView, setCalView] = useState("month");
+  const [activeId, setActiveId] = useState(data.plan.id);
+  return (
+    <PlanBoardView
+      plans={data.plans}
+      activeId={activeId}
+      onSelectPlan={setActiveId}
+      plan={data.plan}
+      postsById={data.postsById}
+      view={current}
+      onViewChange={setCurrent}
+      calView={calView}
+      onCalViewChange={setCalView}
+      today={today}
+      onStartPlan={() => {}}
+      onRevisePlan={() => {}}
+      onReviseDay={() => {}}
+    />
+  );
+}
+
+/** One generated desk, loaded once per mount like the real one. */
+function DeskScenario({ id }) {
+  const load = useMemo(() => stubLoader(deskScenario(id)), [id]);
+  return <Desk projectIdOverride="preview" loadDeskFn={load} />;
+}
+
 function DeskRaceScene() {
   const load = useMemo(racingLoader, []);
   useEffect(() => {
@@ -2091,13 +2110,52 @@ export const SCENES = [
       </DialogScene>
     ),
   },
+  // The desk in every situation it has to survive, generated from
+  // lib/__fixtures__/deskScenarios.mjs: the same payloads the unit tests hold
+  // the arrangement to. Each note is what the scenario holds the page to.
+  ...DESK_SCENARIOS.map((scenario) => ({
+    id: `desk-scenario-${scenario.id}`,
+    state: scenario.title,
+    group: "Desk scenarios",
+    title: `Desk — ${scenario.title}`,
+    note: `${scenario.expect} Content is generated at render time, relative to now; sweep the frame from phone to wide and check the page keeps its shape.`,
+    render: () => <DeskScenario id={scenario.id} />,
+  })),
+  // The content plan board in every situation it has to survive, generated
+  // from lib/__fixtures__/planScenarios.mjs relative to today: the same plans
+  // the schedule tests hold the agenda to. The list is the default view; the
+  // Kanban scenes show the same plan by status.
+  ...PLAN_SCENARIOS.map((scenario) => ({
+    id: `plan-scenario-${scenario.id}`,
+    state: scenario.title,
+    group: "Plan scenarios",
+    title: `Plan — ${scenario.title}`,
+    note: `${scenario.expect} Switch to Kanban and Calendar from the toolbar; sweep the frame from phone to wide.`,
+    render: () => <PlanScenario id={scenario.id} />,
+  })),
+  ...["ended-nothing-posted", "mid-month", "long-and-foreign"].map((id) => ({
+    id: `plan-scenario-${id}-kanban`,
+    state: "Kanban",
+    group: "Plan scenarios",
+    title: `Plan by status — ${PLAN_SCENARIOS.find((s) => s.id === id).title}`,
+    note: "Empty lanes are a header and nothing else; a planned post with no media is its words, not a grey 16:9 box.",
+    render: () => <PlanScenario id={id} view={PlanView.KANBAN} />,
+  })),
   {
-    id: "desk-cards-long-title",
-    state: "content",
+    id: "desk-connect-first",
+    state: "nothing connected",
     group: "Desk",
-    title: "Cards, an agent-length finding title",
-    note: "Drag the frame through the 448–768px band: three columns to two to one. The long title in “What I found” clamps to two lines instead of pushing its siblings out — hover or tab to it for the rest.",
-    render: () => <DeskCards buckets={DESK_BUCKETS_SHAPED} />,
+    title: "Connect your first source",
+    note: "The Desk's one hero while nothing is connected: four logos, one line, one button. Below @2xl it stacks; check the button sits at the left edge, not stretched.",
+    render: () => <DeskConnectFirst />,
+  },
+  {
+    id: "connections-first-source",
+    state: "the first source just connected",
+    group: "Connections",
+    title: "First source celebration",
+    note: "Shown once per browser, only while exactly one source is connected. Clear localStorage key duct_first_source_celebrated to see it again; the tesserae burst once and are skipped under reduced motion.",
+    render: () => <FirstSourceCelebration connectedTypes={["gsc"]} ready />,
   },
   {
     id: "desk-background-refresh",
@@ -2494,7 +2552,7 @@ export const SCENES = [
     state: "all four permission states",
     group: "AppSidebar",
     title: "The notification row, in every state it has",
-    note: "Lives in the user footer menu. Two of these are unreachable from a browser — \"System\" only happens inside the desktop shell, and \"Blocked\" needs a site permission you have to deny by hand — so this is the only place they get looked at. Clickability is the thing to check: \"Off\" asks the browser for permission and \"Notification settings\" opens the OS pane, while \"On\" and \"Blocked\" are statements and are dimmed to say so. The last row is a desktop shell too old to have `open_notification_settings`, or Linux, where there is no single page to open.",
+    note: "Lives in the preferences group of the account menu. Two of these are unreachable from a browser — \"System\" only happens inside the desktop shell, and \"Blocked\" needs a site permission you have to deny by hand — so this is the only place they get looked at. Every state but the first is \"Notifications\" with its value in muted text on the right, the shape Language and Appearance use. Clickability is the thing to check: \"Turn on notifications\" asks the browser, and the \"System\" row with an arrow opens the OS pane, while \"On\" and \"Blocked\" are statements and are dimmed to say so. The last row is a desktop shell too old to have `open_notification_settings`, or Linux, where there is no single page to open.",
     render: () => (
       <DropdownMenu defaultOpen modal={false}>
         <DropdownMenuTrigger asChild>
@@ -2515,7 +2573,7 @@ export const SCENES = [
     state: "sub-menu open on the current language",
     group: "AppSidebar",
     title: "The language row in the account menu",
-    note: "Sits under Profile in the user footer menu. The trigger shows the current language's own name; the sub-menu lists all five as a radio group, each in its own script, so someone who landed in the wrong language can still find theirs. Picking one switches this whole preview, the same way it switches the app: cookie, profile when signed in, then a refresh in place.",
+    note: "Opens the preferences group of the account menu. The trigger shows the current language's own name; the sub-menu lists all five as a radio group, each in its own script, so someone who landed in the wrong language can still find theirs. Picking one switches this whole preview, the same way it switches the app: cookie, profile when signed in, then a refresh in place.",
     render: () => (
       <DropdownMenu defaultOpen modal={false}>
         <DropdownMenuTrigger asChild>
@@ -2523,6 +2581,40 @@ export const SCENES = [
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-64">
           <LanguageMenuItem />
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+  },
+  {
+    id: "account-menu",
+    state: "signed in, open",
+    group: "AppSidebar",
+    title: "The account menu, whole",
+    note: "Five groups in the order people look: you (Profile, Your memory), what runs your work (models, usage, your own agent), how the app looks and talks to you (language, appearance, notifications, cookies), feedback, then Log out alone. Check that every setting shows its current value the same way, muted on the right, and that no row wraps at this width in German. Manage projects is in the project switcher now, beside the projects.",
+    render: () => (
+      <DropdownMenu defaultOpen modal={false}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm">Open the account menu</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-64">
+          <AccountMenuItems onSignOut={() => {}} />
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+  },
+  {
+    id: "account-menu-guest",
+    state: "guest, open",
+    group: "AppSidebar",
+    title: "The account menu for a guest",
+    note: "The same menu with one row in front of it: sign in to keep what the audit made. It is the only thing a guest is missing, so it comes first and stands alone.",
+    render: () => (
+      <DropdownMenu defaultOpen modal={false}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm">Open the account menu</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-64">
+          <AccountMenuItems guest onSignOut={() => {}} />
         </DropdownMenuContent>
       </DropdownMenu>
     ),

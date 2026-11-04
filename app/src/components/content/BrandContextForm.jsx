@@ -24,6 +24,8 @@ import WritingSamples from "@/components/content/WritingSamples";
 import VoiceRulesFields from "@/components/content/VoiceRulesFields";
 import { getActiveProject } from "@/lib/projects";
 import { slugify } from "@/lib/slug";
+import { Textarea } from "@/components/ui/textarea";
+import { Card } from "@/components/ui/card";
 
 /**
  * Structured form for editing a project's content brand context.
@@ -172,7 +174,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-5 pb-24">
+    <div className="max-w-4xl space-y-5 pb-24">
       <div>
         <h2 className="text-lg font-semibold tracking-tight"><Trans>Brand context</Trans></h2>
         <p className="text-sm text-muted-foreground">
@@ -187,7 +189,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
       )}
 
       {/* Inherited from project context — single source of truth for shared fields */}
-      <section className="rounded-2xl border border-dashed border-border bg-muted/20 p-5 @2xl:p-6">
+      <Card variant="quiet">
         <div className="grid gap-x-8 gap-y-4 @2xl:grid-cols-[240px_1fr]">
           <header className="space-y-2">
             <h3 className="flex items-center gap-2 text-sm font-semibold">
@@ -211,15 +213,15 @@ export default function BrandContextForm({ projectId, onSaved }) {
             <ReadOnly label={t`Audience`} value={project?.audience?.primary_segment} className="@lg:col-span-2" />
           </dl>
         </div>
-      </section>
+      </Card>
 
       <Section icon={Building2} title={t`Identity`} hint={t`Tagline and description used across posts.`}>
         <Field label={t`Tagline`} hint={t`One memorable line.`}>
-          <Input value={tagline} onChange={e => setTagline(e.target.value)} placeholder={t`One memorable line`} />
+          <Input value={tagline} onChange={e => setTagline(e.target.value)} placeholder={t`e.g. Numbers you can trust`} />
         </Field>
         <Field label={t`Short description`} hint={t`One sentence on what you do.`}>
           <Textarea value={description} onChange={e => setDescription(e.target.value)}
-            rows={2} placeholder={t`One sentence on what you do.`} />
+            rows={2} placeholder={t`e.g. Duct reads your marketing data and says what changed.`} />
         </Field>
       </Section>
 
@@ -284,7 +286,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
             <div key={i} className="rounded-xl border border-border bg-background p-3">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <span className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                  <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-2xs font-semibold text-primary tabular-nums">
+                  <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-2xs font-semibold text-brand tabular-nums">
                     {i + 1}
                   </span>
                   <Trans>Pillar</Trans>
@@ -359,7 +361,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
 /** Two-column settings section: label + description on the left, fields on the right. */
 function Section({ icon: Icon, title, hint, children }) {
   return (
-    <section className="rounded-2xl border border-border bg-card p-5 @2xl:p-6">
+    <Card>
       <div className="grid gap-x-8 gap-y-4 @2xl:grid-cols-[240px_1fr]">
         <header className="space-y-1">
           <h3 className="flex items-center gap-2 text-sm font-semibold">
@@ -368,9 +370,9 @@ function Section({ icon: Icon, title, hint, children }) {
           </h3>
           {hint && <p className="text-xs leading-relaxed text-muted-foreground">{hint}</p>}
         </header>
-        <div className="space-y-4">{children}</div>
+        <div className="space-y-5">{children}</div>
       </div>
-    </section>
+    </Card>
   );
 }
 
@@ -387,10 +389,10 @@ function ReadOnly({ label, value, className = "" }) {
 
 function Field({ label, hint, children }) {
   return (
-    <div className="grid gap-1.5">
-      <Label className="text-xs font-medium">{label}</Label>
+    <div className="grid gap-2">
+      <Label className="text-sm font-medium">{label}</Label>
       {children}
-      {hint && <span className="text-2xs text-muted-foreground">{hint}</span>}
+      {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
     </div>
   );
 }
@@ -423,15 +425,6 @@ function ColorField({ label, value, onChange, placeholder }) {
         <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
       </div>
     </Field>
-  );
-}
-
-function Textarea({ className = "", ...props }) {
-  return (
-    <textarea
-      {...props}
-      className={`flex w-full rounded-3xl border border-input bg-input/50 px-4 py-2.5 text-sm transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 resize-y ${className}`}
-    />
   );
 }
 

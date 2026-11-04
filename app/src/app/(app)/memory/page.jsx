@@ -8,10 +8,7 @@
 // and reset controls matter more here than anywhere else.
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
-import { Button } from "@/components/ui/button";
 import MemoryTimeline from "@/components/memory/MemoryTimeline";
 import { hasAuthToken } from "@/lib/authFetch";
 import {
@@ -23,6 +20,7 @@ import {
   setUserMemoryPaused,
   updateUserMemory,
 } from "@/lib/memoryApi";
+import { Page, PageHeader } from "@/components/ui/page";
 
 export default function UserMemoryPage() {
   const { t } = useLingui();
@@ -45,24 +43,11 @@ export default function UserMemoryPage() {
   );
 
   return (
-    <section>
-      <div className="page-toolbar">
-        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">
-          <Trans>Your memory</Trans>
-        </h1>
-        <Button asChild variant="ghost" size="sm" className="ml-auto">
-          <Link href="/projects">
-            <ArrowLeft className="size-4" /> <Trans>Projects</Trans>
-          </Link>
-        </Button>
-      </div>
-
-      <p className="app-subtle" style={{ marginTop: 0, marginBottom: 14 }}>
-        <Trans>
-          How you like to be worked with. Every agent reads this, on every project, and
-          only you can see it.
-        </Trans>
-      </p>
+    <Page width="reading">
+      <PageHeader
+        title={<Trans>Your memory</Trans>}
+        status={<Trans>How you like to be worked with. Every agent reads it; only you can see it.</Trans>}
+      />
 
       <MemoryTimeline
         api={api}
@@ -74,6 +59,6 @@ export default function UserMemoryPage() {
         resetPrompt={t`Delete everything Duct has learned about how you work? This cannot be undone.`}
         emptyHint={t`Nothing yet. Set your preferences from the sidebar, or add a rule here — 'give me the number first, then the why' is a good start.`}
       />
-    </section>
+    </Page>
   );
 }

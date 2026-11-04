@@ -121,7 +121,7 @@ function ThinkingBlock({ thinking, streaming, startedAt, endedAt }) {
         <span>
           {running ? (
             seconds !== null ? <Trans>Thinking · {seconds}s</Trans> : <Trans>Thinking…</Trans>
-          ) : seconds !== null ? (
+          ) : seconds ? (
             <Trans>Thought for {seconds}s</Trans>
           ) : (
             <Trans>Reasoning</Trans>
@@ -734,7 +734,7 @@ export default function AgentChat({
           waiting ? "border-warning/70 bg-warning/5" : "border-border/60"
         }`}
       >
-        <span className="text-sm font-medium">{titleText}</span>
+        <span className="shrink-0 text-sm font-medium">{titleText}</span>
         {waiting && (
           <span className="relative flex size-2" aria-hidden="true">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75" />
@@ -750,13 +750,13 @@ export default function AgentChat({
         <span
           role="status"
           aria-live="polite"
-          className={`text-xs ${
+          className={`min-w-0 truncate text-xs ${
             waiting ? "text-warning font-medium" : isFailed ? "text-destructive" : "text-muted-foreground"
           } ${status.pulse && !waiting && !working ? "animate-pulse" : ""}`}
         >
-          — {statusLabel}
+          {statusLabel}
         </span>
-        <span className="ml-auto flex items-center gap-2">
+        <span className="ml-auto flex shrink-0 items-center gap-2">
           {headerExtra}
           {tierStepDown && (
             <span

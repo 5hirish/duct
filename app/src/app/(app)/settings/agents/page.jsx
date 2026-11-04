@@ -17,6 +17,7 @@ import LoadError from "@/components/LoadError";
 import { hasAuthToken } from "@/lib/authFetch";
 import { isLocalBackendActive } from "@/lib/localBackend";
 import { createMcpToken, listMcpTokens, mcpServerUrl, revokeMcpToken } from "@/lib/mcpTokensApi";
+import { Page, PageHeader } from "@/components/ui/page";
 
 export default function AgentsSettingsPage() {
   const { t } = useLingui();
@@ -69,14 +70,19 @@ export default function AgentsSettingsPage() {
   }
 
   return (
-    <section>
-      <div className="page-toolbar-back">
-        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">
-          <Trans>Connect your AI agent</Trans>
-        </h1>
-      </div>
+    <Page width="narrow">
+      <PageHeader
+        title={<Trans>Connect your AI agent</Trans>}
+        status={<Trans>Use Duct from Claude Code, Codex, Cursor, VS Code or OpenCode, in the repo you are working in.</Trans>}
+        help={
+          <Trans>
+            Your agent can read your projects and draft their profile. It can&apos;t approve changes,
+            connect tools, or replace anything you typed or confirmed.
+          </Trans>
+        }
+      />
       {!signedIn ? (
-        <p className="app-subtle" style={{ marginTop: 0 }}>
+        <p className="text-sm text-muted-foreground">
           <Trans>Sign in first. Your agent works on your account, so there has to be one.</Trans>
         </p>
       ) : loadError ? (
@@ -93,6 +99,6 @@ export default function AgentsSettingsPage() {
           onRevoke={revoke}
         />
       )}
-    </section>
+    </Page>
   );
 }

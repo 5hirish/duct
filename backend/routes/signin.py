@@ -111,6 +111,7 @@ def _create_jwt(
     uid: str = "",
     guest: bool = False,
     remember: bool = False,
+    given_name: str = "",
 ) -> str:
     cfg = get_configs()
     if not cfg.jwt_secret:
@@ -120,6 +121,10 @@ def _create_jwt(
     payload = {
         "sub": email,
         "name": name,
+        # Google's own first name, which the Profile page offers as "what
+        # should Duct call you". Splitting `name` gets it wrong for anyone who
+        # writes the family name first.
+        "given_name": given_name,
         "picture": picture,
         # True only on the sign-in that created the account, so the app can tell
         # a signup from a login. The claim rides a token that lives for a week,
@@ -396,6 +401,7 @@ def _signin_google_callback(*, code: str, state: str) -> RedirectResponse:
     provider_user_id = id_info.get("sub", "")
     email = id_info.get("email", "")
     name = id_info.get("name", "")
+    given_name = id_info.get("given_name", "")
     picture = id_info.get("picture", "")
 
     if not provider_user_id or not email:
@@ -427,6 +433,7 @@ def _signin_google_callback(*, code: str, state: str) -> RedirectResponse:
             new_user=upserted.created,
             uid=upserted.user_id,
             remember=remember,
+            given_name=given_name,
         )
     except ValueError:
         logger.exception("JWT creation failed")

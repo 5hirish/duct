@@ -152,10 +152,11 @@ export const KIND_LABEL = Object.freeze({
  *   index    — the item's position in days[] (for the proposed slot)
  *   locale   — the interface language, so the date badge matches the copy
  *              around it (it used to be pinned to English, as the board was)
- * Returns { date, time|null, kind, kindLabel, dateLabel, status, hasTime };
- * `kindLabel` is a message descriptor.
+ *   today    — the reader's today (start of day), for `missed`; tests pass one
+ * Returns { date, time|null, kind, kindLabel, dateLabel, status, hasTime,
+ * missed }; `kindLabel` is a message descriptor.
  */
-export function effectiveSchedule(day, post, anchor, index, { locale } = {}) {
+export function effectiveSchedule(day, post, anchor, index, { locale, today = startOfDay(new Date()) } = {}) {
   const fmtDate = (d) => formatDate(d, { withYear: false, locale });
   const fmtTime = (d) => formatTime(d, { locale });
   const status = post?.status || day?.status || "pending";
@@ -176,6 +177,129 @@ export function effectiveSchedule(day, post, anchor, index, { locale } = {}) {
 
   const dateLabel = date ? `${fmtDate(date)}${hasTime ? `, ${fmtTime(date)}` : ""}` : "";
 
-  return { date, time: hasTime ? fmtTime(date) : null, kind, kindLabel: KIND_LABEL[kind], dateLabel, status, hasTime };
+  return {
+    date, time: hasTime ? fmtTime(date) : null, kind, kindLabel: KIND_LABEL[kind], dateLabel, status, hasTime,
+    missed: isMissed(status, date, today),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Time: what a plan is, today
+// ---------------------------------------------------------------------------
+//
+// A plan is written for dates, and the board used to show it the same way
+// whatever today was: a person back on 3 November saw October's thirty posts
+// still "Pending", none of them drafted, as if the month were ahead of them.
+// These answer what the dates mean now, so every view says it the same way.
+
+export function startOfDay(date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+/**
+ * A planned post whose day has passed without a draft. Pending only: a draft
+ * whose slot passed can still be approved and sent late, and a scheduled or
+ * posted one already went somewhere.
+ */
+export function isMissed(status, date, today = startOfDay(new Date())) {
+  return status === "pending" && Boolean(date) && date < today;
+}
+
+export const PlanState = Object.freeze({ UPCOMING: "upcoming", RUNNING: "running", ENDED: "ended" });
+
+/** Whether a plan's dates are ahead, under way, or behind `today`. */
+export function planState(plan, today = startOfDay(new Date())) {
+  const start = planStartOf(plan);
+  const end = planEndOf(plan);
+  if (!start || !end) return PlanState.UPCOMING;
+  if (today < start) return PlanState.UPCOMING;
+  if (today > end) return PlanState.ENDED;
+  return PlanState.RUNNING;
+}
+
+/**
+ * Every day of a plan with its effective schedule, in date order, the plan's
+ * own order breaking ties and undated days last. The one place the views get
+ * their rows from, so the agenda, the board and the counts cannot disagree.
+ */
+export function planItems(plan, postsById = {}, { locale, today = startOfDay(new Date()) } = {}) {
+  const start = planStartOf(plan);
+  const days = Array.isArray(plan?.days) ? plan.days : [];
+  const rows = days.map((day, index) => {
+    const post = day?.post_id ? postsById[day.post_id] || null : null;
+    const schedule = effectiveSchedule(day, post, start, index, { locale, today });
+    return { day, post, schedule, index, status: schedule.status || "pending" };
+  });
+  rows.sort((a, b) => {
+    const ta = a.schedule.date?.getTime() ?? Infinity;
+    const tb = b.schedule.date?.getTime() ?? Infinity;
+    return ta - tb || a.index - b.index;
+  });
+  return rows;
+}
+
+/** The counts a plan's header says: how much went out, how much was missed. */
+export function planProgress(items) {
+  const out = { total: items.length, posted: 0, drafted: 0, missed: 0, pending: 0 };
+  for (const it of items) {
+    if (it.status === "posted") out.posted += 1;
+    else if (it.schedule.missed) out.missed += 1;
+    else if (it.status === "pending") out.pending += 1;
+    else out.drafted += 1;
+  }
+  return out;
+}
+
+export const AgendaGroup = Object.freeze({ MISSED: "missed", WEEK: "week", EARLIER: "earlier", UNDATED: "undated" });
+
+// Weeks start on Monday, the ISO week, so "this week" does not change meaning
+// on a Sunday.
+function weekStart(date) {
+  const d = startOfDay(date);
+  return addDays(d, -((d.getDay() + 6) % 7));
+}
+
+function weeksBetween(from, to) {
+  const utc = (d) => Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  return Math.floor((utc(to) - utc(from)) / (7 * 86_400_000));
+}
+
+/**
+ * The agenda: a plan's rows grouped by what today makes of them.
+ *
+ *   missed   — planned, never drafted, day passed: the actionable past, first
+ *   week     — this week and every week after, `offset` 0, 1, 2…
+ *   earlier  — the rest of the past (posted, or drafted late), folded away
+ *   undated  — no date at all, last
+ *
+ * Every row lands in exactly one group, and the groups come back in that
+ * order, weeks ascending. Pure, so it is asserted on over generated plans.
+ */
+export function agendaGroups(items, today = startOfDay(new Date())) {
+  const thisWeek = weekStart(today);
+  const missed = [];
+  const earlier = [];
+  const undated = [];
+  const weeks = new Map();
+  for (const it of items) {
+    const date = it.schedule.date;
+    if (!date) undated.push(it);
+    else if (it.schedule.missed) missed.push(it);
+    else if (date < thisWeek) earlier.push(it);
+    else {
+      const offset = weeksBetween(thisWeek, date);
+      if (!weeks.has(offset)) weeks.set(offset, []);
+      weeks.get(offset).push(it);
+    }
+  }
+  const groups = [];
+  if (missed.length) groups.push({ key: "missed", kind: AgendaGroup.MISSED, items: missed });
+  for (const offset of [...weeks.keys()].sort((a, b) => a - b)) {
+    const from = addDays(thisWeek, offset * 7);
+    groups.push({ key: `week-${offset}`, kind: AgendaGroup.WEEK, offset, from, to: addDays(from, 6), items: weeks.get(offset) });
+  }
+  if (earlier.length) groups.push({ key: "earlier", kind: AgendaGroup.EARLIER, items: earlier });
+  if (undated.length) groups.push({ key: "undated", kind: AgendaGroup.UNDATED, items: undated });
+  return groups;
 }
 

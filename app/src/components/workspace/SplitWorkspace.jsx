@@ -73,6 +73,10 @@ export default function SplitWorkspace({
   leftLabel,
   rightLabel,
   rightStatus = "idle",
+  // Nothing to show on the right yet (no document, no data). The chat takes
+  // the whole width until there is: half a screen of "Nothing written yet"
+  // while the agent works was the emptiest thing on the session screen.
+  rightEmpty = false,
 }) {
   const { t } = useLingui();
   const leftText = leftLabel ?? t`Chat`;
@@ -197,7 +201,7 @@ export default function SplitWorkspace({
       {banner}
 
       {/* Pane toggle — shown until both panes fit side by side */}
-      <div className="flex shrink-0 items-center gap-1 border-b border-border/60 bg-card p-1.5 @xl/split:hidden">
+      <div className={`${rightEmpty ? "hidden" : "flex"} shrink-0 items-center gap-1 border-b border-border/60 bg-card p-1.5 @xl/split:hidden`}>
         <PaneTab active={mobilePane === "left"} onClick={() => setMobilePane("left")} icon={MessageSquare} label={leftText} />
         <PaneTab active={mobilePane === "right"} onClick={() => setMobilePane("right")} icon={PanelRight} label={rightText} status={rightStatus} />
       </div>
@@ -211,7 +215,7 @@ export default function SplitWorkspace({
         <div
           id={`${storageKey}-left`}
           className={`@container ${mobilePane === "left" ? "flex" : "hidden"} w-full flex-col overflow-hidden border-r border-border/60 @xl/split:flex ${
-            rightCollapsed ? "@xl/split:w-full" : "@xl/split:w-[var(--split)] @xl/split:min-w-[17.5rem]"
+            rightCollapsed || rightEmpty ? "@xl/split:w-full" : "@xl/split:w-[var(--split)] @xl/split:min-w-[17.5rem]"
           }`}
         >
           {left}
@@ -234,7 +238,7 @@ export default function SplitWorkspace({
           onKeyDown={onKeyDown}
           onDoubleClick={() => (rightCollapsed ? undefined : commit(initialSplit))}
           title={rightCollapsed ? "" : t`Drag to resize — double-click to reset, arrow keys to nudge`}
-          className={`group relative hidden w-3 shrink-0 touch-none select-none items-center justify-center focus-visible:outline-none @xl/split:flex ${
+          className={`group relative hidden w-3 shrink-0 touch-none select-none items-center justify-center focus-visible:outline-none ${rightEmpty ? "" : "@xl/split:flex"} ${
             rightCollapsed ? "cursor-default" : "cursor-col-resize"
           }`}
         >
@@ -281,7 +285,7 @@ export default function SplitWorkspace({
             // Collapsing is a desktop affordance only: on mobile the panes are
             // already one at a time, so hiding this one there would leave the
             // segmented control pointing at nothing.
-            rightCollapsed ? "@xl/split:hidden" : "@xl/split:flex @xl/split:min-w-[17.5rem]"
+            rightCollapsed || rightEmpty ? "@xl/split:hidden" : "@xl/split:flex @xl/split:min-w-[17.5rem]"
           }`}
         >
           {right}
@@ -298,7 +302,7 @@ function PaneTab({ active, onClick, icon: Icon, label, status }) {
       onClick={onClick}
       aria-pressed={active}
       className={`relative flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-        active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted/50"
+        active ? "bg-primary/10 text-brand" : "text-muted-foreground hover:bg-muted/50"
       }`}
     >
       <Icon className="size-3.5" />

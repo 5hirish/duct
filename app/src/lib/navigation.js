@@ -1,15 +1,5 @@
 import { msg } from "@lingui/core/macro";
-import {
-  TrendingUp,
-  BarChart3,
-  Megaphone,
-  Search,
-  PenLine,
-  ShieldCheck,
-  FileText,
-  History,
-  Gauge,
-} from "lucide-react";
+import { FileText, History, House, PenLine, Plug, Search, ShieldCheck } from "lucide-react";
 
 /**
  * Where you can go in the app — the single source of truth.
@@ -20,8 +10,9 @@ import {
  * exists in one but not the other is the kind of drift nobody notices until a
  * page becomes unreachable from search.
  *
- * `available: false` items are shown by the sidebar as coming-soon and are
- * skipped by the palette — there is nowhere to send you.
+ * `available: false` items are skipped by both. The sidebar used to show them
+ * dimmed with a "Soon" pill, which put two dead entries in the primary nav;
+ * a feature that does not exist yet is not a place you can go.
  *
  * `label` on a section and on an item is a Lingui descriptor, not a string:
  * render it with `i18n._(item.label)` from `useLingui()`. A `t` here would be
@@ -29,16 +20,22 @@ import {
  */
 export const NAV_SECTIONS = [
   {
-    key: "growth",
-    label: msg`Growth`,
+    // Named for what you do, not for the modules behind it. Until 2026-11-02
+    // the sidebar was the org chart: Growth / Product / Execute / Library,
+    // two "Soon" items holding a section to themselves, and Connections, the
+    // one thing a new user must do, parked in the footer beside "Light mode".
+    key: "work",
+    label: msg`Work`,
     items: [
       {
-        key: "organic_growth",
-        label: msg`Organic Growth`,
-        icon: TrendingUp,
+        key: "home",
+        label: msg`Home`,
+        icon: House,
         href: "/insights/organic-growth",
         available: true,
-        matchPrefix: "/insights/organic-growth",
+        // Conversations live under /insights too, and a run working there
+        // pulses this entry.
+        matchPrefix: "/insights",
       },
       {
         key: "seo_audit",
@@ -57,38 +54,22 @@ export const NAV_SECTIONS = [
         matchPrefix: "/content",
       },
       {
-        key: "paid_ads",
-        label: msg`Paid Ads Intelligence`,
-        icon: Megaphone,
-        href: null,
-        available: false,
-      },
-    ],
-  },
-  {
-    key: "product",
-    label: msg`Product`,
-    items: [
-      {
-        key: "product_intelligence",
-        label: msg`Product Intelligence`,
-        icon: BarChart3,
-        href: null,
-        available: false,
-      },
-    ],
-  },
-  {
-    key: "execute",
-    label: msg`Execute`,
-    items: [
-      {
-        key: "executions",
-        label: msg`Executions`,
+        key: "changes",
+        label: msg`Changes`,
         icon: ShieldCheck,
         href: "/execute",
         available: true,
         matchPrefix: "/execute",
+      },
+      {
+        key: "connections",
+        label: msg`Connections`,
+        icon: Plug,
+        href: "/connections",
+        available: true,
+        matchPrefix: "/connections",
+        // The sidebar shows how many sources are live beside this one.
+        badge: "connections",
       },
     ],
   },
@@ -98,7 +79,7 @@ export const NAV_SECTIONS = [
     items: [
       {
         key: "artifacts",
-        label: msg`Artifacts`,
+        label: msg`Documents`,
         icon: FileText,
         href: "/artifacts",
         available: true,
@@ -111,14 +92,6 @@ export const NAV_SECTIONS = [
         href: "/activity",
         available: true,
         matchPrefix: "/activity",
-      },
-      {
-        key: "usage",
-        label: msg`Usage`,
-        icon: Gauge,
-        href: "/usage",
-        available: true,
-        matchPrefix: "/usage",
       },
     ],
   },

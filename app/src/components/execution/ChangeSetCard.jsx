@@ -194,7 +194,7 @@ export default function ChangeSetCard({ changeSet: initial }) {
     <div className="my-2 max-w-md overflow-hidden rounded-xl border border-border bg-card">
       <div className="flex items-start gap-3 p-4">
         <span
-          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-brand"
           aria-hidden="true"
         >
           <Zap className="size-4" />
@@ -248,7 +248,7 @@ export default function ChangeSetCard({ changeSet: initial }) {
 
       {decision && (
         <p className="flex items-center gap-2 border-t border-border/60 bg-muted/40 px-4 py-2.5 text-xs font-medium">
-          <decision.icon className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
+          <decision.icon className="size-3.5 shrink-0 text-brand" aria-hidden="true" />
           <span>{decision.text}</span>
           {decision.at && (
             <span className="font-normal text-muted-foreground">

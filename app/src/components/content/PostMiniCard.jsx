@@ -21,6 +21,25 @@ const KIND_BADGE = {
   proposed: "bg-muted text-muted-foreground",
 };
 
+// A pillar is the person's own word for a theme, so it gets a colour of its
+// own rather than the brand orange, which marks the page's one primary
+// action. The same pillar is the same colour in every view.
+const PILLAR_DOTS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
+function pillarColour(pillar) {
+  let h = 0;
+  for (const ch of String(pillar)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return PILLAR_DOTS[h % PILLAR_DOTS.length];
+}
+
+function PillarChip({ pillar }) {
+  return (
+    <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-muted px-2 py-0.5 text-2xs font-medium text-muted-foreground">
+      <span className="size-1.5 shrink-0 rounded-full" style={{ backgroundColor: pillarColour(pillar) }} aria-hidden />
+      <span className="truncate">{titleCase(pillar)}</span>
+    </span>
+  );
+}
+
 /**
  * One modular post card, shared by every plan view via `variant`:
  *   - "full"    : thumbnail banner with overlaid type/via-Duct/platforms, plus
@@ -60,10 +79,16 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
   const status = post?.status || day?.status || "pending";
   const sMeta = statusMeta(status);
 
-  const showThumb = variant === "full";
+  // The preview is the post's own media. A planned post has none yet, and a
+  // 16:9 grey box with an image icon in it was most of every Kanban card:
+  // thirty of them stacked to about 15,000px. Without media the card is its
+  // words, with the type as a small tile.
+  const hasMedia = Boolean(thumb || post?.video?.url || (postType === "text" && post?.caption));
+  const showThumb = variant === "full" && hasMedia;
+  const compactFull = variant === "full" && !hasMedia;
   // In Week/Month the card sits under its day column, so the date is redundant —
   // show only the time. The Kanban has no date context, so show the full date.
-  const dateText = showThumb ? (schedule?.dateLabel || "") : (schedule?.time || "");
+  const dateText = variant === "full" ? (schedule?.dateLabel || "") : (schedule?.time || "");
 
   const platformBadges = platforms.slice(0, 4).map((p) => {
     const meta = platformMeta(p);
@@ -139,7 +164,9 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
           {platformBadges.length > 0 && (
             <span className="hidden items-center gap-1 @md:flex">{platformBadges}</span>
           )}
-          {status === PostStatus.PENDING ? (
+          {schedule?.missed ? (
+            <Badge variant="warning"><Trans>Missed</Trans></Badge>
+          ) : status === PostStatus.PENDING ? (
             (postId || onRevise) && (
               <span className="flex items-center gap-0.5 text-xs text-muted-foreground group-hover/row:text-foreground group-focus-visible/row:text-foreground">
                 <span className="opacity-0 transition-opacity group-hover/row:opacity-100 group-focus-visible/row:opacity-100">
@@ -221,9 +248,23 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
           <div className="min-w-0 flex-1 space-y-1.5 p-2.5">
             {/* meta row — color-coded kind pill carries the state; muted date keeps the title the hero */}
             <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-              <span className={`rounded-md px-1.5 py-0.5 text-2xs font-medium ${KIND_BADGE[kind]}`}>
-                {KIND_LABEL[kind] ? i18n._(KIND_LABEL[kind]) : titleCase(kind)}
-              </span>
+              {compactFull && (
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground" aria-hidden>
+                  <TypeIcon className="size-3.5" />
+                </span>
+              )}
+              {/* "Planned" on every card in the Pending lane repeated the
+                  lane; on a lane card only a state the lane does not already
+                  say is shown. The week view mixes states, so it keeps all. */}
+              {schedule?.missed ? (
+                <span className="rounded-md bg-warning/15 px-1.5 py-0.5 text-2xs font-medium text-warning">
+                  <Trans>Missed</Trans>
+                </span>
+              ) : (kind !== "proposed" || variant !== "full") && (
+                <span className={`rounded-md px-1.5 py-0.5 text-2xs font-medium ${KIND_BADGE[kind]}`}>
+                  {KIND_LABEL[kind] ? i18n._(KIND_LABEL[kind]) : titleCase(kind)}
+                </span>
+              )}
               {dateText && (
                 <span className="inline-flex items-center gap-1 text-2xs text-muted-foreground">
                   {schedule?.time && <Clock className="size-2.5" />}
@@ -231,7 +272,7 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
                 </span>
               )}
               {/* without a thumbnail (Week view) these stay inline */}
-              {!showThumb && viaDuct && (
+              {variant !== "full" && viaDuct && (
                 <span
                   className="rounded-md px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide"
                   style={{ backgroundColor: "color-mix(in oklch, var(--orange) 15%, transparent)", color: "var(--orange)" }}
@@ -239,20 +280,21 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
                   <Trans>via Duct</Trans>
                 </span>
               )}
-              {!showThumb && <TypeIcon className="ml-auto size-3.5 shrink-0 text-muted-foreground" />}
+              {variant !== "full" && <TypeIcon className="ml-auto size-3.5 shrink-0 text-muted-foreground" />}
+              {compactFull && platformBadges.length > 0 && (
+                <span className="ml-auto flex items-center gap-1">{platformBadges}</span>
+              )}
             </div>
 
             <p className="line-clamp-2 text-sm font-medium leading-snug text-foreground">{title}</p>
 
             {/* chips */}
             <div className="flex flex-wrap items-center gap-1 pt-0.5">
-              {pillar && (
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-2xs font-medium text-primary">{titleCase(pillar)}</span>
-              )}
+              {pillar && <PillarChip pillar={pillar} />}
               {format && (
                 <span className="rounded-full border border-border/70 px-2 py-0.5 text-2xs text-muted-foreground">{format}</span>
               )}
-              {!showThumb && platformBadges.length > 0 && (
+              {variant !== "full" && platformBadges.length > 0 && (
                 <span className="ml-auto flex items-center gap-1">{platformBadges}</span>
               )}
             </div>

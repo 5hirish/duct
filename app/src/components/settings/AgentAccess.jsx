@@ -253,16 +253,6 @@ export default function AgentAccess({
 
   return (
     <div className="max-w-2xl">
-      <p className="mb-1 text-sm text-foreground">
-        <Trans>Use Duct from Claude Code, Codex, Cursor, VS Code or OpenCode, in the repo you are working in.</Trans>
-      </p>
-      <p className="mb-8 text-sm text-muted-foreground">
-        <Trans>
-          Your agent can read your projects and draft their profile. It can&apos;t approve changes,
-          connect tools, or replace anything you typed or confirmed.
-        </Trans>
-      </p>
-
       {signInAvailable ? (
         <>
           <SignInSteps serverUrl={serverUrl} />
