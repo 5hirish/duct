@@ -44,7 +44,7 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from langchain_core.tools import StructuredTool
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from agents.content.results import (
     EditImageResult,
@@ -85,15 +85,19 @@ from agents.content.publishing import (
     SLIDE_RENDER,
     MediaUnreadable,
     PostAlreadyOut,
+    chosen_publisher,
     default_account,
-    is_queued_at_postbridge,
+    is_queued_at_publisher,
     is_text_only,
     load_media,
     metrics_sync,
     no_sync_message,
+    not_synced_yet,
     pick_media,
+    project_publishing,
     publish_blockers,
     publish_failure,
+    pull_metrics,
     push_edit,
     record_published,
     send_post,
@@ -118,7 +122,10 @@ from agents.content.schema import (
 from agents.content.templates import derive_image_prompts, render_slides_html
 from agents.content.video import VIDEO_POST_TYPE, cut_of, video_takes
 from service import storage
-from service.content_metrics import merge_synced_metrics
+from service.content_metrics import metric_value
+from service.publishers import PublisherError, Target
+from service.publishers.registry import publisher_for, spec_for
+from service.vendor_keys import VendorNotConnected
 from db.session import get_engine
 from models.content import (
     ContentAsset,
@@ -455,6 +462,14 @@ def _merge_slide_images(incoming: list[Slide], existing_row: ContentPost | None)
     return merged
 
 
+def _post_spec(db: Session, row: ContentPost):
+    """The scheduler a post goes through (publishing.ProjectPublishing)."""
+    proj = db.get(Project, row.project_id)
+    if proj is None:
+        return spec_for(row.publisher)
+    return project_publishing(db, proj.id, proj.user_id).for_post(row)
+
+
 def _build_post_payload(row: ContentPost, db: Session) -> dict:
     """The POST_DRAFT_UPDATED payload — shared by submit_post_draft, the
     per-slide image attach path and the video attach, so the frontend always
@@ -488,7 +503,7 @@ def _build_post_payload(row: ContentPost, db: Session) -> dict:
         "emotional_arc":   row.emotional_arc,
         "camera_ref_pool": row.camera_ref_pool,
         "platforms":       row.platforms,
-        "channel":         channel_payload(primary_channel(row.platforms)),
+        "channel":         channel_payload(primary_channel(row.platforms), _post_spec(db, row)),
         "status":          row.status,
         "clone_source":    row.clone_source,
         # Recomputed on every emit, so the panel's checks follow each edit and
@@ -856,13 +871,20 @@ def build_content_tools_lc(
 
     class PublishPostArgs(BaseModel):
         post_id: str = Field(description="UUID of the content_posts row to publish.")
-        social_account_ids: list[int] = Field(
+        social_account_ids: list[str] = Field(
             default_factory=list,
             description=(
-                "Numeric PostBridge social account IDs. Omit to post from the account this project "
-                "linked for the post's platform; if there is none, or more than one, the error names them."
+                "Account ids at the project's scheduler, as the error lists them. Omit to post from "
+                "the account this project linked for the post's platform; if there is none, or more "
+                "than one, the error names them."
             ),
         )
+
+        @field_validator("social_account_ids", mode="before")
+        @classmethod
+        def _ids_as_text(cls, value):
+            # PostBridge's ids are numbers, and a model passes them as such.
+            return [str(v) for v in value] if isinstance(value, list) else value
         scheduled_at: str | None = Field(
             None,
             description=(
@@ -977,20 +999,19 @@ def build_content_tools_lc(
             return _err(f"submit_plan failed: {exc}")
 
     async def _push_queued_edit(db: Session, post: ContentPost) -> str | None:
-        """A rewrite of a post PostBridge is holding reaches PostBridge before
-        it is saved, or it is not saved: the queue would publish the old words.
-        Returns the refusal for the model, or None once PostBridge has it."""
-        from service.post_bridge import PostBridgeAPIError, client_for_user
-
+        """A rewrite of a post a scheduler is holding reaches the scheduler
+        before it is saved, or it is not saved: the queue would publish the old
+        words. Returns the refusal for the model, or None once it has them."""
         proj = db.get(Project, project_id)
+        label = (spec_for(post.publisher).label if spec_for(post.publisher) else "its scheduler")
         try:
-            client = client_for_user(proj.user_id, db)
-        except ValueError as exc:
+            pub = publisher_for(proj.user_id, post.publisher, db)
+        except VendorNotConnected as exc:
             db.rollback()
-            return _err(f"The post is scheduled on PostBridge and the rewrite can't reach it: {exc}")
+            return _err(f"The post is scheduled on {label} and the rewrite can't reach it: {exc}")
         try:
-            async with client as pb:
-                await push_edit(pb, post)
+            async with pub:
+                await push_edit(pub, post)
         except PostAlreadyOut:
             db.rollback()
             db.refresh(post)
@@ -1001,11 +1022,11 @@ def build_content_tools_lc(
                 "That post already went out, so the rewrite can't reach it; it is marked posted now. "
                 "Draft a new post for the new words."
             )
-        except PostBridgeAPIError as exc:
+        except PublisherError as exc:
             db.rollback()
             return _err(
-                "The post is scheduled on PostBridge and the update didn't go through, so nothing "
-                f"was saved: {exc.error.message or 'try again shortly'}."
+                f"The post is scheduled on {label} and the update didn't go through, so nothing "
+                f"was saved: {exc.message or 'try again shortly'}."
             )
         return None
 
@@ -1038,7 +1059,11 @@ def build_content_tools_lc(
             replies = [r for r in draft.replies if r.strip()]
             # The platform's own limits, checked here rather than trusted to
             # the model: an over-length tweet does not publish.
-            problems = copy_problems(ch.id, draft.caption, replies)
+            with _open_db() as db:
+                spec = _channel_spec(db, ch.id)
+            problems = copy_problems(
+                ch.id, draft.caption, replies, strips_links=bool(spec and spec.strips_links_on(ch.id)),
+            )
             if problems:
                 return _err("Nothing saved. " + " ".join(problems) + " Tighten it and submit again.")
             if draft.post_type == TEXT_POST_TYPE:
@@ -1141,7 +1166,7 @@ def build_content_tools_lc(
                 if recorded is not None:
                     values["clone_source"] = recorded
                 if existing is not None:
-                    queued = is_queued_at_postbridge(existing)
+                    queued = is_queued_at_publisher(existing)
                     before = (existing.caption, list(existing.replies or []))
                     for k, v in values.items():
                         setattr(existing, k, v)
@@ -1915,24 +1940,24 @@ def build_content_tools_lc(
             logger.exception("edit_image failed")
             return _err("Image editing hit a snag — please try again.")
 
-    # ----------------------- PostBridge (Phase 4) -----------------------
+    # ----------------------- Publishing (service/publishers) -----------------------
+
+    def _channel_spec(db: Session, channel: str):
+        """The scheduler this project's ``channel`` goes through, or None."""
+        proj = db.get(Project, project_id)
+        return project_publishing(db, proj.id, proj.user_id).for_channel(channel) if proj else None
 
     async def publish_post(
         post_id: str,
-        social_account_ids: list[int] | None = None,
+        social_account_ids: list[str] | None = None,
         scheduled_at: str | None = None,
         tiktok_draft: bool = False,
         allow_uncomposed: bool = False,
     ) -> str:
         try:
-            from service.post_bridge import PostBridgeAPIError, client_for_user
-
             if not post_id:
                 return _err("post_id is required.")
-            try:
-                account_ids = [int(x) for x in (social_account_ids or [])]
-            except (TypeError, ValueError):
-                return _err("social_account_ids must be a list of numbers.")
+            account_ids = [str(x) for x in (social_account_ids or []) if str(x).strip()]
             due = parse_iso(scheduled_at) if scheduled_at else None
             if scheduled_at and due is None:
                 return _err(
@@ -1947,17 +1972,21 @@ def build_content_tools_lc(
                 proj = db.get(Project, project_id)
                 if proj is None:
                     return _err("Project missing.")
-                blockers = publish_blockers(post)
-                if blockers:
-                    return _err(" ".join(blockers))
+                publishing = project_publishing(db, proj.id, proj.user_id)
                 if not account_ids:
                     # No list_social_accounts tool exists for the model to
                     # find an id with, so naming none means the project's
                     # own linked account for this platform.
-                    account_id, why_not = default_account(db, post)
-                    if account_id is None:
+                    link, why_not = default_account(db, post)
+                    if link is None:
                         return _err(why_not)
-                    account_ids = [account_id]
+                    account_ids = [link.external_account_id]
+                spec, why_not = chosen_publisher(db, project_id, account_ids, publishing)
+                if spec is None:
+                    return _err(why_not)
+                blockers = publish_blockers(post, spec)
+                if blockers:
+                    return _err(" ".join(blockers))
 
                 pick = pick_media(db, post, allow_uncomposed=allow_uncomposed)
                 if post.post_type == VIDEO_POST_TYPE and not pick.files:
@@ -1983,41 +2012,42 @@ def build_content_tools_lc(
                     return _err("Some media for this post couldn't be loaded — try regenerating the images.")
 
                 try:
-                    client = client_for_user(proj.user_id, db)
-                except ValueError as exc:
+                    pub = publisher_for(proj.user_id, spec.id, db)
+                except VendorNotConnected as exc:
                     return _err(str(exc))
                 try:
-                    async with client as pb:
-                        resp = await send_post(
-                            pb, post, media,
-                            social_account_ids=account_ids,
+                    async with pub:
+                        remote = await send_post(
+                            pub, post, media,
+                            targets=[Target(a) for a in account_ids],
                             scheduled_at=due,
                             tiktok_draft=bool(tiktok_draft),
                         )
-                except PostBridgeAPIError as exc:
+                except PublisherError as exc:
                     logger.warning("content: publish failed: %s", exc, exc_info=True)
-                    return _err(f"Couldn't publish that just now — {exc.error.message or 'please try again shortly'}.")
+                    return _err(f"Couldn't publish that just now — {exc.message or 'please try again shortly'}.")
 
-                if why := publish_failure(resp):
+                if why := publish_failure(remote, spec):
                     return _err(why)
-                record_published(post, resp, due)
+                record_published(post, remote, due, spec)
                 db.add(post)
                 db.commit()
                 db.refresh(post)
                 logger.info(
-                    "content: published post %s via PostBridge → id=%s status=%s",
-                    post.id, resp.id, resp.status,
+                    "content: published post %s via %s → id=%s status=%s",
+                    post.id, spec.id, remote.id, remote.status,
                 )
                 return _ok({
                     "post_id":               str(post.id),
-                    "post_bridge_post_id":   resp.id,
+                    "publisher":             spec.id,
+                    "publisher_post_id":     remote.id,
                     "status":                post.status,
-                    "scheduled_at":          resp.scheduled_at.isoformat() if resp.scheduled_at else None,
+                    "scheduled_at":          remote.scheduled_at.isoformat() if remote.scheduled_at else None,
                     "social_account_ids":    account_ids,
                     "media_count":           len(media),
-                    # Replies the channel does not publish: tell the user to
+                    # Replies the scheduler does not publish: tell the user to
                     # post them by hand (a thread's tail, a LinkedIn comment).
-                    "replies_to_post_by_hand": unpublished_replies(post),
+                    "replies_to_post_by_hand": unpublished_replies(post, spec),
                     "uncomposed_slides":     pick.uncomposed,   # published as raw photos (no caption)
                 })
         except Exception as exc:
@@ -2034,13 +2064,14 @@ def build_content_tools_lc(
                 post, err = _require_post(db, project_id, post_id)
                 if err:
                     return err
-                # PostBridge still holds a scheduled post and will publish it
-                # at its time whatever this row says; marking it posted by
+                # The scheduler still holds a scheduled post and will publish
+                # it at its time whatever this row says; marking it posted by
                 # hand would leave it to go out a second time. The unschedule
                 # path is the one that takes it off the queue.
-                if is_queued_at_postbridge(post):
+                if is_queued_at_publisher(post):
+                    label = spec_for(post.publisher).label if spec_for(post.publisher) else "its scheduler"
                     return _err(
-                        "This post is queued at PostBridge and will go out at its scheduled time. "
+                        f"This post is queued at {label} and will go out at its scheduled time. "
                         "Unschedule it first if it was posted by hand, or wait for it to post."
                     )
                 post.status    = "posted"
@@ -2057,8 +2088,6 @@ def build_content_tools_lc(
 
     async def log_metrics(post_id: str) -> str:
         try:
-            from service.post_bridge import PostBridgeAPIError, client_for_user
-
             post_id_raw = post_id
             if not post_id_raw:
                 return _err("post_id is required.")
@@ -2068,59 +2097,37 @@ def build_content_tools_lc(
                 post, err = _require_post(db, project_id, post_id)
                 if err:
                     return err
-                if not post.post_bridge_post_id:
+                if not post.publisher_post_id:
                     return _err("Post hasn't been published yet — run publish_post first.")
-                synced, sync_filter = metrics_sync(post)
-                if not synced:
-                    return _err(no_sync_message(post))
+                spec = spec_for(post.publisher)
+                if not metrics_sync(post, spec):
+                    return _err(no_sync_message(post, spec))
                 proj = db.get(Project, project_id)
                 if proj is None:
                     return _err("Project missing.")
-
                 try:
-                    client = client_for_user(proj.user_id, db)
-                except ValueError as exc:
+                    pub = publisher_for(proj.user_id, spec.id, db)
+                except VendorNotConnected as exc:
                     return _err(str(exc))
-
                 try:
-                    async with client as pb:
-                        # Trigger a sync (best-effort) then chase the chain
-                        # post → post_result → analytics → daily.
-                        await pb.sync_analytics(platform=sync_filter)
-                        results = await pb.list_post_results(post_id=post.post_bridge_post_id, limit=10)
-                        if not results:
-                            return _err("This post hasn't finished publishing yet — try again in a few minutes.")
-                        # Pick the first successful result; fall back to the latest.
-                        chosen = next((r for r in results if r.success), results[0])
-                        analytics_list = await pb.list_analytics(post_result_id=[chosen.id], limit=1)
-                        if not analytics_list:
-                            return _err("Analytics for this post haven't synced yet.")
-                        analytics = analytics_list[0]
-                        daily = await pb.get_analytics_daily(analytics.id)
-                except PostBridgeAPIError as exc:
+                    async with pub:
+                        # The same pull the sync route makes: numbers the
+                        # person typed in stay theirs.
+                        got = await pull_metrics(pub, post)
+                except PublisherError as exc:
                     logger.warning("content: metrics pull failed: %s", exc, exc_info=True)
-                    return _err(f"Couldn't pull metrics just now — {exc.error.message or 'please try again shortly'}.")
-
-                # The same merge the sync route uses: numbers the person typed
-                # in stay theirs, whichever of the two pulled.
-                post.perf = merge_synced_metrics(
-                    post.perf,
-                    analytics.model_dump(mode="json"),
-                    synced_at=(
-                        analytics.last_synced_at.isoformat() if analytics.last_synced_at else None
-                    ),
-                )
-                post.post_bridge_result_id = chosen.id
-                post.daily_perf = [s.model_dump(mode="json") for s in daily.snapshots]
+                    return _err(f"Couldn't pull metrics just now — {exc.message or 'please try again shortly'}.")
+                if got is None:
+                    return _err(not_synced_yet(post, spec))
                 db.add(post)
                 db.commit()
                 db.refresh(post)
 
                 return _ok_model(LogMetricsResult(
                     post_id=str(post.id),
-                    view_count=analytics.view_count,
-                    like_count=analytics.like_count,
-                    snapshots=len(daily.snapshots),
+                    view_count=int(metric_value(post.perf, "views") or 0),
+                    like_count=int(metric_value(post.perf, "likes") or 0),
+                    snapshots=len(got.daily),
                 ))
         except Exception as exc:
             logger.exception("log_metrics failed")
@@ -2534,16 +2541,18 @@ def build_content_tools_lc(
         ),
         _bind(
             publish_post, ContentTool.PUBLISH_POST,
-            "Publish a saved post via PostBridge, now or at scheduled_at, and "
+            "Publish a saved post through the project's scheduler (the connector "
+            "the user linked the account at), now or at scheduled_at, and "
             "record the result on the post. It posts from the account the "
             "project linked for the post's platform unless social_account_ids "
             "names others; when that is ambiguous the error lists the linked "
             "accounts to ask the user about. A slideshow "
             "uploads each slide's COMPOSED render (call render_slide first; by "
             "default slides with no render are refused, since their captions "
-            "wouldn't appear). A text post goes out as words alone, its first "
-            "reply as the post's first reply where the channel publishes one, "
-            "and the result counts the replies left for the user to post by "
+            "wouldn't appear). A text post goes out as words alone, with as many "
+            "of its replies as the scheduler publishes on that channel (a "
+            "thread, a first comment), and the result counts the replies left "
+            "for the user to post by "
             "hand. A post the platform would refuse (over its limit, words "
             "alone where it needs media) is refused here with the reason.",
             PublishPostArgs,
@@ -2551,19 +2560,18 @@ def build_content_tools_lc(
         _bind(
             mark_posted, ContentTool.MARK_POSTED,
             "Mark a post as posted (manual flag — use when the user posted "
-            "outside of PostBridge, e.g. a thread they pasted by hand). Sets "
+            "outside of Duct, e.g. a thread they pasted by hand). Sets "
             "status='posted' and posted_at=now, and stores the live post's link "
             "when given.",
             MarkPostedArgs,
         ),
         _bind(
             log_metrics, ContentTool.LOG_METRICS,
-            "Refresh performance metrics for a post from PostBridge. Looks up "
-            "the post_result for this post, fetches lifetime + daily analytics, "
-            "and merges them into post.perf / post.daily_perf. Requires "
-            "post_bridge_post_id set on the row (i.e. publish_post ran first). "
-            "PostBridge reports TikTok, YouTube, Instagram and Facebook only; for "
-            "any other channel it says so and the numbers are typed in by hand.",
+            "Refresh performance metrics for a post from the scheduler that "
+            "published it: lifetime + daily numbers, merged into post.perf / "
+            "post.daily_perf. Requires publish_post to have run first. Where the "
+            "scheduler doesn't report the post's channel it says so, and the "
+            "numbers are typed in by hand.",
             PostIdArgs,
         ),
     ]

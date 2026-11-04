@@ -599,6 +599,10 @@ msgstr "{pillarCount, plural, one {# Content-Säule} other {# Content-Säulen}}"
 msgid "{planAccount} — no API key, no extra bill."
 msgstr "{planAccount} — kein API-Schlüssel, keine zusätzliche Rechnung."
 
+#: src/components/content/AccountsTab.jsx
+msgid "{platform} · via {scheduler}"
+msgstr "{platform} · über {scheduler}"
+
 #: src/components/content/PlanBoard.jsx
 #~ msgid "{postCount, plural, one {# post} other {# posts}}"
 #~ msgstr "{postCount, plural, one {# Beitrag} other {# Beiträge}}"
@@ -1106,6 +1110,10 @@ msgstr "Ein Lauf wurde wegen eines Fehlers gestoppt"
 msgid "A saved key is already in use. Paste a new one to replace it, or choose Remove key to forget it."
 msgstr "Ein gespeicherter Schlüssel ist bereits in Gebrauch. Füge einen neuen ein, um ihn zu ersetzen, oder wähle „Schlüssel entfernen“, um ihn zu vergessen."
 
+#: src/components/content/DiscoverPage.jsx
+msgid "A saved post keeps its slides and numbers, so they're there when you plan."
+msgstr "Ein gespeicherter Beitrag behält seine Slides und Zahlen, damit sie beim Planen da sind."
+
 #: src/components/settings/AgentConsent.jsx
 msgid "A sign-in request lasts ten minutes. Start again from your agent."
 msgstr "Eine Anmeldeanfrage ist zehn Minuten gültig. Starte erneut von deinem Agenten."
@@ -1273,6 +1281,10 @@ msgstr "Tag hinzufügen, Enter drücken…"
 #: src/components/workspace/AgentChat.jsx
 msgid "Add a thought — it goes in at the next step"
 msgstr "Gedanken hinzufügen – er wird im nächsten Schritt berücksichtigt"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Add accounts in {scheduler}"
+msgstr "Konten in {scheduler} hinzufügen"
 
 #: src/components/connections/BringAnyTool.jsx
 #: src/components/connections/McpConnectDialog.jsx
@@ -1722,6 +1734,10 @@ msgstr "{selectedCount} Ausgewählte freigeben"
 #: src/components/execution/ChangeSetCard.jsx
 msgid "Approve & apply"
 msgstr "Freigeben & anwenden"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Approve a draft and it goes out at its best time. No copying and pasting."
+msgstr "Gib einen Entwurf frei, und er geht zur besten Zeit raus. Kein Kopieren und Einfügen."
 
 #: src/app/(app)/execute/page.jsx
 msgid "Approve all"
@@ -2617,6 +2633,7 @@ msgstr "Bestätigen"
 
 #: src/components/connections/ConnectorTile.jsx
 #: src/components/connections/McpConnectDialog.jsx
+#: src/components/content/AccountsTab.jsx
 #: src/components/content/VendorKeyForm.jsx
 msgid "Connect"
 msgstr "Verbinden"
@@ -2629,10 +2646,31 @@ msgstr "Verbinde {label}"
 msgid "Connect {label}?"
 msgstr "{label} verbinden?"
 
+#: src/components/content/ConnectorGate.jsx
+msgid "Connect {vendor}"
+msgstr "{vendor} verbinden"
+
 #: src/app/(start)/start/page.jsx
 #: src/components/onboarding/ProviderRequiredCard.jsx
 msgid "Connect a model"
 msgstr "Ein Modell verbinden"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Connect a scheduler"
+msgstr "Einen Planer verbinden"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Connect a scheduler and Duct publishes for you: link several accounts, schedule each post for its best time, and see how it did."
+msgstr "Verbinde einen Planer, und Duct veröffentlicht für dich: Verknüpfe mehrere Konten, plane jeden Beitrag zu seiner besten Zeit und sieh, wie er lief."
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Connect a scheduler and Duct reads each post's numbers back: per post, per account, per pillar."
+msgstr "Verbinde einen Planer, und Duct liest die Zahlen jedes Beitrags zurück: pro Beitrag, pro Konto, pro Säule."
+
+#: src/components/content/AccountsTab.jsx
+#: src/components/content/AnalyticsView.jsx
+msgid "Connect a scheduler to start"
+msgstr "Verbinde einen Planer, um zu starten"
 
 #: src/components/insights/desk/DeskCards.jsx
 #: src/components/insights/desk/DeskDayOne.jsx
@@ -2663,13 +2701,17 @@ msgstr "Einen Agenten verbinden"
 msgid "Connect anyway"
 msgstr "Trotzdem verbinden"
 
+#: src/components/content/DiscoverPage.jsx
+msgid "Connect Apify and Duct searches TikTok for you, by hashtag or a region's trending feed, so your plan starts from posts that are already landing."
+msgstr "Verbinde Apify, und Duct durchsucht TikTok für dich, nach Hashtag oder dem Trend-Feed einer Region, damit dein Plan bei Beiträgen ansetzt, die schon ankommen."
+
 #: src/app/(app)/connections/page.jsx
 msgid "Connect GitHub"
 msgstr "GitHub verbinden"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Connect in PostBridge →"
-msgstr "In PostBridge verbinden →"
+#~ msgid "Connect in PostBridge →"
+#~ msgstr "In PostBridge verbinden →"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Connect one data source"
@@ -2693,8 +2735,12 @@ msgid "Connect your first source"
 msgstr "Verbinde deine erste Quelle"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Connect your LinkedIn, X, TikTok, Instagram or YouTube account in PostBridge, then refresh to link it to this project."
-msgstr "Verbinde dein LinkedIn-, X-, TikTok-, Instagram- oder YouTube-Konto in PostBridge, dann aktualisiere, um es mit diesem Projekt zu verknüpfen."
+#~ msgid "Connect your LinkedIn, X, TikTok, Instagram or YouTube account in PostBridge, then refresh to link it to this project."
+#~ msgstr "Verbinde dein LinkedIn-, X-, TikTok-, Instagram- oder YouTube-Konto in PostBridge, dann aktualisiere, um es mit diesem Projekt zu verknüpfen."
+
+#: src/components/content/AccountsTab.jsx
+msgid "Connect your LinkedIn, X, TikTok, Instagram or YouTube account in your scheduler, then refresh to link it to this project."
+msgstr "Verbinde dein LinkedIn-, X-, TikTok-, Instagram- oder YouTube-Konto in deinem Planer und aktualisiere dann, um es mit diesem Projekt zu verknüpfen."
 
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "Connect your PostBridge account"
@@ -2706,6 +2752,7 @@ msgstr "Verbinde dein LinkedIn-, X-, TikTok-, Instagram- oder YouTube-Konto in P
 #: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/McpConnectors.jsx
+#: src/components/content/AccountsTab.jsx
 msgid "Connected"
 msgstr "Verbunden"
 
@@ -3404,6 +3451,10 @@ msgstr "{host} trennen?"
 msgid "Disconnect {rowName}"
 msgstr "{rowName} trennen"
 
+#: src/components/content/AccountsTab.jsx
+msgid "Disconnect {scheduler}?"
+msgstr "{scheduler} trennen?"
+
 #: src/components/content/DiscoverPage.jsx
 msgid "Disconnect Apify"
 msgstr "Apify trennen"
@@ -3413,12 +3464,12 @@ msgid "Disconnect Apify?"
 msgstr "Apify trennen?"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Disconnect PostBridge"
-msgstr "PostBridge trennen"
+#~ msgid "Disconnect PostBridge"
+#~ msgstr "PostBridge trennen"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Disconnect PostBridge?"
-msgstr "PostBridge trennen?"
+#~ msgid "Disconnect PostBridge?"
+#~ msgstr "PostBridge trennen?"
 
 #: src/components/connections/ProviderCard.jsx
 msgid "Disconnect your ChatGPT plan?"
@@ -3429,8 +3480,8 @@ msgid "discover"
 msgstr "entdecken"
 
 #: src/components/content/DiscoverPage.jsx
-msgid "Discover searches TikTok through Apify, on your own account, so the scraping is billed to you. Log in to Apify, copy your API token, and paste it here."
-msgstr "Discover durchsucht TikTok über Apify, mit deinem eigenen Konto, daher wird das Scraping dir berechnet. Melde dich bei Apify an, kopiere dein API-Token und füge es hier ein."
+#~ msgid "Discover searches TikTok through Apify, on your own account, so the scraping is billed to you. Log in to Apify, copy your API token, and paste it here."
+#~ msgstr "Discover durchsucht TikTok über Apify, mit deinem eigenen Konto, daher wird das Scraping dir berechnet. Melde dich bei Apify an, kopiere dein API-Token und füge es hier ein."
 
 #: src/components/content/DiscoverPage.jsx
 msgid "Discover what's working"
@@ -3638,8 +3689,12 @@ msgid "Duct forgets this endpoint and its key. Tiers set to one of its models fa
 msgstr "Duct vergisst diesen Endpunkt und seinen Schlüssel. Stufen, die eines seiner Modelle nutzen, weichen auf einen anderen verbundenen Anbieter aus."
 
 #: src/components/content/AccountsTab.jsx
-msgid "Duct forgets your API key and stops publishing through your PostBridge account. Your accounts stay connected in PostBridge."
-msgstr "Duct vergisst deinen API-Schlüssel und veröffentlicht nicht mehr über dein PostBridge-Konto. Deine Konten bleiben in PostBridge verbunden."
+msgid "Duct forgets your API key and stops publishing through your {scheduler} account. Your accounts stay connected in {scheduler}, and posts already scheduled there still go out."
+msgstr "Duct vergisst deinen API-Schlüssel und veröffentlicht nicht mehr über dein {scheduler}-Konto. Deine Konten bleiben in {scheduler} verbunden, und dort bereits geplante Beiträge gehen trotzdem raus."
+
+#: src/components/content/AccountsTab.jsx
+#~ msgid "Duct forgets your API key and stops publishing through your PostBridge account. Your accounts stay connected in PostBridge."
+#~ msgstr "Duct vergisst deinen API-Schlüssel und veröffentlicht nicht mehr über dein PostBridge-Konto. Deine Konten bleiben in PostBridge verbunden."
 
 #: src/components/content/DiscoverPage.jsx
 msgid "Duct forgets your Apify token and stops searching through your account. References you saved stay saved."
@@ -3686,12 +3741,20 @@ msgstr "Duct benötigt eine Verbindung. Deine Arbeit ist gespeichert und wird we
 #~ msgstr "Duct wählt pro Briefing: Markdown für eine kurze Lektüre, eine Seite, wenn Layout oder ein Diagramm es erfordert"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Duct posts through PostBridge, using your own account. Log in to PostBridge, copy your API key, and paste it here."
-msgstr "Duct veröffentlicht über PostBridge, mit deinem eigenen Konto. Melde dich bei PostBridge an, kopiere deinen API-Schlüssel und füge ihn hier ein."
+#~ msgid "Duct posts through PostBridge, using your own account. Log in to PostBridge, copy your API key, and paste it here."
+#~ msgstr "Duct veröffentlicht über PostBridge, mit deinem eigenen Konto. Melde dich bei PostBridge an, kopiere deinen API-Schlüssel und füge ihn hier ein."
 
 #: src/components/AppSidebar.jsx
 msgid "Duct posts through the OS — open System Settings to turn them on or off"
 msgstr "Duct sendet Benachrichtigungen über das Betriebssystem — öffne die Systemeinstellungen, um sie ein- oder auszuschalten"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Duct publishes through a scheduler you connect, with your own account. Connect one to schedule posts and see how they do."
+msgstr "Duct veröffentlicht über einen Planer, den du verbindest, mit deinem eigenen Konto. Verbinde einen, um Beiträge zu planen und zu sehen, wie sie laufen."
+
+#: src/components/content/AccountsTab.jsx
+msgid "Duct publishes through these, with your own accounts, and reads each post's numbers back from them."
+msgstr "Duct veröffentlicht über diese, mit deinen eigenen Konten, und liest die Zahlen jedes Beitrags von dort zurück."
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Duct reads \"last week\" and \"yesterday\" in {chosenZone}."
@@ -3991,6 +4054,10 @@ msgstr "Jeder Beitrag datiert, mit seiner Säule und wofür er ist. Öffne einen
 msgid "Every post in this plan has a draft."
 msgstr "Jeder Beitrag in diesem Plan hat einen Entwurf."
 
+#: src/components/content/AnalyticsView.jsx
+msgid "Every post, every account"
+msgstr "Jeder Beitrag, jedes Konto"
+
 #: src/app/(app)/artifacts/page.jsx
 msgid "Every report Duct writes lands here, with each version kept."
 msgstr "Jeder Bericht, den Duct schreibt, landet hier, wobei jede Version aufbewahrt wird."
@@ -4124,8 +4191,12 @@ msgid "Faster, lighter"
 msgstr "Schneller, leichter"
 
 #: src/components/content/AnalyticsView.jsx
-msgid "Fetching analytics from PostBridge…"
-msgstr "Analysen von PostBridge werden abgerufen…"
+#~ msgid "Fetching analytics from PostBridge…"
+#~ msgstr "Analysen von PostBridge werden abgerufen…"
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Fetching analytics from your schedulers…"
+msgstr "Analysen werden von deinen Planern abgerufen…"
 
 #: src/lib/auditEvents.js
 msgid "Fetching sitemap"
@@ -4150,6 +4221,10 @@ msgstr "Bericht wird fertiggestellt"
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Find models"
 msgstr "Modelle suchen"
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Find what's working on TikTok right now"
+msgstr "Finde, was auf TikTok gerade funktioniert"
 
 #: src/components/content/PostViewport.jsx
 msgid "Finding a source…"
@@ -5310,6 +5385,10 @@ msgstr "Aus dem Chat verknüpft — außerhalb der untenstehenden Filter"
 msgid "Linked styles"
 msgstr "Verknüpfte Stile"
 
+#: src/components/content/AccountsTab.jsx
+msgid "LinkedIn, X, TikTok, Instagram and YouTube, side by side."
+msgstr "LinkedIn, X, TikTok, Instagram und YouTube, nebeneinander."
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Links"
 msgstr "Links"
@@ -5327,8 +5406,12 @@ msgid "Live data as of {refreshedAt}"
 msgstr "Live-Daten Stand {refreshedAt}"
 
 #: src/components/content/AnalyticsView.jsx
-msgid "Live performance from PostBridge across your linked accounts."
-msgstr "Live-Performance von PostBridge über deine verknüpften Konten hinweg."
+#~ msgid "Live performance from PostBridge across your linked accounts."
+#~ msgstr "Live-Performance von PostBridge über deine verknüpften Konten hinweg."
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Live performance from your schedulers, across your linked accounts."
+msgstr "Aktuelle Leistung aus deinen Planern, über deine verknüpften Konten hinweg."
 
 #: src/components/LocalInsightDetail.jsx
 msgid "Live refresh ready"
@@ -6352,6 +6435,7 @@ msgstr "Noch nicht bestätigt"
 #: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/McpConnectors.jsx
+#: src/components/content/AccountsTab.jsx
 msgid "Not connected"
 msgstr "Nicht verbunden"
 
@@ -6640,8 +6724,20 @@ msgid "Now asks for a sign-in"
 msgstr "Fragt jetzt nach einer Anmeldung"
 
 #: src/components/content/AnalyticsView.jsx
-msgid "Numbers arrive once posts go out through PostBridge and the accounts are linked."
-msgstr "Zahlen kommen an, sobald Beiträge über PostBridge veröffentlicht und die Konten verknüpft sind."
+#~ msgid "Numbers arrive once posts go out through PostBridge and the accounts are linked."
+#~ msgstr "Zahlen kommen an, sobald Beiträge über PostBridge veröffentlicht und die Konten verknüpft sind."
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Numbers arrive once posts go out through your scheduler and the accounts are linked."
+msgstr "Zahlen kommen, sobald Beiträge über deinen Planer rausgehen und die Konten verknüpft sind."
+
+#: src/components/content/AccountsTab.jsx
+msgid "Numbers come back"
+msgstr "Die Zahlen kommen zurück"
+
+#: src/components/content/ConnectorGate.jsx
+msgid "Numbers from"
+msgstr "Zahlen von"
 
 #: src/components/AppSidebar.jsx
 #~ msgid "Off"
@@ -6800,6 +6896,10 @@ msgstr "Zu blockierende Operationstypen, kommagetrennt (optional)"
 #: src/components/insights/desk/DeskLists.jsx
 msgid "Open"
 msgstr "Öffnen"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Open {scheduler} →"
+msgstr "{scheduler} öffnen →"
 
 #: src/components/content/VendorKeyForm.jsx
 msgid "Open {vendor}"
@@ -6989,12 +7089,16 @@ msgid "Optional — the agent will ask if you leave this unset."
 msgstr "Optional — der Agent fragt nach, wenn du dies leer lässt."
 
 #: src/components/content/PlanDayOne.jsx
+msgid "Optional. Connect a scheduler and link an account, and the plan learns from your own results and posting times."
+msgstr "Optional. Verbinde einen Planer und verknüpfe ein Konto, dann lernt der Plan aus deinen eigenen Ergebnissen und Posting-Zeiten."
+
+#: src/components/content/PlanDayOne.jsx
 msgid "Optional. Connect Apify to search TikTok in Discover; the posts you save there shape the plan's topics."
 msgstr "Optional. Verbinde Apify, um TikTok in Discover zu durchsuchen; die Beiträge, die du dort speicherst, prägen die Themen des Plans."
 
 #: src/components/content/PlanDayOne.jsx
-msgid "Optional. Connect PostBridge and link an account, and the plan learns from your own results and posting times."
-msgstr "Optional. Verbinde PostBridge und verknüpfe ein Konto, und der Plan lernt aus deinen eigenen Ergebnissen und Veröffentlichungszeiten."
+#~ msgid "Optional. Connect PostBridge and link an account, and the plan learns from your own results and posting times."
+#~ msgstr "Optional. Verbinde PostBridge und verknüpfe ein Konto, und der Plan lernt aus deinen eigenen Ergebnissen und Veröffentlichungszeiten."
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Optional. Link one and the plan learns from your own results and posting times."
@@ -7198,6 +7302,10 @@ msgid "Pick a color"
 msgstr "Eine Farbe auswählen"
 
 #: src/components/content/PublishModal.jsx
+msgid "Pick accounts at one scheduler at a time."
+msgstr "Wähle jeweils Konten bei nur einem Planer."
+
+#: src/components/content/PublishModal.jsx
 msgid "Pick at least one account."
 msgstr "Wähle mindestens ein Konto aus."
 
@@ -7236,6 +7344,10 @@ msgstr "Den Hook auswählen..."
 #: src/components/content/BrandContextForm.jsx
 msgid "Pillar"
 msgstr "Säule"
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Pillars and formats ranked by what they earned, not by guesswork."
+msgstr "Säulen und Formate, sortiert nach dem, was sie gebracht haben, nicht nach Bauchgefühl."
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Pin"
@@ -7285,6 +7397,10 @@ msgstr "Geplant"
 msgid "Planning crawl"
 msgstr "Crawl planen"
 
+#: src/components/content/AnalyticsView.jsx
+msgid "Plans that learn"
+msgstr "Pläne, die lernen"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Playful"
 msgstr "Verspielt"
@@ -7326,17 +7442,21 @@ msgstr "Beitrag veröffentlicht"
 msgid "Post scheduled"
 msgstr "Beitrag geplant"
 
+#: src/components/content/AccountsTab.jsx
+msgid "Post to all your accounts from one place"
+msgstr "Poste von einem Ort aus auf all deine Konten"
+
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "PostBridge API key"
 #~ msgstr "PostBridge-API-Schlüssel"
 
 #: src/components/content/PostCard.jsx
-msgid "PostBridge didn't publish it at its scheduled time."
-msgstr "PostBridge hat den Beitrag nicht zur geplanten Zeit veröffentlicht."
+#~ msgid "PostBridge didn't publish it at its scheduled time."
+#~ msgstr "PostBridge hat den Beitrag nicht zur geplanten Zeit veröffentlicht."
 
 #: src/components/content/PostCard.jsx
-msgid "PostBridge didn't publish it: {failureReason}"
-msgstr "PostBridge hat den Beitrag nicht veröffentlicht: {failureReason}"
+#~ msgid "PostBridge didn't publish it: {failureReason}"
+#~ msgstr "PostBridge hat den Beitrag nicht veröffentlicht: {failureReason}"
 
 #: src/app/(app)/content/page.jsx
 msgid "posted"
@@ -7467,8 +7587,8 @@ msgid "Profile"
 msgstr "Profil"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Profile pictures are resolved from public handles. PostBridge doesn't expose bios or follower counts, so those aren't shown."
-msgstr "Profilbilder werden von öffentlichen Handles bezogen. PostBridge zeigt keine Biografien oder Follower-Zahlen an, daher werden diese nicht angezeigt."
+#~ msgid "Profile pictures are resolved from public handles. PostBridge doesn't expose bios or follower counts, so those aren't shown."
+#~ msgstr "Profilbilder werden von öffentlichen Handles bezogen. PostBridge zeigt keine Biografien oder Follower-Zahlen an, daher werden diese nicht angezeigt."
 
 #: src/components/workspace/Todos.jsx
 msgid "Progress"
@@ -7798,6 +7918,14 @@ msgstr "Neu verbinden"
 msgid "Reconnect a source"
 msgstr "Einen Connector erneut verbinden"
 
+#: src/components/content/PublishModal.jsx
+msgid "Reconnect it"
+msgstr "Neu verbinden"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Reconnect it in {scheduler}"
+msgstr "In {scheduler} neu verbinden"
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "Reconnect this source →"
 msgstr "Diese Quelle erneut verbinden →"
@@ -7839,6 +7967,7 @@ msgid "Redirects"
 msgstr "Weiterleitungen"
 
 #: src/components/connections/ProjectEntitySelect.jsx
+#: src/components/content/AccountsTab.jsx
 msgid "Refresh"
 msgstr "Aktualisieren"
 
@@ -7847,12 +7976,16 @@ msgid "Refresh from GitHub"
 msgstr "Von GitHub aktualisieren"
 
 #: src/components/content/AnalyticsView.jsx
-msgid "Refresh from PostBridge"
-msgstr "Von PostBridge aktualisieren"
+#~ msgid "Refresh from PostBridge"
+#~ msgstr "Von PostBridge aktualisieren"
 
 #: src/components/LocalInsightDetail.jsx
 msgid "Refresh now"
 msgstr "Jetzt aktualisieren"
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Refresh numbers"
+msgstr "Zahlen aktualisieren"
 
 #: src/components/LocalInsightDetail.jsx
 msgid "Refreshing live data..."
@@ -8396,6 +8529,10 @@ msgstr "Zahlen speichern"
 msgid "Save project"
 msgstr "Projekt speichern"
 
+#: src/components/content/DiscoverPage.jsx
+msgid "Save what's worth studying"
+msgstr "Speichere, was sich anzuschauen lohnt"
+
 #: src/lib/contentReview.js
 msgid "Save-worthiness"
 msgstr "Speichernswertigkeit"
@@ -8512,9 +8649,17 @@ msgstr "Geplant"
 msgid "Scheduled {scheduledOn}"
 msgstr "Geplant {scheduledOn}"
 
+#: src/components/content/AccountsTab.jsx
+msgid "Scheduled for you"
+msgstr "Für dich geplant"
+
 #: src/components/connections/ProviderCard.jsx
 msgid "Scheduled runs happen with no app open, so they always need a key."
 msgstr "Geplante Läufe finden statt, ohne dass die App geöffnet ist, daher benötigen sie immer einen Schlüssel."
+
+#: src/components/content/AccountsTab.jsx
+msgid "Scheduler"
+msgstr "Planer"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Schema"
@@ -8608,6 +8753,10 @@ msgstr "Suchanfragen, Klicks, Impressionen und durchschnittliche Position suchen
 msgid "Search sources"
 msgstr "Quellen suchen"
 
+#: src/components/content/DiscoverPage.jsx
+msgid "Search your niche"
+msgstr "Durchsuche deine Nische"
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "Searched memory"
 msgstr "Gedächtnis durchsucht"
@@ -8615,6 +8764,10 @@ msgstr "Gedächtnis durchsucht"
 #: src/components/workspace/ActivityRow.jsx
 msgid "Searched the web"
 msgstr "Das Web durchsucht"
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Searches run on your own Apify account, so the scraping is billed to you. The same search again within 30 minutes costs nothing."
+msgstr "Suchen laufen über dein eigenes Apify-Konto, das Scraping wird also dir berechnet. Dieselbe Suche innerhalb von 30 Minuten kostet nichts."
 
 #: src/components/connections/McpConnectors.jsx
 msgid "Searching the MCP Registry"
@@ -8639,6 +8792,10 @@ msgstr "Sicherheitsprüfung konnte nicht geladen werden. Aktualisiere und versuc
 #: src/app/(auth)/page.js
 msgid "Security verification"
 msgstr "Sicherheitsverifizierung"
+
+#: src/components/content/AnalyticsView.jsx
+msgid "See how every post did"
+msgstr "Sieh, wie jeder Beitrag lief"
 
 #: src/components/content/TextPostEditor.jsx
 msgid "see more"
@@ -8875,6 +9032,10 @@ msgstr "Abgerechnete Einnahmen, Abonnements, Rückerstattungen und Zahlungsergeb
 #: src/components/onboarding/Aqueduct.jsx
 msgid "Setup steps"
 msgstr "Einrichtungsschritte"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Several accounts, one project"
+msgstr "Mehrere Konten, ein Projekt"
 
 #: src/components/audit/ShareReport.jsx
 msgid "Share"
@@ -9924,6 +10085,10 @@ msgstr "Der Modellanbieter hat einen Fehler zurückgegeben. Versuche es erneut."
 msgid "The model took too long to answer. Try again."
 msgstr "Das Modell hat zu lange gebraucht, um zu antworten. Versuche es erneut."
 
+#: src/components/content/AnalyticsView.jsx
+msgid "The next plan leans on your own best posts and posting times."
+msgstr "Der nächste Plan stützt sich auf deine eigenen besten Beiträge und Posting-Zeiten."
+
 #: src/app/not-found.js
 msgid "The page you are looking for does not exist or has moved."
 msgstr "Die Seite, die du suchst, existiert nicht oder wurde verschoben."
@@ -9935,6 +10100,10 @@ msgstr "Die Pipeline endete unerwartet. Dein Teilbericht ist weiterhin verfügba
 #: src/components/audit/AuditReport.jsx
 msgid "The pipeline stopped early — your partial results are still visible above."
 msgstr "Die Pipeline wurde frühzeitig gestoppt – deine Teilergebnisse sind oben noch sichtbar."
+
+#: src/components/content/PublishModal.jsx
+msgid "The post and all its replies go out together."
+msgstr "Der Beitrag und alle seine Antworten gehen zusammen raus."
 
 #: src/components/content/PublishModal.jsx
 msgid "The post and its first reply go out together."
@@ -9963,6 +10132,10 @@ msgstr "Die öffentliche https-Adresse, unter der die API im Format von OpenAI l
 #: src/hooks/useAgentNotifications.js
 msgid "The reply is ready when you are."
 msgstr "Die Antwort ist bereit, wenn du es bist."
+
+#: src/components/content/DiscoverPage.jsx
+msgid "The research agent cites what you saved when it proposes topics."
+msgstr "Der Recherche-Agent zitiert, was du gespeichert hast, wenn er Themen vorschlägt."
 
 #: src/app/(app)/connections/page.jsx
 msgid "The revenue every other number should answer to."
@@ -10044,6 +10217,10 @@ msgstr "Der Token IST das Projekt. Clarity erlaubt 10 API-Anfragen pro Projekt p
 msgid "The tone, messaging, pillars and visual identity the content agent works from."
 msgstr "Der Ton, die Botschaften, Säulen und visuelle Identität, von denen der Content-Agent ausgeht."
 
+#: src/components/content/DiscoverPage.jsx
+msgid "The top posts for any hashtag, ranked by plays, saves or engagement."
+msgstr "Die Top-Beiträge zu jedem Hashtag, sortiert nach Aufrufen, Speicherungen oder Engagement."
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "The turn the model read was composed from these, on top of your message — the same way every run on this project starts."
 msgstr "Die vom Modell gelesene Runde setzte sich aus diesen zusammen, zusätzlich zu deiner Nachricht — so beginnt jeder Lauf in diesem Projekt."
@@ -10071,6 +10248,10 @@ msgstr "Dann melde dich über Ducts Eintrag in den MCP-Einstellungen von Cursor 
 #: src/components/settings/AgentAccess.jsx
 msgid "Then, in Claude Code, run <0>/mcp</0>, pick duct and choose Authenticate."
 msgstr "Dann, in Claude Code, führe <0>/mcp</0> aus, wähle Duct und wähle Authentifizieren."
+
+#: src/components/content/PublishModal.jsx
+msgid "There's no account to post from yet. In the Accounts tab, connect a scheduler and link the account you want to post from."
+msgstr "Es gibt noch kein Konto zum Posten. Verbinde im Tab „Konten“ einen Planer und verknüpfe das Konto, von dem du posten willst."
 
 #: src/components/ProjectMembers.jsx
 msgid "They lose access immediately. Anything they already created stays with the project. You can invite them again later."
@@ -10406,6 +10587,10 @@ msgstr "Top-Plays"
 msgid "Top posts by views"
 msgstr "Top-Beiträge nach Aufrufen"
 
+#: src/components/content/DiscoverPage.jsx
+msgid "Topics from real winners"
+msgstr "Themen aus echten Erfolgen"
+
 #: src/app/(app)/connections/page.jsx
 msgid "Traffic, sessions, engagement and conversions."
 msgstr "Traffic, Sessions, Engagement und Conversions."
@@ -10578,8 +10763,8 @@ msgid "Use {projectName}'s context"
 msgstr "Nutze den Kontext von {projectName}"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Use a different PostBridge key"
-msgstr "Anderen PostBridge-Schlüssel verwenden"
+#~ msgid "Use a different PostBridge key"
+#~ msgstr "Anderen PostBridge-Schlüssel verwenden"
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Use a token"
@@ -10746,6 +10931,10 @@ msgstr "Version"
 msgid "Version {version}"
 msgstr "Version {version}"
 
+#: src/components/content/PublishModal.jsx
+msgid "via {scheduler}"
+msgstr "über {scheduler}"
+
 #: src/components/content/AnalyticsView.jsx
 #: src/components/content/PostCard.jsx
 #: src/components/content/PostMiniCard.jsx
@@ -10792,6 +10981,14 @@ msgstr "Aufrufe nach Pillar"
 #: src/components/content/AnalyticsView.jsx
 msgid "Views over time"
 msgstr "Aufrufe im Zeitverlauf"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Views, likes and shares land on each post, and the next plan learns from them."
+msgstr "Aufrufe, Likes und Shares landen bei jedem Beitrag, und der nächste Plan lernt daraus."
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Views, likes, comments and shares in one table, wherever the post went out."
+msgstr "Aufrufe, Likes, Kommentare und Shares in einer Tabelle, egal wo der Beitrag erschien."
 
 #: src/components/content/PostMetricsForm.jsx
 msgid "Views, likes, comments and shares update on their own. Add the rest from the platform’s analytics; a sync never changes what you enter."
@@ -11044,6 +11241,7 @@ msgstr "Was gut läuft"
 msgid "What's stored for {providerName} isn't a key it accepts, so runs skip it. Choose Remove key, then paste a new one."
 msgstr "Was für {providerName} gespeichert ist, ist kein akzeptierter Schlüssel, daher überspringen Läufe ihn. Wähle Schlüssel entfernen, dann füge einen neuen ein."
 
+#: src/components/content/AnalyticsView.jsx
 #: src/components/content/SynthesisPanel.jsx
 msgid "What's working"
 msgstr "Was funktioniert"
@@ -11299,8 +11497,8 @@ msgstr "Du kannst diesen Tab schließen."
 #~ msgstr "Du hast noch keine Social-Media-Konten verbunden. Bitte deinen Admin, ein TikTok-/Instagram-/YouTube-Konto zu verbinden."
 
 #: src/components/content/PublishModal.jsx
-msgid "You don't have any social accounts connected yet. Connect the account you want to post from in the Accounts tab."
-msgstr "Du hast noch keine Social-Media-Konten verbunden. Verbinde das Konto, von dem du posten willst, im Tab Konten."
+#~ msgid "You don't have any social accounts connected yet. Connect the account you want to post from in the Accounts tab."
+#~ msgstr "Du hast noch keine Social-Media-Konten verbunden. Verbinde das Konto, von dem du posten willst, im Tab Konten."
 
 #: src/app/(start)/start/page.jsx
 msgid "You have more than one project for this site. Which should this audit update?"
@@ -11522,8 +11720,16 @@ msgid "Your one-line pitch"
 msgstr "Dein Einzeiler-Pitch"
 
 #: src/components/content/AccountsTab.jsx
-msgid "your PostBridge accounts"
-msgstr "deine PostBridge-Konten"
+msgid "Your own account and API key, stored encrypted. Duct posts only when you ask it to."
+msgstr "Dein eigenes Konto und dein API-Schlüssel, verschlüsselt gespeichert. Duct postet nur, wenn du darum bittest."
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Your own account and API key, stored encrypted. Numbers sync from the posts Duct publishes and the ones you post yourself."
+msgstr "Dein eigenes Konto und dein API-Schlüssel, verschlüsselt gespeichert. Die Zahlen kommen von den Beiträgen, die Duct veröffentlicht, und von denen, die du selbst postest."
+
+#: src/components/content/AccountsTab.jsx
+#~ msgid "your PostBridge accounts"
+#~ msgstr "deine PostBridge-Konten"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "your profile"
@@ -11549,6 +11755,14 @@ msgstr "Dein Bericht ist rechts. Bitte mich, einen Befund zu erklären, eine Lö
 msgid "Your saved key"
 msgstr "Dein gespeicherter Key"
 
+#: src/components/content/PostCard.jsx
+msgid "Your scheduler didn't publish it at its scheduled time."
+msgstr "Dein Planer hat ihn zur geplanten Zeit nicht veröffentlicht."
+
+#: src/components/content/PostCard.jsx
+msgid "Your scheduler didn't publish it: {failureReason}"
+msgstr "Dein Planer hat ihn nicht veröffentlicht: {failureReason}"
+
 #: src/app/(auth)/page.js
 #~ msgid "Your session ended. Sign in again and we'll take you back to where you were."
 #~ msgstr "Deine Sitzung ist abgelaufen. Melde dich erneut an und wir bringen dich zurück zu deiner letzten Position."
@@ -11564,6 +11778,10 @@ msgstr "Deine Website"
 #: src/components/onboarding/FrontDoor.jsx
 msgid "Your site has a problem list.<0>Duct finds it in about three minutes.</0>"
 msgstr "Deine Website hat eine Problemliste.<0>Duct findet sie in etwa drei Minuten.</0>"
+
+#: src/components/content/AccountsTab.jsx
+msgid "your social accounts"
+msgstr "deine Social-Media-Konten"
 
 #: src/components/models/TierSummary.jsx
 msgid "Your three tiers run on different keys — open Customise to see which."

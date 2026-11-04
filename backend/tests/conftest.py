@@ -211,6 +211,38 @@ def no_network(request, monkeypatch):
 
 
 # ---------------------------------------------------------------------------
+# Vendor keys come from the test, never the developer's env file
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def no_operator_vendor_keys(request, monkeypatch):
+    """Blank the instance's own Apify, PostBridge and Zernio keys offline.
+
+    Configs reads backend/.env.local on purpose (see ``clean_env``), and local
+    dev is where ``VendorKey.server()`` spends the instance's key, so a real
+    POSTBRIDGE_API_KEY or ZERNIO_API_KEY there connected a scheduler in every
+    test. The publishing tests that assert nothing is connected, or that an
+    account belongs to one scheduler, failed in a developer's checkout and
+    passed in CI. An empty variable outranks the env file, and a test's own
+    ``Configs(postbridge_api_key=...)`` outranks both.
+    """
+    if request.node.get_closest_marker("live"):
+        yield
+        return
+    from config import get_configs
+    from service.apify.client import APIFY_KEY
+    from service.post_bridge.client import POSTBRIDGE_KEY
+    from service.zernio.client import ZERNIO_KEY
+
+    for key in (APIFY_KEY, POSTBRIDGE_KEY, ZERNIO_KEY):
+        monkeypatch.setenv(key.setting.upper(), "")
+    get_configs.cache_clear()
+    yield
+    get_configs.cache_clear()
+
+
+# ---------------------------------------------------------------------------
 # Rate limits start every test with an empty window
 # ---------------------------------------------------------------------------
 

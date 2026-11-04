@@ -1,6 +1,6 @@
 # Data model
 
-**Author:** Shirish Kadam, Claude · **Updated:** 2026-11-03
+**Author:** Shirish Kadam, Claude · **Updated:** 2026-11-04
 
 Every table the backend owns, what it records, and which one answers a given
 question. The models in [`backend/models/`](../../backend/models/) are the
@@ -65,7 +65,7 @@ this list: LangGraph creates and migrates its own tables outside Alembic
 |---|---|
 | `agent_conversations` | one thread: agent type, project, run status, compaction summary, `seq` allocator, optional link to the artifact it edits |
 | `agent_events` | the thread's transcript (see above). `kind` is free text: `user`, `assistant`, `thinking`, `tool_use`, `tool_result`, `question`, `answer`, `context`, `compacted`, `memory_*`, `failure` |
-| `activity_logs` | see above. The project's audit trail: change-set transitions, GTM publishes, artifact versions, a scheduled post PostBridge failed (whose reason the post's card reads back). Not a mirror of tool calls |
+| `activity_logs` | see above. The project's audit trail: change-set transitions, GTM publishes, artifact versions, a scheduled post its scheduler failed to publish (whose reason the post's card reads back). Not a mirror of tool calls |
 | `agent_contexts` | per project and agent, a JSON blob of working notes the agent carries between runs |
 | `artifacts` | every version of every output (brief, report, image): `group_id` is the identity, one immutable row per version; bytes in object storage, never a public URL |
 | `project_memories` | see above. Scopes `user`, `project`, `artifact` in one table |
@@ -83,11 +83,11 @@ this list: LangGraph creates and migrates its own tables outside Alembic
 | Table | Holds |
 |---|---|
 | `content_plans` | a content plan and its strategy |
-| `content_posts` | one post, whatever platform it is bound for: type (slideshow, video, image, text), its words (`caption`), its own follow-ups under it (`replies`: an X reply, a LinkedIn first comment), slides (none for a text post), a video post's chosen clip (`video`), status, performance counts (`perf`: keys per `service/content_metrics.py`; typed-in ones listed in `manual_keys`, which no sync overwrites), its last pre-publish review, and the TikTok it was cloned from (`clone_source`). What differs by platform is rules, not columns: `agents/content/channels.RULES` |
+| `content_posts` | one post, whatever platform it is bound for: type (slideshow, video, image, text), its words (`caption`), its own follow-ups under it (`replies`: an X reply, a LinkedIn first comment), slides (none for a text post), a video post's chosen clip (`video`), status, performance counts (`perf`: keys per `service/content_metrics.py`; typed-in ones listed in `manual_keys`, which no sync overwrites), its last pre-publish review, and the TikTok it was cloned from (`clone_source`), and once sent, the scheduler holding it (`publisher`) with its ids there. What differs by platform is rules, not columns: `agents/content/channels.RULES` |
 | `content_assets` | generated images and video clips (every take), uploads and references |
 | `content_formats` | a project's library of post formats |
 | `content_avatars` | a project's library of avatars |
-| `content_social_links` | social accounts linked for publishing |
+| `content_social_links` | social accounts linked for publishing, each at the scheduler that holds it (`publisher`: PostBridge, Zernio) |
 
 ### Growth experiments
 

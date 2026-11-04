@@ -26,6 +26,11 @@ published without one. The same script, with no arguments, holds
 
 ### Added
 
+- **Post through Zernio or PostBridge, whichever you connect.** Social
+  schedulers are connectors now, and none is on by default. Zernio adds whole
+  threads on X and Threads, a first comment on LinkedIn, Instagram and
+  Facebook, and numbers from LinkedIn and X. Accounts, Analytics and Discover
+  open on a page saying what they do and what unlocks them, not on an error.
 - **Local models on your own Ollama.** A self-hosted Duct pointed at an Ollama
   server runs on any model pulled there that can call tools, with no key and
   no bill: pick one for a tier like any other model. Duct asks Ollama for a

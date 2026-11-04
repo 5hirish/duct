@@ -26,12 +26,12 @@ describe("reading a metric", () => {
 
 describe("the form", () => {
   it("asks for the four counts only when PostBridge did not publish the post", () => {
-    expect(editableMetrics({ post_bridge_post_id: "pb_1" })).toEqual([
+    expect(editableMetrics({ publisher_post_id: "pb_1" })).toEqual([
       "saves", "reach", "avg_watch_time", "completion_rate",
     ]);
-    expect(editableMetrics({ post_bridge_post_id: "" })).toHaveLength(8);
+    expect(editableMetrics({ publisher_post_id: "" })).toHaveLength(8);
     // Published through PostBridge to a platform it does not report: typed in.
-    expect(editableMetrics({ post_bridge_post_id: "pb_1", channel: { synced_metrics: false } })).toHaveLength(8);
+    expect(editableMetrics({ publisher_post_id: "pb_1", channel: { synced_metrics: false } })).toHaveLength(8);
   });
 
   it("sends only what changed, and null for a cleared value", () => {

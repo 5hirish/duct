@@ -110,6 +110,19 @@ def test_legacy_create_all_install_is_adopted_and_upgraded(clean_env, tmp_path):
         conn.execute(sa.text("ALTER TABLE execution_change_sets DROP COLUMN tool_call_id"))
         conn.execute(sa.text("DROP INDEX uq_artifacts_tool_call"))
         conn.execute(sa.text("ALTER TABLE artifacts DROP COLUMN tool_call_id"))
+        conn.execute(sa.text("ALTER TABLE content_posts DROP COLUMN publisher"))
+        conn.execute(sa.text("ALTER TABLE content_posts RENAME COLUMN publisher_post_id TO post_bridge_post_id"))
+        conn.execute(sa.text("ALTER TABLE content_posts RENAME COLUMN publisher_metrics_id TO post_bridge_result_id"))
+        # A column in a table-level UNIQUE cannot be dropped on SQLite, so the
+        # linked accounts go back to the shape they shipped in, whole.
+        conn.execute(sa.text("DROP TABLE content_social_links"))
+        conn.execute(sa.text(
+            "CREATE TABLE content_social_links (id CHAR(32) NOT NULL PRIMARY KEY, project_id CHAR(32) NOT NULL"
+            " REFERENCES projects (id) ON DELETE CASCADE, external_account_id VARCHAR NOT NULL,"
+            " platform VARCHAR DEFAULT '' NOT NULL, username VARCHAR DEFAULT '' NOT NULL,"
+            " created_at DATETIME NOT NULL, updated_at DATETIME NOT NULL,"
+            " CONSTRAINT uq_content_social_links_project_account UNIQUE (project_id, external_account_id))"
+        ))
 
     assert "alembic_version" not in set(inspect(engine).get_table_names())
     assert "memory_paused" not in _columns(engine, "projects")
@@ -138,6 +151,9 @@ def test_legacy_create_all_install_is_adopted_and_upgraded(clean_env, tmp_path):
     # The text-channel renames kept their data's column, under the new name.
     posts = _columns(engine, "content_posts")
     assert {"replies", "title", "published_url"} <= posts
+    # The scheduler renames too, and every linked account names its scheduler.
+    assert {"publisher", "publisher_post_id", "publisher_metrics_id"} <= posts
+    assert "publisher" in _columns(engine, "content_social_links")
     assert not {"tiktok_title", "tiktok_url"} & posts
     assert _stamped_revision(engine) is not None
 

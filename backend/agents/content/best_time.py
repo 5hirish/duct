@@ -5,9 +5,10 @@ channel, from the account's own history once there is enough of it.
 a *plan's* visual posts should aim at, in UTC, from visual posts only, so a
 tweet's numbers never steer a TikTok plan. This one picks a concrete time for
 one draft on one channel, from that channel's own posted history. X and
-LinkedIn numbers are typed in by hand (PostBridge reports neither), so their
-history stays thin for a long time and the default carries most accounts at
-first; a channel PostBridge syncs fills it sooner. The reason rides with the
+LinkedIn numbers are typed in by hand unless the scheduler reports them (Zernio
+does, PostBridge does not), so their history can stay thin for a long time and
+the default carries most accounts at first; a channel the scheduler syncs
+fills it sooner. The reason rides with the
 slot, so the person knows which kind they are looking at.
 
 Times are the reader's own: the history's hours are read in their timezone,

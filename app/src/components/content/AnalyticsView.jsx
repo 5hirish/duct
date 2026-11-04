@@ -15,6 +15,7 @@ import {
 import {
   ArrowUpDown,
   BarChart2,
+  CalendarRange,
   ExternalLink,
   Eye,
   Heart,
@@ -27,7 +28,8 @@ import { msg } from "@lingui/core/macro";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import { getContentAnalytics } from "@/lib/contentApi";
+import { connectVendorKey, getContentAnalytics, listPublishers } from "@/lib/contentApi";
+import ConnectorGate, { schedulerOptions } from "./ConnectorGate";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
 import { compactNumber, dayKey, formatDate, formatNumber, titleCase, toDate } from "@/lib/format";
 
@@ -61,11 +63,23 @@ export default function AnalyticsView({ projectId, onLinkAccounts }) {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [sortKey, setSortKey] = useState("views"); // views | likes | date
+  // null until known, and left null when it can't be read: the tab then
+  // loads as before and the analytics call says what went wrong.
+  const [publishers, setPublishers] = useState(null);
+  const noScheduler = Array.isArray(publishers) && !publishers.some((p) => p.connected);
 
   const load = useCallback(async (refresh = false) => {
     if (refresh) setRefreshing(true); else setLoading(true);
     setError("");
     try {
+      const pubs = await listPublishers(projectId).catch(() => null);
+      setPublishers(pubs);
+      // With no scheduler there is nothing to read, and asking would only
+      // put the server's "connect one" sentence where the gate says it better.
+      if (Array.isArray(pubs) && !pubs.some((p) => p.connected)) {
+        setRows([]);
+        return;
+      }
       const data = await getContentAnalytics(projectId, { refresh });
       setRows(Array.isArray(data) ? data : []);
     } catch (e) {
@@ -134,6 +148,15 @@ export default function AnalyticsView({ projectId, onLinkAccounts }) {
     return copy;
   }, [rows, sortKey]);
 
+  async function connect(publisher, apiKey) {
+    await connectVendorKey(publisher.id, apiKey);
+    load(false);
+  }
+
+  if (!loading && noScheduler) {
+    return <AnalyticsGate publishers={publishers} onConnect={connect} />;
+  }
+
   return (
     <div className="max-w-6xl space-y-6">
       {/* Header */}
@@ -141,12 +164,12 @@ export default function AnalyticsView({ projectId, onLinkAccounts }) {
         <div>
           <h2 className="text-lg font-semibold tracking-tight"><Trans>Analytics</Trans></h2>
           <p className="text-sm text-muted-foreground">
-            <Trans>Live performance from PostBridge across your linked accounts.</Trans>
+            <Trans>Live performance from your schedulers, across your linked accounts.</Trans>
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={() => load(true)} disabled={refreshing || loading}>
           <RefreshCw className={`size-3.5 ${refreshing ? "animate-spin" : ""}`} />
-          {refreshing ? <Trans>Syncing…</Trans> : <Trans>Refresh from PostBridge</Trans>}
+          {refreshing ? <Trans>Syncing…</Trans> : <Trans>Refresh numbers</Trans>}
         </Button>
       </div>
 
@@ -154,7 +177,7 @@ export default function AnalyticsView({ projectId, onLinkAccounts }) {
 
       {loading ? (
         <div className="flex items-center justify-center gap-2 py-24 text-sm text-muted-foreground">
-          <RefreshCw className="size-4 animate-spin" /> <Trans>Fetching analytics from PostBridge…</Trans>
+          <RefreshCw className="size-4 animate-spin" /> <Trans>Fetching analytics from your schedulers…</Trans>
         </div>
       ) : rows.length === 0 ? (
         // "Link the accounts in the Accounts tab" was a correct instruction
@@ -172,12 +195,12 @@ export default function AnalyticsView({ projectId, onLinkAccounts }) {
               )}
               <Button variant="ghost" size="sm" onClick={() => load(true)} disabled={refreshing}>
                 <RefreshCw className={`size-3.5 ${refreshing ? "animate-spin" : ""}`} aria-hidden="true" />
-                {refreshing ? <Trans>Syncing…</Trans> : <Trans>Refresh from PostBridge</Trans>}
+                {refreshing ? <Trans>Syncing…</Trans> : <Trans>Refresh numbers</Trans>}
               </Button>
             </>
           }
         >
-          <Trans>Numbers arrive once posts go out through PostBridge and the accounts are linked.</Trans>
+          <Trans>Numbers arrive once posts go out through your scheduler and the accounts are linked.</Trans>
         </EmptyState>
       ) : (
         <>
@@ -325,6 +348,43 @@ export default function AnalyticsView({ projectId, onLinkAccounts }) {
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+/** Analytics before any scheduler is connected: what the tab shows once one
+ *  is, and the schedulers that unlock it. Exported for /preview. */
+export function AnalyticsGate({ publishers, onConnect }) {
+  const { t } = useLingui();
+  return (
+    <div className="max-w-6xl">
+      <ConnectorGate
+        title={t`See how every post did`}
+        lead={t`Connect a scheduler and Duct reads each post's numbers back: per post, per account, per pillar.`}
+        benefits={[
+          { icon: Eye, title: t`Every post, every account`, text: t`Views, likes, comments and shares in one table, wherever the post went out.` },
+          { icon: TrendingUp, title: t`What's working`, text: t`Pillars and formats ranked by what they earned, not by guesswork.` },
+          { icon: CalendarRange, title: t`Plans that learn`, text: t`The next plan leans on your own best posts and posting times.` },
+        ]}
+        connectLabel={t`Connect a scheduler to start`}
+        connectors={schedulerOptions(publishers, onConnect)}
+        footnote={t`Your own account and API key, stored encrypted. Numbers sync from the posts Duct publishes and the ones you post yourself.`}
+        example={<AnalyticsExample />}
+      />
+    </div>
+  );
+}
+
+// The stat row as it reads with a few weeks of posts behind it, drawn by the
+// real cards. Invented numbers, framed as an example by ConnectorGate.
+function AnalyticsExample() {
+  const { t } = useLingui();
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      <StatCard icon={Eye} label={t`Views`} value={formatNumber(48210)} accent="text-info" />
+      <StatCard icon={Heart} label={t`Likes`} value={formatNumber(3140)} accent="text-destructive" />
+      <StatCard icon={MessageCircle} label={t`Comments`} value={formatNumber(412)} accent="text-brand" />
+      <StatCard icon={Share2} label={t`Shares`} value={formatNumber(920)} accent="text-success" />
     </div>
   );
 }

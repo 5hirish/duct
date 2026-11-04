@@ -599,6 +599,10 @@ msgstr "{pillarCount, plural, one {# 件のコンテンツピラー} other {# �
 msgid "{planAccount} — no API key, no extra bill."
 msgstr "{planAccount} — APIキー不要、追加料金なし。"
 
+#: src/components/content/AccountsTab.jsx
+msgid "{platform} · via {scheduler}"
+msgstr "{platform} · {scheduler} 経由"
+
 #: src/components/content/PlanBoard.jsx
 #~ msgid "{postCount, plural, one {# post} other {# posts}}"
 #~ msgstr "{postCount, plural, other {# 投稿}}"
@@ -1106,6 +1110,10 @@ msgstr "実行中にエラーが発生しました"
 msgid "A saved key is already in use. Paste a new one to replace it, or choose Remove key to forget it."
 msgstr "保存済みのキーはすでに使用中です。新しいキーを貼り付けて置き換えるか、「キーを削除」を選択して忘れてください。"
 
+#: src/components/content/DiscoverPage.jsx
+msgid "A saved post keeps its slides and numbers, so they're there when you plan."
+msgstr "保存した投稿はスライドと数値を保持するので、プランを立てるときに参照できます。"
+
 #: src/components/settings/AgentConsent.jsx
 msgid "A sign-in request lasts ten minutes. Start again from your agent."
 msgstr "サインインリクエストは10分間有効です。エージェントからやり直してください。"
@@ -1273,6 +1281,10 @@ msgstr "タグを追加、Enterキーを押してください…"
 #: src/components/workspace/AgentChat.jsx
 msgid "Add a thought — it goes in at the next step"
 msgstr "思考を追加 — 次のステップで反映されます"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Add accounts in {scheduler}"
+msgstr "{scheduler} でアカウントを追加"
 
 #: src/components/connections/BringAnyTool.jsx
 #: src/components/connections/McpConnectDialog.jsx
@@ -1722,6 +1734,10 @@ msgstr "{selectedCount} 件を選択済みを承認"
 #: src/components/execution/ChangeSetCard.jsx
 msgid "Approve & apply"
 msgstr "承認して適用"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Approve a draft and it goes out at its best time. No copying and pasting."
+msgstr "下書きを承認すると、最適な時間に公開されます。コピー＆ペーストは不要です。"
 
 #: src/app/(app)/execute/page.jsx
 msgid "Approve all"
@@ -2617,6 +2633,7 @@ msgstr "確認"
 
 #: src/components/connections/ConnectorTile.jsx
 #: src/components/connections/McpConnectDialog.jsx
+#: src/components/content/AccountsTab.jsx
 #: src/components/content/VendorKeyForm.jsx
 msgid "Connect"
 msgstr "接続"
@@ -2629,10 +2646,31 @@ msgstr "{label}を接続"
 msgid "Connect {label}?"
 msgstr "{label}を接続しますか？"
 
+#: src/components/content/ConnectorGate.jsx
+msgid "Connect {vendor}"
+msgstr "{vendor} を接続"
+
 #: src/app/(start)/start/page.jsx
 #: src/components/onboarding/ProviderRequiredCard.jsx
 msgid "Connect a model"
 msgstr "モデルを接続"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "Connect a scheduler"
+msgstr "スケジューラーを接続"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Connect a scheduler and Duct publishes for you: link several accounts, schedule each post for its best time, and see how it did."
+msgstr "スケジューラーを接続すると、Duct が代わりに投稿します。複数のアカウントをリンクし、各投稿を最適な時間に予約し、成果を確認できます。"
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Connect a scheduler and Duct reads each post's numbers back: per post, per account, per pillar."
+msgstr "スケジューラーを接続すると、Duct が各投稿の数値を読み取ります。投稿ごと、アカウントごと、柱ごとに。"
+
+#: src/components/content/AccountsTab.jsx
+#: src/components/content/AnalyticsView.jsx
+msgid "Connect a scheduler to start"
+msgstr "まずスケジューラーを接続してください"
 
 #: src/components/insights/desk/DeskCards.jsx
 #: src/components/insights/desk/DeskDayOne.jsx
@@ -2663,13 +2701,17 @@ msgstr "エージェントを接続"
 msgid "Connect anyway"
 msgstr "このまま接続"
 
+#: src/components/content/DiscoverPage.jsx
+msgid "Connect Apify and Duct searches TikTok for you, by hashtag or a region's trending feed, so your plan starts from posts that are already landing."
+msgstr "Apify を接続すると、Duct がハッシュタグや地域のトレンドフィードで TikTok を検索し、すでに反応を得ている投稿からプランを始められます。"
+
 #: src/app/(app)/connections/page.jsx
 msgid "Connect GitHub"
 msgstr "GitHubを接続"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Connect in PostBridge →"
-msgstr "PostBridgeで接続 →"
+#~ msgid "Connect in PostBridge →"
+#~ msgstr "PostBridgeで接続 →"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Connect one data source"
@@ -2693,8 +2735,12 @@ msgid "Connect your first source"
 msgstr "最初のソースを接続"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Connect your LinkedIn, X, TikTok, Instagram or YouTube account in PostBridge, then refresh to link it to this project."
-msgstr "PostBridgeでLinkedIn、X、TikTok、Instagram、またはYouTubeのアカウントを接続し、更新してこのプロジェクトにリンクします。"
+#~ msgid "Connect your LinkedIn, X, TikTok, Instagram or YouTube account in PostBridge, then refresh to link it to this project."
+#~ msgstr "PostBridgeでLinkedIn、X、TikTok、Instagram、またはYouTubeのアカウントを接続し、更新してこのプロジェクトにリンクします。"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Connect your LinkedIn, X, TikTok, Instagram or YouTube account in your scheduler, then refresh to link it to this project."
+msgstr "スケジューラーで LinkedIn、X、TikTok、Instagram、YouTube のアカウントを接続してから、更新してこのプロジェクトにリンクしてください。"
 
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "Connect your PostBridge account"
@@ -2706,6 +2752,7 @@ msgstr "PostBridgeでLinkedIn、X、TikTok、Instagram、またはYouTubeのア�
 #: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/McpConnectors.jsx
+#: src/components/content/AccountsTab.jsx
 msgid "Connected"
 msgstr "接続済み"
 
@@ -3404,6 +3451,10 @@ msgstr "{host} を切断しますか？"
 msgid "Disconnect {rowName}"
 msgstr "{rowName} の接続を切断"
 
+#: src/components/content/AccountsTab.jsx
+msgid "Disconnect {scheduler}?"
+msgstr "{scheduler} の接続を解除しますか？"
+
 #: src/components/content/DiscoverPage.jsx
 msgid "Disconnect Apify"
 msgstr "Apifyの接続を解除"
@@ -3413,12 +3464,12 @@ msgid "Disconnect Apify?"
 msgstr "Apifyの接続を解除しますか？"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Disconnect PostBridge"
-msgstr "PostBridgeの接続を解除"
+#~ msgid "Disconnect PostBridge"
+#~ msgstr "PostBridgeの接続を解除"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Disconnect PostBridge?"
-msgstr "PostBridgeの接続を解除しますか？"
+#~ msgid "Disconnect PostBridge?"
+#~ msgstr "PostBridgeの接続を解除しますか？"
 
 #: src/components/connections/ProviderCard.jsx
 msgid "Disconnect your ChatGPT plan?"
@@ -3429,8 +3480,8 @@ msgid "discover"
 msgstr "発見"
 
 #: src/components/content/DiscoverPage.jsx
-msgid "Discover searches TikTok through Apify, on your own account, so the scraping is billed to you. Log in to Apify, copy your API token, and paste it here."
-msgstr "DiscoverはあなたのApifyアカウントを通じてTikTokを検索するため、スクレイピング費用はあなたに請求されます。Apifyにログインし、APIトークンをコピーしてここに貼り付けてください。"
+#~ msgid "Discover searches TikTok through Apify, on your own account, so the scraping is billed to you. Log in to Apify, copy your API token, and paste it here."
+#~ msgstr "DiscoverはあなたのApifyアカウントを通じてTikTokを検索するため、スクレイピング費用はあなたに請求されます。Apifyにログインし、APIトークンをコピーしてここに貼り付けてください。"
 
 #: src/components/content/DiscoverPage.jsx
 msgid "Discover what's working"
@@ -3638,8 +3689,12 @@ msgid "Duct forgets this endpoint and its key. Tiers set to one of its models fa
 msgstr "Duct はこのエンドポイントとそのキーを削除します。そのモデルを使っているティアは、接続済みの別のプロバイダーに切り替わります。"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Duct forgets your API key and stops publishing through your PostBridge account. Your accounts stay connected in PostBridge."
-msgstr "DuctはAPIキーを削除し、PostBridgeアカウント経由での公開を停止します。アカウントはPostBridgeに接続されたままです。"
+msgid "Duct forgets your API key and stops publishing through your {scheduler} account. Your accounts stay connected in {scheduler}, and posts already scheduled there still go out."
+msgstr "Duct は API キーを削除し、{scheduler} アカウント経由での投稿を停止します。アカウントは {scheduler} に接続されたままで、そこで予約済みの投稿はそのまま公開されます。"
+
+#: src/components/content/AccountsTab.jsx
+#~ msgid "Duct forgets your API key and stops publishing through your PostBridge account. Your accounts stay connected in PostBridge."
+#~ msgstr "DuctはAPIキーを削除し、PostBridgeアカウント経由での公開を停止します。アカウントはPostBridgeに接続されたままです。"
 
 #: src/components/content/DiscoverPage.jsx
 msgid "Duct forgets your Apify token and stops searching through your account. References you saved stay saved."
@@ -3686,12 +3741,20 @@ msgstr "Ductには接続が必要です。あなたの作業は保存されて�
 #~ msgstr "Ductがブリーフごとに選択: 短い読み物にはMarkdown、レイアウトやグラフが適している場合はページ"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Duct posts through PostBridge, using your own account. Log in to PostBridge, copy your API key, and paste it here."
-msgstr "DuctはPostBridgeを通じて、あなた自身のアカウントで投稿します。PostBridgeにログインしてAPIキーをコピーし、ここに貼り付けてください。"
+#~ msgid "Duct posts through PostBridge, using your own account. Log in to PostBridge, copy your API key, and paste it here."
+#~ msgstr "DuctはPostBridgeを通じて、あなた自身のアカウントで投稿します。PostBridgeにログインしてAPIキーをコピーし、ここに貼り付けてください。"
 
 #: src/components/AppSidebar.jsx
 msgid "Duct posts through the OS — open System Settings to turn them on or off"
 msgstr "DuctはOSを介して投稿します。オン/オフはシステム設定で切り替えてください。"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Duct publishes through a scheduler you connect, with your own account. Connect one to schedule posts and see how they do."
+msgstr "Duct は、あなたが接続したスケジューラーからあなた自身のアカウントで投稿します。接続すると、投稿を予約して反応を確認できます。"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Duct publishes through these, with your own accounts, and reads each post's numbers back from them."
+msgstr "Duct はこれらを通じてあなた自身のアカウントで投稿し、各投稿の数値をそこから読み取ります。"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Duct reads \"last week\" and \"yesterday\" in {chosenZone}."
@@ -3991,6 +4054,10 @@ msgstr "すべての投稿には日付、ピラー、目的が記載されてい
 msgid "Every post in this plan has a draft."
 msgstr "このプランのすべての投稿には下書きがあります。"
 
+#: src/components/content/AnalyticsView.jsx
+msgid "Every post, every account"
+msgstr "すべての投稿、すべてのアカウント"
+
 #: src/app/(app)/artifacts/page.jsx
 msgid "Every report Duct writes lands here, with each version kept."
 msgstr "Duct が作成するすべてのレポートはここに保存され、各バージョンが保持されます。"
@@ -4124,8 +4191,12 @@ msgid "Faster, lighter"
 msgstr "より速く、より軽く"
 
 #: src/components/content/AnalyticsView.jsx
-msgid "Fetching analytics from PostBridge…"
-msgstr "PostBridgeからアナリティクスを取得中…"
+#~ msgid "Fetching analytics from PostBridge…"
+#~ msgstr "PostBridgeからアナリティクスを取得中…"
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Fetching analytics from your schedulers…"
+msgstr "スケジューラーから分析を取得しています…"
 
 #: src/lib/auditEvents.js
 msgid "Fetching sitemap"
@@ -4150,6 +4221,10 @@ msgstr "レポートを最終処理中"
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Find models"
 msgstr "モデルを探す"
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Find what's working on TikTok right now"
+msgstr "いま TikTok で伸びている投稿を見つける"
 
 #: src/components/content/PostViewport.jsx
 msgid "Finding a source…"
@@ -5310,6 +5385,10 @@ msgstr "チャットからリンク — 以下のフィルターの対象外"
 msgid "Linked styles"
 msgstr "リンク済みスタイル"
 
+#: src/components/content/AccountsTab.jsx
+msgid "LinkedIn, X, TikTok, Instagram and YouTube, side by side."
+msgstr "LinkedIn、X、TikTok、Instagram、YouTube を並べて管理。"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Links"
 msgstr "リンク"
@@ -5327,8 +5406,12 @@ msgid "Live data as of {refreshedAt}"
 msgstr "{refreshedAt}時点のライブデータ"
 
 #: src/components/content/AnalyticsView.jsx
-msgid "Live performance from PostBridge across your linked accounts."
-msgstr "リンク済みアカウント全体のPostBridgeからのライブパフォーマンス。"
+#~ msgid "Live performance from PostBridge across your linked accounts."
+#~ msgstr "リンク済みアカウント全体のPostBridgeからのライブパフォーマンス。"
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Live performance from your schedulers, across your linked accounts."
+msgstr "リンク済みのアカウント全体の、スケジューラーからのリアルタイムの成果です。"
 
 #: src/components/LocalInsightDetail.jsx
 msgid "Live refresh ready"
@@ -6353,6 +6436,7 @@ msgstr "未確認"
 #: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/McpConnectors.jsx
+#: src/components/content/AccountsTab.jsx
 msgid "Not connected"
 msgstr "未接続"
 
@@ -6641,8 +6725,20 @@ msgid "Now asks for a sign-in"
 msgstr "現在サインインを求めています"
 
 #: src/components/content/AnalyticsView.jsx
-msgid "Numbers arrive once posts go out through PostBridge and the accounts are linked."
-msgstr "投稿がPostBridgeを通じて公開され、アカウントがリンクされると、数値が表示されます。"
+#~ msgid "Numbers arrive once posts go out through PostBridge and the accounts are linked."
+#~ msgstr "投稿がPostBridgeを通じて公開され、アカウントがリンクされると、数値が表示されます。"
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Numbers arrive once posts go out through your scheduler and the accounts are linked."
+msgstr "投稿がスケジューラーから公開され、アカウントがリンクされると数値が届きます。"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Numbers come back"
+msgstr "数値が戻ってくる"
+
+#: src/components/content/ConnectorGate.jsx
+msgid "Numbers from"
+msgstr "数値の取得元"
 
 #: src/components/AppSidebar.jsx
 #~ msgid "Off"
@@ -6801,6 +6897,10 @@ msgstr "ブロックする操作タイプ、カンマ区切り（オプション
 #: src/components/insights/desk/DeskLists.jsx
 msgid "Open"
 msgstr "開く"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Open {scheduler} →"
+msgstr "{scheduler} を開く →"
 
 #: src/components/content/VendorKeyForm.jsx
 msgid "Open {vendor}"
@@ -6990,12 +7090,16 @@ msgid "Optional — the agent will ask if you leave this unset."
 msgstr "オプション — これを設定しない場合、エージェントが尋ねます。"
 
 #: src/components/content/PlanDayOne.jsx
+msgid "Optional. Connect a scheduler and link an account, and the plan learns from your own results and posting times."
+msgstr "任意です。スケジューラーを接続してアカウントをリンクすると、プランがあなた自身の成果と投稿時間から学習します。"
+
+#: src/components/content/PlanDayOne.jsx
 msgid "Optional. Connect Apify to search TikTok in Discover; the posts you save there shape the plan's topics."
 msgstr "オプション。Apifyを接続してDiscoverでTikTokを検索します。そこで保存した投稿がプランのトピックを形成します。"
 
 #: src/components/content/PlanDayOne.jsx
-msgid "Optional. Connect PostBridge and link an account, and the plan learns from your own results and posting times."
-msgstr "オプション。PostBridgeを接続してアカウントをリンクすると、プランはあなたの結果と投稿時間から学習します。"
+#~ msgid "Optional. Connect PostBridge and link an account, and the plan learns from your own results and posting times."
+#~ msgstr "オプション。PostBridgeを接続してアカウントをリンクすると、プランはあなたの結果と投稿時間から学習します。"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Optional. Link one and the plan learns from your own results and posting times."
@@ -7199,6 +7303,10 @@ msgid "Pick a color"
 msgstr "色を選択"
 
 #: src/components/content/PublishModal.jsx
+msgid "Pick accounts at one scheduler at a time."
+msgstr "一度に選べるのは 1 つのスケジューラーのアカウントだけです。"
+
+#: src/components/content/PublishModal.jsx
 msgid "Pick at least one account."
 msgstr "少なくとも1つのアカウントを選択してください。"
 
@@ -7237,6 +7345,10 @@ msgstr "フックを選択中..."
 #: src/components/content/BrandContextForm.jsx
 msgid "Pillar"
 msgstr "ピラー"
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Pillars and formats ranked by what they earned, not by guesswork."
+msgstr "柱とフォーマットを、勘ではなく実際の成果で順位付けします。"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Pin"
@@ -7286,6 +7398,10 @@ msgstr "計画済み"
 msgid "Planning crawl"
 msgstr "クロール計画中"
 
+#: src/components/content/AnalyticsView.jsx
+msgid "Plans that learn"
+msgstr "学習するプラン"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Playful"
 msgstr "遊び心のある"
@@ -7327,17 +7443,21 @@ msgstr "投稿済み"
 msgid "Post scheduled"
 msgstr "投稿スケジュール済み"
 
+#: src/components/content/AccountsTab.jsx
+msgid "Post to all your accounts from one place"
+msgstr "すべてのアカウントに 1 か所から投稿"
+
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "PostBridge API key"
 #~ msgstr "PostBridgeのAPIキー"
 
 #: src/components/content/PostCard.jsx
-msgid "PostBridge didn't publish it at its scheduled time."
-msgstr "PostBridgeは予定時刻に投稿しませんでした。"
+#~ msgid "PostBridge didn't publish it at its scheduled time."
+#~ msgstr "PostBridgeは予定時刻に投稿しませんでした。"
 
 #: src/components/content/PostCard.jsx
-msgid "PostBridge didn't publish it: {failureReason}"
-msgstr "PostBridgeは投稿しませんでした: {failureReason}"
+#~ msgid "PostBridge didn't publish it: {failureReason}"
+#~ msgstr "PostBridgeは投稿しませんでした: {failureReason}"
 
 #: src/app/(app)/content/page.jsx
 msgid "posted"
@@ -7468,8 +7588,8 @@ msgid "Profile"
 msgstr "プロフィール"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Profile pictures are resolved from public handles. PostBridge doesn't expose bios or follower counts, so those aren't shown."
-msgstr "プロフィール画像は公開ハンドルから取得されます。PostBridgeは自己紹介やフォロワー数を公開しないため、これらは表示されません。"
+#~ msgid "Profile pictures are resolved from public handles. PostBridge doesn't expose bios or follower counts, so those aren't shown."
+#~ msgstr "プロフィール画像は公開ハンドルから取得されます。PostBridgeは自己紹介やフォロワー数を公開しないため、これらは表示されません。"
 
 #: src/components/workspace/Todos.jsx
 msgid "Progress"
@@ -7799,6 +7919,14 @@ msgstr "再接続"
 msgid "Reconnect a source"
 msgstr "ソースを再接続"
 
+#: src/components/content/PublishModal.jsx
+msgid "Reconnect it"
+msgstr "再接続してください"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Reconnect it in {scheduler}"
+msgstr "{scheduler} で再接続してください"
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "Reconnect this source →"
 msgstr "このソースを再接続 →"
@@ -7840,6 +7968,7 @@ msgid "Redirects"
 msgstr "リダイレクト"
 
 #: src/components/connections/ProjectEntitySelect.jsx
+#: src/components/content/AccountsTab.jsx
 msgid "Refresh"
 msgstr "更新"
 
@@ -7848,12 +7977,16 @@ msgid "Refresh from GitHub"
 msgstr "GitHubから更新"
 
 #: src/components/content/AnalyticsView.jsx
-msgid "Refresh from PostBridge"
-msgstr "PostBridgeから更新"
+#~ msgid "Refresh from PostBridge"
+#~ msgstr "PostBridgeから更新"
 
 #: src/components/LocalInsightDetail.jsx
 msgid "Refresh now"
 msgstr "今すぐ更新"
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Refresh numbers"
+msgstr "数値を更新"
 
 #: src/components/LocalInsightDetail.jsx
 msgid "Refreshing live data..."
@@ -8397,6 +8530,10 @@ msgstr "数値を保存"
 msgid "Save project"
 msgstr "プロジェクトを保存"
 
+#: src/components/content/DiscoverPage.jsx
+msgid "Save what's worth studying"
+msgstr "参考になる投稿を保存"
+
 #: src/lib/contentReview.js
 msgid "Save-worthiness"
 msgstr "保存価値"
@@ -8513,9 +8650,17 @@ msgstr "スケジュール済み"
 msgid "Scheduled {scheduledOn}"
 msgstr "{scheduledOn}にスケジュール済み"
 
+#: src/components/content/AccountsTab.jsx
+msgid "Scheduled for you"
+msgstr "自動で予約"
+
 #: src/components/connections/ProviderCard.jsx
 msgid "Scheduled runs happen with no app open, so they always need a key."
 msgstr "スケジュールされた実行はアプリが開いていなくても行われるため、常にキーが必要です。"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Scheduler"
+msgstr "スケジューラー"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Schema"
@@ -8609,6 +8754,10 @@ msgstr "クエリ、クリック数、表示回数、平均掲載順位を検索
 msgid "Search sources"
 msgstr "ソースを検索"
 
+#: src/components/content/DiscoverPage.jsx
+msgid "Search your niche"
+msgstr "ニッチを検索"
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "Searched memory"
 msgstr "メモリを検索しました"
@@ -8616,6 +8765,10 @@ msgstr "メモリを検索しました"
 #: src/components/workspace/ActivityRow.jsx
 msgid "Searched the web"
 msgstr "ウェブを検索"
+
+#: src/components/content/DiscoverPage.jsx
+msgid "Searches run on your own Apify account, so the scraping is billed to you. The same search again within 30 minutes costs nothing."
+msgstr "検索はあなた自身の Apify アカウントで実行されるため、スクレイピング費用はあなたに請求されます。30 分以内の同じ検索は無料です。"
 
 #: src/components/connections/McpConnectors.jsx
 msgid "Searching the MCP Registry"
@@ -8640,6 +8793,10 @@ msgstr "セキュリティチェックの読み込みに失敗しました。更
 #: src/app/(auth)/page.js
 msgid "Security verification"
 msgstr "セキュリティ認証"
+
+#: src/components/content/AnalyticsView.jsx
+msgid "See how every post did"
+msgstr "すべての投稿の成果を確認"
 
 #: src/components/content/TextPostEditor.jsx
 msgid "see more"
@@ -8876,6 +9033,10 @@ msgstr "確定収益、サブスクリプション、払い戻し、支払い結
 #: src/components/onboarding/Aqueduct.jsx
 msgid "Setup steps"
 msgstr "セットアップ手順"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Several accounts, one project"
+msgstr "複数のアカウント、1 つのプロジェクト"
 
 #: src/components/audit/ShareReport.jsx
 msgid "Share"
@@ -9925,6 +10086,10 @@ msgstr "モデルプロバイダーがエラーを返しました。もう一度
 msgid "The model took too long to answer. Try again."
 msgstr "モデルの応答に時間がかかりすぎました。もう一度お試しください。"
 
+#: src/components/content/AnalyticsView.jsx
+msgid "The next plan leans on your own best posts and posting times."
+msgstr "次のプランは、あなた自身の好成績の投稿と投稿時間をもとに作られます。"
+
 #: src/app/not-found.js
 msgid "The page you are looking for does not exist or has moved."
 msgstr "お探しのページは存在しないか、移動しました。"
@@ -9936,6 +10101,10 @@ msgstr "パイプラインが予期せず終了しました。部分的なレポ
 #: src/components/audit/AuditReport.jsx
 msgid "The pipeline stopped early — your partial results are still visible above."
 msgstr "パイプラインが途中で停止しました — 部分的な結果は上記で引き続き表示されます。"
+
+#: src/components/content/PublishModal.jsx
+msgid "The post and all its replies go out together."
+msgstr "投稿とすべての返信が一緒に公開されます。"
 
 #: src/components/content/PublishModal.jsx
 msgid "The post and its first reply go out together."
@@ -9964,6 +10133,10 @@ msgstr "OpenAI 形式の API を提供する公開 https アドレス（通常�
 #: src/hooks/useAgentNotifications.js
 msgid "The reply is ready when you are."
 msgstr "準備ができたら返信できます。"
+
+#: src/components/content/DiscoverPage.jsx
+msgid "The research agent cites what you saved when it proposes topics."
+msgstr "リサーチエージェントは、トピックを提案するときに保存した投稿を引用します。"
 
 #: src/app/(app)/connections/page.jsx
 msgid "The revenue every other number should answer to."
@@ -10045,6 +10218,10 @@ msgstr "トークンはプロジェクトそのものです。Clarityはプロ�
 msgid "The tone, messaging, pillars and visual identity the content agent works from."
 msgstr "コンテンツエージェントが作業の基盤とするトーン、メッセージング、柱、ビジュアルアイデンティティ。"
 
+#: src/components/content/DiscoverPage.jsx
+msgid "The top posts for any hashtag, ranked by plays, saves or engagement."
+msgstr "任意のハッシュタグの上位投稿を、再生数・保存数・エンゲージメントで並べ替え。"
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "The turn the model read was composed from these, on top of your message — the same way every run on this project starts."
 msgstr "モデルが読み込んだターンは、これらの情報とあなたのメッセージに基づいて構成されました。これは、このプロジェクトのすべての実行が開始される方法と同じです。"
@@ -10072,6 +10249,10 @@ msgstr "次に、CursorのMCP設定にあるDuctのエントリからサイン�
 #: src/components/settings/AgentAccess.jsx
 msgid "Then, in Claude Code, run <0>/mcp</0>, pick duct and choose Authenticate."
 msgstr "次に、Claude Codeで、<0>/mcp</0>を実行し、Ductを選択して「認証」を選びます。"
+
+#: src/components/content/PublishModal.jsx
+msgid "There's no account to post from yet. In the Accounts tab, connect a scheduler and link the account you want to post from."
+msgstr "投稿に使うアカウントがまだありません。「アカウント」タブでスケジューラーを接続し、投稿したいアカウントをリンクしてください。"
 
 #: src/components/ProjectMembers.jsx
 msgid "They lose access immediately. Anything they already created stays with the project. You can invite them again later."
@@ -10407,6 +10588,10 @@ msgstr "人気の再生"
 msgid "Top posts by views"
 msgstr "閲覧数上位の投稿"
 
+#: src/components/content/DiscoverPage.jsx
+msgid "Topics from real winners"
+msgstr "実際のヒット投稿からトピックを"
+
 #: src/app/(app)/connections/page.jsx
 msgid "Traffic, sessions, engagement and conversions."
 msgstr "トラフィック、セッション、エンゲージメント、コンバージョン。"
@@ -10579,8 +10764,8 @@ msgid "Use {projectName}'s context"
 msgstr "{projectName}のコンテキストを使用する"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Use a different PostBridge key"
-msgstr "別のPostBridgeキーを使う"
+#~ msgid "Use a different PostBridge key"
+#~ msgstr "別のPostBridgeキーを使う"
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Use a token"
@@ -10747,6 +10932,10 @@ msgstr "バージョン"
 msgid "Version {version}"
 msgstr "バージョン {version}"
 
+#: src/components/content/PublishModal.jsx
+msgid "via {scheduler}"
+msgstr "{scheduler} 経由"
+
 #: src/components/content/AnalyticsView.jsx
 #: src/components/content/PostCard.jsx
 #: src/components/content/PostMiniCard.jsx
@@ -10793,6 +10982,14 @@ msgstr "ピラー別の表示回数"
 #: src/components/content/AnalyticsView.jsx
 msgid "Views over time"
 msgstr "期間別の表示回数"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Views, likes and shares land on each post, and the next plan learns from them."
+msgstr "再生数・いいね・シェアが各投稿に反映され、次のプランはそこから学習します。"
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Views, likes, comments and shares in one table, wherever the post went out."
+msgstr "投稿先にかかわらず、再生数・いいね・コメント・シェアを 1 つの表で。"
 
 #: src/components/content/PostMetricsForm.jsx
 msgid "Views, likes, comments and shares update on their own. Add the rest from the platform’s analytics; a sync never changes what you enter."
@@ -11045,6 +11242,7 @@ msgstr "うまくいっていること"
 msgid "What's stored for {providerName} isn't a key it accepts, so runs skip it. Choose Remove key, then paste a new one."
 msgstr "{providerName}に保存されているキーは受け入れられないため、実行はスキップされます。「キーを削除」を選択し、新しいキーを貼り付けてください。"
 
+#: src/components/content/AnalyticsView.jsx
 #: src/components/content/SynthesisPanel.jsx
 msgid "What's working"
 msgstr "効果的なもの"
@@ -11300,8 +11498,8 @@ msgstr "このタブを閉じることができます。"
 #~ msgstr "ソーシャルアカウントがまだ接続されていません。管理者にご依頼いただき、TikTok / Instagram / YouTube アカウントを接続してください。"
 
 #: src/components/content/PublishModal.jsx
-msgid "You don't have any social accounts connected yet. Connect the account you want to post from in the Accounts tab."
-msgstr "まだソーシャルアカウントが接続されていません。［アカウント］タブで、投稿に使うアカウントを接続してください。"
+#~ msgid "You don't have any social accounts connected yet. Connect the account you want to post from in the Accounts tab."
+#~ msgstr "まだソーシャルアカウントが接続されていません。［アカウント］タブで、投稿に使うアカウントを接続してください。"
 
 #: src/app/(start)/start/page.jsx
 msgid "You have more than one project for this site. Which should this audit update?"
@@ -11523,8 +11721,16 @@ msgid "Your one-line pitch"
 msgstr "ワンラインピッチ"
 
 #: src/components/content/AccountsTab.jsx
-msgid "your PostBridge accounts"
-msgstr "PostBridgeアカウント"
+msgid "Your own account and API key, stored encrypted. Duct posts only when you ask it to."
+msgstr "あなた自身のアカウントと API キーは暗号化して保存されます。Duct は依頼されたときだけ投稿します。"
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Your own account and API key, stored encrypted. Numbers sync from the posts Duct publishes and the ones you post yourself."
+msgstr "あなた自身のアカウントと API キーは暗号化して保存されます。数値は Duct が公開した投稿と、あなたが自分で投稿したものの両方から同期されます。"
+
+#: src/components/content/AccountsTab.jsx
+#~ msgid "your PostBridge accounts"
+#~ msgstr "PostBridgeアカウント"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "your profile"
@@ -11550,6 +11756,14 @@ msgstr "レポートは右側にあります。指摘事項の説明、修正案
 msgid "Your saved key"
 msgstr "保存されたキー"
 
+#: src/components/content/PostCard.jsx
+msgid "Your scheduler didn't publish it at its scheduled time."
+msgstr "スケジューラーが予定時刻に公開しませんでした。"
+
+#: src/components/content/PostCard.jsx
+msgid "Your scheduler didn't publish it: {failureReason}"
+msgstr "スケジューラーが公開しませんでした: {failureReason}"
+
 #: src/app/(auth)/page.js
 #~ msgid "Your session ended. Sign in again and we'll take you back to where you were."
 #~ msgstr "セッションが終了しました。再度サインインすると、元の場所に戻ります。"
@@ -11565,6 +11779,10 @@ msgstr "サイト"
 #: src/components/onboarding/FrontDoor.jsx
 msgid "Your site has a problem list.<0>Duct finds it in about three minutes.</0>"
 msgstr "あなたのサイトには問題リストがあります。<0>Ductは約3分でそれを見つけます。</0>"
+
+#: src/components/content/AccountsTab.jsx
+msgid "your social accounts"
+msgstr "ソーシャルアカウント"
 
 #: src/components/models/TierSummary.jsx
 msgid "Your three tiers run on different keys — open Customise to see which."

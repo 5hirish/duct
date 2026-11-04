@@ -7,9 +7,10 @@
 // argument: information beats a picture). What decides how good a plan is —
 // the brand's voice, its pillars, its accounts' own results, the TikToks
 // already working in its niche — is mostly there after the audit except the
-// two connectors, PostBridge and Apify, which are the user's own keys. The
-// keys are pasted right in the row, because a tab hop to connect one is
-// where a first plan gets abandoned. Showing
+// connectors that are the user's own keys: a scheduler (PostBridge, Zernio)
+// and Apify. Apify's key is pasted right in the row, because a tab hop to
+// connect one is where a first plan gets abandoned; a scheduler is a choice
+// between several, so its row opens the Accounts tab that makes it. Showing
 // those back, by name, does two jobs: it proves the plan will be about this
 // brand rather than a template, and it turns "set up a content plan" into
 // "you are most of the way there". Nothing here is a gate: the agent asks
@@ -62,14 +63,16 @@ const SAMPLE_DAYS_AGO = 2;
  *   - brand: GET /content/brand, or null when it could not be read (the
  *     checklist is left out rather than claiming nothing is set)
  *   - accounts: linked social accounts, or null when unknown
- *   - vendors: { [VENDOR]: { connected, is_owner } | null } — the PostBridge
- *     and Apify key status; null leaves that connector's ask out
+ *   - scheduler: { connected } | null — whether any scheduler is connected;
+ *     null leaves its ask out
+ *   - vendors: { [VENDOR]: { connected, is_owner } | null } — the Apify key
+ *     status; null leaves that connector's ask out
  *   - onStart({ start, days }): open a plan session for the period picked
  *   - onOpenTab(tab): go to the Content Studio tab that fixes a source
  *   - onConnectVendor(vendor, apiKey): save a key; rejects with the vendor's
  *     reason, which the row shows under the field
  */
-export default function PlanDayOne({ brand, accounts, vendors, onStart, onOpenTab, onConnectVendor }) {
+export default function PlanDayOne({ brand, accounts, scheduler, vendors, onStart, onOpenTab, onConnectVendor }) {
   const { t, i18n } = useLingui();
   // The month in progress first, the run's own default; the rest are the
   // shorter horizons someone may plan instead.
@@ -124,6 +127,7 @@ export default function PlanDayOne({ brand, accounts, vendors, onStart, onOpenTa
           <Sources
             brand={brand}
             accounts={accounts}
+            scheduler={scheduler}
             vendors={vendors}
             onOpenTab={onOpenTab}
             onConnectVendor={onConnectVendor}
@@ -151,7 +155,7 @@ export default function PlanDayOne({ brand, accounts, vendors, onStart, onOpenTa
   );
 }
 
-function Sources({ brand, accounts, vendors, onOpenTab, onConnectVendor }) {
+function Sources({ brand, accounts, scheduler, vendors, onOpenTab, onConnectVendor }) {
   const cb = brand.content_brand || {};
   const voice = [cb.tone, cb.value_prop, brand.description].find((v) => typeof v === "string" && v.trim()) || "";
   const pillars = (Array.isArray(brand.content_pillars?.items) ? brand.content_pillars.items : [])
@@ -159,7 +163,7 @@ function Sources({ brand, accounts, vendors, onOpenTab, onConnectVendor }) {
     .filter(Boolean);
   const pillarCount = pillars.length;
   const linked = Array.isArray(accounts) ? accounts : [];
-  const postBridge = vendors?.[VENDOR.POSTBRIDGE] || null;
+
   const apify = vendors?.[VENDOR.APIFY] || null;
   // A connector whose status could not be read is left out of the list and
   // the count, rather than asked for when it may already be connected.
@@ -242,25 +246,19 @@ function Sources({ brand, accounts, vendors, onOpenTab, onConnectVendor }) {
                 <span className="text-2xs text-muted-foreground">+{linked.length - SHOWN_ACCOUNTS}</span>
               )}
             </div>
-          ) : postBridge && !postBridge.connected ? (
-            // Accounts are linked through PostBridge, so without its key
-            // "Link an account" would open a tab that asks for the key first.
+          ) : scheduler && !scheduler.connected ? (
+            // Accounts are linked at a scheduler, so without one "Link an
+            // account" opens a tab that asks which scheduler first, and says so.
             <Detail
               text={
                 <Trans>
-                  Optional. Connect PostBridge and link an account, and the plan learns from your own
+                  Optional. Connect a scheduler and link an account, and the plan learns from your own
                   results and posting times.
                 </Trans>
               }
-            >
-              <VendorKeyForm
-                layout="inline"
-                vendor="PostBridge"
-                homeUrl={VENDOR_HOME[VENDOR.POSTBRIDGE]}
-                isOwner={postBridge.is_owner}
-                onConnect={connect(VENDOR.POSTBRIDGE)}
-              />
-            </Detail>
+              action={<Trans>Connect a scheduler</Trans>}
+              onClick={() => onOpenTab?.(PlanSourceTab.ACCOUNTS)}
+            />
           ) : (
             <Detail
               text={<Trans>Optional. Link one and the plan learns from your own results and posting times.</Trans>}

@@ -57,7 +57,7 @@ export const STATUS_META = Object.freeze({
   },
   // Destructive like Discarded, because it is the other way a post ends up
   // not going out; the label tells the two apart, and only this one asks
-  // for something (publishing again once PostBridge's reason is fixed).
+  // for something (publishing again once the scheduler's reason is fixed).
   [PostStatus.FAILED]: {
     label: POST_STATUS_LABELS[PostStatus.FAILED],
     badgeVariant: "destructive",

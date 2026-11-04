@@ -21,7 +21,9 @@ from sqlmodel import Session, select
 import agents.content.tools as content_tools
 import routes.content as content_routes
 import service.auth as auth_service
-import service.post_bridge as post_bridge
+from service.post_bridge.publisher import POSTBRIDGE
+from service.publishers import MediaRef, RemotePost, RemoteStatus
+from tests.fakes import connect_scheduler
 import service.videos as videos
 from agents import engines
 from agents.content.events import ContentEvent
@@ -335,7 +337,11 @@ def test_a_clip_is_never_a_cards_thumbnail(db, engine, owner, project, post, upl
 
 
 class FakePostBridge:
-    def __init__(self):
+    """PostBridge at the publishing port: what was uploaded and created."""
+
+    spec = POSTBRIDGE
+
+    def __init__(self, *_args):
         self.uploads: list[tuple[str, str, int]] = []
         self.posts: list = []
 
@@ -345,22 +351,19 @@ class FakePostBridge:
     async def __aexit__(self, *exc):
         return False
 
-    async def create_upload_url(self, *, name, mime_type, size_bytes):
-        self.uploads.append((name, mime_type, size_bytes))
-        return SimpleNamespace(upload_url="https://upload.example/x", media_id=f"m{len(self.uploads)}")
+    async def upload(self, data, *, name, mime_type):
+        self.uploads.append((name, mime_type, len(data)))
+        return MediaRef(id=f"m{len(self.uploads)}", mime_type=mime_type)
 
-    async def upload_media(self, data, url, content_type):
-        return None
-
-    async def create_post(self, request):
-        self.posts.append(request)
-        return SimpleNamespace(id="pb_1", status=SimpleNamespace(value="scheduled"), scheduled_at=None)
+    async def create_post(self, post):
+        self.posts.append(post)
+        return RemotePost(id="pb_1", status=RemoteStatus.SCHEDULED)
 
 
 @pytest.fixture
-def post_bridge_fake(monkeypatch):
+def post_bridge_fake(monkeypatch, db, owner):
     fake = FakePostBridge()
-    monkeypatch.setattr(post_bridge, "client_for_user", lambda _uid, _db: fake)
+    connect_scheduler(monkeypatch, db, owner.id, lambda _key: fake)
     return fake
 
 
@@ -380,7 +383,7 @@ def test_publishing_a_video_post_sends_its_cut_and_nothing_else(
     assert res.status_code == 200, res.text
     ((name, mime, size),) = post_bridge_fake.uploads
     assert mime == "video/mp4" and name == f"{cut}.mp4" and size == len(CLIP)
-    assert post_bridge_fake.posts[0].media == ["m1"]
+    assert [m.id for m in post_bridge_fake.posts[0].media] == ["m1"]
 
 
 def test_a_video_post_with_no_clip_is_not_published(db, engine, owner, project, post, post_bridge_fake):

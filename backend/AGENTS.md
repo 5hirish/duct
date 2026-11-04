@@ -709,13 +709,14 @@ agents/
     │                     replies that publish, media and metrics support; the
     │                     writer, both publish paths, the review and the app (via
     │                     `post.channel`) all read it. A new channel is a row there
-    ├── publishing.py   — the PostBridge request, the media and its bookkeeping, shared
+    ├── publishing.py   — what a post sends its scheduler (service/publishers: PostBridge,
+    │                     Zernio), the media and its bookkeeping, shared
     │                     by the agent's publish_post and the publish route (#272, then
     │                     a button that read only local disk, were the two drifting
     │                     apart): pick_media chooses the files (a video's cut, each
     │                     slide's composed render), load_media reads them through
     │                     service.storage (R2 or disk), send_post uploads and creates.
-    │                     While PostBridge holds a scheduled post, push_edit / cancel,
+    │                     While a scheduler holds a scheduled post, push_edit / cancel,
     │                     which every edit, unschedule, delete and agent rewrite goes
     │                     through so the queue never publishes stale words or a deleted
     │                     post; once its time has passed, settle, which the post
@@ -1229,7 +1230,9 @@ don't fit.
   the Ads `login_customer_id`, shown back as `settings` on the row.
 - `service/content_metrics.py` — a content post's `perf`, read and written one
   way. `METRIC_ALIASES` reconciles the three key conventions in the column
-  (PostBridge's `view_count`, migrated `avgWatchTime`, hand-entered `saves`);
+  (PostBridge's `view_count`, migrated `avgWatchTime`, hand-entered `saves`;
+  Zernio's adapter writes the canonical names, and leaves out a metric it
+  reports as 0 where the platform reports none, because unknown is not zero);
   read through `metric_value`, never `perf.get("…")`. Two writers:
   `merge_manual_metrics` (the `/metrics` route) records typed-in metrics under
   `manual_keys`, and `merge_synced_metrics` (the sync route and the agent's
@@ -1240,7 +1243,7 @@ don't fit.
   retry, backoff, rate-limit pacing, error typing. A new connector declares
   an `Endpoint` and an `ApiError` subclass and writes no transport code;
   auth headers, query encoding and pagination stay vendor-side. Not for
-  `service/apify` or `service/post_bridge` — those are async, hold a
+  `service/apify`, `service/post_bridge` or `service/zernio` — those are async, hold a
   long-lived client, and need no retry.
 - `service/ollama.py` + `Provider.OLLAMA` — open models on the instance's own
   Ollama server (`OLLAMA_BASE_URL`), the one chat provider with no key: the
@@ -1277,8 +1280,31 @@ don't fit.
   (constrained decoding, which a small model follows where it ignores a forced
   tool call) and falls back to a tool call; and the price is
   unknown (`None`), since a hosted endpoint bills and Duct cannot say what.
+- `service/publishers/` — social schedulers as connectors (PostBridge,
+  Zernio). Nothing publishes by default: a project publishes through a
+  scheduler its owner connected, each linked account names the scheduler that
+  holds it (`content_social_links.publisher`), and a sent post records its own
+  (`content_posts.publisher`, `publisher_post_id`), because only the scheduler
+  holding a queued post can change or cancel it. `base.py` is Duct's
+  vocabulary (`Publisher` protocol, `RemotePost`, `RemoteStatus`,
+  `PublisherError`, `PostAlreadyOut`) and every caller speaks only it; each
+  adapter lives beside its client (`service/post_bridge/publisher.py`,
+  `service/zernio/publisher.py`) and translates the vendor's ids, statuses,
+  replies and metric names. What a scheduler can do differs per platform and
+  is data on its `PublisherSpec` — `replies` (PostBridge: one on X and
+  Threads; Zernio: a thread on X and Threads, a first comment on LinkedIn,
+  Instagram, Facebook), `metrics` (Zernio reports LinkedIn and X too),
+  `strips_links` (PostBridge on X) — which `channel_payload` folds into what
+  the app reads, so `channels.RULES` keeps only the platform's own facts.
+  Adding a scheduler is an adapter, a spec in `registry._SPECS`, a `VendorKey`
+  and a transport fake in `tests/fakes.py`; the routes, the agent's tools and
+  the Accounts tab read the registry. Adapters speak REST, not the vendors' MCP
+  servers: publishing runs the typed checks, the approval and the bookkeeping
+  around a call, and settling, metrics and the Analytics tab run with no model
+  in the loop at all. A scheduler Duct does not support is still reachable
+  through the MCP client (`service/mcp/`), behind its approval card.
 - `service/vendor_keys.py` — a third-party key each user brings for
-  themselves (PostBridge, Apify). A request spends the key its project's
+  themselves (PostBridge, Zernio, Apify). A request spends the key its project's
   owner saved; the instance's env key only where `allow_server_provider_keys()`
   holds, because on a hosted instance it is Duct's account and every signup
   would be spending it. A new user-facing vendor declares one `VendorKey`

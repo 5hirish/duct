@@ -32,7 +32,7 @@ ACTIVITY_SOURCES = {"user", "agent", "auto"}
 # What kind of thing happened. "conversation" and "connector" are reserved for
 # follow-on call sites. "project" is an outside agent drafting the project's
 # profile through the MCP server, which the person should be able to see.
-# "content" is a scheduled post PostBridge failed to publish, and its reason,
+# "content" is a scheduled post its scheduler failed to publish, and its reason,
 # which the post's card reads back (routes/content.py, _failure_reasons).
 ACTIVITY_CATEGORIES = {"execution", "artifact", "conversation", "connector", "project", "content"}
 

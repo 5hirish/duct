@@ -9,7 +9,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 
 /**
- * Connecting a vendor Duct uses through the user's own account — PostBridge
+ * Connecting a vendor Duct uses through the user's own account — a scheduler
  * to publish, Apify to search TikTok. Hosted Duct never spends a key of its
  * own on someone's request, so the first step is theirs: the API key.
  *

@@ -25,7 +25,7 @@ Format + avatar library CRUD:
   GET/POST/PATCH/DELETE  /api/content/avatars[/{id}]
 
 Deferred:
-  · PostBridge publish + sync routes — Phase 4
+  · scheduler publish + sync routes (service/publishers: PostBridge, Zernio)
   · Uploads + assets routes — Phase 4b
 """
 
@@ -58,15 +58,20 @@ from agents.content.voice_rules import VoiceRules, voice_problems, voice_rules_o
 from agents.content.publishing import (
     MediaUnreadable,
     PostAlreadyOut,
+    ProjectPublishing,
     cancel,
-    is_queued_at_postbridge,
+    chosen_publisher,
+    is_queued_at_publisher,
     is_text_only,
     load_media,
     metrics_sync,
     no_sync_message,
+    not_synced_yet,
     pick_media,
+    project_publishing,
     publish_blockers,
     publish_failure,
+    pull_metrics,
     push_edit,
     record_published,
     send_post,
@@ -121,7 +126,10 @@ from service import storage
 from service.activity import log_activity
 from service.analytics import capture_event
 from service.auth import get_current_user, get_user_provider_keys
-from service.content_metrics import merge_manual_metrics, merge_synced_metrics
+from service.content_metrics import merge_manual_metrics
+from service.publishers import PublisherError, PublisherSpec, Target
+from service.publishers.registry import NO_SCHEDULER, all_specs, publisher_for, spec_for
+from service.vendor_keys import VendorNotConnected
 from service.membership import get_project_for_user, get_project_row_for_user
 from service.provider_keys import stored_keys_for
 from utils.dates import now_iso, utcnow
@@ -147,9 +155,10 @@ router = APIRouter(tags=["content"], dependencies=[Depends(get_current_user)])
 _SESSION_TTL = 1800  # 30 minutes
 _session_created_at: dict[str, float] = {}
 
-# In-process TTL cache for the PostBridge-backed analytics endpoint. That call
-# paginates PostBridge's external API (≤2000 records + post-results) on every
-# request; without this, opening the Analytics tab hammers PostBridge each time.
+# In-process TTL cache for the scheduler-backed analytics endpoint. That call
+# paginates each connected scheduler's API (PostBridge's ≤2000 records plus
+# post-results) on every request; without this, opening the Analytics tab
+# hammers them each time.
 # refresh=true bypasses + repopulates; writes that change analytics clear it.
 _ANALYTICS_TTL = 120.0  # seconds
 _analytics_cache: dict[UUID, tuple[float, list]] = {}
@@ -1212,11 +1221,13 @@ class PostOut(BaseModel):
     scheduled_at:  str | None
     published_url: str
     published_via: str
-    # Set when PostBridge published the post, which is when its counts sync —
-    # so the metrics form shows them rather than asking for them.
-    post_bridge_post_id: str = ""
-    # PostBridge's reason, while the post is failed; "" otherwise, and "" when
-    # PostBridge gave none (the card words that case itself).
+    # The scheduler holding the post, and its id there. Set once Duct sent the
+    # post, which is when its counts sync, so the metrics form shows them
+    # rather than asking for them.
+    publisher: str = ""
+    publisher_post_id: str = ""
+    # The scheduler's reason, while the post is failed; "" otherwise, and ""
+    # when it gave none (the card words that case itself).
     publish_error: str = ""
     perf:          dict
     daily_perf:    list
@@ -1247,8 +1258,10 @@ def _post_out(
     with_assessment: bool = False,
     video_takes: list | None = None,
     publish_error: str = "",
+    spec: PublisherSpec | None = None,
 ) -> PostOut:
-    """Serialize a post. `fmt` is an optional (slug, name) for the linked format."""
+    """Serialize a post. `fmt` is an optional (slug, name) for the linked format;
+    `spec` the scheduler it goes through (ProjectPublishing.for_post)."""
     return PostOut(
         active_conversation_id=active_conversation_id,
         assessment=(
@@ -1288,12 +1301,13 @@ def _post_out(
         emotional_arc=p.emotional_arc,
         camera_ref_pool=p.camera_ref_pool,
         platforms=p.platforms or [],
-        channel=channel_payload(primary_channel(p.platforms)),
+        channel=channel_payload(primary_channel(p.platforms), spec),
         posted_at=p.posted_at.isoformat() if p.posted_at else None,
         scheduled_at=p.scheduled_at.isoformat() if p.scheduled_at else None,
         published_url=p.published_url,
         published_via=p.published_via,
-        post_bridge_post_id=p.post_bridge_post_id or "",
+        publisher=p.publisher or "",
+        publisher_post_id=p.publisher_post_id or "",
         publish_error=publish_error,
         perf=p.perf or {},
         daily_perf=p.daily_perf or [],
@@ -1364,19 +1378,42 @@ def _enrich_one(db: Session, post: ContentPost) -> PostOut:
         post, fmt=_fmt_for(post, by_id), thumbnail_url=thumb, with_assessment=True,
         video_takes=video_takes(db, post),
         publish_error=_failure_reasons(db, post.project_id, [post]).get(post.id, ""),
+        spec=_post_spec(db, post),
     )
+
+
+# ---------------------------------------------------------------------------
+# Schedulers: which one serves a project, a post, a request
+# ---------------------------------------------------------------------------
+
+
+def _publishing(db: Session, proj: Project) -> ProjectPublishing:
+    return project_publishing(db, proj.id, proj.user_id)
+
+
+def _post_spec(db: Session, post: ContentPost) -> PublisherSpec | None:
+    proj = db.get(Project, post.project_id)
+    return _publishing(db, proj).for_post(post) if proj else spec_for(post.publisher)
+
+
+def _open_publisher(db: Session, proj: Project, publisher_id: str):
+    """The scheduler ``publisher_id`` on the key of the project's owner, who pays."""
+    try:
+        return publisher_for(proj.user_id, publisher_id, db)
+    except VendorNotConnected as exc:
+        raise HTTPException(400, str(exc)) from exc
 
 
 # ---------------------------------------------------------------------------
 # Scheduled posts whose time has passed (#311)
 # ---------------------------------------------------------------------------
 
-# How often one project's board may ask PostBridge about its overdue scheduled
-# posts, how many it asks about at once, and how long it waits. A board
-# re-lists on every visit and after every save; without the window each
-# listing would be a round of PostBridge calls, without the cap a backlog of a
+# How often one project's board may ask its schedulers about its overdue
+# scheduled posts, how many it asks about at once, and how long it waits. A
+# board re-lists on every visit and after every save; without the window each
+# listing would be a round of scheduler calls, without the cap a backlog of a
 # hundred overdue posts would hold one listing for two hundred, and without
-# the deadline a slow PostBridge would be a slow board.
+# the deadline a slow scheduler would be a slow board.
 _SETTLE_EVERY = 60.0     # seconds
 _SETTLE_BATCH = 10
 _SETTLE_TIMEOUT = 8.0    # seconds
@@ -1391,13 +1428,11 @@ _POST_TARGET = "content_post"
 
 
 def _settle_overdue(db: Session, proj: Project) -> None:
-    """Settle the project's scheduled posts whose time has passed against
-    PostBridge before the board lists them: posted, failed with PostBridge's
-    reason, or still waiting (publishing.settle). Best effort in every
-    direction: no key, a closed window, a PostBridge error or a slow answer
-    leaves every status as it was, and the listing goes ahead."""
-    from service.post_bridge import client_for_user
-
+    """Settle the project's scheduled posts whose time has passed against the
+    scheduler holding each, before the board lists them: posted, failed with
+    the scheduler's reason, or still waiting (publishing.settle). Best effort
+    in every direction: no key, a closed window, a scheduler error or a slow
+    answer leaves every status as it was, and the listing goes ahead."""
     now = time.monotonic()
     last = _settled_at.get(proj.id)
     if last is not None and now - last < _SETTLE_EVERY:
@@ -1407,7 +1442,7 @@ def _settle_overdue(db: Session, proj: Project) -> None:
         .where(
             ContentPost.project_id == proj.id,
             ContentPost.status == ContentStatus.SCHEDULED,
-            ContentPost.post_bridge_post_id != "",
+            ContentPost.publisher_post_id != "",
             # No stored time: scheduled by the agent before #272. The first
             # answer gives it one, so it is asked about once, not every time.
             or_(ContentPost.scheduled_at.is_(None), ContentPost.scheduled_at <= utcnow()),
@@ -1418,33 +1453,38 @@ def _settle_overdue(db: Session, proj: Project) -> None:
     if not overdue:
         return
     _settled_at[proj.id] = now
-    try:
-        client = client_for_user(proj.user_id, db)
-    except ValueError:
-        return   # the owner's PostBridge key is gone; nothing to ask
-    try:
-        failed = anyio.from_thread.run(_settle_all, client, overdue)
-    except Exception:  # noqa: BLE001 — a PostBridge outage must not take the board down with it
-        logger.warning("content: settling scheduled posts failed for project %s", proj.id, exc_info=True)
-        db.rollback()
-        return
-    db.commit()
-    for post, reason in failed:
-        log_activity(
-            db, category="content", action=_POST_FAILED, source="auto",
-            project_id=proj.id, target_type=_POST_TARGET, target_id=str(post.id),
-            summary=f"PostBridge didn't publish “{post.topic or post.post_dir_slug}” at its scheduled time.",
-            data={"reason": reason, "post_bridge_post_id": post.post_bridge_post_id},
-        )
+    by_publisher: dict[str, list[ContentPost]] = {}
+    for post in overdue:
+        by_publisher.setdefault(post.publisher, []).append(post)
+    for publisher_id, posts in by_publisher.items():
+        try:
+            pub = publisher_for(proj.user_id, publisher_id, db)
+        except VendorNotConnected:
+            continue   # the owner's key for this scheduler is gone; nothing to ask
+        label = pub.spec.label
+        try:
+            failed = anyio.from_thread.run(_settle_all, pub, posts)
+        except Exception:  # noqa: BLE001 — a scheduler outage must not take the board down with it
+            logger.warning("content: settling scheduled posts failed for project %s", proj.id, exc_info=True)
+            db.rollback()
+            continue
+        db.commit()
+        for post, reason in failed:
+            log_activity(
+                db, category="content", action=_POST_FAILED, source="auto",
+                project_id=proj.id, target_type=_POST_TARGET, target_id=str(post.id),
+                summary=f"{label} didn't publish “{post.topic or post.post_dir_slug}” at its scheduled time.",
+                data={"reason": reason, "publisher": publisher_id, "publisher_post_id": post.publisher_post_id},
+            )
 
 
-async def _settle_all(client, posts: list[ContentPost]) -> list[tuple[ContentPost, str]]:
+async def _settle_all(pub, posts: list[ContentPost]) -> list[tuple[ContentPost, str]]:
     """Ask about every post at once, inside one deadline; return the ones
-    that failed, with PostBridge's reason. A post PostBridge errors on stays
-    as it was and the others still settle."""
-    async with client as pb:
+    that failed, with the scheduler's reason. A post the scheduler errors on
+    stays as it was and the others still settle."""
+    async with pub:
         outcomes = await asyncio.wait_for(
-            asyncio.gather(*(settle(pb, p) for p in posts), return_exceptions=True),
+            asyncio.gather(*(settle(pub, p) for p in posts), return_exceptions=True),
             timeout=_SETTLE_TIMEOUT,
         )
     failed: list[tuple[ContentPost, str]] = []
@@ -1457,7 +1497,7 @@ async def _settle_all(client, posts: list[ContentPost]) -> list[tuple[ContentPos
 
 
 def _failure_reasons(db: Session, project_id: UUID, posts) -> dict[UUID, str]:
-    """PostBridge's reason for each failed post among ``posts``, from the
+    """The scheduler's reason for each failed post among ``posts``, from the
     newest activity row that marked it failed."""
     failed_ids = [str(p.id) for p in posts if p.status == ContentStatus.FAILED]
     if not failed_ids:
@@ -1517,10 +1557,11 @@ def list_posts(
     by_id = _format_map(db, project_id)
     thumbs = _thumb_map(db, [r.id for r in rows])
     reasons = _failure_reasons(db, project_id, rows)
+    publishing = _publishing(db, proj)
     return [
         _post_out(
             r, fmt=_fmt_for(r, by_id), thumbnail_url=thumbs.get(r.id, ""),
-            publish_error=reasons.get(r.id, ""),
+            publish_error=reasons.get(r.id, ""), spec=publishing.for_post(r),
         )
         for r in rows
     ]
@@ -1556,6 +1597,7 @@ def get_post(
         with_assessment=True,
         video_takes=video_takes(db, post),
         publish_error=_failure_reasons(db, post.project_id, [post]).get(post.id, ""),
+        spec=_post_spec(db, post),
     )
 
 
@@ -1640,7 +1682,7 @@ def patch_post(
     db: Session = Depends(db_session),
 ) -> PostOut:
     post = _row_for_user(db, user, ContentPost, post_id, "Post")
-    queued = is_queued_at_postbridge(post)
+    queued = is_queued_at_publisher(post)
     before_caption, before_replies = post.caption, list(post.replies or [])
     patch = body.model_dump(exclude_unset=True)
     if "platforms" in patch and patch["platforms"] is not None:
@@ -1662,8 +1704,8 @@ def patch_post(
         except Exception:
             logger.exception("patch_post: failed to re-render slides for %s", post_id)
     if queued:
-        # A sync route, so a save that never touches PostBridge stays off the
-        # event loop; only the queued case crosses to it for the one call.
+        # A sync route, so a save that never touches the scheduler stays off
+        # the event loop; only the queued case crosses to it for the one call.
         anyio.from_thread.run(_keep_queue_in_step, db, user, post, before_caption, before_replies)
     post.updated_at = datetime.now(timezone.utc)
     db.add(post)
@@ -1672,40 +1714,33 @@ def patch_post(
     return _enrich_one(db, post)
 
 
-def _pb_client_for_project(db: Session, user: User, project_id: UUID):
-    """A PostBridge client on the key of the project's owner, who pays."""
-    from service.post_bridge import client_for_user
-
-    proj = _project_for_user(db, user, project_id)
-    try:
-        return client_for_user(proj.user_id, db)
-    except ValueError as exc:
-        raise HTTPException(400, str(exc)) from exc
+def _publisher_of_post(db: Session, user: User, post: ContentPost):
+    """The scheduler holding ``post``, on the key of the project's owner."""
+    proj = _project_for_user(db, user, post.project_id)
+    return _open_publisher(db, proj, post.publisher)
 
 
 async def _keep_queue_in_step(
     db: Session, user: User, post: ContentPost, before_caption: str, before_replies: list,
 ) -> None:
-    """An edit to a post PostBridge is holding reaches PostBridge before it
-    is saved here, or it is not saved at all; otherwise the queue publishes
+    """An edit to a post a scheduler is holding reaches the scheduler before
+    it is saved here, or it is not saved at all; otherwise the queue publishes
     words the person already changed. Moving the post out of Scheduled takes
     it off the queue. Marking it posted by hand touches nothing there."""
-    from service.post_bridge import PostBridgeAPIError
-
     if post.status == ContentStatus.POSTED:
         return
     unscheduled = post.status != ContentStatus.SCHEDULED
     if not unscheduled and not words_changed(post, before_caption, before_replies):
         return
-    client = _pb_client_for_project(db, user, post.project_id)
+    pub = _publisher_of_post(db, user, post)
     try:
-        async with client as pb:
+        async with pub:
             if unscheduled:
                 asked_for = post.status
-                await cancel(pb, post)
+                await cancel(pub, post)
                 post.status = asked_for
             else:
-                await push_edit(pb, post)
+                await push_edit(pub, post)
     except PostAlreadyOut:
         db.rollback()
         db.refresh(post)
@@ -1716,9 +1751,9 @@ async def _keep_queue_in_step(
         raise HTTPException(
             409, f"This post already went out on {label}, so the change can't reach it. It's marked posted now.",
         ) from None
-    except PostBridgeAPIError as exc:
+    except PublisherError as exc:
         db.rollback()
-        raise _pb_http_error(exc) from exc
+        raise _publisher_http_error(exc, pub.spec) from exc
 
 
 @router.post("/content/posts/{post_id}/mark-posted")
@@ -1743,7 +1778,7 @@ class ManualMetrics(BaseModel):
     """Numbers read off the platform's own analytics screen and typed in.
 
     One field per metric in ``service/content_metrics.METRIC_ALIASES``, named
-    the same, which a test holds. PostBridge supplies only the first four, and
+    the same, which a test holds. A scheduler supplies the ones it reports, and
     only for a post it published; everything else is known to the person alone.
     An omitted field is left alone; ``null`` withdraws a value entered earlier.
     """
@@ -1772,7 +1807,7 @@ def enter_post_metrics(
     This replaced ``/log-metrics``, which took any JSON and merged it
     last-write-wins, so it could overwrite a typed number (or the record of
     which ones were typed) as easily as add one. daily_perf is left to
-    ``/sync-daily``: it is PostBridge's history, and a hand-entered point in it
+    ``/sync-daily``: it is the scheduler's history, and a hand-entered point in it
     would be replaced by the next refresh anyway.
     """
     post = _row_for_user(db, user, ContentPost, post_id, "Post")
@@ -1794,17 +1829,15 @@ def delete_post(
     user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> dict:
-    """A post PostBridge is holding comes off its queue first; deleting only
+    """A post a scheduler is holding comes off its queue first; deleting only
     the row would leave the post to go out with no record of it here."""
-    from service.post_bridge import PostBridgeAPIError
-
     post = _row_for_user(db, user, ContentPost, post_id, "Post")
-    if is_queued_at_postbridge(post):
-        client = _pb_client_for_project(db, user, post.project_id)
+    if is_queued_at_publisher(post):
+        pub = _publisher_of_post(db, user, post)
 
         async def _take_off_queue() -> None:
-            async with client as pb:
-                await cancel(pb, post)
+            async with pub:
+                await cancel(pub, post)
 
         try:
             anyio.from_thread.run(_take_off_queue)
@@ -1818,8 +1851,8 @@ def delete_post(
                 f"This post already went out on {label}, so deleting it here won't take it down. "
                 f"Delete it on {label}. It's marked posted here now.",
             ) from None
-        except PostBridgeAPIError as exc:
-            raise _pb_http_error(exc) from exc
+        except PublisherError as exc:
+            raise _publisher_http_error(exc, pub.spec) from exc
     db.delete(post)
     db.commit()
     return {"status": "ok"}
@@ -2298,28 +2331,75 @@ def delete_asset(
 
 
 # ---------------------------------------------------------------------------
-# PostBridge proxies (Phase 4) — schemas match the PostBridge v1 API
+# Schedulers (service/publishers/) — PostBridge, Zernio: connectors a person
+# brings. Nothing is a default: with none connected, nothing publishes.
 # ---------------------------------------------------------------------------
 
 
 class SocialAccountOut(BaseModel):
-    id:       int
-    platform: str
-    username: str
+    id:              str
+    publisher:       str   # the scheduler holding the account (PublisherSpec.id)
+    publisher_label: str
+    platform:        str
+    username:        str
+    display_name:    str = ""
+    avatar_url:      str = ""
+    needs_reconnect: bool = False
 
 
 class PublishRequest(BaseModel):
     """Body for POST /content/posts/{id}/publish.
 
-    social_account_ids are PostBridge's numeric IDs (see GET
-    /content/social-accounts). hashtags belong in `caption` per PostBridge.
+    social_account_ids are the scheduler's own ids (GET
+    /content/social-accounts), all at ``publisher``; without one, the
+    scheduler the project linked those accounts at. Hashtags belong in the
+    caption.
     """
 
     model_config = ConfigDict(extra="forbid")
 
-    social_account_ids: list[int]
+    social_account_ids: list[str] = Field(default_factory=list, max_length=20)
+    publisher:          str = ""
     scheduled_at:       datetime | None = None
     tiktok_draft:       bool = False
+
+    @field_validator("social_account_ids", mode="before")
+    @classmethod
+    def _ids_as_text(cls, value):
+        # PostBridge's ids are numbers, and an older app sends them as such.
+        return [str(v) for v in value] if isinstance(value, list) else value
+
+
+class PublisherOut(BaseModel):
+    id:            str
+    label:         str
+    dashboard_url: str
+    # The platforms it reports numbers for, which is what the person is choosing between.
+    reports:       list[str]
+    connected:     bool   # the project's owner can publish through it
+    own_key:       bool   # through a key the owner saved (not the local env one)
+    is_owner:      bool   # the caller can connect or replace it
+
+
+@router.get("/content/publishers")
+def list_publishers(
+    project_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> list[PublisherOut]:
+    """Every scheduler Duct can publish through, and whether this project's
+    owner connected it. The Accounts tab draws its connectors from this, so
+    adding a scheduler adds no list to the app."""
+    from service.vendor_keys import KEY_OWN
+    proj = _project_for_user(db, user, project_id)
+    out: list[PublisherOut] = []
+    for spec in all_specs():
+        source = spec.key.source(proj.user_id, db)
+        out.append(PublisherOut(
+            id=spec.id, label=spec.label, dashboard_url=spec.dashboard_url,
+            reports=sorted(spec.metrics), connected=source is not None, own_key=source == KEY_OWN, is_owner=proj.user_id == user.id,
+        ))
+    return out
 
 
 @router.get("/content/social-accounts")
@@ -2329,34 +2409,47 @@ async def list_social_accounts(
     user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> list[SocialAccountOut]:
-    """List the user's connected PostBridge social accounts."""
-    from service.post_bridge import PostBridgeAPIError, client_for_user
+    """The accounts at every scheduler the project's owner connected. One
+    scheduler failing leaves the others listed; all of them failing is the
+    first one's error."""
     proj = _project_for_user(db, user, project_id)
-    try:
-        client = client_for_user(proj.user_id, db)
-    except ValueError as exc:
-        raise HTTPException(400, str(exc)) from exc
-    try:
-        async with client as pb:
-            accounts = await pb.list_social_accounts(platform=platform)
-    except PostBridgeAPIError as exc:
-        raise _pb_http_error(exc) from exc
-    return [
-        SocialAccountOut(id=a.id, platform=a.platform.value, username=a.username)
-        for a in accounts
-    ]
+    publishing = _publishing(db, proj)
+    if not publishing.connected:
+        raise HTTPException(400, NO_SCHEDULER)
+    out: list[SocialAccountOut] = []
+    first_error: tuple[PublisherError, PublisherSpec] | None = None
+    for spec in publishing.connected:
+        pub = _open_publisher(db, proj, spec.id)
+        try:
+            async with pub:
+                accounts = await pub.list_accounts(platform=platform)
+        except PublisherError as exc:
+            first_error = first_error or (exc, spec)
+            continue
+        out += [
+            SocialAccountOut(
+                id=a.id, publisher=spec.id, publisher_label=spec.label, platform=a.platform, username=a.username,
+                display_name=a.display_name, avatar_url=a.avatar_url, needs_reconnect=a.needs_reconnect,
+            )
+            for a in accounts
+        ]
+    if not out and first_error is not None:
+        raise _publisher_http_error(*first_error)
+    return out
 
 
 # ---------------------------------------------------------------------------
-# Vendor keys — each user brings their own PostBridge and Apify key. A project
+# Vendor keys — each user brings their own scheduler and Apify key. A project
 # spends its owner's, the way it spends its owner's connectors, so only the
 # owner connects one (service/vendor_keys.py).
 # ---------------------------------------------------------------------------
 
 def _vendor_key(vendor: str):
     from service.apify import APIFY_KEY
-    from service.post_bridge import POSTBRIDGE_KEY
-    key = {"post-bridge": POSTBRIDGE_KEY, "apify": APIFY_KEY}.get(vendor)
+    # "post-bridge" is the slug the app used before schedulers had ids of their own.
+    keys = {"post-bridge": spec_for("post_bridge").key, "apify": APIFY_KEY}
+    keys.update({spec.id: spec.key for spec in all_specs()})
+    key = keys.get(vendor)
     if key is None:
         raise HTTPException(404, "Unknown vendor.")
     return key
@@ -2433,19 +2526,27 @@ def disconnect_vendor_key(
 
 
 # ---------------------------------------------------------------------------
-# Linked accounts — the project's persisted selection of social accounts.
+# Linked accounts — the project's persisted selection of social accounts, each
+# at the scheduler that holds it.
 # ---------------------------------------------------------------------------
 
 class LinkedAccountOut(BaseModel):
-    account_id: int
+    account_id: str
+    publisher:  str
     platform:   str
     username:   str
 
 
 class LinkedAccountIn(BaseModel):
-    account_id: int
+    account_id: str
+    publisher:  str = ""
     platform:   str = ""
     username:   str = ""
+
+    @field_validator("account_id", mode="before")
+    @classmethod
+    def _id_as_text(cls, value):
+        return str(value)
 
 
 class LinkedAccountsIn(BaseModel):
@@ -2457,10 +2558,20 @@ class LinkedAccountsIn(BaseModel):
 
 def _link_out(row: ContentSocialLink) -> LinkedAccountOut:
     return LinkedAccountOut(
-        account_id=int(row.external_account_id),
+        account_id=row.external_account_id,
+        publisher=row.publisher,
         platform=row.platform,
         username=row.username,
     )
+
+
+def _links(db: Session, project_id: UUID) -> list[LinkedAccountOut]:
+    rows = db.execute(
+        select(ContentSocialLink)
+        .where(ContentSocialLink.project_id == project_id)
+        .order_by(ContentSocialLink.created_at)
+    ).scalars().all()
+    return [_link_out(r) for r in rows]
 
 
 @router.get("/content/linked-accounts")
@@ -2471,12 +2582,7 @@ def list_linked_accounts(
 ) -> list[LinkedAccountOut]:
     """The social accounts this project has linked."""
     _project_for_user(db, user, project_id)
-    rows = db.execute(
-        select(ContentSocialLink)
-        .where(ContentSocialLink.project_id == project_id)
-        .order_by(ContentSocialLink.created_at)
-    ).scalars().all()
-    return [_link_out(r) for r in rows]
+    return _links(db, project_id)
 
 
 @router.put("/content/linked-accounts")
@@ -2486,38 +2592,41 @@ def save_linked_accounts(
     db: Session = Depends(db_session),
 ) -> list[LinkedAccountOut]:
     """Replace the project's linked-account set with the supplied list."""
-    _project_for_user(db, user, body.project_id)
+    proj = _project_for_user(db, user, body.project_id)
+    connected = _publishing(db, proj).connected
     db.execute(
         delete(ContentSocialLink).where(ContentSocialLink.project_id == body.project_id)
     )
-    # De-dupe by account id, last wins.
-    by_id: dict[int, LinkedAccountIn] = {a.account_id: a for a in body.accounts}
-    for acc in by_id.values():
+    # De-dupe by scheduler and account id, last wins. An account named with no
+    # scheduler is at the owner's only one; with several, it has to say which.
+    by_id: dict[tuple[str, str], LinkedAccountIn] = {}
+    for acc in body.accounts:
+        publisher = acc.publisher or (connected[0].id if len(connected) == 1 else "")
+        if spec_for(publisher) is None:
+            raise HTTPException(422, f"Say which scheduler account {acc.account_id} is at.")
+        by_id[(publisher, acc.account_id)] = acc
+    for (publisher, account_id), acc in by_id.items():
         db.add(ContentSocialLink(
             project_id=body.project_id,
-            external_account_id=str(acc.account_id),
+            publisher=publisher,
+            external_account_id=account_id,
             platform=acc.platform,
             username=acc.username,
         ))
     db.commit()
     # Analytics output is filtered by the linked platform set — drop its cache.
     _invalidate_analytics(body.project_id)
-    rows = db.execute(
-        select(ContentSocialLink)
-        .where(ContentSocialLink.project_id == body.project_id)
-        .order_by(ContentSocialLink.created_at)
-    ).scalars().all()
-    return [_link_out(r) for r in rows]
+    return _links(db, body.project_id)
 
 
 # ---------------------------------------------------------------------------
-# Analytics — live, pulled straight from PostBridge for the linked accounts.
+# Analytics — live, from every connected scheduler, for the linked accounts.
 # (Distinct from per-post `perf`, which only covers posts published via Duct.)
 # ---------------------------------------------------------------------------
 
 class AnalyticsRowOut(BaseModel):
     id:                 str
-    post_result_id:     str
+    publisher:          str
     platform:           str
     title:              str
     share_url:          str
@@ -2542,16 +2651,14 @@ async def list_content_analytics(
     user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> list[AnalyticsRowOut]:
-    """Per-post analytics for the project, read straight from PostBridge.
+    """Per-post analytics for the project, read straight from its schedulers.
 
-    Mirrors the original marketing app: PostBridge `/v1/analytics` is the source
-    of truth — it captures everything published to the account (via this app,
-    the PB dashboard, or TikTok Studio), with counts + share_url + cover image.
-    Paginates all records, then scopes to the platforms the project has linked
-    (Accounts tab); if nothing is linked, shows all. refresh=true syncs first.
+    Each connected scheduler is the source of truth for the accounts it holds:
+    it reports everything published there (through Duct, its own dashboard or
+    the platform's app), with counts, the post's link and its cover. Scoped to
+    the platforms the project has linked (Accounts tab); if nothing is linked,
+    shows all. refresh=true asks each scheduler to sync first.
     """
-    from service.post_bridge import PostBridgeAPIError, client_for_user
-
     proj = _project_for_user(db, user, project_id)
 
     if not refresh:
@@ -2559,84 +2666,65 @@ async def list_content_analytics(
         if hit is not None and (time.monotonic() - hit[0]) < _ANALYTICS_TTL:
             return hit[1]
 
-    linked_platforms = {
-        r.platform
-        for r in db.execute(
-            select(ContentSocialLink).where(ContentSocialLink.project_id == project_id)
-        ).scalars().all()
-        if r.platform
-    }
+    publishing = _publishing(db, proj)
+    if not publishing.connected:
+        raise HTTPException(400, NO_SCHEDULER)
+    linked_platforms = {link.platform for link in _links(db, project_id) if link.platform}
 
-    try:
-        client = client_for_user(proj.user_id, db)
-    except ValueError as exc:
-        raise HTTPException(400, str(exc)) from exc
-
-    records = []
-    result_to_post: dict[str, str] = {}  # post_result_id -> post_bridge_post_id
-    try:
-        async with client as pb:
-            if refresh:
-                await pb.sync_analytics()
-            # Paginate all analytics records (PostBridge caps limit at 100).
-            offset = 0
-            for _ in range(20):  # safety cap: 2000 records
-                page = await pb.list_analytics(limit=100, offset=offset)
-                records.extend(page)
-                if len(page) < 100:
-                    break
-                offset += 100
-            # Best-effort: map result -> PostBridge post id so we can also match
-            # local posts that only stored post_bridge_post_id. Never fatal.
-            try:
-                for r in await pb.list_post_results(limit=100):
-                    result_to_post[r.id] = r.post_id
-            except PostBridgeAPIError:
-                pass
-    except PostBridgeAPIError as exc:
-        raise _pb_http_error(exc) from exc
+    reported: list[tuple[PublisherSpec, object]] = []
+    first_error: tuple[PublisherError, PublisherSpec] | None = None
+    for spec in publishing.connected:
+        pub = _open_publisher(db, proj, spec.id)
+        try:
+            async with pub:
+                reported += [(spec, r) for r in await pub.reported_posts(refresh=refresh)]
+        except PublisherError as exc:
+            first_error = first_error or (exc, spec)
+    if not reported and first_error is not None:
+        raise _publisher_http_error(*first_error)
 
     # Index this project's local posts so each analytics row can be tied back to
-    # a pillar/format and badged "via Duct" — by result id (direct) or post id.
+    # a pillar/format and badged "via Duct" — by the handle its numbers are
+    # read by (direct), or by its post id at the scheduler.
     local_posts = db.execute(
         select(ContentPost).where(ContentPost.project_id == project_id)
     ).scalars().all()
-    local_by_result = {p.post_bridge_result_id: p for p in local_posts if p.post_bridge_result_id}
-    local_by_post = {p.post_bridge_post_id: p for p in local_posts if p.post_bridge_post_id}
+    local_by_ref = {(p.publisher, p.publisher_metrics_id): p for p in local_posts if p.publisher_metrics_id}
+    local_by_post = {(p.publisher, p.publisher_post_id): p for p in local_posts if p.publisher_post_id}
     fmt_by_id = _format_map(db, project_id)  # format_id → (slug, name)
 
-    # Self-heal: when post-results responded, persist the result id onto any local
-    # post that only had a post id, so it stays matched even if post-results 500s
-    # on later loads. (post-results is intermittently flaky on PostBridge's side.)
+    # Self-heal: where the scheduler tied a row to a post id, keep the handle
+    # on the local post, so it stays matched even when that tie fails on a
+    # later load (PostBridge's post-results is intermittently flaky).
     backfilled = False
-    for result_id, post_id in result_to_post.items():
-        lp = local_by_post.get(post_id)
-        if lp is not None and not lp.post_bridge_result_id:
-            lp.post_bridge_result_id = result_id
-            local_by_result[result_id] = lp
+    for spec, r in reported:
+        lp = local_by_post.get((spec.id, r.remote_post_id)) if r.remote_post_id else None
+        if lp is not None and not lp.publisher_metrics_id:
+            lp.publisher_metrics_id = r.ref
+            local_by_ref[(spec.id, r.ref)] = lp
             db.add(lp)
             backfilled = True
     if backfilled:
         db.commit()
 
     rows: list[AnalyticsRowOut] = []
-    for a in records:
-        if linked_platforms and a.platform not in linked_platforms:
+    for spec, r in reported:
+        if linked_platforms and r.platform not in linked_platforms:
             continue
-        local = local_by_result.get(a.post_result_id) or local_by_post.get(result_to_post.get(a.post_result_id, ""))
+        local = local_by_ref.get((spec.id, r.ref)) or local_by_post.get((spec.id, r.remote_post_id))
         rows.append(AnalyticsRowOut(
-            id=a.id,
-            post_result_id=a.post_result_id,
-            platform=a.platform or "",
-            title=str(a.video_description or ""),
-            share_url=str(a.share_url or ""),
-            cover_image_url=str(a.cover_image_url or ""),
-            view_count=a.view_count or 0,
-            like_count=a.like_count or 0,
-            comment_count=a.comment_count or 0,
-            share_count=a.share_count or 0,
-            platform_created_at=a.platform_created_at if isinstance(a.platform_created_at, str) else None,
-            last_synced_at=a.last_synced_at.isoformat() if a.last_synced_at else None,
+            id=f"{spec.id}:{r.ref}",
+            publisher=spec.id,
+            platform=r.platform,
+            title=r.title,
+            share_url=r.url,
+            cover_image_url=r.cover_url,
+            view_count=r.views,
+            like_count=r.likes,
+            comment_count=r.comments,
+            share_count=r.shares,
+            platform_created_at=r.posted_at,
+            last_synced_at=r.synced_at,
             pillar=local.pillar if local else "",
             format_name=(fmt_by_id.get(local.format_id, ("", ""))[1] if local else ""),
             published_via=local.published_via if local else "",
@@ -2654,14 +2742,23 @@ async def publish_post_route(
     user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> PostOut:
-    """Upload the post's media to PostBridge, then create the post. What goes
-    is the agent's choice too (publishing.pick_media): a video post's cut, a
-    slideshow's composed slides, a text post's words alone."""
-    from service.post_bridge import PostBridgeAPIError, client_for_user
-
+    """Upload the post's media to its scheduler, then create the post. What
+    goes is the agent's choice too (publishing.pick_media): a video post's cut,
+    a slideshow's composed slides, a text post's words alone."""
     post = _row_for_user(db, user, ContentPost, post_id, "Post")
     proj = _project_for_user(db, user, post.project_id)
-    blockers = publish_blockers(post)
+    if not body.social_account_ids:
+        raise HTTPException(400, "Pick at least one account to post from.")
+    publishing = _publishing(db, proj)
+    if body.publisher:
+        spec = spec_for(body.publisher)
+        if spec is None or spec.id not in {s.id for s in publishing.connected}:
+            raise HTTPException(400, f"{spec.label if spec else 'That scheduler'} isn't connected. {NO_SCHEDULER}")
+    else:
+        spec, why = chosen_publisher(db, post.project_id, body.social_account_ids, publishing)
+        if spec is None:
+            raise HTTPException(400, why)
+    blockers = publish_blockers(post, spec)
     if blockers:
         raise HTTPException(400, " ".join(blockers))
 
@@ -2684,30 +2781,47 @@ async def publish_post_route(
         logger.warning("publish: %s for post %s", exc, post.id)
         raise HTTPException(500, "Some of this post's media couldn't be loaded. Try regenerating it.") from exc
 
+    pub = _open_publisher(db, proj, spec.id)
     try:
-        client = client_for_user(proj.user_id, db)
-    except ValueError as exc:
-        raise HTTPException(400, str(exc)) from exc
-    try:
-        async with client as pb:
-            resp = await send_post(
-                pb, post, media,
-                social_account_ids=body.social_account_ids,
+        async with pub:
+            remote = await send_post(
+                pub, post, media,
+                targets=[Target(a) for a in body.social_account_ids],
                 scheduled_at=body.scheduled_at,
                 tiktok_draft=body.tiktok_draft,
             )
-    except PostBridgeAPIError as exc:
-        raise _pb_http_error(exc) from exc
+    except PublisherError as exc:
+        raise _publisher_http_error(exc, spec) from exc
 
-    if why := publish_failure(resp):
+    if why := publish_failure(remote, spec):
         raise HTTPException(502, why)
-    record_published(post, resp, body.scheduled_at)
+    record_published(post, remote, body.scheduled_at, spec)
     db.add(post)
     db.commit()
     db.refresh(post)
     _invalidate_analytics(post.project_id)
-    capture_event("content_post_published", {"post_type": post.post_type, "is_scheduled": body.scheduled_at is not None})
+    capture_event("content_post_published", {
+        "post_type": post.post_type, "is_scheduled": body.scheduled_at is not None, "publisher": spec.id,
+    })
     return _enrich_one(db, post)
+
+
+async def _pull_post_metrics(db: Session, user: User, post: ContentPost) -> None:
+    """Read a published post's numbers from the scheduler holding it into the
+    row (publishing.pull_metrics), or say why not."""
+    if not post.publisher_post_id:
+        raise HTTPException(400, "Publish this post first — then we can pull metrics.")
+    spec = spec_for(post.publisher)
+    if not metrics_sync(post, spec):
+        raise HTTPException(409, no_sync_message(post, spec))
+    pub = _publisher_of_post(db, user, post)
+    try:
+        async with pub:
+            got = await pull_metrics(pub, post)
+    except PublisherError as exc:
+        raise _publisher_http_error(exc, spec) from exc
+    if got is None:
+        raise HTTPException(409, not_synced_yet(post, spec))
 
 
 @router.post("/content/posts/{post_id}/sync-metrics")
@@ -2716,42 +2830,10 @@ async def sync_post_metrics(
     user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> PostOut:
-    """Sync → find post_result → fetch analytics → merge into post.perf."""
-    from service.post_bridge import PostBridgeAPIError, client_for_user
-
+    """The post's numbers, and their daily history, from its scheduler into
+    perf and daily_perf."""
     post = _row_for_user(db, user, ContentPost, post_id, "Post")
-    if not post.post_bridge_post_id:
-        raise HTTPException(400, "Publish this post first — then we can pull metrics.")
-    synced, sync_filter = metrics_sync(post)
-    if not synced:
-        raise HTTPException(409, no_sync_message(post))
-    proj = _project_for_user(db, user, post.project_id)
-
-    try:
-        client = client_for_user(proj.user_id, db)
-    except ValueError as exc:
-        raise HTTPException(400, str(exc)) from exc
-
-    try:
-        async with client as pb:
-            await pb.sync_analytics(platform=sync_filter)
-            results = await pb.list_post_results(post_id=post.post_bridge_post_id, limit=10)
-            if not results:
-                raise HTTPException(409, "No post result yet — try again in a few minutes.")
-            chosen = next((r for r in results if r.success), results[0])
-            analytics_list = await pb.list_analytics(post_result_id=[chosen.id], limit=1)
-            if not analytics_list:
-                raise HTTPException(409, "Analytics haven't synced yet — try again in a few minutes.")
-            analytics = analytics_list[0]
-    except PostBridgeAPIError as exc:
-        raise _pb_http_error(exc) from exc
-
-    post.perf = merge_synced_metrics(
-        post.perf,
-        analytics.model_dump(mode="json"),
-        synced_at=analytics.last_synced_at.isoformat() if analytics.last_synced_at else None,
-    )
-    post.post_bridge_result_id = chosen.id
+    await _pull_post_metrics(db, user, post)
     db.add(post)
     db.commit()
     db.refresh(post)
@@ -2765,68 +2847,37 @@ async def sync_post_daily(
     user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> PostOut:
-    """Refresh daily_perf snapshots from PostBridge."""
-    from service.post_bridge import PostBridgeAPIError, client_for_user
-
-    post = _row_for_user(db, user, ContentPost, post_id, "Post")
-    if not post.post_bridge_post_id:
-        raise HTTPException(400, "Publish this post first — then we can pull daily snapshots.")
-    proj = _project_for_user(db, user, post.project_id)
-
-    try:
-        client = client_for_user(proj.user_id, db)
-    except ValueError as exc:
-        raise HTTPException(400, str(exc)) from exc
-
-    analytics_id = post.post_bridge_result_id
-    try:
-        async with client as pb:
-            if not analytics_id:
-                results = await pb.list_post_results(post_id=post.post_bridge_post_id, limit=10)
-                chosen = next((r for r in results if r.success), results[0]) if results else None
-                if chosen is None:
-                    raise HTTPException(409, "No post result yet — try again in a few minutes.")
-                analytics_list = await pb.list_analytics(post_result_id=[chosen.id], limit=1)
-                if not analytics_list:
-                    raise HTTPException(409, "Analytics haven't synced yet — try again in a few minutes.")
-                analytics_id = analytics_list[0].id
-                post.post_bridge_result_id = chosen.id
-            daily = await pb.get_analytics_daily(analytics_id)
-    except PostBridgeAPIError as exc:
-        raise _pb_http_error(exc) from exc
-
-    post.daily_perf = [s.model_dump(mode="json") for s in daily.snapshots]
-    db.add(post)
-    db.commit()
-    db.refresh(post)
-    _invalidate_analytics(post.project_id)
-    return _enrich_one(db, post)
+    """Refresh daily_perf snapshots from the post's scheduler. The same pull
+    as /sync-metrics: one read brings both, and the app calls either."""
+    return await sync_post_metrics(post_id, user, db)
 
 
-def _pb_http_error(exc) -> HTTPException:
-    """A PostBridge failure as this API's answer. Its 401 and 403 are about the
-    PostBridge key, never the Duct session, and must not reach the browser as
+def _publisher_http_error(exc: PublisherError, spec: PublisherSpec | None) -> HTTPException:
+    """A scheduler failure as this API's answer. Its 401 and 403 are about the
+    scheduler's key, never the Duct session, and must not reach the browser as
     one: the app's throwForStatus signs the user out on a 401."""
-    code = getattr(exc, "status_code", 0) or 0
+    code = exc.status_code or 0
     status = 502 if code in (0, 401, 403) or code >= 500 else code
-    return HTTPException(status, _friendly_pb_error(exc))
+    # A scheduler's 402 is its own plan (Zernio's analytics add-on), and the app
+    # reads a 402 as "connect a model".
+    if code == 402:
+        status = 409
+    return HTTPException(status, _friendly_publisher_error(exc, spec))
 
 
-def _friendly_pb_error(exc) -> str:
-    """Translate PostBridge errors into something a user can act on.
+def _friendly_publisher_error(exc: PublisherError, spec: PublisherSpec | None) -> str:
+    """Translate a scheduler's failure into something a user can act on.
 
     Hides internal status codes and stack traces; only surfaces what the
-    user can do next.
-    """
-    msg = (getattr(exc, "error", None) and getattr(exc.error, "message", "")) or ""
-    code = getattr(exc, "status_code", 0)
-    if code == 401 or code == 403:
-        return "PostBridge didn't accept the saved API key. Paste a fresh one in Content → Accounts."
-    if code == 429:
+    user can do next."""
+    label = spec.label if spec else "The scheduler"
+    if exc.key_rejected:
+        return f"{label} didn't accept the saved API key. Paste a fresh one in Content → Accounts."
+    if exc.status_code == 429:
         return "Hit the publishing rate limit — wait a minute and try again."
-    if code == 0:
+    if exc.status_code == 0:
         return "Couldn't reach the publishing service. Check your internet and try again."
-    return msg or "Publishing failed. Please try again in a moment."
+    return exc.message or "Publishing failed. Please try again in a moment."
 
 
 # ---------------------------------------------------------------------------
@@ -2915,7 +2966,7 @@ def _apify_client_for(db: Session, user: User, project_id: UUID):
 
 def _apify_http_error(exc) -> HTTPException:
     """An Apify failure as this API's answer. Its 401 and 403 are about the
-    Apify key, and the app signs the user out on a 401 (see _pb_http_error)."""
+    Apify key, and the app signs the user out on a 401 (see _publisher_http_error)."""
     code = exc.status_code or 0
     if code in (401, 403):
         return HTTPException(502, "Apify didn't accept the saved API key. Paste a fresh one in Content → Discover.")
