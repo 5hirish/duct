@@ -95,9 +95,41 @@ def test_a_platform_that_hands_out_subdomains_vouches_for_nobody():
     assert not registry.is_official("app.vercel.stripe/mcp", "stripe.vercel.app", ["stripe"])
     # The platform's own server, on its own domain, still is.
     assert registry.is_official("com.vercel/mcp", "mcp.vercel.com", ["vercel"])
-    # A GitHub login vouches for the name it holds there, not for the platform.
-    assert registry.runs_host("io.github.widgets/mcp", "widgets.vercel.app")
+    # A GitHub login proves nothing there: its owner picks the subdomain too.
+    assert not registry.runs_host("io.github.widgets/mcp", "widgets.vercel.app")
     assert not registry.runs_host("io.github.vercel-fan/mcp", "widgets.vercel.app")
+
+
+def test_a_tenant_is_not_the_vendor_even_on_a_platform_nobody_listed():
+    # Toolbox suggests these names, so a tenant of the vendor is the attack:
+    # a free site and a GitHub login containing the word were enough.
+    for name, host, tool in [
+        ("io.webflow.stranger/mcp", "stranger.webflow.io", "webflow"),
+        ("io.github.webflow-fan/mcp", "stranger.webflow.io", "webflow"),
+        ("site.figma.stranger/mcp", "stranger.figma.site", "figma"),
+        ("site.canva.stranger/mcp", "stranger.canva.site", "canva"),
+        ("com.airtable.stranger/mcp", "stranger.airtable.com", "airtable"),
+        ("com.sentry.stranger/mcp", "stranger.sentry.com", "sentry"),
+        # Listed nowhere: refused for its shape.
+        ("app.someplatform.stranger/mcp", "stranger.someplatform.app", "someplatform"),
+        ("io.github.someplatform-fan/mcp", "stranger.someplatform.app", "someplatform"),
+    ]:
+        assert not registry.is_official(name, host, [tool]), host
+    # A listed platform refuses even the name a real vendor would use.
+    assert not registry.is_official("io.webflow.mcp/mcp", "mcp.webflow.io", ["webflow"])
+
+
+def test_a_vendor_is_official_at_its_domain_or_one_service_label_under_it():
+    for name, host, tool in [
+        ("com.figma.mcp/mcp", "mcp.figma.com", "figma"),
+        ("com.widgets/mcp", "widgets.com", "widgets"),
+        ("com.widgets/mcp", "api.widgets.com", "widgets"),
+        ("com.widgets/mcp", "app.widgets.com", "widgets"),
+    ]:
+        assert registry.is_official(name, host, [tool]), host
+    # An unusual place costs the tag, not the listing.
+    assert registry.runs_host("com.cloudflare/docs", "docs.mcp.cloudflare.com")
+    assert not registry.is_official("com.cloudflare/docs", "docs.mcp.cloudflare.com", ["cloudflare"])
 
 
 def test_who_runs_the_host_is_read_from_the_name_the_publisher_proved():
