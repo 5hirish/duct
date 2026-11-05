@@ -515,9 +515,9 @@ msgstr "ユニバーサル · AppleシリコンおよびIntel"
 #: assets/*.js
 msgctxt "js"
 msgid ""
-"We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same."
+"We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold."
 msgstr ""
-"PostHogを使用して、どのページでサインアップが発生し、Ductがどこでユーザーの妨げになっているかを確認します。これには、入力されたすべての情報が非表示にされた訪問のリプレイも含まれます。これが唯一の用途であり、広告ターゲティングや販売目的ではありません。拒否した場合でも、Ductはまったく同じように機能します。"
+"PostHogを使用して、どのページでサインアップが発生し、Ductがどこでユーザーの妨げになっているかを確認します。これには、入力されたすべての情報が非表示にされた訪問のリプレイも含まれます。拒否するとPostHogはオフになり、Ductはまったく同じように機能します。Google Analyticsも訪問数をカウントし、どちらを選択しても独自のクッキーを設定します。データを販売することはありません。"
 
 #: assets/*.js
 msgctxt "js"
@@ -8036,6 +8036,10 @@ msgid "9. Website Audits and Lead Reports"
 msgstr "9. ウェブサイト監査とリードレポート"
 
 #: privacy.html
+msgid "90 days"
+msgstr "90日間"
+
+#: privacy.html
 msgid "<0>Advertising:</0> Meta Ads, Apple Search Ads, OpenAI Ads"
 msgstr "<0>広告:</0> Meta Ads、Apple Search Ads、OpenAI Ads"
 
@@ -8100,6 +8104,18 @@ msgid ""
 "<0>Generated media.</0> Images and video created in Duct are produced by third-party generative AI services, which receive the prompt and any reference image you supply."
 msgstr ""
 "<0>生成されたメディア。</0> Ductで作成された画像と動画は、サードパーティの生成AIサービスによって生成されます。これらのサービスは、プロンプトとお客様が提供する参照画像を受け取ります。"
+
+#: privacy.html
+msgid ""
+"<0>Google Analytics is not part of that choice.</0> Its cookies below are set when a page loads, wherever you are and whatever you choose."
+msgstr ""
+"<0>Google Analyticsはこの選択の対象外です。</0>以下のクッキーは、お客様の所在地や選択にかかわらず、ページの読み込み時に設定されます。"
+
+#: privacy.html
+msgid ""
+"<0>Google LLC is a US company and may process what it receives in the United States,</0> under the safeguards in its data processing terms. What Google's advertising services receive is also used as described in <1>Google's privacy policy</1>."
+msgstr ""
+"<0>Google LLCは米国の企業であり、受け取った情報を米国で処理する場合があります。</0>その際は、同社のデータ処理規約に定める保護措置が適用されます。Googleの広告サービスが受け取る情報は、<1>Googleのプライバシーポリシー</1>に記載されているとおりにも使用されます。"
 
 #: privacy.html
 msgid ""
@@ -8209,15 +8225,15 @@ msgstr ""
 
 #: privacy.html
 msgid ""
-"<0>The desktop app never records a replay of your session.</0> Session replay (section 11) exists only on our website and in the web app in a browser."
+"<0>The desktop app never asks you about cookies.</0> Its usage events and crash reports go to PostHog, which in the desktop app holds everything in memory and writes nothing to your machine, so PostHog's cookie does not exist there. A consent bar in front of an application you just opened is not a question worth interrupting anyone for. The app's window does load our web app, so Google Analytics runs there too, sets the Google cookies listed in section 11, and is not affected by the switch below."
 msgstr ""
-"<0>デスクトップアプリはセッションのリプレイを記録することはありません。</0>セッションリプレイ（セクション11）は、当社のウェブサイトおよびブラウザ内のウェブアプリでのみ存在します。"
+"<0>デスクトップアプリがクッキーについて尋ねることはありません。</0>その使用状況イベントとクラッシュレポートはPostHogに送信されますが、デスクトップアプリではすべてをメモリに保持し、お使いのデバイスには何も書き込まないため、PostHogのクッキーはそこには存在しません。開いたばかりのアプリケーションの前に同意バーが表示されるのは、誰かの作業を中断する価値のある質問ではありません。ただし、アプリのウィンドウは当社のウェブアプリを読み込むため、Google Analyticsもそこで動作し、セクション11に記載のGoogleのクッキーを設定します。また、以下のスイッチの影響は受けません。"
 
 #: privacy.html
 msgid ""
-"<0>The desktop app sets no cookies, and is never going to ask you about them.</0> Its usage events and crash reports go to PostHog, which in the desktop app holds everything in memory and writes nothing to your machine, so none of the cookies in section 11 exist there and there is nothing to consent to. A consent bar in front of an application you just opened is not a question worth interrupting anyone for."
+"<0>The desktop app never records a replay of your session.</0> Session replay (section 11) exists only on our website and in the web app in a browser."
 msgstr ""
-"<0>デスクトップアプリはクッキーを設定せず、クッキーについて尋ねることもありません。</0>その使用状況イベントとクラッシュレポートはPostHogに送信されますが、デスクトップアプリではすべてをメモリに保持し、お使いのデバイスには何も書き込まないため、セクション11のクッキーは存在せず、同意する必要もありません。開いたばかりのアプリケーションの前に同意バーが表示されるのは、誰かの作業を中断する価値のある質問ではありません。"
+"<0>デスクトップアプリはセッションのリプレイを記録することはありません。</0>セッションリプレイ（セクション11）は、当社のウェブサイトおよびブラウザ内のウェブアプリでのみ存在します。"
 
 #: privacy.html
 msgid ""
@@ -8283,12 +8299,6 @@ msgstr ""
 "特定の事項について明示的な同意を得ている場合、セキュリティ目的または適用される法律を遵守するために必要な場合、またはデータが集計され匿名化されている場合を除き、人間がGoogleユーザーデータを読み取ることを許可する"
 
 #: privacy.html
-msgid ""
-"Analytics cookies are set only after you accept them. If you are in the EEA, the UK or Switzerland we ask before anything is set, and nothing but the strictly necessary entries below exists until you choose. Elsewhere analytics is on by default and you can turn it off at any time — the <0>Cookie settings</0> link in our footer, and in the account menu inside the app, reopens the choice on every page."
-msgstr ""
-"分析Cookieは、お客様が同意した場合にのみ設定されます。EEA、英国、またはスイスにお住まいの場合は、設定される前に確認し、お客様が選択するまで、以下の厳密に必要なエントリ以外は存在しません。その他の地域では、分析はデフォルトでオンになっており、いつでもオフにできます。フッターの<0>Cookie設定</0>リンクと、アプリ内のアカウントメニューで、すべてのページで選択肢を再度開くことができます。"
-
-#: privacy.html
 msgid "Anthropic, OpenAI, Google, OpenRouter"
 msgstr "Anthropic、OpenAI、Google、OpenRouter"
 
@@ -8326,6 +8336,11 @@ msgid "Connected data sources"
 msgstr "接続されたデータソース"
 
 #: privacy.html
+msgid ""
+"Connects a visit to an ad click, for measuring Google Ads. Not covered by the choice above"
+msgstr "Google Adsの測定のために、訪問を広告クリックと関連付けます。上記の選択の対象外です"
+
+#: privacy.html
 msgid "Cookie"
 msgstr "Cookie"
 
@@ -8352,9 +8367,9 @@ msgstr "データは、EU標準契約条項を含む転送メカニズムに基�
 
 #: privacy.html
 msgid ""
-"Declining means PostHog is not loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we stop PostHog, delete the cookies below and PostHog's copy of them in your browser's storage, and reload the page."
+"Declining means PostHog is not loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we stop PostHog, delete its cookie and its copy of it in your browser's storage, and reload the page. Google Analytics keeps running either way."
 msgstr ""
-"拒否するということは、PostHogが制限モードで読み込まれるのではなく、まったく読み込まれないことを意味します。以前に承諾した後で拒否した場合、PostHogを停止し、以下のクッキーとブラウザのストレージにあるPostHogのコピーを削除し、ページを再読み込みします。"
+"拒否するということは、PostHogが制限モードで読み込まれるのではなく、まったく読み込まれないことを意味します。以前に承諾した後で拒否した場合、PostHogを停止し、そのクッキーとブラウザのストレージにあるコピーを削除し、ページを再読み込みします。いずれの場合もGoogle Analyticsは動作し続けます。"
 
 #: privacy.html
 msgid ""
@@ -8374,6 +8389,11 @@ msgid ""
 "Distinguishes one visitor from another, and carries the same visit across <0>getduct.ai</0> and <1>app.getduct.ai</1> so it counts as one person, not two. PostHog may keep the same value in your browser's local storage"
 msgstr ""
 "訪問者を区別し、<0>getduct.ai</0>と<1>app.getduct.ai</1>間で同じ訪問を保持し、2人ではなく1人としてカウントします。PostHogは、ブラウザのローカルストレージに同じ値を保持する場合があります"
+
+#: privacy.html
+msgid ""
+"Distinguishes one visitor from another. Set on <0>getduct.ai</0> and all its subdomains. Not covered by the choice above"
+msgstr "訪問者を互いに区別します。<0>getduct.ai</0>とそのすべてのサブドメインに設定されます。上記の選択の対象外です"
 
 #: privacy.html
 msgid ""
@@ -8468,10 +8488,18 @@ msgid "Generative media providers"
 msgstr "生成メディアプロバイダー"
 
 #: privacy.html
+msgid "Google (Analytics and Tag Manager)"
+msgstr "Google（AnalyticsおよびTag Manager）"
+
+#: privacy.html
 msgid ""
 "Google Ads campaigns, ad groups, search terms, and performance metrics (clicks, impressions, cost, conversions, ROAS), plus device and geographic segmentation"
 msgstr ""
 "Google Adsキャンペーン、広告グループ、検索語句、パフォーマンス指標（クリック数、インプレッション数、費用、コンバージョン数、ROAS）、およびデバイスと地域セグメンテーション"
+
+#: privacy.html
+msgid "Google Analytics"
+msgstr "Google Analytics"
 
 #: privacy.html
 msgid "Google Analytics 4 admin settings"
@@ -8521,9 +8549,13 @@ msgid ""
 msgstr ""
 "このポリシーは、他者が実行するソフトウェアのインスタンスには適用されません。第三者が運営するDuctのデプロイメント、またはお客様自身が実行するデプロイメントを使用する場合、そのデプロイメントの運営者がデータ管理者であり、このポリシーは適用されません。コードを公開しても、当社が運営していないデプロイメントに保持されているデータにアクセスできるわけではありません。"
 
-#: privacy.html terms.html
-msgid "Last updated: October 29, 2026"
-msgstr "最終更新日：2026年10月29日"
+#: privacy.html
+msgid "Keeps track of the current visit. Not covered by the choice above"
+msgstr "現在の訪問を追跡します。上記の選択の対象外です"
+
+#: privacy.html
+msgid "Last updated: November 5, 2026"
+msgstr "最終更新日：2026年11月5日"
 
 #. meta og:description
 #. meta twitter:description
@@ -8542,6 +8574,12 @@ msgstr "場所：スペイン"
 #: privacy.html
 msgid "No"
 msgstr "いいえ"
+
+#: privacy.html
+msgid ""
+"No — full page addresses, which can contain internal IDs, visit and device data, IP address and cookie identifiers, as described in section 11; never your connected tools' data or your prompts"
+msgstr ""
+"いいえ。完全なページアドレス（内部IDを含む場合があります）、訪問およびデバイスのデータ、IPアドレス、クッキー識別子が対象です（セクション11に記載）。接続したツールのデータやプロンプトが含まれることはありません"
 
 #: privacy.html
 msgid ""
@@ -8677,6 +8715,12 @@ msgstr "下記の<0>ローカルに保存されたデータ</0>で説明され�
 
 #: privacy.html
 msgid ""
+"The choice we ask for covers PostHog's analytics cookie. If you are in the EEA, the UK or Switzerland we ask before PostHog sets anything. Elsewhere it is on by default and you can turn it off at any time: the <0>Cookie settings</0> link in our footer, and in the account menu inside the app, reopens the choice on every page."
+msgstr ""
+"お願いしている選択は、PostHogの分析クッキーを対象としています。EEA、英国、またはスイスにお住まいの場合は、PostHogが何かを設定する前に確認します。その他の地域ではデフォルトでオンになっており、いつでもオフにできます。フッターの<0>Cookie設定</0>リンクと、アプリ内のアカウントメニューで、すべてのページで選択肢を再度開くことができます。"
+
+#: privacy.html
+msgid ""
 "The commitments in this policy — no sale of your data, no advertising use, no model training, deletion on request — apply to data from these sources exactly as they apply to Google user data."
 msgstr ""
 "このポリシーにおけるコミットメント — お客様データの販売なし、広告利用なし、モデルトレーニングなし、リクエストに応じた削除 — は、Googleユーザーデータに適用されるのとまったく同じように、これらのソースからのデータに適用されます。"
@@ -8740,6 +8784,14 @@ msgid ""
 msgstr "ソースを切断するか、キーを削除するか、アカウントを削除するか、またはプロバイダーでアクセスを取り消すまで — いずれか早い方"
 
 #: privacy.html
+msgid "Up to 14 months"
+msgstr "最長14か月"
+
+#: privacy.html
+msgid "Up to 2 years"
+msgstr "最長2年"
+
+#: privacy.html
 msgid "Up to 7 years, the retention of our PostHog plan"
 msgstr "最大7年間、当社のPostHogプランの保持期間"
 
@@ -8771,6 +8823,16 @@ msgstr ""
 "Googleユーザーデータを使用または転送し、ターゲット広告、パーソナライズ広告、リターゲティング広告、インタレストベース広告を含むあらゆる種類の広告配信のために利用すること"
 
 #: privacy.html
+msgid "Visit data in Google Analytics"
+msgstr "Google Analyticsの訪問データ"
+
+#: privacy.html
+msgid ""
+"We also use Google Analytics, loaded through Google Tag Manager, to count visits and see where they come from. It runs on our website, in the web app and in the desktop app's window. <0>It does not follow the cookie choice described below:</0> it loads on every page, before you answer and after you decline. Google receives the full address of the page, where you came from, your browser and device, your IP address, which it uses to estimate your location, and an identifier from the cookies listed below. These tags also send visit data to Google's advertising services, including the one that builds ad audiences. We are not running Google Ads at the moment. If you do not want this, Google offers a <1>browser add-on that opts you out of Google Analytics</1>."
+msgstr ""
+"また、訪問数をカウントし、流入元を確認するために、Google Tag Managerを通じて読み込まれるGoogle Analyticsを使用しています。当社のウェブサイト、ウェブアプリ、デスクトップアプリのウィンドウで動作します。<0>以下で説明するクッキーの選択には従いません。</0>回答前でも拒否後でも、すべてのページで読み込まれます。Googleは、ページの完全なアドレス、流入元、ブラウザとデバイス、IPアドレス（おおよその位置の推定に使用されます）、および以下のクッキーの識別子を受け取ります。これらのタグは、広告オーディエンスを作成するサービスを含むGoogleの広告サービスにも訪問データを送信します。現在、Google Adsは運用していません。これを望まない場合は、Googleが提供する<1>Google Analyticsをオプトアウトするブラウザアドオン</1>をご利用いただけます。"
+
+#: privacy.html
 msgid ""
 "We are based in Spain and process personal data under the EU GDPR. You have the right to access, correct, export, restrict the processing of, or delete your personal data, and to object to processing. Our legal basis is the performance of our contract with you for operating the product; legitimate interest for security and diagnostics, including the error reports and server-side events in section 11; and your consent for analytics cookies and session replays where we ask for it. Exercise any of these rights at <0>hello@getduct.ai</0>; you also have the right to lodge a complaint with your local supervisory authority (in Spain, the AEPD)."
 msgstr ""
@@ -8784,15 +8846,9 @@ msgstr ""
 
 #: privacy.html
 msgid ""
-"We do not sell your data. We share it only with the service providers below, only as needed to operate Duct, and only under terms that restrict them to that purpose:"
+"We do not sell your data. We share it only with the service providers below, only as needed to operate Duct, and, apart from what Google's advertising services receive, only under terms that restrict them to that purpose:"
 msgstr ""
-"お客様のデータを販売することはありません。Ductの運用に必要な場合に限り、以下のサービスプロバイダーと共有し、その目的に限定する条件の下でのみ共有します。"
-
-#: privacy.html
-msgid ""
-"We do not use Google Analytics, Google Tag Manager or any other tag manager. We stopped in October 2026, and our website deletes the cookies they set before then (<0>_ga</0>, <1>_gcl_au</1>) on your next visit."
-msgstr ""
-"当社はGoogle Analytics、Google Tag Manager、その他のタグマネージャーを使用していません。2026年10月に使用を停止し、それ以前に設定されたクッキー（<0>_ga</0>、<1>_gcl_au</1>）は、次回の訪問時に当社のウェブサイトが削除します。"
+"お客様のデータを販売することはありません。Ductの運用に必要な場合に限り、以下のサービスプロバイダーと共有し、Googleの広告サービスが受け取るものを除き、その目的に限定する条件の下でのみ共有します。"
 
 #: privacy.html
 msgid "We follow the principle of least privilege for internal data access"
@@ -8814,6 +8870,10 @@ msgstr ""
 msgid ""
 "We use Google user data only to provide and improve these user-facing features. We do not use it for any other purpose."
 msgstr "Googleユーザーデータは、これらのユーザー向け機能を提供および改善するためにのみ使用します。その他の目的で使用することはありません。"
+
+#: privacy.html
+msgid "Website and app analytics, and advertising measurement"
+msgstr "ウェブサイトとアプリの分析、および広告の測定"
 
 #: privacy.html terms.html
 msgid "Website: <0>getduct.ai</0>"
@@ -8875,6 +8935,18 @@ msgstr "お客様のメールアドレス"
 #: privacy.html
 msgid "Your name and profile picture"
 msgstr "お客様の名前とプロフィール画像"
+
+#: privacy.html
+msgid "_ga"
+msgstr "_ga"
+
+#: privacy.html
+msgid "_ga_SXH5LYVTJ8"
+msgstr "_ga_SXH5LYVTJ8"
+
+#: privacy.html
+msgid "_gcl_au"
+msgstr "_gcl_au"
 
 #: privacy.html
 msgid "adwords"
@@ -9475,6 +9547,10 @@ msgstr "Ductを使用してコンテンツを下書き、生成、または公�
 msgid ""
 "Interfere with or disrupt the service or servers, including by circumventing rate limits"
 msgstr "サービスまたはサーバーを妨害または中断する（レート制限を回避することを含む）"
+
+#: terms.html
+msgid "Last updated: October 29, 2026"
+msgstr "最終更新日：2026年10月29日"
 
 #: terms.html
 msgid ""
@@ -12104,6 +12180,37 @@ msgstr "← 戻る"
 msgid "← Start over"
 msgstr "← 最初からやり直す"
 
+#~ msgctxt "js"
+#~ msgid ""
+#~ "We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same."
+#~ msgstr ""
+#~ "PostHogを使用して、どのページでサインアップが発生し、Ductがどこでユーザーの妨げになっているかを確認します。これには、入力されたすべての情報が非表示にされた訪問のリプレイも含まれます。これが唯一の用途であり、広告ターゲティングや販売目的ではありません。拒否した場合でも、Ductはまったく同じように機能します。"
+
+#~ msgid ""
+#~ "<0>The desktop app sets no cookies, and is never going to ask you about them.</0> Its usage events and crash reports go to PostHog, which in the desktop app holds everything in memory and writes nothing to your machine, so none of the cookies in section 11 exist there and there is nothing to consent to. A consent bar in front of an application you just opened is not a question worth interrupting anyone for."
+#~ msgstr ""
+#~ "<0>デスクトップアプリはクッキーを設定せず、クッキーについて尋ねることもありません。</0>その使用状況イベントとクラッシュレポートはPostHogに送信されますが、デスクトップアプリではすべてをメモリに保持し、お使いのデバイスには何も書き込まないため、セクション11のクッキーは存在せず、同意する必要もありません。開いたばかりのアプリケーションの前に同意バーが表示されるのは、誰かの作業を中断する価値のある質問ではありません。"
+
+#~ msgid ""
+#~ "Analytics cookies are set only after you accept them. If you are in the EEA, the UK or Switzerland we ask before anything is set, and nothing but the strictly necessary entries below exists until you choose. Elsewhere analytics is on by default and you can turn it off at any time — the <0>Cookie settings</0> link in our footer, and in the account menu inside the app, reopens the choice on every page."
+#~ msgstr ""
+#~ "分析Cookieは、お客様が同意した場合にのみ設定されます。EEA、英国、またはスイスにお住まいの場合は、設定される前に確認し、お客様が選択するまで、以下の厳密に必要なエントリ以外は存在しません。その他の地域では、分析はデフォルトでオンになっており、いつでもオフにできます。フッターの<0>Cookie設定</0>リンクと、アプリ内のアカウントメニューで、すべてのページで選択肢を再度開くことができます。"
+
+#~ msgid ""
+#~ "Declining means PostHog is not loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we stop PostHog, delete the cookies below and PostHog's copy of them in your browser's storage, and reload the page."
+#~ msgstr ""
+#~ "拒否するということは、PostHogが制限モードで読み込まれるのではなく、まったく読み込まれないことを意味します。以前に承諾した後で拒否した場合、PostHogを停止し、以下のクッキーとブラウザのストレージにあるPostHogのコピーを削除し、ページを再読み込みします。"
+
+#~ msgid ""
+#~ "We do not sell your data. We share it only with the service providers below, only as needed to operate Duct, and only under terms that restrict them to that purpose:"
+#~ msgstr ""
+#~ "お客様のデータを販売することはありません。Ductの運用に必要な場合に限り、以下のサービスプロバイダーと共有し、その目的に限定する条件の下でのみ共有します。"
+
+#~ msgid ""
+#~ "We do not use Google Analytics, Google Tag Manager or any other tag manager. We stopped in October 2026, and our website deletes the cookies they set before then (<0>_ga</0>, <1>_gcl_au</1>) on your next visit."
+#~ msgstr ""
+#~ "当社はGoogle Analytics、Google Tag Manager、その他のタグマネージャーを使用していません。2026年10月に使用を停止し、それ以前に設定されたクッキー（<0>_ga</0>、<1>_gcl_au</1>）は、次回の訪問時に当社のウェブサイトが削除します。"
+
 #. img alt
 #~ msgid "The Connections page with twelve tools, five of them connected"
 #~ msgstr "12個のツールがあり、そのうち5個が接続済みの接続ページ"
@@ -12193,9 +12300,6 @@ msgstr "← 最初からやり直す"
 #~ msgid "2 years"
 #~ msgstr "2年間"
 
-#~ msgid "90 days"
-#~ msgstr "90日間"
-
 #~ msgid ""
 #~ "<0>The desktop app sets no cookies, and is never going to ask you about them.</0> It loads no Google Tag Manager and no Google Analytics at all. Its usage events and crash reports go to PostHog, which in the desktop app holds everything in memory and writes nothing to your machine, so none of the cookies in section 11 exist there and there is nothing to consent to. A consent bar in front of an application you just opened is not a question worth interrupting anyone for."
 #~ msgstr ""
@@ -12223,15 +12327,6 @@ msgstr "← 最初からやり直す"
 #~ "We collect product analytics — pages visited, features used, what you click, how fast pages load — to see which pages earn a signup and where Duct gets in your way. On our website and in the web app in a browser this runs through two tools: Google Analytics 4, loaded by Google Tag Manager, and PostHog. Both follow the cookie choice described below."
 #~ msgstr ""
 #~ "当社は、プロダクトアナリティクス（訪問したページ、使用した機能、クリックした内容、ページの読み込み速度など）を収集し、どのページがサインアップにつながり、Ductがどこでユーザーの妨げになっているかを確認しています。当社のウェブサイトおよびブラウザのウェブアプリでは、これはGoogle Tag Managerによって読み込まれるGoogle Analytics 4とPostHogの2つのツールを通じて実行されます。どちらも以下に記載されているクッキーの選択に従います。"
-
-#~ msgid "_ga"
-#~ msgstr "_ga"
-
-#~ msgid "_ga_SXH5LYVTJ8"
-#~ msgstr "_ga_SXH5LYVTJ8"
-
-#~ msgid "_gcl_au"
-#~ msgstr "_gcl_au"
 
 #~ msgid "3 months"
 #~ msgstr "3ヶ月"

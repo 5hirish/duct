@@ -10,11 +10,10 @@
  * should be able to drop that or replace it without reading our consent logic.
  *
  * A provider may still refuse a surface on its own account, when the risk is
- * what the provider *is* rather than measurement as such. A tag manager would:
- * it runs scripts configured outside this repository, with the session token
- * and the desktop shell's IPC in reach. Google Tag Manager and GA4 ran here
- * until October 2026 and went for that reason, and because an open-source
- * product measures itself with open-source tools.
+ * what the provider *is* rather than measurement as such. A tag manager would,
+ * because it runs scripts configured outside this repository, so none is a
+ * provider here. Google Analytics reaches this app from Cloudflare's tag gateway
+ * at the edge instead, past this seam and past consent: see site/AGENTS.md.
  *
  * Selected by `NEXT_PUBLIC_ANALYTICS_PROVIDER`, a comma-separated list. Unset
  * means every provider whose own variable is set (`NEXT_PUBLIC_POSTHOG_KEY`

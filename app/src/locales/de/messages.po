@@ -11086,8 +11086,12 @@ msgstr "Wir haben die Verbindung zu diesem Lauf verloren. Bitte versuche es erne
 #~ msgstr "Wir nutzen PostHog und Google Analytics, um zu sehen, welche Seiten eine Anmeldung bringen und wo Duct dir im Weg steht – auch mit Aufzeichnungen von Besuchen, in denen alles, was du eingibst, verborgen bleibt. Das ist der gesamte Zweck – kein Ad-Targeting, nichts wird verkauft. Ablehnen und Duct funktioniert genau gleich. <0>Datenschutzerklärung</0>"
 
 #: src/components/CookieConsent.jsx
-msgid "We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same. <0>Privacy Policy</0>"
-msgstr "Wir nutzen PostHog, um zu sehen, welche Seiten eine Anmeldung bringen und wo Duct dir im Weg steht – auch mit Aufzeichnungen von Besuchen, in denen alles, was du eingibst, verborgen bleibt. Das ist der gesamte Zweck – kein Ad-Targeting, nichts wird verkauft. Ablehnen und Duct funktioniert genau gleich. <0>Datenschutzerklärung</0>"
+msgid "We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold. <0>Privacy Policy</0>"
+msgstr "Wir nutzen PostHog, um zu sehen, welche Seiten zu einer Anmeldung führen und wo Duct dich behindert, einschließlich Wiedergaben von Besuchen, bei denen alles, was du eingibst, verborgen ist. Mit „Ablehnen“ schaltest du PostHog aus, und Duct funktioniert genau gleich. Google Analytics zählt außerdem Besuche und setzt eigene Cookies, egal was du wählst. Nichts wird verkauft. <0>Datenschutzrichtlinie</0>"
+
+#: src/components/CookieConsent.jsx
+#~ msgid "We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same. <0>Privacy Policy</0>"
+#~ msgstr "Wir nutzen PostHog, um zu sehen, welche Seiten eine Anmeldung bringen und wo Duct dir im Weg steht – auch mit Aufzeichnungen von Besuchen, in denen alles, was du eingibst, verborgen bleibt. Das ist der gesamte Zweck – kein Ad-Targeting, nichts wird verkauft. Ablehnen und Duct funktioniert genau gleich. <0>Datenschutzerklärung</0>"
 
 #: src/lib/agentSession.js
 msgid "We're hitting a rate limit — wait a minute and try again."

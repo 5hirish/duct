@@ -11087,8 +11087,12 @@ msgstr "この実行への接続が失われました。もう一度お試しく
 #~ msgstr "PostHogとGoogle Analyticsを使って、どのページがサインアップにつながるか、Ductのどこで使いにくさを感じているかを確認しています。訪問の録画も含みますが、入力した内容はすべて隠されます。用途はこれだけで、広告ターゲティングも販売も一切ありません。拒否してもDuctはまったく同じように動作します。<0>プライバシーポリシー</0>"
 
 #: src/components/CookieConsent.jsx
-msgid "We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same. <0>Privacy Policy</0>"
-msgstr "PostHogを使って、どのページがサインアップにつながるか、Ductのどこで使いにくさを感じているかを確認しています。訪問の録画も含みますが、入力した内容はすべて隠されます。用途はこれだけで、広告ターゲティングも販売も一切ありません。拒否してもDuctはまったく同じように動作します。<0>プライバシーポリシー</0>"
+msgid "We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold. <0>Privacy Policy</0>"
+msgstr "PostHogを使用して、どのページでサインアップが発生し、Ductがどこでユーザーの妨げになっているかを確認します。これには、入力されたすべての情報が非表示にされた訪問のリプレイも含まれます。拒否するとPostHogはオフになり、Ductはまったく同じように機能します。Google Analyticsも訪問数をカウントし、どちらを選択しても独自のクッキーを設定します。データを販売することはありません。 <0>プライバシーポリシー</0>"
+
+#: src/components/CookieConsent.jsx
+#~ msgid "We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same. <0>Privacy Policy</0>"
+#~ msgstr "PostHogを使って、どのページがサインアップにつながるか、Ductのどこで使いにくさを感じているかを確認しています。訪問の録画も含みますが、入力した内容はすべて隠されます。用途はこれだけで、広告ターゲティングも販売も一切ありません。拒否してもDuctはまったく同じように動作します。<0>プライバシーポリシー</0>"
 
 #: src/lib/agentSession.js
 msgid "We're hitting a rate limit — wait a minute and try again."

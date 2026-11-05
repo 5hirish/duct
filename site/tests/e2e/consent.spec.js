@@ -16,7 +16,9 @@ const { test, expect } = require("@playwright/test");
 
 const { PORT } = require("./port");
 const ORIGIN = `http://localtest.me:${PORT}`;
-// Google Tag Manager and GA4 were removed; nothing may fetch them again.
+// Cloudflare's tag gateway adds Google's tags at the edge, which this server
+// does not have, so nothing here may fetch them: a copy loaded by a page or by
+// duct.js would count every visit twice.
 const GOOGLE_TAGS_PATTERN = /googletagmanager\.com|google-analytics\.com/;
 // PostHog loads through the app's reverse proxy, never from posthog.com, so
 // this is the one address its library can come from.
@@ -74,7 +76,7 @@ test("a decline survives the next page load", async ({ page }) => {
   expect(posthog).toHaveLength(0);
 });
 
-test("accepting loads PostHog and nothing from Google", async ({ page }) => {
+test("accepting loads PostHog, and our code loads nothing from Google", async ({ page }) => {
   const google = await trapGoogleTags(page);
   const posthog = await trapPosthog(page);
   await page.goto(`${ORIGIN}/`);
@@ -202,16 +204,26 @@ test("the decision is stored where both surfaces can read it", async ({ page }) 
   expect(cookie?.expires).toBeGreaterThan(Date.now() / 1000 + 60 * 60 * 24 * 150);
 });
 
-test("cookies Google Analytics left behind are deleted on the next visit", async ({ page }) => {
-  // Set on the registrable domain, as GA4 and the Conversion Linker set them.
+test("Google Analytics' cookies outlive a page load and a decline", async ({ page }) => {
+  // duct.js used to delete these on every load, and GA4 read nearly every visitor
+  // as new. Set on the registrable domain, as GA4 and the Conversion Linker set them.
   await page.context().addCookies([
     { name: "_ga", value: "GA1.1.1.1", domain: ".localtest.me", path: "/" },
     { name: "_ga_SXH5LYVTJ8", value: "GS1.1.1", domain: ".localtest.me", path: "/" },
     { name: "_gcl_au", value: "1.1.1", domain: ".localtest.me", path: "/" },
   ]);
+  const googleCookies = async () =>
+    (await page.context().cookies())
+      .map((c) => c.name)
+      .filter((name) => /^_g(a|cl)/.test(name))
+      .sort();
+  const kept = ["_ga", "_ga_SXH5LYVTJ8", "_gcl_au"];
+
   await page.goto(`${ORIGIN}/`);
   await expect(banner(page)).toBeVisible();
+  expect(await googleCookies()).toEqual(kept);
 
-  const names = (await page.context().cookies()).map((c) => c.name);
-  expect(names.filter((name) => /^_g(a|cl)/.test(name))).toEqual([]);
+  await page.getByRole("button", { name: "Decline" }).click();
+  await page.goto(`${ORIGIN}/about`);
+  expect(await googleCookies()).toEqual(kept);
 });

@@ -41,8 +41,9 @@ export function CookieConsent({ onAccept, onDecline }) {
           <Trans>
             We use PostHog to see which pages earn a signup and
             where Duct gets in your way, including replays of visits with everything
-            you type hidden. That is the whole use — no ad targeting, nothing sold.
-            Decline and Duct works exactly the same.{" "}
+            you type hidden. Decline turns PostHog off, and Duct works exactly the
+            same. Google Analytics also counts visits and sets its own cookies,
+            whichever you choose. Nothing is sold.{" "}
             <a
               href="https://getduct.ai/privacy"
               target="_blank"
