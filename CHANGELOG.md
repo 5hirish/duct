@@ -24,8 +24,34 @@ published without one. The same script, with no arguments, holds
 
 ## [Unreleased]
 
+## [0.7.3] — 2026-11-05
+
+The desktop app signs in again on macOS and Linux. Around it: one searchable Toolbox
+for every connector and MCP server, your coding agent signing in to Duct
+from the browser, and models from your own Ollama or any OpenAI-compatible
+server.
+
+### Fixed
+
+- **Desktop: sign-in on macOS and Linux.** 0.7.2 opened the sign-in security
+  check in the browser and reported "Security check failed to load", so the
+  downloaded app could not sign in. The shell's navigation guard was treating
+  the check's frame as a page to open outside; it now loads where it belongs.
+
 ### Added
 
+- **Toolbox: one searchable catalogue.** Connections is now Toolbox: native
+  connectors and MCP servers in one list, a search that also asks the MCP
+  Registry, and a way in for any server by its address when nothing matches.
+  A connected server that needs attention says why on its tile, and a tenant
+  of a platform is never labelled as the vendor's own server.
+- **Connect your AI agent.** Claude Code, Codex, Cursor, VS Code or OpenCode
+  can use Duct's MCP server by signing in through the browser: one line to
+  paste, no secret in it, and a consent page that names the agent asking.
+- **Content Studio: a drafts queue and a plan for any period.** Waiting
+  drafts gather in one queue and approve onto the channel's best slot, the
+  Plan tab plans the month, one or two weeks, or thirty days ahead, and a
+  project's own writing samples and voice rules shape its text posts.
 - **Post through Zernio or PostBridge, whichever you connect.** Social
   schedulers are connectors now, and none is on by default. Zernio adds whole
   threads on X and Threads, a first comment on LinkedIn, Instagram and
@@ -48,6 +74,9 @@ published without one. The same script, with no arguments, holds
 
 ### Changed
 
+- **Every screen on one page frame.** Home arranges what the agent wrote into
+  fixed slots, the top bar takes the page title over once it scrolls away,
+  and the account menu is five groups with a profile that fills itself in.
 - **New Google Ads keywords always wait for you.** A project set to assisted
   or auto could add keywords without a click; a new keyword goes live enabled,
   so it spends before anyone looks, and undo removes it but not the money.
