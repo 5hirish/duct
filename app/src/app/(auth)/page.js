@@ -147,12 +147,15 @@ function SignInContent() {
     },
     [router, startUrl, t]
   );
-  // Turnstile site keys are locked to their registered hostnames, so the widget
-  // can never render on the desktop shell's origin (`tauri://localhost`, or a
-  // loopback dev server) — it just fails with "Security check failed to load".
-  // Nothing is lost by skipping it: the sidecar is bound to 127.0.0.1 and gated
-  // by a per-install API key, so there is no bot surface to protect, and
-  // `verify_turnstile` already no-ops when the sidecar has no secret configured.
+  // Skipped only with a local sidecar. Nothing is lost there: the sidecar is
+  // bound to 127.0.0.1 and gated by a per-install API key, so there is no bot
+  // surface to protect, and `verify_turnstile` already no-ops when the sidecar
+  // has no secret configured. Against the hosted API the widget renders in the
+  // desktop shell too (the official build loads this page from its registered
+  // hostname), so its iframe origin is on the shell's navigation allowlist
+  // (`EMBEDDED_FRAME_ORIGINS` in `desktop/src-tauri/src/lib.rs`); without it
+  // the shell bounces the frame to the browser and this page reports
+  // "Security check failed to load".
   // State, corrected after mount: hydration has to render what the server did,
   // and the server never has a sidecar.
   const [requiresTurnstile, setRequiresTurnstile] = useState(Boolean(TURNSTILE_SITE_KEY));
