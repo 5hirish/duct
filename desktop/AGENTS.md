@@ -91,13 +91,19 @@ carries all the code.
     three cannot disagree. A config whose window has no remote URL fails
     setup rather than running unguarded.
   - **On macOS and Linux the webview asks the guard about frames too** (wry
-    passes no frame information), so an `<iframe src>` on another origin
-    would be opened in the browser there. Every iframe the app renders is
-    `srcdoc`, which navigates to `about:srcdoc` and passes; so do
-    `about:blank` and a `blob:` the app's own origin created, and nothing
-    else (`data:` and a foreign blob are a foreign page without the request).
-    Keep it that way, or widen `navigation_policy` deliberately, with the
-    test beside it.
+    passes no frame information), so an `<iframe src>` on another origin is
+    not blocked but bounced: cancelled in the window and opened in the
+    browser. Every iframe the app renders is `srcdoc`, which navigates to
+    `about:srcdoc` and passes; so do `about:blank` and a `blob:` the app's
+    own origin created, and the one foreign frame the app embeds: Cloudflare
+    Turnstile's challenge, listed in `EMBEDDED_FRAME_ORIGINS`. Nothing else
+    (`data:` and a foreign blob are a foreign page without the request).
+    **A new `<iframe src>` in `app/` adds its origin to that list in the same
+    change**, with its case in the test beside it. 0.7.2 shipped without
+    Turnstile's: every official build talks to the hosted API, which requires
+    the challenge, so on macOS the sign-in page opened Safari on the
+    challenge URL and said "Security check failed to load". No dev build
+    caught it because a sidecar build skips Turnstile.
 - **The first launch is greeted once.** `claim_first_run` looks for a `greeted`
   marker in the app data dir; if it is absent it writes one and returns true,
   and `open_splash` then builds a 380×330 window (instead of 380×150) and

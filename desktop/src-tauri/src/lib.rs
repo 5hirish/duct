@@ -1079,6 +1079,24 @@ fn open_splash(app: &AppHandle, first_run: bool) -> tauri::Result<()> {
     Ok(())
 }
 
+/// The foreign origins the web app embeds as frames, and nothing else.
+///
+/// Cloudflare Turnstile renders its challenge in an iframe on this origin
+/// whenever the sign-in page talks to the hosted API, which is every official
+/// build. A new `<iframe src>` on another origin in `app/` goes here in the
+/// same change, with its case in `the_window_only_ever_shows_the_app_origin`;
+/// otherwise the guard opens it in the browser and the frame stays empty.
+const EMBEDDED_FRAME_ORIGINS: [&str; 1] = ["https://challenges.cloudflare.com"];
+
+/// Whether `url` sits on one of `EMBEDDED_FRAME_ORIGINS`, compared as origins
+/// so a lookalike host or the same host over plain http does not match.
+fn is_embedded_frame_origin(url: &Url) -> bool {
+    EMBEDDED_FRAME_ORIGINS
+        .iter()
+        .filter_map(|origin| Url::parse(origin).ok())
+        .any(|origin| origin.origin() == url.origin())
+}
+
 /// What the main window may do with a navigation request.
 #[derive(Debug, PartialEq, Eq)]
 enum Navigation {
@@ -1108,12 +1126,19 @@ enum Navigation {
 /// level is the same hole as a foreign web page, just without a request, so
 /// both are dropped. The check matters for frames as much as the top level:
 /// on macOS and Linux the webview asks this function about frame navigations
-/// too (wry passes no frame information). That is the caveat to carry: an
-/// `<iframe src="https://elsewhere">` would be opened in the browser there.
-/// Nothing in the app embeds one today.
+/// too (wry passes no frame information), so a foreign `<iframe src>` is
+/// decided exactly like a top-level load. The app embeds one:
+/// `EMBEDDED_FRAME_ORIGINS` names it, and passes it. A frame origin missing
+/// from that list is not blocked but *bounced*: the frame is cancelled and
+/// its URL opens in the system browser. That is what shipped in 0.7.2, where
+/// the sign-in page's Turnstile challenge opened in Safari and the page said
+/// "Security check failed to load" (sidecar builds skip Turnstile, which is
+/// why no dev build saw it). Allowing the origin at the top level too is the
+/// price of wry's missing frame flag, and for a challenge page it is nothing.
 fn navigation_policy(url: &Url, app_url: &Url) -> Navigation {
     match url.scheme() {
         "http" | "https" if url.origin() == app_url.origin() => Navigation::Allow,
+        "https" if is_embedded_frame_origin(url) => Navigation::Allow,
         "http" | "https" => Navigation::OpenExternally,
         "about" if matches!(url.path(), "blank" | "srcdoc") => Navigation::Allow,
         // The `url` crate gives a blob the origin of the URL in its path, so
@@ -1511,6 +1536,17 @@ mod tests {
         assert_eq!(decide("http://app.getduct.ai/"), Navigation::OpenExternally);
         assert_eq!(decide("https://app.getduct.ai.evil.tld/"), Navigation::OpenExternally);
         assert_eq!(decide("https://api.getduct.ai/"), Navigation::OpenExternally);
+
+        // The sign-in page's Turnstile frame loads in place. The webview asks
+        // about frames with no frame flag, so bouncing it to the browser is
+        // what broke sign-in in 0.7.2. Same origin only: not a lookalike, not
+        // plain http.
+        assert_eq!(
+            decide("https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/turnstile/f/x"),
+            Navigation::Allow
+        );
+        assert_eq!(decide("https://challenges.cloudflare.com.evil.tld/"), Navigation::OpenExternally);
+        assert_eq!(decide("http://challenges.cloudflare.com/"), Navigation::OpenExternally);
 
         // What the page builds for its own frames stays: the two `about:`
         // documents the webview makes, and a blob the app itself created.
