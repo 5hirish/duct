@@ -179,7 +179,7 @@ def _live_accounts_sync(connector_id: str, *, user_id: UUID, project_id: UUID | 
 
     Best-effort by contract: no credentials, no adapter, no network, or a
     provider error all return ``[]`` and the caller falls back to asking the
-    user to finish setup on the Connections page.
+    user to finish setup in the Toolbox.
     """
     from db.session import get_session as db_session
     from service.connector_access import resolve_read_credentials
@@ -244,8 +244,8 @@ async def _run(fn: Callable, *args: Any, **kwargs: Any) -> Any:
                 "status": "reauth_required",
                 "message": (
                     "The stored credential was rejected (expired or revoked). Nothing "
-                    "from this source works until the user reconnects it on the "
-                    "Connections page — call RequestConnection if the analysis needs "
+                    "from this source works until the user reconnects it in the "
+                    "Toolbox — call RequestConnection if the analysis needs "
                     "it, and do not retry this source again this session."
                 ),
             }
@@ -416,7 +416,7 @@ async def _select_account(
             "connector_id": connector_id,
             "message": (
                 f"{source['label']} is authorized but no account is available to select. "
-                "Ask the user to finish setting it up on the Connections page."
+                "Ask the user to finish setting it up in the Toolbox."
             ),
         }
     if pause is None:

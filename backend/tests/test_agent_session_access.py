@@ -3,7 +3,7 @@
 A session id is a uuid4, and for a long time that was the whole of the
 protection: anyone holding one could stream another user's agent, send messages
 into it, read its state, or close it mid-run. Unguessable is not a permission —
-ids reach logs, shared URLs and Sentry breadcrumbs.
+ids reach logs, shared URLs and error reports.
 
 Ownership rather than membership, because a session is in-memory and not always
 project-scoped. The three cases that exist are covered here: a session stamped

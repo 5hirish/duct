@@ -161,7 +161,7 @@ def _tiktok_studio_spec() -> AgentSpec:
         description=(
             "30-day content plans + post drafts for TikTok-style carousels. "
             "Researches pillars, drafts captions and slides, generates images, "
-            "and publishes via PostBridge."
+            "and publishes through the scheduler the user connects (PostBridge, Zernio)."
         ),
         capabilities=[
             AgentCapability.STREAMING,

@@ -81,9 +81,9 @@
       "command": "npx",
       "args": ["-y", "@railway/mcp-server"]
     },
-    // Only up while the Phoenix task is running; a dead entry costs a
+    // Only up while the Jaeger task is running; a dead entry costs a
     // connection attempt, not a broken agent.
-    "phoenix": { "url": "http://localhost:6006/mcp" },
+    "jaeger": { "url": "http://localhost:16686/api/ai/mcp/" },
     "github": { "url": "https://api.githubcopilot.com/mcp/" },
     "figma": { "url": "https://mcp.figma.com/mcp" },
     "cloudflare-docs": { "url": "https://docs.mcp.cloudflare.com/mcp" },

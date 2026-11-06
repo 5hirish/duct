@@ -13,7 +13,7 @@
     "adapter": "Debugpy",
     "request": "launch",
     "module": "pytest",
-    "args": ["tests", "-v", "--tb=short"],
+    "args": ["tests", "-m", "not live", "-v", "--tb=short"],
     "cwd": "$ZED_WORKTREE_ROOT/backend",
     "justMyCode": true
   },

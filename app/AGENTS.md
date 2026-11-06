@@ -10,8 +10,8 @@ Next.js App Router report viewer and agent interface.
 - **State:** React Context (`InsightContext.js`) + component-level state only. No Redux/Zustand.
 - **HTTP:** Native `fetch` wrapped in `lib/api.js`. No type-safe client or OpenAPI generation.
 - **Auth:** Custom API key (`NEXT_PUBLIC_DUCT_API_KEY`) sent to backend + Google Sign-In (`GoogleSignInButton.jsx`). No next-auth/Clerk/Supabase.
-- **Observability:** Sentry (`@sentry/nextjs` — server, edge, client), analytics behind a swappable provider (`lib/analytics/`, GTM by default via `NEXT_PUBLIC_GTM_ID`, gated on consent), Cloudflare Turnstile bot protection.
-  Sentry is **not** behind the consent gate, so the client's `dataCollection` block (`instrumentation-client.ts`) is Sentry 10's restrictive baseline written out — no IP, no bodies. Since Sentry 11 an unset `dataCollection` collects every category, so removing that block is a privacy change, not a tidy-up. Streamed spans pass through neither `beforeSend` nor scope tags: a header that must never leave goes in `dataCollection.httpHeaders` (as `sentry.server.config.ts` does for `X-Provider-*`), and a tag performance data is split by is also set with `Sentry.setAttribute`.
+- **Observability:** PostHog behind a swappable seam (`lib/analytics/`; `NEXT_PUBLIC_ANALYTICS_PROVIDER` picks, unset runs every provider whose variable is set: `NEXT_PUBLIC_POSTHOG_KEY`), gated on consent. No tag manager in this code: Cloudflare's Google tag gateway adds Google Tag Manager and GA4 at the edge, outside this seam and outside consent ([`site/AGENTS.md`](../site/AGENTS.md)); Cloudflare Turnstile bot protection. Nothing outside `lib/analytics/` names a vendor.
+  PostHog runs in two modes on one client (`lib/analytics/posthog.js`). **Errors** starts for every browser session from `instrumentation-client.ts`: early `error`/`unhandledrejection` listeners at once, the library on idle, in-memory persistence, so it stores nothing and needs no banner; error boundaries call `reportError`. **Full** starts on consent: cookie across `.getduct.ai`, page views, autocapture, heatmaps, replay. In the desktop shell the Preferences switch (`lib/telemetry.js`) replaces both the banner and the errors-before-consent rule: off sends nothing at all, on runs full mode in memory and never records a replay. Three rules a change here must keep: the `no-external` build only (the shell's IPC trusts every script on this origin, and it keeps `script-src` at `'self'`); `lib/analytics/scrub.js` on every event (query strings and the `/invite/` and `/open/audit/` path tokens go); and the replay masks all text and blocks images, embeds and canvases, plus `mask_all_text` on clicks, because a human watching a replay of a customer's GA4 numbers breaks Google's Limited Use rule. Server render errors go through `instrumentation.ts` → `lib/analytics/server.js` (posthog-node). Events reach PostHog through the same-origin `/ingest` rewrite in `next.config.mjs`, which the marketing site uses too.
 - **Overrides:** `package.json` forces `lodash-es` to ^4.18.1. `mermaid` 12.0.0 depends on `chevrotain` 11.1.2, which pins `lodash-es` 4.17.23 exactly, and that version carries a high advisory (code injection via `_.template`) and a moderate one (prototype pollution in `_.unset`/`_.omit`). Delete the override once `mermaid` moves to `chevrotain` 12 or later, which no longer uses lodash.
 
 ## Deployment
@@ -19,7 +19,7 @@ Next.js App Router report viewer and agent interface.
 - **Host:** Cloudflare Workers via `@opennextjs/cloudflare` adapter + wrangler CLI.
 - `npm run deploy:cf` → OpenNext build + `wrangler deploy` (do not run directly — all deploys go through CI/CD on merge to main).
 - **CI/CD:** GitHub Actions (`app.yml`) — lint, typecheck, `next build` on every PR; on push to `main` the `deploy` job runs `opennextjs-cloudflare build` + `wrangler deploy`. (Replaced the Cloudflare "Workers Builds" git integration, which failed on its Node 20 builder — wrangler@4.99 needs ≥22.)
-- **Security headers** are `SECURITY_HEADERS` in `next.config.mjs`, applied by OpenNext's routing layer to every response the worker renders. `/_next/static` and `public/` never reach the worker, so their `nosniff` is in `public/_headers`. The CSP's `script-src` is `SCRIPT_SOURCES` there: this origin, the tag container (web only; `lib/analytics/gtm.js` keeps it out of the shell) and the sign-in bot check, plus `'unsafe-eval'` in dev. A script from any other host is refused, so loading one means adding its host there. It keeps `'unsafe-inline'` with no nonce, and not because a nonce would make pages dynamic (every route already is: the root layout reads the locale cookie) but because an `about:srcdoc` frame inherits its parent's policy, and the brief and artifact frames run model-authored inline `<script>` that no nonce can reach. Every `srcDoc` iframe (briefs, the audit report, slides) inherits the policy, so a directive added there also governs model-authored HTML. Dev allows same-origin framing only because `/preview` frames `/preview/frame`.
+- **Security headers** are `SECURITY_HEADERS` in `next.config.mjs`, applied by OpenNext's routing layer to every response the worker renders. `/_next/static` and `public/` never reach the worker, so their `nosniff` is in `public/_headers`. The CSP's `script-src` is `SCRIPT_SOURCES` there: this origin (the edge's Google tag is served from it, so it passes) and the sign-in bot check, plus `'unsafe-eval'` in dev. A script from any other host is refused, so loading one means adding its host there. It keeps `'unsafe-inline'` with no nonce, and not because a nonce would make pages dynamic (every route already is: the root layout reads the locale cookie) but because an `about:srcdoc` frame inherits its parent's policy, and the brief and artifact frames run model-authored inline `<script>` that no nonce can reach. Every `srcDoc` iframe (briefs, the audit report, slides) inherits the policy, so a directive added there also governs model-authored HTML. Dev allows same-origin framing only because `/preview` frames `/preview/frame`.
 
 ## Route structure
 
@@ -99,14 +99,50 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
   - `audit/seo/` + `audit/seo/[sessionId]/` — SEO audit hub and live workspace
   - `content/` — Content Studio hub; `content/plan/` the planner board;
     `content/posts/[postId]`, `posts/new`, `sessions/new` — the content agent
-    workspace over a post or a plan
+    workspace over a post or a plan. A plan session is the plan manager for
+    one period: `?plan=<id>` revises that plan, `?start=<day>&days=<n>` plans
+    that period, and neither manages the plan covering today (or makes one
+    for the month in progress). The Plan tab's Revise plan is the first;
+    New plan and Plan ahead ask how far ahead (`PlanPeriodPicker.jsx`: the
+    month, 1 or 2 weeks, 30 days) and are the second. The dates come from
+    `lib/contentSchedule.js`, which mirrors `agents/content/plan_period.py`
+    and must keep agreeing with it. The hub's Posts tab opens on its Waiting
+    chip while any draft is unanswered: that view is the drafts queue (#266,
+    `components/content/DraftsQueue.jsx`), read from `status=draft` rather
+    than a route of its own. Approve opens `PublishModal` on the channel's
+    best slot (`suggestedAt`), Skip takes a `SkipReason` the content agent's
+    next draft reads as a feedback memory. Its one notice a day is
+    `components/content/DailyDraftsReminder.jsx`, mounted once in the app
+    layout inside `AuthGuard`; its time and switch are per device
+    (`lib/dailyReminder.js`). The Brand tab's Writing samples and Voice rules
+    (#271, `WritingSamples.jsx`, `VoiceRulesFields.jsx`, caps in
+    `lib/voiceRules.js`) save into `content_brand`; the rules are stored only
+    once changed, so an untouched project keeps following Duct's defaults
   - `execute/` — change-set review queue: diffs, approve, apply, roll back
-  - `connections/` — connector/integration management
+  - `connections/` — the **Toolbox**: one searchable catalogue of native
+    connectors and MCP servers
+    (`components/connections/ConnectorBrowser.jsx` over
+    `lib/connectorCatalog.js`). A new native connector needs a category in
+    `NATIVE_CATEGORY`, a new MCP preset one in `MCP_CATEGORY`; without it the
+    source is filed under Other. A search also asks the MCP Registry, whose
+    results are a section of their own under the catalogue's
+    (`useMcpConnectors`' `registry`, through `ConnectorBrowser`'s
+    `moreResults`), never entries in it: they are not ours to file or rank.
+    A search runs out in that order, then to adding by address. While browsing
+    the whole list, `BringAnyTool` is that way in, beside the starters: the same
+    offer as the last tile in the list went unseen.
+    A connected server that needs attention says why on its tile, from the
+    `problem` the server recorded (`lib/mcpServers.js`, `PROBLEM_SHORT`).
+    It was called Connections until November 2026; the route kept the old
+    name because every OAuth callback and the desktop shell's deep link land
+    on `/connections`, and a rename would break connects already in flight
   - `artifacts/` + `[artifactId]/`, `activity/`, `usage/`, `memory/` — the
     library, the cross-agent feed, usage, and user-level memory
   - `settings/models/` + `settings/profile/` — tiers, providers, usage; profile
-  - `settings/agents/` — Connect your AI agent: MCP tokens and the line to
-    paste into Claude Code, Codex or Cursor (`components/settings/AgentAccess.jsx`,
+  - `settings/agents/` — Connect your AI agent: the line to paste into
+    Claude Code, Codex, Cursor, VS Code or OpenCode (no secret in it: the
+    agent signs in through the browser), the agents that did, and personal
+    tokens for one that cannot (`components/settings/AgentAccess.jsx`,
     `lib/mcpTokensApi.js`). A new token's plaintext lives in page state only
   - `generate/` — the retired wizard, now a bare redirect to `/insights/session`
   - `projects/` — project management
@@ -120,9 +156,12 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
   - `project/[projectId]/members/` + `project/[projectId]/memory/` — members
     and invitations (owner/collaborator); project-scoped memory
 
-Plus two top-level routes outside every group, because their visitor is
+Plus three top-level routes outside every group, because their visitor is
 usually signed out and the app shell's guard would lose where they were going:
-`invite/[token]/` (the invitation landing page) and `open/audit/[conversationId]/`
+`invite/[token]/` (the invitation landing page), `authorize/` (where an
+agent's browser sign-in asks the person, `components/settings/AgentConsent.jsx`;
+the backend has checked the agent and parked the request, and the page sends
+the browser back to the agent with the answer) and `open/audit/[conversationId]/`
 (the share link for a report — parks the destination, sends through sign-in,
 then resumes the conversation; the backend hands it only to project members).
 `?kickoff=sources` on that link makes the resumed workspace open by asking
@@ -133,7 +172,16 @@ bag and is spent once).
 **Every routable segment renders `LocalBackendGate`.** The desktop shell
 bundles its own backend and only learns its loopback port at runtime, so
 `BASE` is repointed once at boot (`lib/localBackend.js`) and the gate holds
-rendering until then. Skipping it is not a slow path, it is a sign-out: the
+*hydration* until then. It does not hold the HTML: the server renders the
+page, a browser hydrates it at once, and the shell suspends hydration with
+`use()`, which keeps the server's HTML on screen and runs no effect or handler
+below the gate until the backend is named. Two consequences. A gated page's
+first render has to match the server's, so browser state (`localStorage`,
+`isLocalBackendActive()`, `isMac()`) is read in an effect, not during render;
+the front door's Turnstile flag is the worked example. And a member opening
+`/` must not see the front door the server drew for everyone, so
+`lib/sessionHint.js` marks `<html data-session="member">` before paint and the
+page clears it if it stays. Skipping the gate is not a slow path, it is a sign-out: the
 session token is stored under one key but signed by whichever backend minted
 it, so a token from the wrong one comes back 401 "Invalid token" and
 `authFetch.endSession` reads any 401 as a dead session. That is what `/start`
@@ -259,18 +307,18 @@ it is a claim about the code, not a way to quiet the check.
   for signed-out runs, mirrored from the profile rather than edited here
 - `lib/consent.js` — the consent *rule* and the stored decision. Names no vendor.
 - `lib/analytics/` — the seam. `index.js` selects a provider from
-  `NEXT_PUBLIC_ANALYTICS_PROVIDER` (unset → `gtm` when a container is
-  configured, else `none`); `gtm.js` is the only file that knows Google exists;
+  `NEXT_PUBLIC_ANALYTICS_PROVIDER` (unset → `posthog` when its key is
+  set, else `none`); `posthog.js` is the only file that knows the vendor;
   `none.js` is a complete implementation, not a stub. Adding a provider is one
   file plus a line in `PROVIDERS`. **Nothing outside this directory may
   reference a tag vendor** — that is what lets a self-host build measure nothing
   without editing our consent logic, and it mirrors
   `desktop/src-tauri/src/telemetry/` on the Rust side.
-- `ProductAnalytics` owns the flow. The desktop shell measures nothing and is
-  never asked: `gtm.isConfigured()` is false there, because the shell's IPC
-  trusts every script on this origin and a tag container exists to run scripts
-  configured outside this repository. The Preferences switch in
-  `lib/telemetry.js` governs crash reports alone.
+- `ProductAnalytics` owns the flow. The desktop shell is never asked: the
+  Preferences switch in `lib/telemetry.js` stands in for the banner there.
+  Never load a tag manager from this code: the shell's IPC trusts every script
+  on this origin, and a tag container exists to run scripts configured outside
+  this repository. The one the edge adds is a known exception, not a precedent.
 - `lib/format.js` — dates, numbers and labels: `relativeTime`, `relativeDays`,
   `formatDate`, `formatTime`, `toDate`, `dayKey`, `compactNumber`,
   `formatNumber`, `formatPercent`, `titleCase`, `formatTitle`, `capitalize`,
@@ -286,6 +334,13 @@ it is a claim about the code, not a way to quiet the check.
   refreshes it again.
 - `lib/sse.js` — `consumeSseStream` / `parseSseDataFrame`, shared by every
   streaming endpoint (audit, content, insights)
+- `lib/visibility.js` — `pollWhileVisible(tick, ms)` / `pageHidden()`. Every
+  poller goes through it: the desktop window sits open all day behind other
+  apps, and a tick nobody can see costs battery and wakes the backend. It
+  re-checks on return, so a skipped tick loses nothing.
+- `hooks/useNearViewport.js` — latches true once an element nears the screen.
+  For list items that are expensive to fill (a fetch, a document in a frame);
+  the artifact library is why it exists.
 - `lib/authFetch.js` — the one home for the auth token: `AUTH_TOKEN_KEY`,
   `authToken`, `hasAuthToken`, `authedHeaders`, `authedRequest`, plus
   `decodeJwtPayload` / `isTokenValid`. Never hardcode `"duct_auth_token"`.
@@ -307,7 +362,8 @@ it is a claim about the code, not a way to quiet the check.
   written by `setAuthToken`), because the shell addresses two — its sidecar and
   the hosted API — and a token from the wrong one is well-formed, unexpired and
   correctly signed, so nothing else on the client can tell it apart.
-  `reconcileStoredSession()` runs once, from `LocalBackendGate`, and discards a
+  `reconcileStoredSession()` runs once, when `lib/localBackend.js` settles the
+  backend (before anything below the gate renders), and discards a
   mismatch *quietly*: no event, no parked redirect, no "your session ended".
   That is the distinction — a mismatch is not an expiry, and treating it as one
   is what signed people out mid-use. A session with no recorded issuer predates
@@ -341,30 +397,97 @@ they are placed.
 - Content: `@container` variants on Tailwind's `@`-scale — `@md` 28rem, `@lg` 32rem,
   `@xl` 36rem, `@2xl` 42rem, `@4xl` 56rem. Roughly 224px per grid column.
 - Viewport (`sm:`/`md:`/…) only for genuine device concerns: the sign-in page,
-  the sidebar's mobile sheet, the pane toggle, and `md:text-sm` on chat inputs
-  (which exists to stop iOS zooming a sub-16px field).
+  the sidebar's mobile sheet, and `md:text-sm` on chat inputs (which exists to
+  stop iOS zooming a sub-16px field). The pane toggle used to be on this list
+  and was wrong there: `SplitWorkspace` now splits at `@xl/split`, its own
+  width, because `md:` said "split" with the sidebar's 16rem already gone and
+  clipped the right pane on an iPad in portrait and an iPhone in landscape.
+- **Safe areas are applied once, at the edge.** The body pads left and right
+  only (`styles/theme.css`); the top and bottom insets belong to whatever
+  touches that edge — `.app-header`, the composer, the sidebar container,
+  sheets, the corner notices. A full-height layout (`h-svh`, `h-dvh`) never
+  adds them again, and an element that is `fixed` pads itself, because the
+  body's padding does not reach it. Left and right are separate values on
+  purpose: iPhone Duo's are asymmetric.
 - No hand-picked pixel breakpoints. There are currently zero; keep it that way.
 - Before adding `container-type` anywhere new: it implies `contain: layout`, which
   makes that element the containing block for `position: fixed` descendants.
   Overlays must be portalled (they are — see below) or they will shrink to it.
+
+**Heavy code loads when it is on screen.** A library that only one kind of
+surface uses — charts (Recharts, Nivo), syntax highlighting, Mermaid, the
+slide rasteriser — is a `lazy()` import behind a placeholder of the same size,
+never a static import in a module that common screens reach. A static one in
+`ArtifactRenderer` put ~110 KB of charts on every screen that drew a markdown
+card. Import a package's single file by path, not from its index: one Prism
+theme from `styles/prism` shipped all ~45. Measure a route the way
+`docs/engineering/2026-10-28-performance-review.md` did before and after.
+
+**Long transcripts stay flat.** The chat pane re-renders on every token and
+every clock tick, so anything it draws per row is `memo`ised and takes props
+that keep their identity (the reducer preserves unchanged rows). A stream that
+re-parses everything so far (a brief, a report) is throttled, never debounced:
+a debounce never fires while chunks keep coming.
+
+**Platform hooks.** The root layout sets `data-platform` (mac, windows, linux,
+other) and `data-shell="desktop"` on `<html>` before first paint;
+`styles/base.css` holds the rules that read them. Use them for platform fit
+(Linux drops backdrop blur, WebKitGTK's slow path), never for features, which
+gate on `getShellInfo()` capabilities.
 
 **Units.** Type, spacing and sticky offsets in `rem` so they follow the reader's
 text size. Device units stay `px`: borders, outlines, shadows, radii, 1px optical
 nudges. Prose gets `max-width: var(--measure)` (68ch) or the `.measure` utility —
 never tables, code, or column layouts.
 
-**Two checks hold the design system, and they are not advisory.** Both run in
-`npm run check:parity`, so CI has them:
+**Every screen is built from the page frame.** `components/ui/page` gives
+`Page`, `PageHeader`, `Section`, `TileGrid` and `HelpTip`; `ui/card` and
+`ui/textarea` are the card and the multi-line field. A routed screen is
+`<Page><PageHeader title=… status=… actions=… help=… />…</Page>`, nothing
+else draws an `<h1>`, and there is no slot for a paragraph under the title:
+one line of state goes in `status`, how the page works goes in `help`.
+DESIGN.md's "The page frame" has the parts, the spacing table and the type
+ramp. If a screen needs something the frame does not do, change the
+primitive (and its `/preview` entry), never the one screen — that is the
+whole difference between a design system and 139 bordered boxes.
+
+**Generated content fills slots; it never shapes the layout.** Most text on
+an agent screen was written at run time, by a model or by the person (a
+thread's title is its first message, verbatim), so its count, length, mix
+and age are unknown when the screen is built. A page's headline comes from
+its state, lists are ranked and bounded in a pure function, repeated facts
+merge, old ones file away, the person's words are quoted, and the surface
+ships with scenario fixtures across those axes, rendered in `/preview` and
+asserted on in a check. DESIGN.md's "Content awareness" has the rules;
+`arrangeDesk` in `lib/desk.js` with `lib/__fixtures__/deskScenarios.mjs` is
+the worked example. Orange text is `text-brand`, never `text-primary`:
+`--primary` is the fill, and in dark no one orange can be both.
+
+**Four checks hold the design system, and they are not advisory.** The first
+three run in `npm run check:parity`, so CI has them; the fourth is its own CI
+job (`app-layout` in `app.yml`):
 
 - `scripts/check-design-system.mjs` (`npm run check:design`) fails on
   `text-[Npx]`, a raw Tailwind palette class, a hex in JSX, `window.confirm`,
   `Loader2`, `text-muted-foreground/NN`, a hand-rolled scrollbar
-  (`::-webkit-scrollbar`, `scrollbar-thin`), and a viewport prefix in a
-  container region. It is a **ratchet**: each rule carries an `allow` map of the files
+  (`::-webkit-scrollbar`, `scrollbar-thin`), a viewport prefix in a
+  container region, an `<h1>` outside `PageHeader`, `.page-toolbar`, a raw
+  `<textarea>`, a capsule-radius field, and a new hand-rolled card (that one
+  is a burn-down `budget` that can only go down). It is a **ratchet**: each rule carries an `allow` map of the files
   that are genuinely exceptions, each with its reason. Removing a name is
   permanent. Adding one is a decision you write a sentence for — it is not how
   you quiet the check, any more than adding a file to
   `test_harness_boundaries.py`'s allowlist is how you fix a red test.
+- `scripts/check-page-frame.mjs` (in `npm run check:design`) fails any routed
+  screen under `app/(app)` that does not render `PageHeader`. Full-bleed agent
+  workspaces are exempt by `FULL_BLEED_PREFIXES` in the layout, read from
+  that file so the two cannot disagree.
+- `scripts/check-layout.mjs` (`npm run check:layout`, needs the dev server)
+  renders every framed screen at 390, 1100 and 1440px against the fixture
+  backend and fails on a title out of line or off-size, a page wider than
+  the window, a status that wraps, and a row of cards whose footers do not
+  share a baseline. **Run it before calling any UI change done**; a worktree
+  without `site/node_modules` passes `PLAYWRIGHT_FROM=<repo>/site`.
 - `scripts/check-contrast.mjs` (`npm run check:contrast`) does the WCAG maths
   on the real oklch values in `tokens.css`/`theme.css` and fails when a pair
   the app paints drops below its threshold. It also asserts that every
@@ -383,6 +506,10 @@ concern rather than growing an existing one, and put page-specific styling with
 the page.
 
 **Shared UI primitives — use them, don't re-fork.**
+
+- Page frame: `ui/page` (`Page`, `PageHeader`, `Section`, `TileGrid`,
+  `HelpTip`), `ui/card` (`Card`, `CardFooter`, `cardLinkClass`),
+  `ui/textarea`. See "Every screen is built from the page frame" above.
 
 - Overlays: `ui/dialog` (Radix — portal, focus trap, Escape, scroll lock) and
   `ui/lightbox`. Never hand-roll a `fixed inset-0` backdrop.
@@ -415,7 +542,9 @@ the page.
   `workspace/CodeBlock`. See "Agent workspaces" below before touching any of
   them.
 - Shortcuts: `lib/shortcuts`' `useShortcut("mod+k", fn)` — platform-neutral, owned
-  by the surface that needs it.
+  by the surface that needs it. An Enter-to-send handler checks
+  `isComposing(e)` first: Enter confirms a Japanese, Chinese or Korean
+  candidate, and without the check it sent half-written messages.
 - Commands: `useRegisterCommands` from `components/commands/CommandRegistry`. A
   route contributes its own commands and they withdraw on unmount.
 - Navigation: `lib/navigation`'s `NAV_SECTIONS` is the single source of truth for
@@ -741,7 +870,7 @@ or leave it visible; do not delete the row to make the count look better.
 
 Frames **mount only when scrolled near** and the catalogue crops them to their
 specimen. Both are load-bearing, not polish: each frame is a whole Next document
-(app bundle, Sentry, HMR client), and 27 entries × 2 devices eagerly mounted is
+(app bundle, analytics, HMR client), and 27 entries × 2 devices eagerly mounted is
 not slow, it is `ERR_INSUFFICIENT_RESOURCES` and a half-loaded page. Keep the
 lazy mount if you touch `Frame`.
 
@@ -953,7 +1082,7 @@ nothing else, so a scene's language is in its URL like every other lens.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
-# This is NOT the Next.js you know
+## This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 

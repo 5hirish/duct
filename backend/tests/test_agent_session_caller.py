@@ -110,7 +110,7 @@ def test_the_teaser_runs_on_a_live_lead_token(db):
 
 def test_the_token_is_consumed_and_never_travels_further(db):
     """AuditRequest forbids unknown fields, and a credential that stops moving
-    is one fewer thing to keep out of a log or a Sentry breadcrumb."""
+    is one fewer thing to keep out of a log or an error report."""
     body = {"url": "https://example.com", "lead_magnet": True, "lead_token": _lead(db)}
     agent_routes._require_caller(AUDIT, body, None)
     assert "lead_token" not in body

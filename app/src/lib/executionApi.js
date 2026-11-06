@@ -5,40 +5,16 @@
 // the mutations with per-change results and rollback handles.
 //
 // Authenticated with the Bearer JWT (localStorage "duct_auth_token") plus the
-// shared X-API-Key, same as projectsApi.js. Apply/rollback/propose carry the
-// BYO connector credentials per request (sessionStorage / keychain); when a
-// field is empty the backend falls back to the user's stored encrypted
-// connector credentials (saved from /connections), then server env.
+// shared X-API-Key, same as projectsApi.js. No call carries connector
+// credentials: the backend resolves the project's binding, then the user's
+// stored connection, then server env — the same ladder an agent's apply uses,
+// so a change applied here can be rolled back from anywhere.
 
 import { authedRequest } from "./authFetch";
 import { trackEvent, AnalyticsEvent } from "./analytics";
-import { googleAdsRequestFields } from "./adsCredentials";
 
 function request(path, options) {
   return authedRequest(`/api/execute${path}`, options);
-}
-
-/**
- * BYO credentials for the change set's connector, from session/keychain
- * storage. Empty fields are fine: the backend falls back to the user's stored
- * (encrypted) connector credentials, then server env.
- */
-export async function executionCredentials(connectorType) {
-  if (connectorType === "ga4") {
-    return { refresh_token: sessionStorage.getItem("ga4_refresh_token") || "" };
-  }
-  if (connectorType === "gtm") {
-    return { refresh_token: sessionStorage.getItem("gtm_refresh_token") || "" };
-  }
-  if (connectorType !== "google_ads") {
-    // Manual-credential connectors (Mixpanel …) have no browser token — the
-    // backend resolves their stored encrypted rows.
-    return {};
-  }
-  return {
-    refresh_token: sessionStorage.getItem("gads_refresh_token") || "",
-    ...googleAdsRequestFields(),
-  };
 }
 
 export function listChangeSets() {
@@ -53,9 +29,8 @@ export function listOps() {
   return request("/ops");
 }
 
-export async function proposeChangeSet(changeSet) {
-  const credentials = await executionCredentials(changeSet.connector_type);
-  return request("", { method: "POST", body: { ...changeSet, credentials } });
+export function proposeChangeSet(changeSet) {
+  return request("", { method: "POST", body: changeSet });
 }
 
 export async function approveChangeSet(id, changeIds = null) {
@@ -71,14 +46,12 @@ export function rejectChangeSet(id) {
   return request(`/${id}/reject`, { method: "POST" });
 }
 
-export async function applyChangeSet(id, connectorType) {
-  const credentials = await executionCredentials(connectorType);
-  return request(`/${id}/apply`, { method: "POST", body: { credentials } });
+export function applyChangeSet(id) {
+  return request(`/${id}/apply`, { method: "POST" });
 }
 
-export async function rollbackChangeSet(id, connectorType) {
-  const credentials = await executionCredentials(connectorType);
-  return request(`/${id}/rollback`, { method: "POST", body: { credentials } });
+export function rollbackChangeSet(id) {
+  return request(`/${id}/rollback`, { method: "POST" });
 }
 
 export function listGuardrails(connectorType = "", accountId = "") {

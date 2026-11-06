@@ -50,8 +50,9 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   // this post's run (and finds this post's draft) and never a different
   // one's. A clone has no artifact yet, so its link scopes it: cloning a
   // second post in the same tab must start a second run, not reattach to
-  // the first.
-  const handleKey = `${CONTENT_AGENT_TYPE}:${mode}:${artifactId || context.cloneUrl || context.projectId || ""}`;
+  // the first. A new plan is scoped by its period for the same reason.
+  const periodKey = context.startDate && `from:${context.startDate}+${context.days || ""}`;
+  const handleKey = `${CONTENT_AGENT_TYPE}:${mode}:${artifactId || context.cloneUrl || periodKey || context.projectId || ""}`;
   const agent = useAgentSession({
     agentType: CONTENT_AGENT_TYPE,
     notifyAs: t`Content Studio`,
@@ -159,7 +160,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   // The right viewport is mid-build whenever there's no payload yet and the run
   // hasn't failed — including while a question is pending.
   const viewportBuilding = !hasPayload && agent.phase !== Phase.FAILED;
-  const paneLabel = mode === "plan_month" ? t`30-day plan` : t`Post draft`;
+  const paneLabel = mode === "plan_month" ? t`Content plan` : t`Post draft`;
   // STEP_LABELS is a module-level table of descriptors; resolve here so the
   // shared StepProgress receives plain strings whatever it does with them.
   const stepLabels = Object.fromEntries(
@@ -240,7 +241,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
 }
 
 const MODE_LABELS = {
-  plan_month: msg`Generating 30-day plan`,
+  plan_month: msg`Content plan`,
   draft_post: msg`Drafting post`,
 };
 

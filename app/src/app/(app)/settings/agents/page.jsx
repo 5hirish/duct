@@ -1,7 +1,8 @@
 "use client";
 
 /**
- * Connect your AI agent — tokens for Duct's MCP server, and how to use one.
+ * Connect your AI agent: how to add Duct's MCP server to an agent, the agents
+ * that signed in, and personal tokens for the ones that cannot.
  *
  * The requests live here and the drawing in AgentAccess, so /preview can show
  * every state. A minted token is held in this page's state only: it is shown
@@ -14,7 +15,9 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import AgentAccess from "@/components/settings/AgentAccess";
 import LoadError from "@/components/LoadError";
 import { hasAuthToken } from "@/lib/authFetch";
+import { isLocalBackendActive } from "@/lib/localBackend";
 import { createMcpToken, listMcpTokens, mcpServerUrl, revokeMcpToken } from "@/lib/mcpTokensApi";
+import { Page, PageHeader } from "@/components/ui/page";
 
 export default function AgentsSettingsPage() {
   const { t } = useLingui();
@@ -24,8 +27,10 @@ export default function AgentsSettingsPage() {
   const [error, setError] = useState("");
   const [loadError, setLoadError] = useState(null);
   const [signedIn, setSignedIn] = useState(true);
-  // Read after mount: BASE is repointed at boot in the desktop shell.
+  // Read after mount: BASE is repointed at boot in the desktop shell, and a
+  // sidecar has no browser sign-in (backend service/mcp_server/oauth.py).
   const [serverUrl, setServerUrl] = useState("");
+  const [signInAvailable, setSignInAvailable] = useState(true);
 
   const load = useCallback(() => {
     setLoadError(null);
@@ -36,6 +41,7 @@ export default function AgentsSettingsPage() {
     const ok = hasAuthToken();
     setSignedIn(ok);
     setServerUrl(mcpServerUrl());
+    setSignInAvailable(!isLocalBackendActive());
     if (ok) load();
   }, [load]);
 
@@ -64,18 +70,23 @@ export default function AgentsSettingsPage() {
   }
 
   return (
-    <section>
-      <div className="page-toolbar-back">
-        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">
-          <Trans>Connect your AI agent</Trans>
-        </h1>
-      </div>
+    <Page width="narrow">
+      <PageHeader
+        title={<Trans>Connect your AI agent</Trans>}
+        status={<Trans>Use Duct from Claude Code, Codex, Cursor, VS Code or OpenCode, in the repo you are working in.</Trans>}
+        help={
+          <Trans>
+            Your agent can read your projects and draft their profile. It can&apos;t approve changes,
+            connect tools, or replace anything you typed or confirmed.
+          </Trans>
+        }
+      />
       {!signedIn ? (
-        <p className="app-subtle" style={{ marginTop: 0 }}>
-          <Trans>Sign in first. A token works on your account, so there has to be one.</Trans>
+        <p className="text-sm text-muted-foreground">
+          <Trans>Sign in first. Your agent works on your account, so there has to be one.</Trans>
         </p>
       ) : loadError ? (
-        <LoadError what={t`your tokens`} detail={loadError?.message} onRetry={load} />
+        <LoadError what={t`your agents and tokens`} detail={loadError?.message} onRetry={load} />
       ) : (
         <AgentAccess
           serverUrl={serverUrl}
@@ -83,10 +94,11 @@ export default function AgentsSettingsPage() {
           minted={minted}
           creating={creating}
           error={error}
+          signInAvailable={signInAvailable}
           onCreate={create}
           onRevoke={revoke}
         />
       )}
-    </section>
+    </Page>
   );
 }

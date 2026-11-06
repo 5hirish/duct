@@ -86,7 +86,7 @@ jobs:
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
 
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           workspaces: desktop/src-tauri
           # The first green run is what populates this cache, and a red one
@@ -121,6 +121,13 @@ jobs:
       - name: cargo check
         working-directory: desktop/src-tauri
         run: cargo check --locked --all-targets
+
+      # Release builds compile the crash reporter in; nothing else does. Without
+      # this the code that runs on every distributed install is first compiled
+      # by the release workflow, after the merge.
+      - name: cargo check (crash-reporting)
+        working-directory: desktop/src-tauri
+        run: cargo check --lib --locked --features crash-reporting
 
       - name: cargo test
         working-directory: desktop/src-tauri

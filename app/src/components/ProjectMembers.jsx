@@ -204,7 +204,7 @@ export default function ProjectMembers({ projectId, onLeft }) {
           <span>
             <Trans>
               Email delivery isn’t configured on this environment, so invitations are logged
-              server-side instead of sent. Set <code>RESEND_API_KEY</code> to deliver them.
+              server-side instead of sent. Set <code>EMAIL_PROVIDER</code> and its settings to deliver them.
             </Trans>
           </span>
         </p>

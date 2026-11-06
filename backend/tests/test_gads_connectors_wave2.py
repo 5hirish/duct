@@ -245,7 +245,7 @@ def test_mixpanel_executor_translates_auth_errors(monkeypatch):
 
 
 def test_execution_creds_hand_back_manual_blob(monkeypatch):
-    """Non-Google connectors get their stored shape, override on top, no env keys."""
+    """Non-Google connectors get their stored shape, no env keys."""
     from types import SimpleNamespace
     from uuid import uuid4
 
@@ -258,8 +258,8 @@ def test_execution_creds_hand_back_manual_blob(monkeypatch):
     monkeypatch.setattr(creds_module, "get_configs", lambda: SimpleNamespace(
         google_ads_login_customer_id="", google_oauth_client_id="cid",
         google_oauth_client_secret="cs", google_ads_client_id="", google_ads_client_secret=""))
-    out = creds_module.resolve_execution_creds(None, uuid4(), "mixpanel", override={"project_id": "2"})
-    assert out == {"service_account_username": "sa", "service_account_secret": "s", "project_id": "2"}
+    out = creds_module.resolve_execution_creds(None, uuid4(), "mixpanel")
+    assert out == {"service_account_username": "sa", "service_account_secret": "s", "project_id": "1"}
     assert "client_id" not in out
 
 

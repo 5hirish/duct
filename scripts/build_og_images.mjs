@@ -37,6 +37,7 @@ const PAGES = {
   "download": { title: "The whole picture, in one window.", sub: "Mac, Windows and Linux. Free, open source, your own keys.", shot: "insights-session.webp" },
   "seo-audit": { title: "See exactly what's hurting your rankings.", sub: "A free SEO audit from the open-source Duct agent. No account.", shot: "audit-report.webp" },
   "mcp": { title: "Bring your own MCP servers.", sub: "OpenSEO, Notion, Linear, PostHog or any public server, called by Duct's agent." },
+  "connect-agent": { title: "Use Duct from your agent.", sub: "Claude Code, Codex, Cursor and more: one address, one Allow in your browser." },
   "open-source": { title: "Open source, MIT, your own keys.", sub: "What runs where, how to self-host it, and a plain answer on what will cost money." },
   "about": { title: "Built because my tools wouldn't talk.", sub: "Why an agent that reads your whole business is open source." },
   "doctrine": { title: "The Duct doctrine.", sub: "Seven opinions the project is built on, each linked to the file that enforces it." },

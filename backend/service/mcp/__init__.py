@@ -10,6 +10,7 @@ tool, not a provider feature (issue #345).
 
 * ``http``    — every request goes to a public https address, redirects included.
 * ``presets`` — the curated servers the Connections page offers by name.
+* ``registry`` — the MCP Registry searched by name, with who runs each server.
 * ``oauth``   — discovery, client registration (a client metadata document
                 where the server takes one, dynamic registration otherwise),
                 the code exchange and refresh.

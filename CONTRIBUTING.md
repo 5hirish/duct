@@ -146,6 +146,41 @@ that carry reasoning, and the self-review pass before you open the PR.
 - Add yourself to [`CONTRIBUTORS.md`](CONTRIBUTORS.md) — code, design, or
   content, all in the same file.
 
+## How a contribution is reviewed
+
+One maintainer reads every pull request; an agent may post a first-pass
+summary ahead of them, which orders the review and does not replace it.
+Knowing what the review checks saves a round trip.
+
+- **CI waits for a nod.** GitHub holds a fork's workflow runs until a
+  maintainer approves them, on every pull request from outside the
+  repository's collaborators. That is the fork policy on a public
+  repository, not a verdict on the PR, and it lifts once the diff has been
+  read.
+- **The diff is read against the issue it closes.** Does it do what the issue
+  asked, in the seam the issue named, and nothing else? Scope that grew on
+  the way is the most common reason for a change request, because every
+  extra surface is maintained forever. If the issue is wrong, say so on the
+  issue before widening the PR.
+- **The checks are the contract.** `make check` for the areas you touched,
+  tests that cover the behaviour that changed, `.env.example` for a new
+  setting, the area `AGENTS.md` read. The template's boxes are the review's
+  checklist, so an unticked box is a question you will be asked.
+- **Agent-written code gets the same read, in different places.** Tick the
+  AI-assistance box; nothing is rejected for it. The reviewer then looks
+  hardest where agents slip: a test that asserts its own mock, a helper that
+  duplicates one in `utils/` or `service/`, a comment that restates the line
+  below it, a change outside the seam the issue named.
+- **The branch is read, not run.** Review happens on the diff and in CI,
+  never by running your branch on the maintainer's machine. If a behaviour
+  needs seeing, attach the screenshot or the test that shows it.
+- **Fork PRs are squash-merged.** `main` requires signed commits and a fork's
+  commits usually are not. The squash keeps you as the author. If you sign
+  your commits (SSH or GPG, verified on GitHub), say so in the PR and a merge
+  commit keeps them as they are.
+- **Timing.** Expect a first response within a week. Duct is maintained by
+  one person; if it has been longer, a nudge on the PR is welcome.
+
 ## Reporting security issues
 
 Do not open a public issue. See [SECURITY.md](SECURITY.md).

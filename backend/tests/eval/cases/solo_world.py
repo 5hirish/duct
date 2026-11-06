@@ -376,8 +376,14 @@ class SoloWorld:
     def install(self) -> Iterator["SoloWorld"]:
         """Answer every connector read from this world, for the life of the block.
 
-        Replaced: each fetch spec's vendor call, and the three credential and
-        binding lookups. Kept: everything ``fetch_entity`` does around them.
+        Replaced: each fetch spec's vendor call, the three credential and
+        binding lookups, and the default window's clock. Kept: everything
+        ``fetch_entity`` does around them.
+
+        The clock is the one that bit: an unspecified window ended yesterday by
+        the wall clock, so from a month after ``today`` it fell past the world's
+        last day, every read came back empty, and main's backend job stayed red
+        until Railway, which waits for CI, had skipped two days of deploys.
         """
         from agents.insights import fetchers
         import service.connector_access as access
@@ -396,8 +402,11 @@ class SoloWorld:
             (access, "get_data_source"): access.get_data_source,
             (access, "resolve_read_credentials"): access.resolve_read_credentials,
             (access, "list_data_sources"): access.list_data_sources,
+            (fetchers, "last_n_days"): fetchers.last_n_days,
         }
         sources = {s["connector_id"]: s for s in self.data_sources()}
+        world_yesterday = self.today - timedelta(days=1)
+        real_last_n_days = fetchers.last_n_days
 
         def get_data_source(_db, connector_id, **_kw):
             src = sources.get(connector_id)
@@ -409,6 +418,7 @@ class SoloWorld:
             {"refresh_token": "synthetic"} if kw.get("connector_type") in BOUND else {}
         )
         access.list_data_sources = lambda _db, **_kw: [_Source(s) for s in self.data_sources()]
+        fetchers.last_n_days = lambda days, end=None: real_last_n_days(days, end or world_yesterday)
         try:
             yield self
         finally:

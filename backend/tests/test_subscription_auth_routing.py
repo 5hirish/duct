@@ -179,7 +179,11 @@ def test_a_stray_plan_token_is_not_a_key_for_anyone_else():
 
 
 def test_an_ordinary_api_key_is_usable_everywhere():
+    # Except the OpenAI-compatible slot, which holds a packed endpoint, never a
+    # bare key (tests/test_compatible_provider.py).
     for provider in Provider:
+        if provider is Provider.OPENAI_COMPATIBLE:
+            continue
         assert codex.is_usable_credential(provider, "sk-whatever-123") is True
         assert codex.is_usable_credential(provider, "  ") is False
 

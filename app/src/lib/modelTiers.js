@@ -105,6 +105,7 @@ export const SOURCE_LABELS = {
   env: msg`This computer's key`,
   cloud: msg`Duct's key`,
   subscription: msg`Your ChatGPT plan`,
+  instance: msg`On this server`,
   none: msg`Not set`,
 };
 
@@ -122,6 +123,7 @@ export const SOURCE_SENTENCE = {
   env: msg`Running on a key already on this computer, not one you added here.`,
   cloud: msg`Running on Duct's own key — we are paying for these runs.`,
   subscription: msg`Running on the ChatGPT plan you signed in with on this desktop.`,
+  instance: msg`Running on an open model this server offers — no key, and nobody is billed.`,
   none: msg`No key set for these models yet.`,
 };
 
@@ -132,6 +134,7 @@ export const SOURCE_DETAIL = {
   env: msg`Using a key already on the machine running Duct, not one you added here`,
   cloud: msg`Using Duct's own key — we're paying for this run`,
   subscription: msg`Using the ChatGPT plan you signed in with on this desktop`,
+  instance: msg`Using an open model on the Ollama server whoever runs Duct set up`,
   none: msg`No key set`,
 };
 
@@ -142,6 +145,7 @@ export const SOURCE_TONE = {
   env: "info",
   cloud: "info",
   subscription: "ok",
+  instance: "info",
   none: "warn",
 };
 
@@ -158,6 +162,8 @@ export const PROVIDER_LOGO_KEY = {
   google_genai: "gemini",
   openrouter: "openrouter",
   xai: "xai",
+  ollama: "ollama",
+  openai_compatible: "compatible",
 };
 
 // ---------------------------------------------------------------------------
@@ -285,7 +291,11 @@ export async function fetchProviderStatus() {
  */
 export async function fetchModelCatalogue() {
   try {
-    const res = await fetch(`${BASE}/api/models/catalogue`, { headers: backendAuthedHeaders() });
+    // With the provider headers: a connected endpoint's models are the caller's
+    // own, and the catalogue lists them only for the caller who sent it.
+    const res = await fetch(`${BASE}/api/models/catalogue`, {
+      headers: { ...backendAuthedHeaders(), ...(await providerKeyHeaders()) },
+    });
     if (!res.ok) return null;
     return await res.json();
   } catch {

@@ -143,8 +143,9 @@ var ductT = window.ductT || function (s) { var m = window.DUCT_I18N; return (m &
    * anchors that appear later. Matching on the release prefix is what makes a
    * per-platform link count and a link to /download not.
    *
-   * Queued on dataLayer whether or not GTM has loaded; if the visitor declined
-   * cookies it never loads and the array is simply never drained. */
+   * Sent through ductTrack (assets/duct.js), which queues it until PostHog
+   * has loaded; if the visitor declined cookies PostHog never loads and the
+   * queue is simply never drained. */
   function osForHref(href) {
     var slot = SLOTS.filter(function (s) { return href && href.indexOf(s.file) !== -1; })[0];
     return (slot && slot.key) || detect() || '';
@@ -155,8 +156,9 @@ var ductT = window.ductT || function (s) { var m = window.DUCT_I18N; return (m &
     // to /download is navigation, not a download.
     var el = ev.target && ev.target.closest && ev.target.closest('a[href*="' + LATEST + '"]');
     if (!el) return;
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({ event: 'download_started', os: osForHref(el.getAttribute('href') || '') });
+    // duct.js defines ductTrack and loads both tags; without it nothing would
+    // drain the event anyway.
+    if (window.ductTrack) window.ductTrack('download_started', { os: osForHref(el.getAttribute('href') || '') });
   }, true);
 
   window.DuctDownload = { load: load, detect: detect, mb: mb, urlFor: urlFor,

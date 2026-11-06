@@ -16,7 +16,11 @@ from service.connectors import (
     ConnectorMeta,
     register_connector,
 )
-from service.google.constants import GOOGLE_ADS_CONNECTOR_ID
+from service.google.constants import (
+    GOOGLE_ADS_CONNECTOR_ID,
+    GOOGLE_SERVER_ONLY_KEYS,
+    LOGIN_CUSTOMER_ID_KEY,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +133,7 @@ class GoogleAdsConnector:
         secret = cfg.google_oauth_client_secret or cfg.google_ads_client_secret
         gaps: list[str] = []
         if not rt:
-            gaps.append("refresh_token (query param or GOOGLE_ADS_REFRESH_TOKEN env)")
+            gaps.append("a connected Google Ads account (or GOOGLE_ADS_REFRESH_TOKEN env)")
         if not cid:
             gaps.append("GOOGLE_OAUTH_CLIENT_ID or GOOGLE_ADS_CLIENT_ID")
         if not secret:
@@ -145,6 +149,8 @@ GOOGLE_ADS_META = ConnectorMeta(
     label="Google Ads",
     oauth_scope="https://www.googleapis.com/auth/adwords",
     capabilities=frozenset({CAP_ACCOUNTS, CAP_CAMPAIGN_REPORT}),
+    server_only_keys=GOOGLE_SERVER_ONLY_KEYS,
+    settings_keys=frozenset({LOGIN_CUSTOMER_ID_KEY}),
 )
 
 register_connector(GOOGLE_ADS_META, GoogleAdsConnector())

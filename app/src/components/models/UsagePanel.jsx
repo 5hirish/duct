@@ -389,10 +389,7 @@ export default function UsagePanel({ catalogue = null, standalone = false }) {
     <>
       <div className="usage-head">
         <p className="app-subtle mt-lede">
-          <Trans>
-            What Duct spent running your agents. These are charges on your own provider key —
-            Duct never bills them.
-          </Trans>
+          <Trans>Charges on your own provider key. Duct never bills them.</Trans>
         </p>
         <div className="usage-windows" role="group" aria-label={t`Time window`}>
           {WINDOWS.map((w) => (

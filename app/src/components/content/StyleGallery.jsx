@@ -6,6 +6,7 @@ import { msg } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { listStyles } from "@/lib/contentApi";
 import LoadError from "@/components/LoadError";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // ---------------------------------------------------------------------------
 // Live preview — render the real CSS inside an isolated iframe so global
@@ -141,7 +142,7 @@ export default function StyleGallery() {
     <section className="space-y-6">
       <div className="rounded-lg border border-border/60 bg-muted/30 px-4 py-3">
         <p className="flex items-center gap-2 text-sm font-medium">
-          <Sparkles className="h-4 w-4 text-primary" /> <Trans>Base styles</Trans>
+          <Sparkles className="h-4 w-4 text-brand" /> <Trans>Base styles</Trans>
         </p>
         <p className="mt-0.5 text-xs text-muted-foreground">
           <Trans>

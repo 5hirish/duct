@@ -222,7 +222,7 @@ def render_data_sources(sources: list[dict]) -> str:
         elif hint:
             line += f" ({hint})"
         if status == "not_connected" and src.get("auth_kind") == "manual":
-            line += " · API key, added on the Connections page"
+            line += " · API key, added in the Toolbox"
         if src.get("scope_status") in _SCOPE_WORTH_NAMING:
             line += f" · scopes: {src['scope_status']}"
         lines.append(line)

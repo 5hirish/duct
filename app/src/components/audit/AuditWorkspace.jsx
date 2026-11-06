@@ -134,9 +134,16 @@ export default function AuditWorkspace({
     switch (event.event) {
       case AuditEvent.ARTIFACT_CHUNK:
       case AuditEvent.LEGACY_REPORT_CHUNK:
+        // Throttled, not debounced: chunks arrive closer together than the
+        // window, so restarting the timer on each one held the report back
+        // until the stream paused.
         htmlBatchRef.current += event.text;
-        clearTimeout(htmlBatchTimer.current);
-        htmlBatchTimer.current = setTimeout(() => setStreamingHtml(htmlBatchRef.current), 80);
+        if (!htmlBatchTimer.current) {
+          htmlBatchTimer.current = setTimeout(() => {
+            htmlBatchTimer.current = null;
+            setStreamingHtml(htmlBatchRef.current);
+          }, 80);
+        }
         break;
 
       case AuditEvent.ARTIFACT_VERSION:
@@ -151,6 +158,7 @@ export default function AuditWorkspace({
         setStreamingHtml("");
         htmlBatchRef.current = "";
         clearTimeout(htmlBatchTimer.current);
+        htmlBatchTimer.current = null;
         upsertVersion(event);
         if (event.version_id === 1) {
           appendMessage({
@@ -215,6 +223,7 @@ export default function AuditWorkspace({
     setStreamingHtml("");
     htmlBatchRef.current = "";
     clearTimeout(htmlBatchTimer.current);
+    htmlBatchTimer.current = null;
     reportReceivedRef.current = false;
     agent.retry();
   }

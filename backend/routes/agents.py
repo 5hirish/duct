@@ -305,7 +305,7 @@ def _owned_session(session_id: str, agent_type: str, user: User | None):
       anyone, and there is no signed-in caller to compare against.
 
     Session ids are unguessable, but unguessable is not a permission: an id
-    reaches a log, a shared URL, a Sentry breadcrumb. It should not also be
+    reaches a log, a shared URL, an error report. It should not also be
     the only thing standing between a stranger and someone else's live agent.
     """
     session = get_session(session_id)
@@ -348,8 +348,8 @@ def _require_caller(agent_type: str, body: dict, user: User | None) -> str | Non
 
     The token is consumed here and removed from the body: nothing downstream
     needs it, ``AuditRequest`` forbids unknown fields, and a credential that
-    stops travelling is one fewer thing to keep out of a log or a Sentry
-    breadcrumb.
+    stops travelling is one fewer thing to keep out of a log or an error
+    report.
 
     Returns the token when the run is the teaser, because the teaser runs on
     Duct's key (``duct_pays=req.lead_magnet``) and the token is what its limits
@@ -1471,7 +1471,7 @@ async def _start_tiktok_studio(
     plan/draft workers so the DB logic (Day resolution, post_id linkback) stays
     in one place."""
     # Imported lazily to avoid a route-module import cycle.
-    from routes.content import _run_draft_worker, _run_plan_worker
+    from routes.content import _requested_period, _run_draft_worker, _run_plan_worker
 
     mode = body.get("mode", "plan_month")
     # `mode` is a dispatch discriminator, and the conversation/resume fields are
@@ -1497,7 +1497,7 @@ async def _start_tiktok_studio(
             req = PlanRequest.model_validate(config)
         except Exception as exc:
             raise HTTPException(422, f"Invalid plan_month config: {exc}") from exc
-        coro = _run_plan_worker(session_id, req.project_id, emit_fn, user_keys)
+        coro = _run_plan_worker(session_id, req.project_id, emit_fn, user_keys, period=_requested_period(req))
     else:
         raise HTTPException(422, f"mode must be 'plan_month' or 'draft_post', got {mode!r}")
 

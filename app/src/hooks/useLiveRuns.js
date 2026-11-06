@@ -15,6 +15,7 @@ import { useEffect, useSyncExternalStore } from "react";
 
 import { getAgentSessionState } from "../lib/api";
 import { forgetDetachedRun, listDetachedRuns, subscribeDetachedRuns } from "../lib/liveRuns";
+import { pollWhileVisible } from "../lib/visibility";
 
 const LIVE_RUN_POLL_MS = 15_000;
 const NONE = Object.freeze([]);
@@ -37,10 +38,10 @@ export function useLiveRuns() {
       }
     }
 
-    const timer = setInterval(settle, LIVE_RUN_POLL_MS);
+    const stop = pollWhileVisible(settle, LIVE_RUN_POLL_MS);
     return () => {
       cancelled = true;
-      clearInterval(timer);
+      stop();
     };
   }, [runs]);
 

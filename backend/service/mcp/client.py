@@ -12,6 +12,14 @@ Failures come back as ``McpCallError`` with a code the agent can act on:
 ``unreachable`` and ``protocol_error``. The SDK reports an HTTP failure from
 inside its task group, so the cause arrives wrapped in exception groups;
 ``_classify`` digs it out.
+
+The same failures are what the Connections page shows as "Needs attention",
+so the client records them through the caller's sink (``store.PROBLEM``): a
+failed listing, which is every run's first contact and the page's own check,
+and a refused refresh, which is definitive wherever it happens. A failed tool
+call records nothing: a slow keyword job that times out says nothing about
+the server, and a 403 from one tool is that tool's permission, not the
+sign-in. Any call that works clears the record.
 """
 
 from __future__ import annotations
@@ -32,7 +40,22 @@ from service.crawl.fetcher import SSRFError
 from service.mcp import http as mcp_http
 from service.mcp import oauth
 from service.mcp.oauth import AUTH_KEY, AUTH_OAUTH, OAuthFailed
-from service.mcp.store import API_KEY, NEEDS_REAUTH, RESOURCE, TOKEN_ENDPOINT, ServerAccess, with_tokens
+from service.mcp.store import (
+    API_KEY,
+    NEEDS_REAUTH,
+    PROBLEM,
+    PROBLEM_AUTH_REQUIRED,
+    PROBLEM_FAILING,
+    PROBLEM_KEY_REFUSED,
+    PROBLEM_SIGNED_OUT,
+    PROBLEM_UNREACHABLE,
+    RESOURCE,
+    TOKEN_ENDPOINT,
+    ServerAccess,
+    with_problem,
+    with_tokens,
+    without_problem,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +103,40 @@ class ToolResult:
 # ---------------------------------------------------------------------------
 
 
+async def _keep(access: ServerAccess, sink: CredentialSink | None, credentials: dict) -> None:
+    """Persist ``credentials`` and make them the run's own, in place, so the
+    next call this run makes starts from what was saved."""
+    if sink is not None:
+        await sink(credentials)
+    access.credentials.clear()
+    access.credentials.update(credentials)
+
+
+def problem_for(code: str, auth: str) -> str:
+    """The reason a failure with ``code`` gives the person, for a server that
+    signs in with ``auth``."""
+    if code == CODE_REAUTH:
+        return {AUTH_OAUTH: PROBLEM_SIGNED_OUT, AUTH_KEY: PROBLEM_KEY_REFUSED}.get(auth, PROBLEM_AUTH_REQUIRED)
+    return PROBLEM_UNREACHABLE if code == CODE_UNREACHABLE else PROBLEM_FAILING
+
+
+async def _note(access: ServerAccess, sink: CredentialSink | None, failure: McpCallError) -> None:
+    """Record why ``failure`` needs the person. The first time it went wrong is
+    the date the card shows, so a repeat of the same reason writes nothing,
+    and neither does a server already flagged for sign-in: that reason stands
+    (it may be "unreadable", which a rewrite would lose)."""
+    if failure.code == CODE_REAUTH and access.credentials.get(NEEDS_REAUTH):
+        return
+    problem = problem_for(failure.code, access.auth)
+    if access.credentials.get(PROBLEM) != problem:
+        await _keep(access, sink, with_problem(access.credentials, problem))
+
+
+async def _settle(access: ServerAccess, sink: CredentialSink | None) -> None:
+    if access.credentials.get(PROBLEM):
+        await _keep(access, sink, without_problem(access.credentials))
+
+
 async def _refresh(access: ServerAccess, sink: CredentialSink | None) -> str:
     tokens = access.tokens()
     if not tokens.refresh_token:
@@ -92,16 +149,11 @@ async def _refresh(access: ServerAccess, sink: CredentialSink | None) -> str:
             resource=str(access.credentials.get(RESOURCE) or access.url),
         )
     except OAuthFailed as exc:
-        if sink is not None:
-            await sink({**access.credentials, NEEDS_REAUTH: True})
+        await _keep(access, sink, with_problem({**access.credentials, NEEDS_REAUTH: True}, PROBLEM_SIGNED_OUT))
         raise McpCallError(CODE_REAUTH, f"{access.name} needs signing in again.") from exc
-    updated = with_tokens(access.credentials, fresh)
-    if sink is not None:
-        await sink(updated)
     # In place, so the next call this run makes starts from the fresh token
     # rather than refreshing again from the one the server just retired.
-    access.credentials.clear()
-    access.credentials.update(updated)
+    await _keep(access, sink, with_tokens(access.credentials, fresh))
     return fresh.access_token
 
 
@@ -245,7 +297,13 @@ async def list_tools(access: ServerAccess, sink: CredentialSink | None = None) -
                 break
         return tools
 
-    return await _with_session(access, sink, work)
+    try:
+        tools = await _with_session(access, sink, work)
+    except McpCallError as failure:
+        await _note(access, sink, failure)
+        raise
+    await _settle(access, sink)
+    return tools
 
 
 def _text_of(block: Any) -> str:
@@ -278,7 +336,9 @@ async def call_tool(
         text = "\n\n".join(t for t in (_text_of(b) for b in result.content) if t)
         return ToolResult(is_error=bool(result.is_error), text=text, structured=result.structured_content)
 
-    return await _with_session(access, sink, work)
+    result = await _with_session(access, sink, work)
+    await _settle(access, sink)
+    return result
 
 
 async def probe(access: ServerAccess) -> int:

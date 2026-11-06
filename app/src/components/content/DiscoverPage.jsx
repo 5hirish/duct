@@ -27,6 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import {
   VENDOR,
+  VENDOR_HOME,
   connectVendorKey,
   disconnectVendorKey,
   getVendorKeyStatus,
@@ -34,7 +35,7 @@ import {
   saveDiscoveredReference,
 } from "../../lib/contentApi";
 import { useConfirm } from "@/components/ui/confirm-dialog";
-import VendorKeyForm from "./VendorKeyForm";
+import ConnectorGate from "./ConnectorGate";
 import { useScraperRun } from "../../hooks/useScraperRun";
 import { engagement } from "@/lib/discoverSynthesis";
 import SynthesisPanel from "./SynthesisPanel";
@@ -78,14 +79,14 @@ const RUNNING = new Set(["running", "polling", "fetching"]);
 // and a sweep on every tab switch (or twice under StrictMode) buys nothing.
 const backfilled = new Set();
 
-const APIFY_URL = "https://console.apify.com";
+const APIFY_URL = VENDOR_HOME[VENDOR.APIFY];
 
 function DiscoverHeader({ aside }) {
   return (
     <header className="flex flex-wrap items-start justify-between gap-3">
       <div>
         <h2 className="flex items-center gap-2 text-base font-semibold">
-          <Sparkles className="h-4 w-4 text-primary" /> <Trans>Discover what&apos;s working</Trans>
+          <Sparkles className="h-4 w-4 text-brand" /> <Trans>Discover what&apos;s working</Trans>
         </h2>
         <p className="mt-0.5 max-w-prose text-xs text-muted-foreground">
           <Trans>
@@ -209,23 +210,7 @@ export default function DiscoverPage({ projectId }) {
   ].filter(Boolean).join(" · ");
 
   if (apify && !apify.connected) {
-    return (
-      <div className="space-y-5">
-        <DiscoverHeader />
-        <VendorKeyForm
-          vendor="Apify"
-          homeUrl={APIFY_URL}
-          isOwner={apify.is_owner}
-          onConnect={connectApify}
-          description={
-            <Trans>
-              Discover searches TikTok through Apify, on your own account, so the scraping is
-              billed to you. Log in to Apify, copy your API token, and paste it here.
-            </Trans>
-          }
-        />
-      </div>
-    );
+    return <DiscoverGate isOwner={apify.is_owner} onConnect={connectApify} />;
   }
 
   return (
@@ -335,7 +320,7 @@ export default function DiscoverPage({ projectId }) {
             <Spinner className="size-3.5" />
             <Trans>Scraping on Apify ({elapsed}s) — polling every 3s, results appear as soon as the actor finishes.</Trans>
           </div>
-          <div className="grid grid-cols-2 gap-4 @2xl:grid-cols-3 @4xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 @2xl:grid-cols-3 @4xl:grid-cols-4 @7xl:grid-cols-[repeat(auto-fill,minmax(18rem,1fr))]">
             {[0, 1, 2, 3].map((i) => (
               <Skeleton key={i} className="aspect-[3/4] rounded-xl" />
             ))}
@@ -378,13 +363,58 @@ export default function DiscoverPage({ projectId }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 @2xl:grid-cols-3 @4xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 @2xl:grid-cols-3 @4xl:grid-cols-4 @7xl:grid-cols-[repeat(auto-fill,minmax(18rem,1fr))]">
             {sorted.map((p) => (
               <ResultCard key={p.id} post={p} busy={busy[p.id]} onSave={() => handleSave(p)} />
             ))}
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/** Discover before Apify is connected: what a search finds, and the
+ *  connector that runs it. Exported for /preview. */
+export function DiscoverGate({ isOwner, onConnect }) {
+  const { t } = useLingui();
+  return (
+    <ConnectorGate
+      title={t`Find what's working on TikTok right now`}
+      lead={t`Connect Apify and Duct searches TikTok for you, by hashtag or a region's trending feed, so your plan starts from posts that are already landing.`}
+      benefits={[
+        { icon: Search, title: t`Search your niche`, text: t`The top posts for any hashtag, ranked by plays, saves or engagement.` },
+        { icon: Bookmark, title: t`Save what's worth studying`, text: t`A saved post keeps its slides and numbers, so they're there when you plan.` },
+        { icon: Sparkles, title: t`Topics from real winners`, text: t`The research agent cites what you saved when it proposes topics.` },
+      ]}
+      connectors={[{ id: VENDOR.APIFY, label: "Apify", homeUrl: APIFY_URL, isOwner, onConnect }]}
+      footnote={t`Searches run on your own Apify account, so the scraping is billed to you. The same search again within 30 minutes costs nothing.`}
+      example={<DiscoverExample />}
+    />
+  );
+}
+
+// Two results as a search returns them, drawn by the real card. Invented
+// posts, framed as an example by ConnectorGate.
+const EXAMPLE_RESULTS = [
+  {
+    id: "example-1", text: "3 money rules I wish I knew at 22 #personalfinance #moneytips",
+    is_slideshow: true, play_count: 412000, digg_count: 38100, comment_count: 920, share_count: 4100, collect_count: 12800,
+    hashtags: ["personalfinance", "moneytips"], author_meta: { name: "budgetwithmia", fans: 88000 },
+    create_time_iso: "2026-10-28T09:00:00Z",
+  },
+  {
+    id: "example-2", text: "What a $40k salary actually looks like, month by month",
+    is_slideshow: true, play_count: 186000, digg_count: 14200, comment_count: 610, share_count: 2300, collect_count: 6900,
+    hashtags: ["salarytransparency", "budgeting"], author_meta: { name: "plainmoney", fans: 41000 },
+    create_time_iso: "2026-10-30T18:00:00Z",
+  },
+];
+
+function DiscoverExample() {
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      {EXAMPLE_RESULTS.map((post) => <ResultCard key={post.id} post={post} onSave={() => {}} />)}
     </div>
   );
 }

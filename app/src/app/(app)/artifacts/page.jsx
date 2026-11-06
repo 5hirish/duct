@@ -21,6 +21,7 @@ import { listArtifacts } from "../../../lib/artifactsApi";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Page, PageHeader } from "@/components/ui/page";
 
 // Mirrors models/artifact.py's `kind` — what an artifact *is*, not who made it.
 const KIND_TABS = [
@@ -69,34 +70,28 @@ export default function ArtifactsPage() {
   const projectName = project?.name || t`this project`;
 
   return (
-    <section>
-      <div className="page-toolbar-back">
-        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight"><Trans>Artifacts</Trans></h1>
-      </div>
-
-      <p className="app-subtle" style={{ marginTop: 0, marginBottom: 14 }}>
-        <Trans>
-          Everything your agents have produced for{" "}
-          <strong>{projectName}</strong> — reports, documents, exports.
-          Stored durably; open one to view, download, or continue its chat.
-        </Trans>
-      </p>
-
-      <Tabs value={kind} onValueChange={setKind}>
-        <TabsList>
-          {KIND_TABS.map((tab) => (
-            <TabsTrigger key={tab.value || "all"} value={tab.value}>
-              {i18n._(tab.label)}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+    <Page>
+      <PageHeader
+        title={<Trans>Documents</Trans>}
+        status={<Trans>Reports, briefs and exports for {projectName}</Trans>}
+        actions={
+          <Tabs value={kind} onValueChange={setKind}>
+            <TabsList>
+              {KIND_TABS.map((tab) => (
+                <TabsTrigger key={tab.value || "all"} value={tab.value}>
+                  {i18n._(tab.label)}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        }
+      />
 
       {!signedIn && (
-        <div style={{ marginTop: 18 }}>
+        <div>
           <EmptyState
             icon={LockKeyhole}
-            title={t`Sign in to see your saved artifacts`}
+            title={t`Sign in to see your saved documents`}
             actions={
               <Button size="sm" asChild>
                 <Link href="/"><Trans>Sign in</Trans></Link>
@@ -110,7 +105,7 @@ export default function ArtifactsPage() {
 
       {signedIn && items === null && (
         <div
-          className="@container mt-4 grid grid-cols-2 gap-4 @lg:grid-cols-3 @2xl:grid-cols-4"
+          className="@container grid grid-cols-2 gap-3 @lg:grid-cols-3 @2xl:grid-cols-4"
           role="status"
           aria-label={t`Loading artifacts`}
         >
@@ -123,10 +118,10 @@ export default function ArtifactsPage() {
       {signedIn && error && <LoadError what={t`your artifacts`} detail={error} />}
 
       {signedIn && !error && items && items.length === 0 && (
-        <div style={{ marginTop: 18 }}>
+        <div>
           <EmptyState
             icon={FileText}
-            title={t`No artifacts yet`}
+            title={t`No documents yet`}
             actions={
               <>
                 <Button size="sm" asChild>
@@ -138,10 +133,7 @@ export default function ArtifactsPage() {
               </>
             }
           >
-            <Trans>
-              Run an audit with your project selected and its report lands here — versioned, so
-              you can read what changed between two runs of the same check.
-            </Trans>
+            <Trans>Every report Duct writes lands here, with each version kept.</Trans>
           </EmptyState>
         </div>
       )}
@@ -156,10 +148,9 @@ export default function ArtifactsPage() {
             labelFor={(doc) =>
               Number.isFinite(doc.meta?.overall_score) ? `${doc.kind} · ${doc.meta.overall_score}` : doc.kind
             }
-            className="mt-4"
           />
         </div>
       )}
-    </section>
+    </Page>
   );
 }

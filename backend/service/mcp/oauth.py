@@ -10,6 +10,10 @@ of which is a request to an address the server chose (hence ``mcp_http``):
    authorization server; its metadata (RFC 8414, or OIDC discovery) names the
    endpoints. The reference SDK builds the candidate URLs in spec order,
    including the 2025-03-26 fallback for servers that predate the split.
+   Each document is held to where it was found: the resource it names must
+   be this server or a parent of it, and the issuer must be the server the
+   metadata was fetched for (RFC 8414 §3.3). One that names somewhere else
+   ends the sign-in.
 3. **Register.** Duct has no account with any of these vendors, so it either
    presents a client metadata document (the ``client_id`` is a URL Duct
    serves, nothing to register) where the server says it takes one, or
@@ -39,8 +43,10 @@ from mcp.client.auth.utils import (
     extract_scope_from_www_auth,
     get_client_metadata_scopes,
     is_valid_client_metadata_url,
+    issuers_match,
 )
 from mcp.shared.auth import OAuthClientInformationFull, OAuthMetadata, OAuthToken, ProtectedResourceMetadata
+from mcp.shared.auth_utils import check_resource_allowed
 from mcp.types import LATEST_PROTOCOL_VERSION
 from pydantic import ValidationError
 
@@ -190,11 +196,49 @@ async def _first_json(client: httpx2.AsyncClient, urls: list[str], model: type) 
     return None
 
 
+def _resource_for(url: str, resource_meta: ProtectedResourceMetadata | None) -> str:
+    """The RFC 8707 ``resource`` the token is minted for.
+
+    The server's own address, or the parent its metadata names (one token for
+    ``/mcp`` and ``/mcp/v2``, the SDK's rule). A ``resource`` anywhere else is
+    refused: the token would be asked for, and later sent, in the name of an
+    address the user never typed, which is the document's author choosing
+    where a credential goes.
+    """
+    advertised = str(resource_meta.resource) if resource_meta and resource_meta.resource else ""
+    if not advertised:
+        return url
+    if not check_resource_allowed(requested_resource=url, configured_resource=advertised):
+        logger.warning("mcp oauth: %s publishes a resource that is not itself", url)
+        raise OAuthUnavailable("The server's metadata names a different server as its resource.")
+    return advertised
+
+
+def _issuer_for(server_meta: OAuthMetadata, *, auth_server: str | None, url: str) -> str:
+    """The issuer the rest of the flow is bound to, once the metadata agrees.
+
+    RFC 8414 §3.3: ``issuer`` must be the identifier the discovery URL was
+    built from, the authorization server the resource named or, on the
+    2025-03-26 path, this server's own origin. Metadata naming another issuer
+    is misconfigured or planted, and either way the code it would send back
+    is some other sign-in's; the callback's RFC 9207 check compares against
+    the value returned here.
+    """
+    parts = urlsplit(url)
+    expected = auth_server or f"{parts.scheme}://{parts.netloc}"
+    issuer = str(server_meta.issuer)
+    if not issuers_match(issuer, expected):
+        logger.warning("mcp oauth: the sign-in metadata for %s names another issuer", url)
+        raise OAuthUnavailable("The server's sign-in names an issuer other than the one it was found at.")
+    return issuer
+
+
 async def discover(url: str) -> AuthPlan:
     """Ask the server what it needs. ``url`` is already ``canonical_url``'d.
 
     Raises ``OAuthUnavailable`` when the server wants credentials but publishes
-    no authorization server, and ``OAuthFailed`` when it cannot be reached.
+    no authorization server, or publishes metadata that names another server
+    as its resource or issuer; ``OAuthFailed`` when it cannot be reached.
     """
     try:
         async with mcp_http.guarded_client() as client:
@@ -243,7 +287,7 @@ async def discover(url: str) -> AuthPlan:
         # codes anybody who sees the redirect could redeem.
         raise OAuthUnavailable("The server's sign-in does not support PKCE.")
 
-    resource = str(resource_meta.resource) if resource_meta and resource_meta.resource else url
+    resource = _resource_for(url, resource_meta)
     return AuthPlan(
         kind=AUTH_OAUTH,
         resource=resource,
@@ -251,7 +295,7 @@ async def discover(url: str) -> AuthPlan:
         # Not the authorization server's whole list, which the SDK would fall
         # back to and which can carry every write scope the vendor has.
         scope=get_client_metadata_scopes(extract_scope_from_www_auth(probe), resource_meta) or "",
-        issuer=str(server_meta.issuer),
+        issuer=_issuer_for(server_meta, auth_server=auth_server, url=url),
         authorization_endpoint=str(server_meta.authorization_endpoint),
         token_endpoint=str(server_meta.token_endpoint),
         registration_endpoint=str(server_meta.registration_endpoint or ""),

@@ -14,7 +14,11 @@ from service.connectors import (
     entity_facts,
     register_connector,
 )
-from service.google.constants import GSC_CONNECTOR_ID, GSC_READ_SCOPE
+from service.google.constants import (
+    GOOGLE_SERVER_ONLY_KEYS,
+    GSC_CONNECTOR_ID,
+    GSC_READ_SCOPE,
+)
 
 _GSC_SCOPE = GSC_READ_SCOPE
 _TOKEN_URI = "https://oauth2.googleapis.com/token"
@@ -287,6 +291,7 @@ GSC_META = ConnectorMeta(
     capabilities=frozenset({CAP_ACCOUNTS}),
     entity_noun="property",
     entity_noun_plural="properties",
+    server_only_keys=GOOGLE_SERVER_ONLY_KEYS,
 )
 
 register_connector(GSC_META, GSCConnector())

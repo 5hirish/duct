@@ -6,9 +6,9 @@
  * This mirrors `site/assets/duct.js` deliberately — one product, one consent
  * story, whichever surface someone lands on first.
  *
- * What a refusal *does* belongs to the provider (`lib/analytics/`): for GTM it
- * means the container never loads at all rather than running in cookieless ping
- * mode, because "we sent nothing" needs no defending. Nothing in this file
+ * What a refusal *does* belongs to the provider (`lib/analytics/`): for PostHog
+ * it means crash reports kept in memory and nothing else, because "we sent
+ * nothing" needs no defending. Nothing in this file
  * knows that, which is the point — a fork that swaps the provider should not
  * have to re-derive the law.
  */

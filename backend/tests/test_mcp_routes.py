@@ -29,6 +29,7 @@ from service.mcp import oauth
 from service.mcp.client import CODE_REAUTH, CODE_UNREACHABLE, McpCallError
 from service.mcp.store import ACCESS_TOKEN, API_KEY, AUTH, MCP_CONNECTOR_TYPE, servers_for_user
 from tests.conftest import make_sqlite_engine
+from tests.fakes import FakeMcpServer
 
 API = "https://api.duct.test"
 APP = "https://app.duct.test"
@@ -189,6 +190,9 @@ def test_a_sign_in_is_kept_when_the_server_blips_on_the_first_listing(browser, d
     assert claimed.status_code == 200
     (row,) = _rows(db)
     assert row.last_validated_at is None
+    # Kept, and the card says why it may not work yet.
+    assert claimed.json()["server"]["status"] == "failing"
+    assert claimed.json()["server"]["problem"] == "unreachable"
 
 
 def test_a_token_refused_straight_after_sign_in_is_not_kept(browser, db, alice, vendor):
@@ -307,3 +311,54 @@ def test_the_client_metadata_document_is_public_and_names_itself(browser):
     assert document.status_code == 200
     assert document.json()["client_id"] == f"{API}{oauth.CLIENT_METADATA_PATH}"
     assert document.json()["redirect_uris"] == [f"{API}{oauth.CALLBACK_PATH}"]
+
+
+def _key_server(browser, user) -> str:
+    browser.as_(user).post("/api/user/mcp/servers", json={"url": SERVER, "api_key": "k-1"})
+    return browser.as_(user).get("/api/user/mcp/servers").json()["servers"][0]["id"]
+
+
+def _tools_server(token: str) -> FakeMcpServer:
+    server = FakeMcpServer(token=token)
+
+    @server.mcp.tool()
+    def lookup(term: str) -> str:
+        """Look a term up."""
+        return term
+
+    return server
+
+
+async def _check(browser, user, server_id: str, server: FakeMcpServer, monkeypatch) -> dict:
+    """POST the check while ``server`` runs: on one loop, since the route
+    awaits the client and the fake server's session manager lives on it."""
+    import httpx
+
+    browser.user = user
+    async with server.running(monkeypatch):
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=browser.http.app), base_url=API) as http:
+            answer = await http.post(f"/api/user/mcp/servers/{server_id}/check")
+    assert answer.status_code == 200
+    return answer.json()
+
+
+async def test_a_check_records_a_refused_key_and_clears_it_once_the_key_works(browser, db, alice, vendor, monkeypatch):
+    server_id = _key_server(browser, alice)
+
+    refused = await _check(browser, alice, server_id, _tools_server(token="rotated"), monkeypatch)
+    assert refused["tools"] is None
+    assert refused["server"]["status"] == "needs_reauth"
+    assert refused["server"]["problem"] == "key_refused" and refused["server"]["problem_at"]
+    # The listing says the same without calling anyone.
+    assert browser.as_(alice).get("/api/user/mcp/servers").json()["servers"][0]["problem"] == "key_refused"
+
+    working = await _check(browser, alice, server_id, _tools_server(token="k-1"), monkeypatch)
+    assert working["tools"] == 1
+    assert working["server"]["status"] == "connected" and working["server"]["problem"] == ""
+    (row,) = _rows(db)
+    assert row.last_validated_at is not None
+
+
+def test_someone_elses_server_cannot_be_checked(browser, alice, mallory, vendor):
+    server_id = _key_server(browser, alice)
+    assert browser.as_(mallory).post(f"/api/user/mcp/servers/{server_id}/check").status_code == 404

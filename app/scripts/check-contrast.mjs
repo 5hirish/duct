@@ -24,6 +24,8 @@ const STYLES = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "app",
 const TEXT = 4.5;
 const LARGE_TEXT = 3;
 const NON_TEXT = 3;
+// A field's resting edge: see "field edge" in PAIRS for why it is not NON_TEXT.
+const FIELD_EDGE = 1.8;
 
 // --- colour -----------------------------------------------------------------
 
@@ -132,7 +134,10 @@ const PAIRS = [
   ["secondary text", "--muted-foreground", "--background", TEXT],
   ["card text", "--card-foreground", "--card", TEXT],
   ["default Button", "--primary-foreground", "--primary", TEXT],
-  ["link / primary as text", "--primary", "--background", TEXT],
+  // `--primary` is a fill (buttons, checks, tints) and orange text is
+  // `--brand` ("brand as text" below): no one orange is both dark enough for
+  // a white label and light enough to read as text on the dark background.
+  ["primary fill against the page", "--primary", "--background", NON_TEXT],
   ["solid destructive", "--destructive-foreground", "--destructive", TEXT],
   ["solid success", "--success-foreground", "--success", TEXT],
   ["solid warning", "--warning-foreground", "--warning", TEXT],
@@ -157,9 +162,14 @@ const PAIRS = [
   // itself is deliberately absent from this list: it separates things already
   // distinguishable by position, which 1.4.11 does not cover, and holding a
   // card divider to 3:1 would box the whole app in.
-  ["control boundary", "--control", "--background", NON_TEXT],
-  ["control boundary on card", "--control", "--card", NON_TEXT],
+  // A deliberate step below 1.4.11's 3:1 (2026-11-03): at 3:1 every field
+  // drew a bright outline that out-shouted its own text. A field is still
+  // found by three things at once: its visible label, its filled background
+  // and an edge near 2:1; and the focused field gets the full 3:1 ring.
+  ["field edge", "--control", "--background", FIELD_EDGE],
+  ["field edge on card", "--control", "--card", FIELD_EDGE],
   ["focus ring", "--ring", "--background", NON_TEXT],
+  ["focus ring on card", "--ring", "--card", NON_TEXT],
   ["chart 1", "--chart-1", "--background", NON_TEXT],
   ["chart 2", "--chart-2", "--background", NON_TEXT],
   ["chart 3", "--chart-3", "--background", NON_TEXT],

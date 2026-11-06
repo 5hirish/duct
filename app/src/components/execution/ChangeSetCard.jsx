@@ -184,17 +184,17 @@ export default function ChangeSetCard({ changeSet: initial }) {
   const onApprove = () =>
     run("approve", async () => {
       await approveChangeSet(cs.change_set_id);
-      return applyChangeSet(cs.change_set_id, cs.connector_type);
+      return applyChangeSet(cs.change_set_id);
     });
   const onReject = () => run("reject", () => rejectChangeSet(cs.change_set_id));
   const onRollback = () =>
-    run("rollback", () => rollbackChangeSet(cs.change_set_id, cs.connector_type));
+    run("rollback", () => rollbackChangeSet(cs.change_set_id));
 
   return (
     <div className="my-2 max-w-md overflow-hidden rounded-xl border border-border bg-card">
       <div className="flex items-start gap-3 p-4">
         <span
-          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-brand"
           aria-hidden="true"
         >
           <Zap className="size-4" />
@@ -248,7 +248,7 @@ export default function ChangeSetCard({ changeSet: initial }) {
 
       {decision && (
         <p className="flex items-center gap-2 border-t border-border/60 bg-muted/40 px-4 py-2.5 text-xs font-medium">
-          <decision.icon className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
+          <decision.icon className="size-3.5 shrink-0 text-brand" aria-hidden="true" />
           <span>{decision.text}</span>
           {decision.at && (
             <span className="font-normal text-muted-foreground">

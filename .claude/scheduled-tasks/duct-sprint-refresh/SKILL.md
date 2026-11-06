@@ -21,7 +21,7 @@ Iteration field `PVTIF_lAHOAGxEyM4Bi8OtzhhydDk`. Status `PVTSSF_lAHOAGxEyM4Bi8Ot
 
 ```
 # reads
-gh api graphql -f query='{ user(login:"5hirish"){ projectV2(number:10){ field(name:"Iteration"){ ... on ProjectV2IterationField { configuration { iterations { id title startDate duration } completedIterations { id title startDate duration } } } } statusUpdates(last:5){ nodes { createdAt body } } } } }'
+gh api graphql -f query='{ user(login:"5hirish"){ projectV2(number:10){ field(name:"Iteration"){ ... on ProjectV2IterationField { configuration { iterations { id title startDate duration } completedIterations { id title startDate duration } } } } statusUpdates(first:5){ nodes { createdAt body } } } } }'
 gh project item-list 10 --owner 5hirish --limit 300 --format json
 gh api repos/5hirish/duct/milestones?state=all
 gh pr list --repo 5hirish/duct --state open --json number,title,updatedAt,closingIssuesReferences
@@ -43,7 +43,7 @@ gh api graphql -f query='mutation($p:ID!,$b:String!,$s:ProjectV2StatusUpdateStat
 
 ## 1. Read the state
 
-Run the reads above. `iterations[0]` is the current sprint and `iterations[1]` the next one; the sprint ends at `startDate + duration` days. The date for the merged-PR search is the latest status update's `createdAt`.
+Run the reads above. `iterations[0]` is the current sprint and `iterations[1]` the next one; the sprint ends at `startDate + duration` days. The date for the merged-PR search is the latest status update's `createdAt`. `statusUpdates` comes newest first, so `first:5` is the latest five: on 28 Oct 2026 the old `last:5` returned the oldest five and hid the update that had already planned Iteration 4, which would have re-planned the sprint and doubled its rollover comments.
 
 ## 2. Choose the mode
 
@@ -64,6 +64,8 @@ e. **Sprint runway.** If fewer than two iterations come after the current one, p
 f. **New work, from evidence only.** If main's latest CI run failed and no open issue already covers it (search the failing workflow's name), file a `bug`: P0, nearest open milestone, assigned `5hirish`, written in the skill's bug format with the run URL as evidence, added to the board, `Ready`, and put in the current sprint. Anything else that looks like new work (a stranded branch, an idea, a TODO) is never filed unattended: list it under "Needs you" with one line of why.
 
 g. **Triage.** An open issue on the board with no Priority, unless it's labelled `question`, gets one from the skill's rubric: impact × severity for a bug, who is waiting for a feature or idea. Set it, never change one already there, and list each under "Triaged" in the readout with a one-line reason so the maintainer can override it. A priority doesn't move anything into a sprint by itself; status and milestone still decide that.
+
+h. **Obsoleted by a removal.** For each PR merged since the previous update, list what it deleted: `gh api repos/5hirish/duct/pulls/<n>/files --paginate --jq '.[] | select(.status=="removed") | .filename'`. Name each removed module, connector or vendor (its directory under `backend/service/` or `backend/agents/insights/catalog/`, a dropped package) and search open issues for it. Run `git fetch -q origin` once, then check every path and name the issue mentions with `git ls-tree -r --name-only origin/main`. If all of them are gone, close it as not planned, commenting `Obsoleted by #<pr>, which removed <what>.` If any is still on `main`, or a contributor has claimed the issue, leave it open and list it under "Needs you". The skill's Mechanics section has the rule and the incident behind it.
 
 ## 4. Planning (planning mode only)
 

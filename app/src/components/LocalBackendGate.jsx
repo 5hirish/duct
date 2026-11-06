@@ -1,79 +1,81 @@
 "use client";
 
 /**
- * Holds rendering until the API base URL is known.
+ * Holds the subtree's *hydration*, not its HTML, until the API base is known.
  *
- * In the browser this resolves on the first tick and is effectively invisible.
- * In the desktop shell it waits for the bundled backend to finish booting and
- * report its loopback port, because anything that renders sooner would fire its
- * requests at the hosted API instead of the local one.
+ * The server renders the children as it would anywhere else, so the first
+ * paint is the real page. This used to hold the HTML too: it rendered
+ * "Starting Duct…" until an effect ran, and effects never run on the server,
+ * so every route arrived as that one line and waited for all of its
+ * JavaScript before showing anything. In a browser that wait bought nothing.
+ *
+ * In a browser the base is known on the first client render and the page
+ * hydrates at once. In the desktop shell the children suspend during
+ * hydration until the shell names its backend: React keeps the server's HTML
+ * on screen and runs no effect or handler below this point until then. That
+ * is the guarantee this gate exists for — nothing below fires a request at
+ * the hosted API while the shell meant its bundled one, which the session
+ * reads as a sign-out (see `lib/localBackend.js`).
  *
  * Wrap subtrees that talk to the API — not the root layout, whose children
  * include static marketing routes that need no backend at all.
  */
 
-import { useEffect, useState } from "react";
+import { Suspense, use, useEffect } from "react";
 import { Trans } from "@lingui/react/macro";
 
-import { reconcileStoredSession } from "../lib/authFetch.js";
-import { initLocalBackend } from "../lib/localBackend.js";
+import { initLocalBackend, settledBackend } from "../lib/localBackend.js";
 import { installExternalLinkHandler } from "../lib/shell.js";
 
 export default function LocalBackendGate({ children }) {
-  // Starts false on both server and client so the first paint matches; the
-  // effect below flips it once the backend is resolved.
-  const [ready, setReady] = useState(false);
-  const [error, setError] = useState("");
+  // Same subtrees, same shell: this is where the app's own chrome lives, so
+  // it is where new-tab links have to be taught to reach the system browser.
+  // Outside the boundary, so it is live while the children wait.
+  useEffect(() => installExternalLinkHandler(), []);
 
-  useEffect(() => {
-    let alive = true;
-    initLocalBackend().then((result) => {
-      if (!alive) return;
-      if (result.error) {
-        // The base never moved, so it does not describe the backend this shell
-        // meant to use. Judging the stored session against it would throw away
-        // a session that is still good for the sidecar that failed to start.
-        setError(result.error);
-      } else {
-        reconcileStoredSession();
-      }
-      setReady(true);
-    });
-    // Same subtrees, same shell: this is where the app's own chrome lives, so
-    // it is where new-tab links have to be taught to reach the system browser.
-    const uninstall = installExternalLinkHandler();
-    return () => {
-      alive = false;
-      uninstall();
-    };
-  }, []);
+  // The fallback shows only on a client navigation that beats the shell's
+  // answer. During hydration React keeps the server's HTML instead.
+  return (
+    <Suspense fallback={<Starting />}>
+      <Settled>{children}</Settled>
+    </Suspense>
+  );
+}
 
-  if (error) {
-    return (
-      <div className="flex min-h-svh items-center justify-center p-8">
-        <div className="max-w-md space-y-2 text-center">
-          <h1 className="text-lg font-semibold text-foreground">
-            <Trans>Duct’s local backend didn’t start</Trans>
-          </h1>
-          <p className="text-sm text-muted-foreground">{error}</p>
-          <p className="text-sm text-muted-foreground">
-            <Trans>
-              Quit and reopen Duct. If it keeps happening, the app bundle may be
-              incomplete — reinstall it.
-            </Trans>
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!ready) {
-    return (
-      <div className="flex min-h-svh items-center justify-center p-8">
-        <p className="text-sm text-muted-foreground"><Trans>Starting Duct…</Trans></p>
-      </div>
-    );
-  }
-
+function Settled({ children }) {
+  // Settled during render, not in an effect: effects run children first, so
+  // theirs would fire before ours.
+  const backend = settledBackend() ?? use(initLocalBackend());
+  // A terminal failure replaces the server's HTML, which React reports as a
+  // hydration mismatch and recovers from. It only happens in a self-host
+  // shell whose sidecar did not start.
+  if (backend.error) return <BackendFailed detail={backend.error} />;
   return children;
+}
+
+function Starting() {
+  return (
+    <div className="flex min-h-svh items-center justify-center p-8">
+      <p className="text-sm text-muted-foreground"><Trans>Starting Duct…</Trans></p>
+    </div>
+  );
+}
+
+function BackendFailed({ detail }) {
+  return (
+    <div className="flex min-h-svh items-center justify-center p-8">
+      <div className="max-w-md space-y-2 text-center">
+        <h1 className="text-lg font-semibold text-foreground">
+          <Trans>Duct’s local backend didn’t start</Trans>
+        </h1>
+        <p className="text-sm text-muted-foreground">{detail}</p>
+        <p className="text-sm text-muted-foreground">
+          <Trans>
+            Quit and reopen Duct. If it keeps happening, the app bundle may be
+            incomplete — reinstall it.
+          </Trans>
+        </p>
+      </div>
+    </div>
+  );
 }

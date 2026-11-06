@@ -1,4 +1,3 @@
-import { googleAdsRequestFields } from "./adsCredentials.js";
 import { providerKeyHeaders } from "./providerKeys.js";
 import { consumeSseStream } from "./sse.js";
 // Bearer JWT minted by Google Sign-In. Optional: signed-out sessions omit it and
@@ -117,35 +116,6 @@ export function backendAuthedHeaders(extra = {}) {
   return headers;
 }
 
-export async function fetchConnectorAccounts(connectorId, refreshToken, extras = {}) {
-  const res = await fetch(
-    `${BASE}/api/connectors/${encodeURIComponent(connectorId)}/accounts`,
-    {
-      method: "POST",
-      headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
-      body: JSON.stringify({ refresh_token: refreshToken, ...extras }),
-    }
-  );
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `Server error ${res.status}`);
-  }
-  const payload = await res.json();
-  return payload.accounts ?? [];
-}
-
-export async function fetchGoogleAdsAccounts(refreshToken) {
-  return fetchConnectorAccounts("google_ads", refreshToken, googleAdsRequestFields());
-}
-
-export async function fetchGa4Properties(refreshToken) {
-  return fetchConnectorAccounts("ga4", refreshToken);
-}
-
-export async function fetchGscSites(refreshToken) {
-  return fetchConnectorAccounts("gsc", refreshToken);
-}
-
 export async function generateReport(params) {
   const res = await fetch(`${BASE}/api/insights/generate`, {
     method: "POST",
@@ -159,18 +129,17 @@ export async function generateReport(params) {
   return res.json();
 }
 
+/**
+ * Re-pull a saved insight's data. The backend reads each connector from the
+ * signed-in account's stored connections; nothing in this tab is sent along,
+ * so a refresh works from any tab, browser or the desktop app.
+ */
 export async function refreshInsightBriefs(routine) {
-  const refreshToken = sessionStorage.getItem("gads_refresh_token") || "";
-  const ga4RefreshToken = sessionStorage.getItem("ga4_refresh_token") || "";
-  const gscRefreshToken = sessionStorage.getItem("gsc_refresh_token") || "";
   const body = {
     connections: routine?.connections || [],
     date_preset: routine?.date_preset || "30",
     date_from: routine?.custom_date_from || "",
     date_to: routine?.custom_date_to || "",
-    refresh_token: refreshToken,
-    ga4_refresh_token: ga4RefreshToken,
-    gsc_refresh_token: gscRefreshToken,
     targets: routine?.targets || {},
   };
   const res = await fetch(`${BASE}/api/insights/refresh`, {

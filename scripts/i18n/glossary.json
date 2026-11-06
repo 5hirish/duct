@@ -9,11 +9,12 @@
     "Microsoft Clarity", "RevenueCat", "HubSpot",
     "Duct AI", "getduct.ai", "Duct Doctrine", "Doctrine", "Content Studio", "Ship with AI", "Shirish Kadam",
     "FONS", "SALVE", "NIHIL", "OTIVM",
-    "OpenRouter", "xAI", "Grok", "PostBridge", "Apify", "Ahrefs", "OpenSEO", "Supermetrics", "Amplitude",
+    "OpenRouter", "xAI", "Grok", "PostBridge", "Zernio", "Apify", "Ahrefs", "OpenSEO", "Supermetrics", "Amplitude",
     "n8n", "Claude Cowork", "Cowork", "OpenClaw", "Adspirer", "PaidSync", "AdLoop",
     "Instagram", "LinkedIn", "Facebook", "Pinterest", "Bluesky", "Slack", "Notion", "Linear",
     "Tauri", "FastAPI", "Next.js", "Cloudflare", "Railway", "Turnstile", "Sentry",
-    "SaaS", "UTM", "CMGR", "ROI", "OAuth", "PDF", "Word", "PowerPoint", "Markdown", "MCP", "Model Context Protocol", "Streamable HTTP", "HTTPS"
+    "SaaS", "UTM", "CMGR", "ROI", "OAuth", "PDF", "Word", "PowerPoint", "Markdown", "MCP", "Model Context Protocol", "Streamable HTTP", "HTTPS",
+    "Claude Code", "Claude Desktop", "claude.ai", "Cursor", "VS Code", "OpenCode", "HTTP"
   ],
   "terms": {
     "brief": { "es": "informe", "pt-BR": "resumo", "de": "Briefing", "ja": "ブリーフ", "note": "The weekly synthesis Duct writes. A noun." },
@@ -21,6 +22,7 @@
     "change set": { "es": "conjunto de cambios", "pt-BR": "conjunto de alterações", "de": "Änderungssatz", "ja": "変更セット", "note": "A proposed, previewable batch of edits to an ad account or property." },
     "connector": { "es": "conector", "pt-BR": "conector", "de": "Connector", "ja": "コネクタ", "note": "An integration with one tool." },
     "connection": { "es": "conexión", "pt-BR": "conexão", "de": "Verbindung", "ja": "接続" },
+    "toolbox": { "es": "Caja de herramientas", "pt-BR": "Caixa de ferramentas", "de": "Werkzeugkasten", "ja": "ツールボックス", "note": "The page where every connector and MCP server is added; called Connections until November 2026." },
     "project": { "es": "proyecto", "pt-BR": "projeto", "de": "Projekt", "ja": "プロジェクト", "note": "One client or product; the unit everything is scoped to." },
     "insight": { "es": "hallazgo", "pt-BR": "insight", "de": "Erkenntnis", "ja": "インサイト" },
     "audit": { "es": "auditoría", "pt-BR": "auditoria", "de": "Audit", "ja": "監査" },
