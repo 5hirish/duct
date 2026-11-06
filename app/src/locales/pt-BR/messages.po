@@ -11087,8 +11087,12 @@ msgstr "Perdemos a conexão com esta execução. Por favor, tente novamente."
 #~ msgstr "Usamos o PostHog e o Google Analytics para ver quais páginas geram um cadastro e onde o Duct atrapalha você, incluindo gravações de visitas com tudo o que você digita oculto. Esse é o único uso — sem segmentação de anúncios, nada vendido. Recuse e o Duct funciona exatamente da mesma forma. <0>Política de Privacidade</0>"
 
 #: src/components/CookieConsent.jsx
-msgid "We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same. <0>Privacy Policy</0>"
-msgstr "Usamos o PostHog para ver quais páginas geram um cadastro e onde o Duct atrapalha você, incluindo gravações de visitas com tudo o que você digita oculto. Esse é o único uso — sem segmentação de anúncios, nada vendido. Recuse e o Duct funciona exatamente da mesma forma. <0>Política de Privacidade</0>"
+msgid "We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold. <0>Privacy Policy</0>"
+msgstr "Usamos o PostHog para ver quais páginas geram um cadastro e onde o Duct atrapalha você, incluindo replays de visitas com tudo o que você digita oculto. Recusar desativa o PostHog, e o Duct funciona exatamente da mesma forma. O Google Analytics também conta as visitas e define os próprios cookies, seja qual for a sua escolha. Nada é vendido. <0>Política de privacidade</0>"
+
+#: src/components/CookieConsent.jsx
+#~ msgid "We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same. <0>Privacy Policy</0>"
+#~ msgstr "Usamos o PostHog para ver quais páginas geram um cadastro e onde o Duct atrapalha você, incluindo gravações de visitas com tudo o que você digita oculto. Esse é o único uso — sem segmentação de anúncios, nada vendido. Recuse e o Duct funciona exatamente da mesma forma. <0>Política de Privacidade</0>"
 
 #: src/lib/agentSession.js
 msgid "We're hitting a rate limit — wait a minute and try again."

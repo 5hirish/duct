@@ -242,8 +242,11 @@ Only while the switch is on.
 | | |
 |---|---|
 | Crashes | From the shell: the panic message and stack, with your home folder replaced by `~`, under a random install id rather than your account. From the web view: the error and stack trace, page path without its query, and your account id if signed in ([web view reporter](../app/src/lib/analytics/posthog.js)) |
-| Usage | Which screens and features you open, page views and clicks (the element, never its text), under your account id if signed in. Held in memory, so nothing is stored on your machine and there is no consent bar; never a session replay. No tag container either: the keychain bridge trusts every script on the page, so only bundled code measures |
+| Usage | Which screens and features you open, page views and clicks (the element, never its text), under your account id if signed in. Held in memory, so nothing is stored on your machine and there is no consent bar; never a session replay |
 | Never | Your model keys, connected-tool data, uploads, or anything an agent writes for you |
+
+Google Analytics sits outside this switch. The window loads the web app, so it
+runs there too and sets its own cookies ([privacy policy](../site/privacy.html), section 7).
 
 ### If a fork fails
 

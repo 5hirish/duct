@@ -261,10 +261,10 @@ class PageChecker(HTMLParser):
         elif not self.duct_js_defer:
             self.errors.append("duct.js script tag is missing the 'defer' attribute")
 
-        # GTM and GA4 were removed: a tag container runs scripts configured
-        # outside this repository, and outside the consent gate in duct.js.
+        # Cloudflare's Google tag gateway already adds GTM and GA4 to every page
+        # at the edge, so a copy in the source counts every visit twice.
         if self.loads_google_tags:
-            self.errors.append("Loads Google Tag Manager; the site measures with PostHog behind the consent gate in duct.js")
+            self.errors.append("Loads Google Tag Manager; Cloudflare's tag gateway already adds it at the edge, so this counts every visit twice")
 
 
 # ── Runner ────────────────────────────────────────────────────────────────────

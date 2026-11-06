@@ -35,11 +35,15 @@
 <meta name="twitter:description" content="Saiba como o Duct coleta, usa e protege seus dados."/>
 <meta name="twitter:image" content="https://getduct.ai/assets/og/privacy.jpg"/>
 <link rel="stylesheet" href="/assets/duct.css"/>
-<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookies, honestamente","We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same.":"Usamos o PostHog para ver quais páginas geram um cadastro e onde o Duct atrapalha você, incluindo replays de visitas com tudo o que você digita oculto. Esse é o único uso — sem direcionamento de anúncios, nada vendido. Recuse e o Duct funciona exatamente da mesma forma.","Privacy Policy":"Política de Privacidade","Decline":"Recusar","Accept":"Aceitar","{n} stars on GitHub":"{n} estrelas no GitHub","UTM Builder":"Construtor de UTM","SaaS Metrics Benchmark Calculator":"Calculadora de Benchmark de Métricas SaaS","Weekly Marketing Brief Generator":"Gerador de Resumo Semanal de Marketing","CAC / LTV Calculator":"Calculadora de CAC / LTV","MRR Growth Rate Calculator":"Calculadora de Taxa de Crescimento de MRR","Engagement Rate Calculator":"Calculadora de Taxa de Engajamento","CTR Calculator":"Calculadora de CTR","CPM Calculator":"Calculadora de CPM","CPC Calculator":"Calculadora de CPC","CPA Calculator":"Calculadora de CPA","Marketing ROI Calculator":"Calculadora de ROI de Marketing","ROAS Calculator":"Calculadora de ROAS","Open navigation menu":"Abrir menu de navegação","Close navigation menu":"Fechar menu de navegação","Menu":"Menu","Free Tools":"Ferramentas gratuitas","Solutions":"Soluções","Download Duct ↓":"Baixar Duct ↓","Language":"Idioma","Enlarged screenshot":"Captura de tela ampliada","Close":"Fechar","Fit to screen":"Ajustar à tela","Zoom in":"Ampliar","Enlarge":"Ampliar","Universal · Apple silicon and Intel":"Universal · Apple silicon e Intel","Windows 10 and later":"Windows 10 e posterior","Runs on any distribution":"Funciona em qualquer distribuição","Debian and Ubuntu":"Debian e Ubuntu","Download ↓":"Baixar ↓","Download for {label} ↓":"Baixar para {label} ↓","Example numbers. Change any field and calculate again for yours.":"Números de exemplo. Altere qualquer campo e calcule novamente para os seus."};</script>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookies, honestamente","We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold.":"Usamos o PostHog para ver quais páginas geram um cadastro e onde o Duct atrapalha você, incluindo replays de visitas com tudo o que você digita oculto. Recusar desativa o PostHog, e o Duct funciona exatamente da mesma forma. O Google Analytics também conta as visitas e define os próprios cookies, seja qual for a sua escolha. Nada é vendido.","Privacy Policy":"Política de Privacidade","Decline":"Recusar","Accept":"Aceitar","{n} stars on GitHub":"{n} estrelas no GitHub","UTM Builder":"Construtor de UTM","SaaS Metrics Benchmark Calculator":"Calculadora de Benchmark de Métricas SaaS","Weekly Marketing Brief Generator":"Gerador de Resumo Semanal de Marketing","CAC / LTV Calculator":"Calculadora de CAC / LTV","MRR Growth Rate Calculator":"Calculadora de Taxa de Crescimento de MRR","Engagement Rate Calculator":"Calculadora de Taxa de Engajamento","CTR Calculator":"Calculadora de CTR","CPM Calculator":"Calculadora de CPM","CPC Calculator":"Calculadora de CPC","CPA Calculator":"Calculadora de CPA","Marketing ROI Calculator":"Calculadora de ROI de Marketing","ROAS Calculator":"Calculadora de ROAS","Open navigation menu":"Abrir menu de navegação","Close navigation menu":"Fechar menu de navegação","Menu":"Menu","Free Tools":"Ferramentas gratuitas","Solutions":"Soluções","Download Duct ↓":"Baixar Duct ↓","Language":"Idioma","Enlarged screenshot":"Captura de tela ampliada","Close":"Fechar","Fit to screen":"Ajustar à tela","Zoom in":"Ampliar","Enlarge":"Ampliar","Universal · Apple silicon and Intel":"Universal · Apple silicon e Intel","Windows 10 and later":"Windows 10 e posterior","Runs on any distribution":"Funciona em qualquer distribuição","Debian and Ubuntu":"Debian e Ubuntu","Download ↓":"Baixar ↓","Download for {label} ↓":"Baixar para {label} ↓","Example numbers. Change any field and calculate again for yours.":"Números de exemplo. Altere qualquer campo e calcule novamente para os seus."};</script>
 <script src="/assets/config.js" defer></script>
 <style>
 .legal-page { max-width: 780px; margin: 0 auto; padding: 80px 24px 100px; }
-.legal-page h1 { font-family: var(--serif); font-size: 36px; font-weight: 700; margin-bottom: 8px; letter-spacing: -.5px; }
+/* German's one-word "Datenschutzrichtlinie" is wider than a phone at 36px, and
+   one word has nowhere to wrap, so the whole page scrolled sideways. The scale
+   fits it on one line down to 320px; a long h2 hyphenates. */
+.legal-page h1 { font-family: var(--serif); font-size: clamp(22px, 7.2vw, 36px); font-weight: 700; margin-bottom: 8px; letter-spacing: -.5px; }
+.legal-page h1, .legal-page h2 { overflow-wrap: break-word; -webkit-hyphens: auto; hyphens: auto; }
 .legal-date { font-size: 13px; color: var(--navy-3); margin-bottom: 48px; }
 .legal-page h2 { font-family: var(--serif); font-size: 22px; font-weight: 700; margin: 40px 0 16px; letter-spacing: -.2px; }
 .legal-page h3 { font-size: 16px; font-weight: 600; margin: 28px 0 10px; }
@@ -84,7 +88,7 @@
 <article class="legal-page">
 
 <h1>Política de privacidade</h1>
-<p class="legal-date">Última atualização: 29 de outubro de 2026</p>
+<p class="legal-date">Última atualização: 5 de novembro de 2026</p>
 
 <p>Alleviate Lab ("nós", "nosso") opera o Duct (<a href="https://getduct.ai">getduct.ai</a>), uma plataforma de inteligência multi-ferramentas que conecta suas ferramentas de publicidade, análise, produto e busca, sintetiza o que mudou entre elas e — somente quando você aprova uma alteração específica — aplica essa alteração de volta à ferramenta conectada. Esta Política de Privacidade explica o que coletamos, por que, com quem compartilhamos, por quanto tempo mantemos e como excluí-lo.</p>
 
@@ -188,7 +192,7 @@
 <li><strong>O app que distribuímos se comunica com nossos servidores.</strong> Ele não carrega uma cópia própria do backend do Duct. Seus projetos, resumos, memórias do agente, registro de atividades, uploads e autorizações de conectores são armazenados por nós, exatamente como quando você usa o Duct em um navegador — o que também permite que você entre em um segundo computador e encontre seu trabalho lá. As seções 12 a 14 cobrem como armazenamos, compartilhamos e excluímos esses dados.</li>
 <li><strong>Suas chaves de provedor de IA permanecem na sua máquina.</strong> Elas ficam no chaveiro do seu sistema operacional e são enviadas com uma solicitação apenas quando um trabalho precisa ser executado. Nunca as armazenamos, e a opção de salvar uma chave conosco que a versão do navegador oferece é deliberadamente desativada no app para desktop.</li>
 <li><strong>Entrar e a autorização do conector abrem o navegador do seu sistema</strong> em vez de uma janela incorporada, para que você mantenha as proteções do seu navegador, e nenhuma credencial é transportada no link que o retorna ao app.</li>
-<li><strong>O app para desktop não define cookies e nunca vai perguntar sobre eles.</strong> Seus eventos de uso e relatórios de falhas vão para o PostHog, que no app para desktop mantém tudo na memória e não escreve nada em sua máquina, então nenhum dos cookies da seção 11 existe lá e não há nada para consentir. Uma barra de consentimento na frente de um aplicativo que você acabou de abrir não é uma pergunta que valha a pena interromper alguém.</li>
+<li><strong>O app para desktop nunca pergunta sobre cookies.</strong> Seus eventos de uso e relatórios de falhas vão para o PostHog, que no app para desktop mantém tudo na memória e não escreve nada em sua máquina, então o cookie do PostHog não existe lá. Uma barra de consentimento na frente de um aplicativo que você acabou de abrir não é uma pergunta que valha a pena interromper alguém. A janela do app carrega, sim, o nosso app web, então o Google Analytics também roda lá, define os cookies do Google listados na seção 11 e não é afetado pelo botão abaixo.</li>
 <li><strong>Relatórios de falhas e dados de uso estão ativados por padrão no app que distribuímos, e um único interruptor em Preferências desativa ambos.</strong> Depois de tocar nele, sua resposta é mantida e nenhum padrão se aplica novamente. Um relatório de falha contém o erro e o rastreamento de pilha que o causou; dados de uso são as telas e recursos que você abre — nunca suas chaves de API de provedor, seus dados ou qualquer coisa que você gera. Se você estiver conectado, ambos carregam seu ID de conta. Se você construir o Duct por conta própria, ambos estarão desativados por padrão, porque então não somos nós que o estamos executando.</li>
 <li><strong>O app para desktop nunca grava um replay da sua sessão.</strong> O replay de sessão (seção 11) existe apenas em nosso site e no app web em um navegador.</li>
 <li><strong>Verificações de atualização</strong> contatam nosso host de lançamento para perguntar se uma versão mais recente existe. Esta solicitação revela seu endereço IP e a versão que você está usando.</li>
@@ -217,7 +221,7 @@
 
 <h3>Dados de uso</h3>
 <p>Coletamos análises de produto — páginas visitadas, recursos usados, o que você clica, quão rápido as páginas carregam — para ver quais páginas geram um cadastro e onde o Duct atrapalha você. Em nosso site e no app web em um navegador, isso é feito pelo PostHog, que segue a escolha de cookies descrita abaixo.</p>
-<p>Não usamos Google Analytics, Google Tag Manager nem qualquer outro gerenciador de tags. Paramos em outubro de 2026, e nosso site exclui na sua próxima visita os cookies que eles definiram antes disso (<code>_ga</code>, <code>_gcl_au</code>).</p>
+<p>Também usamos o Google Analytics, carregado pelo Google Tag Manager, para contar as visitas e ver de onde elas vêm. Ele roda no nosso site, no app web e na janela do app para desktop. <strong>Ele não segue a escolha de cookies descrita abaixo:</strong> carrega em todas as páginas, antes de você responder e depois de você recusar. O Google recebe o endereço completo da página, de onde você veio, seu navegador e dispositivo, seu endereço IP, que ele usa para estimar sua localização, e um identificador dos cookies listados abaixo. Essas tags também enviam dados de visitas para os serviços de publicidade do Google, incluindo o que cria públicos de anúncios. No momento não veiculamos Google Ads. Se você não quiser isso, o Google oferece um <a href="https://tools.google.com/dlpage/gaoptout" rel="noopener">complemento de navegador que exclui você do Google Analytics</a>.</p>
 <p>O PostHog também registra reproduções de sessão: uma reconstrução da página e onde você clicou, para que possamos ver onde uma visita deu errado. O que uma reprodução oculta é escondido no seu navegador, antes que qualquer coisa o deixe:</p>
 <ul>
 <li><strong>No nosso site,</strong> tudo o que você digita em um campo.</li>
@@ -231,15 +235,20 @@
 
 <h3>Cookies e tecnologias semelhantes</h3>
 
-<p>Os cookies de análise são definidos somente depois que você os aceita. Se você estiver no EEE, Reino Unido ou Suíça, perguntamos antes que algo seja definido, e nada além das entradas estritamente necessárias abaixo existe até que você escolha. Em outros lugares, a análise está ativada por padrão e você pode desativá-la a qualquer momento — o link <strong>Configurações de cookies</strong> no nosso rodapé, e no menu da conta dentro do app, reabre a escolha em cada página.</p>
+<p>A escolha que pedimos cobre o cookie de análise do PostHog. Se você estiver no EEE, Reino Unido ou Suíça, perguntamos antes que o PostHog defina qualquer coisa. Em outros lugares, ele está ativado por padrão e você pode desativá-lo a qualquer momento: o link <strong>Configurações de cookies</strong> no nosso rodapé, e no menu da conta dentro do app, reabre a escolha em todas as páginas.</p>
 
-<p>Recusar significa que o PostHog não é carregado, em vez de ser carregado em um modo restrito. Se você recusar depois de ter aceitado anteriormente, paramos o PostHog, excluímos os cookies abaixo e a cópia deles do PostHog no armazenamento do seu navegador, e recarregamos a página.</p>
+<p><strong>O Google Analytics não faz parte dessa escolha.</strong> Os cookies dele listados abaixo são definidos quando uma página carrega, onde quer que você esteja e seja qual for a sua escolha.</p>
+
+<p>Recusar significa que o PostHog não é carregado, em vez de ser carregado em um modo restrito. Se você recusar depois de ter aceitado anteriormente, paramos o PostHog, excluímos o cookie dele e a cópia dele no armazenamento do seu navegador, e recarregamos a página. O Google Analytics continua rodando em qualquer caso.</p>
 
 <div class="legal-table-wrap">
 <table>
 <thead><tr><th>Cookie</th><th>Definido por</th><th>Finalidade</th><th>Expira</th></tr></thead>
 <tbody>
 <tr><td><code>ph_phc_…_posthog</code></td><td>PostHog</td><td>Distingue um visitante de outro e leva a mesma visita através de <code>getduct.ai</code> e <code>app.getduct.ai</code> para que conte como uma pessoa, não duas. O PostHog pode manter o mesmo valor no armazenamento local do seu navegador</td><td>1 ano</td></tr>
+<tr><td><code>_ga</code></td><td>Google Analytics</td><td>Distingue um visitante de outro. Definido em <code>getduct.ai</code> e em todos os seus subdomínios. Não coberto pela escolha acima</td><td>Até 2 anos</td></tr>
+<tr><td><code>_ga_SXH5LYVTJ8</code></td><td>Google Analytics</td><td>Acompanha a visita atual. Não coberto pela escolha acima</td><td>Até 2 anos</td></tr>
+<tr><td><code>_gcl_au</code></td><td>Google Tag Manager</td><td>Conecta uma visita a um clique em anúncio, para medir o Google Ads. Não coberto pela escolha acima</td><td>90 dias</td></tr>
 <tr><td><code>duct_consent</code></td><td>Duct</td><td>Lembra sua escolha, para que você não seja perguntado em todas as páginas. Definido em <code>getduct.ai</code> e todos os seus subdomínios, então responder uma vez no seu navegador também responde para o app. O app para desktop nunca o define, porque nunca pergunta (seção 7). Estritamente necessário — ele existe quer você aceite ou recuse</td><td>6 meses, depois perguntamos novamente</td></tr>
 <tr><td><code>duct_consent_region</code></td><td>Duct (armazenamento de sessão)</td><td>Armazena em cache o país de onde sua solicitação veio, para que façamos a pergunta certa sem repetir a busca. Estritamente necessário</td><td>Fim da sessão</td></tr>
 </tbody>
@@ -260,7 +269,7 @@
 
 <h2>12. Como Compartilhamos e Armazenamos Dados</h2>
 
-<p>Não vendemos seus dados. Compartilhamos apenas com os provedores de serviço abaixo, somente conforme necessário para operar o Duct, e apenas sob termos que os restringem a essa finalidade:</p>
+<p>Não vendemos seus dados. Compartilhamos apenas com os provedores de serviço abaixo, somente conforme necessário para operar o Duct e, exceto pelo que os serviços de publicidade do Google recebem, apenas sob termos que os restringem a essa finalidade:</p>
 <div class="legal-table-wrap">
 <table>
 <thead><tr><th>Provedor</th><th>Finalidade</th><th>Recebe dados de fontes conectadas?</th></tr></thead>
@@ -272,10 +281,12 @@
 <tr><td>PostBridge</td><td>Publicar em, e ler análises de, suas contas sociais</td><td>Dados da conta social e conteúdo de post apenas</td></tr>
 <tr><td>Apify</td><td>Recuperar conteúdo social disponível publicamente para pesquisa</td><td>Não</td></tr>
 <tr><td>PostHog</td><td>Análise de produto e web, replay de sessão, relatório de erros e falhas, medição de velocidade da página, metadados de chamadas de IA</td><td>Não — eventos de uso, reproduções de sessão mascaradas conforme descrito na seção 11, relatórios de erro, tempo de carregamento da página e metadados de chamadas de IA; nunca os dados das suas ferramentas conectadas ou seus prompts. Um relatório de erro pode, incidentalmente, conter um identificador, conforme descrito na seção 11.</td></tr>
+<tr><td>Google (Analytics e Tag Manager)</td><td>Análise do site e do app, e medição de publicidade</td><td>Não — endereços completos das páginas, que podem conter IDs internos, dados de visita e do dispositivo, endereço IP e identificadores de cookies, conforme descrito na seção 11; nunca os dados das suas ferramentas conectadas nem os seus prompts</td></tr>
 </tbody>
 </table>
 </div>
 <p><strong>PostHog, Inc. é uma empresa dos EUA e armazena o que recebe em sua região nos EUA.</strong> O envio de dados da UE para ele depende das Cláusulas Contratuais Padrão da UE no acordo de processamento de dados do PostHog.</p>
+<p><strong>A Google LLC é uma empresa dos EUA e pode processar o que recebe nos Estados Unidos,</strong> com as salvaguardas dos termos de processamento de dados dela. O que os serviços de publicidade do Google recebem também é usado conforme descrito na <a href="https://policies.google.com/privacy" rel="noopener">política de privacidade do Google</a>.</p>
 <p>Quando dados de fonte conectada são enviados a um provedor de modelo de IA, eles são enviados exclusivamente para produzir o resultado que você solicitou. <strong>Nunca os usamos para treinar modelos, e nunca permitimos que um provedor o faça em nosso nome.</strong> Anthropic, OpenAI e Google são usados sob termos de API que excluem dados enviados do treinamento por padrão.</p>
 <p><strong>OpenRouter é um roteador, não um provedor de modelo,</strong> e merece uma nota específica. Ele encaminha uma solicitação para o provedor subjacente que a configuração de roteamento selecionar, e esses provedores diferem quanto ao registro ou treinamento com base no que recebem. Onde você fornece sua própria chave OpenRouter, essa configuração de roteamento é sua: o comportamento de retenção e treinamento de uma solicitação é regido pela política de dados definida em sua conta OpenRouter, e você deve configurá-la para corresponder aos compromissos de que precisa. Recomendamos ativar a política de dados de zero registro e sem treinamento do OpenRouter antes de conectar uma chave. O Duct não usa seus dados para treinamento, independentemente da rota que for tomada.</p>
 <p>Também podemos divulgar dados quando exigido por lei, e a uma entidade sucessora em caso de fusão ou aquisição, caso em que esta política continua a ser aplicada até que você seja notificado de outra forma.</p>
@@ -299,6 +310,7 @@
 <tr><td>Tokens de autenticação (navegador)</td><td>7 dias</td></tr>
 <tr><td>Eventos de uso, relatórios de erros e metadados de chamadas de IA (PostHog)</td><td>Até 7 anos, a retenção do nosso plano PostHog</td></tr>
 <tr><td>Replays de sessão (PostHog)</td><td>30 dias</td></tr>
+<tr><td>Dados de visitas no Google Analytics</td><td>Até 14 meses</td></tr>
 <tr><td>Envios de ferramentas de auditoria</td><td>Até que você nos peça para excluí-los</td></tr>
 <tr><td>Backups</td><td>Dados excluídos podem persistir em backups criptografados por até 30 dias após a exclusão</td></tr>
 </tbody>

@@ -38,7 +38,11 @@
 <script src="assets/config.js" defer></script>
 <style>
 .legal-page { max-width: 780px; margin: 0 auto; padding: 80px 24px 100px; }
-.legal-page h1 { font-family: var(--serif); font-size: 36px; font-weight: 700; margin-bottom: 8px; letter-spacing: -.5px; }
+/* German's one-word "Datenschutzrichtlinie" is wider than a phone at 36px, and
+   one word has nowhere to wrap, so the whole page scrolled sideways. The scale
+   fits it on one line down to 320px; a long h2 hyphenates. */
+.legal-page h1 { font-family: var(--serif); font-size: clamp(22px, 7.2vw, 36px); font-weight: 700; margin-bottom: 8px; letter-spacing: -.5px; }
+.legal-page h1, .legal-page h2 { overflow-wrap: break-word; -webkit-hyphens: auto; hyphens: auto; }
 .legal-date { font-size: 13px; color: var(--navy-3); margin-bottom: 48px; }
 .legal-page h2 { font-family: var(--serif); font-size: 22px; font-weight: 700; margin: 40px 0 16px; letter-spacing: -.2px; }
 .legal-page h3 { font-size: 16px; font-weight: 600; margin: 28px 0 10px; }
@@ -83,7 +87,7 @@
 <article class="legal-page">
 
 <h1>Privacy Policy</h1>
-<p class="legal-date">Last updated: October 29, 2026</p>
+<p class="legal-date">Last updated: November 5, 2026</p>
 
 <p>Alleviate Lab ("we", "us", "our") operates Duct (<a href="https://getduct.ai">getduct.ai</a>), a cross-tool intelligence platform that connects your advertising, analytics, product and search tools, synthesises what changed across them, and — only when you approve a specific change — applies that change back to the connected tool. This Privacy Policy explains what we collect, why, who we share it with, how long we keep it, and how to delete it.</p>
 
@@ -187,7 +191,7 @@
 <li><strong>The app we distribute talks to our servers.</strong> It does not carry its own copy of Duct's backend. Your projects, briefs, agent memories, activity log, uploads and connector authorisations are stored by us, exactly as they are when you use Duct in a browser &mdash; which is also what lets you sign in on a second computer and find your work there. Sections 12 to 14 cover how we store, share and delete it.</li>
 <li><strong>Your AI provider keys stay on your machine.</strong> They live in your operating system's keychain, and are sent with a request only when a job needs to run. We never store them, and the option to save a key with us that the browser version offers is deliberately switched off in the desktop app.</li>
 <li><strong>Sign-in and connector authorisation open your system browser</strong> rather than an embedded window, so you keep your browser's own protections, and no credential is ever carried in the link that returns you to the app.</li>
-<li><strong>The desktop app sets no cookies, and is never going to ask you about them.</strong> Its usage events and crash reports go to PostHog, which in the desktop app holds everything in memory and writes nothing to your machine, so none of the cookies in section 11 exist there and there is nothing to consent to. A consent bar in front of an application you just opened is not a question worth interrupting anyone for.</li>
+<li><strong>The desktop app never asks you about cookies.</strong> Its usage events and crash reports go to PostHog, which in the desktop app holds everything in memory and writes nothing to your machine, so PostHog's cookie does not exist there. A consent bar in front of an application you just opened is not a question worth interrupting anyone for. The app's window does load our web app, so Google Analytics runs there too, sets the Google cookies listed in section 11, and is not affected by the switch below.</li>
 <li><strong>Crash reports and usage data are on by default in the app we distribute, and one switch in Preferences turns both off.</strong> Once you touch it your answer is kept and no default applies again. A crash report contains the error and the stack trace that caused it; usage data is which screens and features you open &mdash; never your provider API keys, your data, or anything you generate. If you are signed in, both carry your account ID. If you build Duct yourself both are off by default instead, because then we are not the ones running it.</li>
 <li><strong>The desktop app never records a replay of your session.</strong> Session replay (section 11) exists only on our website and in the web app in a browser.</li>
 <li><strong>Update checks</strong> contact our release host to ask whether a newer version exists. This request reveals your IP address and the version you are running.</li>
@@ -216,7 +220,7 @@
 
 <h3>Usage data</h3>
 <p>We collect product analytics — pages visited, features used, what you click, how fast pages load — to see which pages earn a signup and where Duct gets in your way. On our website and in the web app in a browser this runs through PostHog, which follows the cookie choice described below.</p>
-<p>We do not use Google Analytics, Google Tag Manager or any other tag manager. We stopped in October 2026, and our website deletes the cookies they set before then (<code>_ga</code>, <code>_gcl_au</code>) on your next visit.</p>
+<p>We also use Google Analytics, loaded through Google Tag Manager, to count visits and see where they come from. It runs on our website, in the web app and in the desktop app's window. <strong>It does not follow the cookie choice described below:</strong> it loads on every page, before you answer and after you decline. Google receives the full address of the page, where you came from, your browser and device, your IP address, which it uses to estimate your location, and an identifier from the cookies listed below. These tags also send visit data to Google's advertising services, including the one that builds ad audiences. We are not running Google Ads at the moment. If you do not want this, Google offers a <a href="https://tools.google.com/dlpage/gaoptout" rel="noopener">browser add-on that opts you out of Google Analytics</a>.</p>
 <p>PostHog also records session replays: a reconstruction of the page and where you clicked, so we can watch where a visit went wrong. What a replay hides is hidden in your browser, before anything leaves it:</p>
 <ul>
 <li><strong>On our website,</strong> everything you type into a field.</li>
@@ -230,15 +234,20 @@
 
 <h3>Cookies and similar technologies</h3>
 
-<p>Analytics cookies are set only after you accept them. If you are in the EEA, the UK or Switzerland we ask before anything is set, and nothing but the strictly necessary entries below exists until you choose. Elsewhere analytics is on by default and you can turn it off at any time — the <strong>Cookie settings</strong> link in our footer, and in the account menu inside the app, reopens the choice on every page.</p>
+<p>The choice we ask for covers PostHog's analytics cookie. If you are in the EEA, the UK or Switzerland we ask before PostHog sets anything. Elsewhere it is on by default and you can turn it off at any time: the <strong>Cookie settings</strong> link in our footer, and in the account menu inside the app, reopens the choice on every page.</p>
 
-<p>Declining means PostHog is not loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we stop PostHog, delete the cookies below and PostHog's copy of them in your browser's storage, and reload the page.</p>
+<p><strong>Google Analytics is not part of that choice.</strong> Its cookies below are set when a page loads, wherever you are and whatever you choose.</p>
+
+<p>Declining means PostHog is not loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we stop PostHog, delete its cookie and its copy of it in your browser's storage, and reload the page. Google Analytics keeps running either way.</p>
 
 <div class="legal-table-wrap">
 <table>
 <thead><tr><th>Cookie</th><th>Set by</th><th>Purpose</th><th>Expires</th></tr></thead>
 <tbody>
 <tr><td><code>ph_phc_…_posthog</code></td><td>PostHog</td><td>Distinguishes one visitor from another, and carries the same visit across <code>getduct.ai</code> and <code>app.getduct.ai</code> so it counts as one person, not two. PostHog may keep the same value in your browser's local storage</td><td>1 year</td></tr>
+<tr><td><code>_ga</code></td><td>Google Analytics</td><td>Distinguishes one visitor from another. Set on <code>getduct.ai</code> and all its subdomains. Not covered by the choice above</td><td>Up to 2 years</td></tr>
+<tr><td><code>_ga_SXH5LYVTJ8</code></td><td>Google Analytics</td><td>Keeps track of the current visit. Not covered by the choice above</td><td>Up to 2 years</td></tr>
+<tr><td><code>_gcl_au</code></td><td>Google Tag Manager</td><td>Connects a visit to an ad click, for measuring Google Ads. Not covered by the choice above</td><td>90 days</td></tr>
 <tr><td><code>duct_consent</code></td><td>Duct</td><td>Remembers your choice, so you are not asked on every page. Set on <code>getduct.ai</code> and all its subdomains, so answering once in your browser also answers for the app. The desktop app never sets it, because it never asks (section 7). Strictly necessary — it exists whether you accept or decline</td><td>6 months, then we ask again</td></tr>
 <tr><td><code>duct_consent_region</code></td><td>Duct (session storage)</td><td>Caches the country your request arrived from, so we ask the right question without repeating the lookup. Strictly necessary</td><td>End of session</td></tr>
 </tbody>
@@ -259,7 +268,7 @@
 
 <h2>12. How We Share and Store Data</h2>
 
-<p>We do not sell your data. We share it only with the service providers below, only as needed to operate Duct, and only under terms that restrict them to that purpose:</p>
+<p>We do not sell your data. We share it only with the service providers below, only as needed to operate Duct, and, apart from what Google's advertising services receive, only under terms that restrict them to that purpose:</p>
 <div class="legal-table-wrap">
 <table>
 <thead><tr><th>Provider</th><th>Purpose</th><th>Receives connected-source data?</th></tr></thead>
@@ -271,10 +280,12 @@
 <tr><td>PostBridge</td><td>Publishing to, and reading analytics from, your social accounts</td><td>Social account data and post content only</td></tr>
 <tr><td>Apify</td><td>Retrieving publicly available social content for research</td><td>No</td></tr>
 <tr><td>PostHog</td><td>Product and web analytics, session replay, error and crash reporting, page-speed measurement, AI call metadata</td><td>No — usage events, session replays masked as described in section 11, error reports, page timing and AI call metadata; never your connected tools' data or your prompts. An error report may incidentally contain an identifier, as described in section 11</td></tr>
+<tr><td>Google (Analytics and Tag Manager)</td><td>Website and app analytics, and advertising measurement</td><td>No — full page addresses, which can contain internal IDs, visit and device data, IP address and cookie identifiers, as described in section 11; never your connected tools' data or your prompts</td></tr>
 </tbody>
 </table>
 </div>
 <p><strong>PostHog, Inc. is a US company, and stores what it receives in its US region.</strong> Sending it data from the EU relies on the EU Standard Contractual Clauses in PostHog's data processing agreement.</p>
+<p><strong>Google LLC is a US company and may process what it receives in the United States,</strong> under the safeguards in its data processing terms. What Google's advertising services receive is also used as described in <a href="https://policies.google.com/privacy" rel="noopener">Google's privacy policy</a>.</p>
 <p>Where connected-source data is sent to an AI model provider, it is sent solely to produce the output you asked for. <strong>We never use it to train models, and we never permit a provider to do so on our behalf.</strong> Anthropic, OpenAI and Google are used under API terms that exclude submitted data from training by default.</p>
 <p><strong>OpenRouter is a router, not a model provider,</strong> and it warrants a specific note. It forwards a request to whichever underlying provider the routing configuration selects, and those providers differ in whether they log or train on what they receive. Where you supply your own OpenRouter key, that routing configuration is yours: the retention and training behaviour of a request is governed by the data policy set on your OpenRouter account, and you should set it to match the commitments you need. We recommend enabling OpenRouter's zero-logging and no-training data policy before connecting a key. Duct does not use your data for training regardless of which route is taken.</p>
 <p>We may also disclose data where required by law, and to a successor entity in the event of a merger or acquisition, in which case this policy continues to apply until you are notified otherwise.</p>
@@ -298,6 +309,7 @@
 <tr><td>Authentication tokens (browser)</td><td>7 days</td></tr>
 <tr><td>Usage events, error reports and AI call metadata (PostHog)</td><td>Up to 7 years, the retention of our PostHog plan</td></tr>
 <tr><td>Session replays (PostHog)</td><td>30 days</td></tr>
+<tr><td>Visit data in Google Analytics</td><td>Up to 14 months</td></tr>
 <tr><td>Audit tool submissions</td><td>Until you ask us to delete them</td></tr>
 <tr><td>Backups</td><td>Deleted data may persist in encrypted backups for up to 30 days after deletion</td></tr>
 </tbody>

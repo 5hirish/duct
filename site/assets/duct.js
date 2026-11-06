@@ -23,11 +23,13 @@ window.ductLangPath = ductLangPath;
 // So it loads never before an answer where we ask, never after a decline,
 // never on localhost. One banner, one footer link, one withdrawal.
 //
-// No tag manager. Google Tag Manager and GA4 ran beside PostHog until October
-// 2026 and went because a container runs scripts configured outside this
-// repository, and an open-source product measures itself with open-source
-// tools. A rejection stops PostHog loading at all rather than running it
-// cookieless: "we sent nothing" needs no defending.
+// Google Analytics is not loaded from this file and this gate does not govern
+// it. Cloudflare's Google tag gateway adds Google Tag Manager, which loads GA4,
+// to every page at the edge; the banner and the privacy policy say so. Its
+// cookies are not ours to touch: this file used to delete _ga and _gcl_au on
+// every load, and GA4 read nearly every visitor as new. A rejection stops
+// PostHog loading at all rather than running it cookieless: "PostHog got
+// nothing" needs no defending.
 (function (w, d, s, cfg) {
   var phToken = cfg.posthog_token || '';
   var phHost = cfg.posthog_api_host || '';
@@ -47,10 +49,6 @@ window.ductLangPath = ductLangPath;
   // What the tag actually writes. Withdrawing consent has to remove what was
   // already set, or "decline" only ever means "stop counting from here".
   var COOKIE_PREFIXES = ['ph_'];
-  // What GTM and GA4 left behind for anyone who accepted before they were
-  // removed. Nothing reads them any more, so every visit deletes them, whatever
-  // the visitor chose; the privacy policy says so.
-  var RETIRED_COOKIE_PREFIXES = ['_ga', '_gid', '_gcl', '_gac'];
   // PostHog keeps a copy of its cookie in localStorage, and its session state
   // in sessionStorage, under the same prefix.
   var STORAGE_PREFIX = 'ph_';
@@ -319,7 +317,7 @@ window.ductLangPath = ductLangPath;
     title.textContent = ductT('Cookies, honestly');
     var body = d.createElement('p');
     // The app's banner says the same words; change both or neither.
-    body.innerHTML = ductT('We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same.') +
+    body.innerHTML = ductT('We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold.') +
       ' <a href="' + ductLangPath('/privacy') + '">' + ductT('Privacy Policy') + '</a>';
     copy.appendChild(title);
     copy.appendChild(body);
@@ -357,8 +355,6 @@ window.ductLangPath = ductLangPath;
     if (phReady) w.posthog.capture(event, props);
     else phPending.push([event, props]);
   };
-
-  clearCookies(RETIRED_COOKIE_PREFIXES);
 
   if (!phToken || isLocalhost) return;
 

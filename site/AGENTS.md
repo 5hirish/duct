@@ -610,11 +610,22 @@ empty project and exits 0.
 
 - Do not add npm tooling.
 - Do not create `.env` files.
-- **Do not add Google Tag Manager, GA4 or any other tag container.** They
-  were removed in October 2026: a container runs scripts configured outside
-  this repository, and the product measures itself with open-source tools.
-  `check-pages.py` fails a page that loads GTM.
-- **Do not load a tag outside the consent gate.** `duct.js` loads PostHog only
+- **Google Analytics runs on this site, and nothing in this repository loads
+  it.** Cloudflare's Google tag gateway adds Google Tag Manager, which loads
+  GA4, to every HTML response at the edge, on `getduct.ai` and `app.getduct.ai`
+  alike and outside the consent gate. Source files, CI and localhost never show
+  it; only a browser on the live site does. So:
+  - Do not add a copy to a page. It would count every visit twice, and
+    `check-pages.py` fails a page that loads GTM.
+  - Do not delete its cookies (`_ga`, `_ga_*`, `_gcl_au`). The site did until
+    November 2026, and GA4 read nearly every visitor as new.
+    `tests/e2e/consent.spec.js` holds this.
+  - A change to the gateway or the container changes what we tell people. The
+    banner and the privacy policy (sections 7, 11, 12 and 14) describe it, so
+    they change with it.
+- **Do not add any other tag container.** A container runs scripts configured
+  outside this repository.
+- **Do not load any other tag outside the consent gate.** `duct.js` loads PostHog only
   after a stored choice — or, outside the EEA/UK/CH, after `/cdn-cgi/trace`
   says the visitor is somewhere the default may be measurement. A script tag
   added straight to a page bypasses all of it. Anything new goes beside

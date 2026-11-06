@@ -24,6 +24,22 @@ published without one. The same script, with no arguments, holds
 
 ## [Unreleased]
 
+### Changed
+
+- **The cookie bar and the privacy policy name Google Analytics.** Cloudflare's
+  Google tag gateway kept adding Google Tag Manager and GA4 at the edge after
+  they left this repository, on the site, in the web app and in the desktop
+  window, whatever a visitor chose. They stay, and both now say so. The bar's
+  "no ad targeting" line is gone, because these tags also reach Google's
+  advertising services.
+
+### Fixed
+
+- **GA4 recognises a returning visitor.** The site deleted `_ga` and `_gcl_au`
+  on every page load, so GA4 read nearly every visitor as new.
+- **The privacy page fits a phone in German.** Its one-word heading pushed the
+  page wider than the screen.
+
 ## [0.7.3] — 2026-11-05
 
 The desktop app signs in again on macOS and Linux. Around it: one searchable Toolbox
@@ -85,11 +101,9 @@ server.
 
 ### Removed
 
-- **Google Tag Manager and GA4, from the site and the web app.** PostHog,
-  which is open source, already measured both, and a tag container runs
-  scripts configured outside this repository with the session token in reach.
-  The cookie bar names PostHog alone, and the site deletes the `_ga` and
-  `_gcl_au` cookies that earlier visits were given.
+- **Google Tag Manager and GA4, from this repository's site and web app code.**
+  Correction: this did not take them out of production, because Cloudflare's
+  Google tag gateway kept adding them at the edge, and they stay.
 
 ## [0.7.2] — 2026-10-29
 
