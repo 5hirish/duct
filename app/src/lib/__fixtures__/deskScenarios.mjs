@@ -122,7 +122,7 @@ export const DESK_SCENARIOS = [
       activity: activity(now, 0.1),
       memories: [
         memory(now, { kind: "metric", title: "Trial-to-paid held at 11.2%", value: { value: 0.112, unit: "%", delta: 0.004 }, source_refs: [{ connector: "stripe" }] }),
-        memory(now, { kind: "milestone", title: "First 1,000 organic sessions in a week", daysAgo: 3, source_refs: [{ connector: "ga4" }] }),
+        memory(now, { kind: "outcome", title: "Meta title rewrite lifted organic clicks 18% in two weeks", daysAgo: 3, source_refs: [{ connector: "ga4" }] }),
         memory(now, { kind: "watch", title: "Watching the new pricing page for a week before judging it", daysAgo: 4, status: "proposed" }),
       ],
     }),
@@ -245,7 +245,7 @@ export function randomDesk(seed, { now = Date.now() } = {}) {
     const roll = r();
     if (roll < 0.55) {
       d.memories.push(memory(now, {
-        kind: pick(["incident", "conclusion", "metric", "goal", "decision", "watch", "milestone", "status", "entity"]),
+        kind: pick(["incident", "conclusion", "metric", "goal", "decision", "watch", "outcome", "status", "entity"]),
         title: pick(ALL_TITLES),
         status: pick(["confirmed", "proposed", "archived"]),
         confidence: pick(["high", "medium", "low"]),

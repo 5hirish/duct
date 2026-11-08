@@ -109,7 +109,7 @@ import DraftsQueue from "@/components/content/DraftsQueue";
 import ReminderSetting from "@/components/content/ReminderSetting";
 import WritingSamples from "@/components/content/WritingSamples";
 import VoiceRulesFields from "@/components/content/VoiceRulesFields";
-import { MEMORY_KINDS } from "@/lib/memoryApi";
+import { PROJECT_KIND_GROUPS, USER_KIND_GROUPS } from "@/lib/memoryApi";
 import { ANSWERS as STORY_ANSWERS, AUDIT_REPORT as STORY_AUDIT, CHANGE_SET as STORY_CHANGE_SET, CONNECTORS as STORY_CONNECTORS, MEMORIES as STORY_MEMORIES, PLAN as STORY_PLAN, POSTS as STORY_POSTS } from "@/lib/__fixtures__/solo-story.mjs";
 import { TranscriptRow, WorkingIndicator } from "@/components/workspace/AgentChat";
 import StepProgress from "@/components/workspace/StepProgress";
@@ -3106,11 +3106,19 @@ export const SCENES = [
   },
   {
     id: "shot-memory-timeline",
-    state: "eight memories: one superseded, one pinned, one unconfirmed",
+    state: "current facts: one replaced a target, one pinned, one to review",
     group: "MemoryTimeline",
     title: "What Duct remembers about Solo",
-    note: "The rows the insights agent recalls in the session. One goal was raised from 700 to 900, so the old value is shown superseded rather than deleted; the CPA target is pinned; the watch the agent wrote this week is still unconfirmed. Every write here is a no-op.",
+    note: "The project tab. The weekly signups goal was raised from 700 to 900, so the current row says what it replaced (the old row appears under ⋯ › Show replaced and dismissed); the CPA target is pinned; the watch the agent wrote this week waits for Keep or Dismiss on the row. What to check: icons centred on the two-line text, Keep/Dismiss on one line at 390px, the date menu's presets. Every write here is a no-op.",
     render: () => <StoryMemoryScene />,
+  },
+  {
+    id: "memory-timeline-private",
+    state: "your memory: three rules, one to review",
+    group: "MemoryTimeline",
+    title: "Only you",
+    note: "The private tab: the person's own rules, grouped About you / Style / Methods / Corrections. One holds only on Solo (a private rule bound to one project); open a row for “Only on Solo” / “Use on every project”, and Remember asks where it applies. The agent's proposal came from a project run and landed here, not on the project, because it describes the person. Every write here is a no-op.",
+    render: () => <StoryMemoryScene items={PRIVATE_MEMORIES} groups={USER_KIND_GROUPS} binding={{ projectId: "solo", projectName: "Solo" }} />,
   },
   {
     id: "shot-connectors",
@@ -3763,17 +3771,24 @@ function CloneDialogScene({ initialValue = "" }) {
  * failures, a finding with affected URLs, and a phase whose tasks carry an
  * effort estimate.
  */
-function StoryMemoryScene() {
+const PRIVATE_MEMORIES = [
+  { id: "p-1", kind: "communication", status: "confirmed", title: "Give me the number first, then the why", body: "", source_type: "user", recorded_at: "2026-09-12T09:00:00Z", observed_at: "2026-09-12", source_refs: [] },
+  { id: "p-2", kind: "method", status: "confirmed", project_id: "solo", title: "Always compare to the same week last year", body: "Weekly numbers swing with paydays; week over week misleads.", source_type: "user", recorded_at: "2026-10-02T09:00:00Z", observed_at: "2026-10-02", source_refs: [] },
+  { id: "p-3", kind: "method", status: "proposed", title: "Trusts GA4 over the Ads conversion count", body: "Said twice in the 6 Nov brief chat.", source_type: "agent", recorded_at: "2026-11-06T15:00:00Z", observed_at: "2026-11-06", source_refs: [{ conversation_id: "c-1" }] },
+];
+
+function StoryMemoryScene({ items: source = STORY_MEMORIES, groups = PROJECT_KIND_GROUPS, binding = null }) {
   const api = useMemo(() => {
-    const items = STORY_MEMORIES.map((m) => ({ ...m })).sort((a, b) => (a.observed_at < b.observed_at ? 1 : -1));
+    const items = source.map((m) => ({ ...m })).sort((a, b) => (a.observed_at < b.observed_at ? 1 : -1));
     const kinds = Array.from(new Set(items.map((m) => m.kind))).sort();
     const noop = async () => ({});
     return {
-      list: async ({ q = "", kind = "", includeSuperseded = true } = {}) => ({
+      list: async ({ q = "", kind = "", status = "", includeSuperseded = true } = {}) => ({
         items: items.filter(
           (m) =>
-            (includeSuperseded || m.status !== "superseded") &&
-            (!kind || m.kind === kind) &&
+            (includeSuperseded || !["superseded", "archived"].includes(m.status)) &&
+            (!kind || kind.split(",").includes(m.kind)) &&
+            (!status || m.status === status) &&
             (!q || `${m.title} ${m.body}`.toLowerCase().includes(q.toLowerCase())),
         ),
         kinds,
@@ -3781,11 +3796,15 @@ function StoryMemoryScene() {
       }),
       get: async ({ memoryId }) => items.find((m) => m.id === memoryId) || null,
       create: noop, patch: noop, remove: noop, reset: noop, setPaused: noop,
+      move: binding ? noop : undefined,
     };
-  }, []);
+    // Keyed on the id: the scene passes a fresh object each render, and a new
+    // api would refetch on every one.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [source, binding?.projectId]);
   return (
     <div style={{ maxWidth: 880, padding: 24 }}>
-      <MemoryTimeline api={api} kinds={MEMORY_KINDS} defaultKind="goal" />
+      <MemoryTimeline api={api} groups={groups} binding={binding} />
     </div>
   );
 }

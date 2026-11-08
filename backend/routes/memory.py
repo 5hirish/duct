@@ -30,9 +30,11 @@ from models.auth import User
 from models.memory import (
     MEMORY_KINDS,
     SCOPE_USER,
+    canonical_kind,
     SOURCE_USER,
     STATUS_ARCHIVED,
     STATUS_CONFIRMED,
+    STATUS_SUPERSEDED,
     USER_KINDS,
     ProjectMemory,
 )
@@ -51,6 +53,8 @@ def _serialize(row: ProjectMemory) -> dict[str, Any]:
         "id": str(row.id),
         "short_id": short_id(row.id),
         "scope": row.scope,
+        # On a private row: the one project it applies to, or None for all.
+        "project_id": str(row.project_id) if row.project_id else None,
         "kind": row.kind,
         "title": row.title,
         "body": row.body,
@@ -77,6 +81,41 @@ def _serialize(row: ProjectMemory) -> dict[str, Any]:
     }
 
 
+def _serialize_list(session: Session, rows: list[ProjectMemory]) -> list[dict[str, Any]]:
+    """Rows for the page, each current one saying what it replaced.
+
+    "Target CPA $45" is easier to trust as "was $60 until 30 Jun" than as two
+    rows and a toggle, so the previous version rides on the current one. The
+    previous rows are looked up by ``superseded_by`` within the same owner,
+    since a row id alone is not a boundary.
+    """
+    out = [_serialize(r) for r in rows]
+    current = [r for r in rows if r.status != STATUS_SUPERSEDED]
+    if not current:
+        return out
+    stmt = select(ProjectMemory).where(
+        ProjectMemory.superseded_by.in_([r.id for r in current])
+    )
+    first = current[0]
+    if first.scope == SCOPE_USER:
+        stmt = stmt.where(ProjectMemory.user_id == first.user_id, ProjectMemory.scope == SCOPE_USER)
+    else:
+        stmt = stmt.where(ProjectMemory.project_id == first.project_id, ProjectMemory.scope != SCOPE_USER)
+    previous: dict[UUID, ProjectMemory] = {}
+    for row in session.execute(stmt).scalars():
+        kept = previous.get(row.superseded_by)
+        if kept is None or (row.valid_to and kept.valid_to and row.valid_to > kept.valid_to):
+            previous[row.superseded_by] = row
+    for item, row in zip(out, rows):
+        prior = previous.get(row.id)
+        if prior is not None:
+            item["replaced"] = {
+                "title": prior.title,
+                "until": prior.valid_to.isoformat() if prior.valid_to else None,
+            }
+    return out
+
+
 class MemoryIn(BaseModel):
     """A memory the user writes by hand ("Remember this")."""
 
@@ -91,6 +130,9 @@ class MemoryIn(BaseModel):
     observed_at: str = ""
     importance: int = 5
     source_refs: list[dict] = Field(default_factory=list)
+    # Private memory only: bind the entry to this project ("for this client,
+    # brief me in Spanish"). Empty means it holds on every project.
+    project_id: str = ""
 
 
 class MemoryPatch(BaseModel):
@@ -103,10 +145,30 @@ class MemoryPatch(BaseModel):
     importance: int | None = None
 
 
+class MemoryMove(BaseModel):
+    """Where a private entry applies: one project, or every project ("")."""
+
+    project_id: str = ""
+
+
+def _private_binding(session: Session, user: User, raw: str) -> UUID | None:
+    """The project a private entry is bound to, checked: a member's own, or 404."""
+    if not raw:
+        return None
+    try:
+        project_id = UUID(raw)
+    except ValueError:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Project not found") from None
+    get_project_for_user(project_id, user, session)
+    return project_id
+
+
 def _get_owned(session: Session, user: User, project_id: UUID, memory_id: UUID) -> ProjectMemory:
     get_project_for_user(project_id, user, session)
     row = session.get(ProjectMemory, memory_id)
-    if row is None or row.project_id != project_id:
+    # Private rows 404 here whatever their project id: the project routes
+    # are for what every member may see.
+    if row is None or row.project_id != project_id or row.scope == SCOPE_USER:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Memory not found")
     return row
 
@@ -142,7 +204,7 @@ def list_memory(
         limit=limit,
     )
     return {
-        "items": [_serialize(r) for r in rows],
+        "items": _serialize_list(session, rows),
         # Kinds actually present, so the UI's filter chips reflect this project
         # rather than the full vocabulary.
         "kinds": sorted({r.kind for r in rows}),
@@ -162,13 +224,14 @@ def create_memory(
 ) -> dict:
     """"Remember this" — a user statement, which lands confirmed, not proposed."""
     get_project_for_user(project_id, user, session)
-    if body.kind not in MEMORY_KINDS:
+    kind = canonical_kind(body.kind)
+    if kind not in MEMORY_KINDS:
         raise HTTPException(status_code=422, detail=f"Unknown memory kind: {body.kind!r}")
     scope = SCOPE_USER if body.scope == SCOPE_USER else "project"
     row = remember(
         session,
         scope=scope,
-        kind=body.kind,
+        kind=kind,
         title=body.title,
         body=body.body,
         project_id=None if scope == SCOPE_USER else project_id,
@@ -323,7 +386,9 @@ def reset_memory(
             detail="Reset deletes every memory for this project. Retry with confirm=true.",
         )
     deleted = session.execute(
-        sa.delete(ProjectMemory).where(ProjectMemory.project_id == project_id)
+        sa.delete(ProjectMemory).where(
+            ProjectMemory.project_id == project_id, ProjectMemory.scope != SCOPE_USER
+        )
     ).rowcount
     session.commit()
     return {"deleted": int(deleted or 0)}
@@ -339,7 +404,7 @@ def export_memory(
     get_project_for_user(project_id, user, session)
     rows = session.execute(
         select(ProjectMemory)
-        .where(ProjectMemory.project_id == project_id)
+        .where(ProjectMemory.project_id == project_id, ProjectMemory.scope != SCOPE_USER)
         .order_by(ProjectMemory.observed_at)
     ).scalars()
     return {
@@ -377,21 +442,37 @@ user_router = APIRouter(tags=["memory"])
 def list_user_memory(
     q: str = "",
     kind: str = "",
+    project_id: str = "",
+    status: str = "",
+    from_date: str = "",
+    to_date: str = "",
+    include_superseded: bool = True,
     limit: int = Query(default=100, ge=1, le=_MAX_LIMIT),
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ) -> dict:
+    """The caller's own memory. Only ever theirs: no role, owner or project
+    membership reaches another person's rows, because the query is keyed on
+    the signed-in user and nothing in the request can change that.
+
+    ``project_id`` adds what is private to that project to what holds
+    everywhere; without it, only what holds everywhere."""
+    bound = _private_binding(session, user, project_id)
     rows = search(
         session,
         user_id=user.id,
+        project_id=bound,
         scope=SCOPE_USER,
         query=q,
         kinds=[k.strip() for k in kind.split(",") if k.strip()] or None,
-        include_superseded=True,
+        since=parse_iso(from_date),
+        until=parse_iso(to_date),
+        statuses=[s.strip() for s in status.split(",") if s.strip()] or None,
+        include_superseded=include_superseded,
         limit=limit,
     )
     return {
-        "items": [_serialize(r) for r in rows],
+        "items": _serialize_list(session, rows),
         "kinds": sorted({r.kind for r in rows}),
         "memory_paused": bool(user.memory_paused),
     }
@@ -403,18 +484,22 @@ def create_user_memory(
     user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ) -> dict:
-    if body.kind not in USER_KINDS:
+    kind = canonical_kind(body.kind)
+    if kind not in USER_KINDS:
         raise HTTPException(
             status_code=422,
             detail=f"User memory kinds are: {', '.join(sorted(USER_KINDS))}.",
         )
+    bound = _private_binding(session, user, body.project_id)
     row = remember(
         session,
         scope=SCOPE_USER,
-        kind=body.kind,
+        kind=kind,
         title=body.title,
         body=body.body,
         user_id=user.id,
+        project_id=bound,
+        private_to_project=bound is not None,
         entity_key=body.entity_key,
         attribute=body.attribute,
         source_type=SOURCE_USER,
@@ -444,6 +529,52 @@ def update_user_memory(
 ) -> dict:
     row = _get_user_owned(session, user, memory_id)
     return _serialize(_apply_patch(session, row, body, user))
+
+
+@user_router.post("/{memory_id}/move")
+def move_user_memory(
+    memory_id: UUID,
+    body: MemoryMove,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> dict:
+    """Make a private entry hold on one project, or on every project.
+
+    Written again under the new binding and the old row removed, because the
+    binding is part of what the entry replaces and is replaced by: moving it
+    in place would leave its dedupe and state keys pointing at the old one.
+    """
+    row = _get_user_owned(session, user, memory_id)
+    bound = _private_binding(session, user, body.project_id)
+    if row.project_id == bound:
+        return _serialize(row)
+    moved = remember(
+        session,
+        scope=SCOPE_USER,
+        kind=row.kind,
+        title=row.title,
+        body=row.body,
+        user_id=user.id,
+        project_id=bound,
+        private_to_project=bound is not None,
+        entity_key=row.entity_key,
+        attribute=row.attribute,
+        period=row.period,
+        value=row.value or {},
+        observed_at=row.observed_at,
+        source_type=SOURCE_USER,
+        source_refs=list(row.source_refs or []) or [{"source": "user"}],
+        confidence=row.confidence,
+        importance=row.importance,
+        status=STATUS_CONFIRMED,
+        meta=row.meta or {},
+    )
+    if moved is None:
+        raise HTTPException(status_code=422, detail="Could not move that memory.")
+    if moved.id != row.id:
+        session.delete(row)
+        session.commit()
+    return _serialize(moved)
 
 
 @user_router.delete("/{memory_id}", status_code=204)

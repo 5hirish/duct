@@ -64,6 +64,7 @@ const ROUTES = process.env.ROUTES
       "/insights/organic-growth", "/audit/seo", "/content", "/content?tab=brand", "/execute", "/connections",
       "/artifacts", "/activity", "/usage", "/projects", `/project/${P}`,
       "/settings/models", "/settings/profile", "/settings/agents",
+      "/memory", `/project/${P}/memory`,
     ];
 const WIDTHS = [
   { width: 390, height: 844 },

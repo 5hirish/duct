@@ -32,7 +32,7 @@ export const CARD_LIMIT = 3;
 // step. `action` is absent on purpose: an in-flight action is IN_PROGRESS, and
 // a finished one is history the timeline already carries.
 const CLAIM_KINDS = new Set([
-  "goal", "metric", "conclusion", "incident", "decision", "watch", "milestone", "status",
+  "rule", "goal", "metric", "conclusion", "outcome", "incident", "decision", "watch", "status",
 ]);
 
 /** Live = the current statement of its subject, not a closed or dismissed one. */

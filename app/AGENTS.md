@@ -137,7 +137,7 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
     name because every OAuth callback and the desktop shell's deep link land
     on `/connections`, and a rename would break connects already in flight
   - `artifacts/` + `[artifactId]/`, `activity/`, `usage/`, `memory/` — the
-    library, the cross-agent feed, usage, and user-level memory. An agent's
+    library, the cross-agent feed, usage, and memory. An agent's
     edit to the project (MCP `update_project`, #512) carries Undo in the
     feed: that button is what the consent page's "every edit can be undone
     in Duct" stands on, so it stays wherever that promise is made
@@ -168,7 +168,12 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
     `#competition` / `#brand`. There is no `/onboarding` route any more —
     "new project" everywhere means `/start`.
   - `project/[projectId]/members/` + `project/[projectId]/memory/` — members
-    and invitations (owner/collaborator); project-scoped memory
+    and invitations (owner/collaborator); memory. Both memory routes are one
+    page (`components/memory/MemoryPage.jsx`) with a Project / Only you tab:
+    the project route opens on the shared tab, `/memory` on the private one
+    with the active project beside it. Kinds are filtered as the groups in
+    `lib/memoryApi.js` (Goals, Facts, Numbers…), never as the backend's
+    eleven-plus-six kinds.
 
 Plus three top-level routes outside every group, because their visitor is
 usually signed out and the app shell's guard would lose where they were going:

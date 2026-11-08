@@ -1,86 +1,25 @@
 "use client";
 
-// Project memory — the timeline of what Duct knows about this account.
-//
-// Goals and decisions, incidents with when they started and ended, metrics for
-// a period, actions taken on the account, artifacts produced. The rows and
-// their affordances live in components/memory/MemoryTimeline; this page only
-// binds them to the project-scoped API and names the place.
+// Project memory — the Memory page opened on this project's shared memory,
+// with your private memory one tab away. Everything is MemoryPage's.
 
-import { Suspense, use, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { Suspense, use } from "react";
 import { useSearchParams } from "next/navigation";
-import { Users } from "lucide-react";
-import { Trans, useLingui } from "@lingui/react/macro";
-import { Button } from "@/components/ui/button";
+import { useLingui } from "@lingui/react/macro";
 import { SkeletonList } from "@/components/ui/skeleton";
-import MemoryTimeline from "@/components/memory/MemoryTimeline";
-import { hasAuthToken } from "@/lib/authFetch";
-import { getProjectById } from "@/lib/projects";
-import {
-  MEMORY_KINDS,
-  createMemory,
-  deleteMemory,
-  getMemory,
-  listMemory,
-  resetMemory,
-  setMemoryPaused,
-  updateMemory,
-} from "@/lib/memoryApi";
-import { Page, PageHeader } from "@/components/ui/page";
+import MemoryPage, { SCOPE_PROJECT } from "@/components/memory/MemoryPage";
 
 function ProjectMemory({ projectId }) {
   const { t } = useLingui();
   // ?m=<id> — a chip in the chat linking to the entry behind an answer.
   const focusId = useSearchParams().get("m") || "";
-  const [projectName, setProjectName] = useState("");
-  const [signedIn, setSignedIn] = useState(true);
-
-  useEffect(() => {
-    setProjectName(getProjectById(projectId)?.name || "");
-    setSignedIn(hasAuthToken());
-  }, [projectId]);
-
-  // Bound once per project so the timeline's effects don't re-run every render.
-  const api = useMemo(
-    () => ({
-      list: (opts) => listMemory({ projectId, ...opts }),
-      get: ({ memoryId }) => getMemory({ projectId, memoryId }),
-      create: (entry) => createMemory({ projectId, ...entry }),
-      patch: (patch) => updateMemory({ projectId, ...patch }),
-      remove: ({ memoryId }) => deleteMemory({ projectId, memoryId }),
-      setPaused: ({ paused }) => setMemoryPaused({ projectId, paused }),
-      reset: () => resetMemory({ projectId }),
-    }),
-    [projectId]
-  );
-
   return (
-    <Page width="reading">
-      <PageHeader
-        title={<Trans>Memory</Trans>}
-        status={projectName ? <Trans>What Duct knows about {projectName}. Agents read it before every run.</Trans> : null}
-        back={{ href: "/projects", label: t`Projects` }}
-        actions={
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/project/${projectId}/members`}>
-              <Users className="size-4" /> <Trans>Members</Trans>
-            </Link>
-          </Button>
-        }
-      />
-
-      <MemoryTimeline
-        errorSubject={t`this project's memory`}
-        api={api}
-        signedIn={signedIn}
-        focusId={focusId}
-        kinds={MEMORY_KINDS.filter((k) => k !== "artifact")}
-        defaultKind="decision"
-        resetPrompt={t`Delete every memory for this project? This cannot be undone.`}
-        emptyHint={t`Nothing remembered yet. Run an audit, apply a change, or set your targets in project settings — everything an agent concludes lands here with its evidence.`}
-      />
-    </Page>
+    <MemoryPage
+      projectId={projectId}
+      initialScope={SCOPE_PROJECT}
+      focusId={focusId}
+      back={{ href: "/projects", label: t`Projects` }}
+    />
   );
 }
 

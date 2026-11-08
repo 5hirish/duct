@@ -81,6 +81,12 @@ def _option_values(options: tuple[ConfigOption, ...]) -> set[str]:
 ALL_NORTH_STAR_VALUES = _option_values(NORTH_STAR_OPTIONS)
 ALL_GROWTH_STAGE_VALUES = _option_values(GROWTH_STAGE_OPTIONS)
 
+#: Profile field -> {stored code: label}, for the fields whose code is not
+#: already words. Project memory titles read these (service/memory.py).
+PROFILE_OPTION_LABELS: dict[str, dict[str, str]] = {
+    "growth_stage_milestone": {o.value: o.label for o in GROWTH_STAGE_OPTIONS},
+}
+
 
 def _build_option_subset(
     options: tuple[ConfigOption, ...],
