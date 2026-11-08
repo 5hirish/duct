@@ -15,7 +15,7 @@ the plans that produced the posts — with no network and no model call:
 * **Best posting times.** Hour of day and weekday, ranked by this account's
   own median views rather than a generic chart.
 
-A metric that was never recorded is **unknown, not zero**. PostBridge syncs
+A metric that was never recorded is **unknown, not zero**. A scheduler syncs
 views, likes, comments and shares; completion and saves arrive only when
 someone logs them. Reading an absent completion rate as 0% would crown
 whichever type happened to have one logged, so every median here is taken
@@ -57,7 +57,7 @@ TOP_WINDOWS = 3
 TOP_BETS = 5
 
 # Ranking signals, strongest first. Completion and saves say a post was watched
-# and kept; shares is the member of that family PostBridge syncs by itself, so
+# and kept; shares is the member of that family every scheduler syncs, so
 # an account that never logs metrics by hand still gets a ranking. Likes are
 # deliberately absent.
 RANKING_SIGNALS: tuple[str, ...] = ("completion_rate", "saves", "shares")

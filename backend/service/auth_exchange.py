@@ -7,10 +7,11 @@ Referer headers.
 * **Sign-in** — the JWT. Instead of `/?token=JWT`, the callback stores it under
   an opaque 60-second single-use code and redirects to `/?auth_code=CODE`; the
   frontend calls `GET /auth/exchange?code=CODE` for the token itself.
-* **Desktop connector OAuth** — the connector's refresh token. That flow runs in
-  the *system browser* and comes back through a custom-scheme deep link, so the
-  redirect URL is even more exposed than a same-browser one. The token never
-  rides in it; a code does.
+* **Google connector connect** — GitHub's shape below, for a refresh token. The
+  connect starts from a *connect link* naming the signed-in user, and the
+  callback parks what Google granted for that user to claim. The token never
+  rides a URL and never reaches a client: the browser, or the desktop shell's
+  deep link, carries only the code, and the claim stores the token server-side.
 * **Guest link** — the other direction. A guest starting Google sign-in must
   say which guest to link, but the authorize endpoint is a bare navigation
   with no bearer token, so the guest's JWT cannot travel with it and must not
@@ -26,6 +27,15 @@ Referer headers.
   creating an account; the tokens come back as a grant for the claim route,
   honoured only for the same user (``routes/mcp.py``).
 
+* **An agent signing in to Duct's MCP server** — Duct as the authorization
+  server, the reverse of the MCP connect above (``service/mcp_server/oauth``).
+  ``/oauth/authorize`` parks the checked request and sends the browser to the
+  app with its code; the consent page reads it (``peek_agent_request``, since
+  a reload must not spend it) and the person's answer spends it. Allowing
+  parks the grant under the authorization code the agent redeems at
+  ``/oauth/token``: a minute, because the agent redeems it the moment its
+  listener receives it.
+
 * **GitHub App connect** — both directions at once. The authorize route is a
   bare navigation again, so the signed-in app first mints a *connect link*
   naming its user (five minutes, like the guest link). What comes back is a
@@ -34,8 +44,8 @@ Referer headers.
   (`service/github/app.py` explains why that binding is the whole point).
 
 Codes are namespaced so one kind can never be redeemed as the other: a connector
-refresh token presented at `/auth/exchange` would otherwise be handed back as if
-it were a session JWT.
+grant presented at `/auth/exchange` would otherwise be handed back as if it
+were a session JWT.
 """
 
 from __future__ import annotations
@@ -45,29 +55,34 @@ import time
 from typing import Any
 
 _NS_SIGNIN = "signin"
-_NS_CONNECTOR = "connector"
+_NS_CONNECTOR_GRANT = "connector_grant"
 _NS_LINK = "link"
 _NS_CONNECT_LINK = "connect_link"
 _NS_GITHUB_GRANT = "github_grant"
 _NS_MCP_FLOW = "mcp_flow"
 _NS_MCP_GRANT = "mcp_grant"
+_NS_AGENT_REQUEST = "agent_request"
+_NS_AGENT_CODE = "agent_code"
 
 _store: dict[str, tuple[str, Any, float]] = {}  # code → (namespace, payload, issued_at)
 _TTL = 60  # seconds
 _LINK_TTL = 300  # seconds
 # A grant crosses back into the desktop app through a deep link, which may
-# have to wake the app first; a minute has been enough for the connector
-# refresh token on the same route, and two leave room for a slow wake.
+# have to wake the app first; a minute was enough for the connector code the
+# same route carried before grants, and two leave room for a slow wake.
 _GRANT_TTL = 120  # seconds
 _MCP_FLOW_TTL = 600  # seconds
 _TTL_BY_NAMESPACE = {
     _NS_SIGNIN: _TTL,
-    _NS_CONNECTOR: _TTL,
+    _NS_CONNECTOR_GRANT: _GRANT_TTL,
     _NS_LINK: _LINK_TTL,
     _NS_CONNECT_LINK: _LINK_TTL,
     _NS_GITHUB_GRANT: _GRANT_TTL,
     _NS_MCP_FLOW: _MCP_FLOW_TTL,
     _NS_MCP_GRANT: _GRANT_TTL,
+    # The person may have to sign in to Duct first, like an MCP connect.
+    _NS_AGENT_REQUEST: _MCP_FLOW_TTL,
+    _NS_AGENT_CODE: _TTL,
 }
 
 
@@ -80,6 +95,14 @@ def _store_code(namespace: str, payload: Any) -> str:
     code = secrets.token_urlsafe(32)
     _store[code] = (namespace, payload, time.monotonic())
     return code
+
+
+def _peek_code(namespace: str, code: str) -> Any | None:
+    _purge_expired()
+    entry = _store.get(code)
+    if entry is None or entry[0] != namespace or time.monotonic() - entry[2] > _ttl_for(namespace):
+        return None
+    return entry[1]
 
 
 def _consume_code(namespace: str, code: str) -> Any | None:
@@ -109,18 +132,19 @@ def consume_exchange_code(code: str) -> str | None:
     return payload if isinstance(payload, str) else None
 
 
-def store_connector_code(
-    *, connector_type: str, refresh_token: str, granted_scopes: str = ""
+def store_connector_grant(
+    *, user_id: str, connector_type: str, refresh_token: str, granted_scopes: str = ""
 ) -> str:
-    """Store a connector's OAuth refresh token; return a single-use opaque code.
+    """Park a connector's OAuth grant for ``user_id`` to claim; return a single-use code (2 min).
 
     ``granted_scopes`` travels with the token rather than being looked up later:
     it is a property of this particular consent, and the next reconnect can
     grant something different.
     """
     return _store_code(
-        _NS_CONNECTOR,
+        _NS_CONNECTOR_GRANT,
         {
+            "user_id": str(user_id),
             "connector_type": connector_type,
             "refresh_token": refresh_token,
             "granted_scopes": granted_scopes,
@@ -128,9 +152,13 @@ def store_connector_code(
     )
 
 
-def consume_connector_code(code: str) -> dict[str, str] | None:
-    """Return `{connector_type, refresh_token, granted_scopes}` for a valid code."""
-    payload = _consume_code(_NS_CONNECTOR, code)
+def consume_connector_grant(code: str) -> dict[str, str] | None:
+    """Return ``{user_id, connector_type, refresh_token, granted_scopes}`` and delete it.
+
+    Spent whoever presents it, like a GitHub grant: the caller compares
+    ``user_id`` with the session.
+    """
+    payload = _consume_code(_NS_CONNECTOR_GRANT, code)
     return payload if isinstance(payload, dict) else None
 
 
@@ -201,3 +229,30 @@ def _purge_expired() -> None:
     ]
     for k in expired:
         _store.pop(k, None)
+
+
+def store_agent_request(request: dict[str, Any]) -> str:
+    """Park an agent's checked authorization request; the code names it to the consent page (10 min)."""
+    return _store_code(_NS_AGENT_REQUEST, dict(request))
+
+
+def peek_agent_request(code: str) -> dict[str, Any] | None:
+    """The parked request, left in place: the consent page reads it on every load."""
+    payload = _peek_code(_NS_AGENT_REQUEST, code)
+    return dict(payload) if isinstance(payload, dict) else None
+
+
+def consume_agent_request(code: str) -> dict[str, Any] | None:
+    """The parked request, spent by the person's answer either way."""
+    payload = _consume_code(_NS_AGENT_REQUEST, code)
+    return payload if isinstance(payload, dict) else None
+
+
+def store_agent_code(grant: dict[str, Any]) -> str:
+    """Park what the person allowed; the returned code is the OAuth authorization code (60 s)."""
+    return _store_code(_NS_AGENT_CODE, dict(grant))
+
+
+def consume_agent_code(code: str) -> dict[str, Any] | None:
+    payload = _consume_code(_NS_AGENT_CODE, code)
+    return payload if isinstance(payload, dict) else None

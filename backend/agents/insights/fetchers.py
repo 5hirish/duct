@@ -378,7 +378,7 @@ def fetch_entity(
                 "message": (
                     f"{spec.connector_id} rejected its stored credential (expired or "
                     "revoked). Nothing from this source can be fetched until the user "
-                    "reconnects it on the Connections page — call RequestConnection "
+                    "reconnects it in the Toolbox — call RequestConnection "
                     "if the analysis needs it, and do not fetch from it again this session."
                 ),
             }

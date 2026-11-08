@@ -17,6 +17,7 @@ import {
   migrateLegacyPreferences,
   zoneLabel,
   zoneOffsetLabel,
+  firstName,
   zoneRegion,
 } from "../userProfile.js";
 
@@ -169,9 +170,18 @@ describe("timezone", () => {
   });
 
   it("reports an offset for the hint, and nothing for an unset zone", () => {
-    expect(zoneOffsetLabel("Europe/Madrid")).toMatch(/GMT[+-]\d/);
+    expect(zoneOffsetLabel("Europe/Madrid")).toMatch(/^UTC[+-]\d/);
+    expect(zoneOffsetLabel("UTC")).toBe("UTC");
     expect(zoneOffsetLabel("")).toBe("");
     expect(zoneOffsetLabel("Middle/Earth")).toBe("");
+  });
+
+  it("takes Google's first name, or the first word of the full name", () => {
+    expect(firstName({ name: "Ada Lovelace", givenName: "Ada" })).toBe("Ada");
+    expect(firstName({ name: "María José García" })).toBe("María");
+    expect(firstName({ name: "  " })).toBe("");
+    expect(firstName({ name: "Guest", guest: true })).toBe("");
+    expect(firstName(null)).toBe("");
   });
 
   it("detects a zone without throwing", () => {

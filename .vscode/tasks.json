@@ -24,6 +24,19 @@
       }
     },
     {
+      "//": "Freezes the backend into backend/dist/duct-sidecar for the self-host desktop launch. Only the first freeze needs this task: after it, the desktop scripts' pre* hooks refreeze whenever the backend has moved ahead. NOT bare `pyinstaller`: that deletes its output directory before rebuilding, out from under a sidecar a running app is executing; the script stages the freeze and swaps it in. ~3 min. Zed lists this one from here, so .zed/tasks.json has no copy.",
+      "label": "Desktop: Build sidecar",
+      "type": "shell",
+      "command": "npm run sidecar",
+      "options": { "cwd": "${workspaceFolder}/desktop" },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "App: stop dev server (3003)",
       "type": "shell",
       "command": "./scripts/dev_stop.sh app",
@@ -36,9 +49,9 @@
       "problemMatcher": []
     },
     {
-      "label": "Phoenix: stop (6006)",
+      "label": "Jaeger: stop (16686)",
       "type": "shell",
-      "command": "./scripts/dev_stop.sh phoenix",
+      "command": "./scripts/dev_stop.sh jaeger",
       "options": { "cwd": "${workspaceFolder}" },
       "presentation": {
         "reveal": "silent",
@@ -101,6 +114,32 @@
       "label": "Site: stop dev server (8090)",
       "type": "shell",
       "command": "./scripts/dev_stop.sh site",
+      "options": { "cwd": "${workspaceFolder}" },
+      "presentation": {
+        "reveal": "silent",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "//": "Catches every mail a local flow sends, so an invite or a report can be read as it would arrive rather than as a log line. Point the API at it with EMAIL_PROVIDER=smtp, SMTP_HOST=localhost, SMTP_PORT=1025, SMTP_SECURITY=none (backend/.env.example). Bound to localhost: the inbox holds whatever the flows sent. Needs `brew install mailpit`.",
+      "label": "Mailpit: catch local mail (:8025)",
+      "type": "shell",
+      "command": "mailpit --smtp 127.0.0.1:1025 --listen 127.0.0.1:8025",
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "presentation": {
+        "reveal": "silent",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Mailpit: stop (8025)",
+      "type": "shell",
+      "command": "./scripts/dev_stop.sh mailpit",
       "options": { "cwd": "${workspaceFolder}" },
       "presentation": {
         "reveal": "silent",

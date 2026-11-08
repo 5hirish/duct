@@ -5,7 +5,11 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  min-height: 3.25rem;
+  /* The top safe area is this bar's to clear (theme.css pads the body's sides
+     only): under a status bar or a Dynamic Island the bar grows by the inset
+     and keeps its 3.25rem of controls below it. Zero everywhere else. */
+  padding-top: env(safe-area-inset-top, 0px);
+  min-height: calc(3.25rem + env(safe-area-inset-top, 0px));
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -63,54 +67,34 @@
    Fit-content of a size-contained box is zero. With an explicit `width` the
    size is definite, the auto margins go back to only centring, and the
    `max-width` still caps the reading column. */
-.app-main {
-  container-type: inline-size;
-  width: 100%;
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 1.75rem 1rem 4rem;
-}
-
-/* Fluid full-width variant for tool surfaces (e.g. Content) that should use
-   the whole viewport rather than the centered reading column. `margin: 0`
-   rather than `0 auto` is what keeps this one stretching — see .app-main. */
+/* One gutter for every page, wide or not. The two regions used to pad 1rem
+   and 1.5rem, which is why a page title sat 8px further right on Content
+   Studio than anywhere else. The gutter grows with the window from a phone's
+   16px to a desktop's 32px (Material: 16dp compact, 24dp from medium; Apple:
+   16/20pt), and the top inset matches the widest side so the title starts in
+   the corner of a square, not a slot. */
+.app-main,
 .app-main-wide {
   container-type: inline-size;
+  width: 100%;
+  padding: 2rem clamp(1rem, 3vw, 2rem) 5rem;
+}
+
+.app-main {
+  /* rem, not px: the cap follows the reader's text size and the desktop
+     app's zoom, so a zoomed-in page keeps the same measure. 77rem holds a
+     three-column grid of cards comfortably and stops a 27" window from
+     stretching a list into lines nobody can track across. */
+  max-width: 81rem; /* 77rem of content inside a 2rem gutter */
+  margin: 0 auto;
+}
+
+/* Fluid full-width variant for tool surfaces (Content's board) that should
+   use the whole window. `margin: 0` rather than `0 auto` is what keeps this
+   one stretching — see .app-main. */
+.app-main-wide {
   max-width: 100%;
   margin: 0;
-  padding: 1.75rem 1.5rem 4rem;
-}
-
-/* Page title rows — wrap on phones / small tablets */
-.page-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  row-gap: 0.625rem;
-  margin-bottom: 0.5rem;
-}
-
-.page-toolbar .page-toolbar-title {
-  margin: 0;
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.page-toolbar-back {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem;
-  row-gap: 0.625rem;
-  margin-bottom: 0.625rem;
-}
-
-.page-toolbar-back .page-toolbar-title {
-  margin: 0;
-  flex: 1 1 min(100%, 220px);
-  min-width: 0;
 }
 
 .report-detail-title {

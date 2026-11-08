@@ -11,12 +11,10 @@ import time
 from contextlib import AsyncExitStack, asynccontextmanager
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from urllib.parse import urlparse
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import sentry_sdk
 from uvicorn.logging import DefaultFormatter
 
 import service.apple.ads.fetch  # noqa: F401 — registers connectors before routes import
@@ -40,7 +38,9 @@ from db.migrate import ensure_schema
 from db.session import init_db
 import models  # noqa: F401 - registers SQLModel metadata
 from routes.namespace import router as api_router
+from service import analytics
 from utils.openapi_docs_auth import OpenapiDocsBasicAuthMiddleware
+from utils.posthog_logs import configure_posthog_logs, posthog_log_logger
 from utils.security_headers import SecurityHeadersMiddleware
 
 _cfg = get_configs()
@@ -220,55 +220,6 @@ def _incoming_request_id(scope) -> str:
     return ""
 
 
-def _is_localhost_url(url: str) -> bool:
-    hostname = urlparse(url).hostname
-    return hostname in {"localhost", "127.0.0.1", "::1"}
-
-
-# Secret request headers that must never reach Sentry, even with
-# send_default_pii enabled: the per-request bring-your-own provider keys and the
-# app gate key. Matched case-insensitively in the before_send hook below.
-_SENSITIVE_HEADERS = frozenset({
-    "x-api-key",
-    "x-provider-anthropic",
-    "x-provider-openai",
-    "x-provider-gemini",
-    "x-provider-openrouter",
-    "x-provider-xai",
-    "x-openai-account-id",
-    "authorization",
-})
-
-
-def _scrub_sensitive_headers(event: dict, _hint: dict) -> dict:
-    """Sentry before_send: redact secret request headers so BYO provider keys and
-    the app API key are never captured. Best-effort — never drops the event."""
-    try:
-        headers = event.get("request", {}).get("headers")
-        if isinstance(headers, dict):
-            for name in list(headers):
-                if name.lower() in _SENSITIVE_HEADERS:
-                    headers[name] = "[redacted]"
-    except Exception:  # noqa: BLE001 — scrubbing must never break error reporting
-        pass
-    return event
-
-
-if _cfg.sentry_dsn and (
-    _cfg.sentry_enable_localhost or not _is_localhost_url(_cfg.api_public_url)
-):
-    sentry_sdk.init(
-        dsn=_cfg.sentry_dsn,
-        environment=_cfg.app_env,
-        send_default_pii=_cfg.sentry_send_default_pii,
-        enable_logs=_cfg.sentry_enable_logs,
-        traces_sample_rate=_cfg.sentry_traces_sample_rate,
-        profile_session_sample_rate=_cfg.sentry_profile_session_sample_rate,
-        profile_lifecycle=_cfg.sentry_profile_lifecycle,
-        before_send=_scrub_sensitive_headers,
-    )
-    logging.getLogger(__name__).info("Sentry SDK initialized for backend.")
-
 # Agent traces. Off unless OTEL_EXPORTER_OTLP_ENDPOINT is set; a no-op costs
 # nothing and the spans were being opened either way.
 configure_tracing(_cfg.otel_exporter_otlp_endpoint, environment=_cfg.app_env)
@@ -332,6 +283,10 @@ async def lifespan(app: FastAPI):
         # cleanly — a deploy, a crash, a quit desktop app. Close only flushes early.
         asyncio.create_task(sweep_idle_conversations(), name="memory-sweep"),
     ]
+    posthog_log_logger.info(
+        "backend_started",
+        extra={"event": "backend_started", "environment": _cfg.app_env},
+    )
     try:
         yield
     finally:
@@ -345,11 +300,30 @@ async def lifespan(app: FastAPI):
         for task in pruners:
             task.cancel()
         await asyncio.gather(*pruners, return_exceptions=True)
+        posthog_log_logger.info(
+            "backend_stopping",
+            extra={"event": "backend_stopping", "environment": _cfg.app_env},
+        )
+        analytics.shutdown()
+        if _posthog_log_provider:
+            _posthog_log_provider.force_flush()
+            _posthog_log_provider.shutdown()
         # Last: a still-draining session may write a final checkpoint, so the
         # pool outlives everything that could use it.
         set_checkpointer(None)
         await checkpoints.aclose()
 
+
+# Lifecycle lines only, to PostHog Logs; the app's own loggers stay local.
+_posthog_log_provider = (
+    configure_posthog_logs(
+        host=_cfg.posthog_host,
+        project_token=_cfg.posthog_api_key,
+        environment=_cfg.app_env,
+    )
+    if analytics.client() is not None
+    else None
+)
 
 _openapi = "/openapi.json" if _cfg.expose_openapi_docs else None
 app = FastAPI(
@@ -361,6 +335,9 @@ app = FastAPI(
 )
 
 app.add_middleware(CORSMiddleware, **cors_kwargs(get_configs()))
+# Request context for every event, and capture of any exception that escapes a
+# route. A no-op unless POSTHOG_API_KEY is set (service/analytics.py).
+analytics.install(app)
 app.add_middleware(OpenapiDocsBasicAuthMiddleware)
 # Outside CORS and the docs gate, so a preflight answer and a docs 401 carry
 # the headers too; inside the access log, which stays outermost for timing.

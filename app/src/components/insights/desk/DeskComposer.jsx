@@ -22,6 +22,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { faviconUrl } from "@/lib/favicon";
 import { fetchProviderStatus } from "@/lib/modelTiers";
 import { clearDraft, readDraft, writeDraft } from "@/lib/composerDraft";
+import { isComposing } from "@/lib/shortcuts";
 import ComposerDials, { TierDial } from "../../workspace/ComposerDials";
 import ContextRing from "../../workspace/ContextRing";
 
@@ -119,7 +120,9 @@ export default function DeskComposer({ project, autonomy, onAutonomyChange, plac
   }
 
   return (
-    <div className="mx-auto w-full max-w-[720px]">
+    // The content column's width, not a centred 720px: centred under a
+    // left-aligned page it sat on a column of its own (2026-11-02 audit).
+    <div className="w-full">
       <div className="mb-2.5 flex">
         <span className="inline-flex items-center gap-2 rounded-lg border bg-card py-1 pl-[7px] pr-3 text-xs">
           <span className="flex size-[18px] shrink-0 items-center justify-center overflow-hidden rounded border bg-background">
@@ -140,7 +143,7 @@ export default function DeskComposer({ project, autonomy, onAutonomyChange, plac
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
+            if (e.key === "Enter" && !e.shiftKey && !isComposing(e)) {
               e.preventDefault();
               send();
             }

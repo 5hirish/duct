@@ -15,6 +15,11 @@ The connect is GitHub's shape (``routes/auth.py``) for a server the user names:
    to the signed-in session is what stops a stranger's sign-in landing in
    your account, or yours in theirs.
 
+Around it: ``GET /registry`` finds a server by name in the MCP Registry
+(``service/mcp/registry.py``), whose address step 1 then takes like a typed
+one, and ``POST /servers/{id}/check`` lists a saved server's tools with what
+is saved, so the page can say whether it works and clear or record why not.
+
 The client metadata document is public: an authorization server fetches it,
 with no key, when our ``client_id`` is its URL.
 """
@@ -42,7 +47,7 @@ from service.auth_exchange import (
     store_mcp_grant,
 )
 from service.mcp import client as mcp_client
-from service.mcp import oauth
+from service.mcp import oauth, registry
 from service.mcp import store as mcp_store
 from service.mcp.http import UnsafeServerUrl, canonical_url
 from service.mcp.presets import PRESETS, preset
@@ -70,6 +75,9 @@ STATUS_NEEDS_KEY = "needs_key"
 # like every route that spends before the caller has proven much.
 _CONNECT_LIMIT_USER = RateLimit(limit=20, window_seconds=600.0)
 _CONNECT_LIMIT_ADDRESS = RateLimit(limit=40, window_seconds=600.0)
+# Searches are typed, debounced in the app and cached here, so this only
+# stops a loop from making Duct hammer someone else's free service.
+_REGISTRY_LIMIT = RateLimit(limit=60, window_seconds=60.0)
 
 
 class ServerIn(BaseModel):
@@ -117,14 +125,33 @@ def _save(db: Session, user: User, *, url: str, name: str, credentials: dict, va
 
 
 async def _probe(*, url: str, name: str, credentials: dict) -> None:
-    """List the server's tools with these credentials, or raise ``McpCallError``."""
-    access = mcp_store.ServerAccess(row_id=None, key="", url=url, name=name, credentials=credentials)
+    """List the server's tools with these credentials, or raise ``McpCallError``.
+    A copy, because a failed listing notes its reason on the credentials in
+    place, and what is saved here is the caller's decision."""
+    access = mcp_store.ServerAccess(row_id=None, key="", url=url, name=name, credentials=dict(credentials))
     await mcp_client.probe(access)
 
 
 @router.get("/presets")
 def list_presets(user: User = Depends(get_current_user)) -> dict:
     return {"presets": [p.as_dict() for p in PRESETS]}
+
+
+@router.get("/registry")
+async def search_registry(
+    q: str = Query(default="", max_length=100),
+    user: User = Depends(get_current_user),
+) -> dict:
+    """Servers in the MCP Registry matching ``q``. ``available`` is false when
+    this instance turned the search off, and the page then hides it."""
+    if not registry.enabled():
+        return {"available": False, "servers": []}
+    _REGISTRY_LIMIT.enforce(str(user.id), "Too many searches. Try again in a minute.")
+    try:
+        found = await registry.search(q)
+    except registry.RegistryUnavailable as exc:
+        raise HTTPException(status_code=HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+    return {"available": True, "servers": [listing.as_dict() for listing in found]}
 
 
 @router.get("/servers")
@@ -227,7 +254,37 @@ async def claim_grant(
             raise HTTPException(status_code=422, detail=f"{name} refused the sign-in. Connect again.") from exc
         logger.warning("mcp claim: %s did not answer the first listing: %s", url, exc.message)
         validated = False
+        # Kept, and said: the card reads "Needs attention" until a call works.
+        credentials = mcp_store.with_problem(credentials, mcp_client.problem_for(exc.code, credentials.get(mcp_store.AUTH, "")))
     return {"server": _save(db, user, url=url, name=name, credentials=credentials, validated=validated)}
+
+
+@router.post("/servers/{server_id}/check")
+async def check_server(
+    server_id: UUID,
+    request: Request,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_session),
+) -> dict:
+    """List the server's tools with what is saved. A failure is an answer, not
+    an error: the server comes back with the reason recorded, and ``tools`` is
+    null. Someone else's server answers as one that does not exist."""
+    access = mcp_store.server_for_user(db, user.id, server_id)
+    if access is None:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="No such server.")
+    _limit(request, user)
+
+    async def sink(credentials: dict) -> None:
+        mcp_store.store_credentials(db, server_id, credentials)
+
+    tools: int | None = None
+    try:
+        tools = len(await mcp_client.list_tools(access, sink))
+        mcp_store.mark_validated(db, server_id)
+    except mcp_client.McpCallError as exc:
+        logger.info("mcp check: %s failed: %s", access.url, exc.message)
+    db.commit()
+    return {"server": _server_out(db, user.id, server_id), "tools": tools}
 
 
 @router.delete("/servers/{server_id}", status_code=204)

@@ -1,7 +1,5 @@
 "use client";
 
-import { domToPng } from "modern-screenshot";
-
 /**
  * Rasterize a self-contained slide document to a base64 PNG at 1080×1920.
  *
@@ -44,6 +42,11 @@ export async function captureSlideDocToPng(html) {
     try { await idoc.fonts?.ready; } catch { /* fonts optional */ }
     await waitForImages(idoc, 5000);
     const target = idoc.querySelector(".slide") || idoc.body;
+    // Imported here, not at the top: this runs only when the agent asks to
+    // see a slide, and a static import put the library in every content
+    // workspace's first load. Inside the try, so a failed chunk load is a
+    // failed capture ("") like any other.
+    const { domToPng } = await import("modern-screenshot");
     const dataUrl = await domToPng(target, {
       width: 1080,
       height: 1920,

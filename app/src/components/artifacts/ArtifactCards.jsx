@@ -14,7 +14,9 @@
  * The preview is the real renderer scaled down, not a screenshot and not a
  * summary: a markdown brief goes through `MarkdownView`, an HTML brief into
  * a script-less iframe, both inside a clipped box. That costs one content
- * fetch per card, which is the price of the thumbnail being true.
+ * fetch per card, which is the price of the thumbnail being true — paid only
+ * for cards near the screen. The library lists fifty, and fifty documents
+ * fetched and mounted at once was the largest memory spike in the app.
  */
 
 import { useEffect, useState } from "react";
@@ -22,6 +24,7 @@ import { FileText } from "lucide-react";
 import { MarkdownView, svgDataUrl } from "@/components/artifacts/ArtifactRenderer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getArtifactContent } from "@/lib/artifactsApi";
+import { useNearViewport } from "@/hooks/useNearViewport";
 import { relativeTime } from "@/lib/format";
 import { useLingui } from "@lingui/react/macro";
 import { cn } from "@/lib/utils";
@@ -108,6 +111,7 @@ export function DocumentThumbnail({ content, html = false, svg = false, classNam
 export function ArtifactCard({ doc, onOpen, loadContent = getArtifactContent, label = "" }) {
   const [content, setContent] = useState(null);
   const [failed, setFailed] = useState(false);
+  const [cardRef, near] = useNearViewport();
 
   useEffect(() => {
     let cancelled = false;
@@ -117,17 +121,18 @@ export function ArtifactCard({ doc, onOpen, loadContent = getArtifactContent, la
       setFailed(true);
       return undefined;
     }
+    if (!near) return undefined;
     loadContent(doc.id)
       .then((text) => { if (!cancelled) setContent(text); })
       .catch(() => { if (!cancelled) setFailed(true); });
     return () => { cancelled = true; };
-  }, [doc.id, doc.has_content, loadContent]);
+  }, [doc.id, doc.has_content, loadContent, near]);
 
   const title = doc.title || doc.filename || "Untitled";
   const versionLabel = doc.version_count > 1 ? `v${doc.version} of ${doc.version_count}` : `v${doc.version}`;
 
   return (
-    <div className="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md focus-within:ring-2 focus-within:ring-ring">
+    <div ref={cardRef} className="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md focus-within:ring-2 focus-within:ring-ring">
       <div className="aspect-[3/4] w-full border-b border-border/60">
         {content !== null ? (
           <DocumentThumbnail content={content} html={isHtmlArtifact(doc)} svg={isSvgArtifact(doc)} className="h-full w-full" />

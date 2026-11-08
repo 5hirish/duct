@@ -1,9 +1,12 @@
-"""Duct's MCP server: the transport, the token, and the three setup tools.
+"""Duct's MCP server: the transport, the token, and the four project tools.
 
 What these pin, in the order a reviewer would worry about them:
 
-  * an outside agent's write is always a draft: it never replaces what the
-    person typed or confirmed, and never outranks their live site;
+  * an outside agent's draft never replaces what the person typed or
+    confirmed, and never outranks their live site;
+  * an edit the person asks for (update_project) can replace anything, is
+    recorded with what it replaced, and one undo puts that back without
+    wiping out a later change;
   * a token reaches only its owner's projects, and a stranger's project reads
     exactly like a made-up id;
   * a token works on /mcp and nowhere else, and a sign-in JWT does not work on
@@ -32,7 +35,7 @@ from models.activity import ActivityLog
 from models.auth import McpToken, User
 from models.membership import ProjectMember
 from models.project import Project
-from routes import mcp_server, mcp_tokens
+from routes import mcp_server, mcp_tokens, user_projects
 from service.auth import get_current_user
 from service.mcp_server.protocol import PROTOCOL_VERSIONS
 from service.mcp_tokens import MAX_ACTIVE_TOKENS, TOKEN_PREFIX, mint
@@ -87,6 +90,7 @@ def env():
     app = FastAPI()
     app.include_router(mcp_server.router)
     app.include_router(mcp_tokens.router, prefix="/api/user/mcp-tokens")
+    app.include_router(user_projects.router, prefix="/api/user/projects")
     state = _Env(session, TestClient(app, raise_server_exceptions=False))
 
     def _session():
@@ -119,13 +123,15 @@ def test_a_notification_is_acknowledged_with_an_empty_202(env):
     assert (res.status_code, res.content) == (202, b"")
 
 
-def test_the_tool_list_is_the_three_setup_tools_with_flat_schemas(env):
+def test_the_tool_list_is_the_four_project_tools_with_flat_schemas(env):
     token = env.token(env.user("ana@acme.example"))
     tools = {t["name"]: t for t in env.rpc(token, "tools/list").json()["result"]["tools"]}
-    assert set(tools) == {"list_projects", "get_project", "draft_project"}
+    assert set(tools) == {"list_projects", "get_project", "draft_project", "update_project"}
     assert tools["get_project"]["annotations"]["readOnlyHint"] is True
     assert tools["draft_project"]["annotations"]["readOnlyHint"] is False
-    assert all(t["annotations"]["destructiveHint"] is False for t in tools.values())
+    # Only the edit replaces what the person set, so only it asks a client to
+    # confirm the call with them first.
+    assert {n for n, t in tools.items() if t["annotations"]["destructiveHint"]} == {"update_project"}
     # Several clients resolve no $ref; tool_schema inlines them.
     assert "$ref" not in str(tools["draft_project"]["inputSchema"])
     fields = tools["draft_project"]["inputSchema"]["properties"]["fields"]["properties"]
@@ -338,6 +344,111 @@ def test_a_bad_draft_is_an_error_the_model_can_read_and_writes_nothing(env, argu
     assert out["isError"]
     assert out["structuredContent"]["error"]
     assert env.session.execute(select(Project)).scalars().all() == []
+
+
+# -- update_project and its undo ------------------------------------------------
+
+def _edit_rows(env, project_id):
+    return env.session.execute(
+        select(ActivityLog).where(ActivityLog.project_id == project_id, ActivityLog.action == "project.edited")
+    ).scalars().all()
+
+
+def test_an_edit_replaces_what_the_person_set_and_records_what_it_replaced(env):
+    ana = env.user("ana@acme.example")
+    project = env.project(ana, pitch="Glow up with AI", industry="Education",
+                          provenance={"pitch": PROVENANCE_USER, "industry": PROVENANCE_CRAWL})
+    out = env.call(env.token(ana), "update_project", {
+        "project_id": str(project.id),
+        "fields": {"pitch": "Stop second-guessing what you wear.", "industry": "Education"},
+    })
+    assert not out["isError"], out
+    result = out["structuredContent"]
+    assert result["changed"] == ["pitch", "industry"]
+    assert "/activity" in result["undo"]
+    env.session.refresh(project)
+    assert project.pitch == "Stop second-guessing what you wear."
+    assert project.provenance == {"pitch": PROVENANCE_USER, "industry": PROVENANCE_USER}
+
+    [log] = _edit_rows(env, project.id)
+    assert log.source == "agent"
+    assert log.data["before"] == {"pitch": "Glow up with AI", "industry": "Education"}
+    assert log.data["before_labels"] == {"pitch": PROVENANCE_USER, "industry": PROVENANCE_CRAWL}
+
+
+def test_an_edit_that_changes_nothing_records_nothing(env):
+    ana = env.user("ana@acme.example")
+    project = env.project(ana, pitch="Same", provenance={"pitch": PROVENANCE_USER})
+    out = env.call(env.token(ana), "update_project",
+                   {"project_id": str(project.id), "fields": {"pitch": "Same"}})["structuredContent"]
+    assert (out["changed"], out["unchanged"]) == ([], ["pitch"])
+    assert _edit_rows(env, project.id) == []
+
+
+def test_an_edit_reaches_only_the_callers_projects_and_needs_a_field(env):
+    ana, bo = env.user("ana@acme.example"), env.user("bo@other.example")
+    theirs = env.project(bo, pitch="Bo's pitch")
+    out = env.call(env.token(ana), "update_project", {"project_id": str(theirs.id), "fields": {"pitch": "Mine now"}})
+    assert out["isError"] and "list_projects" in out["structuredContent"]["error"]
+    env.session.refresh(theirs)
+    assert theirs.pitch == "Bo's pitch"
+
+    mine = env.project(ana)
+    empty = env.call(env.token(ana), "update_project", {"project_id": str(mine.id), "fields": {}})
+    assert empty["isError"]
+
+
+def test_undo_puts_back_the_old_values_and_labels_once(env):
+    ana = env.user("ana@acme.example")
+    project = env.project(ana, pitch="Old pitch", industry="Education", provenance={"pitch": PROVENANCE_USER})
+    env.call(env.token(ana), "update_project", {
+        "project_id": str(project.id), "fields": {"pitch": "New pitch", "industry": "SaaS & Software"},
+    })
+    [edit] = _edit_rows(env, project.id)
+    env.signed_in = ana
+    url = f"/api/user/projects/{project.id}/edits/{edit.id}/undo"
+
+    res = env.client.post(url)
+    assert res.status_code == 200, res.text
+    assert sorted(res.json()["restored"]) == ["industry", "pitch"]
+    env.session.expire_all()
+    project = env.session.get(Project, project.id)
+    assert (project.pitch, project.industry) == ("Old pitch", "Education")
+    assert project.provenance.get("pitch") == PROVENANCE_USER
+    assert "industry" not in project.provenance, "an unlabelled field goes back to unlabelled"
+
+    assert env.client.post(url).status_code == 409
+
+
+def test_undo_never_wipes_out_a_later_change(env):
+    ana = env.user("ana@acme.example")
+    project = env.project(ana, pitch="Old pitch", company_name="Acme", provenance={})
+    token = env.token(ana)
+    env.call(token, "update_project", {"project_id": str(project.id),
+                                       "fields": {"pitch": "Agent pitch", "company_name": "Acme Labs"}})
+    [edit] = _edit_rows(env, project.id)
+    project.pitch = "Typed after the agent"
+    env.session.add(project)
+    env.session.commit()
+
+    env.signed_in = ana
+    out = env.client.post(f"/api/user/projects/{project.id}/edits/{edit.id}/undo").json()
+    assert (out["restored"], out["skipped"]) == (["company_name"], ["pitch"])
+    env.session.expire_all()
+    project = env.session.get(Project, project.id)
+    assert (project.pitch, project.company_name) == ("Typed after the agent", "Acme")
+
+
+def test_a_stranger_cannot_undo_or_even_find_an_edit(env):
+    ana, bo = env.user("ana@acme.example"), env.user("bo@other.example")
+    project = env.project(ana, pitch="Old")
+    env.call(env.token(ana), "update_project", {"project_id": str(project.id), "fields": {"pitch": "New"}})
+    [edit] = _edit_rows(env, project.id)
+    env.signed_in = bo
+    assert env.client.post(f"/api/user/projects/{project.id}/edits/{edit.id}/undo").status_code == 404
+    env.signed_in = ana
+    other = env.project(ana)
+    assert env.client.post(f"/api/user/projects/{other.id}/edits/{edit.id}/undo").status_code == 404
 
 
 # -- the token routes ------------------------------------------------------------

@@ -23,6 +23,12 @@ import ContextCompressionCard from "@/components/ContextCompressionCard.jsx";
 import FrontDoor from "@/components/onboarding/FrontDoor";
 import DocumentPicker, { DocumentState } from "@/components/onboarding/DocumentPicker";
 import AgentAccess from "@/components/settings/AgentAccess";
+import AgentConsent, {
+  CONSENT_ALLOWED,
+  CONSENT_ASK,
+  CONSENT_EXPIRED,
+  CONSENT_SIGN_IN,
+} from "@/components/settings/AgentConsent";
 import { DocumentError } from "@/lib/onboardingApi";
 import Desk from "@/components/insights/Desk";
 import DeskComposer from "@/components/insights/desk/DeskComposer";
@@ -31,12 +37,13 @@ import ChatInput from "@/components/workspace/ChatInput";
 import { DropHint } from "@/components/workspace/Attachments";
 import { AUTONOMY_ASK } from "@/lib/projectsApi";
 import { CornerNotice } from "@/components/ui/corner-notice";
-import { FolderOpen, RefreshCw } from "lucide-react";
+import { CalendarPlus, FolderOpen, Plus, RefreshCw } from "lucide-react";
 import { CookieConsent } from "@/components/CookieConsent";
 import LoadError from "@/components/LoadError";
 import CloneFromUrlDialog from "@/components/content/CloneFromUrlDialog";
 import CloneSourceNote from "@/components/content/CloneSourceNote";
-import DeskCards from "@/components/insights/desk/DeskCards";
+import { DeskConnectFirst } from "@/components/insights/desk/DeskCards";
+import FirstSourceCelebration from "@/components/connections/FirstSourceCelebration";
 import DeskActivity, { activityGridClass } from "@/components/insights/desk/DeskActivity";
 import SplitWorkspace from "@/components/workspace/SplitWorkspace";
 import { ArtifactPaneHeader, BriefPane, DataPane, DocumentFocus } from "@/components/insights/InsightsWorkspace";
@@ -46,19 +53,30 @@ import { activitiesFromEvents, contextActivity, dataSourceRollup } from "@/lib/t
 import { briefFile } from "@/lib/brief";
 import { saveText } from "@/lib/download";
 import { ArtifactGallery } from "@/components/artifacts/ArtifactCards";
-import { NEEDS_YOU, FOUND, IN_PROGRESS } from "@/lib/desk";
+import { ChartJsonView } from "@/components/artifacts/ArtifactRenderer";
+import { DESK_SCENARIOS, deskScenario } from "@/lib/__fixtures__/deskScenarios.mjs";
+import { KANBAN_SCENARIO_IDS, PLAN_SCENARIOS, planScenario } from "@/lib/__fixtures__/planScenarios.mjs";
+import { PlanBoardView, PlanView } from "@/components/content/PlanBoard";
+import { startOfDay } from "@/lib/contentSchedule";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
 import ConnectorTile from "@/components/connections/ConnectorTile";
 import ManualConnectorCard from "@/components/connections/ManualConnectorCard";
+import OAuthConnectorCard from "@/components/connections/OAuthConnectorCard";
 import McpConnectDialog from "@/components/connections/McpConnectDialog";
-import McpConnectors from "@/components/connections/McpConnectors";
-import { NATIVE_SOURCE } from "@/lib/connectorSource";
+import McpConnectors, { useMcpConnectors } from "@/components/connections/McpConnectors";
+import { NATIVE_SOURCE, mcpSource } from "@/lib/connectorSource";
+import BringAnyTool from "@/components/connections/BringAnyTool";
+import ConnectorBrowser, { NO_FILTERS, StatusTabs } from "@/components/connections/ConnectorBrowser";
+import { CATALOG_SCENARIOS, STARTERS as CATALOG_STARTERS, catalogScenario } from "@/lib/__fixtures__/connectorCatalogs.mjs";
+import { FIGMA_LISTINGS, GATEWAY_ONLY_LISTINGS, STRIPE_LISTINGS } from "@/lib/__fixtures__/mcpRegistry.mjs";
 import PauseCard from "@/components/workspace/PauseCard";
 import { AgentEvent } from "@/lib/agentEvents";
 import ProviderCard from "@/components/connections/ProviderCard";
+import InstanceProviderCard from "@/components/connections/InstanceProviderCard";
+import EndpointProviderCard from "@/components/connections/EndpointProviderCard";
 import { LOGOS } from "@/components/connections/logos";
-import { PROVIDERS } from "@/lib/providerKeys";
+import { ENDPOINT_PROVIDER, INSTANCE_PROVIDERS, PROVIDERS } from "@/lib/providerKeys";
 import EntityAvatar from "@/components/connections/EntityAvatar";
 import ProjectEntitySelect from "@/components/connections/ProjectEntitySelect";
 import StorageBadge from "@/components/connections/StorageBadge";
@@ -72,6 +90,13 @@ import AuditReportV1 from "@/components/audit/AuditReportV1";
 import MemoryTimeline from "@/components/memory/MemoryTimeline";
 import PlanKanban from "@/components/content/PlanKanban";
 import PlanStrategy from "@/components/content/PlanStrategy";
+import PlanDayOne from "@/components/content/PlanDayOne";
+import AccountsTab from "@/components/content/AccountsTab";
+import { AnalyticsGate } from "@/components/content/AnalyticsView";
+import { DiscoverGate } from "@/components/content/DiscoverPage";
+import PlanList from "@/components/content/PlanList";
+import { PlanPeriodMenu, PlanPeriodToggle } from "@/components/content/PlanPeriodPicker";
+import { planPeriodOptions } from "@/lib/contentSchedule";
 import PlanViewport from "@/components/content/PlanViewport";
 import PostMetricsForm from "@/components/content/PostMetricsForm";
 import PostVideo from "@/components/content/PostVideo";
@@ -80,6 +105,10 @@ import SynthesisPanel from "@/components/content/SynthesisPanel";
 import PublishReviewPanel from "@/components/content/PublishReviewPanel";
 import TextPostEditor from "@/components/content/TextPostEditor";
 import PostCard from "@/components/content/PostCard";
+import DraftsQueue from "@/components/content/DraftsQueue";
+import ReminderSetting from "@/components/content/ReminderSetting";
+import WritingSamples from "@/components/content/WritingSamples";
+import VoiceRulesFields from "@/components/content/VoiceRulesFields";
 import { MEMORY_KINDS } from "@/lib/memoryApi";
 import { ANSWERS as STORY_ANSWERS, AUDIT_REPORT as STORY_AUDIT, CHANGE_SET as STORY_CHANGE_SET, CONNECTORS as STORY_CONNECTORS, MEMORIES as STORY_MEMORIES, PLAN as STORY_PLAN, POSTS as STORY_POSTS } from "@/lib/__fixtures__/solo-story.mjs";
 import { TranscriptRow, WorkingIndicator } from "@/components/workspace/AgentChat";
@@ -90,7 +119,7 @@ import VoiceSample from "@/components/profile/VoiceSample";
 import { UsageEmpty } from "@/components/models/UsagePanel";
 import { TIERS } from "@/lib/modelTiers";
 import { Button } from "@/components/ui/button";
-import { NotificationRow } from "@/components/AppSidebar";
+import { AccountMenuItems, NotificationRow } from "@/components/AppSidebar";
 import { LanguageMenuItem } from "@/components/LanguageMenu";
 import {
   DropdownMenu,
@@ -258,12 +287,21 @@ function DocumentPickerScene({ initial = [] }) {
 const PREVIEW_MCP_URL = "https://api.example.com/mcp";
 const AGENT_TOKENS = [
   {
-    id: "t1", name: "Claude Code on the studio Mac", hint: "Q7mz",
+    id: "a1", kind: "agent", name: "Claude Code", hint: "",
+    created_at: "2026-10-30T09:00:00Z", expires_at: "2027-01-28T09:00:00Z",
+    last_used_at: new Date(Date.now() - 20 * 60_000).toISOString(),
+  },
+  {
+    id: "a2", kind: "agent", name: "Visual Studio Code, the Kestrel rebrand workspace with its two landing pages", hint: "",
+    created_at: "2026-11-01T09:00:00Z", expires_at: "2027-01-30T09:00:00Z", last_used_at: null,
+  },
+  {
+    id: "t1", kind: "token", name: "CI on GitHub Actions", hint: "Q7mz",
     created_at: "2026-09-02T09:00:00Z", expires_at: "2027-09-02T09:00:00Z",
     last_used_at: new Date(Date.now() - 3 * 3600_000).toISOString(),
   },
   {
-    id: "t2", name: "Cursor, client laptop for the Kestrel rebrand and its two landing pages", hint: "b81X",
+    id: "t2", kind: "token", name: "Cursor, client laptop for the Kestrel rebrand and its two landing pages", hint: "b81X",
     created_at: "2026-10-20T09:00:00Z", expires_at: "2027-10-20T09:00:00Z", last_used_at: null,
   },
 ];
@@ -279,12 +317,31 @@ const NO_TOKENS = [];
 // would stop it checking every other scene here.
 const previewPlaintext = (hint) => `duct_mcp_preview-only-not-a-real-token-${hint}`;
 
-function AgentAccessScene({ initial = NO_TOKENS, mintedFirst = false, error = "" }) {
+/** `signInAfterMs` plays the page's watch: copying step 1 starts it, and a
+ *  Claude Code agent signs in that long after, as the poll would find it. */
+function AgentAccessScene({
+  initial = NO_TOKENS, mintedFirst = false, error = "", signInAvailable = true, deepLinks = true, signInAfterMs = 0,
+}) {
   const [tokens, setTokens] = useState(null);
+  const [watching, setWatching] = useState(false);
   useEffect(() => setTokens(initial), [initial]);
-  const [minted, setMinted] = useState(
-    mintedFirst ? { ...initial[0], token: previewPlaintext(initial[0].hint) } : null,
-  );
+  useEffect(() => {
+    if (!watching || !signInAfterMs) return undefined;
+    const timer = setTimeout(() => {
+      setTokens((prev) => [
+        {
+          id: `a${Date.now()}`, kind: "agent", name: "Claude Code", hint: "", created_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 90 * 86400_000).toISOString(), last_used_at: null,
+        },
+        ...(prev || []),
+      ]);
+    }, signInAfterMs);
+    return () => clearTimeout(timer);
+  }, [watching, signInAfterMs]);
+  const [minted, setMinted] = useState(() => {
+    const first = initial.find((row) => row.kind === "token");
+    return mintedFirst && first ? { ...first, token: previewPlaintext(first.hint) } : null;
+  });
   return (
     <div className="p-6">
       <AgentAccess
@@ -292,9 +349,13 @@ function AgentAccessScene({ initial = NO_TOKENS, mintedFirst = false, error = ""
         tokens={tokens}
         minted={minted}
         error={error}
+        signInAvailable={signInAvailable}
+        watching={watching}
+        deepLinks={deepLinks}
+        onWatch={setWatching}
         onCreate={(name) => {
           const row = {
-            id: `t${Date.now()}`, name, hint: "Zp4c", created_at: new Date().toISOString(),
+            id: `t${Date.now()}`, kind: "token", name, hint: "Zp4c", created_at: new Date().toISOString(),
             expires_at: new Date(Date.now() + 365 * 86400_000).toISOString(), last_used_at: null,
           };
           setTokens((prev) => [row, ...(prev || [])]);
@@ -438,28 +499,11 @@ function DeskComposerScene(props) {
   return <DeskComposer {...props} autonomy={autonomy} onAutonomyChange={setAutonomy} />;
 }
 
-// Long titles on purpose — an agent wrote these, not someone picking a label
-// short enough to fit. This is the case that revealed DeskCards had no
-// line-clamp: a single item could run the card to nine lines and shove its
-// siblings off the bottom.
+// Long on purpose — an agent wrote this, not someone picking a label short
+// enough to fit. The desk's own long titles are in deskScenarios.mjs.
 const LONG_TITLE =
   "North-star window: Next 90 days: get net new MRR positive and keep it there. Measured 30-day position — $219.95 of new MRR against $297.86 lost to failed payments plus $209.88 sitting past-due, so the window is still net negative.";
 
-const DESK_BUCKETS = {
-  [NEEDS_YOU]: [
-    { id: "n1", title: "Audit our Google Search performance please.", detailCode: "resume", tone: "attention", at: "2026-09-09T06:00:00Z" },
-  ],
-  [FOUND]: [
-    { id: "f1", title: "Next growth milestone: 3_repeatable_growth", detailCode: "checked", tone: "sure", at: "2026-09-08T09:00:00Z" },
-    { id: "f2", title: LONG_TITLE, detailCode: "checked", tone: "sure", at: "2026-09-08T09:00:00Z" },
-    { id: "f3", title: "North-star metric: Net new revenue", detailCode: "checked", tone: "sure", at: "2026-09-08T09:00:00Z" },
-  ],
-  [IN_PROGRESS]: [
-    { id: "p1", title: "Audit our Google Search performance please.", detailCode: "working", tone: "running", at: "2026-09-09T06:00:00Z" },
-    { id: "p2", title: "Audit our Google Search performance please.", detailCode: "working", tone: "running", at: "2026-09-09T06:00:00Z" },
-  ],
-};
-const DESK_BUCKETS_SHAPED = { needsYou: DESK_BUCKETS[NEEDS_YOU], found: DESK_BUCKETS[FOUND], inProgress: DESK_BUCKETS[IN_PROGRESS] };
 
 // A brief the way the agent actually writes one: a decision up top, the
 // evidence as a table, the gaps as a list. Enough element kinds to catch a
@@ -526,7 +570,7 @@ const TOOL_TRAFFIC = [
   use("FetchData", "t3", { entity_id: "google_ads_campaigns" }),
   returned("FetchData", "t3", {
     status: "reauth_required", entity_id: "google_ads_campaigns", connector_id: "google_ads",
-    message: "google_ads rejected its stored credential (expired or revoked). Nothing from this source can be fetched until the user reconnects it on the Connections page.",
+    message: "google_ads rejected its stored credential (expired or revoked). Nothing from this source can be fetched until the user reconnects it in the Toolbox.",
   }),
   use("WebSearch", "t4", { query: "self-hosted AI gateway 2026 alternatives" }),
   returned("WebSearch", "t4", {
@@ -552,7 +596,7 @@ const TOOL_TRAFFIC = [
   use("submit_assessment", "t12", { markers: [], notes: "" }),
   returned("submit_assessment", "t12", { status: "ok", post_id: "p1", topic: "Why your colours look off", overall: 56, band: "needs_work" }),
   use("publish_post", "t11", { post_id: "p1" }),
-  returned("publish_post", "t11", { status: "ok", post_id: "p1", post_bridge_post_id: "pb1", status_label: "scheduled", scheduled_at: "2026-09-23T09:00:00Z" }),
+  returned("publish_post", "t11", { status: "ok", post_id: "p1", publisher: "zernio", publisher_post_id: "zp1", status_label: "scheduled", scheduled_at: "2026-09-23T09:00:00Z" }),
 ];
 
 // A post's pre-publish review as `PostOut.assessment` carries it. Ids only —
@@ -633,6 +677,19 @@ const MCP_SERVERS = [
   }),
 ];
 
+// One server per reason the backend records (store.PROBLEM), so every
+// "Needs attention" line is on screen at once.
+const MCP_ATTENTION = [
+  mcpServer("openseo", { url: "https://app.openseo.so/mcp", name: "OpenSEO", preset: "openseo", auth: "key", status: "needs_reauth", problem: "key_refused", problem_at: "2026-11-01T08:12:00Z" }),
+  mcpServer("notion", { url: "https://mcp.notion.com/mcp", name: "Notion", preset: "notion", status: "needs_reauth", problem: "signed_out", problem_at: "2026-10-30T19:40:00Z" }),
+  mcpServer("linear", { url: "https://mcp.linear.app/mcp", name: "Linear", preset: "linear", status: "needs_reauth", problem: "unreadable" }),
+  mcpServer("posthog", { url: "https://mcp.posthog.com/mcp", name: "PostHog", preset: "posthog", status: "failing", problem: "unreachable", problem_at: "2026-11-02T03:05:00Z" }),
+  mcpServer("docs", { url: "https://mcp.docs-search.example.com/mcp", name: "Docs search", auth: "none", status: "needs_reauth", problem: "auth_required" }),
+  mcpServer("acme", { url: "https://mcp.acme-tools.example.com/mcp", name: "Acme CRM", status: "failing", problem: "failing" }),
+  // From a Duct older than recorded reasons: a status alone.
+  mcpServer("railway", { url: "https://mcp.railway.com", name: "Railway", preset: "railway", status: "needs_reauth" }),
+];
+
 // A run's connected-tool traffic as the recorder stores it: what the agent
 // asked each server, and what came back. Every outcome the row has words for.
 const MCP_TRAFFIC = [
@@ -647,7 +704,7 @@ const MCP_TRAFFIC = [
   use("CallConnectedTool", "m4b", { server: "notion", tool: "update_page" }),
   returned("CallConnectedTool", "m4b", { status: "arguments_too_long", server: "notion", name: "Notion", tool: "update_page", message: "Too long to show for approval, so nothing was sent." }),
   use("CallConnectedTool", "m5", { server: "notion", tool: "search" }),
-  returned("CallConnectedTool", "m5", { server: "notion", name: "Notion", status: "reauth_required", message: "Notion refused the stored sign-in. Reconnect it on the Connections page." }),
+  returned("CallConnectedTool", "m5", { server: "notion", name: "Notion", status: "reauth_required", message: "Notion refused the stored sign-in. Reconnect it in the Toolbox." }),
   use("CallConnectedTool", "m6", { server: "posthog", tool: "query_insights" }),
   returned("CallConnectedTool", "m6", { server: "posthog", name: "PostHog", status: "unreachable", message: "mcp.posthog.com did not answer within 30 seconds." }),
   use("CallConnectedTool", "m7", { server: "openseo", tool: "research_keywords" }),
@@ -779,6 +836,169 @@ function racingLoader() {
  * restart the load forever), and must start over on the next mount, or the
  * scene works once per page load and shows a finished desk ever after.
  */
+const CATALOG_TONE = { connected: "on", attention: "partial", available: "off" };
+const CATALOG_STATUS = { connected: "Connected", attention: "Needs reconnecting", available: "Not connected" };
+
+/** A fixture entry as the tile the page would draw for it. */
+function catalogTile(entry, extra = {}) {
+  return (
+    <ConnectorTile
+      key={entry.id}
+      logo={<EntityAvatar name={entry.logo} className="conn-favicon" />}
+      title={entry.title}
+      description={entry.description}
+      source={entry.origin === "duct" ? NATIVE_SOURCE : mcpSource(entry.publisher)}
+      tone={CATALOG_TONE[entry.status]}
+      status={CATALOG_STATUS[entry.status]}
+      onClick={() => {}}
+      {...extra}
+    />
+  );
+}
+
+/** One generated catalogue through the real browser, search and filters live. */
+function CatalogScenario({ id, initialFilters }) {
+  const entries = useMemo(
+    () => catalogScenario(id).map((e) => ({ ...e, render: () => catalogTile(e) })),
+    [id],
+  );
+  const byId = useMemo(() => Object.fromEntries(entries.map((e) => [e.id, e])), [entries]);
+  const [filters, setFilters] = useState({ ...NO_FILTERS, ...initialFilters });
+  return (
+    <div className="flex flex-col gap-10">
+      {/* The tabs sit in the page header's actions on the real page. */}
+      <div className="flex justify-end">
+        <StatusTabs entries={entries} filters={filters} onFiltersChange={setFilters} />
+      </div>
+      <ConnectorBrowser
+        entries={entries}
+        filters={filters}
+        onFiltersChange={setFilters}
+        featured={CATALOG_STARTERS}
+        renderFeatured={(fid) => catalogTile(byId[fid], { featured: true, benefit: byId[fid].description })}
+        hero={(searchFor) => <BringAnyTool onAdd={() => {}} onSearch={searchFor} />}
+        trailing={
+          <ConnectorTile
+            key="add"
+            logo={<Plus className="mcp-add-icon" aria-hidden="true" />}
+            title="Any MCP server"
+            source={mcpSource("")}
+            description="Paste the address of any remote MCP server."
+            status="Add by address"
+            onClick={() => {}}
+          />
+        }
+      />
+    </div>
+  );
+}
+
+/**
+ * The Toolbox search with the MCP Registry asked too, over a stub that
+ * answers like `GET /api/user/mcp/registry`: `answer` is "results" (the
+ * fixture matching the query), "gateways", "failed" (the server says so),
+ * "unreachable" (the request never landed), "off" or "slow". A
+ * connect with a key saves on the spot; Figma's without one waits on the
+ * browser; anything else connects as an open server would. Either way the
+ * server leaves the registry's section for the catalogue's results.
+ */
+function RegistryScenario({ id = "today", query, answer = "results", servers = MCP_NONE }) {
+  const [message, setMessage] = useState({});
+  const entries = useMemo(
+    () => catalogScenario(id).map((e) => ({ ...e, render: () => catalogTile(e) })),
+    [id],
+  );
+  const byId = useMemo(() => Object.fromEntries(entries.map((e) => [e.id, e])), [entries]);
+  const [filters, setFilters] = useState({ ...NO_FILTERS, query });
+  const api = useMemo(() => {
+    let rows = [...servers];
+    return {
+      listPresets: async () => MCP_PRESETS,
+      listServers: async () => rows,
+      systemBrowser: async () => true,
+      openSignIn: async () => "browser",
+      claim: async () => null,
+      remove: async (sid) => {
+        rows = rows.filter((r) => r.id !== sid);
+      },
+      check: async () => ({ server: rows[0], tools: 3 }),
+      searchRegistry: async (q) => {
+        if (answer === "slow") return new Promise(() => {});
+        await new Promise((r) => setTimeout(r, 400));
+        if (answer === "failed") throw Object.assign(new Error("The MCP Registry didn't answer in time."), { status: 502 });
+        if (answer === "unreachable") throw new TypeError("Load failed");
+        if (answer === "off") return { available: false, servers: [] };
+        if (answer === "gateways") return { available: true, servers: GATEWAY_ONLY_LISTINGS };
+        const all = [...STRIPE_LISTINGS, ...FIGMA_LISTINGS];
+        const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+        const found = all.filter((l) => words.every((w) => `${l.name} ${l.title} ${l.description}`.toLowerCase().includes(w)));
+        return { available: true, servers: found };
+      },
+      connect: async ({ url, name, apiKey }) => {
+        await new Promise((r) => setTimeout(r, 500));
+        if (!apiKey && url.includes("figma")) return { status: "authorize", authorize_url: "https://example.com/authorize" };
+        const server = mcpServer(`reg-${rows.length}`, { url, name, auth: apiKey ? "key" : "none" });
+        rows = [...rows.filter((r) => r.url !== url), server];
+        return { status: "connected", server };
+      },
+    };
+  }, [servers, answer]);
+  const mcp = useMcpConnectors({ signedIn: true, search: filters.query, api, onMessage: setMessage });
+  return (
+    <div className="flex flex-col gap-10">
+      <McpMessage message={message} />
+      <ConnectorBrowser
+        entries={[...entries, ...mcp.entries]}
+        filters={filters}
+        onFiltersChange={setFilters}
+        featured={CATALOG_STARTERS}
+        renderFeatured={(fid) => catalogTile(byId[fid], { featured: true, benefit: byId[fid].description })}
+        hero={
+          mcp.phase === "ready"
+            ? (searchFor) => <BringAnyTool onAdd={mcp.addServer} onSearch={mcp.registryAvailable ? searchFor : null} />
+            : null
+        }
+        trailing={mcp.phase === "ready" ? mcp.addTile() : mcp.placeholder}
+        moreResults={mcp.registry}
+        searchPlaceholder={mcp.registryAvailable ? "Search any tool or MCP server" : ""}
+      />
+      {mcp.overlays}
+    </div>
+  );
+}
+
+/** One generated plan through the real board view, every control live. */
+function PlanScenario({ id, view = PlanView.LIST }) {
+  const today = useMemo(() => startOfDay(new Date()), []);
+  const data = useMemo(() => planScenario(id, today), [id, today]);
+  const [current, setCurrent] = useState(view);
+  const [calView, setCalView] = useState("month");
+  const [activeId, setActiveId] = useState(data.plan.id);
+  return (
+    <PlanBoardView
+      plans={data.plans}
+      activeId={activeId}
+      onSelectPlan={setActiveId}
+      plan={data.plan}
+      postsById={data.postsById}
+      view={current}
+      onViewChange={setCurrent}
+      calView={calView}
+      onCalViewChange={setCalView}
+      today={today}
+      onStartPlan={() => {}}
+      onRevisePlan={() => {}}
+      onReviseDay={() => {}}
+    />
+  );
+}
+
+/** One generated desk, loaded once per mount like the real one. */
+function DeskScenario({ id }) {
+  const load = useMemo(() => stubLoader(deskScenario(id)), [id]);
+  return <Desk projectIdOverride="preview" loadDeskFn={load} />;
+}
+
 function DeskRaceScene() {
   const load = useMemo(racingLoader, []);
   useEffect(() => {
@@ -1022,12 +1242,104 @@ const PLAN_STRATEGY_ALL_PROVEN = {
   explore_evidence: "Every type has at least three measured posts, so the test slot goes to identity_challenge hooks instead.",
 };
 
+// A whole month as the plan agent hands it over: thirty pending posts, the
+// story's five topics cycled with the bets each slot makes. What the plan
+// workspace's list shows the moment submit_plan runs.
+const MONTH_OBJECTIVES = ["saves", "follows", "shares", "clicks", "saves"];
+const PLAN_MONTH = {
+  id: "plan_preview_month",
+  name: "October content plan",
+  start_date: "2026-10-01T00:00:00",
+  days: Array.from({ length: 30 }, (_, i) => {
+    const d = STORY_PLAN.days[i % STORY_PLAN.days.length];
+    return { ...d, status: "pending", post_id: null, objective: MONTH_OBJECTIVES[i % MONTH_OBJECTIVES.length] };
+  }),
+};
+
+// The brand context the first-run Plan tab reads back. A project that came
+// through the audit usually has a voice and pillars and no linked account.
+const PLAN_BRAND_READY = {
+  description: "Budgeting for freelancers who invoice in euros.",
+  content_brand: { tone: "Practical, warm, a little dry. Numbers over adjectives." },
+  content_pillars: {
+    items: [
+      { id: "money_habits", name: "Money habits" },
+      { id: "invoicing", name: "Invoicing" },
+      { id: "tax_without_fear", name: "Tax without fear" },
+      { id: "behind_the_app", name: "Behind the app" },
+    ],
+  },
+};
+const PLAN_BRAND_EMPTY = { description: "", content_brand: {}, content_pillars: {} };
+const PLAN_ACCOUNTS = [
+  { account_id: 1, platform: "tiktok", username: "solo.money" },
+  { account_id: 2, platform: "instagram", username: "solomoney.app" },
+];
+// The Apify key a user brings, as GET /content/vendor-keys/apify answers; a
+// scheduler is any of GET /content/publishers being connected.
+const PLAN_VENDORS_MISSING = {
+  apify: { connected: false, own_key: false, is_owner: true },
+};
+const PLAN_VENDORS_CONNECTED = {
+  apify: { connected: true, own_key: true, is_owner: true },
+};
+const PLAN_VENDORS_COLLABORATOR = {
+  apify: { connected: false, own_key: false, is_owner: false },
+};
+// The Accounts tab's three reads, as GET /content/publishers, /social-accounts
+// and /linked-accounts answer them.
+const SCHEDULERS_NONE = [
+  { id: "post_bridge", label: "PostBridge", dashboard_url: "https://app.post-bridge.com", reports: ["facebook", "instagram", "tiktok", "youtube"], connected: false, own_key: false, is_owner: true },
+  { id: "zernio", label: "Zernio", dashboard_url: "https://zernio.com/dashboard", reports: ["bluesky", "facebook", "google_business", "instagram", "linkedin", "pinterest", "threads", "tiktok", "twitter", "youtube"], connected: false, own_key: false, is_owner: true },
+];
+const SCHEDULERS_BOTH = SCHEDULERS_NONE.map((p) => ({ ...p, connected: true, own_key: true }));
+const SCHEDULER_ACCOUNTS = [
+  { id: "101", publisher: "post_bridge", publisher_label: "PostBridge", platform: "tiktok", username: "solomoney.app" },
+  { id: "acc_li", publisher: "zernio", publisher_label: "Zernio", platform: "linkedin", username: "solomoney", display_name: "Solo Money" },
+  { id: "acc_x", publisher: "zernio", publisher_label: "Zernio", platform: "twitter", username: "solomoneyhq", needs_reconnect: true },
+];
+const loadsAccounts = (publishers, accounts = [], linked = []) => async () => ({ publishers, accounts, linked });
+const ACCOUNTS_NONE = loadsAccounts(SCHEDULERS_NONE);
+const ACCOUNTS_BOTH = loadsAccounts(SCHEDULERS_BOTH, SCHEDULER_ACCOUNTS, [{ account_id: "acc_li", publisher: "zernio" }]);
+const ACCOUNTS_COLLABORATOR = loadsAccounts(SCHEDULERS_NONE.map((p) => ({ ...p, is_owner: false })));
+const NO_SCHEDULER = { connected: false };
+const A_SCHEDULER = { connected: true };
+// What the preview does with a pasted key: accept it after a beat, the way
+// the real save waits for the vendor, or refuse it the way a wrong key is.
+const acceptKey = () => new Promise((resolve) => setTimeout(resolve, 900));
+const refuseKey = (vendor) => Promise.reject(new Error(vendor === "apify"
+  ? "Apify didn't accept that key. Copy it again from your Apify account."
+  : "PostBridge didn't accept that key. Copy it again from your PostBridge dashboard."));
+
+// The period choices on fixed dates, so the scene reads the same any day:
+// a new plan on Oct 7, planning ahead from Nov 1 with a week already planned
+// from Nov 10, and a new plan on Oct 28, when the month rolls over.
+const planOn = (start, n) => ({ start_date: start, days: Array.from({ length: n }, () => ({})) });
+function PlanPeriodScene() {
+  const rollover = useMemo(() => planPeriodOptions(new Date(2026, 9, 28)), []);
+  const [length, setLength] = useState(rollover[0].length);
+  return (
+    <div className="flex flex-col gap-6 p-5">
+      <div className="flex flex-wrap items-center gap-2">
+        <PlanPeriodMenu options={planPeriodOptions(new Date(2026, 10, 1), [planOn("2026-11-10", 7)])} onPick={() => {}} icon={CalendarPlus} variant="outline">
+          Plan ahead
+        </PlanPeriodMenu>
+        <PlanPeriodMenu options={planPeriodOptions(new Date(2026, 9, 7))} onPick={() => {}} icon={Plus}>
+          New plan
+        </PlanPeriodMenu>
+      </div>
+      <PlanPeriodToggle options={rollover} value={length} onChange={setLength} />
+    </div>
+  );
+}
+
 // A posted post's numbers, as the metrics form receives them. The published
 // one carries what a PostBridge sync writes plus a typed saves count; the
 // other went out from the platform's own app, so nothing has synced.
 const METRICS_SYNCED_POST = {
   ...STORY_POSTS.post_1,
-  post_bridge_post_id: "pb_story_1",
+  publisher: "post_bridge",
+  publisher_post_id: "pb_story_1",
   perf: {
     view_count: 18400, like_count: 1120, comment_count: 86, share_count: 240,
     last_synced_at: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
@@ -1036,7 +1348,7 @@ const METRICS_SYNCED_POST = {
     manual_updated_at: new Date(Date.now() - 26 * 3600 * 1000).toISOString(),
   },
 };
-const METRICS_MANUAL_POST = { ...STORY_POSTS.post_2, post_bridge_post_id: "", perf: {} };
+const METRICS_MANUAL_POST = { ...STORY_POSTS.post_2, publisher: "", publisher_post_id: "", perf: {} };
 
 // Text posts (X, LinkedIn). `channel` is what the backend sends with every
 // post (agents/content/channels.channel_payload); the editor counts against it.
@@ -1068,7 +1380,54 @@ const X_OVER_POST = {
   ...X_THREAD_POST, id: "text-x-2", replies: [],
   caption: "Most freelancers who ask me about tax want a better percentage. The percentage is almost never the problem. The problem is that the money sits in the same account as everything else for weeks, and money that looks spendable gets spent. Move it the hour the invoice clears, into an account with no card.",
 };
-const X_METRICS_POST = { ...X_THREAD_POST, id: "text-x-3", status: "posted", post_bridge_post_id: "pb_story_x", perf: {} };
+const X_METRICS_POST = { ...X_THREAD_POST, id: "text-x-3", status: "posted", publisher: "post_bridge", publisher_post_id: "pb_story_x", perf: {} };
+
+// The drafts queue (issue 266): three drafts nobody has answered, from a
+// chat (X), a plan day (the carousel) and the LinkedIn writer, newest first.
+const QUEUE_DRAFTS = [
+  { ...X_THREAD_POST, id: "queue-x", created_at: "2026-10-30T18:00:00Z" },
+  { ...STORY_POSTS.post_1, id: "queue-carousel", status: "draft", created_at: "2026-10-30T09:00:00Z" },
+  { ...LINKEDIN_POST, id: "queue-li", created_at: "2026-10-29T16:00:00Z" },
+];
+// GET /content/best-slot per channel: X on its default, LinkedIn from the
+// account's own history, TikTok on the weekday-morning fallback.
+const QUEUE_SLOTS = {
+  twitter: { at: "2026-11-02T08:00:00Z", reason: "default", posts: 0, hour: 9 },
+  linkedin: { at: "2026-11-03T07:00:00Z", reason: "history", posts: 7, hour: 8 },
+  tiktok: { at: "2026-11-02T08:00:00Z", reason: "default", posts: 2, hour: 9 },
+};
+const queueSlot = (_project, channel) => Promise.resolve(QUEUE_SLOTS[channel]);
+
+// The Brand tab's voice (issue 271). VOICE_DEFAULTS is what GET /content/brand
+// answers as voice_rules_default: the rules every project had as constants.
+const VOICE_DEFAULTS = {
+  banned_words: ["game-changer", "revolutionary", "excited to share", "dive in", "unpopular opinion",
+    "hot take", "here's a thread", "a few thoughts on", "today I learned", "quick reminder", "let that sink in"],
+  no_client_names: true,
+  protect_the_edge: true,
+};
+const VOICE_BUILD_IN_PUBLIC = { banned_words: ["synergy", "game-changer"], no_client_names: false, protect_the_edge: false };
+
+/** Both fields are controlled by the Brand tab's form; this is that form's state. */
+function WritingSamplesScene({ initial }) {
+  const [samples, setSamples] = useState(initial);
+  return <div className="max-w-xl p-5"><WritingSamples samples={samples} onChange={setSamples} /></div>;
+}
+
+function VoiceRulesScene({ initial, customised: startCustomised }) {
+  const [rules, setRules] = useState(initial);
+  const [customised, setCustomised] = useState(startCustomised);
+  return (
+    <div className="max-w-xl p-5">
+      <VoiceRulesFields
+        rules={rules}
+        customised={customised}
+        onChange={(next) => { setRules(next); setCustomised(true); }}
+        onReset={() => { setRules(VOICE_DEFAULTS); setCustomised(false); }}
+      />
+    </div>
+  );
+}
 
 /** TextPostEditor is controlled by the post pane; this is that pane's state. */
 function TextPostScene({ initial }) {
@@ -1182,19 +1541,43 @@ export const SCENES = [
   },
   {
     id: "agent-access",
-    state: "first visit: no tokens, placeholder in every snippet",
+    state: "first visit: nothing connected, no tokens",
     group: "AgentAccess",
     title: "Connect your AI agent",
-    note: "The second paragraph, what an agent cannot do, is the reason a cautious person gets past the first step; it must read before the form. Every snippet shows duct_mcp_… until a token exists. Switch the three tabs: the Codex and Cursor snippets are multi-line and must wrap inside the box, never push the page wider, at 22rem.",
+    note: "The why comes before the how: a quiet card drawing repo → the picked agent → the Duct project, the one sentence on what that profile is for, and the can / can never lists the consent page shows too (one component, AgentAbilities). Change the picked tile and the middle node follows; at 36rem the drawing turns from a column into a row. The agent is picked by its own logo, because every step after names it. Five tiles, three to a row below 28rem and one row above; arrow keys move between them (they are radios). Step 1 is the current step until something in it is copied; Cursor and VS Code lead with a one-click install and fold the paste route under it. No snippet carries a secret. Step 2 draws the consent page in miniature with Allow ringed. Below 28rem the rail between markers goes, since the bodies sit under the numbers. The token section sits below a rule, plainly the second way in.",
     render: () => <AgentAccessScene />,
   },
   {
-    id: "agent-access-minted",
-    state: "a token just made: shown once, filled into each snippet; a second token never used, with a name long enough to clip",
+    id: "agent-access-live",
+    state: "copy step 1 and an agent signs in three seconds later",
     group: "AgentAccess",
     title: "Connect your AI agent",
-    note: "The new token sits under the form with its copy button, and the Claude Code command now carries it, so one copy is enough. In the list, the long name truncates and the hint, last use, expiry and Revoke stay on the row or wrap below it as a group. Revoke asks first, in the destructive tint, and the dialog says the projects stay as they are.",
+    note: "Copy step 1: its marker fills and checks, the rail below it turns orange, and step 2 says it is waiting with a spinner. Three seconds on, Claude Code appears in Connected agents with its logo, step 2 checks off with its name, and the Claude Code tile gains a green check. Copy the prompt and step 3 checks too. On the page the wait is a poll every 4 s while the tab is visible, for at most ten minutes; past that the line offers Check again.",
+    render: () => <AgentAccessScene signInAfterMs={3000} />,
+  },
+  {
+    id: "agent-access-desktop",
+    state: "inside the desktop shell: no one-click installs",
+    group: "AgentAccess",
+    title: "Connect your AI agent",
+    note: "Pick Cursor or VS Code: the shell opens only http(s) links outside itself, so the install button would do nothing; the paste route stands on its own, unfolded.",
+    render: () => <AgentAccessScene deepLinks={false} />,
+  },
+  {
+    id: "agent-access-minted",
+    state: "two agents signed in (one never used, its name long enough to clip), a token just made, a second token",
+    group: "AgentAccess",
+    title: "Connect your AI agent",
+    note: "Connected agents carry their agent's logo when the name they gave themselves matches one (Claude Code, Visual Studio Code), and the matching picker tiles show a green check; tokens show a key. Agents show when they connected and last called, with no hint (their token changes hourly); tokens show their last four and expiry. The new token sits under its form with the Claude Code command and the bare header, both carrying it. Disconnect and Revoke both ask first, in the destructive tint, and say the projects stay as they are.",
     render: () => <AgentAccessScene initial={AGENT_TOKENS} mintedFirst />,
+  },
+  {
+    id: "agent-access-sidecar",
+    state: "the desktop app's own backend: no browser sign-in, tokens only",
+    group: "AgentAccess",
+    title: "Connect your AI agent",
+    note: "The why card stays, with a generic agent in the middle node since nothing is picked. The steps and the Connected agents list are gone, replaced by one boxed sentence saying why. The token section heading drops its 'No browser?' and becomes the way in.",
+    render: () => <AgentAccessScene initial={AGENT_TOKENS.filter((row) => row.kind === "token")} signInAvailable={false} />,
   },
   {
     id: "agent-access-limit",
@@ -1208,6 +1591,63 @@ export const SCENES = [
         error="You have 10 tokens already. Revoke one you no longer use first."
       />
     ),
+  },
+  {
+    id: "agent-consent",
+    state: "signed in, a local agent asking",
+    group: "AgentConsent",
+    title: "Allow an agent",
+    note: "What it can and can't do reads before the buttons, the can'ts in muted ink with an X, never red: nothing is wrong. The destination line says the sign-in goes to this computer. Allow is the filled button on the right, Cancel beside it; both stay one row down to 20rem.",
+    render: () => (
+      <AgentConsent
+        state={CONSENT_ASK}
+        request={{ client_name: "Claude Code (duct)", destination: "device", destination_name: "127.0.0.1" }}
+        viewerEmail="ana@kestrel.studio"
+      />
+    ),
+  },
+  {
+    id: "agent-consent-web",
+    state: "signed in, a hosted client with a long self-chosen name",
+    group: "AgentConsent",
+    title: "Allow an agent",
+    note: "A website destination is named in bold, so a page calling itself Claude that sends you to an unknown host is visible. The long name wraps in the heading and in the caution line without breaking the card.",
+    render: () => (
+      <AgentConsent
+        state={CONSENT_ASK}
+        request={{ client_name: "Claude for the Kestrel rebrand workspace", destination: "web", destination_name: "claude.ai" }}
+        viewerEmail="ana@kestrel.studio"
+      />
+    ),
+  },
+  {
+    id: "agent-consent-sign-in",
+    state: "signed out: who is asking, then sign-in",
+    group: "AgentConsent",
+    title: "Allow an agent",
+    note: "The agent's name shows before any sign-in, so the person knows why they are being asked. One line, then the Google button.",
+    render: () => (
+      <AgentConsent
+        state={CONSENT_SIGN_IN}
+        request={{ client_name: "Codex", destination: "device", destination_name: "127.0.0.1" }}
+      />
+    ),
+  },
+  {
+    id: "agent-consent-expired",
+    state: "the request is older than ten minutes",
+    group: "AgentConsent",
+    title: "Allow an agent",
+    note: "No button: nothing on this page can fix it. The way forward is in the agent, so the two commands that restart it are named.",
+    render: () => <AgentConsent state={CONSENT_EXPIRED} />,
+  },
+  {
+    id: "agent-consent-allowed",
+    state: "allowed; the browser is on its way back to the agent",
+    group: "AgentConsent",
+    title: "Allow an agent",
+    note: "Shown for the moment before the agent's own page loads, and left in place for a website or app that takes the hand-off without replacing this tab.",
+    render: () => <AgentConsent state={CONSENT_ALLOWED} request={{ client_name: "Claude Code" }} />,
   },
   {
     id: "desk-composer",
@@ -1462,6 +1902,14 @@ export const SCENES = [
     ),
   },
   {
+    id: "oauth-card-google",
+    state: "not connected, and connected with a partial grant",
+    group: "OAuthConnectorCard",
+    title: "A Google sign-in connector",
+    note: "Open each tile. What the card shows is the stored row and nothing else: there is no \u201cthis session only\u201d state any more, because the token never reaches the browser. Not connected, the dialog offers Sign in with Google; press it and the preview answers the way the desktop hand-off does, so the waiting line with Open it again appears. Connected, the storage glyph says where the row lives, the permissions list shows the scope that was declined, and the footer carries Disconnect (which asks first) and Reconnect.",
+    render: () => <OAuthCardScene />,
+  },
+  {
     id: "manual-card-one-click",
     state: "GitHub App available, not connected and connected",
     group: "ManualConnectorCard",
@@ -1534,6 +1982,110 @@ export const SCENES = [
         />
       </div>
     ),
+  },
+  {
+    id: "instance-provider",
+    state: "ready, and not answering",
+    group: "InstanceProviderCard",
+    title: "Local models: Ollama offered by the server, no key",
+    note: "Two tiles for one provider in its two states. Ready reads On this server in the info tone, not green: green is for a key the reader put there. Open the grey one: the two steps name the two ways it fails, and Check again asks the server which (in the preview there is no backend, so it answers with the request's own error). Neither dialog has a key field or a Remove button; nothing here is the reader's to store.",
+    render: () => (
+      <div className="conn-grid">
+        <InstanceProviderCard
+          provider={INSTANCE_PROVIDERS[0]}
+          logo={LOGOS.ollama}
+          status={{ id: "ollama", source: "instance", reachable: true, configured: true, keyless: true }}
+        />
+        <InstanceProviderCard
+          provider={INSTANCE_PROVIDERS[0]}
+          logo={LOGOS.ollama}
+          status={{ id: "ollama", source: "none", reachable: false, configured: true, keyless: true }}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "endpoint-provider",
+    state: "not connected, connected, self-hosted",
+    group: "EndpointProviderCard",
+    title: "Bring your own provider: an address, its models, a tool call",
+    note: "Three tiles. The first is a hosted Duct with nothing connected: open it, pick Together, and Find models lists a host's catalogue with a filter; type localhost instead and the field says why a hosted server cannot reach it before any request. Picking base-model and testing shows the no-tools failure with Connect anyway; any other model passes the check (saving then fails here, since the preview has no backend to remember it on). The second is connected and remembered: the host is the tile's tag, the dialog lists the chosen models with their context and offers Check again, Change and Disconnect. The third is a self-hosted Duct, which offers LM Studio, vLLM and llama.cpp as well.",
+    render: () => {
+      const listing = [
+        { id: "Qwen/Qwen3-235B-A22B", context_length: 262144 },
+        { id: "Qwen/Qwen3-32B", context_length: 40960 },
+        { id: "base-model", context_length: 0 },
+        { id: "deepseek-ai/DeepSeek-V4", context_length: 131072 },
+        { id: "meta-llama/Llama-4-Maverick-17B-128E-Instruct", context_length: 1048576 },
+        { id: "meta-llama/Llama-4-Scout", context_length: 131072 },
+        { id: "mistralai/Mistral-Small-4", context_length: 131072 },
+        { id: "moonshotai/Kimi-K2.5", context_length: 262144 },
+        { id: "openai/gpt-oss-120b", context_length: 131072 },
+        { id: "zai-org/GLM-5", context_length: 202752 },
+      ];
+      const probe = async ({ baseUrl, model }) => {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        if (/localhost|127\.0/.test(baseUrl)) {
+          return { ok: false, code: "refused", detail: "That address is on a private network, which Duct's servers can't reach." };
+        }
+        const base = baseUrl.replace(/\/+$/, "");
+        const answer = { ok: true, base_url: base, models: listing };
+        if (model) {
+          answer.check =
+            model === "base-model"
+              ? { ok: false, code: "no_tools", model, detail: "It answered in words instead of calling the tool it was given." }
+              : { ok: true, model, latency_ms: 1380 };
+        }
+        return answer;
+      };
+      const readKey = async () => ({ key: "" });
+      const check = async () => ({ ok: true, model: "Qwen/Qwen3-32B", latency_ms: 1210 });
+      const connected = {
+        id: "openai_compatible",
+        source: "stored",
+        reachable: true,
+        stored: true,
+        private_ok: false,
+        endpoint: {
+          base_url: "https://api.together.xyz/v1",
+          host: "api.together.xyz",
+          has_key: true,
+          models: [
+            { id: "Qwen/Qwen3-32B", context_length: 40960 },
+            { id: "meta-llama/Llama-4-Scout", context_length: 131072 },
+          ],
+        },
+      };
+      return (
+        <div className="conn-grid">
+          <EndpointProviderCard
+            provider={ENDPOINT_PROVIDER}
+            logo={LOGOS.compatible}
+            status={{ id: "openai_compatible", source: "none", reachable: false, stored: false, private_ok: false, endpoint: null }}
+            readKey={readKey}
+            probe={probe}
+            check={check}
+          />
+          <EndpointProviderCard
+            provider={ENDPOINT_PROVIDER}
+            logo={LOGOS.compatible}
+            status={connected}
+            readKey={readKey}
+            probe={probe}
+            check={check}
+            onOpenTiers={() => {}}
+          />
+          <EndpointProviderCard
+            provider={ENDPOINT_PROVIDER}
+            logo={LOGOS.compatible}
+            status={{ id: "openai_compatible", source: "none", reachable: false, stored: false, private_ok: true, endpoint: null }}
+            readKey={readKey}
+            probe={probe}
+            check={check}
+          />
+        </div>
+      );
+    },
   },
   {
     id: "storage-badge",
@@ -1647,7 +2199,7 @@ export const SCENES = [
     state: "nothing connected yet",
     group: "McpConnectors",
     title: "MCP connectors, before the first connect",
-    note: "The MCP tiles join the native ones in Connections' one grid, two native tiles ahead of them here. Every tile says its kind and publisher under its name: Native · by Duct, or MCP · by the company that runs the server. A tile per preset plus one for any server by address, each opening the connect dialog. Open OpenSEO and press Connect: this stub answers the way a sign-in does on the desktop shell, so the dialog waits on your browser. Open Notion's dialog: no key path, because Notion issues none. Open Railway's: it asks before every call, read-only or not, because its reads return secrets. The two notes at the dialog's foot are the facts worth knowing before connecting one.",
+    note: "The MCP tiles join the native ones in the Toolbox's one grid, two native tiles ahead of them here. Every tile says its kind and publisher under its name: Native · by Duct, or MCP · by the company that runs the server. A tile per preset plus one for any server by address, each opening the connect dialog. Open OpenSEO and press Connect: this stub answers the way a sign-in does on the desktop shell, so the dialog waits on your browser. Open Notion's dialog: no key path, because Notion issues none. Open Railway's: it asks before every call, read-only or not, because its reads return secrets. The two notes at the dialog's foot are the facts worth knowing before connecting one.",
     render: () => <McpScene servers={MCP_NONE} answer="authorize" />,
   },
   {
@@ -1657,6 +2209,14 @@ export const SCENES = [
     title: "MCP connectors, connected",
     note: "OpenSEO is connected with a key. Notion's sign-in lapsed: its tile goes amber and says Needs reconnecting, and its dialog opens on Reconnect. The third is a server added by address, now a tile of its own: MCP with no publisher (Duct can't know who runs it), its host underneath, and a name long enough to wrap. Disconnect, in the dialog, asks first, then the tile goes.",
     render: () => <McpScene servers={MCP_SERVERS} answer="needs_key" />,
+  },
+  {
+    id: "mcp-servers-attention",
+    state: "one server per reason it needs attention",
+    group: "McpConnectors",
+    title: "MCP connectors that need attention",
+    note: "Every reason the server records, on its tile as Needs attention · <reason> in amber: a refused key, an expired sign-in, a sign-in Duct can no longer read, a server not answering, one that now asks for a sign-in, one returning errors, and Railway, from an older Duct that sends a status and no reason (it reads as an expired sign-in). Open any: the dialog says the whole reason and what fixes it. Check connection on PostHog or Acme answers Working with a tool count and the tile goes green; on the others it says the reason again, because only reconnecting fixes a sign-in. OpenSEO opens with its key field showing.",
+    render: () => <McpScene servers={MCP_ATTENTION} answer="needs_key" />,
   },
   {
     id: "mcp-servers-needs-key",
@@ -1704,7 +2264,7 @@ export const SCENES = [
     state: "checked · used · skipped · needs approval · too long to show · signed out · unreachable · the server's error · unknown tool · running",
     group: "AgentChat",
     title: "Tools on connected servers, in the transcript",
-    note: "Built by lib/toolActivity from recorded traffic, the path a reopened thread takes. A skip is the person's choice and is not painted red, and neither is a call held back because it was too long to show first. A protocol or tool error carries no text of the server's: the row says the server returned an error, in our words. Signed out links to Connections; unreachable and an unknown tool keep Duct's own sentence behind the chevron.",
+    note: "Built by lib/toolActivity from recorded traffic, the path a reopened thread takes. A skip is the person's choice and is not painted red, and neither is a call held back because it was too long to show first. A protocol or tool error carries no text of the server's: the row says the server returned an error, in our words. Signed out links to the Toolbox; unreachable and an unknown tool keep Duct's own sentence behind the chevron.",
     render: () => (
       <div className="max-w-xl space-y-6">
         <ActivityGroup activities={MCP_ACTIVITIES} />
@@ -1762,13 +2322,132 @@ export const SCENES = [
       </DialogScene>
     ),
   },
+  // The desk in every situation it has to survive, generated from
+  // lib/__fixtures__/deskScenarios.mjs: the same payloads the unit tests hold
+  // the arrangement to. Each note is what the scenario holds the page to.
+  ...DESK_SCENARIOS.map((scenario) => ({
+    id: `desk-scenario-${scenario.id}`,
+    state: scenario.title,
+    group: "Desk scenarios",
+    title: `Desk — ${scenario.title}`,
+    note: `${scenario.expect} Content is generated at render time, relative to now; sweep the frame from phone to wide and check the page keeps its shape.`,
+    render: () => <DeskScenario id={scenario.id} />,
+  })),
+  // The content plan board in every situation it has to survive, generated
+  // from lib/__fixtures__/planScenarios.mjs relative to today: the same plans
+  // the schedule tests hold the agenda to. The list is the default view; the
+  // Kanban scenes show the same plan by status.
+  ...PLAN_SCENARIOS.map((scenario) => ({
+    id: `plan-scenario-${scenario.id}`,
+    state: scenario.title,
+    group: "Plan scenarios",
+    title: `Plan — ${scenario.title}`,
+    note: `${scenario.expect} Switch to Kanban and Calendar from the toolbar; sweep the frame from phone to wide.`,
+    render: () => <PlanScenario id={scenario.id} />,
+  })),
+  // The Toolbox catalogue at every size it has to hold, from
+  // lib/__fixtures__/connectorCatalogs.mjs, the sets the catalogue tests
+  // arrange. Type, pick a chip, open the two menus: all of it is live.
+  ...CATALOG_SCENARIOS.map((scenario) => ({
+    id: `catalog-${scenario.id}`,
+    state: scenario.title,
+    group: "Toolbox catalogue",
+    title: `Toolbox — ${scenario.title}`,
+    note: `${scenario.expect} Press / to search.`,
+    render: () => <CatalogScenario id={scenario.id} />,
+  })),
   {
-    id: "desk-cards-long-title",
-    state: "content",
+    id: "catalog-connected-tab",
+    state: "Connected tab",
+    group: "Toolbox catalogue",
+    title: "Toolbox — the Connected tab",
+    note: "Only what this account has, the source needing attention first, with the amber dot on the tab saying so. No starters and no Any MCP server tile here.",
+    render: () => <CatalogScenario id="hundreds" initialFilters={{ status: "connected" }} />,
+  },
+  {
+    id: "bring-any-tool",
+    state: "with names to try · search turned off",
+    group: "Toolbox catalogue",
+    title: "Bring any tool",
+    note: "The one brand-tinted card on Toolbox, drawn with the starters while browsing everything. It replaced the Any MCP server tile at the end of the list. The tiles are the picture and the controls: a name runs that search and each returned its vendor's own server when written, Yours opens the add dialog, and pointing at one lights its channel. A Duct that turned the registry off keeps the picture but its names stop being buttons, since they would find nothing. Sweep the width: the drawing sits beside the words from @2xl, under them below that, and gives way to wrapped tiles below @xs.",
+    render: () => (
+      <div className="flex flex-col gap-6">
+        <BringAnyTool onAdd={() => {}} onSearch={() => {}} />
+        <BringAnyTool onAdd={() => {}} />
+      </div>
+    ),
+  },
+  {
+    id: "catalog-search",
+    state: "searching \"ads\"",
+    group: "Toolbox catalogue",
+    title: "Toolbox — a search",
+    note: "Results ranked: titles that start with the words first, then a word of the title, the vendor and keywords, then the description. The category name counts, so \"advertising\" lists the ads. Chips keep their counts for this search.",
+    render: () => <CatalogScenario id="hundreds" initialFilters={{ query: "ads" }} />,
+  },
+  {
+    id: "mcp-registry-results",
+    state: "searching \"stripe\"",
+    group: "MCP Registry",
+    title: "Toolbox — a search that reaches the MCP Registry",
+    note: "The catalogue's own Stripe first, then From the MCP Registry: Stripe's own server tagged Official, then the servers whose publishers run their address, each badge naming the site it runs at. Two gateways wait behind Show 2 more from other publishers. Open Stripe Reports: the registry says it takes a key, so the key field is open with the publisher's line about it and a link to its site. Open Stripe and Connect: it saves, and moves up into the catalogue's results as Added by you. Open a gateway after Show more: an amber note says nobody has shown they run that address.",
+    render: () => <RegistryScenario query="stripe" />,
+  },
+  {
+    id: "mcp-registry-figma",
+    state: "nothing local, Figma's own server in the registry",
+    group: "MCP Registry",
+    title: "Toolbox — the registry finds what the catalogue doesn't",
+    note: "Nothing in the catalogue matches figma, so the registry's section comes straight after with Figma's own server, Official, and the way in by address waits at the end. Connect waits on the browser the way a desktop sign-in does.",
+    render: () => <RegistryScenario query="figma" />,
+  },
+  {
+    id: "mcp-registry-edges",
+    state: "only gateways · searching · failed · unreachable · nothing found",
+    group: "MCP Registry",
+    title: "The registry's section, when it has little to say",
+    note: "Only gateways: a line says nothing run by its publisher matched, and the button reveals them. Searching holds three tile shapes. A failed search says so with Try again, and never blocks the catalogue's results above it. One that never reached the server gets the same row in Duct's words, never the browser's Load failed. Nothing found says so in one line. A Duct with the search turned off shows no section at all (not drawn here).",
+    render: () => (
+      <div className="flex flex-col gap-16">
+        <RegistryScenario query="stripe" answer="gateways" />
+        <RegistryScenario query="google ads" answer="slow" />
+        <RegistryScenario query="hubspot" answer="failed" />
+        <RegistryScenario query="hubspot" answer="unreachable" />
+        <RegistryScenario query="hubspot" />
+      </div>
+    ),
+  },
+  {
+    id: "catalog-nothing-found",
+    state: "no match",
+    group: "Toolbox catalogue",
+    title: "Toolbox — nothing matches",
+    note: "Says what was searched, offers to clear, and the way in for anything unlisted: any MCP server by its address.",
+    render: () => <CatalogScenario id="today" initialFilters={{ query: "hubspot" }} />,
+  },
+  ...KANBAN_SCENARIO_IDS.map((id) => ({
+    id: `plan-scenario-${id}-kanban`,
+    state: "Kanban",
+    group: "Plan scenarios",
+    title: `Plan by status — ${PLAN_SCENARIOS.find((s) => s.id === id).title}`,
+    note: "Every lane is one width, at most 24rem, even beside empty ones; an empty lane is a header and nothing else; a planned post with no media is its words, not a grey 16:9 box.",
+    render: () => <PlanScenario id={id} view={PlanView.KANBAN} />,
+  })),
+  {
+    id: "desk-connect-first",
+    state: "nothing connected",
     group: "Desk",
-    title: "Cards, an agent-length finding title",
-    note: "Drag the frame through the 448–768px band: three columns to two to one. The long title in “What I found” clamps to two lines instead of pushing its siblings out — hover or tab to it for the rest.",
-    render: () => <DeskCards buckets={DESK_BUCKETS_SHAPED} />,
+    title: "Connect your first source",
+    note: "The Desk's one hero while nothing is connected: four logos, one line, one button. Below @2xl it stacks; check the button sits at the left edge, not stretched.",
+    render: () => <DeskConnectFirst />,
+  },
+  {
+    id: "connections-first-source",
+    state: "the first source just connected",
+    group: "Toolbox",
+    title: "First source celebration",
+    note: "Shown once per browser, only while exactly one source is connected. Clear localStorage key duct_first_source_celebrated to see it again; the tesserae burst once and are skipped under reduced motion.",
+    render: () => <FirstSourceCelebration connectedTypes={["gsc"]} ready />,
   },
   {
     id: "desk-background-refresh",
@@ -2165,7 +2844,7 @@ export const SCENES = [
     state: "all four permission states",
     group: "AppSidebar",
     title: "The notification row, in every state it has",
-    note: "Lives in the user footer menu. Two of these are unreachable from a browser — \"System\" only happens inside the desktop shell, and \"Blocked\" needs a site permission you have to deny by hand — so this is the only place they get looked at. Clickability is the thing to check: \"Off\" asks the browser for permission and \"Notification settings\" opens the OS pane, while \"On\" and \"Blocked\" are statements and are dimmed to say so. The last row is a desktop shell too old to have `open_notification_settings`, or Linux, where there is no single page to open.",
+    note: "Lives in the preferences group of the account menu. Two of these are unreachable from a browser — \"System\" only happens inside the desktop shell, and \"Blocked\" needs a site permission you have to deny by hand — so this is the only place they get looked at. Every state but the first is \"Notifications\" with its value in muted text on the right, the shape Language and Appearance use. Clickability is the thing to check: \"Turn on notifications\" asks the browser, and the \"System\" row with an arrow opens the OS pane, while \"On\" and \"Blocked\" are statements and are dimmed to say so. The last row is a desktop shell too old to have `open_notification_settings`, or Linux, where there is no single page to open.",
     render: () => (
       <DropdownMenu defaultOpen modal={false}>
         <DropdownMenuTrigger asChild>
@@ -2186,7 +2865,7 @@ export const SCENES = [
     state: "sub-menu open on the current language",
     group: "AppSidebar",
     title: "The language row in the account menu",
-    note: "Sits under Profile in the user footer menu. The trigger shows the current language's own name; the sub-menu lists all five as a radio group, each in its own script, so someone who landed in the wrong language can still find theirs. Picking one switches this whole preview, the same way it switches the app: cookie, profile when signed in, then a refresh in place.",
+    note: "Opens the preferences group of the account menu. The trigger shows the current language's own name; the sub-menu lists all five as a radio group, each in its own script, so someone who landed in the wrong language can still find theirs. Picking one switches this whole preview, the same way it switches the app: cookie, profile when signed in, then a refresh in place.",
     render: () => (
       <DropdownMenu defaultOpen modal={false}>
         <DropdownMenuTrigger asChild>
@@ -2194,6 +2873,40 @@ export const SCENES = [
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-64">
           <LanguageMenuItem />
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+  },
+  {
+    id: "account-menu",
+    state: "signed in, open",
+    group: "AppSidebar",
+    title: "The account menu, whole",
+    note: "Five groups in the order people look: you (Profile, Your memory), what runs your work (models, usage, your own agent), how the app looks and talks to you (language, appearance, notifications, cookies), feedback, then Log out alone. Check that every setting shows its current value the same way, muted on the right, and that no row wraps at this width in German. Manage projects is in the project switcher now, beside the projects.",
+    render: () => (
+      <DropdownMenu defaultOpen modal={false}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm">Open the account menu</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-64">
+          <AccountMenuItems onSignOut={() => {}} />
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+  },
+  {
+    id: "account-menu-guest",
+    state: "guest, open",
+    group: "AppSidebar",
+    title: "The account menu for a guest",
+    note: "The same menu with one row in front of it: sign in to keep what the audit made. It is the only thing a guest is missing, so it comes first and stands alone.",
+    render: () => (
+      <DropdownMenu defaultOpen modal={false}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm">Open the account menu</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-64">
+          <AccountMenuItems guest onSignOut={() => {}} />
         </DropdownMenuContent>
       </DropdownMenu>
     ),
@@ -2520,6 +3233,93 @@ export const SCENES = [
     ),
   },
   {
+    id: "drafts-queue",
+    state: "three drafts waiting · one slot from history",
+    group: "DraftsQueue",
+    title: "The drafts queue on the Posts tab",
+    note: "The Posts tab opens on its Waiting chip while any draft is unanswered (issue 266): plan-day drafts and chat drafts alike, any channel, newest first. Each card says when it would go out and why: the account's own best hour once five posts on that channel have numbers, else the channel's default. Approve opens the publish dialog on that time; Edit in chat opens the post's workspace; Skip asks one of five reasons and turns it into a feedback memory the content agent's next draft reads. A long LinkedIn post folds behind Show all. What to check: Approve is the heaviest thing on each card, and Skip sits right, out of the way.",
+    render: () => (
+      <div className="p-5">
+        <DraftsQueue
+          posts={QUEUE_DRAFTS}
+          projectId="p"
+          loadSlot={queueSlot}
+          skip={(id) => new Promise((resolve) => setTimeout(() => resolve({ id, status: "discarded" }), 400))}
+          aside={<ReminderSetting surface="shell" />}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "drafts-queue-empty",
+    state: "the last draft answered",
+    group: "DraftsQueue",
+    title: "Nothing waiting",
+    note: "What the Waiting view says once the last draft is answered. The chip stays while it is the one selected, so the view never loses its label; on the next visit the tab opens on All instead.",
+    render: () => (
+      <div className="p-5">
+        <DraftsQueue posts={[]} projectId="p" loadSlot={queueSlot} aside={<ReminderSetting surface="browser" />} />
+      </div>
+    ),
+  },
+  {
+    id: "reminder-setting",
+    state: "the daily notice's time",
+    group: "ReminderSetting",
+    title: "When the daily notice arrives",
+    note: "One notice a day, \"3 drafts ready\", through the desktop shell or a browser tab that granted notifications, and only while the app is not being looked at. Per device, beside the queue. Hidden where nothing can notify, because a setting for a notice that can never arrive is a promise the page breaks.",
+    render: () => (
+      <div className="p-5">
+        <ReminderSetting surface="shell" />
+      </div>
+    ),
+  },
+  {
+    id: "writing-samples",
+    state: "two posts pasted",
+    group: "WritingSamples",
+    title: "Writing samples on the Brand tab",
+    note: "Posts the brand already wrote (issue 271). The text writer reads them before every X or LinkedIn draft, and a carousel caption hears them too, so a draft starts in a real voice. Up to five, 1,500 characters each, counted under each field. What to check: the counter sits right under its own field, and Add a post disables at five.",
+    render: () => <WritingSamplesScene initial={[X_THREAD_POST.caption, LINKEDIN_POST.caption]} />,
+  },
+  {
+    id: "writing-samples-empty",
+    state: "nothing pasted yet",
+    group: "WritingSamples",
+    title: "Before the first sample",
+    note: "One empty field rather than an empty list: the placeholder says what goes in it.",
+    render: () => <WritingSamplesScene initial={[]} />,
+  },
+  {
+    id: "voice-rules-default",
+    state: "Duct's defaults",
+    group: "VoiceRulesFields",
+    title: "Voice rules, never touched",
+    note: "The rules every project had as constants until issue 271, shown as settings: the banned list as chips, the two switches on. Change anything and Back to Duct's defaults appears. The writer refuses an X or LinkedIn draft with a banned word and says which, so the list is a promise, not a hint.",
+    render: () => <VoiceRulesScene initial={VOICE_DEFAULTS} customised={false} />,
+  },
+  {
+    id: "voice-rules-custom",
+    state: "a build-in-public founder's rules",
+    group: "VoiceRulesFields",
+    title: "Voice rules, customised",
+    note: "Clients may be named and the mechanism may be shown; each switch's line says what it means in its current position, not in the other one.",
+    render: () => <VoiceRulesScene initial={VOICE_BUILD_IN_PUBLIC} customised />,
+  },
+  {
+    id: "post-card-failed",
+    state: "a scheduled post PostBridge failed · with and without a reason",
+    group: "PostCard",
+    title: "A post that didn't go out",
+    note: "The board asks PostBridge about a scheduled post once its time has passed (issue 311). A failure gets the Failed chip and PostBridge's own sentence under the title; when PostBridge gave none, the card says so in its own words. Publishing again is the way out.",
+    render: () => (
+      <div className="grid max-w-md grid-cols-2 gap-4 p-5">
+        <PostCard post={{ ...X_THREAD_POST, id: "failed-1", status: "failed", publish_error: "The X account needs reconnecting." }} />
+        <PostCard post={{ ...LINKEDIN_POST, id: "failed-2", status: "failed", publish_error: "" }} />
+      </div>
+    ),
+  },
+  {
     id: "post-metrics-x",
     state: "X post published through PostBridge · nothing syncs",
     group: "PostMetricsForm",
@@ -2602,6 +3402,18 @@ export const SCENES = [
     ),
   },
   {
+    id: "vendor-key-inline",
+    state: "inline · Apify refused the key",
+    group: "VendorKeyForm",
+    title: "The key field inside a row",
+    note: "The same field with no card around it, for a row that already says what the vendor is for (the Plan tab's checklist). Submit any key: the refusal appears under the field the same way it does in the card.",
+    render: () => (
+      <div className="max-w-sm p-5">
+        <VendorKeyForm layout="inline" vendor="Apify" homeUrl="https://console.apify.com" onConnect={() => refuseKey("apify")} />
+      </div>
+    ),
+  },
+  {
     id: "vendor-key-collaborator",
     state: "collaborator · the owner hasn't connected PostBridge",
     group: "VendorKeyForm",
@@ -2610,6 +3422,158 @@ export const SCENES = [
     render: () => (
       <div className="p-5">
         <VendorKeyForm vendor="PostBridge" homeUrl="https://app.post-bridge.com" isOwner={false} onConnect={() => Promise.resolve()} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-board-empty",
+    state: "voice and pillars set, no connector yet",
+    group: "PlanDayOne",
+    title: "The Plan tab, before the first plan",
+    note: "The first screen of Content Studio for a new project, and the usual case after the audit: the voice and pillars it drafted, neither connector's key saved. It used to be a dashed \"No plan yet\" box. Now it says what a plan is, reads back what Duct will plan from, takes the PostBridge and Apify keys right in their rows, asks how far ahead to plan (the month in progress, or 1 week, 2 weeks, 30 days, each naming its dates), and shows a sample week in the same list the plan workspace uses. Paste anything into a key field and press Enter: the preview refuses it the way a wrong key is refused. What to check: the button is the heaviest thing on the screen; the checklist sits beside the sample from @3xl and above it below that; the sample is dimmed, labelled and cannot be tabbed into.",
+    render: () => (
+      <div className="p-5">
+        <PlanDayOne brand={PLAN_BRAND_READY} accounts={[]} scheduler={NO_SCHEDULER} vendors={PLAN_VENDORS_MISSING} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={refuseKey} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-day-one-fresh",
+    state: "nothing set yet",
+    group: "PlanDayOne",
+    title: "A project with no brand context",
+    note: "Every source missing. Voice and pillars say what Duct does about them (it asks) and offer the tab that fixes them; the two connectors take their key in place. The button still works: the agent asks for what is missing before it plans. A pasted key is accepted after a beat here and the field stays busy, since the preview has no state to turn the row over with.",
+    render: () => (
+      <div className="p-5">
+        <PlanDayOne brand={PLAN_BRAND_EMPTY} accounts={[]} scheduler={NO_SCHEDULER} vendors={PLAN_VENDORS_MISSING} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-day-one-ready",
+    state: "everything set",
+    group: "PlanDayOne",
+    title: "All four sources ready",
+    note: "Voice, four pillars, two linked accounts and Apify connected. The plan learns from those accounts' own results, which is what the strategy band on a finished plan reports; the research row points at Discover, because only posts saved there reach the plan.",
+    render: () => (
+      <div className="p-5">
+        <PlanDayOne brand={PLAN_BRAND_READY} accounts={PLAN_ACCOUNTS} scheduler={A_SCHEDULER} vendors={PLAN_VENDORS_CONNECTED} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-day-one-collaborator",
+    state: "a collaborator, owner hasn't connected either key",
+    group: "PlanDayOne",
+    title: "When the keys are someone else's",
+    note: "A project spends its owner's PostBridge and Apify keys, so a collaborator gets no field, only who to ask.",
+    render: () => (
+      <div className="p-5">
+        <PlanDayOne brand={PLAN_BRAND_READY} accounts={[]} scheduler={NO_SCHEDULER} vendors={PLAN_VENDORS_COLLABORATOR} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
+      </div>
+    ),
+  },
+  {
+    id: "analytics-no-scheduler",
+    state: "no scheduler connected",
+    group: "ConnectorGate",
+    title: "Analytics, before any scheduler",
+    note: "What the tab does, what unlocks it, and the stat row it fills in, drawn by the real cards over invented numbers. The schedulers are the server's list, at most three.",
+    render: () => (
+      <div className="p-5"><AnalyticsGate publishers={SCHEDULERS_NONE} onConnect={acceptKey} /></div>
+    ),
+  },
+  {
+    id: "discover-no-apify",
+    state: "Apify not connected",
+    group: "ConnectorGate",
+    title: "Discover, before Apify",
+    note: "One connector, so one card; who pays for the scraping is said under it. The example is two real result cards over invented posts.",
+    render: () => (
+      <div className="p-5"><DiscoverGate isOwner onConnect={acceptKey} /></div>
+    ),
+  },
+  {
+    id: "discover-no-apify-collaborator",
+    state: "a collaborator, owner hasn't connected Apify",
+    group: "ConnectorGate",
+    title: "Discover, when the key is the owner's",
+    note: "No Connect button: the project spends its owner's key, so anyone else is told who connects it.",
+    render: () => (
+      <div className="p-5"><DiscoverGate isOwner={false} onConnect={acceptKey} /></div>
+    ),
+  },
+  {
+    id: "accounts-no-scheduler",
+    state: "nothing connected",
+    group: "AccountsTab",
+    title: "Accounts, before any scheduler",
+    note: "Nothing is a default: with no scheduler connected nothing publishes, so the tab says what it does once one is, offers each scheduler with the platforms it reports numbers for (the difference worth choosing on), and shows the accounts list it fills in. Connect opens the key field in the card.",
+    render: () => (
+      <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_NONE} /></div>
+    ),
+  },
+  {
+    id: "accounts-two-schedulers",
+    state: "both connected, one account linked, one needing a reconnect",
+    group: "AccountsTab",
+    title: "Accounts at two schedulers",
+    note: "Each account says which scheduler holds it, because that is the one a post to it goes through. An account the scheduler reports as disconnected says where to fix it.",
+    render: () => (
+      <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_BOTH} /></div>
+    ),
+  },
+  {
+    id: "accounts-scheduler-collaborator",
+    state: "a collaborator, owner hasn't connected one",
+    group: "AccountsTab",
+    title: "When the scheduler is the owner's to connect",
+    note: "A project publishes through its owner's scheduler, so Connect tells anyone else who sets it up rather than offering a key that would never be used.",
+    render: () => (
+      <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_COLLABORATOR} /></div>
+    ),
+  },
+  {
+    id: "plan-day-one-unknown",
+    state: "brand context failed to load",
+    group: "PlanDayOne",
+    title: "When the sources cannot be read",
+    note: "The checklist is left out rather than reporting every source as missing: a failed read and an empty brand are different facts. The same goes for one connector whose status could not be read: its row and its share of the count drop out.",
+    render: () => (
+      <div className="p-5">
+        <PlanDayOne brand={null} accounts={null} vendors={{}} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-period-picker",
+    state: "Oct 7, Nov 1 with a plan from Nov 10, and Oct 28",
+    group: "PlanPeriodPicker",
+    title: "How far ahead a new plan looks",
+    note: "The Plan tab's \"Plan ahead\" and \"New plan\" menus, and the toggles the first-run screen uses for the same choice. Every option names the dates it will plan, by the run's own rules: the month in progress, or 1 week, 2 weeks, 30 days, never more than 30. What to check: \"Plan ahead\" starts on Nov 1 and stops the day before the plan already made from Nov 10, so the month is offered as \"9 days\" and the longer lengths, which come to the same dates, are not offered twice; the toggles are for Oct 28, so the month is November, not the four days left of October.",
+    render: () => <PlanPeriodScene />,
+  },
+  {
+    id: "plan-list-month",
+    state: "a fresh 30-day plan, every post pending",
+    group: "PlanList",
+    title: "The plan as an agenda",
+    note: "What the plan workspace shows once submit_plan runs: thirty posts in date order, grouped by week from the plan's first day, filterable by status. Pending rows carry no badge (thirty identical pills is noise); hovering one says Draft. What to check: the week header sticks while the list scrolls; platforms drop out of the row in a narrow pane before the title loses room.",
+    render: () => (
+      <div style={{ height: 640, display: "flex" }} className="bg-background">
+        <PlanList plan={PLAN_MONTH} onReviseDay={() => {}} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-list-story",
+    state: "one week: two posted, one drafted, two pending",
+    group: "PlanList",
+    title: "A plan with posts moving",
+    note: "The story week. Posted and drafted rows carry their status and time; a scheduled post would say Scheduled. The filter counts follow, and Discarded appears only once something is in it.",
+    render: () => (
+      <div style={{ height: 420, display: "flex" }} className="bg-background">
+        <PlanList plan={STORY_PLAN} postsById={STORY_POSTS} onReviseDay={() => {}} />
       </div>
     ),
   },
@@ -2642,11 +3606,11 @@ export const SCENES = [
     state: "a live plan with its strategy",
     group: "PlanViewport",
     title: "The plan pane in the workspace",
-    note: "The right pane of a plan session once submit_plan has run: the name bar, the strategy, then the board. A plan made before strategies were recorded shows no strategy band at all.",
+    note: "The right pane of a plan session once submit_plan has run: the name bar, the strategy, then the list. A plan made before strategies were recorded shows no strategy band at all.",
     render: () => (
       <div style={{ height: 720, display: "flex" }} className="bg-background">
         <div className="flex-1 min-w-0">
-          <PlanViewport payload={{ type: "plan", ...STORY_PLAN, strategy: PLAN_STRATEGY }} />
+          <PlanViewport payload={{ type: "plan", ...PLAN_MONTH, strategy: PLAN_STRATEGY }} onReviseDay={() => {}} />
         </div>
       </div>
     ),
@@ -2671,6 +3635,48 @@ export const SCENES = [
       </div>
     ),
   })),
+  {
+    id: "chat-code-and-long-link",
+    group: "AgentChat",
+    title: "A code block and a long link in a reply",
+    state: "settled reply, highlighter loading on first sight",
+    note: "The highlighter is not in the chat's first load: the first code block on screen fetches it, and until then the block is drawn plain in the same dark box at the same size, so only the token colours arrive late. Reload with the network throttled to see the swap. The link has no spaces to break at; it must wrap inside the column rather than scroll the transcript sideways at phone width.",
+    render: () => (
+      <div className="max-w-xl">
+        <TranscriptRow
+          msg={{
+            role: "assistant",
+            text: "The redirect chain is in the response headers:\n\n```bash\ncurl -sI https://example.com/pricing | grep -i location\n```\n\nThe canonical it lands on is https://example.com/pricing/plans/annual?utm_source=newsletter&utm_medium=email&utm_campaign=october-launch-reminder-second-send, which no internal link points to.",
+          }}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "artifact-chart",
+    group: "Artifacts",
+    title: "A chart artifact",
+    state: "line chart, Recharts loaded on first sight",
+    note: "Recharts loads when a chart is on screen, not with every screen that can show an artifact; a skeleton of the chart's own height holds the place, so nothing below it moves when the chart arrives.",
+    render: () => (
+      <ChartJsonView
+        source={JSON.stringify({
+          type: "line",
+          title: "Organic sessions, last six weeks",
+          x: "week",
+          series: [{ key: "sessions", label: "Sessions" }, { key: "signups", label: "Sign-ups" }],
+          data: [
+            { week: "W1", sessions: 1240, signups: 31 },
+            { week: "W2", sessions: 1310, signups: 35 },
+            { week: "W3", sessions: 1180, signups: 29 },
+            { week: "W4", sessions: 1420, signups: 41 },
+            { week: "W5", sessions: 1510, signups: 44 },
+            { week: "W6", sessions: 1630, signups: 52 },
+          ],
+        })}
+      />
+    ),
+  },
   {
     id: "audit-report-v1",
     group: "Audit",
@@ -2840,6 +3846,49 @@ function OneClickCardScene() {
   );
 }
 
+function OAuthCardScene() {
+  const GA4_READ = "https://www.googleapis.com/auth/analytics.readonly";
+  const GA4_EDIT = "https://www.googleapis.com/auth/analytics.edit";
+  const scopes = [
+    { scope: GA4_READ, label: "Read reports", why: "To read traffic and conversions for briefs.", access: "read", required: true, granted: true },
+    { scope: GA4_EDIT, label: "Edit configuration", why: "To stage key events you approve.", access: "write", required: false, granted: false },
+  ];
+  const row = {
+    id: "r1",
+    connector_type: "ga4",
+    account_id: "",
+    account_name: "",
+    storage: "cloud",
+    residency: "server",
+    scopes,
+    scope_status: "partial",
+    missing_scopes: [GA4_EDIT],
+  };
+  const common = {
+    connectorType: "ga4",
+    title: "Google Analytics",
+    description: "Traffic, sessions, engagement and conversions.",
+    logo: LOGOS.ga4,
+    start: () => new Promise((resolve) => setTimeout(() => resolve("browser"), 400)),
+    onDisconnect: () => {},
+  };
+  return (
+    <div className="conn-grid">
+      <OAuthConnectorCard {...common} connected={false} oauthConnected={false} tone="off" status="Not connected" />
+      <OAuthConnectorCard
+        {...common}
+        connected
+        oauthConnected
+        tone="partial"
+        status="Connected · 1 permission missing"
+        scopes={scopes}
+        scopeStatus="partial"
+        rows={[row]}
+      />
+    </div>
+  );
+}
+
 /** The grid the MCP tiles join on Connections, with two native tiles ahead of
  *  them so the source lines can be compared, and the page's message line. */
 function ConnectorGrid({ children }) {
@@ -2891,6 +3940,16 @@ function McpScene({ servers, answer, signedIn = true }) {
       claim: async () => null,
       remove: async (id) => {
         rows = rows.filter((r) => r.id !== id);
+      },
+      // A server that was only down answers now; a sign-in or key problem
+      // is still there, because only reconnecting fixes those.
+      check: async (id) => {
+        await new Promise((r) => setTimeout(r, 600));
+        const row = rows.find((r) => r.id === id);
+        const fixed = !row?.status || row.status === "connected" || row.status === "failing";
+        const server = fixed ? { ...row, status: "connected", problem: "", problem_at: null } : row;
+        rows = rows.map((r) => (r.id === id ? server : r));
+        return { server, tools: fixed ? 4 : null };
       },
       connect: async ({ preset, url, name, apiKey }) => {
         await new Promise((r) => setTimeout(r, 500));

@@ -47,6 +47,7 @@ import {
 } from "@/lib/contentApi";
 import MarkdownSpec from "@/components/content/MarkdownSpec";
 import LoadError from "@/components/LoadError";
+import { Textarea } from "@/components/ui/textarea";
 
 const SLIDE_MIN = 1;
 const SLIDE_MAX = 12;
@@ -92,7 +93,7 @@ const relTime = (iso, locale) => relativeTime(iso, { fallbackAfterDays: 7, local
 
 const ACCENTS = [
   "from-destructive/25 to-warning/15 text-destructive",
-  "from-primary/25 to-primary/15 text-primary",
+  "from-primary/25 to-primary/15 text-brand",
   "from-success/25 to-success/15 text-success",
   "from-info/25 to-info/15 text-info",
   "from-warning/25 to-warning/15 text-warning",
@@ -169,7 +170,7 @@ export default function FormatLibrary({ projectId }) {
       <div className="mb-4 flex items-end justify-between gap-3">
         <div>
           <h2 className="flex items-center gap-2 text-sm font-semibold">
-            <Layers className="h-4 w-4 text-primary" />
+            <Layers className="h-4 w-4 text-brand" />
             <Trans>Formats</Trans>
             <span className="text-xs font-normal tabular-nums text-muted-foreground">
               {formats.length}
@@ -310,7 +311,7 @@ function FormatCard({ format, onView, onEdit, onDelete }) {
           </h3>
           <p className="truncate text-xs text-muted-foreground">{subtitleOf(format)}</p>
         </div>
-        <div className="relative z-10 flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+        <div className="relative z-10 flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
           <button
             type="button"
             title={t`Edit`}
@@ -352,7 +353,7 @@ function FormatCard({ format, onView, onEdit, onDelete }) {
 
       <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2.5 text-2xs text-muted-foreground">
         <span><Trans>Updated {updated}</Trans></span>
-        <span className="text-primary opacity-0 transition-opacity group-hover:opacity-100"><Trans>View →</Trans></span>
+        <span className="text-brand opacity-0 transition-opacity group-hover:opacity-100"><Trans>View →</Trans></span>
       </div>
     </article>
   );
@@ -550,7 +551,7 @@ function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved }) 
                       onClick={() => toggleLinked(s.key)}
                       className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-2xs font-medium transition-colors ${
                         on
-                          ? "border-primary bg-primary/10 text-primary"
+                          ? "border-primary bg-primary/10 text-brand"
                           : "border-border text-muted-foreground hover:bg-muted"
                       }`}
                     >
@@ -575,13 +576,13 @@ function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved }) 
                 <TabsTrigger value="preview"><Trans>Preview</Trans></TabsTrigger>
               </TabsList>
               <TabsContent value="edit">
-                <textarea
+                <Textarea
                   value={spec}
                   aria-label={t`Format spec`}
                   onChange={(e) => setSpec(e.target.value)}
                   spellCheck={false}
                   placeholder={t`# My Format\n\n## Slide Structure\n\n| Slide | Type |\n|-------|------|\n| 1 | Hook |`}
-                  className="h-[48vh] w-full resize-y rounded-md border border-border/70 bg-background p-3 font-mono text-xs leading-relaxed outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                  className="field-sizing-fixed h-[48vh] max-h-none font-mono"
                 />
                 <p className="mt-1 text-right text-2xs tabular-nums text-muted-foreground"><Plural value={charCount} one="# char" other="# chars" /></p>
               </TabsContent>

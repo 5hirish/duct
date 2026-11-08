@@ -1,47 +1,55 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Check, Plus } from "lucide-react";
+import { BarChart3, CalendarClock, Check, ExternalLink, Plus, RefreshCw, Users } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import {
-  VENDOR,
   connectVendorKey,
   disconnectVendorKey,
-  getVendorKeyStatus,
   listLinkedAccounts,
+  listPublishers,
   listSocialAccounts,
   saveLinkedAccounts,
 } from "@/lib/contentApi";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
 import VendorKeyForm from "./VendorKeyForm";
+import ConnectorGate, { ReportedPlatforms, schedulerOptions } from "./ConnectorGate";
 import LoadError from "@/components/LoadError";
 
-const POSTBRIDGE_URL = "https://app.post-bridge.com";
-
-// Resolve a real profile picture from the handle (best-effort, falls back to a
-// monogram on error). PostBridge itself doesn't return avatars.
-function avatarUrl(platform, username) {
-  if (!username) return "";
-  return `https://unavatar.io/${platform}/${encodeURIComponent(username)}?fallback=false`;
+// A scheduler's own picture when it has one (Zernio does), else one resolved
+// from the public handle (best-effort, falls back to a monogram on error).
+function avatarUrl(account) {
+  if (account.avatar_url) return account.avatar_url;
+  if (!account.username) return "";
+  return `https://unavatar.io/${account.platform}/${encodeURIComponent(account.username)}?fallback=false`;
 }
 
+// Accounts are unique per scheduler, not overall: two schedulers can number
+// theirs the same.
+const accountKey = (a) => `${a.publisher || ""}:${a.id ?? a.account_id}`;
+
 /**
- * Accounts tab — link the project's social accounts.
+ * Accounts tab — connect a scheduler, then link the project's social accounts.
  *
- * Lists the PostBridge accounts available to the user and lets them select
- * which ones are linked to this project. The linked set is persisted (DB) and
- * pre-selected when scheduling / used for analytics. Before any of that, the
- * project's owner connects their own PostBridge account with its API key.
+ * Schedulers (PostBridge, Zernio: the server's list, `listPublishers`) are
+ * connectors the project's owner brings with their own API key. Nothing is a
+ * default: with none connected, nothing publishes, and the tab says so. Each
+ * connected scheduler's accounts are listed together, tagged with the one
+ * that holds them, and the linked set (persisted) is what a post goes out
+ * through and what analytics read.
+ *
+ * `load` stands in for the three reads in /preview.
  */
-export default function AccountsTab({ projectId }) {
+export default function AccountsTab({ projectId, load = loadAccounts }) {
   const { t } = useLingui();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [publishers, setPublishers] = useState([]);
   const [accounts, setAccounts] = useState([]);
-  const [linkedIds, setLinkedIds] = useState(() => new Set());
+  const [linkedKeys, setLinkedKeys] = useState(() => new Set());
   const [saving, setSaving] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);
   // A list that never arrived is not an empty list: the two states used to
@@ -49,8 +57,6 @@ export default function AccountsTab({ projectId }) {
   // someone whose request simply failed that they have nothing connected.
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
-  // null until known; { connected, own_key, is_owner } after.
-  const [postBridge, setPostBridge] = useState(null);
   const { confirm, dialog } = useConfirm();
 
   useEffect(() => {
@@ -60,20 +66,11 @@ export default function AccountsTab({ projectId }) {
       setError("");
       setLoadError("");
       try {
-        const status = await getVendorKeyStatus(VENDOR.POSTBRIDGE, projectId);
+        const out = await load(projectId);
         if (cancelled) return;
-        setPostBridge(status);
-        if (!status?.connected) {
-          setAccounts([]);
-          return;
-        }
-        const [available, linked] = await Promise.all([
-          listSocialAccounts(projectId),
-          listLinkedAccounts(projectId).catch(() => []),
-        ]);
-        if (cancelled) return;
-        setAccounts(Array.isArray(available) ? available : []);
-        setLinkedIds(new Set((linked || []).map((a) => Number(a.account_id))));
+        setPublishers(out.publishers);
+        setAccounts(out.accounts);
+        setLinkedKeys(new Set(out.linked.map(accountKey)));
       } catch (e) {
         if (!cancelled) setLoadError(e.message || "");
       } finally {
@@ -81,7 +78,9 @@ export default function AccountsTab({ projectId }) {
       }
     })();
     return () => { cancelled = true; };
-  }, [projectId, reloadKey]);
+  }, [projectId, reloadKey, load]);
+
+  const connected = publishers.filter((p) => p.connected);
 
   const grouped = useMemo(() => {
     const map = {};
@@ -93,8 +92,8 @@ export default function AccountsTab({ projectId }) {
 
   async function persist(nextSet) {
     const payload = accounts
-      .filter((a) => nextSet.has(Number(a.id)))
-      .map((a) => ({ account_id: Number(a.id), platform: a.platform, username: a.username }));
+      .filter((a) => nextSet.has(accountKey(a)))
+      .map((a) => ({ account_id: a.id, publisher: a.publisher, platform: a.platform, username: a.username }));
     setSaving(true);
     try {
       await saveLinkedAccounts(projectId, payload);
@@ -108,46 +107,47 @@ export default function AccountsTab({ projectId }) {
     }
   }
 
-  async function setLinked(ids) {
-    const prev = linkedIds;
-    setLinkedIds(ids); // optimistic
+  async function setLinked(keys) {
+    const prev = linkedKeys;
+    setLinkedKeys(keys); // optimistic
     try {
-      await persist(ids);
+      await persist(keys);
     } catch {
-      setLinkedIds(prev); // revert
+      setLinkedKeys(prev); // revert
     }
   }
 
   function toggle(account) {
-    const id = Number(account.id);
-    const next = new Set(linkedIds);
-    next.has(id) ? next.delete(id) : next.add(id);
+    const key = accountKey(account);
+    const next = new Set(linkedKeys);
+    next.has(key) ? next.delete(key) : next.add(key);
     setLinked(next);
   }
 
-  async function connect(apiKey) {
-    await connectVendorKey(VENDOR.POSTBRIDGE, apiKey);
+  async function connect(publisher, apiKey) {
+    await connectVendorKey(publisher.id, apiKey);
     setReloadKey((k) => k + 1);
   }
 
-  async function disconnect() {
+  async function disconnect(publisher) {
+    const scheduler = publisher.label;
     const ok = await confirm({
-      title: t`Disconnect PostBridge?`,
-      description: t`Duct forgets your API key and stops publishing through your PostBridge account. Your accounts stay connected in PostBridge.`,
+      title: t`Disconnect ${scheduler}?`,
+      description: t`Duct forgets your API key and stops publishing through your ${scheduler} account. Your accounts stay connected in ${scheduler}, and posts already scheduled there still go out.`,
       action: t`Disconnect`,
       destructive: true,
     });
     if (!ok) return;
     try {
-      await disconnectVendorKey(VENDOR.POSTBRIDGE);
+      await disconnectVendorKey(publisher.id);
       setReloadKey((k) => k + 1);
     } catch (e) {
       setError(e.message || t`That didn't disconnect. Try again.`);
     }
   }
 
-  const allIds = useMemo(() => accounts.map((a) => Number(a.id)), [accounts]);
-  const allLinked = allIds.length > 0 && allIds.every((id) => linkedIds.has(id));
+  const allKeys = useMemo(() => accounts.map(accountKey), [accounts]);
+  const allLinked = allKeys.length > 0 && allKeys.every((k) => linkedKeys.has(k));
 
   if (loading) {
     return <p className="text-sm text-muted-foreground"><Trans>Loading accounts…</Trans></p>;
@@ -156,135 +156,244 @@ export default function AccountsTab({ projectId }) {
   if (loadError) {
     return (
       <LoadError
-        what={t`your PostBridge accounts`}
+        what={t`your social accounts`}
         detail={loadError}
         onRetry={() => setReloadKey((k) => k + 1)}
       />
     );
   }
 
-  if (postBridge && !postBridge.connected) {
+  if (connected.length === 0) {
     return (
-      <VendorKeyForm
-        vendor="PostBridge"
-        homeUrl={POSTBRIDGE_URL}
-        isOwner={postBridge.is_owner}
-        onConnect={connect}
-        description={
-          <Trans>
-            Duct posts through PostBridge, using your own account. Log in to PostBridge, copy your
-            API key, and paste it here.
-          </Trans>
-        }
-      />
-    );
-  }
-
-  const canDisconnect = Boolean(postBridge?.own_key && postBridge?.is_owner);
-
-  if (accounts.length === 0) {
-    return (
-      <div className="mx-auto max-w-md rounded-2xl border border-dashed border-border/70 p-10 text-center">
-        <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
-          <Plus className="size-5" />
-        </div>
-        <h3 className="text-sm font-semibold"><Trans>No accounts available yet</Trans></h3>
-        <p className="mt-1 text-sm text-muted-foreground">
-          <Trans>
-            Connect a TikTok, Instagram, or YouTube account in PostBridge, then refresh to link
-            it to this project.
-          </Trans>
-        </p>
-        <Button className="mt-4" asChild>
-          <a href={POSTBRIDGE_URL} target="_blank" rel="noreferrer"><Trans>Connect in PostBridge →</Trans></a>
-        </Button>
-        {canDisconnect && (
-          <div className="mt-3">
-            <Button variant="link" size="sm" className="h-auto p-0 text-xs text-muted-foreground" onClick={disconnect}>
-              <Trans>Use a different PostBridge key</Trans>
-            </Button>
-          </div>
-        )}
-        {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
+      <div className="max-w-6xl">
+        <ConnectorGate
+          title={t`Post to all your accounts from one place`}
+          lead={t`Connect a scheduler and Duct publishes for you: link several accounts, schedule each post for its best time, and see how it did.`}
+          benefits={[
+            { icon: Users, title: t`Several accounts, one project`, text: t`LinkedIn, X, TikTok, Instagram and YouTube, side by side.` },
+            { icon: CalendarClock, title: t`Scheduled for you`, text: t`Approve a draft and it goes out at its best time. No copying and pasting.` },
+            { icon: BarChart3, title: t`Numbers come back`, text: t`Views, likes and shares land on each post, and the next plan learns from them.` },
+          ]}
+          connectLabel={t`Connect a scheduler to start`}
+          connectors={schedulerOptions(publishers, connect)}
+          footnote={t`Your own account and API key, stored encrypted. Duct posts only when you ask it to.`}
+          example={<AccountsExample />}
+        />
+        {error && <p className="mt-3 text-xs text-destructive">{error}</p>}
         {dialog}
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-base font-semibold"><Trans>Linked accounts</Trans></h2>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            <Trans>
-              Choose which accounts this project posts to — they&apos;re pre-selected when
-              scheduling and used for analytics.
-            </Trans>
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <SaveState saving={saving} saved={savedFlash} count={linkedIds.size} />
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={saving || allIds.length === 0}
-            onClick={() => setLinked(new Set(allLinked ? [] : allIds))}
-          >
-            {allLinked ? <Trans>Unlink all</Trans> : <Trans>Link all</Trans>}
-          </Button>
-        </div>
-      </div>
+    <div className="max-w-4xl space-y-8">
+      <Schedulers publishers={publishers} onConnect={connect} onDisconnect={disconnect} />
 
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {connected.length > 0 && (accounts.length === 0 ? (
+        <NoAccounts connected={connected} onRefresh={() => setReloadKey((k) => k + 1)} />
+      ) : (
+        <section className="space-y-6">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold"><Trans>Linked accounts</Trans></h2>
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                <Trans>
+                  Choose which accounts this project posts to — they&apos;re pre-selected when
+                  scheduling and used for analytics.
+                </Trans>
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <SaveState saving={saving} saved={savedFlash} count={linkedKeys.size} />
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={saving || allKeys.length === 0}
+                onClick={() => setLinked(new Set(allLinked ? [] : allKeys))}
+              >
+                {allLinked ? <Trans>Unlink all</Trans> : <Trans>Link all</Trans>}
+              </Button>
+            </div>
+          </div>
 
-      {/* Per-platform groups */}
-      <div className="space-y-6">
-        {grouped.map(([platform, list]) => {
-          const meta = platformMeta(platform);
-          return (
-            <section key={platform} className="space-y-2.5">
-              <div className="flex items-center gap-2">
-                <PlatformGlyph platform={platform} className="size-4" />
-                <h3 className="text-sm font-medium">{meta.label}</h3>
-                <span className="text-xs tabular-nums text-muted-foreground">{list.length}</span>
-              </div>
-              <div className="grid grid-cols-1 gap-3 @lg:grid-cols-2">
-                {list.map((a) => (
-                  <AccountCard
-                    key={a.id}
-                    account={a}
-                    linked={linkedIds.has(Number(a.id))}
-                    busy={saving}
-                    onToggle={() => toggle(a)}
-                  />
-                ))}
-              </div>
-            </section>
-          );
-        })}
-      </div>
+          {error && <p className="text-xs text-destructive">{error}</p>}
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs text-muted-foreground">
-          <Trans>
-            Profile pictures are resolved from public handles. PostBridge doesn&apos;t expose
-            bios or follower counts, so those aren&apos;t shown.
-          </Trans>
-        </p>
-        {canDisconnect && (
-          <Button variant="link" size="sm" className="h-auto p-0 text-xs text-muted-foreground" onClick={disconnect}>
-            <Trans>Disconnect PostBridge</Trans>
-          </Button>
-        )}
-      </div>
+          {grouped.map(([platform, list]) => {
+            const meta = platformMeta(platform);
+            return (
+              <section key={platform} className="space-y-2.5">
+                <div className="flex items-center gap-2">
+                  <PlatformGlyph platform={platform} className="size-4" />
+                  <h3 className="text-sm font-medium">{meta.label}</h3>
+                  <span className="text-xs tabular-nums text-muted-foreground">{list.length}</span>
+                </div>
+                <div className="grid grid-cols-1 gap-3 @lg:grid-cols-2">
+                  {list.map((a) => (
+                    <AccountCard
+                      key={accountKey(a)}
+                      account={a}
+                      linked={linkedKeys.has(accountKey(a))}
+                      busy={saving}
+                      onToggle={() => toggle(a)}
+                    />
+                  ))}
+                </div>
+              </section>
+            );
+          })}
+        </section>
+      ))}
+      {error && accounts.length === 0 && <p className="text-xs text-destructive">{error}</p>}
       {dialog}
     </div>
   );
 }
 
-function AccountCard({ account, linked, busy, onToggle }) {
+// What the tab holds once a scheduler is connected, drawn by the real card.
+const EXAMPLE_ACCOUNTS = [
+  { id: "1", publisher: "example", publisher_label: "Zernio", platform: "linkedin", username: "yourbrand", linked: true },
+  { id: "2", publisher: "example", publisher_label: "Zernio", platform: "twitter", username: "yourbrand", linked: true },
+  { id: "3", publisher: "example", publisher_label: "PostBridge", platform: "tiktok", username: "yourbrand.app", linked: false },
+];
+
+function AccountsExample() {
+  return (
+    <div className="grid grid-cols-1 gap-3">
+      {EXAMPLE_ACCOUNTS.map((a) => (
+        <AccountCard key={a.id} account={{ ...a, avatar_url: "" }} linked={a.linked} busy={false} onToggle={() => {}} noAvatar />
+      ))}
+    </div>
+  );
+}
+
+async function loadAccounts(projectId) {
+  const publishers = await listPublishers(projectId);
+  if (!publishers.some((p) => p.connected)) return { publishers, accounts: [], linked: [] };
+  const [accounts, linked] = await Promise.all([
+    listSocialAccounts(projectId),
+    listLinkedAccounts(projectId).catch(() => []),
+  ]);
+  return { publishers, accounts: Array.isArray(accounts) ? accounts : [], linked: linked || [] };
+}
+
+/** Every scheduler, connected or not, with what each one reports. */
+function Schedulers({ publishers, onConnect, onDisconnect }) {
+  const none = !publishers.some((p) => p.connected);
+  return (
+    <section className="space-y-3">
+      <div>
+        <h2 className="text-base font-semibold"><Trans>Scheduler</Trans></h2>
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          {none
+            ? <Trans>Duct publishes through a scheduler you connect, with your own account. Connect one to schedule posts and see how they do.</Trans>
+            : <Trans>Duct publishes through these, with your own accounts, and reads each post&apos;s numbers back from them.</Trans>}
+        </p>
+      </div>
+      <div className="grid grid-cols-1 gap-3 @2xl:grid-cols-2">
+        {publishers.map((p) => (
+          <SchedulerCard key={p.id} publisher={p} onConnect={onConnect} onDisconnect={onDisconnect} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function SchedulerCard({ publisher, onConnect, onDisconnect }) {
+  const [open, setOpen] = useState(false);
+  const scheduler = publisher.label;
+  return (
+    <article
+      className={`flex flex-col gap-3 rounded-xl border p-4 ${
+        publisher.connected ? "border-primary/40 bg-primary/[0.04]" : "border-border bg-card"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold">{scheduler}</h3>
+          <p className="mt-0.5 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+            {publisher.connected ? (
+              <><Check className="size-3.5 text-success" aria-hidden /> <Trans>Connected</Trans></>
+            ) : (
+              <Trans>Not connected</Trans>
+            )}
+          </p>
+        </div>
+        {!publisher.connected && !open && (
+          <Button size="sm" onClick={() => setOpen(true)}><Trans>Connect</Trans></Button>
+        )}
+      </div>
+
+      {publisher.reports?.length > 0 && <ReportedPlatforms platforms={publisher.reports} />}
+
+      {open && !publisher.connected && (
+        <VendorKeyForm
+          layout="inline"
+          vendor={scheduler}
+          homeUrl={publisher.dashboard_url}
+          isOwner={publisher.is_owner}
+          onConnect={(apiKey) => onConnect(publisher, apiKey)}
+        />
+      )}
+
+      {publisher.connected && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+          <a
+            href={publisher.dashboard_url}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+          >
+            <Trans>Add accounts in {scheduler}</Trans>
+            <ExternalLink className="size-3" aria-hidden />
+          </a>
+          {publisher.own_key && publisher.is_owner && (
+            <Button variant="link" size="sm" className="h-auto p-0 text-xs text-muted-foreground" onClick={() => onDisconnect(publisher)}>
+              <Trans>Disconnect</Trans>
+            </Button>
+          )}
+        </div>
+      )}
+    </article>
+  );
+}
+
+function NoAccounts({ connected, onRefresh }) {
+  return (
+    <div className="mx-auto max-w-md rounded-2xl border border-dashed border-border/70 p-10 text-center">
+      <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+        <Plus className="size-5" />
+      </div>
+      <h3 className="text-sm font-semibold"><Trans>No accounts available yet</Trans></h3>
+      <p className="mt-1 text-sm text-muted-foreground">
+        <Trans>
+          Connect your LinkedIn, X, TikTok, Instagram or YouTube account in your scheduler, then
+          refresh to link it to this project.
+        </Trans>
+      </p>
+      <div className="mt-4 flex flex-wrap justify-center gap-2">
+        {connected.map((p) => (
+          <SchedulerLink key={p.id} publisher={p} />
+        ))}
+        <Button variant="outline" onClick={onRefresh}>
+          <RefreshCw className="size-3.5" aria-hidden /> <Trans>Refresh</Trans>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function SchedulerLink({ publisher }) {
+  const scheduler = publisher.label;
+  return (
+    <Button asChild>
+      <a href={publisher.dashboard_url} target="_blank" rel="noreferrer"><Trans>Open {scheduler} →</Trans></a>
+    </Button>
+  );
+}
+
+function AccountCard({ account, linked, busy, onToggle, noAvatar = false }) {
+  const scheduler = account.publisher_label;
+  const platform = platformMeta(account.platform).label;
   return (
     <article
       className={`group relative flex items-center gap-3 rounded-xl border p-3 transition-all ${
@@ -293,13 +402,16 @@ function AccountCard({ account, linked, busy, onToggle }) {
           : "border-border bg-card hover:border-primary/30 hover:bg-muted/30"
       }`}
     >
-      <AccountAvatar account={account} linked={linked} />
+      <AccountAvatar account={account} linked={linked} noAvatar={noAvatar} />
 
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold">@{account.username}</p>
         <p className="truncate text-xs text-muted-foreground">
-          {platformMeta(account.platform).label} · #{account.id}
+          {scheduler ? <Trans>{platform} · via {scheduler}</Trans> : platform}
         </p>
+        {account.needs_reconnect && (
+          <p className="truncate text-xs text-warning"><Trans>Reconnect it in {scheduler}</Trans></p>
+        )}
       </div>
 
       <Button
@@ -322,10 +434,11 @@ function AccountCard({ account, linked, busy, onToggle }) {
   );
 }
 
-function AccountAvatar({ account, linked }) {
+function AccountAvatar({ account, linked, noAvatar }) {
   const meta = platformMeta(account.platform);
   const [imgFailed, setImgFailed] = useState(false);
-  const src = imgFailed ? "" : avatarUrl(account.platform, account.username);
+  // The example's handles are invented, so it never asks a third party for a face.
+  const src = imgFailed || noAvatar ? "" : avatarUrl(account);
   const initial = (account.username || "?").charAt(0).toUpperCase();
 
   return (

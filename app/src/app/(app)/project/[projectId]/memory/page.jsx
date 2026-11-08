@@ -10,7 +10,7 @@
 import { Suspense, use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import { SkeletonList } from "@/components/ui/skeleton";
@@ -27,6 +27,7 @@ import {
   setMemoryPaused,
   updateMemory,
 } from "@/lib/memoryApi";
+import { Page, PageHeader } from "@/components/ui/page";
 
 function ProjectMemory({ projectId }) {
   const { t } = useLingui();
@@ -55,31 +56,19 @@ function ProjectMemory({ projectId }) {
   );
 
   return (
-    <section>
-      <div className="page-toolbar">
-        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">
-          {projectName ? t`${projectName} · Memory` : t`Memory`}
-        </h1>
-        <div className="ml-auto flex items-center gap-2">
-          <Button asChild variant="ghost" size="sm">
+    <Page width="reading">
+      <PageHeader
+        title={<Trans>Memory</Trans>}
+        status={projectName ? <Trans>What Duct knows about {projectName}. Agents read it before every run.</Trans> : null}
+        back={{ href: "/projects", label: t`Projects` }}
+        actions={
+          <Button asChild variant="outline" size="sm">
             <Link href={`/project/${projectId}/members`}>
               <Users className="size-4" /> <Trans>Members</Trans>
             </Link>
           </Button>
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/projects">
-              <ArrowLeft className="size-4" /> <Trans>All projects</Trans>
-            </Link>
-          </Button>
-        </div>
-      </div>
-
-      <p className="app-subtle" style={{ marginTop: 0, marginBottom: 14 }}>
-        <Trans>
-          What Duct knows about this project. Agents read it before every run — confirm,
-          correct, or pin a fact so it stays in view.
-        </Trans>
-      </p>
+        }
+      />
 
       <MemoryTimeline
         errorSubject={t`this project's memory`}
@@ -91,7 +80,7 @@ function ProjectMemory({ projectId }) {
         resetPrompt={t`Delete every memory for this project? This cannot be undone.`}
         emptyHint={t`Nothing remembered yet. Run an audit, apply a change, or set your targets in project settings — everything an agent concludes lands here with its evidence.`}
       />
-    </section>
+    </Page>
   );
 }
 

@@ -47,8 +47,14 @@ const FROZEN_DIR = join(DIST, SIDECAR_DIR);
 const FROZEN = join(FROZEN_DIR, SIDECAR_BIN);
 /** PyInstaller's output lands here first, so the live directory is never its to delete. */
 const STAGING = join(DIST, ".staging");
-/** The freeze a swap displaces, kept until nothing is running from it. */
+/** The freeze a swap displaces, swept once nothing is running from it. */
 const SUPERSEDED_PREFIX = ".superseded-";
+
+/**
+ * PyInstaller's INFO runs for minutes and buries the build's own output. A
+ * failure still shows at this level, and its message offers the full command.
+ */
+const FREEZE_LOG_LEVEL = "WARN";
 
 /** Directories that never reach the freeze, or that the freeze itself writes. */
 const SKIP_DIRS = new Set([
@@ -104,6 +110,17 @@ function sweepSuperseded() {
   }
 }
 
+/** True, having said why, when replacing the freeze would break a running app. */
+function refuseWhileRunning() {
+  if (!inUse(FROZEN)) return false;
+  console.error(
+    `\nDuct is running from this freeze, so it can't be replaced.\n\n` +
+      `Quit Duct completely, not just its window (Cmd-Q on a Mac), and run this again.\n` +
+      `Opening it a second time only hands off to the one already running.\n`,
+  );
+  return true;
+}
+
 /**
  * Freeze into a staging directory, then swap it in.
  *
@@ -113,18 +130,30 @@ function sweepSuperseded() {
  * by deleting its output directory, so freezing in place pulls the binary and
  * every dylib out from under that process. What the user sees is "Duct's local
  * backend stopped responding", which reads as an app bug and is not one; it
- * cost an afternoon on 2026-09-17. A rename leaves the running process intact,
- * because its open handles follow the directory it is holding.
+ * cost an afternoon on 2026-09-17.
+ *
+ * Staging fixes that and nothing else, so a running app refuses the swap too.
+ * A rename keeps the handles a process already holds, but a frozen app finds
+ * its files by the path it started from, so whatever it imports next comes from
+ * the new build. On 2026-11-04 that was the MCP Registry search, the first thing
+ * to reach for the async HTTP client: a 500 with no CORS header on every try,
+ * which a browser calls "Load failed", while every other route kept working. A
+ * second launch doesn't help, because the app is single-instance and hands off
+ * to the window already running. Checked again before the swap, since the app
+ * can start during the three minutes in between.
  */
 function refreeze() {
+  if (refuseWhileRunning()) return false;
   sweepSuperseded();
   rmSync(STAGING, { recursive: true, force: true });
+
+  console.log("Freezing the sidecar. It stays quiet for a few minutes unless something is wrong.\n");
 
   // Default --workpath on purpose: PyInstaller's analysis cache lives in
   // backend/build, and redirecting it turns every refreeze into a cold one.
   const { status, signal, error } = spawnSync(
     "poetry",
-    ["run", "pyinstaller", "duct_sidecar.spec", "--noconfirm", "--distpath", STAGING],
+    ["run", "pyinstaller", "duct_sidecar.spec", "--noconfirm", "--distpath", STAGING, "--log-level", FREEZE_LOG_LEVEL],
     { cwd: BACKEND, stdio: "inherit" },
   );
   if (status !== 0) {
@@ -140,6 +169,7 @@ function refreeze() {
     return false;
   }
 
+  if (refuseWhileRunning()) return false;
   if (existsSync(FROZEN_DIR)) {
     renameSync(FROZEN_DIR, join(DIST, `${SUPERSEDED_PREFIX}${Date.now()}`));
   }

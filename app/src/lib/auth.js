@@ -27,6 +27,9 @@ export function AuthProvider({ children }) {
       setUser({
         email: payload.sub,
         name: payload.name,
+        // Absent on a token minted before the claim existed; firstName() in
+        // lib/userProfile.js falls back to the first word of `name`.
+        givenName: payload.given_name || "",
         picture: payload.picture,
         // A guest holds a real token for a real row (lib/guest.js); this is
         // what lets the shell say "save your work" instead of an email
@@ -34,9 +37,9 @@ export function AuthProvider({ children }) {
         guest: payload.guest === true,
       });
       // The account UUID, not `sub` — that is the email, and it must not reach
-      // an analytics provider. Safe before consent resolves: nothing drains the
-      // dataLayer until a provider actually loads, and if the answer is no it
-      // never does.
+      // an analytics provider. Safe before consent resolves: until someone says
+      // yes the provider sends crash reports and nothing else, and if the
+      // answer is no that never changes.
       analytics.identify(payload.uid);
     }
     setLoading(false);
@@ -71,6 +74,12 @@ export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
+}
+
+/** The signed-in user or null, for a component that also renders outside the
+ *  shell (a /preview scene) and only wants the name when there is one. */
+export function useAuthUser() {
+  return useContext(AuthContext)?.user || null;
 }
 
 function AuthLoadingMessage({ message }) {

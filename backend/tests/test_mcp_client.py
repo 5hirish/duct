@@ -2,8 +2,9 @@
 
 What these hold: a server's own ``readOnlyHint`` is the only thing that makes
 a tool read-only; a refused token becomes ``reauth_required`` (dug out of the
-SDK's exception groups); and a refused token with a refresh token behind it
-is refreshed once, persisted, and retried before anyone is told to reconnect.
+SDK's exception groups); a refused token with a refresh token behind it
+is refreshed once, persisted, and retried before anyone is told to reconnect;
+and a listing that fails records why, once, until a call works again.
 """
 
 from __future__ import annotations
@@ -18,10 +19,17 @@ from service.mcp import oauth
 from service.mcp.store import (
     ACCESS_TOKEN,
     NEEDS_REAUTH,
+    PROBLEM,
+    PROBLEM_AT,
+    PROBLEM_AUTH_REQUIRED,
+    PROBLEM_KEY_REFUSED,
+    PROBLEM_SIGNED_OUT,
+    PROBLEM_UNREACHABLE,
     ServerAccess,
     key_credentials,
     no_credentials,
     oauth_credentials,
+    problem_of,
 )
 from tests.fakes import FakeMcpServer
 
@@ -159,3 +167,79 @@ async def test_a_server_flagged_for_reconnecting_is_not_called_at_all(monkeypatc
 
     assert caught.value.code == mcp_client.CODE_REAUTH
     assert server.authorizations == []
+
+
+# ---------------------------------------------------------------------------
+# Why a server needs its owner: recorded by a listing, cleared by any success
+# ---------------------------------------------------------------------------
+
+
+def _recording() -> tuple[list[dict], object]:
+    saved: list[dict] = []
+
+    async def sink(credentials: dict) -> None:
+        saved.append(dict(credentials))
+
+    return saved, sink
+
+
+async def test_a_refused_key_is_recorded_and_a_working_call_clears_it(monkeypatch):
+    saved, sink = _recording()
+    access = _access(key_credentials("a-wrong-key"))
+    async with _server(token="the-real-key").running(monkeypatch):
+        with pytest.raises(mcp_client.McpCallError):
+            await mcp_client.list_tools(access, sink)
+    assert saved[-1][PROBLEM] == PROBLEM_KEY_REFUSED
+    assert problem_of(saved[-1]) == PROBLEM_KEY_REFUSED
+
+    # The person fixes the key at the vendor; the next call works and says so.
+    async with _server(token="a-wrong-key").running(monkeypatch):
+        await mcp_client.call_tool(access, "keyword_volume", {"keyword": "seo"}, sink)
+    assert PROBLEM not in saved[-1]
+
+
+async def test_an_open_server_that_starts_wanting_a_sign_in_says_so(monkeypatch):
+    saved, sink = _recording()
+    async with _server(token="now-required").running(monkeypatch):
+        with pytest.raises(mcp_client.McpCallError):
+            await mcp_client.list_tools(_access(no_credentials()), sink)
+    assert saved[-1][PROBLEM] == PROBLEM_AUTH_REQUIRED
+
+
+async def test_a_refused_refresh_is_recorded_as_signed_out(monkeypatch):
+    async def refused(**kwargs):
+        raise oauth.OAuthFailed("invalid_grant")
+
+    monkeypatch.setattr(mcp_client.oauth, "refresh", refused)
+    saved, sink = _recording()
+    async with _server(token="never").running(monkeypatch):
+        with pytest.raises(mcp_client.McpCallError):
+            await mcp_client.list_tools(_access(_oauth("dead")), sink)
+    # One write: the listing's own note sees the reason already recorded.
+    assert len(saved) == 1
+    assert saved[0][NEEDS_REAUTH] is True and saved[0][PROBLEM] == PROBLEM_SIGNED_OUT
+
+
+async def test_a_server_that_stays_down_is_recorded_once_with_the_first_date(monkeypatch):
+    async def down(access, sink, work):
+        raise mcp_client.McpCallError(mcp_client.CODE_UNREACHABLE, "Vendor did not answer in time.")
+
+    monkeypatch.setattr(mcp_client, "_with_session", down)
+    saved, sink = _recording()
+    access = _access(no_credentials())
+    for _ in range(3):
+        with pytest.raises(mcp_client.McpCallError):
+            await mcp_client.list_tools(access, sink)
+    assert len(saved) == 1
+    assert saved[0][PROBLEM] == PROBLEM_UNREACHABLE and saved[0][PROBLEM_AT]
+
+
+async def test_a_failed_tool_call_records_nothing(monkeypatch):
+    async def slow(access, sink, work):
+        raise mcp_client.McpCallError(mcp_client.CODE_UNREACHABLE, "Vendor did not answer in time.")
+
+    monkeypatch.setattr(mcp_client, "_with_session", slow)
+    saved, sink = _recording()
+    with pytest.raises(mcp_client.McpCallError):
+        await mcp_client.call_tool(_access(no_credentials()), "crawl_site", {}, sink)
+    assert saved == []

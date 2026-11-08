@@ -291,7 +291,7 @@ def bootstrap(argv: list[str] | None = None) -> dict[str, object]:
     os.environ.setdefault("FRONTEND_ORIGIN", "tauri://localhost")
     # A user's laptop is not a deployment — never phone home by default.
     os.environ.setdefault("APP_ENV", "desktop")
-    os.environ.setdefault("SENTRY_DSN", "")
+    os.environ.setdefault("POSTHOG_API_KEY", "")
 
     return {
         "duct_sidecar": 1,

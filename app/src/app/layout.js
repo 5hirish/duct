@@ -9,6 +9,7 @@ import { Trans } from "@lingui/react/macro";
 
 import { LinguiClientProvider } from "../i18n/LinguiClientProvider";
 import { activateRequestI18n } from "../i18n/server";
+import { SESSION_HINT_SCRIPT } from "../lib/sessionHint";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -16,12 +17,27 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
+// Not preloaded: it sets code, badges and `.numeric` columns, none of which
+// the front door or most first screens show, and a preload makes every first
+// visit fetch it (40 KB) before the page needs it. It loads on first use.
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-jetbrains-mono",
   display: "swap",
+  preload: false,
 });
 
+
+/**
+ * Which platform and shell this document is running in, as attributes on
+ * `<html>`, set before first paint so CSS can adapt without a flash:
+ * `data-platform` is mac | windows | linux | other, and `data-shell="desktop"`
+ * marks the Tauri window (its bridge is injected before any page script).
+ * Inline and synchronous for the same reason next-themes' script is; the
+ * `<html>` element already carries `suppressHydrationWarning` for it. The
+ * rules that read these live in `styles/base.css`.
+ */
+const PLATFORM_SCRIPT = `(function(){try{var d=document.documentElement,n=navigator,p=n.platform||"",u=n.userAgent||"";d.dataset.platform=/Mac|iPhone|iPad/.test(p||u)?"mac":/Win/.test(p||u)?"windows":/Linux|X11/.test(p||u)&&!/Android/.test(u)?"linux":"other";if(window.__TAURI__)d.dataset.shell="desktop"}catch(e){}})()`;
 
 /** CI must not use placeholder hosts (e.g. `<subdomain>`); `new URL()` throws and breaks `next build`. */
 function metadataBaseUrl() {
@@ -95,6 +111,8 @@ export default async function RootLayout({ children }) {
       suppressHydrationWarning
     >
       <body className="min-h-dvh bg-background font-sans text-foreground antialiased">
+        <script dangerouslySetInnerHTML={{ __html: PLATFORM_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: SESSION_HINT_SCRIPT }} />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="duct-theme">
           <TooltipProvider>
             <a href="#main-content" className="skip-link">
@@ -104,8 +122,12 @@ export default async function RootLayout({ children }) {
                 without asking, and it bought nothing: GA4 needs JavaScript, so
                 with JS off the frame measures a visitor it cannot report on.
                 The seam in lib/analytics is the only path in now. */}
-            <ProductAnalytics />
             <LinguiClientProvider initialLocale={i18n.locale} initialMessages={i18n.messages}>
+              {/* Inside the provider: the consent bar is translated, and a
+                  <Trans> rendered outside it has no catalogue to read. Outside,
+                  every visitor who was asked (the EEA, the UK, Switzerland)
+                  got the root error page instead of the question. */}
+              <ProductAnalytics />
               {children}
             </LinguiClientProvider>
           </TooltipProvider>

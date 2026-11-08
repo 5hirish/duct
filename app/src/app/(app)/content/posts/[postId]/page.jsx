@@ -10,6 +10,7 @@ import PostMetricsForm from "@/components/content/PostMetricsForm";
 import { getPost } from "@/lib/contentApi";
 import { PostStatus } from "@/lib/contentEnums";
 import { getActiveProjectId } from "@/lib/projects";
+import { useLeaveOnProjectSwitch } from "@/hooks/useActiveProjectId";
 import LoadError from "@/components/LoadError";
 
 /**
@@ -37,6 +38,9 @@ export default function PostDetailPage() {
   const [err, setErr] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
   const [publishOpen, setPublishOpen] = useState(false);
+  // A post belongs to one project; the sidebar naming another is a request
+  // to work there.
+  useLeaveOnProjectSwitch();
 
   useEffect(() => {
     if (typeof window !== "undefined") {

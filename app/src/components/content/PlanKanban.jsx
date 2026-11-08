@@ -1,87 +1,93 @@
 "use client";
 
-import { Trans, useLingui } from "@lingui/react/macro";
+import { useLingui } from "@lingui/react/macro";
 import { PostStatus } from "../../lib/contentEnums";
 import { STATUS_ORDER, statusMeta } from "../../lib/contentStatus";
-import { effectiveSchedule, planStartOf } from "../../lib/contentSchedule";
+import { planItems, startOfDay } from "../../lib/contentSchedule";
+import { cn } from "@/lib/utils";
 import PostMiniCard from "./PostMiniCard";
+
+const HIDDEN_WHEN_EMPTY = new Set([PostStatus.FAILED, PostStatus.DISCARDED]);
 
 const COLUMNS = STATUS_ORDER.map((key) => {
   const meta = statusMeta(key);
-  return { key, label: meta.label, accent: meta.accentClass };
+  return { key, label: meta.label, dot: meta.dotClass };
 });
 
 /**
- * Kanban view of the monthly plan, columns by status. Cards are rich
- * (PostMiniCard) and each lane is sorted by effective date so you see what's
- * upcoming. Posts link to days by post_id (no day numbering).
+ * The plan by status, for production days. The agenda (PlanList) is the
+ * board's default; this is the second view.
+ *
+ * A lane with nothing in it is its header and nothing else: a fresh plan is
+ * thirty posts in one lane, and two full-height tinted panels beside it saying
+ * "Nothing here yet" were most of the screen.
+ *
+ * Every lane is the same width, and none is wider than `max-w-sm` (24rem),
+ * side by side or stacked below @4xl.
+ * The lanes used to follow the content, empty ones narrow and the full one
+ * taking the rest, so an ended plan put thirty cards in one lane two-thirds of
+ * the window wide: a 130-character title on one line is a list row, not a
+ * card, and the Draft lane moved every time a card did. A Kanban column keeps
+ * its place and its width; what is left of a wide window stays empty.
+ * `check:layout` measures the lanes against the same 24rem.
  *
  * Props:
  *   - plan: { days[], start_date }
  *   - postsById: { [id]: fullPost }
  *   - onReviseDay?(index)
+ *   - scroll: "self" (default) scrolls inside its box; "page" lets the page
+ *     scroll, lane headers pinned under the top bar
+ *   - today: the reader's today, for scenes and tests
  */
-export default function PlanKanban({ plan, postsById = {}, onReviseDay }) {
+export default function PlanKanban({ plan, postsById = {}, onReviseDay, scroll = "self", today }) {
   const { i18n } = useLingui();
-  const days = Array.isArray(plan?.days) ? plan.days : [];
-  const anchor = planStartOf(plan);
+  const page = scroll === "page";
+  const items = planItems(plan, postsById, { locale: i18n.locale, today: today || startOfDay(new Date()) });
 
   const grouped = Object.fromEntries(COLUMNS.map((c) => [c.key, []]));
-  days.forEach((d, idx) => {
-    const post = d.post_id ? postsById[d.post_id] || null : null;
-    const schedule = effectiveSchedule(d, post, anchor, idx, { locale: i18n.locale });
-    const status = schedule.status || "pending";
-    (grouped[status] = grouped[status] || []).push({ day: d, post, schedule, index: idx });
-  });
+  for (const it of items) (grouped[it.status] = grouped[it.status] || []).push(it);
+  // planItems is oldest first, which is right for what is still ahead; what
+  // went out reads newest first.
+  grouped[PostStatus.POSTED]?.reverse();
 
-  // Sort each lane by effective date — posted newest-first, everything else
-  // oldest-first (upcoming next). Items without a date sort last.
-  for (const col of COLUMNS) {
-    const desc = col.key === "posted";
-    grouped[col.key].sort((a, b) => {
-      const ta = a.schedule.date?.getTime();
-      const tb = b.schedule.date?.getTime();
-      if (ta == null && tb == null) return 0;
-      if (ta == null) return 1;
-      if (tb == null) return -1;
-      return desc ? tb - ta : ta - tb;
-    });
-  }
+  const lanes = COLUMNS.filter((col) => !(HIDDEN_WHEN_EMPTY.has(col.key) && grouped[col.key].length === 0));
 
   return (
     // @container, not viewport breakpoints: this board renders both full-width
     // on /content and inside SplitWorkspace's user-resizable right pane, where
     // `lg:` would be true at 1024px of WINDOW while the pane itself is 300px.
-    <div className="@container flex-1 overflow-auto p-4">
-      <div className="grid min-w-0 grid-cols-1 gap-4 @md:grid-cols-2 @4xl:grid-flow-col @4xl:auto-cols-fr @4xl:grid-cols-none">
-        {COLUMNS.map((col) => {
+    <div className={cn("@container min-w-0", !page && "flex-1 overflow-auto p-4")}>
+      <div className="flex flex-col gap-4 @4xl:flex-row @4xl:items-start">
+        {lanes.map((col) => {
           const cards = grouped[col.key] || [];
-          // Discarded is where posts go to be forgotten; an empty lane for it
-          // is a column-width "Nothing here yet" on every fresh plan.
-          if (col.key === PostStatus.DISCARDED && cards.length === 0) return null;
+          const empty = cards.length === 0;
           return (
-            <div key={col.key} className={`flex min-w-0 flex-col rounded-lg border ${col.accent}`}>
-              <div className="flex items-center justify-between border-b border-border/50 px-3 py-2">
-                <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {i18n._(col.label)}
-                </span>
-                <span className="text-xs tabular-nums text-muted-foreground">{cards.length}</span>
-              </div>
-              <div className="min-h-20 flex-1 space-y-2 p-2">
-                {cards.length === 0 && (
-                  <p className="px-1 py-2 text-xs italic text-muted-foreground"><Trans>Nothing here yet.</Trans></p>
+            <section
+              key={col.key}
+              aria-label={i18n._(col.label)}
+              data-plan-lane={col.key}
+              className="flex min-w-0 max-w-sm flex-col gap-2 @4xl:flex-1 @4xl:basis-0"
+            >
+              <h3
+                className={cn(
+                  "sticky z-10 flex items-center gap-2 bg-background py-1.5 text-xs font-medium text-muted-foreground",
+                  page ? "top-13" : "top-0"
                 )}
-                {cards.map((card) => (
-                  <PostMiniCard
-                    key={card.index}
-                    day={card.day}
-                    post={card.post}
-                    schedule={card.schedule}
-                    onRevise={() => onReviseDay?.(card.index)}
-                  />
-                ))}
-              </div>
-            </div>
+              >
+                <span className={cn("size-2 shrink-0 rounded-full", col.dot)} aria-hidden />
+                <span className={cn(!empty && "text-foreground")}>{i18n._(col.label)}</span>
+                <span className="tabular-nums">{cards.length}</span>
+              </h3>
+              {cards.map((card) => (
+                <PostMiniCard
+                  key={card.index}
+                  day={card.day}
+                  post={card.post}
+                  schedule={card.schedule}
+                  onRevise={() => onReviseDay?.(card.index)}
+                />
+              ))}
+            </section>
           );
         })}
       </div>

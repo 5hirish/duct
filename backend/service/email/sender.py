@@ -19,20 +19,21 @@ import logging
 
 from config import Configs, get_configs
 from service.email.message import Attachment, EmailMessage, EmailResult
-from service.email.providers import EmailProvider, cloudflare, console, resend
+from service.email.providers import EmailProvider, cloudflare, console, smtp
 
 logger = logging.getLogger(__name__)
 
 PROVIDERS: dict[str, EmailProvider] = {
     cloudflare.NAME: cloudflare,
-    resend.NAME: resend,
+    smtp.NAME: smtp,
     console.NAME: console,
 }
 
 # Which configured provider wins when EMAIL_PROVIDER is unset. Cloudflare leads
-# because the rest of the stack is already there; console is not a candidate
-# here — it is what you get when nothing else answers.
-_AUTO_ORDER = (cloudflare.NAME, resend.NAME)
+# because the hosted stack is already there, so adding SMTP settings to a deploy
+# that has it changes nothing; console is not a candidate here — it is what you
+# get when nothing else answers.
+_AUTO_ORDER = (cloudflare.NAME, smtp.NAME)
 
 
 def active_backend(cfg: Configs | None = None) -> str:

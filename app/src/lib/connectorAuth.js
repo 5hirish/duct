@@ -13,24 +13,22 @@
  * Gated on the `browserConnectors` capability, never on the shell version: a
  * shell built before the deep-link route existed reports no flag and correctly
  * keeps the in-window navigation, which is all it can do.
+ *
+ * Nothing here ever holds a provider token. The connect starts from a link
+ * naming the signed-in user, the provider's grant is parked on the server, and
+ * the Connections page claims it with the same session (issue #456). What
+ * comes back to this app, in the browser or through the shell, is a code.
  */
 
-import { BASE, backendApiKey } from "./api.js";
+import { BASE } from "./api.js";
+import { startConnectLink } from "./connectorsApi.js";
 import { getShellInfo, isDesktopShell, openExternal } from "./shell.js";
 
-/** connector_type -> the sessionStorage key the rest of the app reads it from. */
-export const CONNECTOR_TOKEN_KEYS = {
-  google_ads: "gads_refresh_token",
-  ga4: "ga4_refresh_token",
-  gsc: "gsc_refresh_token",
-  gtm: "gtm_refresh_token",
-};
-
 /**
- * Where the connect should land once the token is home, and which connector
- * just arrived. Both the browser flow (a redirect to /connections with the
- * token in the fragment) and the desktop flow (a deep link the shell turns
- * into /connections?connector=&auth_code=) end on the Connections page, which
+ * Where the connect should land once the grant is claimed, and which connector
+ * just arrived. Both the browser flow (a redirect to
+ * /connections?connector=&auth_code=) and the desktop flow (a deep link the
+ * shell turns into the same URL) end on the Connections page, which
  * is the wrong place when the connect was asked for mid-conversation: the
  * user was answering the agent, and came back to a settings screen with the
  * agent's question a navigation away. So the page that started the connect
@@ -80,17 +78,27 @@ export function consumeConnectorConnected(connectorType) {
 }
 
 /**
- * Begin OAuth for one connector.
+ * Begin OAuth for one connector (`google_ads`, `ga4`, `gsc`, `gtm`, `github`).
  *
- * Returns "browser" when the system browser took over — the caller should show
- * a waiting state, because the result arrives later through the deep link — or
- * "redirect" when this window is navigating away, in which case nothing the
- * caller does afterwards runs.
+ * Mints the single-use link naming this session's user first: the authorize
+ * route is a bare navigation with no bearer token, and refuses to start
+ * without one. A dead session therefore fails here, before Google, rather
+ * than after the user has approved access nobody can claim — so this rejects
+ * when the link cannot be minted, and the caller resets its button.
+ *
+ * Resolves to "browser" when the system browser took over — the caller should
+ * show a waiting state, because the result arrives later through the deep
+ * link — or "redirect" when this window is navigating away, in which case
+ * nothing the caller does afterwards runs.
  *
  * `returnTo` is where the Connections page should send the user once the
- * token is home; omit it to stay on the Connections page.
+ * grant is claimed; omit it to stay on the Connections page.
  */
-export async function startConnectorOAuth(authorizeUrl, { returnTo = "" } = {}) {
+export async function startConnectorOAuth(connectorType, { returnTo = "" } = {}) {
+  const link = await startConnectLink(connectorType);
+  const authorizeUrl =
+    `${BASE}/auth/connectors/${encodeURIComponent(connectorType)}/oauth/authorize` +
+    `?link=${encodeURIComponent(link)}`;
   try {
     if (samePath(returnTo)) sessionStorage.setItem(CONNECTOR_RETURN_KEY, returnTo);
     else sessionStorage.removeItem(CONNECTOR_RETURN_KEY);
@@ -98,9 +106,8 @@ export async function startConnectorOAuth(authorizeUrl, { returnTo = "" } = {}) 
     /* they land on the Connections page instead */
   }
   if (await usesSystemBrowser()) {
-    const separator = authorizeUrl.includes("?") ? "&" : "?";
     try {
-      await openExternal(`${authorizeUrl}${separator}client=desktop`);
+      await openExternal(`${authorizeUrl}&client=desktop`);
       return "browser";
     } catch {
       // The shell refused to open it — fall through to the in-window
@@ -137,25 +144,4 @@ export async function openVendorSignIn(authorizeUrl, { systemBrowser = false } =
   }
   window.location.href = authorizeUrl;
   return "redirect";
-}
-
-/**
- * Redeem the one-time code the shell's deep link carried back.
- *
- * The refresh token never travels in that URL — the backend keeps it behind a
- * single-use, 60-second code (`/auth/connectors/exchange`), the same shape as
- * `/auth/exchange` for the sign-in JWT. Resolves to
- * `{ connector_type, refresh_token }`.
- */
-export async function exchangeConnectorCode(code) {
-  const headers = {};
-  const key = backendApiKey();
-  if (key) headers["X-API-Key"] = key;
-  const res = await fetch(`${BASE}/auth/connectors/exchange?code=${encodeURIComponent(code)}`, {
-    headers,
-  });
-  if (!res.ok) {
-    throw new Error(`connector exchange failed (${res.status})`);
-  }
-  return res.json();
 }

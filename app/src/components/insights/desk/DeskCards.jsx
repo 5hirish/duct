@@ -1,174 +1,122 @@
 "use client";
 
-// The three cards. One rule decides which one an item is in — see lib/desk.js.
+// The desk's own cards: the ones it leads with when no waiting item is the
+// news. Each belongs to one state of `arrangeDesk` (lib/desk.js), and at most
+// one of them is on the page, so the mosaic rule holds by construction: one
+// panel a screen, and only where someone arrives.
 //
-// Only the first card is loud. Three equally-weighted cards give the eye
-// nowhere to land, and "needs you" is the only one of the three that is ever
-// urgent; the other two are things to read, not things to do.
+// The three bucket cards that used to live here ("Needs you", "What I found",
+// "In progress") are gone. Buckets let the content decide the layout — seven
+// items beside one beside an empty box — and DeskQueue's fixed slots replaced
+// them (DESIGN.md, "Content awareness").
 
 import Link from "next/link";
-import { msg } from "@lingui/core/macro";
-import { Plural, useLingui } from "@lingui/react/macro";
-import { CARD_LIMIT, NEEDS_YOU, FOUND, IN_PROGRESS } from "@/lib/desk";
-import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
-import { ClampTooltipContent, clampClass } from "@/components/ui/clamp-text";
-import { cn } from "@/lib/utils";
-import { useRelativeTime } from "./useRelativeTime";
+import { Trans, useLingui } from "@lingui/react/macro";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import MosaicPanel, { MOSAIC } from "@/components/MosaicPanel";
+import { LOGOS } from "@/components/connections/logos";
+import { formatDate } from "@/lib/format";
 
-const CARDS = [
-  {
-    key: NEEDS_YOU,
-    label: msg`Needs you`,
-    dot: "bg-destructive",
-    ring: "border-destructive/40",
-    empty: msg`Nothing is waiting on you.`,
-  },
-  {
-    key: FOUND,
-    label: msg`What I found`,
-    dot: "bg-[var(--orange)]",
-    ring: "border-border",
-    empty: msg`Nothing checked yet.`,
-  },
-  {
-    key: IN_PROGRESS,
-    label: msg`In progress`,
-    dot: "bg-primary",
-    ring: "border-border",
-    empty: msg`Nothing running.`,
-  },
-];
-
-// The words for lib/desk.js's codes. The rule lives there and cannot carry
-// copy (it runs under plain node, no macro pass); the sentences live here.
-const TITLE = {
-  untitled_thread: msg`Untitled thread`,
-  untitled_change_set: msg`Untitled change set`,
-};
-
-const DETAIL = {
-  // certainty(): a finding, and how far Duct trusts it
-  unconfirmed: msg`Not confirmed`,
-  checked: msg`Checked`,
-  low: msg`Low confidence`,
-  fair: msg`Fairly sure`,
-  // an incident nobody has resolved
-  unclosed: msg`Nobody has closed this`,
-  // a change set past the approval click
-  applying: msg`Applying now`,
-  approved: msg`Approved, waiting to run`,
-  // conversationCard(): a thread, by its run status
-  waiting: msg`Waiting on your answer`,
-  failed: msg`The last turn failed`,
-  working: msg`Working`,
-  stopped: msg`Stopped — pick up where it left off`,
-  resume: msg`Pick up where you left off`,
-};
-
-const TONE_CLASS = {
-  sure: "text-success",
-  partial: "text-warning",
-  unsure: "text-muted-foreground",
-  alert: "text-muted-foreground",
-  running: "text-muted-foreground",
-};
-
-/** Where an item goes when you click it. Each type knows its own home. */
-export function itemHref(item) {
-  if (item.type === "change_set") return "/execute";
-  if (item.conversationId) return `/insights/session?conversation=${item.conversationId}`;
-  // A finding written by an unattended run has provenance but no thread. The
-  // useful thing to do with it is ask about it, so that is where clicking goes.
-  if (item.type === "memory") {
-    return `/insights/session?q=${encodeURIComponent(item.title)}`;
-  }
-  return "/insights/session";
-}
-
-// A finding's title can run to a full sentence (an agent wrote it, not a
-// human picking a label). Two lines, with the rest on hover/focus — the
-// trigger is the row itself, not a second focusable span, so tabbing the
-// card still lands on one stop per item (AGENTS.md accessibility rule).
-function Item({ item }) {
-  const { i18n } = useLingui();
-  const relative = useRelativeTime();
-  const title = item.title || (TITLE[item.titleCode] ? i18n._(TITLE[item.titleCode]) : "");
-  const count = item.count ?? 0;
-  const detail =
-    item.detailCode === "changes_to_approve" ? (
-      <Plural value={count} one="# change to approve" other="# changes to approve" />
-    ) : item.detailCode === "failed" && item.error ? (
-      // The backend's own reason for the failure, when it gave one.
-      item.error
-    ) : DETAIL[item.detailCode] ? (
-      i18n._(DETAIL[item.detailCode])
-    ) : (
-      ""
-    );
-  const ago = relative(item.at);
+/**
+ * Nothing waiting, nothing found, nothing running, and Duct has looked: the
+ * desk's inbox-zero. The one place on the daily path that earns the mosaic,
+ * because it is the reward for an empty queue (DESIGN.md, delight where use is
+ * rare), and it says when Duct last looked so the calm is trustworthy.
+ */
+export function DeskAllClear({ lastChecked }) {
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Link
-          href={itemHref(item)}
-          className="group block rounded-md -mx-2 px-2 py-1.5 transition-colors hover:bg-accent/60"
-        >
-          <p className={cn(clampClass(2), "text-sm font-medium leading-snug")}>{title}</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            <span className={cn(TONE_CLASS[item.tone] || "text-muted-foreground")}>{detail}</span>
-            {ago && <span> · {ago}</span>}
-          </p>
-        </Link>
-      </TooltipTrigger>
-      <ClampTooltipContent text={title} />
-    </Tooltip>
+    <Card variant="quiet" size="lg" className="items-center gap-6 @2xl:flex-row">
+      <MosaicPanel name={MOSAIC.otium} size={240} className="shrink-0" />
+      <div className="flex flex-col gap-2 @2xl:max-w-sm">
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          {lastChecked ? (
+            <Trans>Duct last looked {lastChecked} and found nothing worth your time. Enjoy the quiet.</Trans>
+          ) : (
+            <Trans>Duct found nothing worth your time. Enjoy the quiet.</Trans>
+          )}
+        </p>
+      </div>
+    </Card>
   );
 }
 
-export default function DeskCards({ buckets }) {
-  const { i18n } = useLingui();
-  const byKey = {
-    [NEEDS_YOU]: buckets.needsYou,
-    [FOUND]: buckets.found,
-    [IN_PROGRESS]: buckets.inProgress,
-  };
-
+/**
+ * Back after a long gap. What is on the desk is old news, so the page leads
+ * with the one useful act — ask Duct to look again — under the threshold
+ * mosaic that greets an arrival (`salve`). Only a click starts a run: opening
+ * the page never spends a model call.
+ */
+export function DeskFreshLook({ lookedAt, onAsk }) {
+  const { t, i18n } = useLingui();
+  const since = formatDate(lookedAt, { locale: i18n.locale, withYear: false });
   return (
-    <div className="grid gap-4 @lg:grid-cols-2 @3xl:grid-cols-3">
-      {CARDS.map((card) => {
-        const items = byKey[card.key] || [];
-        const shown = items.slice(0, CARD_LIMIT);
-        const rest = items.length - shown.length;
-        return (
-          <section
-            key={card.key}
-            className={cn("flex flex-col rounded-xl border bg-card p-5", card.ring)}
-            aria-label={i18n._(card.label)}
+    <Card variant="hero" size="lg" className="items-center gap-6 @2xl:flex-row">
+      <MosaicPanel name={MOSAIC.salve} size={240} className="shrink-0" />
+      <div className="flex min-w-0 flex-col items-start gap-4 @2xl:max-w-sm">
+        <div className="flex flex-col gap-1">
+          <p className="text-sm font-semibold">
+            <Trans>Welcome back. Take a fresh look?</Trans>
+          </p>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            <Trans>Duct reads your sources again and tells you what changed since {since}.</Trans>
+          </p>
+        </div>
+        <Button onClick={() => onAsk(t`What changed since ${since}?`)}>
+          <Trans>Take a fresh look</Trans>
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
+// The connectors a first source most often is. Logos, not a list of names:
+// the reader recognises them before reading them.
+const FIRST_SOURCES = ["gsc", "ga4", "google_ads", "stripe"];
+
+/**
+ * The one thing to do while nothing is connected: the screen's hero.
+ * `returning` is a desk that had sources and lost them, which is not a first.
+ */
+export function DeskConnectFirst({ returning = false }) {
+  return (
+    <Card variant="hero" size="lg" className="gap-5 @2xl:flex-row @2xl:items-center">
+      <div className="flex shrink-0 -space-x-2" aria-hidden>
+        {FIRST_SOURCES.map((key) => (
+          <span
+            key={key}
+            className="flex size-11 items-center justify-center rounded-xl border bg-background ring-4 ring-card [&_img]:size-6 [&_svg]:size-6"
           >
-            <header className="mb-4 flex items-center gap-2.5">
-              <span className={cn("size-[7px] rounded-full", card.dot)} aria-hidden />
-              <h2 className="text-sm font-bold tracking-tight">{i18n._(card.label)}</h2>
-              <span className="text-sm text-muted-foreground">{items.length || ""}</span>
-            </header>
-
-            {shown.length === 0 ? (
-              <p className="text-xs text-muted-foreground">{i18n._(card.empty)}</p>
-            ) : (
-              <div className="flex flex-col gap-3.5">
-                {shown.map((item) => (
-                  <Item key={item.id} item={item} />
-                ))}
-              </div>
-            )}
-
-            {rest > 0 && (
-              <p className="mt-auto pt-4 text-xs text-muted-foreground">
-                <Plural value={rest} one="# more not shown" other="# more not shown" />
-              </p>
-            )}
-          </section>
-        );
-      })}
-    </div>
+            {LOGOS[key]}
+          </span>
+        ))}
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        {returning ? (
+          <>
+            <p className="text-sm font-semibold">
+              <Trans>Reconnect a source</Trans>
+            </p>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              <Trans>Duct can't read anything right now. What it found before is still below.</Trans>
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-sm font-semibold">
+              <Trans>Connect your first source</Trans>
+            </p>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              <Trans>Search Console is the easiest start. Your first brief takes about three minutes.</Trans>
+            </p>
+          </>
+        )}
+      </div>
+      <Button asChild className="shrink-0 self-start @2xl:self-center">
+        <Link href="/connections">
+          <Trans>Connect a source</Trans>
+        </Link>
+      </Button>
+    </Card>
   );
 }

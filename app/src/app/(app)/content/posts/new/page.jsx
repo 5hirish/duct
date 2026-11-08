@@ -6,6 +6,7 @@ import { Trans } from "@lingui/react/macro";
 import ContentWorkspace from "@/components/content/ContentWorkspace";
 import PostViewport from "@/components/content/PostViewport";
 import { getActiveProjectId } from "@/lib/projects";
+import { useLeaveOnProjectSwitch } from "@/hooks/useActiveProjectId";
 
 /**
  * Start a new draft_post session.
@@ -25,6 +26,8 @@ export default function NewPostDraftPage() {
   const router = useRouter();
   const search = useSearchParams();
   const [projectId, setProjectId] = useState(null);
+  // The draft is written into the project the page opened on.
+  useLeaveOnProjectSwitch();
 
   const planId    = search.get("plan_id") || undefined;
   const dayIndex  = search.get("day");

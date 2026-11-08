@@ -174,7 +174,11 @@ def test_the_pruner_leaves_a_running_turn_alone(monkeypatch):
     busy = _session("busy-for-ages", turn_active=True)
     try:
         idle.last_activity = busy.last_activity = 0.0
-        assert agents_routes._stale_session_ids(now=100.0) == ["idle-for-ages"]
+        # The registry is process-wide and other tests leave sessions in it, so
+        # judge only the two made here: comparing the whole list failed on CI
+        # whenever an earlier test's session also read as idle.
+        stale = agents_routes._stale_session_ids(now=100.0)
+        assert [s for s in stale if s in {"idle-for-ages", "busy-for-ages"}] == ["idle-for-ages"]
     finally:
         close_session("idle-for-ages")
         close_session("busy-for-ages")

@@ -3,7 +3,8 @@
 PostBridge proxies posts and analytics to TikTok, Instagram, YouTube,
 LinkedIn, Twitter, Facebook, Threads, Bluesky, Pinterest, and Google
 Business Profile. duct talks only to PostBridge — never to the
-platforms directly.
+platforms directly — and everything outside this package reaches it through
+its ``Publisher`` adapter (``publisher.py``, service/publishers/).
 
 Posting flow (from PostBridge docs):
   1. GET  /v1/social-accounts                — list connected accounts

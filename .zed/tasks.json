@@ -45,10 +45,9 @@
   {
     // OTEL_EXPORTER_OTLP_ENDPOINT on the API is what fills this; without it
     // the UI comes up and receives nothing.
-    "label": "Phoenix: OTEL traces UI (:6006)",
-    "command": "poetry",
-    "args": ["run", "python", "-m", "phoenix.server.main", "serve"],
-    "cwd": "$ZED_WORKTREE_ROOT/backend",
+    "label": "Jaeger: traces UI (:16686)",
+    "command": "./scripts/jaeger.sh",
+    "cwd": "$ZED_WORKTREE_ROOT",
     "allow_concurrent_runs": false
   },
   {
@@ -65,21 +64,21 @@
     "cwd": "$ZED_WORKTREE_ROOT",
     "allow_concurrent_runs": false
   },
-  {
-    // Run once before the first desktop launch: a missing freeze ships a
-    // broken app. NOT bare `pyinstaller` — that deletes its output directory
-    // out from under a running sidecar. ~3 min.
-    "label": "Desktop: Build sidecar",
-    "command": "npm",
-    "args": ["run", "sidecar"],
-    "cwd": "$ZED_WORKTREE_ROOT/desktop",
-    "reveal": "always"
-  },
+  // "Desktop: Build sidecar" comes from .vscode/tasks.json, which Zed merges.
   {
     "label": "Desktop: Tauri dev (sidecar backend)",
     "command": "npm",
     "args": ["run", "dev:local"],
     "cwd": "$ZED_WORKTREE_ROOT/desktop",
+    "allow_concurrent_runs": false
+  },
+  {
+    // Catches every mail a local flow sends; the API reaches it with
+    // EMAIL_PROVIDER=smtp on :1025 (backend/.env.example). Localhost only.
+    "label": "Mailpit: catch local mail (:8025)",
+    "command": "mailpit",
+    "args": ["--smtp", "127.0.0.1:1025", "--listen", "127.0.0.1:8025"],
+    "cwd": "$ZED_WORKTREE_ROOT",
     "allow_concurrent_runs": false
   },
 
@@ -108,9 +107,17 @@
     "hide": "on_success"
   },
   {
-    "label": "Phoenix: stop (6006)",
+    "label": "Jaeger: stop (16686)",
     "command": "./scripts/dev_stop.sh",
-    "args": ["phoenix"],
+    "args": ["jaeger"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "reveal": "no_focus",
+    "hide": "on_success"
+  },
+  {
+    "label": "Mailpit: stop (8025)",
+    "command": "./scripts/dev_stop.sh",
+    "args": ["mailpit"],
     "cwd": "$ZED_WORKTREE_ROOT",
     "reveal": "no_focus",
     "hide": "on_success"

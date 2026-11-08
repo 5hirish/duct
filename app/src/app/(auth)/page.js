@@ -13,6 +13,8 @@ import MosaicPanel, { MOSAIC } from "@/components/MosaicPanel";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   POST_SIGNIN_REDIRECT_KEY,
+  SIGN_IN_NOW_PARAM,
+  SIGN_IN_NOW_VALUE,
   SIGNIN_REASON_EXPIRED,
   SIGNIN_REASON_KEY,
   authToken,
@@ -24,6 +26,7 @@ import { analytics, trackEvent, AnalyticsEvent, AnalyticsParam } from "@/lib/ana
 import { isGuestToken } from "@/lib/guest";
 import { guestLinkCode } from "@/lib/onboardingApi";
 import { consumeSignInSources, peekSignInSources } from "@/lib/signInSources";
+import { clearSessionHint } from "@/lib/sessionHint";
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "";
 const DEFAULT_LANDING = "/insights/organic-growth";
@@ -99,7 +102,18 @@ function SignInContent() {
   const searchParams = useSearchParams();
   const { resolvedTheme } = useTheme();
   const [turnstileToken, setTurnstileToken] = useState("");
-  const [ready, setReady] = useState(false);
+  // Whether to show the front door. The server renders it for everyone but an
+  // OAuth callback, which it can see in the URL; a member on their way into
+  // the app is hidden before paint by `lib/sessionHint.js` and taken off here
+  // once the effect below confirms it.
+  const [ready, setReady] = useState(() => !searchParams.get("auth_code"));
+  // An exchange in flight. Clearing `auth_code` from the URL re-runs the
+  // effect below with no code and, the token not stored yet, it used to show
+  // the front door until the exchange answered and the redirect fired: the
+  // sign-in page flashed back after a sign-in that had worked. React's dev
+  // double-run also sent the single-use code twice (200, then 400).
+  const exchangingRef = useRef(false);
+  const autoStartedRef = useRef(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [awaitingBrowser, setAwaitingBrowser] = useState(false);
   // "" when fine; "outdated" or "browser" when the shell cannot carry a
@@ -142,13 +156,21 @@ function SignInContent() {
     },
     [router, startUrl, t]
   );
-  // Turnstile site keys are locked to their registered hostnames, so the widget
-  // can never render on the desktop shell's origin (`tauri://localhost`, or a
-  // loopback dev server) — it just fails with "Security check failed to load".
-  // Nothing is lost by skipping it: the sidecar is bound to 127.0.0.1 and gated
-  // by a per-install API key, so there is no bot surface to protect, and
-  // `verify_turnstile` already no-ops when the sidecar has no secret configured.
-  const requiresTurnstile = Boolean(TURNSTILE_SITE_KEY) && !isLocalBackendActive();
+  // Skipped only with a local sidecar. Nothing is lost there: the sidecar is
+  // bound to 127.0.0.1 and gated by a per-install API key, so there is no bot
+  // surface to protect, and `verify_turnstile` already no-ops when the sidecar
+  // has no secret configured. Against the hosted API the widget renders in the
+  // desktop shell too (the official build loads this page from its registered
+  // hostname), so its iframe origin is on the shell's navigation allowlist
+  // (`EMBEDDED_FRAME_ORIGINS` in `desktop/src-tauri/src/lib.rs`); without it
+  // the shell bounces the frame to the browser and this page reports
+  // "Security check failed to load".
+  // State, corrected after mount: hydration has to render what the server did,
+  // and the server never has a sidecar.
+  const [requiresTurnstile, setRequiresTurnstile] = useState(Boolean(TURNSTILE_SITE_KEY));
+  useEffect(() => {
+    if (isLocalBackendActive()) setRequiresTurnstile(false);
+  }, []);
   const turnstileContainerRef = useRef(null);
   const turnstileWidgetIdRef = useRef(null);
   const getTurnstileResponseToken = useCallback(() => {
@@ -170,24 +192,33 @@ function SignInContent() {
     // Handle auth_code from OAuth callback — exchange it for the JWT server-side
     // so the token itself never appears in the URL (browser history / Referer leak).
     const authCode = searchParams.get("auth_code");
+    if (exchangingRef.current) return;
     if (authCode) {
+      exchangingRef.current = true;
       window.history.replaceState({}, "", "/");
+      const showFrontDoor = () => {
+        exchangingRef.current = false;
+        clearSessionHint();
+        setReady(true);
+      };
       fetch(`${BASE}/auth/exchange?code=${encodeURIComponent(authCode)}`)
         .then((r) => r.json())
         .then(({ token }) => {
-          if (token) {
-            setAuthToken(token);
-            analytics.identify(decodeJwtPayload(token)?.uid);
-            // `new_user` is true only on the sign-in that created the account
-            // (routes/signin.py). Fired here rather than wherever the token is
-            // read, because it is read on every load for a week.
-            if (decodeJwtPayload(token)?.new_user) {
-              trackEvent(AnalyticsEvent.SignUp, { method: "google" });
-            }
-            router.replace(consumePostSignInRedirect());
+          if (!token) {
+            showFrontDoor();
+            return;
           }
+          setAuthToken(token);
+          analytics.identify(decodeJwtPayload(token)?.uid);
+          // `new_user` is true only on the sign-in that created the account
+          // (routes/signin.py). Fired here rather than wherever the token is
+          // read, because it is read on every load for a week.
+          if (decodeJwtPayload(token)?.new_user) {
+            trackEvent(AnalyticsEvent.SignUp, { method: "google" });
+          }
+          router.replace(consumePostSignInRedirect());
         })
-        .catch(() => {});
+        .catch(showFrontDoor);
       return;
     }
 
@@ -195,10 +226,12 @@ function SignInContent() {
     // guest comes to become an account, so their token must not bounce them.
     const existing = authToken();
     if (isTokenValid(existing) && !isGuestToken(existing)) {
+      setReady(false);
       router.replace(consumePostSignInRedirect());
       return;
     }
 
+    clearSessionHint();
     setSourcesArmed(Boolean(peekSignInSources()));
     setReady(true);
   }, [searchParams, router]);
@@ -400,6 +433,17 @@ function SignInContent() {
     requiresTurnstile,
     turnstileToken,
   ]);
+
+  // `/?signin=now` (SIGN_IN_NOW_PARAM): the person already chose to sign in
+  // on another page, so start the flow once the front door is ready rather
+  // than show them a second button. handleSignIn still waits for the bot
+  // check, and any failure lands on this page with its usual notice.
+  useEffect(() => {
+    if (!ready || autoStartedRef.current) return;
+    if (searchParams.get(SIGN_IN_NOW_PARAM) !== SIGN_IN_NOW_VALUE) return;
+    autoStartedRef.current = true;
+    handleSignIn();
+  }, [ready, searchParams, handleSignIn]);
 
   if (!ready) {
     return (

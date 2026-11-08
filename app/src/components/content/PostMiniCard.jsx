@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { Images, Video, Image as ImageIcon, Clock, Type } from "lucide-react";
+import { Images, Video, Image as ImageIcon, Clock, Type, ChevronRight, Target } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { mediaUrl } from "@/lib/contentApi";
-import { firstImageSrc, statusMeta } from "@/lib/contentStatus";
+import { POST_TYPE_LABELS, PostStatus } from "@/lib/contentEnums";
+import { SCHEDULED_META, firstImageSrc, statusMeta } from "@/lib/contentStatus";
 import { KIND_LABEL } from "@/lib/contentSchedule";
 import { PlatformGlyph, platformMeta } from "@/components/content/platformGlyphs";
 import { ClipStill } from "@/components/content/PostVideo";
+import { Badge } from "@/components/ui/badge";
 import { titleCase } from "@/lib/format";
 
 // Shared with PlanStrategy, so a post type has one icon wherever it appears.
@@ -19,6 +21,25 @@ const KIND_BADGE = {
   proposed: "bg-muted text-muted-foreground",
 };
 
+// A pillar is the person's own word for a theme, so it gets a colour of its
+// own rather than the brand orange, which marks the page's one primary
+// action. The same pillar is the same colour in every view.
+const PILLAR_DOTS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
+function pillarColour(pillar) {
+  let h = 0;
+  for (const ch of String(pillar)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return PILLAR_DOTS[h % PILLAR_DOTS.length];
+}
+
+function PillarChip({ pillar }) {
+  return (
+    <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-muted px-2 py-0.5 text-2xs font-medium text-muted-foreground">
+      <span className="size-1.5 shrink-0 rounded-full" style={{ backgroundColor: pillarColour(pillar) }} aria-hidden />
+      <span className="truncate">{titleCase(pillar)}</span>
+    </span>
+  );
+}
+
 /**
  * One modular post card, shared by every plan view via `variant`:
  *   - "full"    : thumbnail banner with overlaid type/via-Duct/platforms, plus
@@ -28,13 +49,18 @@ const KIND_BADGE = {
  *                 Week calendar where a single day mixes statuses.
  *   - "chip"    : a single status-tinted line (type icon + title + primary
  *                 platform). Used by the Month calendar cells.
+ *   - "row"     : one agenda line — weekday and date, a cover tile, title,
+ *                 type · pillar · goal, then the status. Used by PlanList.
+ *                 A pending row carries no badge: on a fresh plan that would
+ *                 be thirty identical pills, so only the rows that moved say
+ *                 so and the rest offer to be drafted.
  *
  * Props:
  *   - day      : plan.days[] entry (topic, pillar, post_type, platforms, ...)
  *   - post     : linked full post (or null)
  *   - schedule : effectiveSchedule(...) result ({ kind, label, time, ... })
  *   - onRevise : () => void  — drafting affordance when there's no post yet
- *   - variant  : "full" | "compact" | "chip" (default "full")
+ *   - variant  : "full" | "compact" | "chip" | "row" (default "full")
  */
 export default function PostMiniCard({ day, post, schedule, onRevise, variant = "full" }) {
   const { t, i18n } = useLingui();
@@ -53,10 +79,16 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
   const status = post?.status || day?.status || "pending";
   const sMeta = statusMeta(status);
 
-  const showThumb = variant === "full";
+  // The preview is the post's own media. A planned post has none yet, and a
+  // 16:9 grey box with an image icon in it was most of every Kanban card:
+  // thirty of them stacked to about 15,000px. Without media the card is its
+  // words, with the type as a small tile.
+  const hasMedia = Boolean(thumb || post?.video?.url || (postType === "text" && post?.caption));
+  const showThumb = variant === "full" && hasMedia;
+  const compactFull = variant === "full" && !hasMedia;
   // In Week/Month the card sits under its day column, so the date is redundant —
   // show only the time. The Kanban has no date context, so show the full date.
-  const dateText = showThumb ? (schedule?.dateLabel || "") : (schedule?.time || "");
+  const dateText = variant === "full" ? (schedule?.dateLabel || "") : (schedule?.time || "");
 
   const platformBadges = platforms.slice(0, 4).map((p) => {
     const meta = platformMeta(p);
@@ -73,7 +105,83 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
   });
 
   let inner;
-  if (variant === "chip") {
+  if (variant === "row") {
+    const date = schedule?.date || null;
+    const typeLabel = POST_TYPE_LABELS[postType];
+    const objective = day?.objective || "";
+    const badge = schedule?.kind === "scheduled" ? SCHEDULED_META : sMeta;
+    inner = (
+      <div className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors group-hover/row:bg-muted/60">
+        {/* The agenda's spine: weekday over day number, the way a calendar's
+            schedule view reads. The week header above carries the month. */}
+        <div className="w-9 shrink-0 text-center leading-none">
+          {date && (
+            <>
+              <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">
+                {date.toLocaleDateString(i18n.locale, { weekday: "short" })}
+              </p>
+              <p className="mt-1 text-base font-semibold tabular-nums">{date.getDate()}</p>
+            </>
+          )}
+        </div>
+
+        {/* The cover once there is one; the post type until then. */}
+        <div className="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-muted/40 text-muted-foreground">
+          {thumb ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={thumb} alt="" className="size-full object-cover" />
+          ) : (
+            <TypeIcon className="size-4" aria-hidden />
+          )}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="line-clamp-2 text-sm font-medium leading-snug">{title}</p>
+          <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-2xs text-muted-foreground">
+            <span>{typeLabel ? i18n._(typeLabel) : titleCase(postType)}</span>
+            {pillar && <><span aria-hidden>·</span><span>{titleCase(pillar)}</span></>}
+            {objective && (
+              <>
+                <span aria-hidden>·</span>
+                <span className="inline-flex items-center gap-1">
+                  <Target className="size-2.5" aria-hidden />
+                  <span className="sr-only"><Trans>Goal:</Trans></span>
+                  {titleCase(objective)}
+                </span>
+              </>
+            )}
+            {schedule?.time && (
+              <>
+                <span aria-hidden>·</span>
+                <span className="inline-flex items-center gap-1"><Clock className="size-2.5" aria-hidden />{schedule.time}</span>
+              </>
+            )}
+          </p>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          {/* Platforms only where there is room; the title outranks them. */}
+          {platformBadges.length > 0 && (
+            <span className="hidden items-center gap-1 @md:flex">{platformBadges}</span>
+          )}
+          {schedule?.missed ? (
+            <Badge variant="warning"><Trans>Missed</Trans></Badge>
+          ) : status === PostStatus.PENDING ? (
+            (postId || onRevise) && (
+              <span className="flex items-center gap-0.5 text-xs text-muted-foreground group-hover/row:text-foreground group-focus-visible/row:text-foreground">
+                <span className="opacity-0 transition-opacity group-hover/row:opacity-100 group-focus-visible/row:opacity-100">
+                  <Trans>Draft post</Trans>
+                </span>
+                <ChevronRight className="size-4" aria-hidden />
+              </span>
+            )
+          ) : (
+            <Badge variant={badge.badgeVariant}>{i18n._(badge.label)}</Badge>
+          )}
+        </div>
+      </div>
+    );
+  } else if (variant === "chip") {
     // Single-line month chip: status carried by the tinted background; the
     // leading type icon and trailing primary-platform glyph add format + reach.
     const primary = platforms[0] || null;
@@ -140,9 +248,23 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
           <div className="min-w-0 flex-1 space-y-1.5 p-2.5">
             {/* meta row — color-coded kind pill carries the state; muted date keeps the title the hero */}
             <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-              <span className={`rounded-md px-1.5 py-0.5 text-2xs font-medium ${KIND_BADGE[kind]}`}>
-                {KIND_LABEL[kind] ? i18n._(KIND_LABEL[kind]) : titleCase(kind)}
-              </span>
+              {compactFull && (
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground" aria-hidden>
+                  <TypeIcon className="size-3.5" />
+                </span>
+              )}
+              {/* "Planned" on every card in the Pending lane repeated the
+                  lane; on a lane card only a state the lane does not already
+                  say is shown. The week view mixes states, so it keeps all. */}
+              {schedule?.missed ? (
+                <span className="rounded-md bg-warning/15 px-1.5 py-0.5 text-2xs font-medium text-warning">
+                  <Trans>Missed</Trans>
+                </span>
+              ) : (kind !== "proposed" || variant !== "full") && (
+                <span className={`rounded-md px-1.5 py-0.5 text-2xs font-medium ${KIND_BADGE[kind]}`}>
+                  {KIND_LABEL[kind] ? i18n._(KIND_LABEL[kind]) : titleCase(kind)}
+                </span>
+              )}
               {dateText && (
                 <span className="inline-flex items-center gap-1 text-2xs text-muted-foreground">
                   {schedule?.time && <Clock className="size-2.5" />}
@@ -150,7 +272,7 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
                 </span>
               )}
               {/* without a thumbnail (Week view) these stay inline */}
-              {!showThumb && viaDuct && (
+              {variant !== "full" && viaDuct && (
                 <span
                   className="rounded-md px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide"
                   style={{ backgroundColor: "color-mix(in oklch, var(--orange) 15%, transparent)", color: "var(--orange)" }}
@@ -158,20 +280,21 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
                   <Trans>via Duct</Trans>
                 </span>
               )}
-              {!showThumb && <TypeIcon className="ml-auto size-3.5 shrink-0 text-muted-foreground" />}
+              {variant !== "full" && <TypeIcon className="ml-auto size-3.5 shrink-0 text-muted-foreground" />}
+              {compactFull && platformBadges.length > 0 && (
+                <span className="ml-auto flex items-center gap-1">{platformBadges}</span>
+              )}
             </div>
 
             <p className="line-clamp-2 text-sm font-medium leading-snug text-foreground">{title}</p>
 
             {/* chips */}
             <div className="flex flex-wrap items-center gap-1 pt-0.5">
-              {pillar && (
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-2xs font-medium text-primary">{titleCase(pillar)}</span>
-              )}
+              {pillar && <PillarChip pillar={pillar} />}
               {format && (
                 <span className="rounded-full border border-border/70 px-2 py-0.5 text-2xs text-muted-foreground">{format}</span>
               )}
-              {!showThumb && platformBadges.length > 0 && (
+              {variant !== "full" && platformBadges.length > 0 && (
                 <span className="ml-auto flex items-center gap-1">{platformBadges}</span>
               )}
             </div>
@@ -183,13 +306,14 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
 
   // Shared interaction: link to the post (status-aware) or the create flow.
   // stopPropagation keeps a Month chip's click from also firing the day cell.
+  // `group/row` is what the row variant's hover and focus styles key off.
   if (postId) {
     const href = status === "draft" ? `/content/posts/${postId}?revise=1` : `/content/posts/${postId}`;
     return (
       <Link
         href={href}
         title={variant === "chip" ? title : undefined}
-        className="block"
+        className="group/row block rounded-lg"
         onClick={(e) => e.stopPropagation()}
       >
         {inner}
@@ -202,7 +326,7 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
         type="button"
         onClick={(e) => { e.stopPropagation(); onRevise(); }}
         title={variant === "chip" ? title : undefined}
-        className="block w-full text-left"
+        className="group/row block w-full rounded-lg text-left"
       >
         {inner}
       </button>

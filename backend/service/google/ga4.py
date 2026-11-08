@@ -14,7 +14,11 @@ from service.connectors import (
     entity_facts,
     register_connector,
 )
-from service.google.constants import GA4_CONNECTOR_ID, GA4_READ_SCOPE
+from service.google.constants import (
+    GA4_CONNECTOR_ID,
+    GA4_READ_SCOPE,
+    GOOGLE_SERVER_ONLY_KEYS,
+)
 
 _GA4_SCOPE = GA4_READ_SCOPE
 # Requested on top of readonly at consent time so stored GA4 tokens can also
@@ -321,6 +325,7 @@ GA4_META = ConnectorMeta(
     capabilities=frozenset({CAP_ACCOUNTS}),
     entity_noun="property",
     entity_noun_plural="properties",
+    server_only_keys=GOOGLE_SERVER_ONLY_KEYS,
 )
 
 register_connector(GA4_META, GA4Connector())

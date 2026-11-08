@@ -87,14 +87,14 @@ function resumeFields({ conversationId, resume, startFresh, artifactType, artifa
  * /api/agents/tiktok_studio/sessions. The hook owns opening the stream,
  * reconnecting and closing; this only knows the two modes' fields.
  *
- *   plan_month: { projectId, startDate? }
+ *   plan_month: { projectId, startDate?, days? }
  *   draft_post: { projectId, planId?, dayIndex?, topic?, pillar?, channel? }
  * plus the resume fields (conversationId, resume, startFresh, artifactType,
  * artifactId) in either mode.
  */
 export function contentSessionBody(mode, context = {}) {
   const {
-    projectId, startDate, planId, dayIndex, topic, pillar, channel, cloneUrl,
+    projectId, startDate, days, planId, dayIndex, topic, pillar, channel, cloneUrl,
     conversationId, resume, startFresh, artifactType, artifactId,
   } = context;
   const resumeBody = resumeFields({ conversationId, resume, startFresh, artifactType, artifactId });
@@ -103,6 +103,7 @@ export function contentSessionBody(mode, context = {}) {
       mode,
       project_id: projectId,
       ...(startDate ? { start_date: startDate } : {}),
+      ...(days ? { days } : {}),
       ...resumeBody,
     };
   }
@@ -218,7 +219,7 @@ export async function patchPlanDay(planId, day, patch) {
   return jsonOrThrow(res);
 }
 
-// Posts + their PostBridge-sourced analytics both depend on post state, so any
+// Posts + their scheduler-sourced analytics both depend on post state, so any
 // post write clears both. Broad (prefix) invalidation keeps it simple and safe.
 function invalidatePosts() {
   invalidate("posts:");
@@ -290,23 +291,88 @@ export async function markPostPosted(postId, { publishedUrl } = {}) {
 }
 
 /**
- * POST /api/content/posts/{id}/publish — uploads each linked image to
- * PostBridge then creates the post.
+ * The next good time for a post on `channel`, as `{ at, reason, posts, hour }`:
+ * `reason` is SlotReason.HISTORY once the account's own posts with numbers
+ * decide it, else SlotReason.DEFAULT. `tz` is the reader's zone, so the hour
+ * is theirs.
+ */
+export async function getBestSlot(projectId, channel, tz = browserTimeZone()) {
+  const params = new URLSearchParams({ project_id: projectId, channel, tz });
+  const res = await fetch(
+    `${BASE}/api/content/best-slot?${params.toString()}`,
+    { headers: backendAuthedHeaders() },
+  );
+  return jsonOrThrow(res);
+}
+
+/** No to a draft, with the SkipReason that shapes the next one. */
+export async function skipPost(postId, reason) {
+  const res = await fetch(
+    `${BASE}/api/content/posts/${encodeURIComponent(postId)}/skip`,
+    {
+      method: "POST",
+      headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ reason }),
+    },
+  );
+  const out = await jsonOrThrow(res);
+  invalidatePosts();
+  return out;
+}
+
+function browserTimeZone() {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+  } catch {
+    // An engine without Intl zones: the server reads "" as UTC.
+    return "";
+  }
+}
+
+/**
+ * A schedule time as an absolute instant. The picker's value
+ * ("2026-10-02T09:00") has no zone, and the server read it as UTC, so a
+ * post set for 9:00 in Madrid went out at 11:00. JavaScript reads that
+ * shape as the reader's own local time, which is what they picked.
+ */
+export function absoluteTime(value) {
+  if (!value) return value;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? value : d.toISOString();
+}
+
+/**
+ * A moment as the `datetime-local` picker's value, in the reader's zone:
+ * "2026-10-02T09:00". `toISOString` would give UTC, and the picker would show
+ * a time hours off from the one meant.
+ */
+export function localPickerValue(date) {
+  const d = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/**
+ * POST /api/content/posts/{id}/publish — uploads the post's media to its
+ * scheduler then creates the post there.
  *
  * @param postId          Content post UUID
- * @param socialAccountIds Numeric PostBridge social account IDs
- * @param scheduledAt     ISO 8601 string (optional; omit to post now)
+ * @param socialAccountIds the scheduler's account ids (from listSocialAccounts)
+ * @param publisher       the scheduler holding those accounts (their `publisher`)
+ * @param scheduledAt     the picker's local time (optional; omit to post now)
  * @param tiktokDraft     true → land as a TikTok draft, false → schedule/post
  */
-export async function publishPost(postId, { socialAccountIds, scheduledAt, tiktokDraft = false } = {}) {
+export async function publishPost(postId, { socialAccountIds, publisher, scheduledAt, tiktokDraft = false } = {}) {
   const res = await fetch(
     `${BASE}/api/content/posts/${encodeURIComponent(postId)}/publish`,
     {
       method: "POST",
       headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({
-        social_account_ids: socialAccountIds,
-        ...(scheduledAt ? { scheduled_at: scheduledAt } : {}),
+        social_account_ids: socialAccountIds.map(String),
+        ...(publisher ? { publisher } : {}),
+        ...(scheduledAt ? { scheduled_at: absoluteTime(scheduledAt) } : {}),
         tiktok_draft: tiktokDraft,
       }),
     },
@@ -364,11 +430,30 @@ export async function listSocialAccounts(projectId, platform) {
 }
 
 /**
- * The vendors each user brings their own key for: PostBridge (publishing) and
- * Apify (Discover). A project spends its owner's key, so only the owner
- * connects one. Status is { connected, own_key, is_owner }.
+ * The vendors each user brings their own key for: a scheduler to publish
+ * through (PostBridge, Zernio: listPublishers names them) and Apify
+ * (Discover). A project spends its owner's key, so only the owner connects
+ * one. Status is { connected, own_key, is_owner }. A scheduler's id is its
+ * vendor slug here too.
  */
-export const VENDOR = Object.freeze({ POSTBRIDGE: "post-bridge", APIFY: "apify" });
+export const VENDOR = Object.freeze({ APIFY: "apify" });
+
+// Where a user gets the Apify key; a scheduler's comes with it (dashboard_url).
+export const VENDOR_HOME = Object.freeze({
+  [VENDOR.APIFY]: "https://console.apify.com",
+});
+
+/**
+ * Every scheduler Duct can publish through, and whether this project's owner
+ * connected it: [{ id, label, dashboard_url, reports, connected, own_key,
+ * is_owner }]. Nothing is a default; with none connected nothing publishes.
+ */
+export async function listPublishers(projectId) {
+  const url = new URL(`${BASE}/api/content/publishers`);
+  url.searchParams.set("project_id", projectId);
+  const res = await fetch(url.toString(), { headers: backendAuthedHeaders() });
+  return jsonOrThrow(res);
+}
 
 export async function getVendorKeyStatus(vendor, projectId) {
   const url = new URL(`${BASE}/api/content/vendor-keys/${vendor}`);
@@ -396,8 +481,8 @@ export async function disconnectVendorKey(vendor) {
 }
 
 /**
- * Per-post analytics for the project's linked accounts, pulled live from
- * PostBridge. Pass { refresh: true } to trigger a PostBridge sync first.
+ * Per-post analytics for the project's linked accounts, pulled live from every
+ * connected scheduler. Pass { refresh: true } to ask them to sync first.
  */
 export async function getContentAnalytics(projectId, { refresh = false } = {}) {
   const fetchIt = async () => {

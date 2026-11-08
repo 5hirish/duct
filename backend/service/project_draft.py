@@ -26,6 +26,12 @@ Two kinds of write reach a project, and they get different rules:
      drafts existed is in that state, and typing was the only way a field got
      filled then.
 
+* **An edit** (``edit_fields``) is the person speaking through an agent: they
+  asked it, in so many words, to change a field. It lands like the person's own
+  typing, labelled ``user``, and keeps what it replaced so the edit can be
+  undone (``revert_fields``). Only the MCP server's ``update_project`` makes
+  one; reading files is never an edit.
+
 * **A save** (``reconcile_save``) is the person speaking, through a client that
   sends the whole project. A field the person changed wins. A value the client
   only carried along, its copy of an earlier draft, may fill a blank or beat a
@@ -206,6 +212,57 @@ def merge_draft(project: Any, fields: Mapping[str, Mapping[str, Any]]) -> list[s
         landed.append(name)
     project.provenance = labels
     return landed
+
+
+def edit_fields(project: Any, values: Mapping[str, Any]) -> tuple[list[str], dict[str, Any], dict[str, str | None]]:
+    """Set fields as the person, whatever their label. Returns the fields that
+    changed, with the values and labels they replaced, which is all an undo
+    needs. A field already holding the value, as the person's, is not a change.
+    """
+    labels = dict(project.provenance or {})
+    changed: list[str] = []
+    before: dict[str, Any] = {}
+    before_labels: dict[str, str | None] = {}
+    for name, value in values.items():
+        if name not in FIELDS:
+            continue
+        current, label = get_value(project, name), labels.get(name)
+        if _same(name, current, value) and (label == PROVENANCE_USER or is_blank(name, value)):
+            continue
+        before[name], before_labels[name] = current, label
+        set_value(project, name, value)
+        labels[name] = PROVENANCE_USER
+        changed.append(name)
+    project.provenance = labels
+    return changed, before, before_labels
+
+
+def revert_fields(
+    project: Any,
+    after: Mapping[str, Any],
+    before: Mapping[str, Any],
+    before_labels: Mapping[str, str | None],
+) -> tuple[list[str], list[str]]:
+    """Put back what an edit replaced, field by field. A field changed again
+    since the edit (it no longer holds ``after``) is left alone: undoing one
+    edit must never wipe out a later one. Returns (restored, skipped)."""
+    labels = dict(project.provenance or {})
+    restored: list[str] = []
+    skipped: list[str] = []
+    for name, value in after.items():
+        if name not in FIELDS or name not in before:
+            continue
+        if not _same(name, get_value(project, name), value):
+            skipped.append(name)
+            continue
+        set_value(project, name, before[name])
+        if before_labels.get(name) is None:
+            labels.pop(name, None)
+        else:
+            labels[name] = before_labels[name]
+        restored.append(name)
+    project.provenance = labels
+    return restored, skipped
 
 
 def snapshot(project: Any | None) -> dict[str, Any]:

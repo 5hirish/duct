@@ -143,6 +143,8 @@ _CLEAN = {"status": "proposed", "preview": {"diff": "x"}}
         ("clean allowlisted change", _spec(), _CLEAN, True),
         # Budget moves money — deliberately off the allowlist for now.
         ("off the allowlist", _spec("google_ads.set_campaign_budget"), _CLEAN, False),
+        # A new keyword goes in enabled and spends, so it waits like a budget.
+        ("a new keyword spends", _spec("google_ads.add_keywords"), _CLEAN, False),
         ("destructive gate is absolute", _spec(destructive=True), _CLEAN, False),
         ("no rollback path", _spec(rollback=False), _CLEAN, False),
         (
@@ -621,3 +623,21 @@ def test_executors_registered():
         spec = EXECUTOR_REGISTRY[op]
         assert spec.rollback is not None
         assert spec.destructive is False
+
+
+# Every op whose apply can spend money or change spend: reversible as a
+# setting, not as a cost. None may apply without a person until numeric
+# guardrails exist; add_keywords was the one that slipped through (G1).
+SPEND_OPS = {
+    "google_ads.add_keywords",
+    "google_ads.set_campaign_budget",
+    "google_ads.set_campaign_bidding",
+    "google_ads.set_campaign_status",
+    "google_ads.set_ad_group_status",
+    "google_ads.set_keyword_status",
+    "google_ads.pause_campaign",
+}
+
+
+def test_nothing_that_spends_is_on_the_auto_apply_allowlist():
+    assert not SPEND_OPS & policy.AUTO_APPLY_ALLOWLIST

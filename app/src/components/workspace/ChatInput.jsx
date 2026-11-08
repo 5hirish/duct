@@ -15,7 +15,7 @@ import {
   pastedAttachment,
 } from "@/lib/attachments";
 import { clearDraft, readDraft, writeDraft } from "@/lib/composerDraft";
-import { matchesCombo } from "@/lib/shortcuts";
+import { matchesCombo, isComposing } from "@/lib/shortcuts";
 import { AttachmentStrip, DropHint } from "./Attachments";
 
 /**
@@ -126,7 +126,7 @@ export default function ChatInput({
       onStop();
       return;
     }
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey && !isComposing(e)) {
       e.preventDefault();
       handleSend();
     }
@@ -233,7 +233,7 @@ export default function ChatInput({
   return (
     <div className="border-t border-border/60 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))]">
       <div
-        className={`relative rounded-xl border bg-card focus-within:border-ring ${dragging ? "border-ring" : ""}`}
+        className={`relative mx-auto max-w-3xl rounded-xl border bg-card focus-within:border-ring ${dragging ? "border-ring" : ""}`}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}

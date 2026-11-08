@@ -10,7 +10,7 @@
 // here now".
 
 import { authedFetch, authToken } from "./authFetch";
-import { PROVIDERS, getProviderKey } from "./providerKeys";
+import { KEYED_PROVIDERS, getProviderKey } from "./providerKeys";
 
 /** How often an open app offers its keys. Matches the backend's idle window. */
 export const CATCH_UP_INTERVAL_MS = 30 * 60 * 1000;
@@ -22,7 +22,7 @@ export const CATCH_UP_INTERVAL_MS = 30 * 60 * 1000;
  */
 export async function apiKeyHeaders() {
   const headers = {};
-  for (const provider of PROVIDERS) {
+  for (const provider of KEYED_PROVIDERS) {
     const key = await getProviderKey(provider.id);
     if (key) headers[provider.header] = key;
   }

@@ -11,9 +11,19 @@ import { dayKey, formatDate, formatTime, toDate as parseDate } from "./format";
 // Re-exported under the board's own names.
 export { parseDate, dayKey };
 
+// A plan's start_date is a calendar date ("2026-10-07"). `new Date()` reads
+// that as UTC midnight, which is the evening before anywhere west of
+// Greenwich, and every date on the plan moved back a day with it.
+function calendarDate(value) {
+  const ymd = typeof value === "string" && /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (ymd) return new Date(Number(ymd[1]), Number(ymd[2]) - 1, Number(ymd[3]));
+  const d = parseDate(value);
+  return d ? new Date(d.getFullYear(), d.getMonth(), d.getDate()) : null;
+}
+
 /** First of the month the plan is anchored to (from plan.start_date). */
 export function monthStartOf(plan) {
-  const sd = parseDate(plan?.start_date);
+  const sd = calendarDate(plan?.start_date);
   return sd ? new Date(sd.getFullYear(), sd.getMonth(), 1) : null;
 }
 
@@ -21,12 +31,110 @@ export function monthStartOf(plan) {
  * proposes its first post for the 8th; anchoring on the month start put a
  * week plan's proposed days a week early, before its own published ones. */
 export function planStartOf(plan) {
-  const sd = parseDate(plan?.start_date);
-  return sd ? new Date(sd.getFullYear(), sd.getMonth(), sd.getDate()) : null;
+  return calendarDate(plan?.start_date);
 }
 
 function addDays(date, n) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate() + n);
+}
+
+/**
+ * The period a plan manages: one post per date from its first day. The
+ * backend holds the same rule (agents/content/plan_period.py) — a revision
+ * keeps the dates, and a run opened while a plan covers a date manages that
+ * plan rather than making a second one.
+ */
+export function planEndOf(plan) {
+  const start = planStartOf(plan);
+  const n = Array.isArray(plan?.days) ? plan.days.length : 0;
+  return start && n > 0 ? addDays(start, n - 1) : null;
+}
+
+/** The plan covering `day` (a Date), newest first, or null. */
+export function planCovering(plans, day) {
+  const d = new Date(day.getFullYear(), day.getMonth(), day.getDate());
+  return (plans || []).find((p) => {
+    const start = planStartOf(p);
+    const end = planEndOf(p);
+    return start && end && start <= d && d <= end;
+  }) || null;
+}
+
+// The period rules of agents/content/plan_period.py, mirrored so a button can
+// name its dates before the run starts: at most MAX_PLAN_DAYS, and a month
+// with less than ROLLOVER_DAYS left is planned from the next month.
+export const MAX_PLAN_DAYS = 30;
+export const ROLLOVER_DAYS = 7;
+
+// How far ahead a plan looks. MONTH is the month in progress, the default;
+// the others are a number of days from the plan's first date.
+export const PlanLength = Object.freeze({
+  MONTH: "month",
+  WEEK: "week",
+  TWO_WEEKS: "two_weeks",
+  THIRTY_DAYS: "thirty_days",
+});
+const LENGTH_DAYS = Object.freeze({
+  [PlanLength.WEEK]: 7,
+  [PlanLength.TWO_WEEKS]: 14,
+  [PlanLength.THIRTY_DAYS]: MAX_PLAN_DAYS,
+});
+
+// Calendar days from a to b. Through UTC, because a local-time difference
+// is an hour short across a daylight-saving change.
+function daysBetween(a, b) {
+  return Math.round(
+    (Date.UTC(b.getFullYear(), b.getMonth(), b.getDate()) - Date.UTC(a.getFullYear(), a.getMonth(), a.getDate()))
+      / 86_400_000,
+  );
+}
+
+/** The rest of `start`'s month, or the whole of the next one when less than
+ * ROLLOVER_DAYS are left. plan_period.month_period. */
+export function monthPeriod(start) {
+  let from = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  let monthEnd = new Date(from.getFullYear(), from.getMonth() + 1, 0);
+  if (daysBetween(from, monthEnd) + 1 < ROLLOVER_DAYS) {
+    from = addDays(monthEnd, 1);
+    monthEnd = new Date(from.getFullYear(), from.getMonth() + 1, 0);
+  }
+  return { start: from, days: Math.min(daysBetween(from, monthEnd) + 1, MAX_PLAN_DAYS) };
+}
+
+/**
+ * The periods a new plan from `from` can cover, one per PlanLength, as
+ * `{ length, start, end, days, clipped }`. Each stops short of the next plan
+ * already made (two plans never claim one date, the runner's
+ * _resolve_plan_period; `clipped` says it did),
+ * a month that rolled over into a planned month is left out, and lengths
+ * that come to the same dates are offered once.
+ */
+export function planPeriodOptions(from, plans = []) {
+  const options = [];
+  for (const length of Object.values(PlanLength)) {
+    const { start, days: wanted } = length === PlanLength.MONTH
+      ? monthPeriod(from)
+      : { start: new Date(from.getFullYear(), from.getMonth(), from.getDate()), days: LENGTH_DAYS[length] };
+    if (planCovering(plans, start)) continue;
+    const nextStart = (plans || [])
+      .map(planStartOf)
+      .filter((d) => d && d > start)
+      .sort((a, b) => a - b)[0];
+    const days = nextStart ? Math.min(wanted, daysBetween(start, nextStart)) : wanted;
+    if (options.some((o) => o.start.getTime() === start.getTime() && o.days === days)) continue;
+    options.push({ length, start, end: addDays(start, days - 1), days, clipped: days < wanted });
+  }
+  return options;
+}
+
+/** The day after the last plan ends, when that plan is still running or
+ * ahead: where planning ahead starts. Null when nothing is planned past today. */
+export function nextPlanStart(plans, today = new Date()) {
+  const ends = (plans || []).map(planEndOf).filter(Boolean);
+  if (ends.length === 0) return null;
+  const last = new Date(Math.max(...ends));
+  const day = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  return last >= day ? addDays(last, 1) : null;
 }
 
 // Message descriptors (module-level table): render with `i18n._(KIND_LABEL[kind])`.
@@ -44,10 +152,11 @@ export const KIND_LABEL = Object.freeze({
  *   index    — the item's position in days[] (for the proposed slot)
  *   locale   — the interface language, so the date badge matches the copy
  *              around it (it used to be pinned to English, as the board was)
- * Returns { date, time|null, kind, kindLabel, dateLabel, status, hasTime };
- * `kindLabel` is a message descriptor.
+ *   today    — the reader's today (start of day), for `missed`; tests pass one
+ * Returns { date, time|null, kind, kindLabel, dateLabel, status, hasTime,
+ * missed }; `kindLabel` is a message descriptor.
  */
-export function effectiveSchedule(day, post, anchor, index, { locale } = {}) {
+export function effectiveSchedule(day, post, anchor, index, { locale, today = startOfDay(new Date()) } = {}) {
   const fmtDate = (d) => formatDate(d, { withYear: false, locale });
   const fmtTime = (d) => formatTime(d, { locale });
   const status = post?.status || day?.status || "pending";
@@ -68,6 +177,129 @@ export function effectiveSchedule(day, post, anchor, index, { locale } = {}) {
 
   const dateLabel = date ? `${fmtDate(date)}${hasTime ? `, ${fmtTime(date)}` : ""}` : "";
 
-  return { date, time: hasTime ? fmtTime(date) : null, kind, kindLabel: KIND_LABEL[kind], dateLabel, status, hasTime };
+  return {
+    date, time: hasTime ? fmtTime(date) : null, kind, kindLabel: KIND_LABEL[kind], dateLabel, status, hasTime,
+    missed: isMissed(status, date, today),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Time: what a plan is, today
+// ---------------------------------------------------------------------------
+//
+// A plan is written for dates, and the board used to show it the same way
+// whatever today was: a person back on 3 November saw October's thirty posts
+// still "Pending", none of them drafted, as if the month were ahead of them.
+// These answer what the dates mean now, so every view says it the same way.
+
+export function startOfDay(date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+/**
+ * A planned post whose day has passed without a draft. Pending only: a draft
+ * whose slot passed can still be approved and sent late, and a scheduled or
+ * posted one already went somewhere.
+ */
+export function isMissed(status, date, today = startOfDay(new Date())) {
+  return status === "pending" && Boolean(date) && date < today;
+}
+
+export const PlanState = Object.freeze({ UPCOMING: "upcoming", RUNNING: "running", ENDED: "ended" });
+
+/** Whether a plan's dates are ahead, under way, or behind `today`. */
+export function planState(plan, today = startOfDay(new Date())) {
+  const start = planStartOf(plan);
+  const end = planEndOf(plan);
+  if (!start || !end) return PlanState.UPCOMING;
+  if (today < start) return PlanState.UPCOMING;
+  if (today > end) return PlanState.ENDED;
+  return PlanState.RUNNING;
+}
+
+/**
+ * Every day of a plan with its effective schedule, in date order, the plan's
+ * own order breaking ties and undated days last. The one place the views get
+ * their rows from, so the agenda, the board and the counts cannot disagree.
+ */
+export function planItems(plan, postsById = {}, { locale, today = startOfDay(new Date()) } = {}) {
+  const start = planStartOf(plan);
+  const days = Array.isArray(plan?.days) ? plan.days : [];
+  const rows = days.map((day, index) => {
+    const post = day?.post_id ? postsById[day.post_id] || null : null;
+    const schedule = effectiveSchedule(day, post, start, index, { locale, today });
+    return { day, post, schedule, index, status: schedule.status || "pending" };
+  });
+  rows.sort((a, b) => {
+    const ta = a.schedule.date?.getTime() ?? Infinity;
+    const tb = b.schedule.date?.getTime() ?? Infinity;
+    return ta - tb || a.index - b.index;
+  });
+  return rows;
+}
+
+/** The counts a plan's header says: how much went out, how much was missed. */
+export function planProgress(items) {
+  const out = { total: items.length, posted: 0, drafted: 0, missed: 0, pending: 0 };
+  for (const it of items) {
+    if (it.status === "posted") out.posted += 1;
+    else if (it.schedule.missed) out.missed += 1;
+    else if (it.status === "pending") out.pending += 1;
+    else out.drafted += 1;
+  }
+  return out;
+}
+
+export const AgendaGroup = Object.freeze({ MISSED: "missed", WEEK: "week", EARLIER: "earlier", UNDATED: "undated" });
+
+// Weeks start on Monday, the ISO week, so "this week" does not change meaning
+// on a Sunday.
+function weekStart(date) {
+  const d = startOfDay(date);
+  return addDays(d, -((d.getDay() + 6) % 7));
+}
+
+function weeksBetween(from, to) {
+  const utc = (d) => Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  return Math.floor((utc(to) - utc(from)) / (7 * 86_400_000));
+}
+
+/**
+ * The agenda: a plan's rows grouped by what today makes of them.
+ *
+ *   missed   — planned, never drafted, day passed: the actionable past, first
+ *   week     — this week and every week after, `offset` 0, 1, 2…
+ *   earlier  — the rest of the past (posted, or drafted late), folded away
+ *   undated  — no date at all, last
+ *
+ * Every row lands in exactly one group, and the groups come back in that
+ * order, weeks ascending. Pure, so it is asserted on over generated plans.
+ */
+export function agendaGroups(items, today = startOfDay(new Date())) {
+  const thisWeek = weekStart(today);
+  const missed = [];
+  const earlier = [];
+  const undated = [];
+  const weeks = new Map();
+  for (const it of items) {
+    const date = it.schedule.date;
+    if (!date) undated.push(it);
+    else if (it.schedule.missed) missed.push(it);
+    else if (date < thisWeek) earlier.push(it);
+    else {
+      const offset = weeksBetween(thisWeek, date);
+      if (!weeks.has(offset)) weeks.set(offset, []);
+      weeks.get(offset).push(it);
+    }
+  }
+  const groups = [];
+  if (missed.length) groups.push({ key: "missed", kind: AgendaGroup.MISSED, items: missed });
+  for (const offset of [...weeks.keys()].sort((a, b) => a - b)) {
+    const from = addDays(thisWeek, offset * 7);
+    groups.push({ key: `week-${offset}`, kind: AgendaGroup.WEEK, offset, from, to: addDays(from, 6), items: weeks.get(offset) });
+  }
+  if (earlier.length) groups.push({ key: "earlier", kind: AgendaGroup.EARLIER, items: earlier });
+  if (undated.length) groups.push({ key: "undated", kind: AgendaGroup.UNDATED, items: undated });
+  return groups;
 }
 

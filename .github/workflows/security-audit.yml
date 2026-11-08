@@ -34,12 +34,12 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Setup Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
         with:
           python-version: "3.12"
 
       - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: "20"
 
@@ -58,6 +58,11 @@ jobs:
       # is no `|| true`: a scanner that cannot be installed should fail the job,
       # not silently downgrade the audit.
       - name: Install security scanners
+        env:
+          OPENGREP_VERSION: v1.33.1
+          BETTERLEAKS_VERSION: v1.10.0
+          TRIVY_VERSION: v0.76.2
+          OSV_SCANNER_VERSION: v2.7.0
         run: |
           set -euxo pipefail
           python -m pip install --upgrade pip
@@ -66,16 +71,26 @@ jobs:
           # taint analysis and interprocedural scanning that Semgrep moved
           # behind its commercial tier, and is governed by a consortium rather
           # than a single vendor. Same flags, same JSON schema.
-          curl -fsSL https://raw.githubusercontent.com/opengrep/opengrep/main/install.sh | bash
+          # Versions are pinned because every one of these installers otherwise
+          # asks GitHub for "latest" first, over an API that runners share an
+          # unauthenticated rate limit on and that GitHub degrades first. On
+          # 2026-11-08 that lookup failed six runs in a row and held every
+          # merge to main for two hours. Dependabot cannot see a pin inside a
+          # shell line, so bumping these is a deliberate edit here.
+          curl -fsSL https://raw.githubusercontent.com/opengrep/opengrep/main/install.sh \
+            | bash -s -- -v "$OPENGREP_VERSION"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           # betterleaks is the maintained successor to gitleaks by its original
           # author, and the only scanner whose findings audit.py treats as
           # CRITICAL. It reads .betterleaks.toml, which carries Duct's own rules.
-          go install github.com/betterleaks/betterleaks@latest
-          go install github.com/google/osv-scanner/cmd/osv-scanner@latest
+          go install "github.com/betterleaks/betterleaks@$BETTERLEAKS_VERSION"
+          # osv-scanner 2.x lives under the /v2 module path. The old path's
+          # "latest" was v1.9.2 from 2024, which has no `scan source` command,
+          # so every run until now logged an execution issue instead of a scan.
+          go install "github.com/google/osv-scanner/v2/cmd/osv-scanner@$OSV_SCANNER_VERSION"
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
-            | sh -s -- -b /usr/local/bin
+            | sh -s -- -b /usr/local/bin "$TRIVY_VERSION"
 
       # Runs over every tracked file, not just the diff: a credential added
       # before the hook existed is just as public as one added today.

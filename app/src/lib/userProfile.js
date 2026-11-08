@@ -155,7 +155,11 @@ export function zoneRegion(zone) {
   return head && head !== zone ? head.replace(/_/g, " ") : "Other";
 }
 
-/** The current UTC offset, for the hint beside the control. Never throws. */
+/**
+ * The zone's offset from UTC right now, "UTC+1" or "UTC-3:30", for each zone
+ * in the picker. Intl spells it "GMT+1"; the picker's default is "UTC", and
+ * one list should not name the same clock two ways. Never throws.
+ */
 export function zoneOffsetLabel(zone, now = new Date()) {
   if (!zone) return "";
   try {
@@ -163,14 +167,36 @@ export function zoneOffsetLabel(zone, now = new Date()) {
       timeZone: zone,
       timeZoneName: "shortOffset",
     }).formatToParts(now);
-    return parts.find((p) => p.type === "timeZoneName")?.value || "";
+    const gmt = parts.find((p) => p.type === "timeZoneName")?.value || "";
+    // Zero comes back as "GMT" or "GMT+0" depending on the engine.
+    return gmt.replace(/^GMT/, "UTC").replace(/^UTC[+-]0$/, "UTC");
   } catch {
     return "";
   }
 }
 
+/**
+ * Who the signed-in person is to Google, first name only, for the Profile
+ * page's "What should Duct call you?" when nothing is set. Google's own
+ * `given_name` when the session carries it; otherwise the first word of the
+ * full name. A guest is named "Guest" by the server, which is not a name.
+ */
+export function firstName(user) {
+  if (!user || user.guest) return "";
+  const given = String(user.givenName || "").trim();
+  if (given) return given.slice(0, 80);
+  return String(user.name || "").trim().split(/\s+/)[0].slice(0, 80);
+}
+
+/**
+ * Set once the Profile page has filled the name in from Google, so a person
+ * who clears it is not handed it back on the next visit.
+ */
+export const NAME_FILLED_KEY = "duct_profile_name_filled";
+
+/** No "Not saying": an unset role is an empty control whose placeholder says
+ * what answering buys, rather than a choice that reads like a refusal. */
 export const ROLE_OPTIONS = [
-  { value: "", label: msg`Not saying` },
   { value: "Founder / CEO", label: msg`Founder / CEO` },
   { value: "Executive (CMO, VP, Director)", label: msg`Executive (CMO, VP, Director)` },
   { value: "Product Manager", label: msg`Product Manager` },
