@@ -941,6 +941,15 @@ The tree, measured against this file. Fix each when a change touches it.
 
 ## Sources
 
+The principles behind this file (hierarchy, grid, type, targets, motion,
+copy, the psychology line) live once, for every project, in the
+`design-sense` skill, the maintainer's agent-skill hub at
+`~/.agents/skills/design-sense/` (not in this repository): Apple HIG, NN/g,
+Laws of UX and growth.design distilled into rules with numbers, plus the
+pre-ship checklist. This file holds what is Duct's alone: tokens, primitives,
+canon, checks and known gaps. A general lesson learned here goes into that
+skill's `references/lessons.md`; a Duct-specific one stays here.
+
 - NN/g on visual hierarchy, layer-cake scanning, Gestalt proximity and common
   region, cards vs lists, progressive disclosure and empty states:
   nngroup.com/articles/visual-hierarchy-ux-definition,

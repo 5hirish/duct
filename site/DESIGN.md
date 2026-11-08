@@ -1,3 +1,8 @@
+<!-- The cross-project design principles (hierarchy, type, color, targets,
+     copy, psychology) live in the design-sense skill, the maintainer's agent-skill hub at
+     ~/.agents/skills/design-sense/ (not in this repository). This file is the site's own visual system
+     and voice; a lesson that would apply to any site goes in that skill's
+     references/lessons.md. -->
 # Duct site — design & voice guide
 
 [`AGENTS.md`](AGENTS.md) holds the mechanical rules CI enforces — head

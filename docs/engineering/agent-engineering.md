@@ -1,11 +1,19 @@
 # Building and changing agents
 
-**Author:** Shirish Kadam · **Updated:** 2026-10-27
+**Author:** Shirish Kadam · **Updated:** 2026-11-08
 
 Duct's agent rulebook on LangChain 1.x, LangGraph and `deepagents`: 34 rules,
 each naming its primitive and its enforcing test, plus 12 ranked open gaps.
 Read it before adding an agent or changing a prompt, tool, model default,
 middleware or pin.
+
+> The framework-free half of these rules (architecture, prompting, memory,
+> evals, guardrails, observability) is the `agent-engineering` skill in the
+> maintainer's agent-skill hub (`~/.agents/skills/agent-engineering/`, not in
+> this repository), which every project's agent reads.
+> This page stays Duct's: the LangChain and `deepagents` primitives, the
+> enforcing tests and the open gaps. A lesson any agent product could use
+> goes in the skill's `references/lessons.md` the day it lands.
 
 ## At a glance
 

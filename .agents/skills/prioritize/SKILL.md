@@ -415,3 +415,12 @@ The roadmap is what's open across the current and next milestones plus
 `Status: Ready` — read it from there rather than keeping a second copy in a
 document, which would drift the way the old root `AGENTS.md` preferences
 file did.
+
+## Related
+
+The method here, with every Duct mechanic removed, is the cross-project
+`product-strategy` skill (the maintainer's agent-skill hub at
+`~/.agents/skills/product-strategy/`, not in this repository;
+`references/prioritisation.md`). This file keeps what is Duct's: the board, its ids, labels and
+milestones. A lesson any product could use goes in that skill's
+`references/lessons.md`.
