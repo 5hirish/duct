@@ -78,6 +78,9 @@ class Tool:
     args: type[BaseModel]
     run: Callable[[BaseModel, Caller], dict[str, Any]]
     read_only: bool
+    # Replaces what the person set (update_project). Clients read the hint to
+    # confirm the call with the person first.
+    destructive: bool = False
 
     def descriptor(self) -> dict[str, Any]:
         return {
@@ -90,7 +93,7 @@ class Tool:
             "annotations": {
                 "title": self.title,
                 "readOnlyHint": self.read_only,
-                "destructiveHint": False,
+                "destructiveHint": self.destructive,
                 "idempotentHint": True,
                 "openWorldHint": False,
             },

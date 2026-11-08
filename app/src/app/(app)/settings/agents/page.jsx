@@ -104,8 +104,8 @@ export default function AgentsSettingsPage() {
         help={
           <Trans>
             Add it once and it works in every repo. Your agent does the reading on its own subscription, so
-            Duct spends none of your model keys on it. Running it again is safe: a draft never replaces what
-            you typed or confirmed.
+            Duct spends none of your model keys on it. What it reads only fills gaps; it changes what you set
+            only when you ask, and you can undo any edit from Activity.
           </Trans>
         }
       />

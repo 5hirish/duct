@@ -1332,8 +1332,12 @@ msgid "Add guardrail"
 msgstr "ガードレールを追加"
 
 #: src/app/(app)/settings/agents/page.jsx
-msgid "Add it once and it works in every repo. Your agent does the reading on its own subscription, so Duct spends none of your model keys on it. Running it again is safe: a draft never replaces what you typed or confirmed."
-msgstr "一度追加すれば、すべてのリポジトリで使えます。読み込みはエージェント自身のサブスクリプションで行うため、Duct があなたのモデルキーを消費することはありません。何度実行しても安全です。下書きが、あなたが入力または確認した内容を置き換えることはありません。"
+#~ msgid "Add it once and it works in every repo. Your agent does the reading on its own subscription, so Duct spends none of your model keys on it. Running it again is safe: a draft never replaces what you typed or confirmed."
+#~ msgstr "一度追加すれば、すべてのリポジトリで使えます。読み込みはエージェント自身のサブスクリプションで行うため、Duct があなたのモデルキーを消費することはありません。何度実行しても安全です。下書きが、あなたが入力または確認した内容を置き換えることはありません。"
+
+#: src/app/(app)/settings/agents/page.jsx
+msgid "Add it once and it works in every repo. Your agent does the reading on its own subscription, so Duct spends none of your model keys on it. What it reads only fills gaps; it changes what you set only when you ask, and you can undo any edit from Activity."
+msgstr "一度追加すれば、すべてのリポジトリで使えます。読み込みはエージェント自身のサブスクリプションで行うため、Duct があなたのモデルキーを消費することはありません。読み込んだ内容は空欄を埋めるだけで、あなたが設定した内容は頼んだときだけ変更します。どの変更もアクティビティから元に戻せます。"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Add one or more names, separated by commas."
@@ -1774,8 +1778,12 @@ msgid "Approve all"
 msgstr "すべて承認"
 
 #: src/components/settings/AgentAbilities.jsx
-msgid "Approve or apply changes, or connect tools"
-msgstr "変更を承認または適用するか、ツールを接続する"
+msgid "Approve or apply changes to your tools, or connect new ones"
+msgstr "ツールへの変更を承認・適用したり、新しいツールを接続したりすること"
+
+#: src/components/settings/AgentAbilities.jsx
+#~ msgid "Approve or apply changes, or connect tools"
+#~ msgstr "変更を承認または適用するか、ツールを接続する"
 
 #: src/components/content/DailyDraftsReminder.jsx
 msgid "Approve, edit or skip them on Content Studio's Posts tab."
@@ -1896,8 +1904,12 @@ msgstr "サイトについて何でも質問してください"
 #~ msgstr "何か質問してください"
 
 #: src/components/settings/AgentAccess.jsx
-msgid "Ask the same in any other repo, or after a launch. It updates that product's project, or starts one, and never touches what you set yourself."
-msgstr "ほかのリポジトリでも、ローンチの後でも、同じように頼んでください。その製品のプロジェクトを更新するか新しく作成し、あなたが自分で設定した内容には触れません。"
+#~ msgid "Ask the same in any other repo, or after a launch. It updates that product's project, or starts one, and never touches what you set yourself."
+#~ msgstr "ほかのリポジトリでも、ローンチの後でも、同じように頼んでください。その製品のプロジェクトを更新するか新しく作成し、あなたが自分で設定した内容には触れません。"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Ask the same in any other repo, or after a launch. It updates that product's project, or starts one. To change something you set, just ask; you can undo it from Activity."
+msgstr "ほかのリポジトリでも、ローンチの後でも、同じように頼んでください。その製品のプロジェクトを更新するか新しく作成します。設定した内容を変えたいときは頼むだけで、アクティビティから元に戻せます。"
 
 #: src/app/invite/[token]/page.jsx
 msgid "Ask whoever invited you to send a new one, or <0>sign in</0> if you already have access."
@@ -3993,6 +4005,10 @@ msgstr "チャットで編集"
 #: src/components/content/BrandContextForm.jsx
 msgid "Edit project context"
 msgstr "プロジェクトコンテキストを編集"
+
+#: src/components/settings/AgentAbilities.jsx
+msgid "Edit your project when you ask, and every edit can be undone in Duct"
+msgstr "頼んだときにプロジェクトを編集すること（どの変更も Duct で元に戻せます）"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Edited a slide"
@@ -8884,8 +8900,12 @@ msgid "See what we’d do"
 msgstr "提案を見る"
 
 #: src/components/settings/AgentAbilities.jsx
-msgid "See your keys, or replace anything you typed"
-msgstr "キーを見る、または入力したものを置き換える"
+msgid "See your keys or passwords"
+msgstr "キーやパスワードを見ること"
+
+#: src/components/settings/AgentAbilities.jsx
+#~ msgid "See your keys, or replace anything you typed"
+#~ msgstr "キーを見る、または入力したものを置き換える"
 
 #: src/components/settings/AgentAbilities.jsx
 msgid "See your projects and what Duct knows about each"
@@ -9958,6 +9978,7 @@ msgstr "接続できませんでした。しばらくしてからもう一度お
 msgid "That didn't disconnect. Try again."
 msgstr "接続を解除できませんでした。もう一度お試しください。"
 
+#: src/app/(app)/activity/page.jsx
 #: src/app/(app)/settings/agents/page.jsx
 #: src/app/authorize/page.jsx
 msgid "That didn't go through. Try again in a moment."
@@ -10756,9 +10777,22 @@ msgstr "未確認"
 msgid "Undated"
 msgstr "日付なし"
 
+#: src/app/(app)/activity/page.jsx
 #: src/components/workspace/MemoryRows.jsx
 msgid "Undo"
 msgstr "元に戻す"
+
+#: src/app/(app)/activity/page.jsx
+msgid "Undoing…"
+msgstr "元に戻しています…"
+
+#: src/app/(app)/activity/page.jsx
+msgid "Undone"
+msgstr "元に戻しました"
+
+#: src/app/(app)/activity/page.jsx
+msgid "Undone, except {skipped}, which changed again since"
+msgstr "元に戻しました（{skipped} はその後また変更されたため除きます）"
 
 #: src/app/(auth)/desktop-auth/page.js
 msgid "Unknown connector"

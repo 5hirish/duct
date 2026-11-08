@@ -137,7 +137,10 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
     name because every OAuth callback and the desktop shell's deep link land
     on `/connections`, and a rename would break connects already in flight
   - `artifacts/` + `[artifactId]/`, `activity/`, `usage/`, `memory/` — the
-    library, the cross-agent feed, usage, and user-level memory
+    library, the cross-agent feed, usage, and user-level memory. An agent's
+    edit to the project (MCP `update_project`, #512) carries Undo in the
+    feed: that button is what the consent page's "every edit can be undone
+    in Duct" stands on, so it stays wherever that promise is made
   - `settings/models/` + `settings/profile/` — tiers, providers, usage; profile
   - `settings/agents/` — Connect your AI agent. The why comes first: a
     drawing of repo → agent → Duct project, what that profile feeds, and

@@ -23,3 +23,18 @@ export function listActivity({ projectId, conversationId, category, before, limi
 
   return authedRequest(`/api/user/activity?${params}`);
 }
+
+/** An agent's edit to a project (MCP `update_project`). The backend's
+ *  ACTION_EDITED in service/project_writes.py; the feed offers Undo on it. */
+export const ACTION_PROJECT_EDITED = "project.edited";
+
+/**
+ * Put back what one agent edit replaced. Resolves to `{ restored, skipped,
+ * project }`: a field changed again since the edit is skipped, never reverted.
+ */
+export function undoProjectEdit(projectId, activityId) {
+  return authedRequest(
+    `/api/user/projects/${encodeURIComponent(projectId)}/edits/${encodeURIComponent(activityId)}/undo`,
+    { method: "POST" },
+  );
+}

@@ -1,5 +1,8 @@
 """Writing a project row: the upsert, the lock, and the draft merge around it.
 
+An agent's edit (``apply_edit``) and its undo (``undo_edit``) land here too,
+beside the draft, so the lock and the write path are shared.
+
 Two callers write drafts, and they must not drift: the app's
 ``POST /api/user/projects/{id}/draft`` and the MCP server's ``draft_project``
 tool, which is an outside agent writing on the person's behalf. Both land here,
@@ -20,7 +23,7 @@ from models.auth import User
 from models.project import Project, unique_slug
 from service.membership import ensure_owner_membership, get_project_for_user
 from service.memory import seed_project_profile
-from service.project_draft import UNTITLED_PROJECT, is_blank, merge_draft
+from service.project_draft import UNTITLED_PROJECT, edit_fields, is_blank, merge_draft, revert_fields
 from utils.dates import utcnow
 
 
@@ -93,3 +96,52 @@ def apply_draft(
     if landed or is_new:
         project.updated_at = utcnow()
     return finish_write(project, is_new, user, session), landed, is_new
+
+
+# The activity actions an agent's edit and its undo are recorded under. The MCP
+# tool writes the first, the undo route finds edits by it and writes the second,
+# and the app's activity feed reads both, so they are a contract, not labels.
+ACTION_EDITED = "project.edited"
+ACTION_EDIT_UNDONE = "project.edit_undone"
+
+
+def _locked_member_project(project_id: UUID, user: User, session: Session) -> Project:
+    """The project, locked, when the caller may write it; 404 otherwise. An
+    edit never creates a project: there is nothing to edit yet."""
+    found = session.execute(
+        select(Project).where(Project.id == project_id).with_for_update()
+    ).scalars().first()
+    if found is None:
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=404, detail="Project not found")
+    return get_project_for_user(project_id, user, session)
+
+
+def apply_edit(
+    project_id: UUID, values: dict[str, Any], user: User, session: Session
+) -> tuple[Project, list[str], dict[str, Any], dict[str, str | None]]:
+    """Set fields as the person asked, keeping what they replaced.
+
+    Returns the project, the fields that changed, and the replaced values and
+    labels, which the caller records so ``undo_edit`` can put them back.
+    """
+    project = _locked_member_project(project_id, user, session)
+    changed, before, before_labels = edit_fields(project, values)
+    if changed:
+        project.updated_at = utcnow()
+    return finish_write(project, False, user, session), changed, before, before_labels
+
+
+def undo_edit(
+    project_id: UUID, edit: dict[str, Any], user: User, session: Session
+) -> tuple[Project, list[str], list[str]]:
+    """Put back what one recorded edit replaced. ``edit`` is the activity
+    row's data: ``after``, ``before`` and ``before_labels``."""
+    project = _locked_member_project(project_id, user, session)
+    restored, skipped = revert_fields(
+        project, edit.get("after") or {}, edit.get("before") or {}, edit.get("before_labels") or {}
+    )
+    if restored:
+        project.updated_at = utcnow()
+    return finish_write(project, False, user, session), restored, skipped

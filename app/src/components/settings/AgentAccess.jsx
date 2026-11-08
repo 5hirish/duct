@@ -516,7 +516,7 @@ function SignInSteps({ agent, onAgentChange, serverUrl, agents, watching, deepLi
           <Hint>
             <Trans>
               Ask the same in any other repo, or after a launch. It updates that product&apos;s project, or starts
-              one, and never touches what you set yourself.
+              one. To change something you set, just ask; you can undo it from Activity.
             </Trans>
           </Hint>
         </Step>

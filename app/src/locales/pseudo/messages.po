@@ -1326,7 +1326,11 @@ msgid "Add guardrail"
 msgstr ""
 
 #: src/app/(app)/settings/agents/page.jsx
-msgid "Add it once and it works in every repo. Your agent does the reading on its own subscription, so Duct spends none of your model keys on it. Running it again is safe: a draft never replaces what you typed or confirmed."
+#~ msgid "Add it once and it works in every repo. Your agent does the reading on its own subscription, so Duct spends none of your model keys on it. Running it again is safe: a draft never replaces what you typed or confirmed."
+#~ msgstr ""
+
+#: src/app/(app)/settings/agents/page.jsx
+msgid "Add it once and it works in every repo. Your agent does the reading on its own subscription, so Duct spends none of your model keys on it. What it reads only fills gaps; it changes what you set only when you ask, and you can undo any edit from Activity."
 msgstr ""
 
 #: src/app/(app)/project/[projectId]/page.jsx
@@ -1768,8 +1772,12 @@ msgid "Approve all"
 msgstr ""
 
 #: src/components/settings/AgentAbilities.jsx
-msgid "Approve or apply changes, or connect tools"
+msgid "Approve or apply changes to your tools, or connect new ones"
 msgstr ""
+
+#: src/components/settings/AgentAbilities.jsx
+#~ msgid "Approve or apply changes, or connect tools"
+#~ msgstr ""
 
 #: src/components/content/DailyDraftsReminder.jsx
 msgid "Approve, edit or skip them on Content Studio's Posts tab."
@@ -1890,7 +1898,11 @@ msgstr ""
 #~ msgstr ""
 
 #: src/components/settings/AgentAccess.jsx
-msgid "Ask the same in any other repo, or after a launch. It updates that product's project, or starts one, and never touches what you set yourself."
+#~ msgid "Ask the same in any other repo, or after a launch. It updates that product's project, or starts one, and never touches what you set yourself."
+#~ msgstr ""
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Ask the same in any other repo, or after a launch. It updates that product's project, or starts one. To change something you set, just ask; you can undo it from Activity."
 msgstr ""
 
 #: src/app/invite/[token]/page.jsx
@@ -3986,6 +3998,10 @@ msgstr ""
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Edit project context"
+msgstr ""
+
+#: src/components/settings/AgentAbilities.jsx
+msgid "Edit your project when you ask, and every edit can be undone in Duct"
 msgstr ""
 
 #: src/components/workspace/ActivityRow.jsx
@@ -8878,8 +8894,12 @@ msgid "See what we’d do"
 msgstr ""
 
 #: src/components/settings/AgentAbilities.jsx
-msgid "See your keys, or replace anything you typed"
+msgid "See your keys or passwords"
 msgstr ""
+
+#: src/components/settings/AgentAbilities.jsx
+#~ msgid "See your keys, or replace anything you typed"
+#~ msgstr ""
 
 #: src/components/settings/AgentAbilities.jsx
 msgid "See your projects and what Duct knows about each"
@@ -9952,6 +9972,7 @@ msgstr ""
 msgid "That didn't disconnect. Try again."
 msgstr ""
 
+#: src/app/(app)/activity/page.jsx
 #: src/app/(app)/settings/agents/page.jsx
 #: src/app/authorize/page.jsx
 msgid "That didn't go through. Try again in a moment."
@@ -10750,8 +10771,21 @@ msgstr ""
 msgid "Undated"
 msgstr ""
 
+#: src/app/(app)/activity/page.jsx
 #: src/components/workspace/MemoryRows.jsx
 msgid "Undo"
+msgstr ""
+
+#: src/app/(app)/activity/page.jsx
+msgid "Undoing…"
+msgstr ""
+
+#: src/app/(app)/activity/page.jsx
+msgid "Undone"
+msgstr ""
+
+#: src/app/(app)/activity/page.jsx
+msgid "Undone, except {skipped}, which changed again since"
 msgstr ""
 
 #: src/app/(auth)/desktop-auth/page.js

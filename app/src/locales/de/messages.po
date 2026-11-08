@@ -1332,8 +1332,12 @@ msgid "Add guardrail"
 msgstr "Leitplanke hinzufügen"
 
 #: src/app/(app)/settings/agents/page.jsx
-msgid "Add it once and it works in every repo. Your agent does the reading on its own subscription, so Duct spends none of your model keys on it. Running it again is safe: a draft never replaces what you typed or confirmed."
-msgstr "Einmal hinzufügen, und es funktioniert in jedem Repo. Dein Agent liest über sein eigenes Abo, Duct verbraucht dafür also keinen deiner Modell-Schlüssel. Du kannst es gefahrlos erneut ausführen: Ein Entwurf ersetzt nie, was du eingegeben oder bestätigt hast."
+#~ msgid "Add it once and it works in every repo. Your agent does the reading on its own subscription, so Duct spends none of your model keys on it. Running it again is safe: a draft never replaces what you typed or confirmed."
+#~ msgstr "Einmal hinzufügen, und es funktioniert in jedem Repo. Dein Agent liest über sein eigenes Abo, Duct verbraucht dafür also keinen deiner Modell-Schlüssel. Du kannst es gefahrlos erneut ausführen: Ein Entwurf ersetzt nie, was du eingegeben oder bestätigt hast."
+
+#: src/app/(app)/settings/agents/page.jsx
+msgid "Add it once and it works in every repo. Your agent does the reading on its own subscription, so Duct spends none of your model keys on it. What it reads only fills gaps; it changes what you set only when you ask, and you can undo any edit from Activity."
+msgstr "Einmal hinzufügen, und es funktioniert in jedem Repo. Dein Agent liest über sein eigenes Abo, Duct verbraucht dafür also keinen deiner Modell-Schlüssel. Was er liest, füllt nur Lücken; was du festgelegt hast, ändert er nur auf deinen Wunsch, und jede Änderung kannst du unter Aktivität rückgängig machen."
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Add one or more names, separated by commas."
@@ -1774,8 +1778,12 @@ msgid "Approve all"
 msgstr "Alle freigeben"
 
 #: src/components/settings/AgentAbilities.jsx
-msgid "Approve or apply changes, or connect tools"
-msgstr "Änderungen freigeben oder anwenden, oder Tools verbinden"
+msgid "Approve or apply changes to your tools, or connect new ones"
+msgstr "Änderungen an deinen Tools freigeben oder anwenden oder neue verbinden"
+
+#: src/components/settings/AgentAbilities.jsx
+#~ msgid "Approve or apply changes, or connect tools"
+#~ msgstr "Änderungen freigeben oder anwenden, oder Tools verbinden"
 
 #: src/components/content/DailyDraftsReminder.jsx
 msgid "Approve, edit or skip them on Content Studio's Posts tab."
@@ -1896,8 +1904,12 @@ msgstr "Frage mich alles über deine Website"
 #~ msgstr "Frage mich etwas"
 
 #: src/components/settings/AgentAccess.jsx
-msgid "Ask the same in any other repo, or after a launch. It updates that product's project, or starts one, and never touches what you set yourself."
-msgstr "Frag dasselbe in jedem anderen Repo oder nach einem Launch. Er aktualisiert das Projekt dieses Produkts oder legt eines an und rührt nie an, was du selbst festgelegt hast."
+#~ msgid "Ask the same in any other repo, or after a launch. It updates that product's project, or starts one, and never touches what you set yourself."
+#~ msgstr "Frag dasselbe in jedem anderen Repo oder nach einem Launch. Er aktualisiert das Projekt dieses Produkts oder legt eines an und rührt nie an, was du selbst festgelegt hast."
+
+#: src/components/settings/AgentAccess.jsx
+msgid "Ask the same in any other repo, or after a launch. It updates that product's project, or starts one. To change something you set, just ask; you can undo it from Activity."
+msgstr "Frag dasselbe in jedem anderen Repo oder nach einem Launch. Er aktualisiert das Projekt dieses Produkts oder legt eines an. Um etwas zu ändern, das du festgelegt hast, frag einfach; unter Aktivität kannst du es rückgängig machen."
 
 #: src/app/invite/[token]/page.jsx
 msgid "Ask whoever invited you to send a new one, or <0>sign in</0> if you already have access."
@@ -3993,6 +4005,10 @@ msgstr "Im Chat bearbeiten"
 #: src/components/content/BrandContextForm.jsx
 msgid "Edit project context"
 msgstr "Projektkontext bearbeiten"
+
+#: src/components/settings/AgentAbilities.jsx
+msgid "Edit your project when you ask, and every edit can be undone in Duct"
+msgstr "Dein Projekt auf deinen Wunsch bearbeiten, und jede Änderung lässt sich in Duct rückgängig machen"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Edited a slide"
@@ -8883,8 +8899,12 @@ msgid "See what we’d do"
 msgstr "Sehen, was wir tun würden"
 
 #: src/components/settings/AgentAbilities.jsx
-msgid "See your keys, or replace anything you typed"
-msgstr "Deine Schlüssel sehen oder alles, was du eingegeben hast, ersetzen"
+msgid "See your keys or passwords"
+msgstr "Deine Schlüssel oder Passwörter sehen"
+
+#: src/components/settings/AgentAbilities.jsx
+#~ msgid "See your keys, or replace anything you typed"
+#~ msgstr "Deine Schlüssel sehen oder alles, was du eingegeben hast, ersetzen"
 
 #: src/components/settings/AgentAbilities.jsx
 msgid "See your projects and what Duct knows about each"
@@ -9957,6 +9977,7 @@ msgstr "Das hat nicht verbunden. Versuche es gleich noch einmal."
 msgid "That didn't disconnect. Try again."
 msgstr "Das Trennen hat nicht geklappt. Versuch es noch einmal."
 
+#: src/app/(app)/activity/page.jsx
 #: src/app/(app)/settings/agents/page.jsx
 #: src/app/authorize/page.jsx
 msgid "That didn't go through. Try again in a moment."
@@ -10755,9 +10776,22 @@ msgstr "unbestätigt"
 msgid "Undated"
 msgstr "Ohne Datum"
 
+#: src/app/(app)/activity/page.jsx
 #: src/components/workspace/MemoryRows.jsx
 msgid "Undo"
 msgstr "Rückgängig machen"
+
+#: src/app/(app)/activity/page.jsx
+msgid "Undoing…"
+msgstr "Wird rückgängig gemacht…"
+
+#: src/app/(app)/activity/page.jsx
+msgid "Undone"
+msgstr "Rückgängig gemacht"
+
+#: src/app/(app)/activity/page.jsx
+msgid "Undone, except {skipped}, which changed again since"
+msgstr "Rückgängig gemacht, außer {skipped}, das sich seitdem wieder geändert hat"
 
 #: src/app/(auth)/desktop-auth/page.js
 msgid "Unknown connector"
