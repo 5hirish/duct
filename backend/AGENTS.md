@@ -532,6 +532,11 @@ Postgres `DATABASE_URL` names.
   of project fields goes through `merge_draft`** (the MCP server, a GitHub
   re-sync), never a direct column write; a writer the rules do not know is
   how a guess overwrites what someone typed. A draft cannot claim `user`.
+  The one exception is the person speaking through their agent: MCP
+  `update_project` writes through `edit_fields` as `user`, whatever the field
+  held, and records what it replaced in its `activity_logs` row so
+  `POST /api/user/projects/{id}/edits/{activity_id}/undo` (`revert_fields`)
+  puts it back, skipping any field changed since (issue #512).
 - `routes/mcp_server.py` + `service/mcp_server/` — Duct as an MCP server at
   `POST /mcp`, for the person's own agent (Claude Code, Codex, Cursor,
   OpenCode). Stateless JSON-RPC with no SDK: five methods, no sessions, no
@@ -552,14 +557,16 @@ Postgres `DATABASE_URL` names.
   its address changes every launch and its app is `tauri://`). A
   **personal token**, minted at `/api/user/mcp-tokens` by a signed-in
   session, is the way in for an agent with no browser. Both are rows in
-  `mcp_tokens`, listed together with a `kind`, and DELETE ends either. Three tools, and adding a
-  fourth is a scope decision, not a refactor: `list_projects`,
-  `get_project`, `draft_project`. Writes go through
+  `mcp_tokens`, listed together with a `kind`, and DELETE ends either. Four tools, and adding a
+  fifth is a scope decision, not a refactor: `list_projects`,
+  `get_project`, `draft_project`, `update_project`. A draft goes through
   `service/project_writes.apply_draft`, labelled `document` (or `inferred`
-  for what the agent guessed), so they never replace the person or their
-  site; each one leaves an `activity_logs` row (`category="project"`). No
-  tool calls a model on Duct's side, and none approves, applies, connects
-  or touches credentials.
+  for what the agent guessed), so it never replaces the person or their
+  site. An edit (`update_project`, #512) is the person asking in so many
+  words: it can replace anything, carries `destructiveHint` so the client
+  confirms it, and is undoable from the activity feed. Each write leaves an
+  `activity_logs` row (`category="project"`). No tool calls a model on
+  Duct's side, and none approves, applies, connects or touches credentials.
 - `agents/engines.resolve_job_run` — provider and model over the keys *this
   caller* can spend, so a user holding only an OpenAI key runs on OpenAI
   instead of a 402 for the instance default. All three agents route through

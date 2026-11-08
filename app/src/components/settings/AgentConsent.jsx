@@ -15,13 +15,15 @@
  * requests, so /preview can draw every state.
  */
 
-import { AppWindow, Check, Globe, Laptop, X } from "lucide-react";
+import { AppWindow, ArrowRight, Globe, Laptop } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
-import { DESTINATION_APP, DESTINATION_DEVICE } from "@/lib/mcpTokensApi";
+import AgentAbilities from "@/components/settings/AgentAbilities";
+import { AgentLogoTile } from "@/components/connections/logos";
+import { DESTINATION_APP, DESTINATION_DEVICE, agentDisplayName, agentFromName } from "@/lib/mcpTokensApi";
 
 export const CONSENT_LOADING = "loading";
 export const CONSENT_ASK = "ask";
@@ -36,7 +38,7 @@ export const CONSENT_FAILED = "failed";
 // through by name and this is the same word set in the logo's lowercase.
 const WORDMARK = "duct";
 
-function Shell({ children }) {
+function Shell({ children, mark = null }) {
   return (
     <main
       id="main-content"
@@ -44,13 +46,33 @@ function Shell({ children }) {
       tabIndex={-1}
     >
       <Card size="lg" className="w-full max-w-md gap-0">
-        <div className="mb-6 flex items-center gap-1.5">
-          <span className="font-serif text-lg tracking-tight text-foreground">{WORDMARK}</span>
-          <span className="size-2 rounded-full bg-[var(--orange)]" aria-hidden />
-        </div>
+        {mark || (
+          <div className="mb-6 flex items-center gap-1.5">
+            <span className="font-serif text-lg tracking-tight text-foreground">{WORDMARK}</span>
+            <span className="size-2 rounded-full bg-[var(--orange)]" aria-hidden />
+          </div>
+        )}
         {children}
       </Card>
     </main>
+  );
+}
+
+/** The agent's mark joined to Duct's: who is asking, at a glance. A known
+ *  name gets its owner's logo, anything else a generic agent; the name in
+ *  the heading below is still the thing to check. */
+function Pairing({ agentId }) {
+  return (
+    <div className="mb-6 flex items-center gap-2" aria-hidden="true">
+      <AgentLogoTile id={agentId} className="size-11 rounded-xl [&_img]:size-6 [&_svg]:size-6" />
+      <ArrowRight className="size-4 text-muted-foreground" />
+      <span className="flex size-11 items-center justify-center rounded-xl border border-border bg-background">
+        <span className="flex items-baseline gap-0.5">
+          <span className="font-serif text-lg leading-none text-foreground">{WORDMARK.charAt(0)}</span>
+          <span className="size-1.5 rounded-full bg-[var(--orange)]" />
+        </span>
+      </span>
+    </div>
   );
 }
 
@@ -60,16 +82,6 @@ function Notice({ title, children }) {
       <h1 className="mb-2 font-serif text-xl text-foreground">{title}</h1>
       <div className="space-y-2 text-sm text-muted-foreground">{children}</div>
     </>
-  );
-}
-
-function Ability({ allowed, children }) {
-  const Icon = allowed ? Check : X;
-  return (
-    <li className="flex items-start gap-2.5 text-sm text-foreground">
-      <Icon className={`mt-0.5 size-4 shrink-0 ${allowed ? "text-success" : "text-muted-foreground"}`} aria-hidden="true" />
-      <span>{children}</span>
-    </li>
   );
 }
 
@@ -107,7 +119,8 @@ export default function AgentConsent({
   onSwitchAccount,
 }) {
   const { t } = useLingui();
-  const agent = request?.client_name || t`An AI agent`;
+  const agent = agentDisplayName(request?.client_name) || t`An AI agent`;
+  const agentId = agentFromName(request?.client_name);
 
   if (state === CONSENT_LOADING) {
     return (
@@ -152,7 +165,7 @@ export default function AgentConsent({
 
   if (state === CONSENT_ALLOWED || state === CONSENT_DECLINED) {
     return (
-      <Shell>
+      <Shell mark={<Pairing agentId={agentId} />}>
         <Notice title={state === CONSENT_ALLOWED ? t`${agent} is connected` : t`${agent} wasn't connected`}>
           <p role="status">
             {state === CONSENT_ALLOWED
@@ -166,7 +179,7 @@ export default function AgentConsent({
 
   if (state === CONSENT_SIGN_IN) {
     return (
-      <Shell>
+      <Shell mark={<Pairing agentId={agentId} />}>
         <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-brand">
           <Trans>Connect an agent</Trans>
         </p>
@@ -184,7 +197,7 @@ export default function AgentConsent({
   }
 
   return (
-    <Shell>
+    <Shell mark={<Pairing agentId={agentId} />}>
       <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-brand">
         <Trans>Connect an agent</Trans>
       </p>
@@ -202,18 +215,7 @@ export default function AgentConsent({
         </button>
       </p>
 
-      {/* Two labelled lists, not one: a check and a cross are the only
-          difference otherwise, and a skim reads four lines as four grants. */}
-      <p className="mb-1.5 text-xs font-semibold text-muted-foreground"><Trans>It will be able to</Trans></p>
-      <ul className="mb-4 space-y-2">
-        <Ability allowed><Trans>See your projects and what Duct knows about each</Trans></Ability>
-        <Ability allowed><Trans>Draft a project&apos;s description, audience and competitors</Trans></Ability>
-      </ul>
-      <p className="mb-1.5 text-xs font-semibold text-muted-foreground"><Trans>It can never</Trans></p>
-      <ul className="mb-4 space-y-2">
-        <Ability allowed={false}><Trans>Approve or apply changes, or connect tools</Trans></Ability>
-        <Ability allowed={false}><Trans>See your keys, or replace anything you typed</Trans></Ability>
-      </ul>
+      <AgentAbilities className="mb-4" />
 
       <div className="mb-6 space-y-2 border-t border-border pt-4">
         <Destination kind={request?.destination} name={request?.destination_name} agent={agent} />

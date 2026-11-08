@@ -17,7 +17,7 @@ import { hasAuthToken, isSessionExpired } from "../../../lib/authFetch";
 import LoadError from "@/components/LoadError";
 import EmptyState from "@/components/ui/empty-state";
 import { relativeTime } from "@/lib/format";
-import { listActivity } from "../../../lib/activityApi";
+import { ACTION_PROJECT_EDITED, listActivity, undoProjectEdit } from "../../../lib/activityApi";
 import { Button } from "@/components/ui/button";
 import { SkeletonList } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -49,6 +49,49 @@ function targetHref(row) {
   if (row.target_type === "change_set") return "/execute";
   if (row.target_type === "project" && row.target_id) return `/project/${row.target_id}`;
   return null;
+}
+
+/** Undo on an agent's edit to the project, which the consent page promises:
+ *  "every edit can be undone in Duct". After the click the row says what came
+ *  back and what was left because it changed again since. */
+function UndoEdit({ row }) {
+  const { t } = useLingui();
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState("");
+  const undone = Boolean(row.data?.undone_at) || Boolean(result);
+
+  async function undo() {
+    setBusy(true);
+    setError("");
+    try {
+      const out = await undoProjectEdit(row.target_id, row.id);
+      // No reload: the row keeps what came back and what was skipped, which
+      // a refetch would lose. The undo's own row is there on the next visit.
+      setResult(out);
+    } catch (err) {
+      setError(err?.message || t`That didn't go through. Try again in a moment.`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (undone) {
+    const skipped = (result?.skipped || []).join(", ");
+    return (
+      <span className="text-xs text-muted-foreground">
+        {skipped ? <Trans>Undone, except {skipped}, which changed again since</Trans> : <Trans>Undone</Trans>}
+      </span>
+    );
+  }
+  return (
+    <span className="flex items-center gap-2">
+      <Button type="button" variant="outline" size="sm" onClick={undo} disabled={busy}>
+        {busy ? <Trans>Undoing…</Trans> : <Trans>Undo</Trans>}
+      </Button>
+      {error && <span role="alert" className="text-xs text-destructive">{error}</span>}
+    </span>
+  );
 }
 
 function ActivityRow({ row }) {
@@ -87,6 +130,11 @@ function ActivityRow({ row }) {
           )}
         </p>
       </div>
+      {row.action === ACTION_PROJECT_EDITED && row.target_id && (
+        <div className="shrink-0 self-center">
+          <UndoEdit row={row} />
+        </div>
+      )}
     </li>
   );
 }

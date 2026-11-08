@@ -317,9 +317,27 @@ const NO_TOKENS = [];
 // would stop it checking every other scene here.
 const previewPlaintext = (hint) => `duct_mcp_preview-only-not-a-real-token-${hint}`;
 
-function AgentAccessScene({ initial = NO_TOKENS, mintedFirst = false, error = "", signInAvailable = true }) {
+/** `signInAfterMs` plays the page's watch: copying step 1 starts it, and a
+ *  Claude Code agent signs in that long after, as the poll would find it. */
+function AgentAccessScene({
+  initial = NO_TOKENS, mintedFirst = false, error = "", signInAvailable = true, deepLinks = true, signInAfterMs = 0,
+}) {
   const [tokens, setTokens] = useState(null);
+  const [watching, setWatching] = useState(false);
   useEffect(() => setTokens(initial), [initial]);
+  useEffect(() => {
+    if (!watching || !signInAfterMs) return undefined;
+    const timer = setTimeout(() => {
+      setTokens((prev) => [
+        {
+          id: `a${Date.now()}`, kind: "agent", name: "Claude Code", hint: "", created_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 90 * 86400_000).toISOString(), last_used_at: null,
+        },
+        ...(prev || []),
+      ]);
+    }, signInAfterMs);
+    return () => clearTimeout(timer);
+  }, [watching, signInAfterMs]);
   const [minted, setMinted] = useState(() => {
     const first = initial.find((row) => row.kind === "token");
     return mintedFirst && first ? { ...first, token: previewPlaintext(first.hint) } : null;
@@ -332,6 +350,9 @@ function AgentAccessScene({ initial = NO_TOKENS, mintedFirst = false, error = ""
         minted={minted}
         error={error}
         signInAvailable={signInAvailable}
+        watching={watching}
+        deepLinks={deepLinks}
+        onWatch={setWatching}
         onCreate={(name) => {
           const row = {
             id: `t${Date.now()}`, kind: "token", name, hint: "Zp4c", created_at: new Date().toISOString(),
@@ -1523,15 +1544,31 @@ export const SCENES = [
     state: "first visit: nothing connected, no tokens",
     group: "AgentAccess",
     title: "Connect your AI agent",
-    note: "The second paragraph, what an agent cannot do, is the reason a cautious person gets past the first step; it must read before the steps. No snippet carries a secret: each is the address alone, and the agent's own sign-in does the rest. Switch the five tabs at 22rem: the tab list wraps rather than scrolling, and the Cursor and OpenCode JSON wraps inside its box, never pushing the page wider. The token section sits below a rule, plainly the second way in.",
+    note: "The why comes before the how: a quiet card drawing repo → the picked agent → the Duct project, the one sentence on what that profile is for, and the can / can never lists the consent page shows too (one component, AgentAbilities). Change the picked tile and the middle node follows; at 36rem the drawing turns from a column into a row. The agent is picked by its own logo, because every step after names it. Five tiles, three to a row below 28rem and one row above; arrow keys move between them (they are radios). Step 1 is the current step until something in it is copied; Cursor and VS Code lead with a one-click install and fold the paste route under it. No snippet carries a secret. Step 2 draws the consent page in miniature with Allow ringed. Below 28rem the rail between markers goes, since the bodies sit under the numbers. The token section sits below a rule, plainly the second way in.",
     render: () => <AgentAccessScene />,
+  },
+  {
+    id: "agent-access-live",
+    state: "copy step 1 and an agent signs in three seconds later",
+    group: "AgentAccess",
+    title: "Connect your AI agent",
+    note: "Copy step 1: its marker fills and checks, the rail below it turns orange, and step 2 says it is waiting with a spinner. Three seconds on, Claude Code appears in Connected agents with its logo, step 2 checks off with its name, and the Claude Code tile gains a green check. Copy the prompt and step 3 checks too. On the page the wait is a poll every 4 s while the tab is visible, for at most ten minutes; past that the line offers Check again.",
+    render: () => <AgentAccessScene signInAfterMs={3000} />,
+  },
+  {
+    id: "agent-access-desktop",
+    state: "inside the desktop shell: no one-click installs",
+    group: "AgentAccess",
+    title: "Connect your AI agent",
+    note: "Pick Cursor or VS Code: the shell opens only http(s) links outside itself, so the install button would do nothing; the paste route stands on its own, unfolded.",
+    render: () => <AgentAccessScene deepLinks={false} />,
   },
   {
     id: "agent-access-minted",
     state: "two agents signed in (one never used, its name long enough to clip), a token just made, a second token",
     group: "AgentAccess",
     title: "Connect your AI agent",
-    note: "Connected agents show when they connected and last called, with no hint (their token changes hourly); tokens show their last four and expiry. The new token sits under its form with the Claude Code command and the bare header, both carrying it. Disconnect and Revoke both ask first, in the destructive tint, and say the projects stay as they are.",
+    note: "Connected agents carry their agent's logo when the name they gave themselves matches one (Claude Code, Visual Studio Code), and the matching picker tiles show a green check; tokens show a key. Agents show when they connected and last called, with no hint (their token changes hourly); tokens show their last four and expiry. The new token sits under its form with the Claude Code command and the bare header, both carrying it. Disconnect and Revoke both ask first, in the destructive tint, and say the projects stay as they are.",
     render: () => <AgentAccessScene initial={AGENT_TOKENS} mintedFirst />,
   },
   {
@@ -1539,7 +1576,7 @@ export const SCENES = [
     state: "the desktop app's own backend: no browser sign-in, tokens only",
     group: "AgentAccess",
     title: "Connect your AI agent",
-    note: "The steps and the Connected agents list are gone, replaced by one boxed sentence saying why. The token section heading drops its 'No browser?' and becomes the way in.",
+    note: "The why card stays, with a generic agent in the middle node since nothing is picked. The steps and the Connected agents list are gone, replaced by one boxed sentence saying why. The token section heading drops its 'No browser?' and becomes the way in.",
     render: () => <AgentAccessScene initial={AGENT_TOKENS.filter((row) => row.kind === "token")} signInAvailable={false} />,
   },
   {
@@ -1564,7 +1601,7 @@ export const SCENES = [
     render: () => (
       <AgentConsent
         state={CONSENT_ASK}
-        request={{ client_name: "Claude Code", destination: "device", destination_name: "127.0.0.1" }}
+        request={{ client_name: "Claude Code (duct)", destination: "device", destination_name: "127.0.0.1" }}
         viewerEmail="ana@kestrel.studio"
       />
     ),

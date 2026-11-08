@@ -24,8 +24,50 @@ export const DESTINATION_DEVICE = "device";
 export const DESTINATION_WEB = "web";
 export const DESTINATION_APP = "app";
 
-/** The agents the setup steps cover, in tab order. */
+/** The agents the setup steps cover, in picker order. */
 export const AGENTS = ["claude", "codex", "cursor", "vscode", "opencode"];
+
+/** Product names, never translated (`keep` in scripts/i18n/glossary.json). */
+export const AGENT_NAMES = {
+  claude: "Claude Code",
+  codex: "Codex",
+  cursor: "Cursor",
+  vscode: "VS Code",
+  opencode: "OpenCode",
+};
+
+// What each agent registers itself as when it signs in (its OAuth
+// `client_name`), loosely: "Claude Code (duct)", "Visual Studio Code",
+// "opencode". First match wins, so Claude Code is tested before anything
+// that could contain "code".
+const AGENT_NAME_PATTERNS = [
+  ["claude", /claude[\s-]?code/i],
+  ["vscode", /visual studio code|\bvs ?code\b/i],
+  ["opencode", /open ?code/i],
+  ["cursor", /\bcursor\b/i],
+  ["codex", /\bcodex\b/i],
+];
+
+// Claude Code registers as "<product> (<server name>)", so every agent added
+// as `duct` would read "Claude Code (duct)" on the consent page and in the
+// list, naming us back to ourselves.
+const OWN_NAME_SUFFIX = /\s*\(duct\)\s*$/i;
+
+/** The name to show for an agent: the one it gave itself, without our own
+ *  server name tacked on. Never more than that, since the name is all the
+ *  person has to recognise the agent by. */
+export function agentDisplayName(name) {
+  return (name || "").replace(OWN_NAME_SUFFIX, "").trim();
+}
+
+/** Which agent a connected row is, from the name it gave itself, or null.
+ *  Only ever used to pick a logo: the name is self-chosen, so nothing about
+ *  access depends on it (the consent page says the same). */
+export function agentFromName(name) {
+  if (!name) return null;
+  const hit = AGENT_NAME_PATTERNS.find(([, pattern]) => pattern.test(name));
+  return hit ? hit[0] : null;
+}
 
 /** Where an agent sends its requests. Read at call time: the desktop shell
  *  repoints BASE at boot (see api.js). */
@@ -51,12 +93,17 @@ export function revokeMcpToken(id) {
  * agent finds Duct's sign-in from the server's first 401 and opens the
  * browser itself.
  *
- * Each client's own shape, from its docs. Claude Code and Codex take CLI
- * commands (Claude Code at user scope, so it works from every repo; Codex's
- * second line opens the browser at once rather than on first use). Cursor and
- * OpenCode read a config file, and OpenCode's `mcp auth` starts the sign-in.
- * VS Code adds a server from its Command Palette, so its snippet is the
- * address itself.
+ * Each client's own shape, from its docs, and every one of them global, so
+ * one setup works from every repo (the page promises that). Claude Code,
+ * Codex and OpenCode take CLI commands: Claude Code at user scope, OpenCode
+ * with `--global` (it writes to the project's config without it), and the
+ * second line of the other two opens the browser at once rather than on
+ * first use. Cursor reads `~/.cursor/mcp.json`. VS Code adds a server from
+ * its Command Palette, so its snippet is the address itself.
+ *
+ * OpenCode was a config snippet until November 2026, when its config moved
+ * remote servers under `mcp.servers`; its CLI writes whichever shape the
+ * installed version reads, which a pasted snippet cannot.
  */
 export function agentSetup(url) {
   return {
@@ -64,11 +111,23 @@ export function agentSetup(url) {
     codex: `codex mcp add duct --url ${url}\ncodex mcp login duct`,
     cursor: JSON.stringify({ mcpServers: { duct: { url } } }, null, 2),
     vscode: url,
-    opencode: JSON.stringify(
-      { $schema: "https://opencode.ai/config.json", mcp: { duct: { type: "remote", url } } },
-      null,
-      2,
-    ),
+    opencode: `opencode mcp add duct --global --url ${url}\nopencode mcp auth duct`,
+  };
+}
+
+/**
+ * One-click installs, for the two agents that register a URL handler for it.
+ * Both open the agent on its own "add this server?" screen, so nothing is
+ * installed without a second click there. Formats from each vendor's docs:
+ * Cursor takes the mcp.json entry base64-encoded, VS Code the server's JSON
+ * URL-encoded, with its name inside.
+ */
+export function installLinks(url) {
+  const cursorConfig = btoa(JSON.stringify({ url }));
+  const vscodeConfig = JSON.stringify({ name: "duct", type: "http", url });
+  return {
+    cursor: `cursor://anysphere.cursor-deeplink/mcp/install?name=duct&config=${encodeURIComponent(cursorConfig)}`,
+    vscode: `vscode:mcp/install?${encodeURIComponent(vscodeConfig)}`,
   };
 }
 

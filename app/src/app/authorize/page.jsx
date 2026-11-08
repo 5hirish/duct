@@ -22,6 +22,8 @@ import AgentConsent, {
 } from "@/components/settings/AgentConsent";
 import {
   POST_SIGNIN_REDIRECT_KEY,
+  SIGN_IN_NOW_PARAM,
+  SIGN_IN_NOW_VALUE,
   authToken,
   clearAuthToken,
   decodeJwtPayload,
@@ -75,7 +77,9 @@ export default function AuthorizePage({ searchParams }) {
       // Storage refused (private mode): they land on the app after signing
       // in, and the agent's sign-in can be started again.
     }
-    router.push("/");
+    // Straight into Google's flow: the button the person just pressed said
+    // "Sign in with Google", and a front door with a second one is a detour.
+    router.push(`/?${SIGN_IN_NOW_PARAM}=${SIGN_IN_NOW_VALUE}`);
   }, [code, router]);
 
   const answer = useCallback(
