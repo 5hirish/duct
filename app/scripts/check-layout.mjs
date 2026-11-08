@@ -47,7 +47,10 @@ const { chromium } = req(req.resolve("playwright", { paths: [process.env.PLAYWRI
 const fixtures = await import(join(REPO, "scripts/shots/fixtures.mjs"));
 const { STORY } = await import(join(REPO, "app/src/lib/__fixtures__/solo-story.mjs"));
 const { DESK_SCENARIOS } = await import(join(REPO, "app/src/lib/__fixtures__/deskScenarios.mjs"));
-const { PLAN_SCENARIOS } = await import(join(REPO, "app/src/lib/__fixtures__/planScenarios.mjs"));
+const { KANBAN_SCENARIO_IDS, PLAN_SCENARIOS } = await import(join(REPO, "app/src/lib/__fixtures__/planScenarios.mjs"));
+// PlanKanban's `max-w-sm`. An ended plan once put thirty cards in one lane two
+// thirds of the window wide, and nothing here measured a lane.
+const LANE_MAX_REM = 24;
 
 const APP = process.env.APP || "http://localhost:3003";
 const API = process.env.API || "http://localhost:8002";
@@ -167,9 +170,16 @@ try {
           for (const h of d.tallRows) fail(where, `a row is ${h}px tall: its title is not held to one line`);
           if (d.leadTitleLines > 2) fail(where, `the lead's title runs to ${d.leadTitleLines} lines`);
         }
-        // The content plan board, in every generated plan, as the agenda and
-        // as the Kanban: nothing wider than the window, nothing crushed.
-        for (const id of PLAN_SCENARIOS.map((s) => s.id)) {
+        // The content plan board, in every generated plan as the agenda and in
+        // the Kanban scenes as the Kanban: nothing wider than the window,
+        // nothing crushed, no lane wider than a card should be. (The comment
+        // said "and as the Kanban" for a week while only the agenda was
+        // visited, which is how a two-thirds-wide lane got through.)
+        const planScenes = [
+          ...PLAN_SCENARIOS.map((s) => s.id),
+          ...KANBAN_SCENARIO_IDS.map((id) => `${id}-kanban`),
+        ];
+        for (const id of planScenes) {
           const where = `plan scenario ${id} @${viewport.width}`;
           await page.goto(`${APP}/preview/frame?scene=plan-scenario-${id}&theme=dark`, { waitUntil: "domcontentloaded" });
           await page.waitForSelector('[aria-label="Plan strategy"], [aria-pressed]', { timeout: 20000 }).catch(() => {});
@@ -177,6 +187,9 @@ try {
           const m = await page.evaluate(measure);
           if (m.overflow > PX) fail(where, `page is ${m.overflow}px wider than the window`);
           for (const text of m.squeezed) fail(where, `"${text.text}" is cut to ${text.width}px`);
+          if (m.widestLaneRem > LANE_MAX_REM + 0.1) {
+            fail(where, `a Kanban lane is ${m.widestLaneRem.toFixed(1)}rem wide; lanes stop at ${LANE_MAX_REM}rem`);
+          }
         }
       }
 
@@ -304,7 +317,12 @@ function measure() {
     : [];
   const titleText = headerEl?.querySelector("h1")?.textContent.trim() || "";
   const barText = document.querySelector(".app-header nav")?.textContent.trim() || "";
+  const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+  const laneWidths = [...main.querySelectorAll("[data-plan-lane]")]
+    .filter(visible)
+    .map((el) => el.getBoundingClientRect().width / rem);
   return {
+    widestLaneRem: laneWidths.length ? Math.max(...laneWidths) : 0,
     titleText,
     barRepeatsTitle: Boolean(titleText && barText.includes(titleText)),
     // Enough page under the title to scroll it away and still fill the window.

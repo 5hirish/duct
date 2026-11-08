@@ -97,6 +97,12 @@ function withPost(plan, postsById, i, status, today, offset, { media = true } = 
   };
 }
 
+/**
+ * The scenarios also rendered as the Kanban, in /preview and in
+ * check:layout: one full lane, every lane in use, and long foreign titles.
+ */
+export const KANBAN_SCENARIO_IDS = ["ended-nothing-posted", "mid-month", "long-and-foreign"];
+
 export const PLAN_SCENARIOS = [
   {
     id: "ended-nothing-posted",

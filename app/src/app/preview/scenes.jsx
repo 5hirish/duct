@@ -55,7 +55,7 @@ import { saveText } from "@/lib/download";
 import { ArtifactGallery } from "@/components/artifacts/ArtifactCards";
 import { ChartJsonView } from "@/components/artifacts/ArtifactRenderer";
 import { DESK_SCENARIOS, deskScenario } from "@/lib/__fixtures__/deskScenarios.mjs";
-import { PLAN_SCENARIOS, planScenario } from "@/lib/__fixtures__/planScenarios.mjs";
+import { KANBAN_SCENARIO_IDS, PLAN_SCENARIOS, planScenario } from "@/lib/__fixtures__/planScenarios.mjs";
 import { PlanBoardView, PlanView } from "@/components/content/PlanBoard";
 import { startOfDay } from "@/lib/contentSchedule";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
@@ -2425,12 +2425,12 @@ export const SCENES = [
     note: "Says what was searched, offers to clear, and the way in for anything unlisted: any MCP server by its address.",
     render: () => <CatalogScenario id="today" initialFilters={{ query: "hubspot" }} />,
   },
-  ...["ended-nothing-posted", "mid-month", "long-and-foreign"].map((id) => ({
+  ...KANBAN_SCENARIO_IDS.map((id) => ({
     id: `plan-scenario-${id}-kanban`,
     state: "Kanban",
     group: "Plan scenarios",
     title: `Plan by status — ${PLAN_SCENARIOS.find((s) => s.id === id).title}`,
-    note: "Empty lanes are a header and nothing else; a planned post with no media is its words, not a grey 16:9 box.",
+    note: "Every lane is one width, at most 24rem, even beside empty ones; an empty lane is a header and nothing else; a planned post with no media is its words, not a grey 16:9 box.",
     render: () => <PlanScenario id={id} view={PlanView.KANBAN} />,
   })),
   {
