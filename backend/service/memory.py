@@ -47,6 +47,8 @@ from models.memory import (
     MEMORY_SCOPES,
     MEMORY_SOURCES,
     MEMORY_STATUSES,
+    PERSONAL_KINDS,
+    canonical_kind,
     SCOPE_ARTIFACT,
     SCOPE_PROJECT,
     SCOPE_USER,
@@ -185,11 +187,33 @@ def _owner_id(scope: str, project_id: UUID | None, user_id: UUID | None) -> UUID
     return user_id if scope == SCOPE_USER else project_id
 
 
-def _scope_filter(stmt, *, scope: str, project_id: UUID | None, user_id: UUID | None):
-    """Apply the isolation predicate for a scope. Never call a query without it."""
+def _scope_filter(
+    stmt, *, scope: str, project_id: UUID | None, user_id: UUID | None, private_project: UUID | None = None
+):
+    """Apply the isolation predicate for a scope. Never call a query without it.
+
+    A private row may be bound to one project (``project_id`` set on a user
+    row): "for this client, brief me in Spanish". ``private_project`` names that
+    binding, and ``None`` means the person's rows for every project, so a
+    project-bound rule never closes the general one or a twin elsewhere.
+    """
     if scope == SCOPE_USER:
-        return stmt.where(ProjectMemory.user_id == user_id, ProjectMemory.scope == SCOPE_USER)
+        return stmt.where(
+            ProjectMemory.user_id == user_id,
+            ProjectMemory.scope == SCOPE_USER,
+            ProjectMemory.project_id == private_project if private_project is not None
+            else ProjectMemory.project_id.is_(None),
+        )
     return stmt.where(ProjectMemory.project_id == project_id, ProjectMemory.scope == scope)
+
+
+def shared_rows(project_id: UUID | None):
+    """The predicate for "this project's shared memory", for every project read.
+
+    ``project_id`` alone is not the boundary: a private row bound to a project
+    carries the same id, and only its owner may ever read it.
+    """
+    return sa.and_(ProjectMemory.project_id == project_id, ProjectMemory.scope != SCOPE_USER)
 
 
 # ---------------------------------------------------------------------------
@@ -220,8 +244,12 @@ def remember(
     agent_type: str = "",
     conversation_id: UUID | None = None,
     meta: dict | None = None,
+    private_to_project: bool = False,
 ) -> ProjectMemory | None:
     """Write one memory entry, superseding whatever it replaces.
+
+    ``private_to_project`` binds a user-scope entry to ``project_id``: still
+    private to its person, but read only on runs for that project.
 
     Returns the stored row, the existing row when this is a duplicate, or
     ``None`` when the entry was rejected or the write failed. Never raises —
@@ -235,6 +263,12 @@ def remember(
         scope = (scope or SCOPE_PROJECT).strip()
         kind = (kind or "").strip()
         title = _clean(title, TITLE_MAX)
+        kind = canonical_kind(kind)
+        if kind in PERSONAL_KINDS and scope != SCOPE_USER:
+            # A fact about a person never becomes project memory, whoever
+            # asked: it goes to that person's private scope or nowhere.
+            logger.debug("memory: %s is personal — stored privately, not on the project", kind)
+            scope = SCOPE_USER
         if scope not in MEMORY_SCOPES or not kind or not title:
             logger.debug("memory: rejected entry (scope=%r kind=%r title=%r)", scope, kind, title)
             return None
@@ -280,13 +314,18 @@ def remember(
         attribute = _clean(attribute, 100)
         period = _clean(period, 100)
 
+        bound = project_id if scope == SCOPE_USER and private_to_project else None
         owner = _owner_id(scope, project_id, user_id)
+        if bound is not None:
+            owner = f"{owner}:{bound}"
         digest = content_hash(
             scope=scope, owner_id=owner, kind=kind, title=title,
             entity_key=entity_key, attribute=attribute, period=period,
         )
 
-        existing = _find_duplicate(db, scope=scope, project_id=project_id, user_id=user_id, digest=digest)
+        existing = _find_duplicate(
+            db, scope=scope, project_id=project_id, user_id=user_id, digest=digest, private_project=bound
+        )
         if existing is not None:
             # Consolidation re-reads a transcript, where the agent may only have
             # repeated what memory told it; that is not a fresh sighting.
@@ -296,9 +335,14 @@ def remember(
             )
 
         key = state_key(kind, entity_key, attribute, period)
+        if bound is not None and key:
+            # The unique index is per project and state key, and this row sits
+            # in the project's id space: key it to its person so it can never
+            # collide with a shared row or with a teammate's private one.
+            key = f"user:{user_id}|{key}"
         row = ProjectMemory(
             scope=scope,
-            project_id=project_id if scope != SCOPE_USER else None,
+            project_id=project_id if scope != SCOPE_USER else bound,
             user_id=user_id,
             kind=kind,
             title=title,
@@ -324,7 +368,9 @@ def remember(
         )
 
         if key:
-            _supersede(db, row, scope=scope, project_id=project_id, user_id=user_id, key=key)
+            _supersede(
+                db, row, scope=scope, project_id=project_id, user_id=user_id, key=key, private_project=bound
+            )
 
         db.add(row)
         db.commit()
@@ -342,9 +388,10 @@ def remember(
         return None
 
 
-def _find_duplicate(db, *, scope, project_id, user_id, digest) -> ProjectMemory | None:
+def _find_duplicate(db, *, scope, project_id, user_id, digest, private_project=None) -> ProjectMemory | None:
     stmt = _scope_filter(
-        select(ProjectMemory), scope=scope, project_id=project_id, user_id=user_id
+        select(ProjectMemory), scope=scope, project_id=project_id, user_id=user_id,
+        private_project=private_project,
     ).where(
         ProjectMemory.content_hash == digest,
         ProjectMemory.status.in_(ACTIVE_STATUSES),
@@ -387,14 +434,17 @@ def _ref_key(ref: dict) -> str:
     return "|".join(f"{k}={ref[k]}" for k in sorted(ref))
 
 
-def _supersede(db, incoming: ProjectMemory, *, scope, project_id, user_id, key: str) -> None:
+def _supersede(
+    db, incoming: ProjectMemory, *, scope, project_id, user_id, key: str, private_project=None
+) -> None:
     """Close every active row sharing the incoming entry's state key.
 
     Ordered before the insert on purpose: the partial unique index allows only
     one active row per state key, so the close has to land first.
     """
     stmt = _scope_filter(
-        select(ProjectMemory), scope=scope, project_id=project_id, user_id=user_id
+        select(ProjectMemory), scope=scope, project_id=project_id, user_id=user_id,
+        private_project=private_project,
     ).where(
         ProjectMemory.state_key == key,
         ProjectMemory.superseded_by.is_(None),
@@ -467,7 +517,7 @@ def touch_cited(db, *, project_id: UUID | None, user_id: UUID | None = None, tex
     try:
         scope = []
         if project_id is not None:
-            scope.append(ProjectMemory.project_id == project_id)
+            scope.append(shared_rows(project_id))
         if user_id is not None:
             scope.append(sa.and_(ProjectMemory.user_id == user_id, ProjectMemory.scope == SCOPE_USER))
         ids = [
@@ -572,8 +622,10 @@ _KIND_WORDS: dict[str, str] = {
     "watch": "watch", "watching": "watch",
     "conclusion": "conclusion", "conclude": "conclusion", "finding": "conclusion",
     "learn": "conclusion", "learned": "conclusion",
-    "milestone": "milestone", "event": "event", "status": "status",
+    "milestone": "event", "event": "event", "status": "status",
     "entity": "entity", "artifact": "artifact", "report": "artifact",
+    "rule": "rule", "rules": "rule", "policy": "rule", "policies": "rule",
+    "outcome": "outcome", "outcomes": "outcome",
 }
 
 
@@ -678,14 +730,28 @@ def search(
 
     stmt = select(ProjectMemory)
     if scope == SCOPE_USER:
-        stmt = stmt.where(ProjectMemory.user_id == user_id, ProjectMemory.scope == SCOPE_USER)
+        stmt = stmt.where(
+            ProjectMemory.user_id == user_id,
+            ProjectMemory.scope == SCOPE_USER,
+            # Everywhere, plus what is private to the project in hand. With no
+            # project, only the rows that hold everywhere: a rule bound to one
+            # client must never reach a run for another.
+            sa.or_(ProjectMemory.project_id.is_(None), ProjectMemory.project_id == project_id)
+            if project_id is not None else ProjectMemory.project_id.is_(None),
+            # Settings the profile now owns. Their old rows stay in history,
+            # but no reader (the digest, the page, a search) shows them.
+            ProjectMemory.entity_key.not_in(list(_PROFILE_OWNED_KEYS)),
+        )
     else:
-        stmt = stmt.where(ProjectMemory.project_id == project_id)
+        # Private memory never reaches a project reader, even a row bound to
+        # this project. The project id alone is not the boundary.
+        stmt = stmt.where(shared_rows(project_id))
         if scope:
             stmt = stmt.where(ProjectMemory.scope == scope)
 
     if kinds:
-        stmt = stmt.where(ProjectMemory.kind.in_(list(kinds)))
+        # A merged kind's old name still finds the rows filed under it since.
+        stmt = stmt.where(ProjectMemory.kind.in_({canonical_kind(k) for k in kinds}))
     if entity:
         stmt = stmt.where(ProjectMemory.entity_key.ilike(f"%{entity}%"))
     if since is not None:
@@ -790,10 +856,9 @@ _REINFORCEMENT_CEILING = 10  # recalls beyond this add nothing
 # with an LLM at write time; kind is a cheaper signal that needs no call). A
 # resolved incident or a stated goal outranks a routine metric reading.
 _IMPORTANCE_BY_KIND: dict[str, int] = {
-    "goal": 8, "decision": 8, "incident": 7, "conclusion": 7, "watch": 7,
-    "milestone": 6, "status": 6, "action": 6, "identity": 6,
-    "communication": 6, "method": 6, "process": 6,
-    "metric": 4, "event": 4, "entity": 4, "artifact": 4, "tooling": 5,
+    "rule": 9, "goal": 8, "decision": 8, "incident": 7, "conclusion": 7, "watch": 7,
+    "outcome": 7, "status": 6, "action": 6, "identity": 6, "communication": 6, "method": 6,
+    "metric": 4, "event": 4, "entity": 4, "artifact": 4,
     "feedback": 7,
 }
 DEFAULT_IMPORTANCE = 5
@@ -1043,7 +1108,7 @@ def resolve_short_id(
     if user_id is not None and project_id is None:
         stmt = stmt.where(ProjectMemory.user_id == user_id, ProjectMemory.scope == SCOPE_USER)
     else:
-        stmt = stmt.where(ProjectMemory.project_id == project_id)
+        stmt = stmt.where(shared_rows(project_id))
     # No expression index on the id text, but the candidate set is one project's
     # memories — a scan here is cheaper than a second id column.
     matches = [r for r in db.execute(stmt).scalars() if str(r.id).replace("-", "").startswith(raw.lower())]
@@ -1104,7 +1169,7 @@ _ROLLING_PERIOD = re.compile(
 def volatility(row: ProjectMemory) -> str:
     """Which freshness policy an entry lives under. Pure; see the table in the design."""
     kind = row.kind or ""
-    if row.scope == SCOPE_USER or kind == "goal":
+    if row.scope == SCOPE_USER or kind in ("goal", "rule"):
         return VOLATILITY_DECLARED
     if kind in ("incident", "watch"):
         return VOLATILITY_OPEN
@@ -1328,7 +1393,7 @@ def render_digest(
         db.execute(
             select(ProjectMemory)
             .where(
-                ProjectMemory.project_id == project_id,
+                shared_rows(project_id),
                 ProjectMemory.pinned.is_(True),
                 ProjectMemory.status.in_(ACTIVE_STATUSES),
             )
@@ -1337,7 +1402,10 @@ def render_digest(
         ).scalars(),
         12,
     )
-    # Goals and decisions are standing context even when nobody pinned them.
+    # Rules are in force until replaced, so every one in force rides along
+    # before anything else competes for the budget; then goals and decisions,
+    # the standing context nobody has to pin.
+    pinned += take(search(db, kinds=["rule"], **base), 10)
     pinned += take(search(db, kinds=["goal", "decision"], **base), 5)
     sections.append((SECTION_PINNED, pinned))
 
@@ -1346,7 +1414,7 @@ def render_digest(
         db.execute(
             select(ProjectMemory)
             .where(
-                ProjectMemory.project_id == project_id,
+                shared_rows(project_id),
                 ProjectMemory.kind.in_(["incident", "watch", "status"]),
                 ProjectMemory.status.in_(ACTIVE_STATUSES),
                 ProjectMemory.valid_to.is_(None),
@@ -1405,12 +1473,12 @@ def render_digest(
     return MemoryContext(blocks={"project_memory": block}, recalled=used)
 
 
-def render_user_memory(db, *, user_id: UUID, max_entries: int = 12) -> MemoryContext:
-    """The ``<user_memory>`` block — how this operator wants to be worked with."""
-    rows = [
-        row for row in search(db, user_id=user_id, scope=SCOPE_USER, limit=max_entries)
-        if row.entity_key not in _PROFILE_OWNED_KEYS
-    ]
+def render_user_memory(
+    db, *, user_id: UUID, project_id: UUID | None = None, max_entries: int = 12
+) -> MemoryContext:
+    """The ``<user_memory>`` block — how this operator wants to be worked with,
+    everywhere and on the project this run is for."""
+    rows = search(db, user_id=user_id, project_id=project_id, scope=SCOPE_USER, limit=max_entries)
     if not rows:
         return MemoryContext()
     lines = [render_entry(row) for row in rows]
@@ -1594,7 +1662,7 @@ def build_memory_context(
     recalled: list[dict] = []
     try:
         if user_id is not None and spec.wants("user_memory"):
-            user_block = render_user_memory(db, user_id=user_id)
+            user_block = render_user_memory(db, user_id=user_id, project_id=project_id)
             blocks.update(user_block.blocks)
             recalled += user_block.recalled
 
@@ -1709,7 +1777,7 @@ def memory_changed_since(
     """
     scope = []
     if project_id is not None:
-        scope.append(ProjectMemory.project_id == project_id)
+        scope.append(shared_rows(project_id))
     if user_id is not None:
         scope.append(sa.and_(ProjectMemory.user_id == user_id, ProjectMemory.scope == SCOPE_USER))
     if not scope:
@@ -1821,7 +1889,7 @@ def backfill_artifact_summary(db, artifact_row: Any, summary: str) -> None:
         key = state_key("artifact", f"artifact:{artifact_row.group_id}", "version")
         row = db.execute(
             select(ProjectMemory).where(
-                ProjectMemory.project_id == artifact_row.project_id,
+                shared_rows(artifact_row.project_id),
                 ProjectMemory.state_key == key,
                 ProjectMemory.status.in_(ACTIVE_STATUSES),
             )
@@ -1900,7 +1968,8 @@ _PREFERENCE_FIELDS: tuple[tuple[str, str, str, str, str], ...] = (
 )
 
 #: Entity keys of preferences the profile now owns. Rows written under them
-#: before the profile took over stay on the timeline but no longer render.
+#: before the profile took over stay in the table, but ``search`` (every
+#: reader: the digest, the page, SearchMemory) never returns them.
 _PROFILE_OWNED_KEYS = frozenset({"operator:role", "operator:style", "operator:depth"})
 
 
@@ -1979,11 +2048,24 @@ _PROFILE_TARGETS: tuple[tuple[str, str, str, str, str, str], ...] = (
     ("targets", "primary_kpi", "goal", "kpi:primary", "name", "Primary KPI"),
     ("targets", "north_star_metric", "goal", "kpi:north_star", "name", "North-star metric"),
     ("targets", "north_star_goal_window", "goal", "kpi:north_star", "window", "North-star window"),
-    ("targets", "growth_stage_milestone", "milestone", "", "", "Next growth milestone"),
+    # Where the business is now, so a state that supersedes, not a milestone:
+    # a milestone is an event, and every edit used to add another one.
+    ("targets", "growth_stage_milestone", "status", "business:growth_stage", "stage", "Growth stage"),
     ("audience", "primary_segment", "entity", "audience:primary", "segment", "Primary audience"),
     ("competition", "positioning_statement", "entity", "brand:positioning", "statement", "Positioning"),
     ("brand_channels", "brand_voice", "entity", "brand:voice", "description", "Brand voice"),
 )
+
+
+def profile_option_label(key: str, value: str) -> str:
+    """The words for a stored option code, or the value itself.
+
+    A select field stores a code (``0_pre_customer``) and the form shows its
+    label. Memory is read by people and agents, so it gets the label too.
+    """
+    from service.project_config import PROFILE_OPTION_LABELS
+
+    return PROFILE_OPTION_LABELS.get(key, {}).get(value, value)
 
 
 def seed_project_profile(db, project: Any, *, user_id: UUID | None = None) -> list[ProjectMemory]:
@@ -2003,6 +2085,7 @@ def seed_project_profile(db, project: Any, *, user_id: UUID | None = None) -> li
             text = str(raw).strip() if raw not in (None, "", [], {}) else ""
             if not text:
                 continue
+            text = profile_option_label(key, text)
             row = remember(
                 db,
                 scope=SCOPE_PROJECT,

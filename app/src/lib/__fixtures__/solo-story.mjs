@@ -122,6 +122,7 @@ export const MEMORIES = Object.freeze([
     title: "Weekly signups target is 900",
     body: "Replaces the 700 target. Reviewed monthly.",
     source_type: "user", recorded_at: "2026-08-30T16:20:00Z", observed_at: "2026-08-30", recall_count: 5,
+    replaced: { title: "Weekly signups target is 700", until: "2026-08-30" },
   },
   {
     id: "mem-clarity", short_id: "clrt", kind: "watch", status: "proposed", pinned: false,

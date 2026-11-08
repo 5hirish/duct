@@ -347,8 +347,8 @@ msgstr "{fieldLabel} (任意)"
 #~ msgstr "{found, plural, other {# 記録された指摘事項。}}"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "{from} – {to}"
-msgstr "{from} ～ {to}"
+#~ msgid "{from} – {to}"
+#~ msgstr "{from} ～ {to}"
 
 #: src/components/connections/ConnectorPermissions.jsx
 msgid "{granted} of {total} granted"
@@ -659,6 +659,10 @@ msgstr "{ready} / {total} が適用されます · {blocked, plural, other {# �
 msgid "{recalledCount, plural, one {Recalled # memory} other {Recalled # memories}}"
 msgstr "{recalledCount, plural, other {# メモリを呼び出し済み}}"
 
+#: src/components/memory/MemoryTimeline.jsx
+msgid "{recalls, plural, one {used in # answer} other {used in # answers}}"
+msgstr "{recalls, plural, other {# 回答で使用}}"
+
 #: src/components/ProjectMembers.jsx
 msgid "{removed} no longer has access."
 msgstr "{removed} はアクセス権がなくなりました。"
@@ -768,6 +772,10 @@ msgstr "{tokens} トークン · {calls, plural, one {# 呼び出し} other {# �
 msgid "{tokensIn} in · {tokensOut} out"
 msgstr "{tokensIn} 入力 · {tokensOut} 出力"
 
+#: src/components/memory/MemoryTimeline.jsx
+msgid "{toReview, plural, one {# to review} other {# to review}}"
+msgstr "{toReview, plural, other {# 件レビュー待ち}}"
+
 #: src/components/connections/ConnectorPermissions.jsx
 msgid "{total, plural, one {Granted} other {All # granted}}"
 msgstr "{total, plural, one {許可済み} other {# 件すべて許可済み}}"
@@ -777,8 +785,8 @@ msgid "{total, plural, one {Show all #} other {Show all #}}"
 msgstr "{total, plural, one {すべて表示 #} other {すべて表示 #}}"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "{unconfirmed, plural, one {# unconfirmed} other {# unconfirmed}}"
-msgstr "{unconfirmed, plural, one {# 未確認} other {# 未確認}}"
+#~ msgid "{unconfirmed, plural, one {# unconfirmed} other {# unconfirmed}}"
+#~ msgstr "{unconfirmed, plural, one {# 未確認} other {# 未確認}}"
 
 #: src/components/workspace/ContextRing.jsx
 #~ msgid "{used} of {window}"
@@ -1162,6 +1170,10 @@ msgstr "この会話を破棄して新しい会話を開始する（生成され
 msgid "About"
 msgstr "概要"
 
+#: src/lib/memoryApi.js
+msgid "About you"
+msgstr "あなたについて"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "About your business"
 msgstr "あなたのビジネスについて"
@@ -1177,11 +1189,11 @@ msgstr "招待を承認する"
 
 #: src/components/content/PlanViewport.jsx
 msgid "Accept replaces your plan from today on; posts already drafted stay."
-msgstr "承認すると、本日からお客様の計画を置き換えます。すでに下書きされた投稿は残ります。"
+msgstr "承認すると、本日からプランが置き換わります。下書き済みの投稿は維持されます。"
 
 #: src/components/content/PlanViewport.jsx
 msgid "Accept saves this as your plan."
-msgstr "承認すると、この計画が保存されます。"
+msgstr "承認すると、これをあなたのプランとして保存します。"
 
 #: src/components/connections/ProjectAccountSelect.jsx
 msgid "Account"
@@ -1361,8 +1373,8 @@ msgid "Add pillars"
 msgstr "ピラーを追加"
 
 #: src/app/(app)/memory/page.jsx
-msgid "Add something about how you work"
-msgstr "働き方について追加する"
+#~ msgid "Add something about how you work"
+#~ msgstr "働き方について追加する"
 
 #: src/components/settings/AgentAccess.jsx
 #~ msgid "Add this to <0>~/.codex/config.toml</0>."
@@ -1638,8 +1650,8 @@ msgid "Analytics rows reach the model as raw JSON. A large pull gets cut short, 
 msgstr "アナリティクスの行は生のJSONとしてモデルに到達します。大量のプルは途中で中断されるため、ドロップされた行がなくてもブリーフを作成できます。"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "and"
-msgstr "と"
+#~ msgid "and"
+#~ msgstr "と"
 
 #: src/components/content/PlanBoard.jsx
 msgid "Another length"
@@ -1668,6 +1680,10 @@ msgstr "このトークンを使用するエージェントは直ちにDuctへ�
 #: src/components/connections/McpConnectors.jsx
 msgid "Any MCP server"
 msgstr "任意のMCPサーバー"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Any time"
+msgstr "いつでも"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Anything else Duct should know"
@@ -1828,7 +1844,6 @@ msgstr "アーティファクト"
 
 #: src/components/artifacts/ArtifactRenderer.jsx
 #: src/components/insights/InsightsWorkspace.jsx
-#: src/components/memory/MemoryTimeline.jsx
 msgid "Artifact"
 msgstr "アーティファクト"
 
@@ -2115,8 +2130,8 @@ msgid "Best times"
 msgstr "最適な時間"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Between"
-msgstr "間"
+#~ msgid "Between"
+#~ msgstr "間"
 
 #: src/components/content/SynthesisPanel.jsx
 msgid "Beyond the ones you searched, on two posts or more"
@@ -2526,7 +2541,6 @@ msgstr "Claude · 監査あたり数セント"
 #~ msgstr "私のラップトップのClaude Code"
 
 #: src/components/connections/ProjectEntitySelect.jsx
-#: src/components/memory/MemoryTimeline.jsx
 msgid "Clear"
 msgstr "クリア"
 
@@ -2694,8 +2708,8 @@ msgid "Configure {title}"
 msgstr "{title}を設定"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Confirm"
-msgstr "確認"
+#~ msgid "Confirm"
+#~ msgstr "確認"
 
 #: src/components/connections/ConnectorTile.jsx
 #: src/components/connections/McpConnectDialog.jsx
@@ -2990,16 +3004,16 @@ msgstr "ChatGPTで続行"
 #~ msgstr "AIが指摘事項を作成する前に、サイトについてどの程度深く推論するかを制御します。"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "conversation"
-msgstr "会話"
+#~ msgid "conversation"
+#~ msgstr "会話"
 
 #: src/components/AppNav.jsx
 msgid "Conversation"
 msgstr "会話"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "conversation turns {firstTurn}–{lastTurn}"
-msgstr "会話ターン {firstTurn}–{lastTurn}"
+#~ msgid "conversation turns {firstTurn}–{lastTurn}"
+#~ msgstr "会話ターン {firstTurn}–{lastTurn}"
 
 #: src/components/insights/desk/DeskLists.jsx
 msgid "Conversations"
@@ -3075,6 +3089,10 @@ msgstr "プラットフォームの分析からコピーしてください。入
 msgid "Copy this part"
 msgstr "このパートをコピー"
 
+#: src/lib/memoryApi.js
+msgid "Corrections"
+msgstr "修正"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Could not change that."
 msgstr "変更できませんでした。"
@@ -3082,6 +3100,10 @@ msgstr "変更できませんでした。"
 #: src/components/connections/ProjectEntitySelect.jsx
 msgid "Could not list {many}. {listError}"
 msgstr "{many} をリストできませんでした。{listError}"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Could not move that."
+msgstr "移動できませんでした。"
 
 #: src/components/LocalInsightDetail.jsx
 msgid "Could not refresh - showing saved data."
@@ -3105,7 +3127,7 @@ msgstr "確認できませんでした。しばらくしてからもう一度お
 
 #: src/components/content/PlanViewport.jsx
 msgid "Couldn't discard the plan. Try again."
-msgstr "計画を破棄できませんでした。もう一度お試しください。"
+msgstr "プランを破棄できませんでした。もう一度お試しください。"
 
 #: src/components/connections/McpConnectors.jsx
 msgid "Couldn't disconnect {name}. {why}"
@@ -3161,7 +3183,7 @@ msgstr "Googleアカウントを読み取れませんでした"
 
 #: src/components/content/PlanViewport.jsx
 msgid "Couldn't save the plan. Try again."
-msgstr "計画を保存できませんでした。もう一度お試しください。"
+msgstr "プランを保存できませんでした。もう一度お試しください。"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Couldn't save. Please try again."
@@ -3271,6 +3293,14 @@ msgstr "現在の状態（変更前のスナップショット）"
 msgid "Currently mapped to {foreignName} — a teammate's connector."
 msgstr "{foreignName}（チームメイトのコネクタ）に現在マッピングされています。"
 
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Custom range"
+msgstr "カスタム範囲"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Custom range…"
+msgstr "カスタム範囲…"
+
 #: src/components/content/VoiceRulesFields.jsx
 msgid "Customers, clients and partners are never named unless you say so."
 msgstr "顧客、クライアント、パートナーは、あなたが指示しない限り、名前を挙げられることはありません。"
@@ -3309,8 +3339,8 @@ msgid "Date"
 msgstr "日付"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Dates"
-msgstr "日付"
+#~ msgid "Dates"
+#~ msgstr "日付"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Dates resolve in UTC. Pick your zone so \"last week\" means your week."
@@ -3323,6 +3353,10 @@ msgstr "日付はUTCで解決されます。「先週」があなたの週を意
 #: src/components/content/PostCard.jsx
 msgid "Day {dayNumber}"
 msgstr "日 {dayNumber}"
+
+#: src/lib/memoryApi.js
+msgid "Decisions"
+msgstr "決定事項"
 
 #: src/components/CookieConsent.jsx
 msgid "Decline"
@@ -3374,9 +3408,13 @@ msgstr "「{pendingName}」を削除しますか？"
 msgid "Delete {name}"
 msgstr "{name}を削除"
 
+#: src/components/memory/MemoryPage.jsx
+msgid "Delete every memory for this project, for every member? This cannot be undone."
+msgstr "このプロジェクトのすべてのメンバーのメモリをすべて削除しますか？この操作は元に戻せません。"
+
 #: src/app/(app)/project/[projectId]/memory/page.jsx
-msgid "Delete every memory for this project? This cannot be undone."
-msgstr "このプロジェクトのすべてのメモリを削除しますか？この操作は元に戻せません。"
+#~ msgid "Delete every memory for this project? This cannot be undone."
+#~ msgstr "このプロジェクトのすべてのメモリを削除しますか？この操作は元に戻せません。"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Delete every memory here?"
@@ -3386,7 +3424,7 @@ msgstr "ここにあるすべてのメモリを削除しますか？"
 msgid "Delete everything"
 msgstr "すべて削除"
 
-#: src/app/(app)/memory/page.jsx
+#: src/components/memory/MemoryPage.jsx
 msgid "Delete everything Duct has learned about how you work? This cannot be undone."
 msgstr "Ductがあなたの仕事の仕方について学習したすべての情報を削除しますか？この操作は元に戻せません。"
 
@@ -3567,6 +3605,7 @@ msgid "Discover what's working"
 msgstr "何が機能しているかを発見する"
 
 #: src/components/connections/FirstSourceCelebration.jsx
+#: src/components/memory/MemoryTimeline.jsx
 msgid "Dismiss"
 msgstr "閉じる"
 
@@ -3578,6 +3617,10 @@ msgstr "プロジェクトの更新を閉じる"
 #: src/components/UpdateToast.jsx
 msgid "Dismiss update notification"
 msgstr "更新通知を閉じる"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "dismissed"
+msgstr "却下済み"
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Docs / Help"
@@ -3690,6 +3733,10 @@ msgstr "画像を生成しました"
 #: src/components/workspace/Attachments.jsx
 msgid "Drop to attach"
 msgstr "ドロップして添付"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Duct"
+msgstr "Duct"
 
 #: src/components/UpdateToast.jsx
 msgid "Duct {version} is available"
@@ -3829,7 +3876,7 @@ msgstr "DuctはOSを介して投稿します。オン/オフはシステム設�
 
 #: src/components/content/PlanViewport.jsx
 msgid "Duct proposes this plan."
-msgstr "Ductがこの計画を提案します。"
+msgstr "Ductはこのプランを提案します。"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Duct publishes through a scheduler you connect, with your own account. Connect one to schedule posts and see how they do."
@@ -3940,8 +3987,12 @@ msgid "e.g. Acme CRM"
 msgstr "例：Acme CRM"
 
 #: src/app/(app)/memory/page.jsx
-msgid "e.g. Always compare to the same period last year"
-msgstr "例：常に前年同期と比較する"
+#~ msgid "e.g. Always compare to the same period last year"
+#~ msgstr "例：常に前年同期と比較する"
+
+#: src/components/memory/MemoryPage.jsx
+msgid "e.g. Always compare to the same week last year"
+msgstr "例：常に昨年同週と比較する"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "e.g. Drive trial signups via saveable beauty education"
@@ -3990,6 +4041,10 @@ msgstr "例：tbnrkp3gk9（ClarityのURLから）"
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "e.g. Team of 3, founder-led sales, runway for 8 months."
 msgstr "例：3人チーム、創業者主導の営業、8ヶ月間のランウェイ。"
+
+#: src/components/memory/MemoryPage.jsx
+msgid "e.g. We never bid on competitor brand terms"
+msgstr "例：競合ブランドのキーワードには入札しない"
 
 #: src/app/(app)/execute/page.jsx
 msgid "Each change is reverted using the rollback handle recorded when it was applied."
@@ -4247,6 +4302,10 @@ msgstr "FacebookおよびInstagramの費用、リーチ、コンバージョン�
 msgid "faceshape, colorseason…"
 msgstr "顔の形、パーソナルカラー…"
 
+#: src/lib/memoryApi.js
+msgid "Facts"
+msgstr "事実"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "FAIL"
 msgstr "失敗"
@@ -4280,6 +4339,10 @@ msgstr "送信に失敗しました"
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Faster, lighter"
 msgstr "より速く、より軽く"
+
+#: src/lib/memoryApi.js
+msgid "Feedback"
+msgstr "フィードバック"
 
 #: src/components/content/AnalyticsView.jsx
 #~ msgid "Fetching analytics from PostBridge…"
@@ -4328,6 +4391,10 @@ msgstr "情報源を探しています…"
 #: src/components/content/PlanStrategy.jsx
 msgid "Finding what works"
 msgstr "効果的なものを見つける"
+
+#: src/lib/memoryApi.js
+msgid "Findings"
+msgstr "指摘事項"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Findings by Category"
@@ -4464,6 +4531,10 @@ msgstr "フレンドリー"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "from"
+msgstr "から"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "From"
 msgstr "から"
 
 #: src/app/(app)/connections/page.jsx
@@ -4660,6 +4731,10 @@ msgstr "使用状況へ"
 #: src/components/content/PostMiniCard.jsx
 msgid "Goal:"
 msgstr "目標:"
+
+#: src/lib/memoryApi.js
+msgid "Goals"
+msgstr "目標"
 
 #: src/components/audit/AuditReportV1.jsx
 #: src/lib/contentReview.js
@@ -4904,8 +4979,8 @@ msgstr "キーを非表示にする"
 #~ msgstr "推論を非表示にする"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Hide superseded"
-msgstr "置き換えられたものを非表示にする"
+#~ msgid "Hide superseded"
+#~ msgstr "置き換えられたものを非表示にする"
 
 #: src/components/connections/ManualConnectorCard.jsx
 msgid "Hide the token form"
@@ -4979,8 +5054,8 @@ msgid "How posts sound and what they must (or must not) say."
 msgstr "投稿のトーンと、何を言うべきか（または言うべきでないか）。"
 
 #: src/app/(app)/memory/page.jsx
-msgid "How you like to be worked with. Every agent reads it; only you can see it."
-msgstr "エージェントにどのように作業してほしいか。すべてのエージェントがこれを読み込みますが、あなただけが見ることができます。"
+#~ msgid "How you like to be worked with. Every agent reads it; only you can see it."
+#~ msgstr "エージェントにどのように作業してほしいか。すべてのエージェントがこれを読み込みますが、あなただけが見ることができます。"
 
 #: src/app/(app)/memory/page.jsx
 #~ msgid "How you like to be worked with. Every agent reads this, on every project, and only you can see it."
@@ -5285,6 +5360,10 @@ msgstr "たった今"
 msgid "Kanban"
 msgstr "カンバン"
 
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Keep"
+msgstr "保持"
+
 #: src/components/content/VoiceRulesFields.jsx
 msgid "Keep client names out"
 msgstr "クライアント名を含めない"
@@ -5358,6 +5437,18 @@ msgstr "ランディングページ"
 #: src/components/LanguageMenu.jsx
 msgid "Language"
 msgstr "言語"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Last 30 days"
+msgstr "過去30日間"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Last 7 days"
+msgstr "過去7日間"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Last 90 days"
+msgstr "過去90日間"
 
 #: src/components/workspace/ContextRing.jsx
 msgid "Last call"
@@ -5481,8 +5572,12 @@ msgid "Linked accounts"
 msgstr "リンク済みアカウント"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Linked from chat — outside the filters below"
-msgstr "チャットからリンク — 以下のフィルターの対象外"
+#~ msgid "Linked from chat — outside the filters below"
+#~ msgstr "チャットからリンク — 以下のフィルターの対象外"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Linked from chat, outside the filters below"
+msgstr "以下のフィルター外のチャットからリンク済み"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Linked styles"
@@ -5827,8 +5922,8 @@ msgid "Medium impact"
 msgstr "中影響"
 
 #: src/app/(app)/project/[projectId]/members/page.jsx
-#: src/app/(app)/project/[projectId]/memory/page.jsx
 #: src/app/(app)/project/[projectId]/page.jsx
+#: src/components/memory/MemoryPage.jsx
 #: src/components/ProjectMembers.jsx
 msgid "Members"
 msgstr "メンバー"
@@ -5841,26 +5936,34 @@ msgstr "{name}のメンバー"
 msgid "memory"
 msgstr "メモリ"
 
-#: src/app/(app)/project/[projectId]/memory/page.jsx
 #: src/app/(app)/project/[projectId]/page.jsx
+#: src/components/memory/MemoryPage.jsx
 msgid "Memory"
 msgstr "メモリ"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Memory body"
-msgstr "メモリ本文"
+#~ msgid "Memory body"
+#~ msgstr "メモリ本文"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Memory is paused. Nothing new is being remembered; everything below stays readable and still reaches the agents."
-msgstr "メモリは一時停止中です。新しい情報は記憶されず、以下の内容はすべて読み取り可能で、引き続きエージェントに届きます。"
+msgid "Memory detail"
+msgstr "メモリ詳細"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Memory kind"
-msgstr "メモリの種類"
+#~ msgid "Memory is paused. Nothing new is being remembered; everything below stays readable and still reaches the agents."
+#~ msgstr "メモリは一時停止中です。新しい情報は記憶されず、以下の内容はすべて読み取り可能で、引き続きエージェントに届きます。"
+
+#: src/components/memory/MemoryTimeline.jsx
+#~ msgid "Memory kind"
+#~ msgstr "メモリの種類"
 
 #: src/app/(app)/projects/page.jsx
 msgid "Memory of {name}"
 msgstr "{name}のメモリ"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Memory title"
+msgstr "メモリタイトル"
 
 #: src/app/(app)/connections/page.jsx
 msgid "Merged pull requests, releases, closed issues and doc changes, by date."
@@ -5894,6 +5997,10 @@ msgstr "Meta Ads"
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Meta desc"
 msgstr "メタディスクリプション"
+
+#: src/lib/memoryApi.js
+msgid "Methods"
+msgstr "方法"
 
 #: src/app/(app)/connections/page.jsx
 #: src/components/connections/logos.jsx
@@ -6096,6 +6203,10 @@ msgstr "要改善"
 #: src/components/insights/desk/DeskLists.jsx
 msgid "Needs you"
 msgstr "あなたが必要です"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "needs your review"
+msgstr "レビューが必要です"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Net 30 is a choice, not a law"
@@ -6596,12 +6707,12 @@ msgid "Not recorded"
 msgstr "記録されていません"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "not relevant"
-msgstr "関連なし"
+#~ msgid "not relevant"
+#~ msgstr "関連なし"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Not relevant"
-msgstr "関連なし"
+#~ msgid "Not relevant"
+#~ msgstr "関連なし"
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Not remembering"
@@ -6784,8 +6895,8 @@ msgid "Nothing ran in this window."
 msgstr "この期間に何も実行されていません。"
 
 #: src/app/(app)/project/[projectId]/memory/page.jsx
-msgid "Nothing remembered yet. Run an audit, apply a change, or set your targets in project settings — everything an agent concludes lands here with its evidence."
-msgstr "まだ何も記憶されていません。監査を実行するか、変更を適用するか、プロジェクト設定で目標を設定してください — エージェントが結論付けたすべてが、その証拠とともにここに表示されます。"
+#~ msgid "Nothing remembered yet. Run an audit, apply a change, or set your targets in project settings — everything an agent concludes lands here with its evidence."
+#~ msgstr "まだ何も記憶されていません。監査を実行するか、変更を適用するか、プロジェクト設定で目標を設定してください — エージェントが結論付けたすべてが、その証拠とともにここに表示されます。"
 
 #: src/components/insights/desk/DeskCards.jsx
 #~ msgid "Nothing running."
@@ -6815,9 +6926,17 @@ msgstr "まだ何も書かれていません"
 msgid "Nothing yet. Every sync, check and change lands here — with what it found and how to undo it."
 msgstr "まだ何もありません。すべての同期、チェック、変更はここに記録されます。何が見つかったか、そして元に戻す方法も含まれます。"
 
+#: src/components/memory/MemoryPage.jsx
+msgid "Nothing yet. Fill in project settings, run an audit or ask the agent a question: what it learns lands here for you to keep or dismiss."
+msgstr "まだ何もありません。プロジェクト設定を入力するか、監査を実行するか、エージェントに質問してください。学習した内容は、保持または却下するためにここに表示されます。"
+
 #: src/app/(app)/memory/page.jsx
-msgid "Nothing yet. Set your preferences from the sidebar, or add a rule here — 'give me the number first, then the why' is a good start."
-msgstr "まだ何もありません。サイドバーから設定を行うか、ここにルールを追加してください。「まず数字を、次に理由を」が良い出発点です。"
+#~ msgid "Nothing yet. Set your preferences from the sidebar, or add a rule here — 'give me the number first, then the why' is a good start."
+#~ msgstr "まだ何もありません。サイドバーから設定を行うか、ここにルールを追加してください。「まず数字を、次に理由を」が良い出発点です。"
+
+#: src/components/memory/MemoryPage.jsx
+msgid "Nothing yet. Tell Duct how you like answers, like \"give me the number first, then the why\"."
+msgstr "まだ何もありません。Ductに回答の好み（例：「まず数字を、次に理由を教えて」）を伝えてください。"
 
 #: src/components/AppSidebar.jsx
 #~ msgid "Notification settings"
@@ -6834,6 +6953,10 @@ msgstr "今"
 #: src/lib/mcpServers.js
 msgid "Now asks for a sign-in"
 msgstr "現在サインインを求めています"
+
+#: src/lib/memoryApi.js
+msgid "Numbers"
+msgstr "数値"
 
 #: src/components/content/AnalyticsView.jsx
 #~ msgid "Numbers arrive once posts go out through PostBridge and the accounts are linked."
@@ -6887,6 +7010,10 @@ msgstr "オン"
 msgid "On by default, so a crash tells us something without you having to report it."
 msgstr "デフォルトでオンです。これにより、クラッシュが発生した場合、お客様が報告しなくても情報が伝わります。"
 
+#: src/components/memory/MemoryTimeline.jsx
+msgid "On every project"
+msgstr "すべてのプロジェクトで"
+
 #: src/components/audit/ExecutionOffer.jsx
 msgid "On request"
 msgstr "リクエストに応じて"
@@ -6927,6 +7054,10 @@ msgstr "1回のGoogleサインインで両方が行われます。このプロ�
 #: src/components/onboarding/ProviderStep.jsx
 msgid "One key, hundreds of models"
 msgstr "1つのキーで、数百のモデル"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "One line, with its number or date if it has one."
+msgstr "番号または日付がある場合は、それらを含む1行。"
 
 #: src/components/content/BrandContextForm.jsx
 #~ msgid "One memorable line"
@@ -6985,6 +7116,14 @@ msgstr "「アプリシークレットを要求」がオンの場合のみ"
 msgid "Only members of this project can open the link. Nothing here is public."
 msgstr "このプロジェクトのメンバーのみがリンクを開くことができます。ここにあるものは公開されていません。"
 
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Only on {bindingName}"
+msgstr "{bindingName}のみ"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "only on {projectName}"
+msgstr "{projectName}のみ"
+
 #: src/components/workspace/ActivityRow.jsx
 #~ msgid "Only the project owner can approve {tool} on {server}"
 #~ msgstr ""
@@ -6992,6 +7131,10 @@ msgstr "このプロジェクトのメンバーのみがリンクを開くこと
 #: src/app/(app)/execute/page.jsx
 msgid "Only the project owner can change autonomy."
 msgstr "プロジェクトオーナーのみが自律性を変更できます。"
+
+#: src/components/memory/MemoryPage.jsx
+msgid "Only you"
+msgstr "あなたのみ"
 
 #: src/components/connections/McpServers.jsx
 #~ msgid "Only your own chats use your servers, in any project. People you share a project with connect their own."
@@ -7265,6 +7408,10 @@ msgstr "クォータを超過すると、ジョブは次の下位モデルで実
 msgid "Out of quota, the run stops and shows you the limit. Nothing switches models for you, so that morning's brief does not arrive."
 msgstr "クォータを超過すると、実行は停止し、制限が表示されます。モデルは自動で切り替わらないため、その朝のブリーフは届きません。"
 
+#: src/lib/memoryApi.js
+msgid "Outcomes"
+msgstr "成果"
+
 #: src/components/models/UsagePanel.jsx
 msgid "over {windowDays} days"
 msgstr "{windowDays}日間で"
@@ -7503,7 +7650,7 @@ msgstr "事前計画"
 
 #: src/components/content/PlanViewport.jsx
 msgid "Plan discarded. Tell Duct what to plan instead, or close this tab."
-msgstr "計画を破棄しました。代わりに何を計画するかDuctに伝えるか、このタブを閉じてください。"
+msgstr "プランを破棄しました。代わりにDuctに何を計画するか伝えるか、このタブを閉じてください。"
 
 #: src/components/content/PlanStrategy.jsx
 msgid "Plan strategy"
@@ -7611,12 +7758,12 @@ msgid "Preferences"
 msgstr "設定"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "preferences · {field}"
-msgstr "設定 · {field}"
+#~ msgid "preferences · {field}"
+#~ msgstr "設定 · {field}"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "present"
-msgstr "現在"
+#~ msgid "present"
+#~ msgstr "現在"
 
 #: src/components/audit/AuditStepProgress.jsx
 #: src/components/content/FormatLibrary.jsx
@@ -7673,6 +7820,10 @@ msgstr "主要なSEO目標"
 msgid "Print report"
 msgstr "レポートを印刷"
 
+#: src/components/memory/MemoryPage.jsx
+msgid "Private to you. Agents use it only when they work for you."
+msgstr "あなた専用です。エージェントは、あなたのために作業する場合にのみこれを使用します。"
+
 #: src/lib/connectorCatalog.js
 msgid "Product"
 msgstr "プロダクト"
@@ -7717,6 +7868,7 @@ msgstr "進捗"
 #: src/app/(app)/content/page.jsx
 #: src/app/(app)/execute/page.jsx
 #: src/components/AppNav.jsx
+#: src/components/memory/MemoryPage.jsx
 msgid "Project"
 msgstr "プロジェクト"
 
@@ -7742,8 +7894,16 @@ msgid "Project not found. It may have been deleted, or you may not be a member."
 msgstr "プロジェクトが見つかりません。削除されたか、メンバーではない可能性があります。"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "project settings · {field}"
-msgstr "プロジェクト設定 · {field}"
+msgid "project settings"
+msgstr "プロジェクト設定"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Project settings"
+msgstr "プロジェクト設定"
+
+#: src/components/memory/MemoryTimeline.jsx
+#~ msgid "project settings · {field}"
+#~ msgstr "プロジェクト設定 · {field}"
 
 #: src/app/(app)/connections/page.jsx
 msgid "Project settings → API keys → Secret API key (V2) with the read scopes. Public SDK keys (appl_/goog_) cannot read the REST API."
@@ -8017,8 +8177,8 @@ msgid "Reasons before answering. Better on complex sites."
 msgstr "回答前の理由。複雑なサイトでより効果的です。"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "recalled {recalls}×"
-msgstr "呼び出されました {recalls}×"
+#~ msgid "recalled {recalls}×"
+#~ msgstr "呼び出されました {recalls}×"
 
 #: src/components/insights/desk/DeskLists.jsx
 msgid "Recent"
@@ -8151,8 +8311,8 @@ msgid "Remember"
 msgstr "記憶する"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Remember it"
-msgstr "記憶する"
+#~ msgid "Remember it"
+#~ msgstr "記憶する"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Remember it on Duct, encrypted, so it survives a refresh and can fund scheduled checks."
@@ -8185,6 +8345,10 @@ msgstr "記憶済み ✓"
 #: src/components/workspace/MemoryRows.jsx
 msgid "Remembered:"
 msgstr "記憶済み:"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Remembering is paused. Nothing new is saved; everything below stays readable and still reaches the agents."
+msgstr "メモリの記録は一時停止中です。新しいものは保存されませんが、以下の内容はすべて読み取り可能で、エージェントに引き続き到達します。"
 
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Remembering…"
@@ -8254,6 +8418,14 @@ msgstr "図をレンダリング中…"
 msgid "Repeated hashtags: {at}"
 msgstr "重複するハッシュタグ: {at}"
 
+#: src/components/memory/MemoryTimeline.jsx
+msgid "replaced"
+msgstr "置き換え済み"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "replaced on {endedOn}"
+msgstr "{endedOn}に置き換え済み"
+
 #: src/components/content/TextPostEditor.jsx
 msgid "Reply {n}"
 msgstr "返信{n}"
@@ -8265,6 +8437,7 @@ msgstr "返信{r}"
 #: src/components/audit/AuditWorkspace.jsx
 #: src/components/insights/desk/DeskLists.jsx
 #: src/components/LocalInsightDetail.jsx
+#: src/components/memory/MemoryTimeline.jsx
 msgid "Report"
 msgstr "レポート"
 
@@ -8277,6 +8450,7 @@ msgid "Report link"
 msgstr "レポートリンク"
 
 #: src/app/(app)/artifacts/page.jsx
+#: src/lib/memoryApi.js
 msgid "Reports"
 msgstr "レポート"
 
@@ -8517,6 +8691,10 @@ msgstr "ロールバック中…"
 #~ msgid "Rule, e.g. “Never pause the Brand campaign”"
 #~ msgstr "ルール例：「ブランドキャンペーンを一時停止しない」"
 
+#: src/lib/memoryApi.js
+msgid "Rules"
+msgstr "ルール"
+
 #: src/components/insights/ToolApproval.jsx
 msgid "Run {toolName} on {serverName}?"
 msgstr "{toolName}を{serverName}で実行しますか？"
@@ -8692,7 +8870,7 @@ msgstr "TikTokの下書きとして保存済み"
 
 #: src/components/content/PlanViewport.jsx
 msgid "Saved as your plan"
-msgstr "計画として保存されました"
+msgstr "あなたのプランとして保存されました"
 
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Saved encrypted to your account and sent only to this server."
@@ -9200,6 +9378,10 @@ msgstr "シェアしやすさ"
 msgid "Shared by {owner}"
 msgstr "{owner}が共有"
 
+#: src/components/memory/MemoryPage.jsx
+msgid "Shared with everyone on {name}."
+msgstr "{name}の全員と共有されています。"
+
 #: src/components/content/AnalyticsView.jsx
 #: src/components/content/PlanDayOne.jsx
 #: src/components/content/PostMetricsForm.jsx
@@ -9261,6 +9443,10 @@ msgstr "Ductの表示言語"
 msgid "Show fewer"
 msgstr "少なく表示"
 
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Show history"
+msgstr "履歴を表示"
+
 #: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/ProviderCard.jsx
 #: src/components/onboarding/ProviderStep.jsx
@@ -9289,8 +9475,8 @@ msgstr "信号を多く表示"
 #~ msgstr "理由を表示"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Show superseded"
-msgstr "置き換えられたものを表示"
+#~ msgid "Show superseded"
+#~ msgstr "置き換えられたものを表示"
 
 #: src/components/insights/ToolApproval.jsx
 #~ msgid "Showing the first part. The rest goes too."
@@ -9804,6 +9990,7 @@ msgid "Studying what's worked before…"
 msgstr "これまでの成功事例を調査中…"
 
 #: src/components/content/BrandContextForm.jsx
+#: src/lib/memoryApi.js
 msgid "Style"
 msgstr "スタイル"
 
@@ -9824,12 +10011,12 @@ msgid "Suggest an improvement"
 msgstr "改善を提案"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "superseded"
-msgstr "置き換えられました"
+#~ msgid "superseded"
+#~ msgstr "置き換えられました"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Superseded"
-msgstr "無効になりました"
+#~ msgid "Superseded"
+#~ msgstr "無効になりました"
 
 #: src/app/invite/[token]/page.jsx
 #: src/components/settings/AgentConsent.jsx
@@ -9890,7 +10077,6 @@ msgid "Synthesizing your plan…"
 msgstr "プランを統合中…"
 
 #: src/components/AppSidebar.jsx
-#: src/components/memory/MemoryTimeline.jsx
 msgid "System"
 msgstr "システム"
 
@@ -10122,8 +10308,12 @@ msgid "The address that serves OpenAI’s API, usually ending in /v1. One on you
 msgstr "OpenAI 形式の API を提供するアドレス（通常は /v1 で終わります）。ここでは自分のネットワーク内のアドレスも使えます。"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "The agents lose every fact on this timeline from their next turn. This cannot be undone."
-msgstr "エージェントは次回の実行からこのタイムライン上のすべての事実を失います。これは元に戻せません。"
+msgid "The agents lose every fact here from their next turn. This cannot be undone."
+msgstr "エージェントは次回の実行から、ここにあるすべての事実を失います。これは元に戻せません。"
+
+#: src/components/memory/MemoryTimeline.jsx
+#~ msgid "The agents lose every fact on this timeline from their next turn. This cannot be undone."
+#~ msgstr "エージェントは次回の実行からこのタイムライン上のすべての事実を失います。これは元に戻せません。"
 
 #: src/components/workspace/MemoryRows.jsx
 msgid "The agents stop seeing it from the next turn."
@@ -10165,6 +10355,10 @@ msgstr "キャプション"
 msgid "The ChatGPT sign-in has lapsed"
 msgstr "ChatGPTのサインインの有効期限が切れました"
 
+#: src/components/memory/MemoryTimeline.jsx
+msgid "the conversation"
+msgstr "会話"
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "the crawl"
 msgstr "クロール"
@@ -10182,8 +10376,8 @@ msgid "the execution queue"
 msgstr "実行キュー"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "The fact in one line — with its number or date if it has one."
-msgstr "事実を1行で表示 — 番号または日付がある場合はそれらも表示。"
+#~ msgid "The fact in one line — with its number or date if it has one."
+#~ msgstr "事実を1行で表示 — 番号または日付がある場合はそれらも表示。"
 
 #: src/components/content/TextPostEditor.jsx
 msgid "The first line is the hook."
@@ -10562,6 +10756,7 @@ msgstr "この投稿"
 #: src/app/(app)/artifacts/page.jsx
 #: src/app/(app)/audit/seo/page.jsx
 #: src/app/(app)/connections/page.jsx
+#: src/components/memory/MemoryPage.jsx
 msgid "this project"
 msgstr "このプロジェクト"
 
@@ -10585,7 +10780,7 @@ msgstr "このプロジェクトはオーナーの{vendor}アカウントを使�
 msgid "this project's activity"
 msgstr "このプロジェクトのアクティビティ"
 
-#: src/app/(app)/project/[projectId]/memory/page.jsx
+#: src/components/memory/MemoryPage.jsx
 msgid "this project's memory"
 msgstr "このプロジェクトのメモリ"
 
@@ -10696,6 +10891,10 @@ msgstr "時間枠"
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Title"
 msgstr "タイトル"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "to"
+msgstr "へ"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "To date"
@@ -10815,8 +11014,8 @@ msgid "Unavailable"
 msgstr "利用不可"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "unconfirmed"
-msgstr "未確認"
+#~ msgid "unconfirmed"
+#~ msgstr "未確認"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Undated"
@@ -10950,6 +11149,10 @@ msgstr "代わりにAPIキーを使用"
 #: src/components/connections/ProjectBinding.jsx
 msgid "Use for {projectName}"
 msgstr "{projectName}に使用"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Use on every project"
+msgstr "すべてのプロジェクトで使用"
 
 #: src/components/models/TierSummary.jsx
 msgid "Use one provider for all three"
@@ -11226,6 +11429,14 @@ msgstr "警告"
 msgid "warnings"
 msgstr "警告"
 
+#: src/components/memory/MemoryTimeline.jsx
+msgid "was “{replacedTitle}”"
+msgstr "「{replacedTitle}」でした"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "was “{replacedTitle}” until {replacedUntil}"
+msgstr "{replacedUntil}まで「{replacedTitle}」でした"
+
 #: src/components/GoogleAdsReport.js
 msgid "Watch"
 msgstr "視聴"
@@ -11335,8 +11546,8 @@ msgid "What does success look like?"
 msgstr "成功はどのようなものですか？"
 
 #: src/app/(app)/project/[projectId]/memory/page.jsx
-msgid "What Duct knows about {projectName}. Agents read it before every run."
-msgstr "Ductが{projectName}について記憶していること。エージェントはすべての実行前にこれを読み込みます。"
+#~ msgid "What Duct knows about {projectName}. Agents read it before every run."
+#~ msgstr "Ductが{projectName}について記憶していること。エージェントはすべての実行前にこれを読み込みます。"
 
 #: src/app/(app)/project/[projectId]/memory/page.jsx
 #~ msgid "What Duct knows about this project. Agents read it before every run — confirm, correct, or pin a fact so it stays in view."
@@ -11374,6 +11585,10 @@ msgstr "これは何ですか？"
 msgid "What it will send"
 msgstr "送信する内容"
 
+#: src/components/memory/MemoryTimeline.jsx
+msgid "What kind of memory"
+msgstr "どのようなメモリ"
+
 #: src/components/workspace/ComposerDials.jsx
 #~ msgid "What shape the brief takes"
 #~ msgstr "ブリーフの形式"
@@ -11399,8 +11614,12 @@ msgid "What this page will hold"
 msgstr "このページの内容"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "What was observed, why it matters, how to apply it."
-msgstr "観察されたこと、それが重要な理由、適用方法。"
+msgid "What to remember"
+msgstr "記憶する内容"
+
+#: src/components/memory/MemoryTimeline.jsx
+#~ msgid "What was observed, why it matters, how to apply it."
+#~ msgstr "観察されたこと、それが重要な理由、適用方法。"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "What you get"
@@ -11446,6 +11665,10 @@ msgstr "競合他社はどこで私に勝っていますか？"
 #: src/app/(start)/start/page.jsx
 msgid "Where does the data come from?"
 msgstr "データはどこから来ていますか？"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Where it applies"
+msgstr "適用範囲"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Where the funnel actually breaks"
@@ -11508,12 +11731,24 @@ msgid "Who do customers compare you against most often?"
 msgstr "顧客はあなたを誰と最も比較しますか"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Why it matters, and how an agent should apply it"
-msgstr "それが重要な理由と、エージェントがどのように適用すべきか"
+msgid "Why it matters"
+msgstr "重要な理由"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Why it matters, and how an agent should apply it. Optional."
-msgstr "それが重要な理由と、エージェントがどのように適用すべきか。任意。"
+#~ msgid "Why it matters, and how an agent should apply it"
+#~ msgstr "それが重要な理由と、エージェントがどのように適用すべきか"
+
+#: src/components/memory/MemoryTimeline.jsx
+#~ msgid "Why it matters, and how an agent should apply it. Optional."
+#~ msgstr "それが重要な理由と、エージェントがどのように適用すべきか。任意。"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Why it matters, and how an agent should use it."
+msgstr "重要な理由と、エージェントがどのように使用すべきか。"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Why it matters. Optional."
+msgstr "重要な理由。オプション。"
 
 #: src/components/content/CloneSourceNote.jsx
 msgid "Why it worked:"
@@ -11891,11 +12126,11 @@ msgstr "過去{widest}日間で、{earlierCalls, plural, one {# モデル呼び�
 msgid "Your Mac didn’t let Duct read this key. Choose Try again, and when your Mac asks for your password, pick <0>Always Allow</0> so it won’t ask again. Or paste the key again and save."
 msgstr "MacがこのキーをDuctに読み取らせませんでした。「再試行」を選び、Macからパスワードを求められたら<0>常に許可</0>を選んでください。以後は確認されなくなります。または、キーをもう一度貼り付けて保存してください。"
 
+#: src/components/memory/MemoryPage.jsx
 #: src/components/memory/MemoryTimeline.jsx
 msgid "your memory"
 msgstr "メモリ"
 
-#: src/app/(app)/memory/page.jsx
 #: src/components/AppSidebar.jsx
 msgid "Your memory"
 msgstr "メモリ"
@@ -11923,6 +12158,14 @@ msgstr "あなた自身のアカウントと API キーは暗号化して保存�
 #: src/components/content/AccountsTab.jsx
 #~ msgid "your PostBridge accounts"
 #~ msgstr "PostBridgeアカウント"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "your preferences"
+msgstr "あなたの設定"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Your preferences"
+msgstr "あなたの設定"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "your profile"

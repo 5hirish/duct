@@ -125,9 +125,12 @@ function DropdownMenuCheckboxItem({
     <DropdownMenuPrimitive.CheckboxItem
       data-slot="dropdown-menu-checkbox-item"
       className={cn(
-        "relative flex cursor-default select-none items-center rounded-md py-2 pr-3 pl-9 text-sm outline-none transition-colors",
+        "relative flex cursor-default select-none items-center gap-2 rounded-md py-2 pr-3 pl-9 text-sm outline-none transition-colors",
         "focus:bg-accent focus:text-accent-foreground",
         "data-disabled:pointer-events-none data-disabled:opacity-50",
+        // Same icon rule as DropdownMenuItem. Without it an icon beside the
+        // label rendered at lucide's 24px default, touching the text.
+        "[&>svg]:pointer-events-none [&>svg]:size-4 [&>svg]:shrink-0",
         className
       )}
       checked={checked}
@@ -163,9 +166,12 @@ function DropdownMenuRadioItem({
     <DropdownMenuPrimitive.RadioItem
       data-slot="dropdown-menu-radio-item"
       className={cn(
-        "relative flex cursor-default select-none items-center rounded-md py-2 pr-3 pl-9 text-sm outline-none transition-colors",
+        "relative flex cursor-default select-none items-center gap-2 rounded-md py-2 pr-3 pl-9 text-sm outline-none transition-colors",
         "focus:bg-accent focus:text-accent-foreground",
         "data-disabled:pointer-events-none data-disabled:opacity-50",
+        // Same icon rule as DropdownMenuItem. Without it an icon beside the
+        // label rendered at lucide's 24px default, touching the text.
+        "[&>svg]:pointer-events-none [&>svg]:size-4 [&>svg]:shrink-0",
         className
       )}
       {...props}

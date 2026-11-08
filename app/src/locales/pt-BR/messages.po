@@ -347,8 +347,8 @@ msgstr "{fieldLabel} (opcional)"
 #~ msgstr "{found, plural, one {# constatação em arquivo.} other {# constatações em arquivo.}}"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "{from} – {to}"
-msgstr "{from} – {to}"
+#~ msgid "{from} – {to}"
+#~ msgstr "{from} – {to}"
 
 #: src/components/connections/ConnectorPermissions.jsx
 msgid "{granted} of {total} granted"
@@ -659,6 +659,10 @@ msgstr "{ready} de {total} serão aplicados · {blocked, plural, one {# precisa 
 msgid "{recalledCount, plural, one {Recalled # memory} other {Recalled # memories}}"
 msgstr "{recalledCount, plural, one {Lembrou # memória} other {Lembrou # memórias}}"
 
+#: src/components/memory/MemoryTimeline.jsx
+msgid "{recalls, plural, one {used in # answer} other {used in # answers}}"
+msgstr "{recalls, plural, one {usado em # resposta} other {usado em # respostas}}"
+
 #: src/components/ProjectMembers.jsx
 msgid "{removed} no longer has access."
 msgstr "{removed} não tem mais acesso."
@@ -768,6 +772,10 @@ msgstr "{tokens} tokens · {calls, plural, one {# chamada} other {# chamadas}} �
 msgid "{tokensIn} in · {tokensOut} out"
 msgstr "{tokensIn} entrada · {tokensOut} saída"
 
+#: src/components/memory/MemoryTimeline.jsx
+msgid "{toReview, plural, one {# to review} other {# to review}}"
+msgstr "{toReview, plural, one {# para revisar} other {# para revisar}}"
+
 #: src/components/connections/ConnectorPermissions.jsx
 msgid "{total, plural, one {Granted} other {All # granted}}"
 msgstr "{total, plural, one {Concedido} other {Todos os # concedidos}}"
@@ -777,8 +785,8 @@ msgid "{total, plural, one {Show all #} other {Show all #}}"
 msgstr "{total, plural, one {Mostrar todos #} other {Mostrar todos #}}"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "{unconfirmed, plural, one {# unconfirmed} other {# unconfirmed}}"
-msgstr "{unconfirmed, plural, one {# não confirmado} other {# não confirmados}}"
+#~ msgid "{unconfirmed, plural, one {# unconfirmed} other {# unconfirmed}}"
+#~ msgstr "{unconfirmed, plural, one {# não confirmado} other {# não confirmados}}"
 
 #: src/components/workspace/ContextRing.jsx
 #~ msgid "{used} of {window}"
@@ -1162,6 +1170,10 @@ msgstr "Abandonar esta conversa e iniciar uma nova (o que foi produzido é manti
 msgid "About"
 msgstr "Sobre"
 
+#: src/lib/memoryApi.js
+msgid "About you"
+msgstr "Sobre você"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "About your business"
 msgstr "Sobre seu negócio"
@@ -1361,8 +1373,8 @@ msgid "Add pillars"
 msgstr "Adicionar pilares"
 
 #: src/app/(app)/memory/page.jsx
-msgid "Add something about how you work"
-msgstr "Adicione algo sobre como você trabalha"
+#~ msgid "Add something about how you work"
+#~ msgstr "Adicione algo sobre como você trabalha"
 
 #: src/components/settings/AgentAccess.jsx
 #~ msgid "Add this to <0>~/.codex/config.toml</0>."
@@ -1638,8 +1650,8 @@ msgid "Analytics rows reach the model as raw JSON. A large pull gets cut short, 
 msgstr "Linhas de análise chegam ao modelo como JSON bruto. Uma grande extração é interrompida, para que um resumo possa ser escrito sem as linhas que foram descartadas."
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "and"
-msgstr "e"
+#~ msgid "and"
+#~ msgstr "e"
 
 #: src/components/content/PlanBoard.jsx
 msgid "Another length"
@@ -1668,6 +1680,10 @@ msgstr "Qualquer agente usando este token perde o acesso ao Duct imediatamente. 
 #: src/components/connections/McpConnectors.jsx
 msgid "Any MCP server"
 msgstr "Qualquer servidor MCP"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Any time"
+msgstr "A qualquer momento"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Anything else Duct should know"
@@ -1828,7 +1844,6 @@ msgstr "artefato"
 
 #: src/components/artifacts/ArtifactRenderer.jsx
 #: src/components/insights/InsightsWorkspace.jsx
-#: src/components/memory/MemoryTimeline.jsx
 msgid "Artifact"
 msgstr "Artefato"
 
@@ -2115,8 +2130,8 @@ msgid "Best times"
 msgstr "Melhores horários"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Between"
-msgstr "Entre"
+#~ msgid "Between"
+#~ msgstr "Entre"
 
 #: src/components/content/SynthesisPanel.jsx
 msgid "Beyond the ones you searched, on two posts or more"
@@ -2526,7 +2541,6 @@ msgstr "Claude · alguns centavos por auditoria"
 #~ msgstr "Claude Code no meu laptop"
 
 #: src/components/connections/ProjectEntitySelect.jsx
-#: src/components/memory/MemoryTimeline.jsx
 msgid "Clear"
 msgstr "Limpar"
 
@@ -2694,8 +2708,8 @@ msgid "Configure {title}"
 msgstr "Configurar {title}"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Confirm"
-msgstr "Confirmar"
+#~ msgid "Confirm"
+#~ msgstr "Confirmar"
 
 #: src/components/connections/ConnectorTile.jsx
 #: src/components/connections/McpConnectDialog.jsx
@@ -2990,16 +3004,16 @@ msgstr "Continuar com ChatGPT"
 #~ msgstr "Controla a profundidade com que a IA analisa seu site antes de escrever as constatações."
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "conversation"
-msgstr "conversa"
+#~ msgid "conversation"
+#~ msgstr "conversa"
 
 #: src/components/AppNav.jsx
 msgid "Conversation"
 msgstr "Conversa"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "conversation turns {firstTurn}–{lastTurn}"
-msgstr "turnos da conversa {firstTurn}–{lastTurn}"
+#~ msgid "conversation turns {firstTurn}–{lastTurn}"
+#~ msgstr "turnos da conversa {firstTurn}–{lastTurn}"
 
 #: src/components/insights/desk/DeskLists.jsx
 msgid "Conversations"
@@ -3075,6 +3089,10 @@ msgstr "Copie estes dos analytics da plataforma. Eles permanecem como você os i
 msgid "Copy this part"
 msgstr "Copiar esta parte"
 
+#: src/lib/memoryApi.js
+msgid "Corrections"
+msgstr "Correções"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Could not change that."
 msgstr "Não foi possível alterar isso."
@@ -3082,6 +3100,10 @@ msgstr "Não foi possível alterar isso."
 #: src/components/connections/ProjectEntitySelect.jsx
 msgid "Could not list {many}. {listError}"
 msgstr "Não foi possível listar {many}. {listError}"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Could not move that."
+msgstr "Não foi possível mover isso."
 
 #: src/components/LocalInsightDetail.jsx
 msgid "Could not refresh - showing saved data."
@@ -3271,6 +3293,14 @@ msgstr "Estado atual (instantâneo antes da alteração)"
 msgid "Currently mapped to {foreignName} — a teammate's connector."
 msgstr "Atualmente mapeado para {foreignName} — o conector de um colega de equipe."
 
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Custom range"
+msgstr "Intervalo personalizado"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Custom range…"
+msgstr "Intervalo personalizado…"
+
 #: src/components/content/VoiceRulesFields.jsx
 msgid "Customers, clients and partners are never named unless you say so."
 msgstr "Clientes e parceiros nunca são nomeados a menos que você diga."
@@ -3309,8 +3339,8 @@ msgid "Date"
 msgstr "Data"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Dates"
-msgstr "Datas"
+#~ msgid "Dates"
+#~ msgstr "Datas"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Dates resolve in UTC. Pick your zone so \"last week\" means your week."
@@ -3323,6 +3353,10 @@ msgstr "Datas são resolvidas em UTC. Escolha seu fuso horário para que \"seman
 #: src/components/content/PostCard.jsx
 msgid "Day {dayNumber}"
 msgstr "Dia {dayNumber}"
+
+#: src/lib/memoryApi.js
+msgid "Decisions"
+msgstr "Decisões"
 
 #: src/components/CookieConsent.jsx
 msgid "Decline"
@@ -3374,9 +3408,13 @@ msgstr "Excluir “{pendingName}”?"
 msgid "Delete {name}"
 msgstr "Excluir {name}"
 
+#: src/components/memory/MemoryPage.jsx
+msgid "Delete every memory for this project, for every member? This cannot be undone."
+msgstr "Excluir todas as memórias deste projeto, para todos os membros? Isso não pode ser desfeito."
+
 #: src/app/(app)/project/[projectId]/memory/page.jsx
-msgid "Delete every memory for this project? This cannot be undone."
-msgstr "Excluir toda a memória deste projeto? Isso não pode ser desfeito."
+#~ msgid "Delete every memory for this project? This cannot be undone."
+#~ msgstr "Excluir toda a memória deste projeto? Isso não pode ser desfeito."
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Delete every memory here?"
@@ -3386,7 +3424,7 @@ msgstr "Excluir toda a memória aqui?"
 msgid "Delete everything"
 msgstr "Excluir tudo"
 
-#: src/app/(app)/memory/page.jsx
+#: src/components/memory/MemoryPage.jsx
 msgid "Delete everything Duct has learned about how you work? This cannot be undone."
 msgstr "Excluir tudo o que o Duct aprendeu sobre como você trabalha? Isso não pode ser desfeito."
 
@@ -3567,6 +3605,7 @@ msgid "Discover what's working"
 msgstr "Descubra o que está funcionando"
 
 #: src/components/connections/FirstSourceCelebration.jsx
+#: src/components/memory/MemoryTimeline.jsx
 msgid "Dismiss"
 msgstr "Descartar"
 
@@ -3578,6 +3617,10 @@ msgstr "Descartar atualização do projeto"
 #: src/components/UpdateToast.jsx
 msgid "Dismiss update notification"
 msgstr "Descartar notificação de atualização"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "dismissed"
+msgstr "descartado"
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Docs / Help"
@@ -3690,6 +3733,10 @@ msgstr "Desenhou uma imagem"
 #: src/components/workspace/Attachments.jsx
 msgid "Drop to attach"
 msgstr "Arraste para anexar"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Duct"
+msgstr "Duct"
 
 #: src/components/UpdateToast.jsx
 msgid "Duct {version} is available"
@@ -3940,8 +3987,12 @@ msgid "e.g. Acme CRM"
 msgstr "ex: Acme CRM"
 
 #: src/app/(app)/memory/page.jsx
-msgid "e.g. Always compare to the same period last year"
-msgstr "Ex.: Sempre compare com o mesmo período do ano passado"
+#~ msgid "e.g. Always compare to the same period last year"
+#~ msgstr "Ex.: Sempre compare com o mesmo período do ano passado"
+
+#: src/components/memory/MemoryPage.jsx
+msgid "e.g. Always compare to the same week last year"
+msgstr "ex: Sempre comparar com a mesma semana do ano passado"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "e.g. Drive trial signups via saveable beauty education"
@@ -3990,6 +4041,10 @@ msgstr "Ex.: tbnrkp3gk9 (da URL do Clarity)"
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "e.g. Team of 3, founder-led sales, runway for 8 months."
 msgstr "Ex.: Equipe de 3, vendas lideradas pelo fundador, capital para 8 meses."
+
+#: src/components/memory/MemoryPage.jsx
+msgid "e.g. We never bid on competitor brand terms"
+msgstr "ex: Nunca licitamos em termos de marca de concorrentes"
 
 #: src/app/(app)/execute/page.jsx
 msgid "Each change is reverted using the rollback handle recorded when it was applied."
@@ -4247,6 +4302,10 @@ msgstr "Gastos, alcance, conversões e CPA do Facebook e Instagram."
 msgid "faceshape, colorseason…"
 msgstr "formato do rosto, estação de cores…"
 
+#: src/lib/memoryApi.js
+msgid "Facts"
+msgstr "Fatos"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "FAIL"
 msgstr "FALHA"
@@ -4281,6 +4340,10 @@ msgstr "Falha ao enviar"
 msgid "Faster, lighter"
 msgstr "Mais rápido, mais leve"
 
+#: src/lib/memoryApi.js
+msgid "Feedback"
+msgstr "Feedback"
+
 #: src/components/content/AnalyticsView.jsx
 #~ msgid "Fetching analytics from PostBridge…"
 #~ msgstr "Buscando análises do PostBridge…"
@@ -4295,7 +4358,7 @@ msgstr "Buscando sitemap"
 
 #: src/components/content/PlanViewport.jsx
 msgid "Fewer videos in week two, and start with the before-and-after…"
-msgstr "Menos vídeos na segunda semana, e comece com o antes e depois…"
+msgstr "Menos vídeos na semana dois, e comece com o antes e depois…"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Fill-In"
@@ -4328,6 +4391,10 @@ msgstr "Procurando uma fonte…"
 #: src/components/content/PlanStrategy.jsx
 msgid "Finding what works"
 msgstr "Descobrindo o que funciona"
+
+#: src/lib/memoryApi.js
+msgid "Findings"
+msgstr "Constatações"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Findings by Category"
@@ -4465,6 +4532,10 @@ msgstr "Amigável"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "from"
 msgstr "de"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "From"
+msgstr "De"
 
 #: src/app/(app)/connections/page.jsx
 msgid "From Ads Manager → Settings → API keys"
@@ -4660,6 +4731,10 @@ msgstr "Ir para Uso"
 #: src/components/content/PostMiniCard.jsx
 msgid "Goal:"
 msgstr "Meta:"
+
+#: src/lib/memoryApi.js
+msgid "Goals"
+msgstr "Metas"
 
 #: src/components/audit/AuditReportV1.jsx
 #: src/lib/contentReview.js
@@ -4904,8 +4979,8 @@ msgstr "Ocultar chave"
 #~ msgstr "Ocultar raciocínio"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Hide superseded"
-msgstr "Ocultar substituídos"
+#~ msgid "Hide superseded"
+#~ msgstr "Ocultar substituídos"
 
 #: src/components/connections/ManualConnectorCard.jsx
 msgid "Hide the token form"
@@ -4979,8 +5054,8 @@ msgid "How posts sound and what they must (or must not) say."
 msgstr "Como os posts soam e o que eles devem (ou não devem) dizer."
 
 #: src/app/(app)/memory/page.jsx
-msgid "How you like to be worked with. Every agent reads it; only you can see it."
-msgstr "Como você gosta de trabalhar. Todo agente lê; só você pode ver."
+#~ msgid "How you like to be worked with. Every agent reads it; only you can see it."
+#~ msgstr "Como você gosta de trabalhar. Todo agente lê; só você pode ver."
 
 #: src/app/(app)/memory/page.jsx
 #~ msgid "How you like to be worked with. Every agent reads this, on every project, and only you can see it."
@@ -5285,6 +5360,10 @@ msgstr "agora mesmo"
 msgid "Kanban"
 msgstr "Kanban"
 
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Keep"
+msgstr "Manter"
+
 #: src/components/content/VoiceRulesFields.jsx
 msgid "Keep client names out"
 msgstr "Manter nomes de clientes fora"
@@ -5358,6 +5437,18 @@ msgstr "Páginas de destino"
 #: src/components/LanguageMenu.jsx
 msgid "Language"
 msgstr "Idioma"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Last 30 days"
+msgstr "Últimos 30 dias"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Last 7 days"
+msgstr "Últimos 7 dias"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Last 90 days"
+msgstr "Últimos 90 dias"
 
 #: src/components/workspace/ContextRing.jsx
 msgid "Last call"
@@ -5481,8 +5572,12 @@ msgid "Linked accounts"
 msgstr "Contas vinculadas"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Linked from chat — outside the filters below"
-msgstr "Vinculado do chat — fora dos filtros abaixo"
+#~ msgid "Linked from chat — outside the filters below"
+#~ msgstr "Vinculado do chat — fora dos filtros abaixo"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Linked from chat, outside the filters below"
+msgstr "Vinculado do chat, fora dos filtros abaixo"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Linked styles"
@@ -5827,8 +5922,8 @@ msgid "Medium impact"
 msgstr "Impacto médio"
 
 #: src/app/(app)/project/[projectId]/members/page.jsx
-#: src/app/(app)/project/[projectId]/memory/page.jsx
 #: src/app/(app)/project/[projectId]/page.jsx
+#: src/components/memory/MemoryPage.jsx
 #: src/components/ProjectMembers.jsx
 msgid "Members"
 msgstr "Membros"
@@ -5841,26 +5936,34 @@ msgstr "Membros de {name}"
 msgid "memory"
 msgstr "memória"
 
-#: src/app/(app)/project/[projectId]/memory/page.jsx
 #: src/app/(app)/project/[projectId]/page.jsx
+#: src/components/memory/MemoryPage.jsx
 msgid "Memory"
 msgstr "Memória"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Memory body"
-msgstr "Corpo da memória"
+#~ msgid "Memory body"
+#~ msgstr "Corpo da memória"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Memory is paused. Nothing new is being remembered; everything below stays readable and still reaches the agents."
-msgstr "A memória está pausada. Nada de novo está sendo lembrado; tudo abaixo permanece legível e ainda chega aos agentes."
+msgid "Memory detail"
+msgstr "Detalhe da memória"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Memory kind"
-msgstr "Tipo de memória"
+#~ msgid "Memory is paused. Nothing new is being remembered; everything below stays readable and still reaches the agents."
+#~ msgstr "A memória está pausada. Nada de novo está sendo lembrado; tudo abaixo permanece legível e ainda chega aos agentes."
+
+#: src/components/memory/MemoryTimeline.jsx
+#~ msgid "Memory kind"
+#~ msgstr "Tipo de memória"
 
 #: src/app/(app)/projects/page.jsx
 msgid "Memory of {name}"
 msgstr "Memória de {name}"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Memory title"
+msgstr "Título da memória"
 
 #: src/app/(app)/connections/page.jsx
 msgid "Merged pull requests, releases, closed issues and doc changes, by date."
@@ -5894,6 +5997,10 @@ msgstr "Meta Ads"
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Meta desc"
 msgstr "Meta descrição"
+
+#: src/lib/memoryApi.js
+msgid "Methods"
+msgstr "Métodos"
 
 #: src/app/(app)/connections/page.jsx
 #: src/components/connections/logos.jsx
@@ -6096,6 +6203,10 @@ msgstr "Precisa de trabalho"
 #: src/components/insights/desk/DeskLists.jsx
 msgid "Needs you"
 msgstr "Precisa de você"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "needs your review"
+msgstr "precisa da sua revisão"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Net 30 is a choice, not a law"
@@ -6596,12 +6707,12 @@ msgid "Not recorded"
 msgstr "Não registrado"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "not relevant"
-msgstr "não relevante"
+#~ msgid "not relevant"
+#~ msgstr "não relevante"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Not relevant"
-msgstr "Não relevante"
+#~ msgid "Not relevant"
+#~ msgstr "Não relevante"
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Not remembering"
@@ -6784,8 +6895,8 @@ msgid "Nothing ran in this window."
 msgstr "Nada foi executado nesta janela."
 
 #: src/app/(app)/project/[projectId]/memory/page.jsx
-msgid "Nothing remembered yet. Run an audit, apply a change, or set your targets in project settings — everything an agent concludes lands here with its evidence."
-msgstr "Nada lembrado ainda. Execute uma auditoria, aplique uma alteração ou defina seus objetivos nas configurações do projeto — tudo o que um agente conclui aparece aqui com suas evidências."
+#~ msgid "Nothing remembered yet. Run an audit, apply a change, or set your targets in project settings — everything an agent concludes lands here with its evidence."
+#~ msgstr "Nada lembrado ainda. Execute uma auditoria, aplique uma alteração ou defina seus objetivos nas configurações do projeto — tudo o que um agente conclui aparece aqui com suas evidências."
 
 #: src/components/insights/desk/DeskCards.jsx
 #~ msgid "Nothing running."
@@ -6815,9 +6926,17 @@ msgstr "Nada escrito ainda"
 msgid "Nothing yet. Every sync, check and change lands here — with what it found and how to undo it."
 msgstr "Nada ainda. Cada sincronização, verificação e alteração aparece aqui — com o que foi encontrado e como desfazer."
 
+#: src/components/memory/MemoryPage.jsx
+msgid "Nothing yet. Fill in project settings, run an audit or ask the agent a question: what it learns lands here for you to keep or dismiss."
+msgstr "Nada ainda. Preencha as configurações do projeto, execute uma auditoria ou faça uma pergunta ao agente: o que ele aprende aparece aqui para você manter ou descartar."
+
 #: src/app/(app)/memory/page.jsx
-msgid "Nothing yet. Set your preferences from the sidebar, or add a rule here — 'give me the number first, then the why' is a good start."
-msgstr "Nada ainda. Defina suas preferências na barra lateral, ou adicione uma regra aqui — 'me dê o número primeiro, depois o porquê' é um bom começo."
+#~ msgid "Nothing yet. Set your preferences from the sidebar, or add a rule here — 'give me the number first, then the why' is a good start."
+#~ msgstr "Nada ainda. Defina suas preferências na barra lateral, ou adicione uma regra aqui — 'me dê o número primeiro, depois o porquê' é um bom começo."
+
+#: src/components/memory/MemoryPage.jsx
+msgid "Nothing yet. Tell Duct how you like answers, like \"give me the number first, then the why\"."
+msgstr "Nada ainda. Diga ao Duct como você gosta das respostas, como \"me dê o número primeiro, depois o porquê\"."
 
 #: src/components/AppSidebar.jsx
 #~ msgid "Notification settings"
@@ -6834,6 +6953,10 @@ msgstr "agora"
 #: src/lib/mcpServers.js
 msgid "Now asks for a sign-in"
 msgstr "Agora pede uma entrada"
+
+#: src/lib/memoryApi.js
+msgid "Numbers"
+msgstr "Números"
 
 #: src/components/content/AnalyticsView.jsx
 #~ msgid "Numbers arrive once posts go out through PostBridge and the accounts are linked."
@@ -6887,6 +7010,10 @@ msgstr "Ativado"
 msgid "On by default, so a crash tells us something without you having to report it."
 msgstr "Ativado por padrão, para que uma falha nos diga algo sem que você precise relatar."
 
+#: src/components/memory/MemoryTimeline.jsx
+msgid "On every project"
+msgstr "Em todo projeto"
+
 #: src/components/audit/ExecutionOffer.jsx
 msgid "On request"
 msgstr "Sob demanda"
@@ -6927,6 +7054,10 @@ msgstr "Um único acesso do Google faz os dois: ele salva este projeto em uma co
 #: src/components/onboarding/ProviderStep.jsx
 msgid "One key, hundreds of models"
 msgstr "Uma chave, centenas de modelos"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "One line, with its number or date if it has one."
+msgstr "Uma linha, com seu número ou data, se houver."
 
 #: src/components/content/BrandContextForm.jsx
 #~ msgid "One memorable line"
@@ -6985,6 +7116,14 @@ msgstr "Somente se 'Exigir Segredo do App' estiver ativado"
 msgid "Only members of this project can open the link. Nothing here is public."
 msgstr "Apenas membros deste projeto podem abrir o link. Nada aqui é público."
 
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Only on {bindingName}"
+msgstr "Apenas em {bindingName}"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "only on {projectName}"
+msgstr "apenas em {projectName}"
+
 #: src/components/workspace/ActivityRow.jsx
 #~ msgid "Only the project owner can approve {tool} on {server}"
 #~ msgstr ""
@@ -6992,6 +7131,10 @@ msgstr "Apenas membros deste projeto podem abrir o link. Nada aqui é público."
 #: src/app/(app)/execute/page.jsx
 msgid "Only the project owner can change autonomy."
 msgstr "Apenas o proprietário do projeto pode alterar a autonomia."
+
+#: src/components/memory/MemoryPage.jsx
+msgid "Only you"
+msgstr "Apenas você"
 
 #: src/components/connections/McpServers.jsx
 #~ msgid "Only your own chats use your servers, in any project. People you share a project with connect their own."
@@ -7264,6 +7407,10 @@ msgstr "Sem cota, a tarefa é executada no próximo modelo disponível — e o D
 #: src/components/AutoFallbackCard.jsx
 msgid "Out of quota, the run stops and shows you the limit. Nothing switches models for you, so that morning's brief does not arrive."
 msgstr "Sem cota, a execução para e mostra o limite. Nada muda os modelos para você, então o resumo da manhã não chega."
+
+#: src/lib/memoryApi.js
+msgid "Outcomes"
+msgstr "Resultados"
 
 #: src/components/models/UsagePanel.jsx
 msgid "over {windowDays} days"
@@ -7611,12 +7758,12 @@ msgid "Preferences"
 msgstr "Preferências"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "preferences · {field}"
-msgstr "preferências · {field}"
+#~ msgid "preferences · {field}"
+#~ msgstr "preferências · {field}"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "present"
-msgstr "apresentar"
+#~ msgid "present"
+#~ msgstr "apresentar"
 
 #: src/components/audit/AuditStepProgress.jsx
 #: src/components/content/FormatLibrary.jsx
@@ -7673,6 +7820,10 @@ msgstr "Meta principal de SEO"
 msgid "Print report"
 msgstr "Imprimir relatório"
 
+#: src/components/memory/MemoryPage.jsx
+msgid "Private to you. Agents use it only when they work for you."
+msgstr "Privado para você. Agentes o usam apenas quando trabalham para você."
+
 #: src/lib/connectorCatalog.js
 msgid "Product"
 msgstr "Produto"
@@ -7717,6 +7868,7 @@ msgstr "Progresso"
 #: src/app/(app)/content/page.jsx
 #: src/app/(app)/execute/page.jsx
 #: src/components/AppNav.jsx
+#: src/components/memory/MemoryPage.jsx
 msgid "Project"
 msgstr "Projeto"
 
@@ -7742,8 +7894,16 @@ msgid "Project not found. It may have been deleted, or you may not be a member."
 msgstr "Projeto não encontrado. Ele pode ter sido excluído, ou você pode não ser um membro."
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "project settings · {field}"
-msgstr "configurações do projeto · {field}"
+msgid "project settings"
+msgstr "configurações do projeto"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Project settings"
+msgstr "Configurações do projeto"
+
+#: src/components/memory/MemoryTimeline.jsx
+#~ msgid "project settings · {field}"
+#~ msgstr "configurações do projeto · {field}"
 
 #: src/app/(app)/connections/page.jsx
 msgid "Project settings → API keys → Secret API key (V2) with the read scopes. Public SDK keys (appl_/goog_) cannot read the REST API."
@@ -8017,8 +8177,8 @@ msgid "Reasons before answering. Better on complex sites."
 msgstr "Raciocina antes de responder. Melhor em sites complexos."
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "recalled {recalls}×"
-msgstr "relembrado {recalls}×"
+#~ msgid "recalled {recalls}×"
+#~ msgstr "relembrado {recalls}×"
 
 #: src/components/insights/desk/DeskLists.jsx
 msgid "Recent"
@@ -8151,8 +8311,8 @@ msgid "Remember"
 msgstr "Lembrar"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Remember it"
-msgstr "Lembrar"
+#~ msgid "Remember it"
+#~ msgstr "Lembrar"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Remember it on Duct, encrypted, so it survives a refresh and can fund scheduled checks."
@@ -8185,6 +8345,10 @@ msgstr "Lembrado ✓"
 #: src/components/workspace/MemoryRows.jsx
 msgid "Remembered:"
 msgstr "Lembrado:"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Remembering is paused. Nothing new is saved; everything below stays readable and still reaches the agents."
+msgstr "A memorização está pausada. Nada de novo é salvo; tudo abaixo permanece legível e ainda chega aos agentes."
 
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Remembering…"
@@ -8254,6 +8418,14 @@ msgstr "Renderizando diagrama..."
 msgid "Repeated hashtags: {at}"
 msgstr "Hashtags repetidas: {at}"
 
+#: src/components/memory/MemoryTimeline.jsx
+msgid "replaced"
+msgstr "substituído"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "replaced on {endedOn}"
+msgstr "substituído em {endedOn}"
+
 #: src/components/content/TextPostEditor.jsx
 msgid "Reply {n}"
 msgstr "Resposta {n}"
@@ -8265,6 +8437,7 @@ msgstr "a resposta {r}"
 #: src/components/audit/AuditWorkspace.jsx
 #: src/components/insights/desk/DeskLists.jsx
 #: src/components/LocalInsightDetail.jsx
+#: src/components/memory/MemoryTimeline.jsx
 msgid "Report"
 msgstr "Relatório"
 
@@ -8277,6 +8450,7 @@ msgid "Report link"
 msgstr "Link do relatório"
 
 #: src/app/(app)/artifacts/page.jsx
+#: src/lib/memoryApi.js
 msgid "Reports"
 msgstr "Relatórios"
 
@@ -8516,6 +8690,10 @@ msgstr "Revertendo…"
 #: src/app/(app)/execute/page.jsx
 #~ msgid "Rule, e.g. “Never pause the Brand campaign”"
 #~ msgstr "Regra, ex: “Nunca pausar a campanha da Marca”"
+
+#: src/lib/memoryApi.js
+msgid "Rules"
+msgstr "Regras"
 
 #: src/components/insights/ToolApproval.jsx
 msgid "Run {toolName} on {serverName}?"
@@ -9200,6 +9378,10 @@ msgstr "Compartilhabilidade"
 msgid "Shared by {owner}"
 msgstr "Compartilhado por {owner}"
 
+#: src/components/memory/MemoryPage.jsx
+msgid "Shared with everyone on {name}."
+msgstr "Compartilhado com todos em {name}."
+
 #: src/components/content/AnalyticsView.jsx
 #: src/components/content/PlanDayOne.jsx
 #: src/components/content/PostMetricsForm.jsx
@@ -9261,6 +9443,10 @@ msgstr "Mostrar Duct em"
 msgid "Show fewer"
 msgstr "Mostrar menos"
 
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Show history"
+msgstr "Mostrar histórico"
+
 #: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/ProviderCard.jsx
 #: src/components/onboarding/ProviderStep.jsx
@@ -9289,8 +9475,8 @@ msgstr "Mostrar mais sinais"
 #~ msgstr "Mostrar raciocínio"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Show superseded"
-msgstr "Mostrar substituídos"
+#~ msgid "Show superseded"
+#~ msgstr "Mostrar substituídos"
 
 #: src/components/insights/ToolApproval.jsx
 #~ msgid "Showing the first part. The rest goes too."
@@ -9804,6 +9990,7 @@ msgid "Studying what's worked before…"
 msgstr "Estudando o que funcionou antes…"
 
 #: src/components/content/BrandContextForm.jsx
+#: src/lib/memoryApi.js
 msgid "Style"
 msgstr "Estilo"
 
@@ -9824,12 +10011,12 @@ msgid "Suggest an improvement"
 msgstr "Sugerir uma melhoria"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "superseded"
-msgstr "substituído"
+#~ msgid "superseded"
+#~ msgstr "substituído"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Superseded"
-msgstr "Substituído"
+#~ msgid "Superseded"
+#~ msgstr "Substituído"
 
 #: src/app/invite/[token]/page.jsx
 #: src/components/settings/AgentConsent.jsx
@@ -9890,7 +10077,6 @@ msgid "Synthesizing your plan…"
 msgstr "Sintetizando seu plano…"
 
 #: src/components/AppSidebar.jsx
-#: src/components/memory/MemoryTimeline.jsx
 msgid "System"
 msgstr "Sistema"
 
@@ -10122,8 +10308,12 @@ msgid "The address that serves OpenAI’s API, usually ending in /v1. One on you
 msgstr "O endereço que serve a API no formato da OpenAI, geralmente terminando em /v1. Um endereço na sua própria rede funciona aqui."
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "The agents lose every fact on this timeline from their next turn. This cannot be undone."
-msgstr "Os agentes perdem todos os fatos nesta linha do tempo a partir da próxima execução. Isso não pode ser desfeito."
+msgid "The agents lose every fact here from their next turn. This cannot be undone."
+msgstr "Os agentes perdem todos os fatos aqui a partir da próxima execução. Isso não pode ser desfeito."
+
+#: src/components/memory/MemoryTimeline.jsx
+#~ msgid "The agents lose every fact on this timeline from their next turn. This cannot be undone."
+#~ msgstr "Os agentes perdem todos os fatos nesta linha do tempo a partir da próxima execução. Isso não pode ser desfeito."
 
 #: src/components/workspace/MemoryRows.jsx
 msgid "The agents stop seeing it from the next turn."
@@ -10165,6 +10355,10 @@ msgstr "a legenda"
 msgid "The ChatGPT sign-in has lapsed"
 msgstr "O login do ChatGPT expirou"
 
+#: src/components/memory/MemoryTimeline.jsx
+msgid "the conversation"
+msgstr "a conversa"
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "the crawl"
 msgstr "o rastreamento"
@@ -10182,8 +10376,8 @@ msgid "the execution queue"
 msgstr "a fila de execução"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "The fact in one line — with its number or date if it has one."
-msgstr "O fato em uma linha — com seu número ou data, se tiver."
+#~ msgid "The fact in one line — with its number or date if it has one."
+#~ msgstr "O fato em uma linha — com seu número ou data, se tiver."
 
 #: src/components/content/TextPostEditor.jsx
 msgid "The first line is the hook."
@@ -10562,6 +10756,7 @@ msgstr "este post"
 #: src/app/(app)/artifacts/page.jsx
 #: src/app/(app)/audit/seo/page.jsx
 #: src/app/(app)/connections/page.jsx
+#: src/components/memory/MemoryPage.jsx
 msgid "this project"
 msgstr "este projeto"
 
@@ -10585,7 +10780,7 @@ msgstr "Este projeto usa a conta {vendor} do proprietário. Peça a eles para co
 msgid "this project's activity"
 msgstr "atividade deste projeto"
 
-#: src/app/(app)/project/[projectId]/memory/page.jsx
+#: src/components/memory/MemoryPage.jsx
 msgid "this project's memory"
 msgstr "memória deste projeto"
 
@@ -10696,6 +10891,10 @@ msgstr "Janela de tempo"
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Title"
 msgstr "Título"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "to"
+msgstr "para"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "To date"
@@ -10815,8 +11014,8 @@ msgid "Unavailable"
 msgstr "Indisponível"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "unconfirmed"
-msgstr "não confirmado"
+#~ msgid "unconfirmed"
+#~ msgstr "não confirmado"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Undated"
@@ -10950,6 +11149,10 @@ msgstr "Usar uma chave de API em vez disso"
 #: src/components/connections/ProjectBinding.jsx
 msgid "Use for {projectName}"
 msgstr "Usar para {projectName}"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Use on every project"
+msgstr "Usar em todo projeto"
 
 #: src/components/models/TierSummary.jsx
 msgid "Use one provider for all three"
@@ -11226,6 +11429,14 @@ msgstr "Aviso"
 msgid "warnings"
 msgstr "avisos"
 
+#: src/components/memory/MemoryTimeline.jsx
+msgid "was “{replacedTitle}”"
+msgstr "era “{replacedTitle}”"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "was “{replacedTitle}” until {replacedUntil}"
+msgstr "era “{replacedTitle}” até {replacedUntil}"
+
 #: src/components/GoogleAdsReport.js
 msgid "Watch"
 msgstr "Assistir"
@@ -11335,8 +11546,8 @@ msgid "What does success look like?"
 msgstr "Como é o sucesso?"
 
 #: src/app/(app)/project/[projectId]/memory/page.jsx
-msgid "What Duct knows about {projectName}. Agents read it before every run."
-msgstr "O que Duct sabe sobre {projectName}. Agentes leem antes de cada execução."
+#~ msgid "What Duct knows about {projectName}. Agents read it before every run."
+#~ msgstr "O que Duct sabe sobre {projectName}. Agentes leem antes de cada execução."
 
 #: src/app/(app)/project/[projectId]/memory/page.jsx
 #~ msgid "What Duct knows about this project. Agents read it before every run — confirm, correct, or pin a fact so it stays in view."
@@ -11374,6 +11585,10 @@ msgstr "O que é isto?"
 msgid "What it will send"
 msgstr "O que ele enviará"
 
+#: src/components/memory/MemoryTimeline.jsx
+msgid "What kind of memory"
+msgstr "Que tipo de memória"
+
 #: src/components/workspace/ComposerDials.jsx
 #~ msgid "What shape the brief takes"
 #~ msgstr "Qual formato o resumo assume"
@@ -11399,8 +11614,12 @@ msgid "What this page will hold"
 msgstr "O que esta página conterá"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "What was observed, why it matters, how to apply it."
-msgstr "O que foi observado, por que é importante, como aplicar."
+msgid "What to remember"
+msgstr "O que lembrar"
+
+#: src/components/memory/MemoryTimeline.jsx
+#~ msgid "What was observed, why it matters, how to apply it."
+#~ msgstr "O que foi observado, por que é importante, como aplicar."
 
 #: src/components/content/PlanDayOne.jsx
 msgid "What you get"
@@ -11446,6 +11665,10 @@ msgstr "Onde os concorrentes me superam?"
 #: src/app/(start)/start/page.jsx
 msgid "Where does the data come from?"
 msgstr "De onde vêm os dados?"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Where it applies"
+msgstr "Onde se aplica"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Where the funnel actually breaks"
@@ -11508,12 +11731,24 @@ msgid "Who do customers compare you against most often?"
 msgstr "Com quem os clientes mais comparam você?"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Why it matters, and how an agent should apply it"
-msgstr "Por que isso importa e como um agente deve aplicar"
+msgid "Why it matters"
+msgstr "Por que importa"
 
 #: src/components/memory/MemoryTimeline.jsx
-msgid "Why it matters, and how an agent should apply it. Optional."
-msgstr "Por que isso importa e como um agente deve aplicar. Opcional."
+#~ msgid "Why it matters, and how an agent should apply it"
+#~ msgstr "Por que isso importa e como um agente deve aplicar"
+
+#: src/components/memory/MemoryTimeline.jsx
+#~ msgid "Why it matters, and how an agent should apply it. Optional."
+#~ msgstr "Por que isso importa e como um agente deve aplicar. Opcional."
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Why it matters, and how an agent should use it."
+msgstr "Por que importa, e como um agente deve usá-la."
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Why it matters. Optional."
+msgstr "Por que importa. Opcional."
 
 #: src/components/content/CloneSourceNote.jsx
 msgid "Why it worked:"
@@ -11891,11 +12126,11 @@ msgstr "Sua chave foi cobrada {charged} em {earlierCalls, plural, one {# chamada
 msgid "Your Mac didn’t let Duct read this key. Choose Try again, and when your Mac asks for your password, pick <0>Always Allow</0> so it won’t ask again. Or paste the key again and save."
 msgstr "Seu Mac não deixou o Duct ler esta chave. Escolha “Tentar novamente” e, quando o Mac pedir sua senha, clique em <0>Sempre Permitir</0> para que ele não pergunte de novo. Ou cole a chave novamente e salve."
 
+#: src/components/memory/MemoryPage.jsx
 #: src/components/memory/MemoryTimeline.jsx
 msgid "your memory"
 msgstr "sua memória"
 
-#: src/app/(app)/memory/page.jsx
 #: src/components/AppSidebar.jsx
 msgid "Your memory"
 msgstr "Sua memória"
@@ -11923,6 +12158,14 @@ msgstr "Sua própria conta e chave de API, guardadas criptografadas. Os números
 #: src/components/content/AccountsTab.jsx
 #~ msgid "your PostBridge accounts"
 #~ msgstr "suas contas PostBridge"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "your preferences"
+msgstr "suas preferências"
+
+#: src/components/memory/MemoryTimeline.jsx
+msgid "Your preferences"
+msgstr "Suas preferências"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "your profile"

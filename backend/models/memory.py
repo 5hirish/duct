@@ -55,27 +55,47 @@ MEMORY_SCOPES = {SCOPE_USER, SCOPE_PROJECT, SCOPE_ARTIFACT}
 # digest renderer understand. An unknown kind is stored, not rejected.
 
 PROJECT_KINDS = {
-    "status",      # current state of an area or entity        (key: entity + status)
+    "rule",        # standing policy the agents must follow    (key: rule:<topic>)
     "goal",        # targets and KPIs in force                 (key: kpi + target)
-    "milestone",   # dated achievement or planned date         (event, no key)
-    "event",       # launches, budget changes, redirects       (event, no key)
-    "incident",    # anomaly/problem with detected + resolved  (key: entity + issue)
-    "metric",      # dated observation of a KPI for a period   (key: entity + attr + period)
-    "decision",    # what was decided and why                  (event, no key)
-    "conclusion",  # agent finding or hypothesis               (key: entity + topic)
-    "action",      # commitments and change sets with state    (key: action id)
-    "watch",       # open question / something to monitor      (key: entity + watch)
+    "status",      # current state of something outside Duct   (key: entity + status)
     "entity",      # durable fact about a campaign, page, competitor
+    "metric",      # dated observation of a KPI for a period   (key: entity + attr + period)
+    "event",       # launches, budget changes, dated milestones (event, no key)
+    "incident",    # anomaly/problem with detected + resolved  (key: entity + issue)
+    "decision",    # what was decided and why                  (event, no key)
+    "action",      # commitments and change sets with state    (key: action id)
+    "outcome",     # what a change did, measured over a period (key: change + period)
+    "conclusion",  # agent finding or hypothesis               (key: entity + topic)
+    "watch",       # open question / something to monitor      (key: entity + watch)
 }
 
 USER_KINDS = {
     "identity",       # role, seniority, team, accountability
     "communication",  # depth, format, tone, language
-    "method",         # how they like analysis done
-    "tooling",        # which integrations and outputs they trust
-    "process",        # cadence and approval habits
+    "method",         # how they work: analysis, cadence, approvals, trusted tools
     "feedback",       # a correction or confirmation, with the rule it implies
 }
+
+#: Kinds that were merged into another (2026-11-08). Nobody needed the
+#: distinction: a milestone is an event with a date, and method, process and
+#: tooling were three names for "how I work" that agents filed at random.
+#: ``remember()`` maps them, so an agent with an old habit still writes the
+#: current kind, and migration b8e2d4f1a913 moved the rows already stored.
+LEGACY_KINDS = {"milestone": "event", "process": "method", "tooling": "method"}
+
+
+def canonical_kind(kind: str) -> str:
+    """The current name of a kind, for a kind that was merged into another."""
+    return LEGACY_KINDS.get(kind, kind)
+
+
+#: Kinds that describe a person, so they are private whoever writes them.
+#: ``remember()`` stores one as user scope even when the caller said project:
+#: an agent in a project run that notices "she wants the number first" is
+#: describing her, and a project row would show it to every member. Feedback
+#: is the exception on purpose: a skipped draft's reason is about the
+#: project's output and the next teammate's draft should read it too.
+PERSONAL_KINDS = USER_KINDS - {"feedback"}
 
 ARTIFACT_KINDS = {"artifact"}
 
@@ -85,7 +105,7 @@ MEMORY_KINDS = PROJECT_KINDS | USER_KINDS | ARTIFACT_KINDS
 # anything, even when an entity_key is supplied. ``artifact`` is deliberately
 # absent: v2 of a report supersedes v1, so the digest carries the current
 # version while the timeline keeps every one.
-EVENT_KINDS = {"milestone", "event", "decision"}
+EVENT_KINDS = {"event", "decision"}
 
 # --- Status / provenance ---------------------------------------------------
 

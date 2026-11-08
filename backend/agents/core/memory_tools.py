@@ -44,9 +44,12 @@ _SEARCH_LIMIT = 15
 REMEMBER_DESCRIPTION = (
     "Remember one durable fact about this project so future sessions start knowing it. "
     "Write a memory when something is TRUE ACROSS SESSIONS and NOT re-derivable by "
-    "calling a tool or opening an artifact: a decision and its reason, a goal or target, "
-    "an incident with when it started and what caused it, a milestone, a change to the "
-    "site or account, a conclusion you reached with its evidence, or something to watch. "
+    "calling a tool or opening an artifact: a standing rule the team set (kind 'rule', "
+    "entity_key 'rule:<topic>', e.g. never bidding on competitor brand terms), a decision "
+    "and its reason, a goal or target, an incident with when it started and what caused it, "
+    "a launch or other dated event, a change to the site or account, what a change did once "
+    "its numbers are in (kind 'outcome', entity_key naming the change, period the window "
+    "measured), a conclusion you reached with its evidence, or something to watch. "
     "Metrics are the exception to 're-derivable' — a dated value for a named period is "
     "exactly what memory is for. Do NOT remember: anything you can fetch again, running "
     "commentary, restated user questions, or judgements about the person. "
@@ -71,8 +74,8 @@ GET_DESCRIPTION = (
 )
 
 KIND_HELP = (
-    "One of: status, goal, milestone, event, incident, metric, decision, conclusion, "
-    "action, watch, entity."
+    "One of: rule, goal, status, entity, metric, event, incident, decision, action, "
+    "outcome, conclusion, watch."
 )
 
 

@@ -18,7 +18,7 @@ import { msg } from "@lingui/core/macro";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import {
   Activity, Archive, ChartLine, CircleDashed, Eye, Flag, Lightbulb, ListChecks,
-  MessageCircleQuestion, RotateCcw, Scale, Target, TrendingDown, TrendingUp, TriangleAlert,
+  MessageCircleQuestion, RotateCcw, Scale, ShieldCheck, Target, TrendingDown, TrendingUp, TriangleAlert,
 } from "lucide-react";
 import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
 import { ClampTooltipContent, clampClass } from "@/components/ui/clamp-text";
@@ -40,8 +40,9 @@ const LOOK = {
   retry: { Icon: RotateCcw, tile: "bg-muted text-muted-foreground" },
   metric: { Icon: ChartLine, tile: "bg-primary/12 text-brand" },
   conclusion: { Icon: Lightbulb, tile: "bg-warning/15 text-warning" },
+  rule: { Icon: ShieldCheck, tile: "bg-info/12 text-info" },
   goal: { Icon: Target, tile: "bg-success/12 text-success" },
-  milestone: { Icon: Flag, tile: "bg-success/12 text-success" },
+  outcome: { Icon: Flag, tile: "bg-success/12 text-success" },
   decision: { Icon: Scale, tile: "bg-info/12 text-info" },
   status: { Icon: Activity, tile: "bg-info/12 text-info" },
   watch: { Icon: Eye, tile: "bg-muted text-muted-foreground" },

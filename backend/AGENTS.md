@@ -1045,6 +1045,28 @@ don't fit.
   it exists because it caught the AND-everything query bug that made questions
   retrieve nothing, so extend it before tuning retrieval by feel.
 
+  **Private memory is private whatever the role, and the rule is in the
+  service, not in the routes.** `remember()` stores a `PERSONAL_KINDS` entry
+  (identity, communication, method) as user scope even when the caller said
+  project, because an agent in a project run noticing how someone works is
+  describing that person; `feedback` is left out on purpose, since a skipped
+  draft's reason is about the project's output. A private row may be bound
+  to one project (`private_to_project=True`: "for this client, brief me in
+  Spanish"), so it carries that project's id, which is why **every project
+  read goes through `shared_rows()`, never `project_id ==` alone**. A bound
+  row is read only on runs for its project, never replaces the general one,
+  and keys its state to its person so two teammates can bind the same key.
+  `search()` never returns the preference keys the profile now owns
+  (`_PROFILE_OWNED_KEYS`). Held by `tests/test_memory.py`.
+
+  **The kinds are twelve project and four personal** (`models/memory.py`).
+  `rule` is a standing policy, keyed `rule:<topic>` so a new one replaces the
+  old, and every rule in force leads the digest's Pinned section; `outcome`
+  is what a change did, keyed by the change and the window measured. Merged
+  kinds (`LEGACY_KINDS`: milestone, process, tooling) are mapped on write and
+  in `search()`, so an old name still works; add to that map rather than
+  deleting a kind outright.
+
   Six rules about when memory is read and written, each held by
   `tests/test_memory_context.py`, `tests/test_memory_phase2.py` or
   `tests/test_memory_retrieval.py`:

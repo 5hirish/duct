@@ -267,6 +267,12 @@ const apiRow = (cs) => ({
 });
 const PROPOSED = [CHANGE_SET, PRODUCT_CHANGE_SET, ...CONNECTOR_SESSIONS.map((s) => s.change_set).filter(Boolean)];
 
+// GET …/memory as the backend answers it: newest first, the kinds present.
+function memoryList(rows) {
+  const items = [...rows].sort((a, b) => (a.observed_at < b.observed_at ? 1 : -1));
+  return { items, kinds: [...new Set(items.map((m) => m.kind))], memory_paused: false };
+}
+
 // What the app asks the backend for around a session, answered from the
 // story so the shell around the workspace is not empty.
 export function routes() {
@@ -290,6 +296,12 @@ export function routes() {
       { connector_type: "clarity", status: "connected", account_name: "Solo Android" },
     ],
     "GET /api/content/plans": [{ id: PLAN.id, name: PLAN.name, start_date: PLAN.start_date }],
+    // Both memory tabs, so check:layout measures them with rows on screen.
+    [`GET /api/user/projects/${STORY.project.id}/memory`]: memoryList(MEMORIES),
+    "GET /api/user/memory": memoryList([
+      { id: "pm-1", kind: "communication", status: "confirmed", title: "Give me the number first, then the why", body: "", source_type: "user", recorded_at: "2026-09-12T09:00:00Z", observed_at: "2026-09-12", source_refs: [] },
+      { id: "pm-2", kind: "tooling", status: "proposed", title: "Trusts GA4 over the Ads conversion count", body: "", source_type: "agent", recorded_at: "2026-09-10T09:00:00Z", observed_at: "2026-09-10", source_refs: [] },
+    ]),
     // The Executions page: this week's proposal on top of what already went through.
     "GET /api/execute": [CHANGE_SET, ...CHANGE_SET_HISTORY],
     "GET /api/execute/ops": [
