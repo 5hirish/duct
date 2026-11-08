@@ -20,7 +20,8 @@
 
 import { useLingui } from "@lingui/react/macro";
 import { msg } from "@lingui/core/macro";
-import { Server } from "lucide-react";
+import { Bot, Server } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 /**
  * What each mark is called. One map, because the name is needed twice — as the
@@ -119,6 +120,58 @@ export function OllamaMark() {
 export function EndpointMark() {
   const { i18n } = useLingui();
   return <Server aria-label={i18n._(CONNECTOR_NAMES.compatible)} role="img" strokeWidth={1.75} />;
+}
+
+// Cursor's mark from Simple Icons (sourced from cursor.com/brand). One colour,
+// so inline in `currentColor` like OpenAI's.
+export function CursorMark() {
+  return (
+    <svg viewBox="0 0 24 24" role="img" aria-label="Cursor" fill="currentColor">
+      <path d="M11.503.131 1.891 5.678a.84.84 0 0 0-.42.726v11.188c0 .3.162.575.42.724l9.609 5.55a1 1 0 0 0 .998 0l9.61-5.55a.84.84 0 0 0 .42-.724V6.404a.84.84 0 0 0-.42-.726L12.497.131a1.01 1.01 0 0 0-.996 0M2.657 6.338h18.55c.263 0 .43.287.297.515L12.23 22.918c-.062.107-.229.064-.229-.06V12.335a.59.59 0 0 0-.295-.51l-9.11-5.257c-.109-.063-.064-.23.061-.23" />
+    </svg>
+  );
+}
+
+// OpenCode's mark, the two paths of `packages/identity/mark.svg` in its
+// repository with the dark app-icon square left out. The owner draws the inner
+// block a step dimmer than the frame; an opacity keeps that on both themes.
+export function OpenCodeMark() {
+  return (
+    <svg viewBox="96 96 320 320" role="img" aria-label="OpenCode" fill="currentColor">
+      <path d="M320 224V352H192V224H320Z" opacity="0.45" />
+      <path fillRule="evenodd" clipRule="evenodd" d="M384 416H128V96H384V416ZM320 160H192V352H320V160Z" />
+    </svg>
+  );
+}
+
+/**
+ * The coding agents that can add Duct as an MCP server, keyed like `AGENTS` in
+ * `lib/mcpTokensApi.js`. Claude Code's is its own mark (code.claude.com, via
+ * Simple Icons) and VS Code's is the stable icon from Microsoft's brand page,
+ * unedited. Codex is OpenAI's product and carries OpenAI's mark.
+ */
+export const AGENT_LOGOS = {
+  claude: <img src="/icons/claude-code.svg" alt="Claude Code" width="24" height="24" decoding="async" />,
+  codex: <OpenAiMark />,
+  cursor: <CursorMark />,
+  vscode: <img src="/icons/vscode.svg" alt="VS Code" width="24" height="24" decoding="async" />,
+  opencode: <OpenCodeMark />,
+};
+
+/** An agent's mark on a tile, or a generic agent glyph when the name it gave
+ *  itself matches none of ours. Decorative: the name is always beside it. */
+export function AgentLogoTile({ id, className }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-background text-foreground [&_img]:size-6 [&_svg]:size-6",
+        className,
+      )}
+    >
+      {(id && AGENT_LOGOS[id]) || <Bot strokeWidth={1.75} />}
+    </span>
+  );
 }
 
 export const LOGOS = {

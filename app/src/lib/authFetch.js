@@ -64,6 +64,12 @@ export const DESKTOP_AUTH_BACKEND_KEY = "duct_auth_backend__desktop";
  */
 export const POST_SIGNIN_REDIRECT_KEY = "duct_post_signin_redirect";
 
+/** `/?signin=now`: a page that has already asked the person to sign in (an
+ *  agent's consent page) sends them here to start Google's flow at once,
+ *  rather than to a front door with a second sign-in button on it. */
+export const SIGN_IN_NOW_PARAM = "signin";
+export const SIGN_IN_NOW_VALUE = "now";
+
 /** sessionStorage flag: the user was sent to sign-in, they did not choose it. */
 export const SIGNIN_REASON_KEY = "duct_signin_reason";
 export const SIGNIN_REASON_EXPIRED = "expired";

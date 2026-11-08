@@ -139,11 +139,22 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
   - `artifacts/` + `[artifactId]/`, `activity/`, `usage/`, `memory/` — the
     library, the cross-agent feed, usage, and user-level memory
   - `settings/models/` + `settings/profile/` — tiers, providers, usage; profile
-  - `settings/agents/` — Connect your AI agent: the line to paste into
-    Claude Code, Codex, Cursor, VS Code or OpenCode (no secret in it: the
-    agent signs in through the browser), the agents that did, and personal
-    tokens for one that cannot (`components/settings/AgentAccess.jsx`,
-    `lib/mcpTokensApi.js`). A new token's plaintext lives in page state only
+  - `settings/agents/` — Connect your AI agent. The why comes first: a
+    drawing of repo → agent → Duct project, what that profile feeds, and
+    the can / can never lists from `settings/AgentAbilities.jsx`, which the
+    consent page renders too, so the two cannot promise different things
+    (change it when the MCP server gains a tool). Every setup line is global,
+    because the page says one setup works in every repo. Then pick the agent
+    by its logo (`AGENT_LOGOS` in `connections/logos.jsx`) and three tracked
+    steps — the line to paste into Claude Code, Codex or OpenCode, or a one-click
+    install link for Cursor and VS Code (hidden in the desktop shell, which
+    opens only http(s) links outside itself); the browser sign-in, which the
+    page watches for by polling the agent list while visible, from the first
+    copy until an agent it did not know about appears (ten minutes at most);
+    the first prompt. No secret in any step. Below: the agents that signed
+    in, and personal tokens for one that cannot
+    (`components/settings/AgentAccess.jsx`, `lib/mcpTokensApi.js`). A new
+    token's plaintext lives in page state only
   - `generate/` — the retired wizard, now a bare redirect to `/insights/session`
   - `projects/` — project management
   - `project/[projectId]/` — **Project context**, the editor for one

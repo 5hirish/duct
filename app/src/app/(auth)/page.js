@@ -13,6 +13,8 @@ import MosaicPanel, { MOSAIC } from "@/components/MosaicPanel";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   POST_SIGNIN_REDIRECT_KEY,
+  SIGN_IN_NOW_PARAM,
+  SIGN_IN_NOW_VALUE,
   SIGNIN_REASON_EXPIRED,
   SIGNIN_REASON_KEY,
   authToken,
@@ -105,6 +107,13 @@ function SignInContent() {
   // the app is hidden before paint by `lib/sessionHint.js` and taken off here
   // once the effect below confirms it.
   const [ready, setReady] = useState(() => !searchParams.get("auth_code"));
+  // An exchange in flight. Clearing `auth_code` from the URL re-runs the
+  // effect below with no code and, the token not stored yet, it used to show
+  // the front door until the exchange answered and the redirect fired: the
+  // sign-in page flashed back after a sign-in that had worked. React's dev
+  // double-run also sent the single-use code twice (200, then 400).
+  const exchangingRef = useRef(false);
+  const autoStartedRef = useRef(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [awaitingBrowser, setAwaitingBrowser] = useState(false);
   // "" when fine; "outdated" or "browser" when the shell cannot carry a
@@ -183,24 +192,33 @@ function SignInContent() {
     // Handle auth_code from OAuth callback — exchange it for the JWT server-side
     // so the token itself never appears in the URL (browser history / Referer leak).
     const authCode = searchParams.get("auth_code");
+    if (exchangingRef.current) return;
     if (authCode) {
+      exchangingRef.current = true;
       window.history.replaceState({}, "", "/");
+      const showFrontDoor = () => {
+        exchangingRef.current = false;
+        clearSessionHint();
+        setReady(true);
+      };
       fetch(`${BASE}/auth/exchange?code=${encodeURIComponent(authCode)}`)
         .then((r) => r.json())
         .then(({ token }) => {
-          if (token) {
-            setAuthToken(token);
-            analytics.identify(decodeJwtPayload(token)?.uid);
-            // `new_user` is true only on the sign-in that created the account
-            // (routes/signin.py). Fired here rather than wherever the token is
-            // read, because it is read on every load for a week.
-            if (decodeJwtPayload(token)?.new_user) {
-              trackEvent(AnalyticsEvent.SignUp, { method: "google" });
-            }
-            router.replace(consumePostSignInRedirect());
+          if (!token) {
+            showFrontDoor();
+            return;
           }
+          setAuthToken(token);
+          analytics.identify(decodeJwtPayload(token)?.uid);
+          // `new_user` is true only on the sign-in that created the account
+          // (routes/signin.py). Fired here rather than wherever the token is
+          // read, because it is read on every load for a week.
+          if (decodeJwtPayload(token)?.new_user) {
+            trackEvent(AnalyticsEvent.SignUp, { method: "google" });
+          }
+          router.replace(consumePostSignInRedirect());
         })
-        .catch(() => {});
+        .catch(showFrontDoor);
       return;
     }
 
@@ -415,6 +433,17 @@ function SignInContent() {
     requiresTurnstile,
     turnstileToken,
   ]);
+
+  // `/?signin=now` (SIGN_IN_NOW_PARAM): the person already chose to sign in
+  // on another page, so start the flow once the front door is ready rather
+  // than show them a second button. handleSignIn still waits for the bot
+  // check, and any failure lands on this page with its usual notice.
+  useEffect(() => {
+    if (!ready || autoStartedRef.current) return;
+    if (searchParams.get(SIGN_IN_NOW_PARAM) !== SIGN_IN_NOW_VALUE) return;
+    autoStartedRef.current = true;
+    handleSignIn();
+  }, [ready, searchParams, handleSignIn]);
 
   if (!ready) {
     return (
