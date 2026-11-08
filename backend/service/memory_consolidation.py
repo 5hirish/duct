@@ -167,9 +167,10 @@ Remember a fact ONLY when both are true:
 1. It will still matter in a future session, and
 2. it cannot simply be re-fetched by calling a tool or re-opening a report.
 
-So: decisions and their reasons, goals and targets, incidents with when they \
-started and what caused them, milestones, changes made to the site or account, \
-conclusions with the evidence behind them, things to watch. Dated metrics are the \
+So: standing rules the person set, decisions and their reasons, goals and \
+targets, incidents with when they started and what caused them, launches and \
+other dated events, changes made to the site or account, what a change did once \
+its numbers came in, conclusions with the evidence behind them, things to watch. Dated metrics are the \
 exception to rule 2 — a value for a named period is exactly what memory is for.
 
 Do NOT remember: anything a tool can say again, running commentary, restated \

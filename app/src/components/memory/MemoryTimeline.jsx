@@ -1,24 +1,22 @@
 "use client";
 
-// The memory timeline — one component, two scopes.
+// The memory timeline — one component for both scopes.
 //
-// Project memory (/project/[id]/memory) and user memory (/memory) are the same
-// surface over different rows: entries grouped by day, superseded ones greyed
-// with their validity range, each expanding to its body and evidence, with
-// confirm / edit / pin / not-relevant / delete and the pause and reset
-// controls. The scope only differs in *which* API the calls go to, so the page
-// passes an `api` adapter and everything else lives here rather than being
-// forked twice and drifting.
+// Project memory (shared with every member) and your memory (private to you)
+// are the same surface over different rows, so the caller passes an `api`
+// adapter bound to one scope plus that scope's kind groups, and everything
+// else lives here rather than being forked twice and drifting.
+// components/memory/MemoryPage.jsx is the one caller that switches between
+// them.
 //
-// The surface is deliberately quiet. A row is a title and one muted line; the
-// kind is an icon with its name on hover, the source is a word, the validity a
-// range. Everything else — body, evidence, recall count, the actions — waits
-// behind a click, because "what does Duct know about this account" is read as
-// a list first and edited one row at a time.
+// The surface is a list first and an editor second. A row is a title and one
+// muted line: who said it, when, and what it replaced. What an agent proposed
+// carries Keep and Dismiss on the row itself, because reviewing what the
+// agents learned is the job this page earns its place with. Body, evidence
+// and the rest of the verbs wait behind a click.
 //
 // See docs/engineering/2026-08-28-agent-memory-research.md §06 for what each
-// affordance is for, and 2026-08-29-agent-memory-taxonomy-and-ux-patterns.md
-// Part B for why.
+// affordance is for.
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -26,13 +24,15 @@ import { msg } from "@lingui/core/macro";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import {
   CalendarRange,
+  ChartLine,
   Check,
+  ChevronDown,
   Ellipsis,
-  Eye,
-  EyeOff,
+  Building2,
   FileText,
   Flag,
-  Flame,
+  Globe,
+  History,
   Lightbulb,
   MessageSquare,
   Pause,
@@ -40,14 +40,14 @@ import {
   Plus,
   Scale,
   Search,
+  ShieldCheck,
+  SlidersHorizontal,
   Tag,
   Target,
   Trash2,
   TrendingUp,
   User,
-  Wrench,
   X,
-  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -56,61 +56,80 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { SkeletonList } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import LoadError from "@/components/LoadError";
 import { isSessionExpired } from "@/lib/authFetch";
-import { formatDate, relativeTime, titleCase } from "@/lib/format";
-import { Textarea } from "@/components/ui/textarea";
+import { dayKey, formatDate, relativeTime } from "@/lib/format";
 
-// One lucide glyph per kind, for both vocabularies (project and user memory).
-// Anything unmapped gets the tag, which is what "some fact" looks like.
-const KIND_ICONS = {
-  goal: Target,
-  decision: Scale,
-  incident: Flame,
-  status: Pin,
-  metric: TrendingUp,
-  milestone: Flag,
-  event: Zap,
-  conclusion: Lightbulb,
-  action: Wrench,
-  watch: Eye,
-  entity: Tag,
-  artifact: FileText,
-  identity: User,
-  communication: MessageSquare,
-  method: Wrench,
-  tooling: Wrench,
-  process: Flag,
+// One glyph per group, so a row's icon and its filter chip always agree.
+const GROUP_ICONS = {
+  rules: ShieldCheck,
+  goals: Target,
+  facts: Tag,
+  numbers: TrendingUp,
+  findings: Lightbulb,
+  outcomes: ChartLine,
+  decisions: Scale,
   feedback: MessageSquare,
+  reports: FileText,
+  about: User,
+  style: MessageSquare,
+  methods: SlidersHorizontal,
+  corrections: Flag,
 };
 
 const SOURCE_LABELS = {
   user: msg`You`,
   agent: msg`Agent`,
   connector: msg`Connector`,
-  artifact: msg`Artifact`,
-  system: msg`System`,
+  artifact: msg`Report`,
+  system: msg`Duct`,
 };
 
-const EVENT_KINDS = ["milestone", "event", "decision"];
+// Presets cover how people actually ask ("what changed this week"); the
+// custom range is there for the rare "between the redirect and the fix".
+const DATE_PRESETS = [
+  { id: "any", label: msg`Any time`, days: 0 },
+  { id: "7", label: msg`Last 7 days`, days: 7 },
+  { id: "30", label: msg`Last 30 days`, days: 30 },
+  { id: "90", label: msg`Last 90 days`, days: 90 },
+];
 
-function KindIcon({ kind, className = "size-3.5" }) {
-  const Icon = KIND_ICONS[kind] || Tag;
+function groupOf(groups, kind) {
+  return groups.find((g) => g.kinds.includes(kind));
+}
+
+function GroupIcon({ id, className = "size-4" }) {
+  const Icon = GROUP_ICONS[id] || Tag;
   return <Icon className={className} aria-hidden="true" />;
 }
 
-/** "1 Jul 2026 – present" / "14 – 21 Aug 2026" / a period string / a bare date. */
-function validity(entry, i18n) {
-  if (entry.period) return entry.period;
-  const from = formatDate(entry.valid_from || entry.observed_at);
-  if (EVENT_KINDS.includes(entry.kind)) return from;
-  const to = entry.valid_to ? formatDate(entry.valid_to) : i18n._(msg`present`);
-  return i18n._(msg`${from} – ${to}`);
+/** "Project settings" beats "You" for a value mirrored from a form: it says where to change it. */
+function sourceLabel(entry, i18n) {
+  const refs = entry.source_refs || [];
+  if (refs.some((r) => r.project_profile)) return i18n._(msg`Project settings`);
+  if (refs.some((r) => r.user_preferences)) return i18n._(msg`Your preferences`);
+  return i18n._(SOURCE_LABELS[entry.source_type] || SOURCE_LABELS.agent);
+}
+
+function daysAgoIso(days) {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return dayKey(d);
 }
 
 /** Evidence pointers, rendered as the links the design calls chips. */
@@ -144,30 +163,18 @@ function EvidenceLinks({ entry }) {
           );
         }
         if (ref.conversation_id) {
-          const firstTurn = ref.seq ? ref.seq[0] : null;
-          const lastTurn = ref.seq ? ref.seq[1] : null;
           return (
             <Link
               key={i}
               href={`/activity?conversation_id=${encodeURIComponent(ref.conversation_id)}`}
               className="underline underline-offset-2 hover:text-foreground"
             >
-              {ref.seq ? (
-                <Trans>conversation turns {firstTurn}–{lastTurn}</Trans>
-              ) : (
-                <Trans>conversation</Trans>
-              )}
+              <Trans>the conversation</Trans>
             </Link>
           );
         }
-        if (ref.project_profile) {
-          const field = ref.project_profile;
-          return <span key={i}><Trans>project settings · {field}</Trans></span>;
-        }
-        if (ref.user_preferences) {
-          const field = ref.user_preferences;
-          return <span key={i}><Trans>preferences · {field}</Trans></span>;
-        }
+        if (ref.project_profile) return <span key={i}><Trans>project settings</Trans></span>;
+        if (ref.user_preferences) return <span key={i}><Trans>your preferences</Trans></span>;
         if (ref.connector) return <span key={i}>{ref.connector}</span>;
         if (ref.edited_by) return <span key={i}><Trans>edited by you</Trans></span>;
         return <span key={i}>{ref.source || t`recorded`}</span>;
@@ -176,111 +183,135 @@ function EvidenceLinks({ entry }) {
   );
 }
 
-function MemoryRow({ entry, onPatch, onDelete, busy, focused = false }) {
+/** The one muted line under a title: who, when, and what changed. */
+function RowMeta({ entry, binding }) {
+  const { i18n } = useLingui();
+  const onlyHere = Boolean(binding && entry.project_id && entry.project_id === binding.projectId);
+  const projectName = binding?.projectName || "";
+  const date = formatDate(entry.valid_from || entry.observed_at, { locale: i18n.locale });
+  const source = sourceLabel(entry, i18n);
+  const replaced = entry.replaced;
+  const replacedUntil = replaced?.until ? formatDate(replaced.until, { locale: i18n.locale }) : "";
+  const replacedTitle = replaced?.title || "";
+  const endedOn = entry.valid_to ? formatDate(entry.valid_to, { locale: i18n.locale }) : "";
+
+  return (
+    <p className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
+      <span>{source}</span>
+      <span aria-hidden="true">·</span>
+      <span>{date}</span>
+      {onlyHere && (
+        <>
+          <span aria-hidden="true">·</span>
+          <span><Trans>only on {projectName}</Trans></span>
+        </>
+      )}
+      {entry.status === "proposed" && (
+        <>
+          <span aria-hidden="true">·</span>
+          <span className="text-warning"><Trans>needs your review</Trans></span>
+        </>
+      )}
+      {entry.status === "superseded" && (
+        <>
+          <span aria-hidden="true">·</span>
+          <span>{endedOn ? <Trans>replaced on {endedOn}</Trans> : <Trans>replaced</Trans>}</span>
+        </>
+      )}
+      {entry.status === "archived" && (
+        <>
+          <span aria-hidden="true">·</span>
+          <span><Trans>dismissed</Trans></span>
+        </>
+      )}
+      {replaced && (
+        <>
+          <span aria-hidden="true">·</span>
+          <span className="min-w-0 max-w-full truncate" title={replacedTitle}>
+            {replacedUntil ? (
+              <Trans>was “{replacedTitle}” until {replacedUntil}</Trans>
+            ) : (
+              <Trans>was “{replacedTitle}”</Trans>
+            )}
+          </span>
+        </>
+      )}
+    </p>
+  );
+}
+
+function MemoryRow({ entry, groups, binding, onPatch, onMove, onDelete, busy, focused = false }) {
   const { t, i18n } = useLingui();
   const [open, setOpen] = useState(focused);
   const [draft, setDraft] = useState(null);
-  const superseded = entry.status === "superseded";
-  const archived = entry.status === "archived";
   const proposed = entry.status === "proposed";
-  const faded = superseded || archived;
+  const faded = entry.status === "superseded" || entry.status === "archived";
+  const group = groupOf(groups, entry.kind);
+  const groupName = group ? i18n._(group.label) : entry.kind;
   const recordedAgo = relativeTime(entry.recorded_at, { locale: i18n.locale });
   const recalls = entry.recall_count;
+  const bindingName = binding?.projectName || "";
 
   return (
-    <li className={`px-4 py-3.5 ${focused ? "bg-muted/40" : ""}`}>
-      <div className="flex items-start gap-3">
+    <li className={`px-4 py-3 ${focused ? "bg-muted/40" : ""}`}>
+      {/* Icon, text, and the review verbs beside them; in a narrow column the
+          verbs drop under the text instead of squeezing the title to a word
+          per line. */}
+      <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2 @lg:grid-cols-[auto_minmax(0,1fr)_auto]">
         <span
-          title={titleCase(entry.kind)}
-          className={`mt-px flex size-7 shrink-0 items-center justify-center rounded-full bg-muted ${
-            faded ? "text-muted-foreground" : "text-muted-foreground"
-          }`}
+          title={groupName}
+          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground"
         >
-          <KindIcon kind={entry.kind} />
+          <GroupIcon id={group?.id} />
         </span>
 
         <div className="min-w-0 flex-1">
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={open}
+            className={`block w-full text-left text-sm leading-snug underline-offset-2 hover:underline ${
+              faded ? "text-muted-foreground line-through decoration-muted-foreground/60" : ""
+            }`}
+          >
+            {entry.title}
+          </button>
+          <RowMeta entry={entry} binding={binding} />
+        </div>
+
+        {proposed && (
+          // The review is the point of the page, so it is on the row, not
+          // behind the click: two verbs, the keep one quietly heavier.
+          <div className="col-start-2 flex shrink-0 items-center gap-1 @lg:col-start-3">
+            <Button size="xs" variant="outline" disabled={busy}
+              onClick={() => onPatch(entry, { status: "confirmed" })}>
+              <Check /> <Trans>Keep</Trans>
+            </Button>
+            <Button size="xs" variant="ghost" disabled={busy}
+              onClick={() => onPatch(entry, { status: "archived" })}>
+              <X /> <Trans>Dismiss</Trans>
+            </Button>
+          </div>
+        )}
+        {!proposed && entry.pinned && (
+          <Pin className="col-start-3 size-3.5 shrink-0 text-muted-foreground" aria-label={t`Pinned`} />
+        )}
+      </div>
+
+      {open && (
+        // Indented to the title's left edge: the icon (2rem) plus the gap.
+        <div className="mt-3 space-y-3 pl-11">
           {draft === null ? (
-            <button
-              type="button"
-              onClick={() => setOpen((v) => !v)}
-              aria-expanded={open}
-              className={`block w-full text-left text-sm leading-snug hover:underline underline-offset-2 ${
-                faded ? "text-muted-foreground" : ""
-              }`}
-            >
-              {entry.title}
-            </button>
-          ) : (
-            <div className="space-y-2">
-              <Input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} />
-              <Textarea
-                value={draft.body}
-                aria-label={t`Memory body`}
-                onChange={(e) => setDraft({ ...draft, body: e.target.value })}
-                rows={3}
-                placeholder={t`What was observed, why it matters, how to apply it.`}
-              />
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  disabled={busy}
-                  onClick={() => onPatch(entry, draft).then(() => setDraft(null))}
-                >
-                  <Trans>Save</Trans>
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => setDraft(null)}>
-                  <Trans>Cancel</Trans>
-                </Button>
-              </div>
-            </div>
-          )}
-
-          <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
-            <span>{i18n._(SOURCE_LABELS[entry.source_type] || SOURCE_LABELS.agent)}</span>
-            <span aria-hidden="true">·</span>
-            <span>{validity(entry, i18n)}</span>
-            {proposed && (
-              <>
-                <span aria-hidden="true">·</span>
-                <span className="text-warning"><Trans>unconfirmed</Trans></span>
-              </>
-            )}
-            {superseded && (
-              <>
-                <span aria-hidden="true">·</span>
-                <span><Trans>superseded</Trans></span>
-              </>
-            )}
-            {archived && (
-              <>
-                <span aria-hidden="true">·</span>
-                <span><Trans>not relevant</Trans></span>
-              </>
-            )}
-          </p>
-
-          {open && draft === null && (
-            <div className="mt-3 space-y-3">
+            <>
               {entry.body && <p className="whitespace-pre-wrap text-sm leading-relaxed">{entry.body}</p>}
               <p className="text-xs text-muted-foreground">
+                {groupName}
+                {" · "}
                 <Trans>Recorded {recordedAgo}</Trans>
-                {recalls ? <>{" · "}<Trans>recalled {recalls}×</Trans></> : ""}
-                {entry.entity_key ? ` · ${entry.entity_key}${entry.attribute ? ` · ${entry.attribute}` : ""}` : ""}
+                {recalls ? <>{" · "}<Plural value={recalls} one="used in # answer" other="used in # answers" /></> : null}
               </p>
-              {Object.keys(entry.value || {}).length > 0 && (
-                <pre className="overflow-x-auto rounded-md bg-muted/60 p-2 text-xs">
-                  {JSON.stringify(entry.value, null, 2)}
-                </pre>
-              )}
               <EvidenceLinks entry={entry} />
               <div className="flex flex-wrap gap-1">
-                {proposed && (
-                  <Button size="xs" variant="outline" disabled={busy}
-                    onClick={() => onPatch(entry, { status: "confirmed" })}>
-                    <Check /> <Trans>Confirm</Trans>
-                  </Button>
-                )}
                 <Button size="xs" variant="ghost" disabled={busy}
                   onClick={() => setDraft({ title: entry.title, body: entry.body })}>
                   <Trans>Edit</Trans>
@@ -289,92 +320,156 @@ function MemoryRow({ entry, onPatch, onDelete, busy, focused = false }) {
                   onClick={() => onPatch(entry, { pinned: !entry.pinned })}>
                   <Pin /> {entry.pinned ? <Trans>Unpin</Trans> : <Trans>Pin</Trans>}
                 </Button>
-                {!archived && !superseded && (
-                  <Button size="xs" variant="ghost" disabled={busy}
-                    onClick={() => onPatch(entry, { status: "archived" })}>
-                    <X /> <Trans>Not relevant</Trans>
-                  </Button>
+                {onMove && binding && (
+                  entry.project_id ? (
+                    <Button size="xs" variant="ghost" disabled={busy} onClick={() => onMove(entry, false)}>
+                      <Globe /> <Trans>Use on every project</Trans>
+                    </Button>
+                  ) : (
+                    <Button size="xs" variant="ghost" disabled={busy} onClick={() => onMove(entry, true)}>
+                      <Building2 /> <Trans>Only on {bindingName}</Trans>
+                    </Button>
+                  )
                 )}
                 <Button size="xs" variant="ghost" disabled={busy} onClick={() => onDelete(entry)}>
                   <Trash2 /> <Trans>Delete</Trans>
                 </Button>
               </div>
+            </>
+          ) : (
+            <div className="space-y-2">
+              <Input
+                value={draft.title}
+                aria-label={t`Memory title`}
+                onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+              />
+              <Textarea
+                value={draft.body}
+                aria-label={t`Memory detail`}
+                onChange={(e) => setDraft({ ...draft, body: e.target.value })}
+                rows={3}
+                placeholder={t`Why it matters, and how an agent should use it.`}
+              />
+              <div className="flex gap-2">
+                <Button size="sm" disabled={busy}
+                  onClick={() => onPatch(entry, draft).then(() => setDraft(null))}>
+                  <Trans>Save</Trans>
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setDraft(null)}>
+                  <Trans>Cancel</Trans>
+                </Button>
+              </div>
             </div>
           )}
         </div>
-
-        {entry.pinned && (
-          <Pin className="mt-1 size-3.5 shrink-0 text-muted-foreground" aria-label={t`Pinned`} />
-        )}
-      </div>
+      )}
     </li>
   );
 }
 
-function RememberForm({ kinds, defaultKind, placeholder, onCreate, busy, onClose }) {
-  const { t } = useLingui();
-  const [kind, setKind] = useState(defaultKind);
+function RememberForm({ groups, binding, placeholder, onCreate, busy, onClose }) {
+  const { t, i18n } = useLingui();
+  const choices = groups.filter((g) => g.create !== false);
+  const [groupId, setGroupId] = useState(choices[0]?.id || "");
+  // Private memory only: everywhere by default, one project when asked.
+  const [where, setWhere] = useState("all");
+  const bindingName = binding?.projectName || "";
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
+  const kind = choices.find((g) => g.id === groupId)?.kinds[0];
 
   return (
     <form
       className="space-y-2 rounded-xl border border-border p-4"
       onSubmit={(e) => {
         e.preventDefault();
-        if (title.trim()) onCreate({ kind, title: title.trim(), body: body.trim() });
+        if (!title.trim() || !kind) return;
+        const entry = { kind, title: title.trim(), body: body.trim() };
+        if (binding && where === "here") entry.project_id = binding.projectId;
+        onCreate(entry);
       }}
     >
       <div className="flex flex-wrap gap-2">
-        <select
-          value={kind}
-          aria-label={t`Memory kind`}
-          onChange={(e) => setKind(e.target.value)}
-          className="h-9 rounded-md border border-input bg-transparent px-2 text-sm"
-        >
-          {kinds.map((k) => (
-            <option key={k} value={k}>{titleCase(k)}</option>
-          ))}
-        </select>
+        <Select value={groupId} onValueChange={setGroupId}>
+          <SelectTrigger className="w-36" aria-label={t`What kind of memory`}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent position="popper">
+            {choices.map((g) => (
+              <SelectItem key={g.id} value={g.id}>{i18n._(g.label)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <Input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder={placeholder}
-          className="flex-1 min-w-[16rem]"
+          aria-label={t`What to remember`}
+          className="min-w-[14rem] flex-1"
           autoFocus
         />
       </div>
+      {binding && (
+        <Select value={where} onValueChange={setWhere}>
+          <SelectTrigger className="w-auto" aria-label={t`Where it applies`}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent position="popper">
+            <SelectItem value="all"><Trans>On every project</Trans></SelectItem>
+            <SelectItem value="here"><Trans>Only on {bindingName}</Trans></SelectItem>
+          </SelectContent>
+        </Select>
+      )}
       <Textarea
         value={body}
-        aria-label={t`Why it matters, and how an agent should apply it`}
+        aria-label={t`Why it matters`}
         onChange={(e) => setBody(e.target.value)}
         rows={2}
-        placeholder={t`Why it matters, and how an agent should apply it. Optional.`}
+        placeholder={t`Why it matters. Optional.`}
       />
       <div className="flex gap-2">
-        <Button type="submit" size="sm" disabled={busy || !title.trim()}><Trans>Remember it</Trans></Button>
+        <Button type="submit" size="sm" disabled={busy || !title.trim()}><Trans>Save</Trans></Button>
         <Button type="button" size="sm" variant="ghost" onClick={onClose}><Trans>Cancel</Trans></Button>
       </div>
     </form>
   );
 }
 
-/** A filter chip: one colour when on, none when off. */
-function Chip({ active, onClick, children, className = "", ...rest }) {
+/** A filter chip's look: one colour when on, none when off. */
+function chipClass(active) {
+  return `inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium transition-colors [&_svg]:size-3.5 [&_svg]:shrink-0 ${
+    active ? "bg-foreground text-background" : "bg-muted text-muted-foreground hover:text-foreground"
+  }`;
+}
+
+function Chip({ active, onClick, children }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      {...rest}
-      className={`inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium transition-colors ${
-        active
-          ? "bg-foreground text-background"
-          : "bg-muted text-muted-foreground hover:text-foreground"
-      } ${className}`}
-    >
+    <button type="button" onClick={onClick} aria-pressed={active} className={chipClass(active)}>
       {children}
     </button>
+  );
+}
+
+/** "When": presets first, a custom range behind the last item. */
+function DateFilter({ preset, onPreset }) {
+  const { i18n } = useLingui();
+  const current = DATE_PRESETS.find((p) => p.id === preset);
+  const label = current ? i18n._(current.label) : i18n._(msg`Custom range`);
+  return (
+    <DropdownMenu>
+      {/* A menu button, not a toggle, so it borrows the chip's look only. */}
+      <DropdownMenuTrigger className={chipClass(preset !== "any")}>
+        <CalendarRange aria-hidden="true" /> {label} <ChevronDown aria-hidden="true" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuRadioGroup value={preset} onValueChange={onPreset}>
+          {DATE_PRESETS.map((p) => (
+            <DropdownMenuRadioItem key={p.id} value={p.id}>{i18n._(p.label)}</DropdownMenuRadioItem>
+          ))}
+          <DropdownMenuRadioItem value="custom"><Trans>Custom range…</Trans></DropdownMenuRadioItem>
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -382,41 +477,38 @@ function Chip({ active, onClick, children, className = "", ...rest }) {
  * @param api      { list, create, patch, remove, get?, setPaused?, reset? } —
  *                 promises bound to one scope. The optional ones hide their
  *                 affordance when absent.
+ * @param groups   The scope's kind groups (lib/memoryApi.js): the filter
+ *                 chips, the row icons and the "Remember" form's choices.
  * @param focusId  A memory id from a deep link (a chip in the chat). The entry
  *                 is opened and highlighted, and fetched on its own if the
  *                 current filters would not have listed it.
  */
 export default function MemoryTimeline({
   api,
-  kinds: kindVocabulary,
-  defaultKind,
-  // The four copy props default to this surface's own words; a caller with a
-  // scope-specific voice passes its own. Resolved below rather than here, so
-  // they follow the interface language.
-  addLabel,
-  titlePlaceholder,
+  groups,
+  binding = null,
+  addPlaceholder,
   emptyHint,
-  // Completes "We couldn't load …" on the error panel.
   errorSubject,
   resetPrompt,
   signedIn = true,
   focusId = "",
 }) {
-  const { t } = useLingui();
-  const addText = addLabel ?? t`Remember`;
-  const titleHint = titlePlaceholder ?? t`The fact in one line — with its number or date if it has one.`;
+  const { t, i18n } = useLingui();
+  const titleHint = addPlaceholder ?? t`One line, with its number or date if it has one.`;
   const errorWhat = errorSubject ?? t`your memory`;
-  const resetText = resetPrompt ?? t`The agents lose every fact on this timeline from their next turn. This cannot be undone.`;
+  const resetText = resetPrompt ?? t`The agents lose every fact here from their next turn. This cannot be undone.`;
   const [items, setItems] = useState(null); // null = loading
-  const [kinds, setKinds] = useState([]);
-  const [kind, setKind] = useState("");
+  const [kindsSeen, setKindsSeen] = useState([]);
+  const [groupId, setGroupId] = useState("");
+  const [reviewOnly, setReviewOnly] = useState(false);
   const [paused, setPaused] = useState(false);
   const [q, setQ] = useState("");
   const [query, setQuery] = useState("");
+  const [datePreset, setDatePreset] = useState("any");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
-  const [datesOpen, setDatesOpen] = useState(false);
-  const [showSuperseded, setShowSuperseded] = useState(true);
+  const [showHistory, setShowHistory] = useState(false);
   const [adding, setAdding] = useState(false);
   const [busy, setBusy] = useState(false);
   const [resetting, setResetting] = useState(false);
@@ -427,6 +519,12 @@ export default function MemoryTimeline({
   const [error, setError] = useState("");
   const [loadError, setLoadError] = useState("");
   const [linked, setLinked] = useState(null); // deep-linked entry outside the filters
+  const [toReview, setToReview] = useState(0);
+
+  const kind = groups.find((g) => g.id === groupId)?.kinds.join(",") || "";
+  const preset = DATE_PRESETS.find((p) => p.id === datePreset);
+  const since = preset?.days ? daysAgoIso(preset.days) : datePreset === "custom" ? fromDate : "";
+  const until = datePreset === "custom" ? toDate : "";
 
   const load = useCallback(() => {
     if (!signedIn) {
@@ -436,13 +534,22 @@ export default function MemoryTimeline({
     setError("");
     setLoadError("");
     api
-      .list({ q: query, kind, fromDate, toDate, includeSuperseded: showSuperseded })
+      .list({
+        q: query,
+        kind,
+        status: reviewOnly ? "proposed" : "",
+        fromDate: since,
+        toDate: until,
+        includeSuperseded: showHistory,
+      })
       .then((body) => {
-        setItems(body.items);
-        setPaused(Boolean(body.memory_paused));
-        // Keep the widest set of chips seen, so filtering to one kind does not
-        // remove the chips you need to filter back out of it.
-        setKinds((prev) => Array.from(new Set([...prev, ...body.kinds])).sort());
+        const rows = body?.items || [];
+        setItems(rows);
+        setPaused(Boolean(body?.memory_paused));
+        // Keep the widest set of chips seen, so filtering to one group does
+        // not remove the chips you need to filter back out of it.
+        setKindsSeen((prev) => Array.from(new Set([...prev, ...(body?.kinds || [])])));
+        if (!reviewOnly) setToReview(rows.filter((e) => e.status === "proposed").length);
       })
       .catch((err) => {
         // A retired session is already redirecting to sign-in.
@@ -450,7 +557,7 @@ export default function MemoryTimeline({
         setItems(null);
         setLoadError(err.message || "");
       });
-  }, [api, query, kind, fromDate, toDate, showSuperseded, signedIn]);
+  }, [api, query, kind, reviewOnly, since, until, showHistory, signedIn]);
 
   useEffect(() => {
     setItems(null);
@@ -494,30 +601,33 @@ export default function MemoryTimeline({
   );
 
   // Day groups: the timeline reads as dates, not as a flat list.
-  const groups = useMemo(() => {
+  const days = useMemo(() => {
     const out = [];
     for (const entry of items || []) {
-      const label = formatDate(entry.observed_at) || t`Undated`;
+      const label = formatDate(entry.observed_at, { locale: i18n.locale }) || t`Undated`;
       const last = out[out.length - 1];
       if (last && last.label === label) last.entries.push(entry);
       else out.push({ label, entries: [entry] });
     }
     return out;
-  }, [items, t]);
+  }, [items, t, i18n.locale]);
 
-  const unconfirmed = (items || []).filter((e) => e.status === "proposed").length;
-  const filtered = Boolean(query || kind || fromDate || toDate);
+  const presentGroups = groups.filter((g) => g.kinds.some((k) => kindsSeen.includes(k)));
+  const filtered = Boolean(query || kind || since || until || reviewOnly);
   const dateInput = "h-9 rounded-md border border-input bg-transparent px-2 text-xs text-muted-foreground";
 
   const rowHandlers = (after) => ({
     onPatch: (row, patch) =>
       run(() => api.patch({ memoryId: row.id, ...patch }), t`Update failed.`).then(after),
     onDelete: (row) => run(() => api.remove({ memoryId: row.id }), t`Delete failed.`).then(after),
+    onMove: api.move
+      ? (row, bound) => run(() => api.move({ memoryId: row.id, bound }), t`Could not move that.`).then(after)
+      : undefined,
   });
 
   return (
     <div className="space-y-4">
-      {/* Search is the timeline's main control, so it gets the width. */}
+      {/* Search is the main control, so it gets the width. */}
       <form
         className="flex flex-wrap items-center gap-2"
         onSubmit={(e) => {
@@ -525,7 +635,7 @@ export default function MemoryTimeline({
           setQuery(q.trim());
         }}
       >
-        <div className="relative min-w-[14rem] flex-1">
+        <div className="relative min-w-[12rem] flex-1">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
@@ -539,30 +649,36 @@ export default function MemoryTimeline({
             className="pl-8"
           />
         </div>
-        <Button type="button" size="sm" onClick={() => setAdding((v) => !v)} aria-expanded={adding}>
-          <Plus /> {addText}
+        <Button type="button" onClick={() => setAdding((v) => !v)} aria-expanded={adding}>
+          <Plus /> <Trans>Remember</Trans>
         </Button>
-        {(api.setPaused || api.reset) && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button type="button" size="icon-sm" variant="ghost" aria-label={t`More`}>
-                <Ellipsis />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {api.setPaused && (
-                <DropdownMenuCheckboxItem
-                  checked={paused}
-                  disabled={busy}
-                  onCheckedChange={(next) =>
-                    run(() => api.setPaused({ paused: Boolean(next) }), t`Could not change that.`)
-                  }
-                >
-                  <Pause /> <Trans>Pause remembering</Trans>
-                </DropdownMenuCheckboxItem>
-              )}
-              {api.setPaused && api.reset && <DropdownMenuSeparator />}
-              {api.reset && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button type="button" size="icon" variant="ghost" aria-label={t`More`}>
+              <Ellipsis />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {/* "Superseded" said nothing to anyone. A current fact already
+                says what it replaced; history brings back the old rows
+                themselves, and anything dismissed. */}
+            <DropdownMenuCheckboxItem checked={showHistory} onCheckedChange={(v) => setShowHistory(Boolean(v))}>
+              <History /> <Trans>Show history</Trans>
+            </DropdownMenuCheckboxItem>
+            {api.setPaused && (
+              <DropdownMenuCheckboxItem
+                checked={paused}
+                disabled={busy}
+                onCheckedChange={(next) =>
+                  run(() => api.setPaused({ paused: Boolean(next) }), t`Could not change that.`)
+                }
+              >
+                <Pause /> <Trans>Pause remembering</Trans>
+              </DropdownMenuCheckboxItem>
+            )}
+            {api.reset && (
+              <>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   variant="destructive"
                   disabled={busy}
@@ -573,48 +689,41 @@ export default function MemoryTimeline({
                 >
                   <Trash2 /> <Trans>Delete everything</Trans>
                 </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </form>
 
-      {(kinds.length > 0 || items?.length > 0) && (
+      {(presentGroups.length > 0 || items?.length > 0 || datePreset !== "any") && (
         <div className="flex flex-wrap items-center gap-1.5">
-          <Chip active={kind === ""} onClick={() => setKind("")}><Trans>All</Trans></Chip>
-          {kinds.map((k) => (
-            <Chip key={k} active={k === kind} onClick={() => setKind(k === kind ? "" : k)}>
-              <KindIcon kind={k} className="size-3" /> {titleCase(k)}
+          <Chip active={!groupId && !reviewOnly} onClick={() => { setGroupId(""); setReviewOnly(false); }}>
+            <Trans>All</Trans>
+          </Chip>
+          {(toReview > 0 || reviewOnly) && (
+            <Chip active={reviewOnly} onClick={() => setReviewOnly((v) => !v)}>
+              <span className={reviewOnly ? "" : "text-warning"}>
+                <Plural value={toReview} one="# to review" other="# to review" />
+              </span>
+            </Chip>
+          )}
+          {presentGroups.map((g) => (
+            <Chip key={g.id} active={g.id === groupId} onClick={() => setGroupId(g.id === groupId ? "" : g.id)}>
+              <GroupIcon id={g.id} /> {i18n._(g.label)}
             </Chip>
           ))}
-          <span className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground">
-            {/* A number only when it changes what you do next: unconfirmed
-                rows want a look, and a filter should say what it left. */}
-            {unconfirmed > 0 && (
-              <span className="mr-1 text-warning">
-                <Plural value={unconfirmed} one="# unconfirmed" other="# unconfirmed" />
-              </span>
+          <span className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
+            {filtered && items && (
+              <Plural value={items.length} one="# match" other="# matches" />
             )}
-            {!unconfirmed && filtered && items && (
-              <span className="mr-1"><Plural value={items.length} one="# match" other="# matches" /></span>
-            )}
-            {/* The range is what makes this a timeline rather than a list:
-                "what happened between the redirect and the recovery" is a
-                date question — but it is asked rarely, so the inputs wait
-                behind the chip. */}
-            <Chip active={datesOpen || Boolean(fromDate || toDate)} onClick={() => setDatesOpen((v) => !v)} className="h-6 px-2">
-              <CalendarRange className="size-3" /> <Trans>Dates</Trans>
-            </Chip>
-            <Chip active={false} onClick={() => setShowSuperseded((v) => !v)} className="h-6 px-2" aria-label={showSuperseded ? t`Hide superseded` : t`Show superseded`}>
-              {showSuperseded ? <Eye className="size-3" /> : <EyeOff className="size-3" />} <Trans>Superseded</Trans>
-            </Chip>
+            <DateFilter preset={datePreset} onPreset={setDatePreset} />
           </span>
         </div>
       )}
 
-      {datesOpen && (
+      {datePreset === "custom" && (
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span><Trans>Between</Trans></span>
+          <span><Trans>From</Trans></span>
           <input
             type="date"
             value={fromDate}
@@ -623,7 +732,7 @@ export default function MemoryTimeline({
             onChange={(e) => setFromDate(e.target.value)}
             className={dateInput}
           />
-          <span><Trans>and</Trans></span>
+          <span><Trans>to</Trans></span>
           <input
             type="date"
             value={toDate}
@@ -632,18 +741,13 @@ export default function MemoryTimeline({
             onChange={(e) => setToDate(e.target.value)}
             className={dateInput}
           />
-          {(fromDate || toDate) && (
-            <Button type="button" size="xs" variant="ghost" onClick={() => { setFromDate(""); setToDate(""); }}>
-              <Trans>Clear</Trans>
-            </Button>
-          )}
         </div>
       )}
 
       {paused && (
         <p className="text-xs text-muted-foreground">
           <Trans>
-            Memory is paused. Nothing new is being remembered; everything below stays
+            Remembering is paused. Nothing new is saved; everything below stays
             readable and still reaches the agents.
           </Trans>
         </p>
@@ -651,8 +755,8 @@ export default function MemoryTimeline({
 
       {adding && (
         <RememberForm
-          kinds={kindVocabulary}
-          defaultKind={defaultKind}
+          groups={groups}
+          binding={binding}
           placeholder={titleHint}
           busy={busy}
           onClose={() => setAdding(false)}
@@ -677,10 +781,10 @@ export default function MemoryTimeline({
       {linked && (
         <div className="overflow-hidden rounded-xl border border-border">
           <p className="border-b border-border/60 bg-muted/30 px-4 py-1.5 text-xs font-medium text-muted-foreground">
-            <Trans>Linked from chat — outside the filters below</Trans>
+            <Trans>Linked from chat, outside the filters below</Trans>
           </p>
           <ul>
-            <MemoryRow entry={linked} busy={busy} focused {...rowHandlers(() => setLinked(null))} />
+            <MemoryRow entry={linked} groups={groups} binding={binding} busy={busy} focused {...rowHandlers(() => setLinked(null))} />
           </ul>
         </div>
       )}
@@ -689,18 +793,20 @@ export default function MemoryTimeline({
         <p className="app-subtle">{filtered ? <Trans>Nothing matches that filter.</Trans> : emptyHint}</p>
       )}
 
-      {signedIn && groups.length > 0 && (
+      {signedIn && days.length > 0 && (
         <div className="overflow-hidden rounded-xl border border-border">
-          {groups.map((group, gi) => (
-            <div key={group.label} className={gi > 0 ? "border-t border-border/60" : ""}>
+          {days.map((day, gi) => (
+            <div key={day.label} className={gi > 0 ? "border-t border-border/60" : ""}>
               <p className="bg-muted/30 px-4 py-2 text-xs font-medium text-muted-foreground">
-                {group.label}
+                {day.label}
               </p>
               <ul className="divide-y divide-border/60">
-                {group.entries.map((entry) => (
+                {day.entries.map((entry) => (
                   <MemoryRow
                     key={entry.id}
                     entry={entry}
+                    groups={groups}
+                    binding={binding}
                     busy={busy}
                     focused={entry.id === focusId}
                     {...rowHandlers(() => {})}

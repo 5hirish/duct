@@ -29,6 +29,9 @@ const DELEGATES = {
     "components/insights/Desk.jsx",
     "components/insights/desk/DeskDayOne.jsx",
   ],
+  // Both memory routes are one page with a scope switch.
+  "memory/page.jsx": ["components/memory/MemoryPage.jsx"],
+  "project/[projectId]/memory/page.jsx": ["components/memory/MemoryPage.jsx"],
 };
 
 // Pages that render nothing but a redirect.
