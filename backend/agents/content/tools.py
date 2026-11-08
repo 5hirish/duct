@@ -39,7 +39,7 @@ import base64
 import json
 import logging
 from collections.abc import Awaitable, Callable
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -80,7 +80,8 @@ from agents.content.channels import (
     primary_channel,
     resolve as resolve_channel,
 )
-from agents.content.plan_period import PlanPeriod, default_period, keep_drafted_days, plan_end
+from agents.content.plan_period import PlanPeriod, plan_end
+from agents.content.plan_proposal import PROPOSED, build_proposal
 from agents.content.publishing import (
     SLIDE_RENDER,
     MediaUnreadable,
@@ -844,6 +845,9 @@ def build_content_tools_lc(
     class HistoryArgs(BaseModel):
         limit: int = Field(30, ge=1, le=100, description="Max rows to return. Default 30, max 100.")
 
+    class AnalyticsArgs(BaseModel):
+        days: int = Field(30, ge=1, le=365, description="How many days back to read, from today.")
+
     class DiscoveredReferencesArgs(BaseModel):
         min_play_count: int = Field(
             10000, ge=0,
@@ -944,56 +948,59 @@ def build_content_tools_lc(
                     f"This plan covers {session.period_days} days, {session.period_start} to {end}: "
                     f"send exactly {session.period_days} days, one per date. You sent {len(draft.days)}."
                 )
+            # A proposal, not a write (agents/content/plan_proposal.py). The
+            # live plan is read only to show what Accept would keep: days
+            # before today and days with a drafted post. The person decides
+            # in the viewport; the accept route writes.
             with _open_db() as db:
-                # A session bound to a plan (opened to revise it, or one that
-                # already submitted) changes that plan. Inserting here is how
-                # every "make week two more video-heavy" used to leave a second
-                # plan beside the first, with the drafts on the old one.
                 row = db.get(ContentPlan, session.plan_id) if session.plan_id else None
                 if row is not None and row.project_id != project_id:
                     row = None
-                new_days = [d.model_dump(mode="json") for d in draft.days]
-                kept: list[int] = []
-                if row is None:
-                    period = (
-                        PlanPeriod(session.period_start, session.period_days)
-                        if session.period_start and session.period_days
-                        else default_period(utcnow().date())
-                    )
-                    row = ContentPlan(
-                        project_id=project_id,
-                        name=draft.name or f"{period.label()} plan",
-                        start_date=period.start,
-                        status="draft",
-                    )
-                else:
-                    new_days, kept = keep_drafted_days(list(row.days or []), new_days)
-                    if draft.name:
-                        row.name = draft.name
-                    row.updated_at = utcnow()
-                row.character = draft.character.model_dump(mode="json")
-                row.strategy = draft.strategy.model_dump(mode="json")
-                row.days = new_days
-                db.add(row)
-                db.commit()
-                db.refresh(row)
-                session.plan_id = row.id
-                logger.info("content: plan %s saved (%d days, %d kept for their drafts)",
-                            row.id, len(new_days), len(kept))
-                await emit({
-                    "event": ContentEvent.PLAN_GENERATED,
-                    "session_id": session.session_id,
-                    "plan_id": str(row.id),
-                    "payload": {
-                        "id": str(row.id),
-                        "name": row.name,
-                        "start_date": row.start_date.isoformat() if row.start_date else None,
-                        "days": row.days,
-                        "character": row.character,
-                        "strategy": row.strategy,
-                    },
+                live_days = list(row.days or []) if row is not None else None
+                live_id = row.id if row is not None else None
+            active = set(session.active_channels or ())
+            if active:
+                strays = sorted({
+                    str(p) for d in draft.days for p in (d.platforms or []) if str(p) not in active
                 })
-                return _ok_model(SubmitPlanResult(plan_id=str(row.id), days=len(new_days), kept_days=kept))
+                if strays:
+                    return _err(
+                        f"This brand posts on {', '.join(sorted(active))}. Days name {', '.join(strays)}, "
+                        "which it does not post on: keep every day's platforms within the brand's channels."
+                    )
+            proposal = build_proposal(
+                project_id=project_id,
+                draft_name=draft.name,
+                character=draft.character.model_dump(mode="json"),
+                strategy=draft.strategy.model_dump(mode="json"),
+                new_days=[d.model_dump(mode="json") for d in draft.days],
+                live_days=live_days,
+                live_plan_id=live_id,
+                period=(
+                    PlanPeriod(session.period_start, session.period_days)
+                    if session.period_start and session.period_days
+                    else None
+                ),
+                today=utcnow().date(),
+            )
+            session.proposal = proposal
+            logger.info(
+                "content: plan proposed for session %s (%d days, %d kept, replaces %s)",
+                session.session_id, len(proposal.days), len(proposal.kept_days), proposal.replaces_plan_id,
+            )
+            await emit({
+                "event": ContentEvent.PLAN_GENERATED,
+                "session_id": session.session_id,
+                "plan_id": str(live_id) if live_id else None,
+                "payload": proposal.payload(PROPOSED),
+            })
+            return _ok_model(SubmitPlanResult(
+                status=PROPOSED,
+                plan_id="",
+                replaces_plan_id=str(live_id) if live_id else "",
+                days=len(proposal.days),
+                kept_days=proposal.kept_days,
+            ))
         except Exception as exc:
             logger.exception("submit_plan failed")
             return _err(f"submit_plan failed: {exc}")
@@ -1404,6 +1411,74 @@ def build_content_tools_lc(
         except Exception as exc:
             logger.exception("fetch_content_history failed")
             return _err(f"fetch_content_history failed: {exc}")
+
+    async def fetch_content_analytics(days: int = 30) -> str:
+        """Published posts' numbers for the whole project, split the way a
+        review needs them: by platform and by post type, with the hook and
+        topic of the best and worst. fetch_content_history is the list; this
+        is the reading of it. Posted posts only, from what Duct recorded."""
+        from collections import defaultdict
+
+        from service.content_metrics import metric_value
+
+        try:
+            days = max(1, min(int(days or 30), 365))
+            since = utcnow() - timedelta(days=days)
+            with _open_db() as db:
+                rows = db.exec(
+                    select(ContentPost)
+                    .where(ContentPost.project_id == project_id)
+                    .where(ContentPost.posted_at.is_not(None))  # type: ignore[union-attr]
+                    .where(ContentPost.posted_at >= since)  # type: ignore[operator]
+                    .order_by(ContentPost.posted_at.desc())  # type: ignore[union-attr]
+                    .limit(200)
+                ).all()
+            groups: dict[str, dict[str, list]] = {"platform": defaultdict(list), "post_type": defaultdict(list)}
+            scored: list[tuple[float, ContentPost, str]] = []
+            for r in rows:
+                for platform in (r.platforms or ["tiktok"]):
+                    groups["platform"][str(platform)].append(r)
+                groups["post_type"][r.post_type or "slideshow"].append(r)
+                for key in ("completion_rate", "saves", "shares", "views"):
+                    value = metric_value(r.perf or {}, key)
+                    if value is not None:
+                        scored.append((float(value), r, key))
+                        break
+
+            def _summary(items: list) -> dict:
+                out: dict[str, Any] = {"posts": len(items)}
+                for key in ("views", "completion_rate", "saves", "shares", "likes", "comments"):
+                    vals = [v for v in (metric_value(p.perf or {}, key) for p in items) if v is not None]
+                    if vals:
+                        vals.sort()
+                        out[f"median_{key}"] = vals[len(vals) // 2]
+                        out[f"measured_{key}"] = len(vals)
+                return out
+
+            def _named(p: ContentPost, key: str, value: float) -> dict:
+                return {
+                    "topic": p.topic, "pillar": p.pillar, "post_type": p.post_type,
+                    "hook_type": p.hook_type, "platforms": p.platforms,
+                    "posted_at": p.posted_at.isoformat() if p.posted_at else None,
+                    key: value,
+                }
+
+            scored.sort(key=lambda t: -t[0])
+            return _ok({
+                "window_days": days,
+                "posted": len(rows),
+                "by_platform": {k: _summary(v) for k, v in groups["platform"].items()},
+                "by_post_type": {k: _summary(v) for k, v in groups["post_type"].items()},
+                "best": [_named(p, k, v) for v, p, k in scored[:5]],
+                "weakest": [_named(p, k, v) for v, p, k in scored[-5:][::-1]] if len(scored) > 5 else [],
+                "unmeasured": sum(1 for r in rows if not any(
+                    metric_value(r.perf or {}, k) is not None for k in ("views", "completion_rate", "saves", "shares")
+                )),
+                "note": "Medians over the posts that recorded each metric; an absent metric is unknown, not zero.",
+            })
+        except Exception as exc:
+            logger.exception("fetch_content_analytics failed")
+            return _err(f"fetch_content_analytics failed: {exc}")
 
     async def fetch_discovered_references(min_play_count: int = 10000, limit: int = 30) -> str:
         try:
@@ -2384,14 +2459,15 @@ def build_content_tools_lc(
         *memory_tools,
         _bind(
             submit_plan, ContentTool.SUBMIT_PLAN,
-            "Save the content plan for the period this session manages. The argument schema "
-            "is the contract: an ordered list of days, one per date in the period, each with "
-            "a topic and a pillar. The first call creates the plan; every later call, and "
-            "any call in a session opened on an existing plan, replaces that same plan's "
-            "days. A day that already has a drafted post is kept as it is (the result lists "
-            "them as kept_days). Emits PLAN_GENERATED so the workspace renders it. Call this "
-            "AFTER emitting <duct_artifact>{\"type\":\"plan\",...}</duct_artifact>, and send the whole "
-            "plan each time, not just the changed days.",
+            "Propose the content plan for the period this session manages. The argument "
+            "schema is the contract: an ordered list of days, one per date in the period, "
+            "each with a topic and a pillar, every platform among the brand's channels. "
+            "Nothing is saved by this call: the plan appears in the viewport with Accept, "
+            "Modify and Reject, and only the person's Accept writes it. On a period that "
+            "already has a plan, Accept keeps the days before today and the days with a "
+            "drafted post (the result lists them as kept_days) and replaces the rest. A "
+            "later call in the same session replaces the proposal. Call this AFTER emitting "
+            "<duct_artifact>{\"type\":\"plan\",...}</duct_artifact>, with the whole plan.",
             SubmitPlanArgs,
         ),
         _bind(
@@ -2444,6 +2520,14 @@ def build_content_tools_lc(
             "to inform hook variation. Fields: post_dir_slug, pillar, topic, "
             "hook_type, status, posted_at, perf.",
             HistoryArgs,
+        ),
+        _bind(
+            fetch_content_analytics, ContentTool.FETCH_CONTENT_ANALYTICS,
+            "The project's published posts' numbers over a window (default 30 days), "
+            "split by platform and by post type, with the best and weakest posts named "
+            "by topic, hook and type. Read it for a review of what worked; "
+            "fetch_content_history is the raw list.",
+            AnalyticsArgs,
         ),
         _bind(
             fetch_content_assets, ContentTool.FETCH_CONTENT_ASSETS,

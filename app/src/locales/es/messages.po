@@ -1166,6 +1166,7 @@ msgstr "Acerca de"
 msgid "About your business"
 msgstr "Acerca de tu negocio"
 
+#: src/components/content/PlanViewport.jsx
 #: src/components/CookieConsent.jsx
 msgid "Accept"
 msgstr "Aceptar"
@@ -1173,6 +1174,14 @@ msgstr "Aceptar"
 #: src/app/invite/[token]/page.jsx
 msgid "Accept invitation"
 msgstr "Aceptar invitación"
+
+#: src/components/content/PlanViewport.jsx
+msgid "Accept replaces your plan from today on; posts already drafted stay."
+msgstr "Aceptar reemplaza tu plan a partir de hoy; las publicaciones ya borrador se mantienen."
+
+#: src/components/content/PlanViewport.jsx
+msgid "Accept saves this as your plan."
+msgstr "Aceptar guarda esto como tu plan."
 
 #: src/components/connections/ProjectAccountSelect.jsx
 msgid "Account"
@@ -2312,6 +2321,7 @@ msgstr "No se puede leer tu clave"
 #: src/components/connections/ProviderCard.jsx
 #: src/components/content/CloneFromUrlDialog.jsx
 #: src/components/content/FormatLibrary.jsx
+#: src/components/content/PlanViewport.jsx
 #: src/components/content/PublishModal.jsx
 #: src/components/memory/MemoryTimeline.jsx
 #: src/components/onboarding/ProviderStep.jsx
@@ -3093,6 +3103,10 @@ msgstr "Solo se pudo leer la página principal; la auditoría usará eso"
 msgid "Couldn't check it. Try again in a moment."
 msgstr "No se pudo comprobar. Intenta de nuevo en un momento."
 
+#: src/components/content/PlanViewport.jsx
+msgid "Couldn't discard the plan. Try again."
+msgstr "No se pudo descartar el plan. Inténtalo de nuevo."
+
 #: src/components/connections/McpConnectors.jsx
 msgid "Couldn't disconnect {name}. {why}"
 msgstr "No se pudo desconectar {name}. {why}"
@@ -3144,6 +3158,10 @@ msgstr "No se pudo leer ese sitio."
 #: src/app/(auth)/desktop-auth/page.js
 msgid "Couldn't read your Google account"
 msgstr "No se pudo leer tu cuenta de Google"
+
+#: src/components/content/PlanViewport.jsx
+msgid "Couldn't save the plan. Try again."
+msgstr "No se pudo guardar el plan. Inténtalo de nuevo."
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Couldn't save. Please try again."
@@ -3477,6 +3495,10 @@ msgstr "Descartar"
 msgid "Discarded"
 msgstr "Descartado"
 
+#: src/components/content/PlanViewport.jsx
+msgid "Discarding…"
+msgstr "Descartando…"
+
 #: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/McpConnectors.jsx
@@ -3804,6 +3826,10 @@ msgstr "Duct necesita una conexión. Tu trabajo está guardado y seguirá aquí.
 #: src/components/AppSidebar.jsx
 msgid "Duct posts through the OS — open System Settings to turn them on or off"
 msgstr "Duct publica a través del SO — abre la Configuración del Sistema para activarlas o desactivarlas"
+
+#: src/components/content/PlanViewport.jsx
+msgid "Duct proposes this plan."
+msgstr "Duct propone este plan."
 
 #: src/components/content/AccountsTab.jsx
 msgid "Duct publishes through a scheduler you connect, with your own account. Connect one to schedule posts and see how they do."
@@ -4266,6 +4292,10 @@ msgstr "Obteniendo analíticas de tus programadores…"
 #: src/lib/auditEvents.js
 msgid "Fetching sitemap"
 msgstr "Obteniendo mapa del sitio"
+
+#: src/components/content/PlanViewport.jsx
+msgid "Fewer videos in week two, and start with the before-and-after…"
+msgstr "Menos videos en la semana dos, y empieza con el antes y después…"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Fill-In"
@@ -5945,6 +5975,10 @@ msgstr "Modelos"
 msgid "Models & providers"
 msgstr "Modelos y proveedores"
 
+#: src/components/content/PlanViewport.jsx
+msgid "Modify"
+msgstr "Modificar"
+
 #: src/lib/contentReview.js
 msgid "Momentum"
 msgstr "Impulso"
@@ -7466,6 +7500,10 @@ msgstr "Plan {shortId}"
 msgid "Plan ahead"
 msgstr "Planifica con antelación"
 
+#: src/components/content/PlanViewport.jsx
+msgid "Plan discarded. Tell Duct what to plan instead, or close this tab."
+msgstr "Plan descartado. Dile a Duct qué planear en su lugar, o cierra esta pestaña."
+
 #: src/components/content/PlanStrategy.jsx
 msgid "Plan strategy"
 msgstr "Estrategia del plan"
@@ -8089,6 +8127,7 @@ msgid "Region"
 msgstr "Región"
 
 #: src/app/(app)/execute/page.jsx
+#: src/components/content/PlanViewport.jsx
 #: src/components/execution/ChangeSetCard.jsx
 msgid "Reject"
 msgstr "Rechazar"
@@ -8650,6 +8689,10 @@ msgstr "Guardado {savedAtText}"
 msgid "Saved as TikTok draft"
 msgstr "Guardado como borrador de TikTok"
 
+#: src/components/content/PlanViewport.jsx
+msgid "Saved as your plan"
+msgstr "Guardado como tu plan"
+
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Saved encrypted to your account and sent only to this server."
 msgstr "Guardado cifrado en tu cuenta y enviado solo a este servidor."
@@ -8695,6 +8738,7 @@ msgstr "Guardados"
 #: src/components/content/BrandContextForm.jsx
 #: src/components/content/DiscoverPage.jsx
 #: src/components/content/FormatLibrary.jsx
+#: src/components/content/PlanViewport.jsx
 #: src/components/content/PostMetricsForm.jsx
 #: src/components/content/PostViewport.jsx
 msgid "Saving…"
@@ -8976,6 +9020,7 @@ msgid "Self-hosted API URL"
 msgstr "URL de API autoalojada"
 
 #: src/components/ChatSidebar.jsx
+#: src/components/content/PlanViewport.jsx
 #: src/components/insights/desk/DeskComposer.jsx
 #: src/components/workspace/ChatInput.jsx
 msgid "Send"
@@ -11331,6 +11376,10 @@ msgstr "Lo que enviará"
 #: src/components/workspace/ComposerDials.jsx
 #~ msgid "What shape the brief takes"
 #~ msgstr "Qué forma toma el informe"
+
+#: src/components/content/PlanViewport.jsx
+msgid "What should change?"
+msgstr "¿Qué debería cambiar?"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "What should Duct call you?"

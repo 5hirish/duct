@@ -1035,6 +1035,74 @@ def get_plan(
     return out
 
 
+class PlanDecision(BaseModel):
+    """Accept or reject the plan a session proposed."""
+
+    model_config = ConfigDict(extra="forbid")
+    session_id: str
+    proposal_id: str
+
+
+def _proposal_for(db: Session, user: User, body: PlanDecision):
+    """The live session and the proposal the person is deciding on, or 404.
+
+    The proposal id is checked as well as the session: a card left on screen
+    from an earlier proposal must not accept the one the agent made since."""
+    session = _session_for_user(db, user, body.session_id)
+    proposal = getattr(session, "proposal", None)
+    if proposal is None or proposal.proposal_id != body.proposal_id:
+        raise HTTPException(404, "That plan proposal is no longer open.")
+    return session, proposal
+
+
+@router.post("/content/plans/accept")
+async def accept_plan(
+    body: PlanDecision,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> PlanOut:
+    """Write the proposed plan: the only path that saves a plan the agent
+    wrote (agents/content/plan_proposal.py says what is kept). The session
+    learns the plan it now manages, and the viewport hears it on the stream."""
+    from agents.content.plan_proposal import ACCEPTED, apply_proposal
+
+    session, proposal = _proposal_for(db, user, body)
+    row = apply_proposal(db, proposal, now=utcnow())
+    session.plan_id = row.id
+    session.proposal = None
+    _link_conversation_artifact(body.session_id, "plan")
+    payload = proposal.payload(ACCEPTED)
+    payload["id"] = str(row.id)
+    await _emit(session.event_queue, {
+        "event": ContentEvent.PLAN_GENERATED,
+        "session_id": body.session_id,
+        "plan_id": str(row.id),
+        "payload": payload,
+    })
+    return _plan_out(row)
+
+
+@router.post("/content/plans/reject")
+async def reject_plan(
+    body: PlanDecision,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> dict:
+    """Drop the proposal. Nothing was written, so nothing is deleted; the
+    board stays as it was and the session keeps its conversation."""
+    from agents.content.plan_proposal import REJECTED
+
+    session, proposal = _proposal_for(db, user, body)
+    session.proposal = None
+    await _emit(session.event_queue, {
+        "event": ContentEvent.PLAN_GENERATED,
+        "session_id": body.session_id,
+        "plan_id": None,
+        "payload": {**proposal.payload(REJECTED), "days": []},
+    })
+    return {"ok": True}
+
+
 @router.post("/content/plans", status_code=201)
 def create_plan(
     body: PlanIn,

@@ -37,6 +37,14 @@ RECOVERY_NUDGE_PLAN = (
     '<duct_artifact>{"type":"plan", …}</duct_artifact> now and then call submit_plan '
     "with the same payload — do not run more research, just produce and save the plan."
 )
+# A review turn ends in a question, not a plan. When the model reviewed and
+# stopped, the nudge asks for the question, never for the plan: a plan here
+# would be the thing the review turn exists to prevent.
+RECOVERY_NUDGE_REVIEW = (
+    "You reviewed the plan so far but did not ask where to take it next. Ask now, "
+    "with one AskUserQuestion carrying two to four directions in the person's words. "
+    "Do not research and do not submit a plan until they answer."
+)
 RECOVERY_NUDGE_POST = (
     "You analysed everything but did not persist the post draft. Emit the complete "
     '<duct_artifact>{"type":"post", …}</duct_artifact> now and then call '

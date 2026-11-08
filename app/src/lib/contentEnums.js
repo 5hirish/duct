@@ -47,6 +47,15 @@ export const PostStatus = Object.freeze({
   DISCARDED: "discarded",
 });
 
+// What a PLAN_GENERATED payload says about the plan it carries. A plan the
+// agent submits is a proposal until the person accepts it on the viewport;
+// an event with no status predates proposals and is a saved plan.
+export const PlanStatus = Object.freeze({
+  PROPOSED: "proposed",
+  ACCEPTED: "accepted",
+  REJECTED: "rejected",
+});
+
 // Message descriptors, not strings: this table is module-level, so it is
 // rendered with `i18n._(POST_STATUS_LABELS[status])` in the component that
 // shows it. PLATFORM_LABELS above stays plain — those are brand names.

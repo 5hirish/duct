@@ -467,19 +467,26 @@ def test_enrich_skips_research_when_no_web_search_is_available():
     assert ctx.trending_hooks == [] and ctx.total_posts_to_date == 0
 
 
-def test_a_degraded_enrichment_says_why_on_the_step_and_not_in_the_prompt():
-    """The reason the research pass did not run is for the step chip and the
-    log. `enrichment_notes` is rendered into the plan prompt, and an internal
-    error string there read to one model as 'research is unavailable' — it
-    then skipped the sub-agents that were the way to research."""
+def test_a_degraded_enrichment_tells_the_model_in_plain_words_and_the_chip_why():
+    """The raw reason the research pass did not run is for the step chip and
+    the log: an internal error string in the prompt read to one model as
+    'research is unavailable'. But silence was worse — a prompt that still
+    said "use the trend research above" over an empty block had the plan
+    quote trends nobody found. So the model gets one plain sentence per
+    cause, and never the error text."""
     from agents.content.enrichment import _degraded
     from agents.content.prompts import _research_stanza
     from agents.content.schema import ContentResearchContext
 
-    context = _degraded(ContentResearchContext(), "research pass failed: boom")
+    context = _degraded(ContentResearchContext(), "research pass failed: boom", cause="failed")
     assert context.degraded_reason.startswith("local signals only")
-    assert context.enrichment_notes == []
-    assert "boom" not in _research_stanza(context)
+    assert len(context.enrichment_notes) == 1
+    assert "boom" not in context.enrichment_notes[0]
+    stanza = _research_stanza(context)
+    assert "boom" not in stanza and "No trend research this run" in stanza
+
+    timed_out = _degraded(ContentResearchContext(), "timed out after 240s", cause="timeout")
+    assert "ran out of time" in timed_out.enrichment_notes[0]
 
 
 

@@ -1160,12 +1160,21 @@ msgstr ""
 msgid "About your business"
 msgstr ""
 
+#: src/components/content/PlanViewport.jsx
 #: src/components/CookieConsent.jsx
 msgid "Accept"
 msgstr ""
 
 #: src/app/invite/[token]/page.jsx
 msgid "Accept invitation"
+msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+msgid "Accept replaces your plan from today on; posts already drafted stay."
+msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+msgid "Accept saves this as your plan."
 msgstr ""
 
 #: src/components/connections/ProjectAccountSelect.jsx
@@ -2306,6 +2315,7 @@ msgstr ""
 #: src/components/connections/ProviderCard.jsx
 #: src/components/content/CloneFromUrlDialog.jsx
 #: src/components/content/FormatLibrary.jsx
+#: src/components/content/PlanViewport.jsx
 #: src/components/content/PublishModal.jsx
 #: src/components/memory/MemoryTimeline.jsx
 #: src/components/onboarding/ProviderStep.jsx
@@ -3087,6 +3097,10 @@ msgstr ""
 msgid "Couldn't check it. Try again in a moment."
 msgstr ""
 
+#: src/components/content/PlanViewport.jsx
+msgid "Couldn't discard the plan. Try again."
+msgstr ""
+
 #: src/components/connections/McpConnectors.jsx
 msgid "Couldn't disconnect {name}. {why}"
 msgstr ""
@@ -3137,6 +3151,10 @@ msgstr ""
 
 #: src/app/(auth)/desktop-auth/page.js
 msgid "Couldn't read your Google account"
+msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+msgid "Couldn't save the plan. Try again."
 msgstr ""
 
 #: src/components/content/BrandContextForm.jsx
@@ -3471,6 +3489,10 @@ msgstr ""
 msgid "Discarded"
 msgstr ""
 
+#: src/components/content/PlanViewport.jsx
+msgid "Discarding…"
+msgstr ""
+
 #: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/McpConnectors.jsx
@@ -3797,6 +3819,10 @@ msgstr ""
 
 #: src/components/AppSidebar.jsx
 msgid "Duct posts through the OS — open System Settings to turn them on or off"
+msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+msgid "Duct proposes this plan."
 msgstr ""
 
 #: src/components/content/AccountsTab.jsx
@@ -4259,6 +4285,10 @@ msgstr ""
 
 #: src/lib/auditEvents.js
 msgid "Fetching sitemap"
+msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+msgid "Fewer videos in week two, and start with the before-and-after…"
 msgstr ""
 
 #: src/components/audit/AuditReportV1.jsx
@@ -5939,6 +5969,10 @@ msgstr ""
 msgid "Models & providers"
 msgstr ""
 
+#: src/components/content/PlanViewport.jsx
+msgid "Modify"
+msgstr ""
+
 #: src/lib/contentReview.js
 msgid "Momentum"
 msgstr ""
@@ -7461,6 +7495,10 @@ msgstr ""
 msgid "Plan ahead"
 msgstr ""
 
+#: src/components/content/PlanViewport.jsx
+msgid "Plan discarded. Tell Duct what to plan instead, or close this tab."
+msgstr ""
+
 #: src/components/content/PlanStrategy.jsx
 msgid "Plan strategy"
 msgstr ""
@@ -8084,6 +8122,7 @@ msgid "Region"
 msgstr ""
 
 #: src/app/(app)/execute/page.jsx
+#: src/components/content/PlanViewport.jsx
 #: src/components/execution/ChangeSetCard.jsx
 msgid "Reject"
 msgstr ""
@@ -8645,6 +8684,10 @@ msgstr ""
 msgid "Saved as TikTok draft"
 msgstr ""
 
+#: src/components/content/PlanViewport.jsx
+msgid "Saved as your plan"
+msgstr ""
+
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Saved encrypted to your account and sent only to this server."
 msgstr ""
@@ -8690,6 +8733,7 @@ msgstr ""
 #: src/components/content/BrandContextForm.jsx
 #: src/components/content/DiscoverPage.jsx
 #: src/components/content/FormatLibrary.jsx
+#: src/components/content/PlanViewport.jsx
 #: src/components/content/PostMetricsForm.jsx
 #: src/components/content/PostViewport.jsx
 msgid "Saving…"
@@ -8971,6 +9015,7 @@ msgid "Self-hosted API URL"
 msgstr ""
 
 #: src/components/ChatSidebar.jsx
+#: src/components/content/PlanViewport.jsx
 #: src/components/insights/desk/DeskComposer.jsx
 #: src/components/workspace/ChatInput.jsx
 msgid "Send"
@@ -11326,6 +11371,10 @@ msgstr ""
 #: src/components/workspace/ComposerDials.jsx
 #~ msgid "What shape the brief takes"
 #~ msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+msgid "What should change?"
+msgstr ""
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "What should Duct call you?"

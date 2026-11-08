@@ -219,6 +219,32 @@ export async function patchPlanDay(planId, day, patch) {
   return jsonOrThrow(res);
 }
 
+// A plan the agent submits is a proposal until the person decides on the
+// viewport. Both calls answer for the session the proposal was made in; the
+// backend also echoes the decision as a PLAN_GENERATED event, so the pane
+// updates by itself, but the accept response is the saved plan and callers
+// apply it at once rather than waiting for that echo.
+
+/** Save a proposed plan. Replaces the live plan's future days, keeps its past and drafted ones. */
+export async function acceptPlan(sessionId, proposalId) {
+  const res = await fetch(`${BASE}/api/content/plans/accept`, {
+    method: "POST",
+    headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({ session_id: sessionId, proposal_id: proposalId }),
+  });
+  return jsonOrThrow(res);
+}
+
+/** Discard a proposed plan. Nothing already saved changes. */
+export async function rejectPlan(sessionId, proposalId) {
+  const res = await fetch(`${BASE}/api/content/plans/reject`, {
+    method: "POST",
+    headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({ session_id: sessionId, proposal_id: proposalId }),
+  });
+  return jsonOrThrow(res);
+}
+
 // Posts + their scheduler-sourced analytics both depend on post state, so any
 // post write clears both. Broad (prefix) invalidation keeps it simple and safe.
 function invalidatePosts() {

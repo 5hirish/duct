@@ -1166,6 +1166,7 @@ msgstr "概要"
 msgid "About your business"
 msgstr "あなたのビジネスについて"
 
+#: src/components/content/PlanViewport.jsx
 #: src/components/CookieConsent.jsx
 msgid "Accept"
 msgstr "同意する"
@@ -1173,6 +1174,14 @@ msgstr "同意する"
 #: src/app/invite/[token]/page.jsx
 msgid "Accept invitation"
 msgstr "招待を承認する"
+
+#: src/components/content/PlanViewport.jsx
+msgid "Accept replaces your plan from today on; posts already drafted stay."
+msgstr "承認すると、本日からお客様の計画を置き換えます。すでに下書きされた投稿は残ります。"
+
+#: src/components/content/PlanViewport.jsx
+msgid "Accept saves this as your plan."
+msgstr "承認すると、この計画が保存されます。"
 
 #: src/components/connections/ProjectAccountSelect.jsx
 msgid "Account"
@@ -2312,6 +2321,7 @@ msgstr "キーを読み取れません"
 #: src/components/connections/ProviderCard.jsx
 #: src/components/content/CloneFromUrlDialog.jsx
 #: src/components/content/FormatLibrary.jsx
+#: src/components/content/PlanViewport.jsx
 #: src/components/content/PublishModal.jsx
 #: src/components/memory/MemoryTimeline.jsx
 #: src/components/onboarding/ProviderStep.jsx
@@ -3093,6 +3103,10 @@ msgstr "フロントページのみ読み取れました — 監査ではそれ�
 msgid "Couldn't check it. Try again in a moment."
 msgstr "確認できませんでした。しばらくしてからもう一度お試しください。"
 
+#: src/components/content/PlanViewport.jsx
+msgid "Couldn't discard the plan. Try again."
+msgstr "計画を破棄できませんでした。もう一度お試しください。"
+
 #: src/components/connections/McpConnectors.jsx
 msgid "Couldn't disconnect {name}. {why}"
 msgstr "{name} を切断できませんでした。{why}"
@@ -3144,6 +3158,10 @@ msgstr "そのサイトを読み取れませんでした。"
 #: src/app/(auth)/desktop-auth/page.js
 msgid "Couldn't read your Google account"
 msgstr "Googleアカウントを読み取れませんでした"
+
+#: src/components/content/PlanViewport.jsx
+msgid "Couldn't save the plan. Try again."
+msgstr "計画を保存できませんでした。もう一度お試しください。"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Couldn't save. Please try again."
@@ -3477,6 +3495,10 @@ msgstr "破棄"
 msgid "Discarded"
 msgstr "破棄済み"
 
+#: src/components/content/PlanViewport.jsx
+msgid "Discarding…"
+msgstr "破棄中…"
+
 #: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/McpConnectors.jsx
@@ -3804,6 +3826,10 @@ msgstr "Ductには接続が必要です。あなたの作業は保存されて�
 #: src/components/AppSidebar.jsx
 msgid "Duct posts through the OS — open System Settings to turn them on or off"
 msgstr "DuctはOSを介して投稿します。オン/オフはシステム設定で切り替えてください。"
+
+#: src/components/content/PlanViewport.jsx
+msgid "Duct proposes this plan."
+msgstr "Ductがこの計画を提案します。"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Duct publishes through a scheduler you connect, with your own account. Connect one to schedule posts and see how they do."
@@ -4266,6 +4292,10 @@ msgstr "スケジューラーから分析を取得しています…"
 #: src/lib/auditEvents.js
 msgid "Fetching sitemap"
 msgstr "サイトマップを取得中"
+
+#: src/components/content/PlanViewport.jsx
+msgid "Fewer videos in week two, and start with the before-and-after…"
+msgstr "2週目の動画を減らして、ビフォーアフターから始めてください…"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Fill-In"
@@ -5945,6 +5975,10 @@ msgstr "モデル"
 msgid "Models & providers"
 msgstr "モデルとプロバイダー"
 
+#: src/components/content/PlanViewport.jsx
+msgid "Modify"
+msgstr "修正"
+
 #: src/lib/contentReview.js
 msgid "Momentum"
 msgstr "モメンタム"
@@ -7467,6 +7501,10 @@ msgstr "プラン {shortId}"
 msgid "Plan ahead"
 msgstr "事前計画"
 
+#: src/components/content/PlanViewport.jsx
+msgid "Plan discarded. Tell Duct what to plan instead, or close this tab."
+msgstr "計画を破棄しました。代わりに何を計画するかDuctに伝えるか、このタブを閉じてください。"
+
 #: src/components/content/PlanStrategy.jsx
 msgid "Plan strategy"
 msgstr "プランの戦略"
@@ -8090,6 +8128,7 @@ msgid "Region"
 msgstr "地域"
 
 #: src/app/(app)/execute/page.jsx
+#: src/components/content/PlanViewport.jsx
 #: src/components/execution/ChangeSetCard.jsx
 msgid "Reject"
 msgstr "却下"
@@ -8651,6 +8690,10 @@ msgstr "{savedAtText}に保存済み"
 msgid "Saved as TikTok draft"
 msgstr "TikTokの下書きとして保存済み"
 
+#: src/components/content/PlanViewport.jsx
+msgid "Saved as your plan"
+msgstr "計画として保存されました"
+
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Saved encrypted to your account and sent only to this server."
 msgstr "あなたのアカウントに暗号化して保存され、このサーバーにのみ送信されます。"
@@ -8696,6 +8739,7 @@ msgstr "保存"
 #: src/components/content/BrandContextForm.jsx
 #: src/components/content/DiscoverPage.jsx
 #: src/components/content/FormatLibrary.jsx
+#: src/components/content/PlanViewport.jsx
 #: src/components/content/PostMetricsForm.jsx
 #: src/components/content/PostViewport.jsx
 msgid "Saving…"
@@ -8977,6 +9021,7 @@ msgid "Self-hosted API URL"
 msgstr "セルフホスト型API URL"
 
 #: src/components/ChatSidebar.jsx
+#: src/components/content/PlanViewport.jsx
 #: src/components/insights/desk/DeskComposer.jsx
 #: src/components/workspace/ChatInput.jsx
 msgid "Send"
@@ -11332,6 +11377,10 @@ msgstr "送信する内容"
 #: src/components/workspace/ComposerDials.jsx
 #~ msgid "What shape the brief takes"
 #~ msgstr "ブリーフの形式"
+
+#: src/components/content/PlanViewport.jsx
+msgid "What should change?"
+msgstr "何を変更しますか？"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "What should Duct call you?"

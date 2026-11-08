@@ -102,46 +102,115 @@ def _plans(engine) -> list:
         return db.execute(select(ContentPlan)).scalars().all()
 
 
-def test_a_second_submit_revises_the_same_plan(engine):
+def _accept(engine, session):
+    """What the accept route does once the person clicks: write the proposal."""
+    from sqlmodel import Session
+
+    from agents.content.plan_proposal import apply_proposal
+    from utils.dates import utcnow
+
+    with Session(engine) as db:
+        row = apply_proposal(db, session.proposal, now=utcnow())
+        session.plan_id, session.proposal = row.id, None
+        return row
+
+
+def test_a_submit_proposes_and_writes_nothing_until_accepted(engine):
+    """The agent's plan is a proposal on the session, shown with Accept /
+    Modify / Reject; a second submit replaces the proposal, and only Accept
+    makes a row. Until 2026-11-08 the first call wrote thirty days to the
+    board with nobody asked."""
     from agents.content.schema import make_session
 
     session = make_session("s", uuid4(), "plan_month")
-    session.period_start, session.period_days = date(2026, 10, 7), 3
-
+    # A period ahead of any real "today": Accept keeps days already past, and
+    # this test is about replacement, not the cutoff.
+    session.period_start, session.period_days = date(2031, 10, 7), 3
     first = _submit(session, _days(3, "first"))
+    assert first["status"] == "proposed" and first["plan_id"] == ""
+    assert _plans(engine) == []
     second = _submit(session, _days(3, "second"))
+    assert second["status"] == "proposed"
+    assert [d["topic"] for d in session.proposal.days] == ["second0", "second1", "second2"]
 
-    assert first["plan_id"] == second["plan_id"]
-    (row,) = _plans(engine)
-    assert row.start_date == date(2026, 10, 7)
-    assert [d["topic"] for d in row.days] == ["second0", "second1", "second2"]
+    row = _accept(engine, session)
+    (stored,) = _plans(engine)
+    assert stored.id == row.id and stored.start_date == date(2031, 10, 7)
+    assert [d["topic"] for d in stored.days] == ["second0", "second1", "second2"]
+    # The next submit in the same session proposes against the accepted plan.
+    third = _submit(session, _days(3, "third"))
+    assert third["replaces_plan_id"] == str(row.id)
+    _accept(engine, session)
+    (stored,) = _plans(engine)
+    assert stored.id == row.id and [d["topic"] for d in stored.days] == ["third0", "third1", "third2"]
 
 
-def test_a_revision_leaves_drafted_days_alone_and_says_so(engine):
+def test_a_proposal_on_a_live_plan_keeps_drafted_days_and_the_past(engine):
+    """Accept replaces the plan from today on: a drafted day stays because the
+    board finds the draft through it, and a day before today stays because
+    it already happened. The proposal says which indexes it kept."""
     from sqlmodel import Session
 
     from agents.content.schema import make_session
     from models.content import ContentPlan
 
     project = uuid4()
+    start = date(2026, 10, 1)
     with Session(engine) as db:
-        row = ContentPlan(project_id=project, start_date=date(2026, 10, 1),
-                          days=[{"topic": "drafted", "pillar": "p", "post_id": str(uuid4())},
+        row = ContentPlan(project_id=project, start_date=start,
+                          days=[{"topic": "past", "pillar": "p"},
+                                {"topic": "drafted", "pillar": "p", "post_id": str(uuid4())},
                                 {"topic": "old", "pillar": "p"}])
         db.add(row)
         db.commit()
         db.refresh(row)
         plan_id = row.id
-
     session = make_session("s", project, "plan_month")
-    session.plan_id, session.period_start, session.period_days = plan_id, date(2026, 10, 1), 2
+    session.plan_id, session.period_start, session.period_days = plan_id, start, 3
 
-    result = _submit(session, _days(2, "new"))
+    from agents.content import tools as content_tools
+    from datetime import datetime, timezone
 
-    assert result["kept_days"] == [0]
-    (row,) = _plans(engine)
-    assert row.id == plan_id
-    assert [d["topic"] for d in row.days] == ["drafted", "new1"]
+    # Today is day index 1, so index 0 is the past.
+    content_tools.utcnow = lambda: datetime(2026, 10, 2, 12, tzinfo=timezone.utc)  # type: ignore[assignment]
+    try:
+        result = _submit(session, _days(3, "new"))
+    finally:
+        from utils.dates import utcnow as real_utcnow
+        content_tools.utcnow = real_utcnow  # type: ignore[assignment]
+    assert result["kept_days"] == [0, 1]
+    assert [d["topic"] for d in session.proposal.days] == ["past", "drafted", "new2"]
+
+    _accept(engine, session)
+    (stored,) = _plans(engine)
+    assert stored.id == plan_id
+    assert [d["topic"] for d in stored.days] == ["past", "drafted", "new2"]
+
+
+def test_a_day_on_a_channel_the_brand_does_not_post_on_is_refused(engine):
+    from agents.content.schema import make_session
+
+    session = make_session("s", uuid4(), "plan_month")
+    session.period_start, session.period_days = date(2026, 10, 7), 1
+    session.active_channels = ["tiktok", "instagram"]
+    result = _submit(session, [{"topic": "t", "pillar": "p", "platforms": ["linkedin"]}])
+    assert result["status"] == "error" and "linkedin" in result["message"]
+    assert session.proposal is None
+
+
+def test_merge_proposal_is_an_index_cutoff_on_the_calendar():
+    """No database: the merge is data. Positions are dates, so 'before today'
+    is an index, and a drafted day wins wherever it sits."""
+    from agents.content.plan_proposal import merge_proposal
+
+    old = [{"topic": "a"}, {"topic": "b", "post_id": "x"}, {"topic": "c"}, {"topic": "d"}]
+    new = [{"topic": f"n{i}"} for i in range(4)]
+    merged, kept = merge_proposal(old, new, start=date(2026, 10, 1), today=date(2026, 10, 3))
+    assert [d["topic"] for d in merged] == ["a", "b", "n2", "n3"]
+    assert kept == [0, 1]
+    # Nothing live: the proposal whole, nothing kept.
+    merged, kept = merge_proposal(None, new, start=date(2026, 10, 1), today=date(2026, 10, 3))
+    assert [d["topic"] for d in merged] == ["n0", "n1", "n2", "n3"] and kept == []
 
 
 def test_a_plan_must_cover_its_period_exactly(engine):

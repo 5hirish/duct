@@ -74,6 +74,13 @@ class Day(BaseModel):
     hook_type: str = Field("", description="The hook family this post bets on, e.g. curiosity_gap.")
     funnel_stage: str = Field("", description="awareness, consideration or conversion.")
     objective: str = Field("", description="The one thing this post should drive, e.g. saves, follows, clicks.")
+    # The prompt asked for these for months and extra="ignore" dropped them on
+    # the way in, so every plan's emotion arc and series were invented by the
+    # model and lost by the schema. Declared, they reach the board and the next
+    # review.
+    hook_emotion: str = Field("", description="The emotion the hook opens on, e.g. curiosity, frustration, relief.")
+    series: str = Field("", description="The micro-series this day belongs to, e.g. 'S2: Capsule reset, 3/4'; empty for a standalone post.")
+    experiment: str = Field("", description="Set when this day is one of the plan's named test slots, e.g. 'image format test'.")
 
 
 # The post types a plan allocates across, read off Day so there is one list.
@@ -104,7 +111,7 @@ class Avatar(BaseModel):
 
 
 class AppFeature(BaseModel):
-    """Brand feature, e.g. 'face_shape', 'color_aura'."""
+    """A thing the product does that a post can show, e.g. 'onboarding', 'reports'."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -226,6 +233,17 @@ class ContentSession(BaseAgentSession):
     mode: RunMode
     plan_id: UUID | None = None
     post_id: UUID | None = None
+    # The plan the agent put forward and nobody has accepted yet
+    # (agents/content/plan_proposal.py). submit_plan sets it; the accept
+    # route writes it and clears it; reject clears it.
+    proposal: Any = None
+    # The brand's channels, read once at the opening so submit_plan can refuse
+    # a day bound for a platform the brand does not post on.
+    active_channels: list[str] = field(default_factory=list)
+    # True while the opening turn is the review of the plan so far, before any
+    # direction was given: a turn that ends without a plan is then correct,
+    # and the recovery nudge asks for a direction instead of a plan.
+    review_opening: bool = False
     # The dates a plan run manages (agents/content/plan_period.py): set by the
     # runner before the opening turn, from the plan itself when the session is
     # bound to one. submit_plan holds every plan to it; 0 days means no run
@@ -359,6 +377,10 @@ class ContentResearchContext(BaseModel):
     trending_hooks:           list[TrendSignal] = Field(default_factory=list)
     trending_styles:          list[TrendSignal] = Field(default_factory=list)
     audience_insights:        list[str] = Field(default_factory=list)
+    # Named competitor or creator accounts: cadence, formats, hooks seen.
+    competitor_notes:         list[str] = Field(default_factory=list)
+    # Dates inside the period worth a post: a launch, a season, an event.
+    seasonal_hooks:           list[str] = Field(default_factory=list)
     enrichment_notes:         list[str] = Field(default_factory=list)
     # Why the research pass did not contribute, when it did not. Shown on the
     # enrichment step and logged; not rendered into the prompt.
@@ -451,6 +473,7 @@ class ContentTool(StrEnum):
     FETCH_FORMAT_LIBRARY        = "fetch_format_library"
     FETCH_AVATAR_LIBRARY        = "fetch_avatar_library"
     FETCH_CONTENT_HISTORY       = "fetch_content_history"
+    FETCH_CONTENT_ANALYTICS     = "fetch_content_analytics"
     FETCH_CONTENT_ASSETS        = "fetch_content_assets"
     FETCH_DISCOVERED_REFERENCES = "fetch_discovered_references"
     FETCH_POST                  = "fetch_post"
@@ -711,6 +734,8 @@ class PlanStrategy(BaseModel):
     explore_evidence: str = Field("", description="Why it needs testing, e.g. 'no image posts yet' or '2 posts, too few to judge'.")
     lesson: str = Field("", description="What past posts' hooks, funnel stages and objectives changed in this plan.")
     best_times: str = Field("", description="The posting windows this plan recommends, from the account's own history.")
+    experiment: str = Field("", description="The one test this plan runs, with its sample and the metric that judges it, e.g. 'four image posts, judged on saves against the video median'.")
+    review_notes: str = Field("", description="What the review of the previous period changed in this plan, in one or two sentences.")
 
     @field_validator("exploit", "explore")
     @classmethod
