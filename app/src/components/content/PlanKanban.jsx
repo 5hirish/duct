@@ -18,10 +18,18 @@ const COLUMNS = STATUS_ORDER.map((key) => {
  * The plan by status, for production days. The agenda (PlanList) is the
  * board's default; this is the second view.
  *
- * The lanes follow the content rather than the other way round: a fresh plan
- * is thirty posts in one lane, and two full-height tinted panels beside it
- * saying "Nothing here yet" were most of the screen. A lane with nothing in it
- * is its header and nothing else, narrow beside the lanes that have cards.
+ * A lane with nothing in it is its header and nothing else: a fresh plan is
+ * thirty posts in one lane, and two full-height tinted panels beside it saying
+ * "Nothing here yet" were most of the screen.
+ *
+ * Every lane is the same width, and none is wider than `max-w-sm` (24rem),
+ * side by side or stacked below @4xl.
+ * The lanes used to follow the content, empty ones narrow and the full one
+ * taking the rest, so an ended plan put thirty cards in one lane two-thirds of
+ * the window wide: a 130-character title on one line is a list row, not a
+ * card, and the Draft lane moved every time a card did. A Kanban column keeps
+ * its place and its width; what is left of a wide window stays empty.
+ * `check:layout` measures the lanes against the same 24rem.
  *
  * Props:
  *   - plan: { days[], start_date }
@@ -57,7 +65,8 @@ export default function PlanKanban({ plan, postsById = {}, onReviseDay, scroll =
             <section
               key={col.key}
               aria-label={i18n._(col.label)}
-              className={cn("flex min-w-0 flex-col gap-2", empty ? "@4xl:w-36 @4xl:shrink-0" : "@4xl:flex-1")}
+              data-plan-lane={col.key}
+              className="flex min-w-0 max-w-sm flex-col gap-2 @4xl:flex-1 @4xl:basis-0"
             >
               <h3
                 className={cn(
