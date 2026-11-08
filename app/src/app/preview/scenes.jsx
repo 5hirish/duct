@@ -993,6 +993,33 @@ function PlanScenario({ id, view = PlanView.LIST }) {
   );
 }
 
+/**
+ * The plan pane as a PLAN_GENERATED event leaves it, over one of the plan
+ * scenarios: proposed (over a live plan or fresh), accepted, or rejected.
+ * The same plan data the board scenes use, with the proposal fields the
+ * backend adds on top.
+ */
+function PlanViewportScene({ scenario, status, replaces = false }) {
+  const today = useMemo(() => startOfDay(new Date()), []);
+  const { plan } = useMemo(() => planScenario(scenario, today), [scenario, today]);
+  const proposed = status === "proposed";
+  const payload = {
+    type: "plan",
+    ...plan,
+    id: proposed ? null : plan.id,
+    status,
+    proposal_id: proposed ? "proposal-preview" : null,
+    replaces_plan_id: replaces ? "plan-live" : null,
+  };
+  return (
+    <div style={{ height: 720, display: "flex" }} className="bg-background">
+      <div className="flex-1 min-w-0">
+        <PlanViewport payload={payload} sessionId="preview" onSendMessage={() => {}} onReviseDay={() => {}} />
+      </div>
+    </div>
+  );
+}
+
 /** One generated desk, loaded once per mount like the real one. */
 function DeskScenario({ id }) {
   const load = useMemo(() => stubLoader(deskScenario(id)), [id]);
@@ -3622,6 +3649,42 @@ export const SCENES = [
         </div>
       </div>
     ),
+  },
+  // The decision bar: a plan the agent submits is a proposal until the
+  // person accepts it, and the bar under the header is that choice. Accept
+  // and Reject call the real API here, so in the preview they end in the
+  // inline error; Modify opens the note and sends nowhere.
+  {
+    id: "plan-viewport-proposed-replacing",
+    state: "proposed · replaces a plan already running",
+    group: "PlanViewport",
+    title: "A proposal over a live plan",
+    note: "Half way through a month with posts out and drafted, the agent proposes a new plan. The bar says what Accept does to the running one (from today on, drafted posts stay) and offers Accept, Modify, Reject. Sweep the width: the buttons drop under the line on a phone, and nothing is under 24px.",
+    render: () => <PlanViewportScene scenario="mid-month" status="proposed" replaces />,
+  },
+  {
+    id: "plan-viewport-proposed-fresh",
+    state: "proposed · nothing to replace",
+    group: "PlanViewport",
+    title: "A first proposal",
+    note: "No live plan for the period, so the line is the short one: Accept saves it. Click Modify: the note opens under the bar with its label, Cancel and Send; Send is off until something is typed.",
+    render: () => <PlanViewportScene scenario="fresh" status="proposed" />,
+  },
+  {
+    id: "plan-viewport-accepted",
+    state: "accepted",
+    group: "PlanViewport",
+    title: "The plan, saved",
+    note: "What the pane shows once Accept has landed, or when the session's PLAN_GENERATED echo arrives with status accepted: the bar gives way to one chip. A plan from before proposals existed has no status and shows nothing in this slot (the scene above).",
+    render: () => <PlanViewportScene scenario="fresh" status="accepted" />,
+  },
+  {
+    id: "plan-viewport-rejected",
+    state: "rejected",
+    group: "PlanViewport",
+    title: "The proposal, discarded",
+    note: "After Reject: a quiet note in the bar's slot, the proposed days still listed below so the person can see what they turned down. Nothing is deleted from the board.",
+    render: () => <PlanViewportScene scenario="fresh" status="rejected" />,
   },
   // One question, the sources read, the answer: the transcript with nothing
   // around it. Three audiences ask the story week three things; the copy

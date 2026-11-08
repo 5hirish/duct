@@ -89,13 +89,15 @@ export default function NewPlanSessionPage() {
       <ContentWorkspace
         mode="plan_month"
         context={context}
-        renderViewport={({ payload, steps, building }) => (
+        renderViewport={({ payload, steps, building, onSendMessage, sessionId }) => (
           <PlanSessionViewport
             payload={payload || (plan ? { type: "plan", ...plan } : null)}
             steps={steps}
             building={building}
             onReviseDay={reviseDay}
             onPlanId={setPlanId}
+            onSendMessage={onSendMessage}
+            sessionId={sessionId}
           />
         )}
       />
@@ -107,10 +109,20 @@ export default function NewPlanSessionPage() {
  * the id of the plan the agent produced, lifted in an effect rather than
  * during render (React warns, correctly, about setting a parent's state
  * while a child renders). */
-function PlanSessionViewport({ payload, steps, building, onReviseDay, onPlanId }) {
+function PlanSessionViewport({ payload, steps, building, onReviseDay, onPlanId, onSendMessage, sessionId }) {
+  // Null while the plan is only proposed; the live id arrives with Accept.
   const planId = payload?.id;
   useEffect(() => {
     if (planId) onPlanId(planId);
   }, [planId, onPlanId]);
-  return <PlanViewport payload={payload} steps={steps} building={building} onReviseDay={onReviseDay} />;
+  return (
+    <PlanViewport
+      payload={payload}
+      steps={steps}
+      building={building}
+      onReviseDay={onReviseDay}
+      onSendMessage={onSendMessage}
+      sessionId={sessionId}
+    />
+  );
 }

@@ -1178,6 +1178,7 @@ msgstr "あなたについて"
 msgid "About your business"
 msgstr "あなたのビジネスについて"
 
+#: src/components/content/PlanViewport.jsx
 #: src/components/CookieConsent.jsx
 msgid "Accept"
 msgstr "同意する"
@@ -1187,12 +1188,12 @@ msgid "Accept invitation"
 msgstr "招待を承認する"
 
 #: src/components/content/PlanViewport.jsx
-#~ msgid "Accept replaces your plan from today on; posts already drafted stay."
-#~ msgstr "承認すると、本日からプランが置き換わります。下書き済みの投稿は維持されます。"
+msgid "Accept replaces your plan from today on; posts already drafted stay."
+msgstr "承認すると、本日からプランが置き換わります。下書き済みの投稿は維持されます。"
 
 #: src/components/content/PlanViewport.jsx
-#~ msgid "Accept saves this as your plan."
-#~ msgstr "承認すると、これをあなたのプランとして保存します。"
+msgid "Accept saves this as your plan."
+msgstr "承認すると、これをあなたのプランとして保存します。"
 
 #: src/components/connections/ProjectAccountSelect.jsx
 msgid "Account"
@@ -2335,6 +2336,7 @@ msgstr "キーを読み取れません"
 #: src/components/connections/ProviderCard.jsx
 #: src/components/content/CloneFromUrlDialog.jsx
 #: src/components/content/FormatLibrary.jsx
+#: src/components/content/PlanViewport.jsx
 #: src/components/content/PublishModal.jsx
 #: src/components/memory/MemoryTimeline.jsx
 #: src/components/onboarding/ProviderStep.jsx
@@ -3124,8 +3126,8 @@ msgid "Couldn't check it. Try again in a moment."
 msgstr "確認できませんでした。しばらくしてからもう一度お試しください。"
 
 #: src/components/content/PlanViewport.jsx
-#~ msgid "Couldn't discard the plan. Try again."
-#~ msgstr "プランを破棄できませんでした。もう一度お試しください。"
+msgid "Couldn't discard the plan. Try again."
+msgstr "プランを破棄できませんでした。もう一度お試しください。"
 
 #: src/components/connections/McpConnectors.jsx
 msgid "Couldn't disconnect {name}. {why}"
@@ -3180,8 +3182,8 @@ msgid "Couldn't read your Google account"
 msgstr "Googleアカウントを読み取れませんでした"
 
 #: src/components/content/PlanViewport.jsx
-#~ msgid "Couldn't save the plan. Try again."
-#~ msgstr "プランを保存できませんでした。もう一度お試しください。"
+msgid "Couldn't save the plan. Try again."
+msgstr "プランを保存できませんでした。もう一度お試しください。"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Couldn't save. Please try again."
@@ -3532,8 +3534,8 @@ msgid "Discarded"
 msgstr "破棄済み"
 
 #: src/components/content/PlanViewport.jsx
-#~ msgid "Discarding…"
-#~ msgstr "破棄中…"
+msgid "Discarding…"
+msgstr "破棄中…"
 
 #: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
@@ -3873,8 +3875,8 @@ msgid "Duct posts through the OS — open System Settings to turn them on or off
 msgstr "DuctはOSを介して投稿します。オン/オフはシステム設定で切り替えてください。"
 
 #: src/components/content/PlanViewport.jsx
-#~ msgid "Duct proposes this plan."
-#~ msgstr "Ductはこのプランを提案します。"
+msgid "Duct proposes this plan."
+msgstr "Ductはこのプランを提案します。"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Duct publishes through a scheduler you connect, with your own account. Connect one to schedule posts and see how they do."
@@ -4355,8 +4357,8 @@ msgid "Fetching sitemap"
 msgstr "サイトマップを取得中"
 
 #: src/components/content/PlanViewport.jsx
-#~ msgid "Fewer videos in week two, and start with the before-and-after…"
-#~ msgstr "2週目の動画を減らして、ビフォーアフターから始めてください…"
+msgid "Fewer videos in week two, and start with the before-and-after…"
+msgstr "2週目の動画を減らして、ビフォーアフターから始めてください…"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Fill-In"
@@ -6081,8 +6083,8 @@ msgid "Models & providers"
 msgstr "モデルとプロバイダー"
 
 #: src/components/content/PlanViewport.jsx
-#~ msgid "Modify"
-#~ msgstr "修正"
+msgid "Modify"
+msgstr "修正"
 
 #: src/lib/contentReview.js
 msgid "Momentum"
@@ -7647,8 +7649,8 @@ msgid "Plan ahead"
 msgstr "事前計画"
 
 #: src/components/content/PlanViewport.jsx
-#~ msgid "Plan discarded. Tell Duct what to plan instead, or close this tab."
-#~ msgstr "プランを破棄しました。代わりにDuctに何を計画するか伝えるか、このタブを閉じてください。"
+msgid "Plan discarded. Tell Duct what to plan instead, or close this tab."
+msgstr "プランを破棄しました。代わりにDuctに何を計画するか伝えるか、このタブを閉じてください。"
 
 #: src/components/content/PlanStrategy.jsx
 msgid "Plan strategy"
@@ -8286,6 +8288,7 @@ msgid "Region"
 msgstr "地域"
 
 #: src/app/(app)/execute/page.jsx
+#: src/components/content/PlanViewport.jsx
 #: src/components/execution/ChangeSetCard.jsx
 msgid "Reject"
 msgstr "却下"
@@ -8866,8 +8869,8 @@ msgid "Saved as TikTok draft"
 msgstr "TikTokの下書きとして保存済み"
 
 #: src/components/content/PlanViewport.jsx
-#~ msgid "Saved as your plan"
-#~ msgstr "あなたのプランとして保存されました"
+msgid "Saved as your plan"
+msgstr "あなたのプランとして保存されました"
 
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Saved encrypted to your account and sent only to this server."
@@ -8914,6 +8917,7 @@ msgstr "保存"
 #: src/components/content/BrandContextForm.jsx
 #: src/components/content/DiscoverPage.jsx
 #: src/components/content/FormatLibrary.jsx
+#: src/components/content/PlanViewport.jsx
 #: src/components/content/PostMetricsForm.jsx
 #: src/components/content/PostViewport.jsx
 msgid "Saving…"
@@ -9195,6 +9199,7 @@ msgid "Self-hosted API URL"
 msgstr "セルフホスト型API URL"
 
 #: src/components/ChatSidebar.jsx
+#: src/components/content/PlanViewport.jsx
 #: src/components/insights/desk/DeskComposer.jsx
 #: src/components/workspace/ChatInput.jsx
 msgid "Send"
@@ -11589,8 +11594,8 @@ msgstr "どのようなメモリ"
 #~ msgstr "ブリーフの形式"
 
 #: src/components/content/PlanViewport.jsx
-#~ msgid "What should change?"
-#~ msgstr "何を変更しますか？"
+msgid "What should change?"
+msgstr "何を変更しますか？"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "What should Duct call you?"

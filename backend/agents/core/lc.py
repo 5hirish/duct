@@ -121,6 +121,16 @@ async def interrupt_pause(event: str, payload: dict, *, timeout: float | None = 
     return answer if isinstance(answer, dict) else {}
 
 
+def bind_tool_lc(coroutine: Any, *, name: str, description: str, args_schema: type) -> StructuredTool:
+    """One async function as a LangChain tool. The binder a domain module
+    reaches for instead of importing the framework itself: the content
+    runner's ``research_trends`` is a closure over the run, and the only
+    framework-shaped thing about it is this call."""
+    return StructuredTool.from_function(
+        coroutine=coroutine, name=name, description=description, args_schema=args_schema
+    )
+
+
 def build_ask_user_tool(
     session: BaseAgentSession,
     session_id: str,

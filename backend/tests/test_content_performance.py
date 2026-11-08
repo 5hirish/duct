@@ -312,15 +312,20 @@ def test_submit_plan_records_the_strategy_it_chose(engine):
                   "funnel_stage": "awareness", "objective": "saves"}],
     }
     result = json.loads(asyncio.run(tool.ainvoke({"plan": plan})))
-    assert result.get("status") != "error", result
+    assert result.get("status") == "proposed", result
+
+    from agents.content.plan_proposal import apply_proposal
+    from utils.dates import utcnow
 
     with Session(engine) as db:
-        row = db.get(ContentPlan, session.plan_id)
+        row = apply_proposal(db, session.proposal, now=utcnow())
+        row = db.get(ContentPlan, row.id)
     assert row.strategy["exploit"] == "video"  # normalised
     assert row.strategy["explore"] == "image"
     assert row.days[0]["hook_type"] == "question" and row.days[0]["objective"] == "saves"
-    generated = next(e for e in events if e.get("plan_id"))
+    generated = next(e for e in events if e.get("payload", {}).get("status") == "proposed")
     assert generated["payload"]["strategy"]["explore_evidence"] == "no image posts yet"
+    assert generated["payload"]["id"] is None
 
 
 def test_a_strategy_naming_an_unknown_type_is_refused():
