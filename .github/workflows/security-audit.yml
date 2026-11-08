@@ -84,7 +84,10 @@ jobs:
           # author, and the only scanner whose findings audit.py treats as
           # CRITICAL. It reads .betterleaks.toml, which carries Duct's own rules.
           go install "github.com/betterleaks/betterleaks@$BETTERLEAKS_VERSION"
-          go install "github.com/google/osv-scanner/cmd/osv-scanner@$OSV_SCANNER_VERSION"
+          # osv-scanner 2.x lives under the /v2 module path. The old path's
+          # "latest" was v1.9.2 from 2024, which has no `scan source` command,
+          # so every run until now logged an execution issue instead of a scan.
+          go install "github.com/google/osv-scanner/v2/cmd/osv-scanner@$OSV_SCANNER_VERSION"
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
             | sh -s -- -b /usr/local/bin "$TRIVY_VERSION"
