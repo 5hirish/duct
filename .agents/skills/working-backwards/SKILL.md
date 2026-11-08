@@ -296,3 +296,12 @@ the verified claims.
 **Backfill**
 - [ ] Every user-visible change in the range is in one changelog entry, or already was
 - [ ] One table of feature, outlet and reason with its number; the posts filed in cadence order after one approval
+
+## Related
+
+The method here, with every Duct mechanic removed, is the cross-project
+`product-strategy` skill (the maintainer's agent-skill hub at
+`~/.agents/skills/product-strategy/`, not in this repository;
+`references/working-backwards.md`). This file keeps what is Duct's: the issue the PR/FAQ lives on, the outlets
+(changelog, blog, integration page, landing section) and the backfill. A lesson any product could use goes in that skill's
+`references/lessons.md`.

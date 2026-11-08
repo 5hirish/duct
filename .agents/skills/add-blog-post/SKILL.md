@@ -478,3 +478,13 @@ refresh starts from.
 - [ ] Card drawn, page and index rendered, three listings added, `--check` green
 - [ ] Looked at in a browser at desktop and phone width
 - [ ] Distribution list drafted for the maintainer; issue updated with the brief and the publish date
+
+## Related
+
+The method here (research before writing, demand and citation checks,
+cadence, Google's generated-content rules) is the cross-project version in
+the `growth-playbook` skill (the maintainer's agent-skill hub at
+`~/.agents/skills/growth-playbook/`, not in this repository;
+`references/content-and-seo.md`). This file keeps what is Duct's: paths,
+build scripts, categories, the bridge. A lesson any blog could use goes in
+that skill's `references/lessons.md`.
