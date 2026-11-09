@@ -67,7 +67,7 @@ from agents.content.artifacts import (
 from agents.content.events import STEP_LABELS, ContentEvent, ContentStep, StepStatus
 from agents.content.channel_config import linked_pairs, load_channel_config
 from agents.content.publishing import linked_accounts
-from agents.content.performance import AccountPerformance, load_account_performance
+from agents.content.channel_mix import ChannelMix, goal_from, load_channel_mix
 from agents.content.plan_period import MAX_PLAN_DAYS, PlanPeriod, default_period, plan_end
 from agents.content.voice_rules import voice_rules_of, writing_samples_of
 from agents.core.events import run_context
@@ -466,16 +466,19 @@ def _resolve_plan_period(
         return None
 
 
-async def _account_performance(project_id: UUID) -> AccountPerformance | None:
-    """What the account's own posts say, for the plan's opening turn.
+async def _channel_mix(project_id: UUID, brand: ContentBrandContext, days: int) -> ChannelMix | None:
+    """What each channel's own posts say and how many days it gets, judged on
+    the brand's content goal, for the plan's opening turn.
 
     None when it cannot be read: the prompt then says so rather than claiming
     the account has no history, and the plan still gets made.
     """
     try:
-        return await asyncio.to_thread(load_account_performance, project_id)
+        return await asyncio.to_thread(
+            load_channel_mix, project_id, list(brand.active_channels or []), goal_from(brand.content_goal), days,
+        )
     except Exception:  # noqa: BLE001 — a signal for the plan, never a blocker
-        logger.warning("content: account performance unavailable", exc_info=True)
+        logger.warning("content: channel performance unavailable", exc_info=True)
         return None
 
 
@@ -801,7 +804,7 @@ class ContentRunner:
             # say it lacked.
             session.active_channels = list(brand.active_channels or [])
             today = utcnow().date()
-            performance = await _account_performance(project_id)
+            performance = await _channel_mix(project_id, brand, (managed or default_period(today)).days)
             business = await _safely(asyncio.to_thread(_load_business_block, project_id), "", "business context")
             voice = render_voice_stanza(brand.voice_rules, brand.writing_samples, with_rules=False)
             review = await _safely(
