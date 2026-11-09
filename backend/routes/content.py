@@ -2945,8 +2945,8 @@ async def list_content_analytics(
 
     # One fan-out for the tab and the agent's social_post_metrics entity
     # (service/publishers/metrics.py), narrowed to the schedulers this
-    # project uses. A scheduler that fails answers as a notice beside the
-    # rows the others gave; it is the page's error only when every one did.
+    # project uses. Every one failing is the page's error; one failing is a
+    # notice beside the rows the others gave.
     collected = await collect_reported_posts(db, proj, refresh=refresh, specs=asked)
     reported = collected.rows
     if collected.all_failed:
@@ -2956,8 +2956,7 @@ async def list_content_analytics(
         raise HTTPException(400, str(exc))
     notices = [
         AnalyticsNotice(
-            publisher=spec.id,
-            label=spec.label,
+            publisher=spec.id, label=spec.label,
             message=_friendly_publisher_error(exc, spec) if isinstance(exc, PublisherError) else str(exc),
         )
         for spec, exc in collected.failures

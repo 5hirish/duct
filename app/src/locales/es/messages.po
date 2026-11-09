@@ -465,7 +465,7 @@ msgstr "Quedan {left}"
 
 #: src/components/content/PlanBoard.jsx
 msgid "{left} to go"
-msgstr "{left} por hacer"
+msgstr "{left} restantes"
 
 #: src/components/content/FormatLibrary.jsx
 #~ msgid "{linkedCount, plural, one {# linked style} other {# linked styles}}"
@@ -473,7 +473,7 @@ msgstr "{left} por hacer"
 
 #: src/components/content/AccountsTab.jsx
 msgid "{linkedHere, plural, one {# account} other {# accounts}} via {primaryLabel}"
-msgstr "{linkedHere, plural, one {# cuenta} other {# cuentas}} vía {primaryLabel}"
+msgstr "{linkedHere, plural, one {# cuenta} other {# cuentas}} mediante {primaryLabel}"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{llmsLines} lines"
@@ -557,7 +557,7 @@ msgstr "{omitted, plural, one {# más quedó fuera; elige repositorios concretos
 
 #: src/components/content/AccountsTab.jsx
 msgid "{onCount} on · {linkedCount} linked via {primaryLabel}"
-msgstr "{onCount} activas · {linkedCount} vinculadas vía {primaryLabel}"
+msgstr "{onCount} activas · {linkedCount} vinculadas mediante {primaryLabel}"
 
 #: src/components/content/AccountsTab.jsx
 msgid "{onCount} on, all posted by hand"
@@ -646,7 +646,7 @@ msgstr "{posted} de {total} publicadas"
 
 #: src/components/content/PlanBoard.jsx
 msgid "{posted} of {total} posted, {missed} missed, {drafted} drafted"
-msgstr "{posted} de {total} publicadas, {missed} omitidas, {drafted} redactadas"
+msgstr "{posted} publicadas de {total}, {missed} omitidas, {drafted} en borrador"
 
 #: src/components/content/PlanBoard.jsx
 msgid "{posted} of its {total} posts went out. The next plan learns from them."
@@ -654,7 +654,7 @@ msgstr "{posted} de sus {total} publicaciones salieron. El próximo plan aprende
 
 #: src/components/content/PlanBoard.jsx
 msgid "{posted} posted · {left} to go"
-msgstr "{posted} publicadas · {left} por hacer"
+msgstr "{posted} publicadas · {left} restantes"
 
 #: src/components/audit/AuditReport.jsx
 msgid "{posts, plural, one {# post} other {# posts}}"
@@ -1161,7 +1161,7 @@ msgstr "Un proyecto comienza con un sitio. Duct lo lee y redacta el resto — no
 
 #: src/components/content/FormatLibrary.jsx
 msgid "A recipe the drafting agent follows. Say what it applies to, then write the spec."
-msgstr "Una receta que el agente de redacción sigue. Indica a qué se aplica, luego escribe la especificación."
+msgstr "Una receta que sigue el agente de redacción. Di a qué se aplica, luego escribe la especificación."
 
 #: src/components/content/FormatLibrary.jsx
 #~ msgid "A reusable recipe — slide structure, caption styles, image prompt rules — that the drafting agent follows."
@@ -1169,7 +1169,7 @@ msgstr "Una receta que el agente de redacción sigue. Indica a qué se aplica, l
 
 #: src/components/content/FormatLibrary.jsx
 msgid "A reusable recipe — structure, hook rules, image prompt rules — that the drafting agent follows for the media and channels you pick."
-msgstr "Una receta reutilizable —estructura, reglas de gancho, reglas de indicaciones de imagen— que el agente de redacción sigue para los medios y canales que elijas."
+msgstr "Una receta reutilizable —estructura, reglas de gancho, reglas de prompt de imagen— que el agente de redacción sigue para los medios y canales que elijas."
 
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "A run stopped on an error"
@@ -1282,7 +1282,7 @@ msgstr "Cuentas"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Accounts via {primaryLabel}"
-msgstr "Cuentas vía {primaryLabel}"
+msgstr "Cuentas mediante {primaryLabel}"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 #~ msgid "Acme Inc."
@@ -3779,7 +3779,7 @@ msgstr "descartado"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Display name"
-msgstr "Nombre a mostrar"
+msgstr "Nombre de visualización"
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Docs / Help"
@@ -4622,7 +4622,7 @@ msgstr "Completa la verificación de seguridad anterior, luego inténtalo de nue
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Finished a side task"
-msgstr "Terminó una tarea secundaria"
+msgstr "Finalizó una tarea secundaria"
 
 #: src/components/content/TextPostEditor.jsx
 msgid "First comment"
@@ -4646,7 +4646,7 @@ msgstr "Soluciona esto primero"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Fixed, so your copy stands in for the built-in"
-msgstr "Corregido, así tu copia reemplaza al integrado"
+msgstr "Fijo, tu copia sustituye al integrado"
 
 #: src/app/(app)/execute/page.jsx
 msgid "Fixes from an audit or a conversation land here for you to approve."
@@ -7241,7 +7241,7 @@ msgstr "Cifras de"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "Numbers land here after the first post goes out, and on Refresh once it has synced."
-msgstr "Los números aparecen aquí después de que se publica la primera publicación, y al Actualizar una vez que se haya sincronizado."
+msgstr "Los números aparecen aquí después de la primera publicación y al actualizar una vez que se haya sincronizado."
 
 #: src/components/content/AccountsTab.jsx
 msgid "Off"
@@ -7869,7 +7869,7 @@ msgstr "Elige la cuenta a usar:"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Pick the one posts go out through."
-msgstr "Elige por cuál se publican las publicaciones."
+msgstr "Elige por cuál se envían las publicaciones."
 
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Pick the ones Duct may use, up to {MAX_MODELS}. They join the tier pickers, and the first is used when a tier doesn’t name one."
@@ -8046,7 +8046,7 @@ msgstr "Publicaciones"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Posts go out through {primaryLabel}."
-msgstr "Las publicaciones se publican a través de {primaryLabel}."
+msgstr "Las publicaciones se envían a través de {primaryLabel}."
 
 #: src/lib/userProfile.js
 msgid "Practitioner"
@@ -8512,7 +8512,7 @@ msgstr "Recientes"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Recipes the drafting agent follows. Each one says which media and channels it is for; the built-ins can be customised."
-msgstr "Recetas que sigue el agente de redacción. Cada una indica para qué medios y canales es; las integradas se pueden personalizar."
+msgstr "Recetas que sigue el agente de redacción. Cada una dice para qué medios y canales es; los integrados pueden personalizarse."
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Recommended"
@@ -8863,7 +8863,7 @@ msgstr "Restablecer formato"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Reset to built-in"
-msgstr "Restablecer a integrado"
+msgstr "Restablecer al integrado"
 
 #: src/app/(app)/settings/models/page.jsx
 #: src/app/(app)/settings/profile/page.jsx
@@ -9291,7 +9291,7 @@ msgstr "Guardados"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Saving makes this project’s own copy, which replaces the built-in here. Reset it later to go back."
-msgstr "Al guardar se crea una copia propia de este proyecto, que reemplaza a la integrada aquí. Restablécela más tarde para volver."
+msgstr "Al guardar se crea la copia propia de este proyecto, que sustituye al integrado aquí. Restablécelo más tarde para volver."
 
 #: src/components/content/AccountsTab.jsx
 #: src/components/content/BrandContextForm.jsx
@@ -9786,7 +9786,7 @@ msgstr "Shift+Enter para una nueva línea · Esc para detener"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Ships with Duct · customising makes your own copy"
-msgstr "Se envía con Duct · personalizar crea tu propia copia"
+msgstr "Se incluye con Duct · personalizar crea tu propia copia"
 
 #: src/app/(app)/settings/profile/page.jsx
 #~ msgid "Shirish"
@@ -10225,7 +10225,7 @@ msgstr "Páginas SPA"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Spec document"
-msgstr "Documento de especificaciones"
+msgstr "Documento de especificación"
 
 #: src/components/content/FormatLibrary.jsx
 #~ msgid "Spec document (Markdown)"
@@ -10289,7 +10289,7 @@ msgstr "Empezar de nuevo"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Start with a title, then the structure as a table, then the rules…"
-msgstr "Empieza con un título, luego la estructura como una tabla, luego las reglas…"
+msgstr "Empieza con un título, luego la estructura como tabla, luego las reglas…"
 
 #: src/components/connections/ConnectorBrowser.jsx
 msgid "Start with these"
@@ -10810,7 +10810,7 @@ msgstr "La primera línea es el gancho."
 
 #: src/components/content/FormatLibrary.jsx
 msgid "The full recipe — structure, hook rules, image prompt rules, failure modes. Write it like a brief to a new hire; headings and tables help the agent find things."
-msgstr "La receta completa — estructura, reglas de gancho, reglas de indicaciones de imagen, modos de fallo. Escríbela como un informe para un nuevo empleado; los encabezados y las tablas ayudan al agente a encontrar cosas."
+msgstr "La receta completa —estructura, reglas de gancho, reglas de prompt de imagen, modos de fallo. Escríbelo como un informe para un nuevo empleado; los encabezados y las tablas ayudan al agente a encontrar cosas."
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "The key works, but the account has no credit"
@@ -12135,7 +12135,7 @@ msgstr "Dónde aplica"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Where it is offered. The plan only pulls it for posts on these channels."
-msgstr "Dónde se ofrece. El plan solo lo extrae para publicaciones en estos canales."
+msgstr "Dónde se ofrece. El plan solo lo usa para publicaciones en estos canales."
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Where the funnel actually breaks"

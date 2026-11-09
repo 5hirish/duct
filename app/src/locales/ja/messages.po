@@ -449,7 +449,7 @@ msgstr "{label} スコア"
 #: src/app/(app)/content/page.jsx
 #: src/components/content/PlanBoard.jsx
 msgid "{label}, {count} posts"
-msgstr "{label}、{count} 投稿"
+msgstr "{label}、{count}件の投稿"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{landingPages, plural, one {# landing page} other {# landing pages}}"
@@ -465,7 +465,7 @@ msgstr "残り{left}文字"
 
 #: src/components/content/PlanBoard.jsx
 msgid "{left} to go"
-msgstr "{left} 残り"
+msgstr "残り{left}件"
 
 #: src/components/content/FormatLibrary.jsx
 #~ msgid "{linkedCount, plural, one {# linked style} other {# linked styles}}"
@@ -473,7 +473,7 @@ msgstr "{left} 残り"
 
 #: src/components/content/AccountsTab.jsx
 msgid "{linkedHere, plural, one {# account} other {# accounts}} via {primaryLabel}"
-msgstr "{linkedHere, plural, other {# アカウント}}（{primaryLabel} 経由）"
+msgstr "{linkedHere, plural, other {# アカウント}}（{primaryLabel}経由）"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{llmsLines} lines"
@@ -557,11 +557,11 @@ msgstr "{omitted, plural, one {ほかに # 件は含まれていません。含�
 
 #: src/components/content/AccountsTab.jsx
 msgid "{onCount} on · {linkedCount} linked via {primaryLabel}"
-msgstr "{onCount} オン · {linkedCount} 連携済み（{primaryLabel} 経由）"
+msgstr "{onCount}件オン · {linkedCount}件リンク済み（{primaryLabel}経由）"
 
 #: src/components/content/AccountsTab.jsx
 msgid "{onCount} on, all posted by hand"
-msgstr "{onCount} オン、すべて手動で投稿済み"
+msgstr "{onCount}件オン、すべて手動で投稿済み"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "{oppCount} Opp"
@@ -646,7 +646,7 @@ msgstr "{total} 件中 {posted} 件を投稿済み"
 
 #: src/components/content/PlanBoard.jsx
 msgid "{posted} of {total} posted, {missed} missed, {drafted} drafted"
-msgstr "{total} 件中 {posted} 件投稿済み、{missed} 件見逃し、{drafted} 件下書き済み"
+msgstr "{total}件中{posted}件投稿済み、{missed}件見逃し、{drafted}件下書き済み"
 
 #: src/components/content/PlanBoard.jsx
 msgid "{posted} of its {total} posts went out. The next plan learns from them."
@@ -654,7 +654,7 @@ msgstr "{total} 件の投稿のうち {posted} 件が公開されました。次
 
 #: src/components/content/PlanBoard.jsx
 msgid "{posted} posted · {left} to go"
-msgstr "{posted} 件投稿済み · {left} 件残り"
+msgstr "{posted}件投稿済み · 残り{left}件"
 
 #: src/components/audit/AuditReport.jsx
 msgid "{posts, plural, one {# post} other {# posts}}"
@@ -710,11 +710,11 @@ msgstr "{robotsLines} 行"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "{scheduler} hasn’t reported a post for {names} and {more} more yet."
-msgstr "{scheduler} は {names} およびその他 {more} 件について、まだ投稿を報告していません。"
+msgstr "{scheduler}は、{names}とその他{more}件の投稿をまだ報告していません。"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "{scheduler} hasn’t reported a post for {names} yet."
-msgstr "{scheduler} は {names} について、まだ投稿を報告していません。"
+msgstr "{scheduler}は、{names}の投稿をまだ報告していません。"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "{score}/100 — {label}. Weighted average across all 9 SEO categories."
@@ -1161,7 +1161,7 @@ msgstr "プロジェクトはサイトから始まります。Ductがそれを�
 
 #: src/components/content/FormatLibrary.jsx
 msgid "A recipe the drafting agent follows. Say what it applies to, then write the spec."
-msgstr "下書きエージェントが従うレシピです。適用対象を記述し、仕様を作成してください。"
+msgstr "ドラフトエージェントが従うレシピ。適用対象を述べ、その後仕様を記述します。"
 
 #: src/components/content/FormatLibrary.jsx
 #~ msgid "A reusable recipe — slide structure, caption styles, image prompt rules — that the drafting agent follows."
@@ -1169,7 +1169,7 @@ msgstr "下書きエージェントが従うレシピです。適用対象を記
 
 #: src/components/content/FormatLibrary.jsx
 msgid "A reusable recipe — structure, hook rules, image prompt rules — that the drafting agent follows for the media and channels you pick."
-msgstr "下書きエージェントが、選択したメディアとチャネルに対して従う、再利用可能なレシピ（構造、フックルール、画像プロンプトルール）です。"
+msgstr "選択したメディアとチャネル向けに、ドラフトエージェントが従う再利用可能なレシピ（構造、フックルール、画像プロンプトルール）。"
 
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "A run stopped on an error"
@@ -1193,7 +1193,7 @@ msgstr "サインインリクエストは10分間有効です。エージェン�
 
 #: src/components/content/FormatLibrary.jsx
 msgid "A swipe-through lesson, one idea per slide. Use when the post teaches or lists; not for a personal story."
-msgstr "1スライドにつき1アイデアのスワイプ形式のレッスンです。投稿が教える内容やリスト形式の場合に使用し、個人的な話には使用しません。"
+msgstr "スライドごとに1つのアイデアを提示するスワイプ形式のレッスン。投稿が教える内容やリスト形式の場合に使用し、個人的な話には使用しません。"
 
 #: src/components/connections/ProjectAccountSelect.jsx
 msgid "a teammate's account"
@@ -1282,7 +1282,7 @@ msgstr "アカウント"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Accounts via {primaryLabel}"
-msgstr "{primaryLabel} 経由のアカウント"
+msgstr "アカウント（{primaryLabel}経由）"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 #~ msgid "Acme Inc."
@@ -1753,7 +1753,7 @@ msgstr "任意のMCPサーバー"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Any media"
-msgstr "あらゆるメディア"
+msgstr "すべてのメディア"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Any time"
@@ -2044,7 +2044,7 @@ msgstr "アシスト"
 
 #: src/components/content/AccountsTab.jsx
 msgid "At {scheduler}"
-msgstr "{scheduler} で"
+msgstr "{scheduler}にて"
 
 #: src/components/workspace/ChatInput.jsx
 msgid "Attach a file"
@@ -2152,7 +2152,7 @@ msgstr "Avg TTFB"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Avoid"
-msgstr "回避"
+msgstr "避ける"
 
 #: src/app/(app)/execute/page.jsx
 msgid "Awaiting review"
@@ -2241,7 +2241,7 @@ msgstr "最大の修正点"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Bio"
-msgstr "プロフィール"
+msgstr "自己紹介"
 
 #: src/components/AppSidebar.jsx
 msgid "Blocked"
@@ -2581,7 +2581,7 @@ msgstr "接続済みツールを確認しました"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Checked the numbers"
-msgstr "数字を確認しました"
+msgstr "数値を確認しました"
 
 #: src/components/audit/AuditReport.jsx
 msgid "Checking structured data coverage…"
@@ -3462,7 +3462,7 @@ msgstr "組み込みフォーマットをカスタマイズ"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Customised built-in"
-msgstr "カスタマイズ済み組み込み"
+msgstr "カスタマイズされた組み込み"
 
 #: src/components/content/ReminderSetting.jsx
 msgid "Daily reminder"
@@ -3858,11 +3858,11 @@ msgstr "下書き投稿"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Drafted a post"
-msgstr "投稿の下書きを作成しました"
+msgstr "投稿を下書きしました"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Drafting a post"
-msgstr "投稿の下書きを作成中"
+msgstr "投稿を下書き中"
 
 #: src/components/content/ContentWorkspace.jsx
 msgid "Drafting post"
@@ -4276,7 +4276,7 @@ msgstr "エディトリアル / ミニマル / ボールド"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Educational carousel"
-msgstr "学習用カルーセル"
+msgstr "教育用カルーセル"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "educational-carousel"
@@ -4646,7 +4646,7 @@ msgstr "まずこれらを修正"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Fixed, so your copy stands in for the built-in"
-msgstr "修正済み。あなたのコピーが組み込みの代わりになります。"
+msgstr "固定。あなたのコピーが組み込みの代わりになります。"
 
 #: src/app/(app)/execute/page.jsx
 msgid "Fixes from an audit or a conversation land here for you to approve."
@@ -6548,7 +6548,7 @@ msgstr "アカウントは不要です。データはご自身のモデルプロ
 #. placeholder {0}: connected.map((p) => p.label).join(", ")
 #: src/components/content/AccountsTab.jsx
 msgid "No accounts in {0} yet. Add them there, then refresh."
-msgstr "{0}にアカウントがまだありません。追加してから更新してください。"
+msgstr "{0}にアカウントがまだありません。そこに追加してから、更新してください。"
 
 #: src/app/(app)/activity/page.jsx
 msgid "No activity yet"
@@ -6862,7 +6862,7 @@ msgstr "これら以外 — 新しいものを開始する"
 
 #: src/components/content/AccountsTab.jsx
 msgid "None on yet. Switch on where this brand posts."
-msgstr "まだ設定されていません。このブランドが投稿する場所をオンにしてください。"
+msgstr "まだ何もオンになっていません。このブランドが投稿する場所をオンにしてください。"
 
 #: src/components/settings/AgentAccess.jsx
 msgid "None yet. An agent shows up here once you allow it."
@@ -7126,15 +7126,15 @@ msgstr "今、あなたが必要なものはありません。"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Nothing picked = any media"
-msgstr "何も選択しない = すべてのメディア"
+msgstr "未選択 = すべてのメディア"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Nothing picked = every channel"
-msgstr "何も選択しない = すべてのチャネル"
+msgstr "未選択 = すべてのチャネル"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "Nothing posted yet"
-msgstr "まだ投稿されていません"
+msgstr "まだ何も投稿されていません"
 
 #: src/app/(app)/execute/page.jsx
 msgid "Nothing proposed yet"
@@ -7242,7 +7242,7 @@ msgstr "数値の取得元"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "Numbers land here after the first post goes out, and on Refresh once it has synced."
-msgstr "最初の投稿が公開された後、または同期後に更新すると、ここに数値が表示されます。"
+msgstr "最初の投稿が公開され、同期後に更新すると、ここに数値が表示されます。"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Off"
@@ -7352,7 +7352,7 @@ msgstr "{foundAt} に 1 個のモデル"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "One or two sentences. The agent reads this to pick between formats, so say what it does and when to use it."
-msgstr "1、2文で説明してください。エージェントがフォーマットを選択する際にこれを読みますので、その機能と使用時期を記述してください。"
+msgstr "1、2文で記述してください。エージェントはこれを読んでフォーマットを選択するため、何をするものか、いつ使用するかを記述してください。"
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "One sentence"
@@ -7870,7 +7870,7 @@ msgstr "使用するアカウントを選択してください:"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Pick the one posts go out through."
-msgstr "投稿に使用するものを選択してください。"
+msgstr "投稿が公開されるものを選択してください。"
 
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Pick the ones Duct may use, up to {MAX_MODELS}. They join the tier pickers, and the first is used when a tier doesn’t name one."
@@ -7987,7 +7987,7 @@ msgstr "今すぐ投稿"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Post on {label}"
-msgstr "{label}に投稿"
+msgstr "{label}に投稿する"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Post only"
@@ -8047,7 +8047,7 @@ msgstr "投稿"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Posts go out through {primaryLabel}."
-msgstr "投稿は{primaryLabel}を通じて行われます。"
+msgstr "投稿は{primaryLabel}を通じて公開されます。"
 
 #: src/lib/userProfile.js
 msgid "Practitioner"
@@ -8513,7 +8513,7 @@ msgstr "最近"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Recipes the drafting agent follows. Each one says which media and channels it is for; the built-ins can be customised."
-msgstr "ドラフト作成エージェントが従うレシピです。それぞれが対象のメディアとチャネルを示しており、組み込みのものはカスタマイズ可能です。"
+msgstr "ドラフトエージェントが従うレシピ。それぞれがどのメディアとチャネル向けかを示し、組み込みはカスタマイズ可能です。"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Recommended"
@@ -9292,7 +9292,7 @@ msgstr "保存"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Saving makes this project’s own copy, which replaces the built-in here. Reset it later to go back."
-msgstr "保存すると、このプロジェクト独自のコピーが作成され、組み込みのものが置き換えられます。後でリセットして元に戻すことができます。"
+msgstr "保存すると、このプロジェクト独自のコピーが作成され、ここで組み込みを置き換えます。後でリセットして元に戻すことができます。"
 
 #: src/components/content/AccountsTab.jsx
 #: src/components/content/BrandContextForm.jsx
@@ -10290,7 +10290,7 @@ msgstr "やり直す"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Start with a title, then the structure as a table, then the rules…"
-msgstr "タイトルから始め、次に構造をテーブル形式で、そしてルールを記述してください…"
+msgstr "まずタイトル、次に構造を表形式で、その後ルール…"
 
 #: src/components/connections/ConnectorBrowser.jsx
 msgid "Start with these"
@@ -10811,7 +10811,7 @@ msgstr "最初の1行がフックです。"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "The full recipe — structure, hook rules, image prompt rules, failure modes. Write it like a brief to a new hire; headings and tables help the agent find things."
-msgstr "完全なレシピ — 構造、フックルール、画像プロンプトルール、失敗モード。新規採用者へのブリーフのように記述してください。見出しやテーブルはエージェントが情報を見つけるのに役立ちます。"
+msgstr "完全なレシピ（構造、フックルール、画像プロンプトルール、失敗モード）。新入社員へのブリーフのように記述してください。見出しと表はエージェントが情報を見つけるのに役立ちます。"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "The key works, but the account has no credit"
@@ -12011,7 +12011,7 @@ msgstr "Ductが計画する元"
 
 #: src/components/content/AccountsTab.jsx
 msgid "What Duct writes for {label}"
-msgstr "Ductが{label}向けに作成するもの"
+msgstr "Ductが{label}のために作成するもの"
 
 #: src/app/(app)/connections/page.jsx
 msgid "What each campaign costs and what it brings back."
@@ -12047,7 +12047,7 @@ msgstr "どのようなメモリ"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "What kind of post this recipe makes."
-msgstr "このレシピで作成される投稿の種類。"
+msgstr "このレシピが作成する投稿の種類。"
 
 #: src/components/workspace/ComposerDials.jsx
 #~ msgid "What shape the brief takes"
@@ -12075,7 +12075,7 @@ msgstr "このページの内容"
 
 #: src/components/content/AccountsTab.jsx
 msgid "What to know about this channel"
-msgstr "このチャネルについて"
+msgstr "このチャネルについて知っておくべきこと"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "What to remember"
@@ -12136,7 +12136,7 @@ msgstr "適用範囲"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Where it is offered. The plan only pulls it for posts on these channels."
-msgstr "提供場所。このプランは、これらのチャネルの投稿にのみ適用されます。"
+msgstr "提供場所。プランはこれらのチャネルの投稿にのみこれを適用します。"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Where the funnel actually breaks"
@@ -12582,7 +12582,7 @@ msgstr "コンテンツプラン"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Your copy of <0>{deletingName}</0> will be removed and the built-in version comes back. Posts already drafted with it are unaffected."
-msgstr "あなたの<0>{deletingName}</0>のコピーは削除され、組み込みバージョンが復元されます。すでにそれを使用して下書きされた投稿には影響ありません。"
+msgstr "<0>{deletingName}</0>のあなたのコピーは削除され、組み込みバージョンに戻ります。それで既に下書きされた投稿は影響を受けません。"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Your core themes. The agent runs one research sub-agent per pillar."

@@ -557,11 +557,11 @@ msgstr "{omitted, plural, one {Mais # ficou de fora; escolha repositórios espec
 
 #: src/components/content/AccountsTab.jsx
 msgid "{onCount} on · {linkedCount} linked via {primaryLabel}"
-msgstr "{onCount} ativados · {linkedCount} vinculados via {primaryLabel}"
+msgstr "{onCount} ativadas · {linkedCount} vinculadas via {primaryLabel}"
 
 #: src/components/content/AccountsTab.jsx
 msgid "{onCount} on, all posted by hand"
-msgstr "{onCount} ativados, todos postados manualmente"
+msgstr "{onCount} ativadas, todas publicadas manualmente"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "{oppCount} Opp"
@@ -710,7 +710,7 @@ msgstr "{robotsLines} linhas"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "{scheduler} hasn’t reported a post for {names} and {more} more yet."
-msgstr "{scheduler} ainda não relatou um post para {names} e mais {more}."
+msgstr "{scheduler} ainda não relatou um post para {names} e mais {more} ainda."
 
 #: src/components/content/AnalyticsView.jsx
 msgid "{scheduler} hasn’t reported a post for {names} yet."
@@ -1161,7 +1161,7 @@ msgstr "Um projeto começa a partir de um site. Duct o lê e rascunha o restante
 
 #: src/components/content/FormatLibrary.jsx
 msgid "A recipe the drafting agent follows. Say what it applies to, then write the spec."
-msgstr "Uma receita que o agente de rascunho segue. Diga a que se aplica, depois escreva a especificação."
+msgstr "Uma receita que o agente de rascunho segue. Diga a que se aplica e depois escreva a especificação."
 
 #: src/components/content/FormatLibrary.jsx
 #~ msgid "A reusable recipe — slide structure, caption styles, image prompt rules — that the drafting agent follows."
@@ -1193,7 +1193,7 @@ msgstr "Uma solicitação de entrada dura dez minutos. Comece novamente a partir
 
 #: src/components/content/FormatLibrary.jsx
 msgid "A swipe-through lesson, one idea per slide. Use when the post teaches or lists; not for a personal story."
-msgstr "Uma lição interativa, uma ideia por slide. Use quando o post ensina ou lista; não para uma história pessoal."
+msgstr "Uma aula deslizável, uma ideia por slide. Use quando o post ensina ou lista; não para uma história pessoal."
 
 #: src/components/connections/ProjectAccountSelect.jsx
 msgid "a teammate's account"
@@ -3462,7 +3462,7 @@ msgstr "Personalizar formato integrado"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Customised built-in"
-msgstr "Personalizado integrado"
+msgstr "Integrado personalizado"
 
 #: src/components/content/ReminderSetting.jsx
 msgid "Daily reminder"
@@ -4646,7 +4646,7 @@ msgstr "Corrija Estes Primeiro"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Fixed, so your copy stands in for the built-in"
-msgstr "Corrigido, então sua cópia substitui o integrado"
+msgstr "Fixo, então sua cópia substitui o integrado"
 
 #: src/app/(app)/execute/page.jsx
 msgid "Fixes from an audit or a conversation land here for you to approve."
@@ -5087,7 +5087,7 @@ msgstr "Convidado"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Handle"
-msgstr "Nome de usuário"
+msgstr "Identificador"
 
 #: src/components/AppSidebar.jsx
 msgid "Handled by the OS — change it in your system notification settings"
@@ -6048,7 +6048,7 @@ msgstr "Criado por {model}"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Make"
-msgstr "Criar"
+msgstr "Fazer"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Making a video clip"
@@ -6862,7 +6862,7 @@ msgstr "Nenhum desses — comece um novo"
 
 #: src/components/content/AccountsTab.jsx
 msgid "None on yet. Switch on where this brand posts."
-msgstr "Nenhuma ativada ainda. Ative onde esta marca posta."
+msgstr "Nenhum ativado ainda. Ative onde esta marca posta."
 
 #: src/components/settings/AgentAccess.jsx
 msgid "None yet. An agent shows up here once you allow it."
@@ -7870,7 +7870,7 @@ msgstr "Escolha a conta a usar:"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Pick the one posts go out through."
-msgstr "Escolha por qual os posts são publicados."
+msgstr "Escolha por onde os posts são publicados."
 
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Pick the ones Duct may use, up to {MAX_MODELS}. They join the tier pickers, and the first is used when a tier doesn’t name one."
@@ -8047,7 +8047,7 @@ msgstr "Posts"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Posts go out through {primaryLabel}."
-msgstr "Os posts são publicados via {primaryLabel}."
+msgstr "Os posts são publicados através de {primaryLabel}."
 
 #: src/lib/userProfile.js
 msgid "Practitioner"
@@ -8513,7 +8513,7 @@ msgstr "Recente"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Recipes the drafting agent follows. Each one says which media and channels it is for; the built-ins can be customised."
-msgstr "Receitas que o agente de rascunho segue. Cada uma diz para quais mídias e canais é; as integradas podem ser personalizadas."
+msgstr "Receitas que o agente de rascunho segue. Cada uma diz para qual mídia e canais é; os integrados podem ser personalizados."
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Recommended"
@@ -9292,7 +9292,7 @@ msgstr "Salvos"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Saving makes this project’s own copy, which replaces the built-in here. Reset it later to go back."
-msgstr "Salvar cria a cópia própria deste projeto, que substitui a integrada aqui. Redefina-a mais tarde para voltar."
+msgstr "Salvar cria a própria cópia deste projeto, que substitui o integrado aqui. Redefina-o mais tarde para voltar."
 
 #: src/components/content/AccountsTab.jsx
 #: src/components/content/BrandContextForm.jsx
@@ -11112,7 +11112,7 @@ msgstr "Este dispositivo"
 
 #: src/components/content/SpecEditorInner.jsx
 msgid "This document uses markup the visual editor can’t show, so you’re editing it as text. Nothing was changed."
-msgstr "Este documento usa marcação que o editor visual não consegue exibir, então você está editando-o como texto. Nada foi alterado."
+msgstr "Este documento usa marcação que o editor visual não pode mostrar, então você está editando-o como texto. Nada foi alterado."
 
 #: src/components/models/TierCard.jsx
 msgid "This engine runs Anthropic models only, so {tierNameLower} jobs run on <0>{servesName}</0> — this engine's default."
@@ -12047,7 +12047,7 @@ msgstr "Que tipo de memória"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "What kind of post this recipe makes."
-msgstr "Que tipo de post esta receita cria."
+msgstr "Que tipo de post esta receita faz."
 
 #: src/components/workspace/ComposerDials.jsx
 #~ msgid "What shape the brief takes"

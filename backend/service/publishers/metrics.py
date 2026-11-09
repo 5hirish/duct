@@ -50,12 +50,11 @@ async def collect_reported_posts(
     db: Session, proj: Project, *, refresh: bool = False,
     specs: list[PublisherSpec] | None = None,
 ) -> ReportedPosts:
-    """Ask every scheduler the project's owner connected for the posts it
-    reports numbers on, or only ``specs`` when the caller has already decided
-    which schedulers this project uses (the Analytics tab does, so a stale
-    key on a scheduler the project left cannot hide the one it posts
-    through). Never raises for a scheduler that fails; the caller reads
-    ``failures`` and decides whether none answering is its error."""
+    """Ask the schedulers for the posts they report numbers on: ``specs`` when
+    the caller narrowed them (the Analytics tab asks only the ones the project
+    uses), else every one the project's owner connected. Never raises for a
+    scheduler that fails; the caller reads ``failures`` and decides whether
+    none answering is its error."""
     asked = list(specs) if specs is not None else connected_specs(proj.user_id, db)
     linked = _linked_platforms(db, proj.id)
     out = ReportedPosts(asked=asked)

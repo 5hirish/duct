@@ -1121,7 +1121,7 @@ msgstr "Ein guter Standard für {channelLabel}, bis fünf Beiträge Zahlen haben
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "A helper agent answered"
-msgstr "Ein Helfer-Agent antwortete"
+msgstr "Ein Helfer-Agent hat geantwortet"
 
 #: src/app/(app)/connections/page.jsx
 msgid "A key is scoped to ONE ad account — make sure it's the right one."
@@ -1161,7 +1161,7 @@ msgstr "Ein Projekt beginnt mit einer Website. Duct liest sie und entwirft den R
 
 #: src/components/content/FormatLibrary.jsx
 msgid "A recipe the drafting agent follows. Say what it applies to, then write the spec."
-msgstr "Ein Rezept, dem der Entwurfs-Agent folgt. Gib an, worauf es sich bezieht, dann schreibe die Spezifikation."
+msgstr "Ein Rezept, dem der Entwurfs-Agent folgt. Sag, wofür es gilt, dann schreib die Spezifikation."
 
 #: src/components/content/FormatLibrary.jsx
 #~ msgid "A reusable recipe — slide structure, caption styles, image prompt rules — that the drafting agent follows."
@@ -1193,7 +1193,7 @@ msgstr "Eine Anmeldeanfrage ist zehn Minuten gültig. Starte erneut von deinem A
 
 #: src/components/content/FormatLibrary.jsx
 msgid "A swipe-through lesson, one idea per slide. Use when the post teaches or lists; not for a personal story."
-msgstr "Eine Wisch-Lektion, eine Idee pro Folie. Verwenden, wenn der Beitrag lehrt oder auflistet; nicht für eine persönliche Geschichte."
+msgstr "Eine Wisch-Lektion, eine Idee pro Folie. Verwende sie, wenn der Beitrag lehrt oder auflistet; nicht für eine persönliche Geschichte."
 
 #: src/components/connections/ProjectAccountSelect.jsx
 msgid "a teammate's account"
@@ -2028,7 +2028,7 @@ msgstr "Gefragt {0}"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Asked a helper agent"
-msgstr "Fragte einen Helfer-Agenten"
+msgstr "Einen Helfer-Agenten gefragt"
 
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Asks freely · nothing applies without you"
@@ -2581,7 +2581,7 @@ msgstr "Verbundene Tools geprüft"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Checked the numbers"
-msgstr "Prüfte die Zahlen"
+msgstr "Die Zahlen geprüft"
 
 #: src/components/audit/AuditReport.jsx
 msgid "Checking structured data coverage…"
@@ -3462,7 +3462,7 @@ msgstr "Integriertes Format anpassen"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Customised built-in"
-msgstr "Integriert angepasst"
+msgstr "Angepasstes integriertes"
 
 #: src/components/content/ReminderSetting.jsx
 msgid "Daily reminder"
@@ -3858,11 +3858,11 @@ msgstr "Beitragsentwurf"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Drafted a post"
-msgstr "Entwarf einen Beitrag"
+msgstr "Einen Beitrag entworfen"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Drafting a post"
-msgstr "Entwirft einen Beitrag"
+msgstr "Einen Beitrag entwerfen"
 
 #: src/components/content/ContentWorkspace.jsx
 msgid "Drafting post"
@@ -4276,7 +4276,7 @@ msgstr "redaktionell / minimalistisch / fett"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Educational carousel"
-msgstr "Lehrreiches Karussell"
+msgstr "Bildungs-Karussell"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "educational-carousel"
@@ -4622,7 +4622,7 @@ msgstr "Schließe die Sicherheitsprüfung oben ab, versuche es dann erneut."
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Finished a side task"
-msgstr "Beendete eine Nebenaufgabe"
+msgstr "Eine Nebenaufgabe beendet"
 
 #: src/components/content/TextPostEditor.jsx
 msgid "First comment"
@@ -4646,7 +4646,7 @@ msgstr "Diese zuerst beheben"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Fixed, so your copy stands in for the built-in"
-msgstr "Behoben, damit deine Kopie das integrierte ersetzt"
+msgstr "Festgelegt, deine Kopie ersetzt das integrierte."
 
 #: src/app/(app)/execute/page.jsx
 msgid "Fixes from an audit or a conversation land here for you to approve."
@@ -7125,11 +7125,11 @@ msgstr "Nichts braucht dich gerade."
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Nothing picked = any media"
-msgstr "Nichts ausgewählt = beliebige Medien"
+msgstr "Nichts ausgewählt = alle Medien"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Nothing picked = every channel"
-msgstr "Nichts ausgewählt = alle Kanäle"
+msgstr "Nichts ausgewählt = jeder Kanal"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "Nothing posted yet"
@@ -7241,7 +7241,7 @@ msgstr "Zahlen von"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "Numbers land here after the first post goes out, and on Refresh once it has synced."
-msgstr "Zahlen erscheinen hier, nachdem der erste Beitrag veröffentlicht wurde, und nach dem Aktualisieren, sobald er synchronisiert ist."
+msgstr "Zahlen erscheinen hier, nachdem der erste Beitrag veröffentlicht wurde und nach dem Aktualisieren, sobald er synchronisiert ist."
 
 #: src/components/content/AccountsTab.jsx
 msgid "Off"
@@ -7351,7 +7351,7 @@ msgstr "Ein Modell unter {foundAt}"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "One or two sentences. The agent reads this to pick between formats, so say what it does and when to use it."
-msgstr "Ein oder zwei Sätze. Der Agent liest dies, um zwischen Formaten zu wählen, also beschreibe, was es tut und wann es zu verwenden ist."
+msgstr "Ein oder zwei Sätze. Der Agent liest dies, um zwischen Formaten zu wählen, also sag, was es tut und wann es zu verwenden ist."
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "One sentence"
@@ -7986,11 +7986,11 @@ msgstr "Jetzt posten"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Post on {label}"
-msgstr "Auf {label} posten"
+msgstr "Beitrag auf {label}"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Post only"
-msgstr "Nur Beiträge"
+msgstr "Nur Beitrag"
 
 #: src/components/content/PostCard.jsx
 msgid "post preview"
@@ -8512,7 +8512,7 @@ msgstr "Aktuell"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Recipes the drafting agent follows. Each one says which media and channels it is for; the built-ins can be customised."
-msgstr "Rezepte, denen der Entwurfsagent folgt. Jedes Rezept gibt an, für welche Medien und Kanäle es ist; die integrierten können angepasst werden."
+msgstr "Rezepte, denen der Entwurfs-Agent folgt. Jedes sagt, für welche Medien und Kanäle es ist; die integrierten können angepasst werden."
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Recommended"
@@ -8863,7 +8863,7 @@ msgstr "Format zurücksetzen"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Reset to built-in"
-msgstr "Auf integriert zurücksetzen"
+msgstr "Auf integriertes zurücksetzen"
 
 #: src/app/(app)/settings/models/page.jsx
 #: src/app/(app)/settings/profile/page.jsx
@@ -9291,7 +9291,7 @@ msgstr "Speicherungen"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Saving makes this project’s own copy, which replaces the built-in here. Reset it later to go back."
-msgstr "Durch Speichern wird eine eigene Kopie dieses Projekts erstellt, die das integrierte hier ersetzt. Setze es später zurück, um zum Original zurückzukehren."
+msgstr "Speichern erstellt eine eigene Kopie dieses Projekts, die das integrierte hier ersetzt. Setze es später zurück, um zurückzukehren."
 
 #: src/components/content/AccountsTab.jsx
 #: src/components/content/BrandContextForm.jsx
@@ -9786,7 +9786,7 @@ msgstr "Shift+Enter für eine neue Zeile · Esc zum Stoppen"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Ships with Duct · customising makes your own copy"
-msgstr "Wird mit Duct geliefert · Anpassen erstellt eine eigene Kopie"
+msgstr "Wird mit Duct geliefert · Anpassen erstellt deine eigene Kopie"
 
 #: src/app/(app)/settings/profile/page.jsx
 #~ msgid "Shirish"
@@ -10810,7 +10810,7 @@ msgstr "Die erste Zeile ist der Aufhänger."
 
 #: src/components/content/FormatLibrary.jsx
 msgid "The full recipe — structure, hook rules, image prompt rules, failure modes. Write it like a brief to a new hire; headings and tables help the agent find things."
-msgstr "Das vollständige Rezept – Struktur, Hook-Regeln, Bild-Prompt-Regeln, Fehlermodi. Schreibe es wie ein Briefing an einen neuen Mitarbeiter; Überschriften und Tabellen helfen dem Agenten, Dinge zu finden."
+msgstr "Das vollständige Rezept – Struktur, Hook-Regeln, Bild-Prompt-Regeln, Fehlermodi. Schreib es wie ein Briefing an einen neuen Mitarbeiter; Überschriften und Tabellen helfen dem Agenten, Dinge zu finden."
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "The key works, but the account has no credit"
@@ -11111,7 +11111,7 @@ msgstr "Dieses Gerät"
 
 #: src/components/content/SpecEditorInner.jsx
 msgid "This document uses markup the visual editor can’t show, so you’re editing it as text. Nothing was changed."
-msgstr "Dieses Dokument verwendet Markup, das der visuelle Editor nicht anzeigen kann, daher bearbeitest du es als Text. Es wurde nichts geändert."
+msgstr "Dieses Dokument verwendet Markup, das der visuelle Editor nicht anzeigen kann, daher bearbeitest du es als Text. Nichts wurde geändert."
 
 #: src/components/models/TierCard.jsx
 msgid "This engine runs Anthropic models only, so {tierNameLower} jobs run on <0>{servesName}</0> — this engine's default."
@@ -12074,7 +12074,7 @@ msgstr "Was diese Seite enthalten wird"
 
 #: src/components/content/AccountsTab.jsx
 msgid "What to know about this channel"
-msgstr "Was du über diesen Kanal wissen solltest"
+msgstr "Wissenswertes über diesen Kanal"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "What to remember"
@@ -12581,7 +12581,7 @@ msgstr "dein Content-Plan"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Your copy of <0>{deletingName}</0> will be removed and the built-in version comes back. Posts already drafted with it are unaffected."
-msgstr "Deine Kopie von <0>{deletingName}</0> wird entfernt und die integrierte Version kehrt zurück. Bereits damit entworfene Beiträge sind davon unberührt."
+msgstr "Deine Kopie von <0>{deletingName}</0> wird entfernt und die integrierte Version kommt zurück. Bereits damit entworfene Beiträge sind nicht betroffen."
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Your core themes. The agent runs one research sub-agent per pillar."
