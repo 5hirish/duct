@@ -5,7 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 
 from routes import (
-    activity, agents, artifacts, audit, audit_prefetch, auth, chat, connectors, content, engines,
+    activity, agents, artifacts, audit, audit_prefetch, auth, chat, connectors, content, content_reports, engines,
     execution,
     generate, health, lead_magnet, mcp_oauth, mcp_server, mcp_servers, mcp_tokens, memory, model_settings,
     profile,
@@ -98,6 +98,13 @@ router.include_router(
 )
 router.include_router(
     content.router,
+    prefix="/api",
+    dependencies=APP_AND_USER,
+)
+# The Analytics tab's report: the insights agent over the project's sources,
+# stored for a day (routes/content_reports.py).
+router.include_router(
+    content_reports.router,
     prefix="/api",
     dependencies=APP_AND_USER,
 )

@@ -709,3 +709,36 @@ export async function saveDiscoveredReference({ projectId, actorId, runId, datas
   });
   return jsonOrThrow(res);
 }
+
+// ---------------------------------------------------------------------------
+// The Analytics tab's report — the insights agent over the project's sources,
+// stored for a day (backend/routes/content_reports.py)
+// ---------------------------------------------------------------------------
+
+/**
+ * What the tab needs in one read: the templates, the sources that can feed
+ * the chosen one, the latest stored report (flagged stale after a day), and
+ * whether a run is writing a new one. Never starts a run.
+ */
+export async function getAnalyticsReport(projectId, { template = "" } = {}) {
+  const url = new URL(`${BASE}/api/content/analytics/report`);
+  url.searchParams.set("project_id", projectId);
+  if (template) url.searchParams.set("template", template);
+  const res = await fetch(url.toString(), { headers: backendAuthedHeaders() });
+  return jsonOrThrow(res);
+}
+
+/**
+ * Start writing the report on the sources ticked (every ready one when the
+ * list is empty). Answers with the same shape as the read, `generating`
+ * true; a second call while it runs joins that run rather than paying for
+ * another. A 402 means no provider key — the Providers dialog's job.
+ */
+export async function generateAnalyticsReport(projectId, { template = "", sources = [] } = {}) {
+  const res = await fetch(`${BASE}/api/content/analytics/report`, {
+    method: "POST",
+    headers: { ...backendAuthedHeaders(), "Content-Type": "application/json" },
+    body: JSON.stringify({ project_id: projectId, template, sources }),
+  });
+  return jsonOrThrow(res);
+}

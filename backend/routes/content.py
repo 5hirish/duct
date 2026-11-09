@@ -128,6 +128,7 @@ from service.analytics import capture_event
 from service.auth import get_current_user, get_user_provider_keys
 from service.content_metrics import merge_manual_metrics
 from service.publishers import PublisherError, PublisherSpec, Target
+from service.publishers.metrics import collect_reported_posts
 from service.publishers.registry import NO_SCHEDULER, all_specs, publisher_for, spec_for
 from service.vendor_keys import VendorNotConnected
 from service.membership import get_project_for_user, get_project_row_for_user
@@ -2739,17 +2740,16 @@ async def list_content_analytics(
         raise HTTPException(400, NO_SCHEDULER)
     linked_platforms = {link.platform for link in _links(db, project_id) if link.platform}
 
-    reported: list[tuple[PublisherSpec, object]] = []
-    first_error: tuple[PublisherError, PublisherSpec] | None = None
-    for spec in publishing.connected:
-        pub = _open_publisher(db, proj, spec.id)
-        try:
-            async with pub:
-                reported += [(spec, r) for r in await pub.reported_posts(refresh=refresh)]
-        except PublisherError as exc:
-            first_error = first_error or (exc, spec)
-    if not reported and first_error is not None:
-        raise _publisher_http_error(*first_error)
+    # One fan-out for the tab and the agent's social_post_metrics entity
+    # (service/publishers/metrics.py); a scheduler that fails is an error
+    # here only when every scheduler failed.
+    collected = await collect_reported_posts(db, proj, refresh=refresh)
+    reported = collected.rows
+    if collected.all_failed:
+        spec, exc = collected.failures[0]
+        if isinstance(exc, PublisherError):
+            raise _publisher_http_error(exc, spec)
+        raise HTTPException(400, str(exc))
 
     # Index this project's local posts so each analytics row can be tied back to
     # a pillar/format and badged "via Duct" — by the handle its numbers are

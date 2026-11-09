@@ -313,10 +313,12 @@ def _load_business_block(project_id: UUID) -> str:
     """The project's business context as the shared ``<business_context>``
     block: goals, positioning, competitors, growth stage. Insights and audit
     had it from day one; the plan turn never did, so the plan served a
-    north-star it had only ever met as a memory chip."""
+    north-star it had only ever met as a memory chip. The mapping is
+    ``agents/core/context.business_context_from_project``, shared with the
+    report and the scheduled brief."""
     from sqlmodel import Session
 
-    from agents.core.context import BusinessContext, format_business_context
+    from agents.core.context import business_context_from_project, format_business_context
     from db.session import get_engine
     from models.project import Project
 
@@ -327,39 +329,15 @@ def _load_business_block(project_id: UUID) -> str:
         proj = db.get(Project, project_id)
         if proj is None:
             return ""
-        targets = proj.targets if isinstance(proj.targets, dict) else {}
-        competition = proj.competition if isinstance(proj.competition, dict) else {}
-        audience = proj.audience if isinstance(proj.audience, dict) else {}
-        goals = [
-            str(targets[k]).strip()
-            for k in ("north_star_metric", "north_star_goal_window", "primary_kpi")
-            if targets.get(k)
-        ]
-        ctx = BusinessContext.coerce({
-            "business_name": proj.company_name or proj.name or "",
-            "business_description": proj.pitch or proj.description or "",
-            "industry": proj.industry or "",
-            "business_model": proj.business_model or "",
-            "positioning_statement": str(competition.get("compare_against") or ""),
-            "audience_segment": str(audience.get("primary_segment") or ""),
-            "business_goals": "; ".join(goals),
-            "competitors": _competitor_names(competition),
-        })
-        return format_business_context(ctx)
+        return format_business_context(business_context_from_project(proj))
 
 
 def _competitor_names(competition: dict | None) -> list[str]:
-    """Competitor names off the project's competition blob: strings, or
-    dicts with a name (and maybe a URL), as onboarding writes them."""
-    names: list[str] = []
-    for item in (competition or {}).get("competitors") or []:
-        if isinstance(item, str) and item.strip():
-            names.append(item.strip())
-        elif isinstance(item, dict):
-            name = str(item.get("name") or item.get("url") or "").strip()
-            if name:
-                names.append(name)
-    return names[:6]
+    """The shared reading of the competition blob, capped: a research pass
+    over more than six competitors is a research project."""
+    from agents.core.context import competitor_names
+
+    return competitor_names(competition)[:6]
 
 
 def _project_competitors(project_id: UUID) -> list[str]:
