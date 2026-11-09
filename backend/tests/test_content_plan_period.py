@@ -15,6 +15,7 @@ from agents.content.plan_period import (
     PlanPeriod,
     default_period,
     keep_drafted_days,
+    link_post_to_day,
     requested_period,
 )
 
@@ -58,6 +59,15 @@ def test_a_revision_keeps_the_days_that_have_a_draft():
     assert merged[0]["topic"] == "a" and merged[0]["post_id"] == "x"
     assert merged[1]["topic"] == "B"
     assert kept == [0]
+
+
+def test_a_day_is_linked_to_its_post_once():
+    days = [{"topic": "a"}, {"topic": "b", "status": "pending"}]
+    linked = link_post_to_day(days, 1, "p1")
+    assert linked[1] == {"topic": "b", "status": "draft", "post_id": "p1"}
+    assert linked[0] is days[0] and "post_id" not in days[1]   # the input is not mutated
+    assert link_post_to_day(linked, 1, "p1") is None            # already linked: nothing to write
+    assert link_post_to_day(days, 5, "p1") is None              # no such day
 
 
 # ---------------------------------------------------------------------------
@@ -311,3 +321,93 @@ def test_a_rolled_over_month_is_managed_when_it_already_has_a_plan(engine):
     session = make_session("s", project, "plan_month")
     assert _resolve_plan_period(session, None, date(2026, 10, 28)) is not None
     assert session.plan_id == november.id
+
+
+def test_a_draft_for_a_plan_day_fills_the_day_as_soon_as_it_is_saved(engine):
+    """The board finds a day's draft through the day's ``post_id``. It used to
+    be written when the drafting chat ended, so a chat cut off by a server
+    restart left a saved draft the board never showed (2026-11-08)."""
+    from sqlmodel import Session
+
+    from agents.content.schema import make_session
+    from agents.content.tools import build_content_tools_lc
+    from models.auth import User
+    from models.content import ContentPlan, ContentPost
+    from models.project import Project
+
+    with Session(engine) as db:
+        user = User(email="planner@example.com")
+        db.add(user)
+        db.commit()
+        project = Project(user_id=user.id, name="Kestrel Studio", slug="kestrel")
+        db.add(project)
+        db.commit()
+        project_id = project.id
+
+    planning = make_session("plan", project_id, "plan_month")
+    planning.period_start, planning.period_days = date(2031, 10, 7), 3
+    _submit(planning, _days(3))
+    plan = _accept(engine, planning)
+
+    drafting = make_session("draft", project_id, "draft_post")
+    drafting.channel = "twitter"
+    drafting.plan_id, drafting.day_index = plan.id, 1
+
+    async def emit(_body: dict) -> None:
+        return None
+
+    tool = {t.name: t for t in build_content_tools_lc(project_id, emit, drafting)}["submit_post_draft"]
+    draft = {
+        "type": "post", "project_id": str(project_id), "post_dir_slug": "2031-10-08-001",
+        "pillar": "p", "topic": "t1", "caption": "Shipped the eval gate. It failed us twice.",
+    }
+    result = json.loads(asyncio.run(tool.ainvoke({"post": draft})))
+    assert result.get("status") != "error", result
+
+    with Session(engine) as db:
+        days = db.get(ContentPlan, plan.id).days
+        assert days[1]["post_id"] == str(drafting.post_id) and days[1]["status"] == "draft"
+        assert not days[0].get("post_id") and not days[2].get("post_id")
+        assert db.get(ContentPost, drafting.post_id).plan_id == plan.id
+
+
+def test_a_drafts_conversation_is_tied_to_the_post_when_the_post_is_born(engine):
+    """Opening a draft resumes its chat through this link; it used to be
+    written when the chat ended, so a cut-off chat reopened as a new one."""
+    from sqlmodel import Session
+
+    from agents.content.persistence import find_active_conversation
+    from agents.content.schema import make_session
+    from agents.content.tools import build_content_tools_lc
+    from models.auth import User
+    from models.content.conversation import AgentConversation
+    from models.project import Project
+
+    with Session(engine) as db:
+        user = User(email="writer@example.com")
+        db.add(user)
+        db.commit()
+        project = Project(user_id=user.id, name="Kestrel Studio", slug="kestrel")
+        db.add(project)
+        db.commit()
+        conv = AgentConversation(agent_type="tiktok_studio", project_id=project.id, user_id=user.id)
+        db.add(conv)
+        db.commit()
+        project_id, conv_id = project.id, conv.id
+
+    drafting = make_session("draft", project_id, "draft_post")
+    drafting.channel, drafting.conversation_id = "twitter", conv_id
+
+    async def emit(_body: dict) -> None:
+        return None
+
+    tool = {t.name: t for t in build_content_tools_lc(project_id, emit, drafting)}["submit_post_draft"]
+    draft = {
+        "type": "post", "project_id": str(project_id), "post_dir_slug": "2031-10-08-002",
+        "pillar": "p", "topic": "t", "caption": "Shipped the eval gate. It failed us twice.",
+    }
+    assert json.loads(asyncio.run(tool.ainvoke({"post": draft}))).get("status") != "error"
+
+    with Session(engine) as db:
+        found = find_active_conversation(db, artifact_type="post", artifact_id=drafting.post_id, project_id=project_id)
+        assert found is not None and found.id == conv_id

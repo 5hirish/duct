@@ -43,6 +43,8 @@ import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
 import { StepStatus } from "@/lib/agentSteps";
 
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import PauseCard from "@/components/workspace/PauseCard";
+import { AgentEvent } from "@/lib/agentEvents";
 import { canonId } from "./canon";
 
 /** A labelled specimen, so several variants of one rule read as one rule. */
@@ -300,6 +302,27 @@ const EXAMPLES = {
         </div>
       </Specimen>
     </div>
+  ),
+
+  "Agent question (pick from options)": () => (
+    <PauseCard
+      pause={{
+        event: AgentEvent.QUESTIONS_REQUIRED,
+        interrupt_id: "catalogue-question",
+        questions: [
+          {
+            question: "Where should next month's plan go?",
+            multiSelect: false,
+            options: [
+              { label: "Keep the current plan", description: "The 23 days as scheduled." },
+              { label: "Change the mix", description: "More cheat sheets, fewer talking heads." },
+              { label: "Start over", description: "A new angle for one audience." },
+            ],
+          },
+        ],
+      }}
+      onAnswer={() => {}}
+    />
   ),
 
   "Truncated text (2+ lines)": () => (

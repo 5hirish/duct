@@ -25,13 +25,14 @@ import { useLeaveOnProjectSwitch } from "@/hooks/useActiveProjectId";
  * the same way the backend resolves it (runner._resolve_plan_period), so the
  * pane always shows the plan the agent is changing.
  *
- * Clicking "Draft this post →" on a day routes to
- * /content/posts/new?plan_id=<the plan>&day=<dayIndex>.
+ * The pane is for reading the plan being made: a day has no "Draft post"
+ * action here, because that route leaves the planning session for a drafting
+ * one mid-plan (and, since proposals, before there is a plan to draft from).
+ * Drafting from a day lives on the plan board (components/content/PlanBoard).
  */
 export default function NewPlanSessionPage() {
   const router = useRouter();
   const [setup, setSetup] = useState(null); // { projectId, plan, start, days }
-  const [planId, setPlanId] = useState(null);
   // The plan is written into the project the page opened on.
   useLeaveOnProjectSwitch();
 
@@ -77,52 +78,21 @@ export default function NewPlanSessionPage() {
       }
     : { projectId, ...(start ? { startDate: start } : {}), ...(days ? { days } : {}) };
 
-  function reviseDay(index) {
-    const params = new URLSearchParams();
-    if (planId) params.set("plan_id", planId);
-    if (index != null) params.set("day", String(index));
-    router.push(`/content/posts/new?${params.toString()}`);
-  }
-
   return (
     <div className="h-full">
       <ContentWorkspace
         mode="plan_month"
         context={context}
         renderViewport={({ payload, steps, building, onSendMessage, sessionId }) => (
-          <PlanSessionViewport
+          <PlanViewport
             payload={payload || (plan ? { type: "plan", ...plan } : null)}
             steps={steps}
             building={building}
-            onReviseDay={reviseDay}
-            onPlanId={setPlanId}
             onSendMessage={onSendMessage}
             sessionId={sessionId}
           />
         )}
       />
     </div>
-  );
-}
-
-/** The plan viewport plus the one piece of state this page needs from it:
- * the id of the plan the agent produced, lifted in an effect rather than
- * during render (React warns, correctly, about setting a parent's state
- * while a child renders). */
-function PlanSessionViewport({ payload, steps, building, onReviseDay, onPlanId, onSendMessage, sessionId }) {
-  // Null while the plan is only proposed; the live id arrives with Accept.
-  const planId = payload?.id;
-  useEffect(() => {
-    if (planId) onPlanId(planId);
-  }, [planId, onPlanId]);
-  return (
-    <PlanViewport
-      payload={payload}
-      steps={steps}
-      building={building}
-      onReviseDay={onReviseDay}
-      onSendMessage={onSendMessage}
-      sessionId={sessionId}
-    />
   );
 }

@@ -24,7 +24,7 @@
 import { Suspense, use, useEffect } from "react";
 import { Trans } from "@lingui/react/macro";
 
-import { initLocalBackend, settledBackend } from "../lib/localBackend.js";
+import { backendPromise, initLocalBackend, settledBackend } from "../lib/localBackend.js";
 import { installExternalLinkHandler } from "../lib/shell.js";
 
 export default function LocalBackendGate({ children }) {
@@ -45,7 +45,14 @@ export default function LocalBackendGate({ children }) {
 function Settled({ children }) {
   // Settled during render, not in an effect: effects run children first, so
   // theirs would fire before ours.
-  const backend = settledBackend() ?? use(initLocalBackend());
+  //
+  // Once a render has suspended on the shell's answer, every later one reads
+  // it through the same promise. React retries the suspended render and
+  // checks that it calls use() again; reading the settled value instead
+  // skipped it, and React warned on every desktop launch. use() hands back a
+  // promise it has already seen settle without suspending.
+  const waited = backendPromise();
+  const backend = waited ? use(waited) : settledBackend() ?? use(initLocalBackend());
   // A terminal failure replaces the server's HTML, which React reports as a
   // hydration mismatch and recovers from. It only happens in a self-host
   // shell whose sidecar did not start.

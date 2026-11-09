@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { STATUS_ORDER, statusMeta } from "../../lib/contentStatus";
-import { dayKey, effectiveSchedule, monthStartOf, planStartOf } from "../../lib/contentSchedule";
+import { dayKey, effectiveSchedule, monthStartOf, onChannel, planStartOf } from "../../lib/contentSchedule";
 import PostMiniCard from "./PostMiniCard";
 
 function addDays(d, n) {
@@ -28,7 +28,7 @@ const monthDayShort = (d, locale) => d.toLocaleDateString(locale, { month: "shor
  *
  * Props: { plan, postsById, view, onViewChange, onReviseDay }
  */
-export default function PlanCalendar({ plan, postsById = {}, view = "month", onViewChange, onReviseDay }) {
+export default function PlanCalendar({ plan, postsById = {}, view = "month", onViewChange, onReviseDay, channel = null }) {
   const { i18n } = useLingui();
   const locale = i18n.locale;
   const monthStart = monthStartOf(plan);
@@ -41,7 +41,7 @@ export default function PlanCalendar({ plan, postsById = {}, view = "month", onV
     days.forEach((d, idx) => {
       const post = d.post_id ? postsById[d.post_id] || null : null;
       const schedule = effectiveSchedule(d, post, anchor, idx, { locale });
-      if (!schedule.date) return;
+      if (!schedule.date || !onChannel({ day: d, post }, channel)) return;
       const k = dayKey(schedule.date);
       if (!map.has(k)) map.set(k, []);
       map.get(k).push({ day: d, post, schedule, index: idx });
@@ -54,7 +54,7 @@ export default function PlanCalendar({ plan, postsById = {}, view = "month", onV
       );
     }
     return map;
-  }, [plan, postsById, anchor, locale]);
+  }, [plan, postsById, anchor, locale, channel]);
 
   const [monthCursor, setMonthCursor] = useState(() => {
     const base = monthStart || new Date();

@@ -311,11 +311,7 @@ export default function AuditWorkspace({
           onStop={handleStop}
           renderSteps={(steps) => <AuditStepProgress steps={steps} />}
           stepLabels={STEP_LABELS}
-          questionsCopy={{
-            title: t`One moment — Duct has a quick question`,
-            hint: t`Your answers sharpen the findings. Skip if you'd rather Duct decide.`,
-            submitLabel: t`Continue audit →`,
-          }}
+          questionsCopy={{ submitLabel: t`Continue audit` }}
           signInToConnect={signInToConnect}
           inputPlaceholder={t`Ask a follow-up question…`}
           inputAriaLabel={t`Message the audit agent`}

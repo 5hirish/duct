@@ -56,6 +56,10 @@ class Platform(StrEnum):
     BLUESKY         = "bluesky"
     PINTEREST       = "pinterest"
     GOOGLE_BUSINESS = "google_business"
+    # The brand's own site: a long-form article, published by hand or through
+    # the site's own tooling. WordPress is the one with a shape of its own.
+    BLOG            = "blog"
+    WORDPRESS       = "wordpress"
 
 
 class Playbook(StrEnum):
@@ -86,6 +90,9 @@ class ChannelRules:
     fold_chars:          int = 0
     requires_media:      bool = False
     hashtags:            bool = True    # does the playbook expect them at all
+    # The deliverable is an article (title, sections, 800+ words), not a post:
+    # written as text, never as slides, whatever playbook stands in.
+    long_form:           bool = False
 
 
 # Keyed by the enum so a Platform without rules is a visible hole (the unit
@@ -103,7 +110,17 @@ RULES: dict[Platform, ChannelRules] = {
     Platform.BLUESKY:         ChannelRules("Bluesky", 300),
     Platform.PINTEREST:       ChannelRules("Pinterest", 500, requires_media=True),
     Platform.GOOGLE_BUSINESS: ChannelRules("Google Business", 1500),
+    Platform.BLOG:            ChannelRules("Blog", 60000, hashtags=False, long_form=True),
+    Platform.WORDPRESS:       ChannelRules("WordPress", 60000, hashtags=False, long_form=True),
 }
+
+# The channels the Accounts tab offers, in its order: the ones Duct plans and
+# writes for today. A platform in RULES but not here can still be published
+# through a scheduler that holds it, but nobody is asked to switch it on.
+OFFERED: tuple[str, ...] = (
+    Platform.TIKTOK, Platform.INSTAGRAM, Platform.YOUTUBE, Platform.FACEBOOK,
+    Platform.TWITTER, Platform.LINKEDIN, Platform.BLOG, Platform.WORDPRESS,
+)
 
 # Channels with a dedicated, tuned playbook today, and which one each uses.
 PLAYBOOKS: dict[str, Playbook] = {
@@ -135,7 +152,7 @@ class Channel:
 
     @property
     def text_first(self) -> bool:
-        return self.playbook in TEXT_PLAYBOOKS
+        return self.playbook in TEXT_PLAYBOOKS or self.rules.long_form
 
 
 def _normalise(channel: str | None) -> str:

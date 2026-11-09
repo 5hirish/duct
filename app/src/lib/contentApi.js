@@ -547,6 +547,30 @@ export async function saveLinkedAccounts(projectId, accounts) {
   return out;
 }
 
+/**
+ * The channels this project posts on: every one Duct offers, with the
+ * project's choice and words for each, the guide the agent is given and the
+ * linked scheduler accounts on it. `{ primary_publisher, chosen, channels: [{
+ * id, label, enabled, supported, long_form, profile: { enabled, username,
+ * display_name, bio, notes, target_media }, guide, accounts }] }`.
+ */
+export async function getChannels(projectId) {
+  const url = new URL(`${BASE}/api/content/channels`);
+  url.searchParams.set("project_id", projectId);
+  const res = await fetch(url.toString(), { headers: backendAuthedHeaders() });
+  return jsonOrThrow(res);
+}
+
+/** Replace the project's channel choices. `channels` is `{ [platform]: profile }`. */
+export async function saveChannels(projectId, { primaryPublisher = "", channels = {} } = {}) {
+  const res = await fetch(`${BASE}/api/content/channels`, {
+    method: "PUT",
+    headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({ project_id: projectId, primary_publisher: primaryPublisher, channels }),
+  });
+  return jsonOrThrow(res);
+}
+
 /** GET /api/content/styles — shared, read-only style registry (base_css + styles[]). */
 export async function listStyles() {
   return cached("styles:global", TTL_FORMATS, async () => {

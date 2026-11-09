@@ -31,6 +31,8 @@ Deferred:
 
 from __future__ import annotations
 
+from dataclasses import asdict
+
 import asyncio
 import json
 import logging
@@ -108,6 +110,9 @@ from agents.engines import (
 )
 from agents.tiers import Job
 from agents.content.channels import Platform
+from agents.content.channels import OFFERED
+from agents.content.channel_config import ChannelConfig, ChannelProfile, linked_pairs, load_channel_config, save_channel_config
+from agents.content.platform_guides import MEDIA_KINDS, guide_payload
 from config import get_configs
 from db.session import get_session as db_session
 from service.model_settings import get_model_settings
@@ -122,6 +127,7 @@ from models.content import (
 from models.activity import ActivityLog
 from models.auth import User
 from models.project import Project
+from sqlalchemy.orm.attributes import flag_modified
 from service import storage
 from service.activity import log_activity
 from service.analytics import capture_event
@@ -162,7 +168,7 @@ _session_created_at: dict[str, float] = {}
 # hammers them each time.
 # refresh=true bypasses + repopulates; writes that change analytics clear it.
 _ANALYTICS_TTL = 120.0  # seconds
-_analytics_cache: dict[UUID, tuple[float, list]] = {}
+_analytics_cache: dict[UUID, tuple[float, object]] = {}
 
 
 def _invalidate_analytics(project_id: UUID) -> None:
@@ -550,6 +556,11 @@ async def _run_draft_worker(
                         except Exception as exc:
                             logger.warning("content: failed to parse Day[%d] from plan %s: %s",
                                            req.day_index, req.plan_id, exc)
+        if day_obj is not None:
+            # submit_post links the post onto this day as soon as it exists.
+            sess = get_session(session_id)
+            if sess is not None:
+                sess.plan_id, sess.day_index = req.plan_id, req.day_index
         # Primary channel: explicit request → the day's first platform → default.
         from agents.content.channels import primary_channel
         channel = req.channel or (primary_channel(day_obj.platforms) if day_obj else None)
@@ -568,24 +579,10 @@ async def _run_draft_worker(
                 topic=req.topic,
                 pillar=req.pillar,
                 channel=channel,
+                # A day that already has a post opens on it for review; the
+                # drafting kickoff rewrote the saved post unasked (2026-11-08).
+                existing_post_id=day_obj.post_id if day_obj is not None else None,
             )
-        # Link the drafted post back onto its plan-day (post_id) so the board
-        # can match the new post to its slot (we link by post_id, not position).
-        if req.plan_id is not None and req.day_index is not None:
-            sess = get_session(session_id)
-            new_post_id = getattr(sess, "post_id", None) if sess else None
-            if new_post_id is not None:
-                with next(db_session()) as db:
-                    plan = db.get(ContentPlan, req.plan_id)
-                    if plan and 0 <= req.day_index < len(plan.days):
-                        days = list(plan.days)
-                        day = dict(days[req.day_index]) if isinstance(days[req.day_index], dict) else {}
-                        day["post_id"] = str(new_post_id)
-                        days[req.day_index] = day
-                        plan.days = days
-                        plan.updated_at = datetime.now(timezone.utc)
-                        db.add(plan)
-                        db.commit()
         _link_conversation_artifact(session_id, "post")
     except Exception as exc:
         logger.exception("content: draft worker error for session %s", session_id)
@@ -2689,9 +2686,157 @@ def save_linked_accounts(
 
 
 # ---------------------------------------------------------------------------
+# Channels — which platforms the project posts on, through which scheduler,
+# and what the person says about each (agents/content/channel_config.py).
+# A channel with no scheduler account behind it is still a channel: the
+# person posts there by hand and the plan covers it.
+# ---------------------------------------------------------------------------
+
+class ChannelProfileIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool = False
+    username: str = ""
+    display_name: str = ""
+    bio: str = ""
+    notes: str = ""
+    target_media: list[str] = Field(default_factory=list)
+
+    @field_validator("username", "display_name", "bio", "notes", mode="before")
+    @classmethod
+    def _short(cls, value):
+        return str(value or "")[:CHANNEL_TEXT_MAX]
+
+    @field_validator("target_media")
+    @classmethod
+    def _known_media(cls, value):
+        bad = [m for m in value if m not in MEDIA_KINDS]
+        if bad:
+            raise ValueError(f"unknown media kind: {', '.join(bad)}")
+        return value
+
+
+class ChannelsIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    project_id: UUID
+    primary_publisher: str = ""
+    channels: dict[str, ChannelProfileIn] = Field(default_factory=dict)
+
+
+class ChannelOut(BaseModel):
+    id: str
+    label: str
+    enabled: bool
+    # Does Duct have a tuned playbook for it; is it an article rather than a post.
+    supported: bool
+    long_form: bool
+    profile: ChannelProfileIn
+    guide: dict | None
+    # The linked scheduler accounts on this platform (routes above), so the
+    # tab can say "2 accounts via Zernio" without a second read.
+    accounts: list[LinkedAccountOut]
+
+
+class ChannelsOut(BaseModel):
+    primary_publisher: str
+    chosen: bool
+    channels: list[ChannelOut]
+
+
+# A bio or a note is a paragraph, not a document.
+CHANNEL_TEXT_MAX = 2000
+
+
+def _channels_out(db: Session, proj: Project) -> ChannelsOut:
+    links = _links(db, proj.id)
+    config = load_channel_config(proj.brand_channels, linked_pairs(links))
+    out: list[ChannelOut] = []
+    for cid in OFFERED:
+        prof = config.channels.get(cid) or ChannelProfile()
+        ch = resolve_channel(cid)
+        out.append(ChannelOut(
+            id=cid, label=ch.label, enabled=prof.enabled, supported=ch.supported,
+            long_form=ch.rules.long_form,
+            profile=ChannelProfileIn(**asdict(prof)),
+            guide=guide_payload(cid),
+            accounts=[link for link in links if link.platform == cid],
+        ))
+    return ChannelsOut(primary_publisher=config.primary_publisher, chosen=config.chosen, channels=out)
+
+
+@router.get("/content/channels")
+def list_channels(
+    project_id: UUID,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> ChannelsOut:
+    """Every channel Duct offers, with this project's choice and words for
+    each, the guide the agent is given, and the linked accounts on it."""
+    proj = _project_for_user(db, user, project_id)
+    return _channels_out(db, proj)
+
+
+@router.put("/content/channels")
+def save_channels(
+    body: ChannelsIn,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> ChannelsOut:
+    """Replace the project's channel choices. The primary scheduler has to be
+    one the owner connected, or empty (nothing publishes; everything is by hand)."""
+    proj = _project_for_user(db, user, body.project_id)
+    primary = body.primary_publisher.strip()
+    if primary:
+        connected = {spec.id for spec in _publishing(db, proj).connected}
+        if primary not in connected:
+            raise HTTPException(422, "Connect that scheduler first.")
+    unknown = [cid for cid in body.channels if cid not in OFFERED]
+    if unknown:
+        raise HTTPException(422, f"Not a channel Duct offers: {', '.join(unknown)}.")
+    config = ChannelConfig(
+        primary_publisher=primary,
+        channels={cid: ChannelProfile(**prof.model_dump()) for cid, prof in body.channels.items()},
+        chosen=True,
+    )
+    proj.brand_channels = save_channel_config(proj.brand_channels, config)
+    # A new dict is assigned, which SQLAlchemy does track; the flag is for the
+    # JSON column's mutable-in-place case so a future edit-in-place still saves.
+    flag_modified(proj, "brand_channels")
+    db.add(proj)
+    db.commit()
+    db.refresh(proj)
+    return _channels_out(db, proj)
+
+
+# ---------------------------------------------------------------------------
 # Analytics — live, from every connected scheduler, for the linked accounts.
 # (Distinct from per-post `perf`, which only covers posts published via Duct.)
 # ---------------------------------------------------------------------------
+
+class AnalyticsNotice(BaseModel):
+    """A scheduler that was asked and did not answer, in words the person can act on."""
+    publisher: str
+    label:     str
+    message:   str
+
+
+def _analytics_schedulers(
+    connected: list[PublisherSpec], links: list[LinkedAccountOut], primary: str,
+) -> list[PublisherSpec]:
+    """The schedulers whose numbers the project wants: those holding a linked
+    account; with nothing linked, the primary one; with none chosen, all."""
+    holding = {link.publisher for link in links if link.publisher}
+    if holding:
+        chosen = [spec for spec in connected if spec.id in holding]
+        if chosen:
+            return chosen
+    if primary:
+        chosen = [spec for spec in connected if spec.id == primary]
+        if chosen:
+            return chosen
+    return list(connected)
+
 
 class AnalyticsRowOut(BaseModel):
     id:                 str
@@ -2713,20 +2858,32 @@ class AnalyticsRowOut(BaseModel):
     post_id:            str | None = None
 
 
+class AnalyticsOut(BaseModel):
+    rows:    list[AnalyticsRowOut]
+    notices: list[AnalyticsNotice] = Field(default_factory=list)
+
+
 @router.get("/content/analytics")
 async def list_content_analytics(
     project_id: UUID,
     refresh: bool = False,
     user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
-) -> list[AnalyticsRowOut]:
-    """Per-post analytics for the project, read straight from its schedulers.
+) -> AnalyticsOut:
+    """Per-post analytics for the project, read from the schedulers it uses.
 
-    Each connected scheduler is the source of truth for the accounts it holds:
-    it reports everything published there (through Duct, its own dashboard or
-    the platform's app), with counts, the post's link and its cover. Scoped to
-    the platforms the project has linked (Accounts tab); if nothing is linked,
-    shows all. refresh=true asks each scheduler to sync first.
+    A scheduler is the source of truth for the accounts it holds: it reports
+    everything published there (through Duct, its own dashboard or the
+    platform's app), with counts, the post's link and its cover. Which
+    schedulers are read: the ones holding a linked account, else the primary
+    one chosen in the Accounts tab, else every connected one. Scoped to the
+    platforms the project has linked; if nothing is linked, shows all.
+    refresh=true asks each scheduler to sync first.
+
+    A scheduler that fails answers as a notice beside the rows the others
+    gave, never as the page's error: on 2026-11-08 a stale PostBridge key hid
+    a working Zernio behind "PostBridge didn't accept the saved API key".
+    Only every asked scheduler failing is an error.
     """
     proj = _project_for_user(db, user, project_id)
 
@@ -2738,18 +2895,28 @@ async def list_content_analytics(
     publishing = _publishing(db, proj)
     if not publishing.connected:
         raise HTTPException(400, NO_SCHEDULER)
-    linked_platforms = {link.platform for link in _links(db, project_id) if link.platform}
+    links = _links(db, project_id)
+    linked_platforms = {link.platform for link in links if link.platform}
+    asked = _analytics_schedulers(publishing.connected, links, load_channel_config(proj.brand_channels).primary_publisher)
 
     # One fan-out for the tab and the agent's social_post_metrics entity
-    # (service/publishers/metrics.py); a scheduler that fails is an error
-    # here only when every scheduler failed.
-    collected = await collect_reported_posts(db, proj, refresh=refresh)
+    # (service/publishers/metrics.py), narrowed to the schedulers this
+    # project uses. Every one failing is the page's error; one failing is a
+    # notice beside the rows the others gave.
+    collected = await collect_reported_posts(db, proj, refresh=refresh, specs=asked)
     reported = collected.rows
     if collected.all_failed:
         spec, exc = collected.failures[0]
         if isinstance(exc, PublisherError):
             raise _publisher_http_error(exc, spec)
         raise HTTPException(400, str(exc))
+    notices = [
+        AnalyticsNotice(
+            publisher=spec.id, label=spec.label,
+            message=_friendly_publisher_error(exc, spec) if isinstance(exc, PublisherError) else str(exc),
+        )
+        for spec, exc in collected.failures
+    ]
 
     # Index this project's local posts so each analytics row can be tied back to
     # a pillar/format and badged "via Duct" — by the handle its numbers are
@@ -2799,8 +2966,9 @@ async def list_content_analytics(
             post_id=str(local.id) if local else None,
         ))
     rows.sort(key=lambda x: x.view_count, reverse=True)
-    _analytics_cache[project_id] = (time.monotonic(), rows)
-    return rows
+    out = AnalyticsOut(rows=rows, notices=notices)
+    _analytics_cache[project_id] = (time.monotonic(), out)
+    return out
 
 
 @router.post("/content/posts/{post_id}/publish")

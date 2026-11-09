@@ -231,7 +231,6 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
           onStartFresh={handleStartFresh}
           canStartFresh={Boolean(agent.conversationId) && (agent.phase === Phase.READY || agent.phase === Phase.CHATTING)}
           stepLabels={stepLabels}
-          questionsCopy={{ hint: t`A clearer brief produces sharper content. Skip if you'd rather Duct decide.` }}
           inputPlaceholder={t`Ask Duct to refine the plan or post…`}
           inputAriaLabel={t`Message the content agent`}
         />

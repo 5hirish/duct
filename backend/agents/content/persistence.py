@@ -224,7 +224,9 @@ def find_active_conversation(
     )
     if project_id is not None:
         query = query.where(AgentConversation.project_id == project_id)
-    return db.exec(query).first()
+    # A post can carry more than one chat (drafted in one, revised in
+    # another); the one worked in last is the one to reopen.
+    return db.exec(query.order_by(AgentConversation.last_active_at.desc())).first()
 
 
 def archive_conversation(db: Session, conversation_id: UUID) -> None:

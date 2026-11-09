@@ -34,6 +34,7 @@ JSON would put attacker-authored text in the UI and in every client's memory.
 from __future__ import annotations
 
 import json
+import re
 import logging
 from collections.abc import Awaitable, Callable
 from enum import StrEnum
@@ -128,12 +129,36 @@ def _host(url: str) -> str:
         return ""
 
 
+# "proposed" is submit_plan's verdict since plans became proposals (2026-11-08,
+# agents/content/plan_proposal.py): the tool did what it was asked, and the
+# person decides in the viewport. Without it the row painted red.
+_OK_STATUSES = frozenset({"ok", "received", "success", "proposed"})
+# What _err() and its siblings write. Any other value of ``status`` is the
+# thing's own state, not the call's verdict: fetch_post returns the post with
+# its ``status`` ("draft", "posted"), and on 2026-11-08 "Opened the post" was
+# painted red for every saved post because "draft" was read as a failure.
+_FAIL_STATUSES = frozenset({"error", "failed", "failure"})
+
+_UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.I)
+
+
 def _ok(env: dict[str, Any], is_error: bool) -> bool:
     """A tool's verdict. Tools that return an envelope say so in ``status``;
-    the rest are judged by the harness's own error flag."""
-    if env and "status" in env:
-        return env.get("status") in ("ok", "received", "success")
+    the rest, and an envelope whose ``status`` is a domain state rather than a
+    verdict, are judged by the harness's own error flag."""
+    status = env.get("status") if env else None
+    if status in _OK_STATUSES:
+        return True
+    if status in _FAIL_STATUSES:
+        return False
     return not is_error
+
+
+def _words(text: Any) -> str:
+    """A title the person can read: the text unless it is a row id, which
+    names nothing to them and belongs in the detail of a developer tool."""
+    text = _text(text)
+    return "" if _UUID_RE.match(text) else text
 
 
 def _list_len(env: dict[str, Any]) -> int | None:
@@ -375,7 +400,7 @@ def _memory_get_finish(args: dict[str, Any], result: Any, is_error: bool) -> dic
 def _read_start(args: dict[str, Any]) -> dict[str, Any]:
     """A read of something the project already holds — brand context, the
     topic bank, connected sources. The tool name says which; the app words it."""
-    return {"kind": ActivityKind.CONTEXT, "title": _text(args.get("post_id") or args.get("slide_id") or args.get("query"))}
+    return {"kind": ActivityKind.CONTEXT, "title": _words(args.get("post_id") or args.get("slide_id") or args.get("query"))}
 
 
 def _read_finish(args: dict[str, Any], result: Any, is_error: bool) -> dict[str, Any]:
@@ -385,7 +410,10 @@ def _read_finish(args: dict[str, Any], result: Any, is_error: bool) -> dict[str,
     return {
         "kind": ActivityKind.CONTEXT,
         "status": StepStatus.SUCCESS if ok else StepStatus.ERROR,
-        "title": _text(args.get("post_id") or args.get("slide_id") or args.get("query")),
+        # What was read, by its words once they are known: a post by its
+        # topic, never by the id the model addressed it with.
+        "title": _words(env.get("topic") or env.get("headline") or env.get("title"))
+        or _words(args.get("post_id") or args.get("slide_id") or args.get("query")),
         "meta": {"count": count} if count is not None else {},
         "error": "" if ok else _text(env.get("message")),
     }

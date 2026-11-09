@@ -209,12 +209,15 @@ function postRank(p) {
 }
 
 function PostsTab({ projectId }) {
-  const { i18n } = useLingui();
+  const { t, i18n } = useLingui();
   const router = useRouter();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   // null until the posts arrive: the default depends on whether any wait.
   const [filter, setFilter] = useState(null);
+  // One channel, or every one. Posts carry their platforms; the first is the
+  // one they were drafted for.
+  const [channel, setChannel] = useState(null);
   const [cloneOpen, setCloneOpen] = useState(false);
 
   // The two ways into a post no plan asked for: write one for a channel the
@@ -286,8 +289,15 @@ function PostsTab({ projectId }) {
     setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, ...updated } : p)));
   };
 
+  const channels = useMemo(() => {
+    const counts = new Map();
+    for (const p of posts) for (const c of p.platforms || []) counts.set(c, (counts.get(c) || 0) + 1);
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([id, count]) => ({ id, count }));
+  }, [posts]);
+  const picked = channels.some((c) => c.id === channel) ? channel : null;
   const visible = posts
     .filter((p) => activeFilter === "all" || p.status === activeFilter)
+    .filter((p) => !picked || (p.platforms || []).includes(picked))
     .sort((a, b) => {
       const [ar, av] = postRank(a);
       const [br, bv] = postRank(b);
@@ -333,16 +343,42 @@ function PostsTab({ projectId }) {
               key={f}
               type="button"
               onClick={() => setFilter(f)}
+              // Neutral when chosen: the brand orange is the page's one
+              // primary action (New post), and a filter is not that.
               className={`rounded-full px-3 py-1 text-xs font-medium capitalize transition-colors ${
                 activeFilter === f
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground hover:bg-muted/70"
+                  ? "bg-foreground text-background"
+                  : "bg-muted text-muted-foreground hover:text-foreground"
               }`}
             >
               {i18n._(FILTER_LABELS[f])} <span className="tabular-nums opacity-70">{n}</span>
             </button>
           );
         })}
+        {channels.length > 1 && (
+          <div className="ml-2 flex items-center gap-1 border-l border-border/60 pl-3" role="group" aria-label={t`Channel`}>
+            {channels.map(({ id, count }) => {
+              const label = platformMeta(id).label;
+              const active = picked === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  aria-pressed={active}
+                  aria-label={t`${label}, ${count} posts`}
+                  title={label}
+                  onClick={() => setChannel(active ? null : id)}
+                  className={`inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium transition-colors ${
+                    active ? "bg-foreground text-background" : "bg-muted text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <PlatformGlyph platform={id} className="size-3.5" />
+                  <span className="tabular-nums">{count}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {activeFilter === PostStatus.DRAFT ? (

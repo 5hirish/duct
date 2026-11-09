@@ -33,6 +33,8 @@ import {
   PlanState,
   dayKey,
   nextPlanStart,
+  onChannel,
+  planChannels,
   planCovering,
   planEndOf,
   planItems,
@@ -45,6 +47,7 @@ import { formatDate, formatDateRange } from "@/lib/format";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { PeriodName, PlanPeriodMenu } from "@/components/content/PlanPeriodPicker";
+import { PlatformGlyph, platformMeta } from "@/components/content/platformGlyphs";
 
 // Where a plan is made or managed: a plan_month session in the split
 // workspace. Nothing linked here before #274, so a new project had no way in
@@ -270,13 +273,20 @@ export function PlanBoardView({
   onRevisePlan,
   onReviseDay,
   fill = false,
+  defaultChannel = null,
 }) {
   const { t, i18n } = useLingui();
   const activeMeta = plans.find((p) => p.id === activeId) || plan || null;
-  const items = useMemo(
+  // One channel at a time, or every one: the same filter drives the three
+  // views and the header's count, so what the bar says is what is listed.
+  const [channel, setChannel] = useState(defaultChannel);
+  const allItems = useMemo(
     () => planItems(plan, postsById, { locale: i18n.locale, today }),
     [plan, postsById, i18n.locale, today]
   );
+  const channels = useMemo(() => planChannels(allItems), [allItems]);
+  const picked = channels.some((c) => c.channel === channel) ? channel : null;
+  const items = useMemo(() => allItems.filter((it) => onChannel(it, picked)), [allItems, picked]);
   const progress = planProgress(items);
   const state = planState(activeMeta, today);
   const ended = state === PlanState.ENDED;
@@ -319,20 +329,10 @@ export function PlanBoardView({
               {activeMeta?.name || <Trans>Monthly plan</Trans>}
             </h2>
           )}
-          {total > 0 && (
-            <p className="text-xs tabular-nums text-muted-foreground">
-              {periodLabel && <>{periodLabel} · </>}
-              <Trans>{posted} of {total} posted</Trans>
-              {missed > 0 && (
-                <>
-                  {" · "}
-                  <span className="text-warning"><Plural value={missed} one="# missed" other="# missed" /></span>
-                </>
-              )}
-            </p>
-          )}
+          {total > 0 && <PlanProgress period={periodLabel} progress={progress} ended={ended} />}
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {channels.length > 1 && <ChannelFilter channels={channels} value={picked} onChange={setChannel} />}
           {view === PlanView.CALENDAR && (
             <Segmented
               value={calView}
@@ -386,11 +386,11 @@ export function PlanBoardView({
           <Trans>Loading plan…</Trans>
         </div>
       ) : view === PlanView.KANBAN ? (
-        <PlanKanban plan={plan} postsById={postsById} onReviseDay={onReviseDay} scroll={scroll} today={today} />
+        <PlanKanban plan={plan} postsById={postsById} onReviseDay={onReviseDay} scroll={scroll} today={today} channel={picked} />
       ) : view === PlanView.CALENDAR ? (
-        <PlanCalendar plan={plan} postsById={postsById} view={calView} onViewChange={onCalViewChange} onReviseDay={onReviseDay} />
+        <PlanCalendar plan={plan} postsById={postsById} view={calView} onViewChange={onCalViewChange} onReviseDay={onReviseDay} channel={picked} />
       ) : (
-        <PlanList plan={plan} postsById={postsById} onReviseDay={onReviseDay} scroll={scroll} today={today} />
+        <PlanList plan={plan} postsById={postsById} onReviseDay={onReviseDay} scroll={scroll} today={today} channel={picked} />
       )}
     </div>
   );
@@ -439,6 +439,90 @@ function PlanEnded({ end, posted, total, next, others, current, onStartPlan, onO
         )}
       </div>
     </Card>
+  );
+}
+
+/**
+ * The one line under the plan's name: when it runs, and how far it has got,
+ * as a bar with its words. The bar is the comparison every count needs;
+ * posted, missed and still-to-come each have a word as well as a colour, so
+ * the line reads in greyscale and to a screen reader. "0 of 23 posted" on
+ * day one read as a failure; "23 to go" is the same fact the right way up.
+ */
+function PlanProgress({ period, progress, ended }) {
+  const { t } = useLingui();
+  const { total, posted, missed, drafted } = progress;
+  const left = Math.max(total - posted - missed, 0);
+  const pct = (n) => `${(n / total) * 100}%`;
+  const label = ended
+    ? t`${posted} of ${total} posted`
+    : posted === 0 && missed === 0
+      ? t`${left} to go`
+      : t`${posted} posted · ${left} to go`;
+  return (
+    <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+      {period && (
+        <span className="inline-flex shrink-0 items-center gap-1.5">
+          <CalendarDays className="size-3.5" aria-hidden="true" />
+          <span className="tabular-nums">{period}</span>
+        </span>
+      )}
+      <span
+        className="flex h-1.5 w-28 shrink-0 overflow-hidden rounded-full bg-muted"
+        role="img"
+        aria-label={t`${posted} of ${total} posted, ${missed} missed, ${drafted} drafted`}
+      >
+        {posted > 0 && <span className="h-full bg-success" style={{ width: pct(posted) }} />}
+        {missed > 0 && <span className="h-full bg-warning" style={{ width: pct(missed) }} />}
+        {drafted > 0 && <span className="h-full bg-foreground/35" style={{ width: pct(drafted) }} />}
+      </span>
+      <span className="tabular-nums whitespace-nowrap">{label}</span>
+      {missed > 0 && (
+        <span className="tabular-nums whitespace-nowrap text-warning">
+          <Plural value={missed} one="# missed" other="# missed" />
+        </span>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Every channel the plan's days are on, as glyph chips with counts, and
+ * "All". A filter, so it stays neutral when chosen: the brand orange is the
+ * board's one primary action. Hidden with a single channel, where it would
+ * only say what every row already shows.
+ */
+function ChannelFilter({ channels, value, onChange }) {
+  const { t } = useLingui();
+  const chip = (active) =>
+    cn(
+      "inline-flex h-7 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium transition-colors",
+      active ? "bg-foreground text-background" : "bg-muted text-muted-foreground hover:text-foreground"
+    );
+  return (
+    <div className="flex flex-wrap items-center gap-1" role="group" aria-label={t`Channel`}>
+      <button type="button" aria-pressed={value === null} onClick={() => onChange(null)} className={chip(value === null)}>
+        <Trans>All</Trans>
+      </button>
+      {channels.map(({ channel, count }) => {
+        const label = platformMeta(channel).label;
+        const active = value === channel;
+        return (
+          <button
+            key={channel}
+            type="button"
+            aria-pressed={active}
+            aria-label={t`${label}, ${count} posts`}
+            title={label}
+            onClick={() => onChange(active ? null : channel)}
+            className={chip(active)}
+          >
+            <PlatformGlyph platform={channel} className="size-3.5" />
+            <span className="tabular-nums">{count}</span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 

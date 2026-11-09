@@ -96,7 +96,12 @@ class AskUserArgs(BaseModel):
         description=(
             "Clarifying questions for the user. Each item: "
             '{"question": str, "header": str, "options": [{"label": str, "description": str}], '
-            '"multiSelect": bool}.'
+            '"multiSelect": bool}. The options are drawn as a list of rows the '
+            "person picks from, so write them to scan: `label` is the choice itself "
+            "in two to five words; `description` is optional, one clause under "
+            "twelve words saying what sets this option apart, never the label again "
+            "and never the argument for it. An 'Other' row with free text is added "
+            "for you; do not write one."
         )
     )
 
@@ -117,7 +122,9 @@ async def interrupt_pause(event: str, payload: dict, *, timeout: float | None = 
     ignored: a checkpointed pause waits as long as the thread exists.
     """
     del timeout  # the whole point: no clock on a parked thread
-    answer = interrupt({"event": event, **payload})
+    # A plain string, not the AgentEvent member: the checkpointer serialises
+    # the payload with msgpack and warns on (soon refuses) an unregistered type.
+    answer = interrupt({"event": str(event), **payload})
     return answer if isinstance(answer, dict) else {}
 
 

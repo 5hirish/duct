@@ -446,6 +446,11 @@ msgstr "{label}では投稿と最初の返信が公開されます。"
 msgid "{label} score"
 msgstr "{label} スコア"
 
+#: src/app/(app)/content/page.jsx
+#: src/components/content/PlanBoard.jsx
+msgid "{label}, {count} posts"
+msgstr "{label}、{count}件の投稿"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{landingPages, plural, one {# landing page} other {# landing pages}}"
 msgstr "{landingPages, plural, other {# ランディングページ}}"
@@ -458,9 +463,17 @@ msgstr "{landingPages, plural, other {# ページ}}"
 msgid "{left} left"
 msgstr "残り{left}文字"
 
+#: src/components/content/PlanBoard.jsx
+msgid "{left} to go"
+msgstr "残り{left}件"
+
 #: src/components/content/FormatLibrary.jsx
 msgid "{linkedCount, plural, one {# linked style} other {# linked styles}}"
 msgstr "{linkedCount, plural, other {# リンクされたスタイル}}"
+
+#: src/components/content/AccountsTab.jsx
+msgid "{linkedHere, plural, one {# account} other {# accounts}} via {primaryLabel}"
+msgstr "{linkedHere, plural, other {# アカウント}}（{primaryLabel}経由）"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{llmsLines} lines"
@@ -541,6 +554,14 @@ msgstr "{notesLeft, plural, other {# 文字が残っています}}"
 #: src/app/(app)/connections/page.jsx
 msgid "{omitted, plural, one {# more was left out; choose specific repositories on GitHub to reach it.} other {# more were left out; choose specific repositories on GitHub to reach them.}}"
 msgstr "{omitted, plural, one {ほかに # 件は含まれていません。含めるには、GitHubで対象のリポジトリを選択してください。} other {ほかに # 件は含まれていません。含めるには、GitHubで対象のリポジトリを選択してください。}}"
+
+#: src/components/content/AccountsTab.jsx
+msgid "{onCount} on · {linkedCount} linked via {primaryLabel}"
+msgstr "{onCount}件オン · {linkedCount}件リンク済み（{primaryLabel}経由）"
+
+#: src/components/content/AccountsTab.jsx
+msgid "{onCount} on, all posted by hand"
+msgstr "{onCount}件オン、すべて手動で投稿済み"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "{oppCount} Opp"
@@ -624,8 +645,16 @@ msgid "{posted} of {total} posted"
 msgstr "{total} 件中 {posted} 件を投稿済み"
 
 #: src/components/content/PlanBoard.jsx
+msgid "{posted} of {total} posted, {missed} missed, {drafted} drafted"
+msgstr "{total}件中{posted}件投稿済み、{missed}件見逃し、{drafted}件下書き済み"
+
+#: src/components/content/PlanBoard.jsx
 msgid "{posted} of its {total} posts went out. The next plan learns from them."
 msgstr "{total} 件の投稿のうち {posted} 件が公開されました。次のプランはそれらから学習します。"
+
+#: src/components/content/PlanBoard.jsx
+msgid "{posted} posted · {left} to go"
+msgstr "{posted}件投稿済み · 残り{left}件"
 
 #: src/components/audit/AuditReport.jsx
 msgid "{posts, plural, one {# post} other {# posts}}"
@@ -678,6 +707,14 @@ msgstr "{resultCount, plural, one {# コマンド} other {# コマンド}}"
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{robotsLines} lines"
 msgstr "{robotsLines} 行"
+
+#: src/components/content/AnalyticsView.jsx
+msgid "{scheduler} hasn’t reported a post for {names} and {more} more yet."
+msgstr "{scheduler}は、{names}とその他{more}件の投稿をまだ報告していません。"
+
+#: src/components/content/AnalyticsView.jsx
+msgid "{scheduler} hasn’t reported a post for {names} yet."
+msgstr "{scheduler}は、{names}の投稿をまだ報告していません。"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "{score}/100 — {label}. Weighted average across all 9 SEO categories."
@@ -1047,8 +1084,8 @@ msgid "A change that matches a guardrail arrives blocked and can never apply on 
 msgstr "ガードレールに一致する変更はブロックされ、単独で適用されることはありません。エージェントはルールを認識し、それに沿って提案します。マッチング条件のないルールはガイダンスのみです。"
 
 #: src/components/content/ContentWorkspace.jsx
-msgid "A clearer brief produces sharper content. Skip if you'd rather Duct decide."
-msgstr "より明確なブリーフは、よりシャープなコンテンツを生み出します。Ductに任せる場合はスキップしてください。"
+#~ msgid "A clearer brief produces sharper content. Skip if you'd rather Duct decide."
+#~ msgstr "より明確なブリーフは、よりシャープなコンテンツを生み出します。Ductに任せる場合はスキップしてください。"
 
 #: src/lib/agentSession.js
 msgid "A connected account doesn't have access to that data. Check its permissions in the Toolbox."
@@ -1081,6 +1118,10 @@ msgstr "あなたのために書かれた指摘事項"
 #: src/components/content/DraftsQueue.jsx
 msgid "A good default for {channelLabel} until five posts have numbers."
 msgstr "{channelLabel} の良いデフォルトです。5 件の投稿に数値がつくまで。"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "A helper agent answered"
+msgstr "ヘルパーエージェントが回答しました"
 
 #: src/app/(app)/connections/page.jsx
 msgid "A key is scoped to ONE ad account — make sure it's the right one."
@@ -1222,6 +1263,14 @@ msgstr "アカウント: {accountName}"
 #: src/app/(app)/content/page.jsx
 msgid "accounts"
 msgstr "アカウント"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Accounts"
+msgstr "アカウント"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Accounts via {primaryLabel}"
+msgstr "アカウント（{primaryLabel}経由）"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 #~ msgid "Acme Inc."
@@ -1528,6 +1577,7 @@ msgstr "すべて"
 #: src/app/(app)/activity/page.jsx
 #: src/app/(app)/artifacts/page.jsx
 #: src/components/connections/ConnectorBrowser.jsx
+#: src/components/content/PlanBoard.jsx
 #: src/components/content/PlanList.jsx
 #: src/components/memory/MemoryTimeline.jsx
 msgid "All"
@@ -1846,6 +1896,10 @@ msgstr "この会話をアーカイブします（レポートのアーティフ
 #~ msgid "Are my conversions real people?"
 #~ msgstr "コンバージョンは実際のユーザーですか？"
 
+#: src/lib/contentEnums.js
+msgid "Article"
+msgstr "記事"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "artifact"
 msgstr "アーティファクト"
@@ -1952,6 +2006,10 @@ msgstr "招待者にもう一度送ってもらうか、すでにアクセス権
 msgid "Asked {0}"
 msgstr "{0} を質問しました"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Asked a helper agent"
+msgstr "ヘルパーエージェントに質問しました"
+
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Asks freely · nothing applies without you"
 msgstr "自由に質問します · 承認なしに適用されることはありません"
@@ -1963,6 +2021,10 @@ msgstr "重要なときに質問します · 許可された変更は自動的�
 #: src/lib/projectsApi.js
 msgid "Assisted"
 msgstr "アシスト"
+
+#: src/components/content/AccountsTab.jsx
+msgid "At {scheduler}"
+msgstr "{scheduler}にて"
 
 #: src/components/workspace/ChatInput.jsx
 msgid "Attach a file"
@@ -2068,6 +2130,10 @@ msgstr "平均視聴時間 (秒)"
 msgid "Avg TTFB"
 msgstr "Avg TTFB"
 
+#: src/components/content/AccountsTab.jsx
+msgid "Avoid"
+msgstr "避ける"
+
 #: src/app/(app)/execute/page.jsx
 msgid "Awaiting review"
 msgstr "レビュー待ち"
@@ -2152,6 +2218,10 @@ msgstr "ビッグベット"
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Biggest fixes"
 msgstr "最大の修正点"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Bio"
+msgstr "自己紹介"
 
 #: src/components/AppSidebar.jsx
 msgid "Blocked"
@@ -2424,6 +2494,15 @@ msgstr "変更は、このフォーマットを使用する今後の下書きに
 msgid "Changes v{baseVersion} → v{targetVersion}"
 msgstr "変更 v{baseVersion} → v{targetVersion}"
 
+#: src/app/(app)/content/page.jsx
+#: src/components/content/PlanBoard.jsx
+msgid "Channel"
+msgstr "チャネル"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Channels"
+msgstr "チャネル"
+
 #: src/components/models/UsagePanel.jsx
 msgid "charged at a fraction of the rate"
 msgstr "料金の一部で請求される"
@@ -2475,10 +2554,15 @@ msgstr "接続ソースを確認しました"
 msgid "Checked connected tools"
 msgstr "接続済みツールを確認しました"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Checked the numbers"
+msgstr "数値を確認しました"
+
 #: src/components/audit/AuditReport.jsx
 msgid "Checking structured data coverage…"
 msgstr "構造化データのカバレッジを確認中…"
 
+#: src/components/workspace/ActivityRow.jsx
 #: src/components/workspace/AgentChat.jsx
 msgid "Checking the numbers"
 msgstr "数字を確認中"
@@ -2537,8 +2621,8 @@ msgid "Choose them for tiers"
 msgstr "ティアで選ぶ"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Choose which accounts this project posts to — they're pre-selected when scheduling and used for analytics."
-msgstr "このプロジェクトが投稿するアカウントを選択してください — スケジュール時に事前選択され、分析に使用されます。"
+#~ msgid "Choose which accounts this project posts to — they're pre-selected when scheduling and used for analytics."
+#~ msgstr "このプロジェクトが投稿するアカウントを選択してください — スケジュール時に事前選択され、分析に使用されます。"
 
 #: src/components/content/PostViewport.jsx
 msgid "Choosing hashtags…"
@@ -2840,8 +2924,8 @@ msgstr "最初のソースを接続"
 #~ msgstr "PostBridgeでLinkedIn、X、TikTok、Instagram、またはYouTubeのアカウントを接続し、更新してこのプロジェクトにリンクします。"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Connect your LinkedIn, X, TikTok, Instagram or YouTube account in your scheduler, then refresh to link it to this project."
-msgstr "スケジューラーで LinkedIn、X、TikTok、Instagram、YouTube のアカウントを接続してから、更新してこのプロジェクトにリンクしてください。"
+#~ msgid "Connect your LinkedIn, X, TikTok, Instagram or YouTube account in your scheduler, then refresh to link it to this project."
+#~ msgstr "スケジューラーで LinkedIn、X、TikTok、Instagram、YouTube のアカウントを接続してから、更新してこのプロジェクトにリンクしてください。"
 
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "Connect your PostBridge account"
@@ -2996,12 +3080,20 @@ msgid "Context window"
 msgstr "コンテキストウィンドウ"
 
 #: src/components/workspace/QuestionsCard.jsx
-msgid "Continue →"
-msgstr "続行 →"
+msgid "Continue"
+msgstr "続行"
+
+#: src/components/workspace/QuestionsCard.jsx
+#~ msgid "Continue →"
+#~ msgstr "続行 →"
 
 #: src/components/audit/AuditWorkspace.jsx
-msgid "Continue audit →"
-msgstr "監査を続行 →"
+msgid "Continue audit"
+msgstr "監査を続行"
+
+#: src/components/audit/AuditWorkspace.jsx
+#~ msgid "Continue audit →"
+#~ msgstr "監査を続行 →"
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Continue chat"
@@ -3651,6 +3743,10 @@ msgstr "更新通知を閉じる"
 msgid "dismissed"
 msgstr "却下済み"
 
+#: src/components/content/AccountsTab.jsx
+msgid "Display name"
+msgstr "表示名"
+
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Docs / Help"
 msgstr "ドキュメント / ヘルプ"
@@ -3725,6 +3821,14 @@ msgstr "プロジェクトの説明、ターゲット、競合の下書きを作
 #: src/components/content/PostMiniCard.jsx
 msgid "Draft post"
 msgstr "下書き投稿"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Drafted a post"
+msgstr "投稿を下書きしました"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Drafting a post"
+msgstr "投稿を下書き中"
 
 #: src/components/content/ContentWorkspace.jsx
 msgid "Drafting post"
@@ -3908,12 +4012,12 @@ msgid "Duct proposes this plan."
 msgstr "Ductはこのプランを提案します。"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Duct publishes through a scheduler you connect, with your own account. Connect one to schedule posts and see how they do."
-msgstr "Duct は、あなたが接続したスケジューラーからあなた自身のアカウントで投稿します。接続すると、投稿を予約して反応を確認できます。"
+#~ msgid "Duct publishes through a scheduler you connect, with your own account. Connect one to schedule posts and see how they do."
+#~ msgstr "Duct は、あなたが接続したスケジューラーからあなた自身のアカウントで投稿します。接続すると、投稿を予約して反応を確認できます。"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Duct publishes through these, with your own accounts, and reads each post's numbers back from them."
-msgstr "Duct はこれらを通じてあなた自身のアカウントで投稿し、各投稿の数値をそこから読み取ります。"
+#~ msgid "Duct publishes through these, with your own accounts, and reads each post's numbers back from them."
+#~ msgstr "Duct はこれらを通じてあなた自身のアカウントで投稿し、各投稿の数値をそこから読み取ります。"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Duct reads \"last week\" and \"yesterday\" in {chosenZone}."
@@ -4470,6 +4574,10 @@ msgstr "ブラウザでGoogleへのサインインを完了してください �
 msgid "Finish the security check above, then try again."
 msgstr "上記のセキュリティチェックを完了してから、もう一度お試しください。"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Finished a side task"
+msgstr "サイドタスクを完了しました"
+
 #: src/components/content/TextPostEditor.jsx
 msgid "First comment"
 msgstr "最初のコメント"
@@ -4926,6 +5034,10 @@ msgstr "ガードレール"
 #: src/components/AppSidebar.jsx
 msgid "Guest"
 msgstr "ゲスト"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Handle"
+msgstr "ハンドル"
 
 #: src/components/AppSidebar.jsx
 msgid "Handled by the OS — change it in your system notification settings"
@@ -5601,8 +5713,8 @@ msgid "Link"
 msgstr "リンク"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Link all"
-msgstr "すべてリンク"
+#~ msgid "Link all"
+#~ msgstr "すべてリンク"
 
 #: src/components/content/AnalyticsView.jsx
 #: src/components/content/PlanDayOne.jsx
@@ -5614,8 +5726,8 @@ msgid "Linked"
 msgstr "リンク済み"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Linked accounts"
-msgstr "リンク済みアカウント"
+#~ msgid "Linked accounts"
+#~ msgstr "リンク済みアカウント"
 
 #: src/components/memory/MemoryTimeline.jsx
 #~ msgid "Linked from chat — outside the filters below"
@@ -5679,8 +5791,12 @@ msgid "Loading {many}…"
 msgstr "{many}を読み込み中…"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Loading accounts…"
-msgstr "アカウントを読み込み中…"
+msgid "Loading accounts"
+msgstr "アカウントを読み込み中"
+
+#: src/components/content/AccountsTab.jsx
+#~ msgid "Loading accounts…"
+#~ msgstr "アカウントを読み込み中…"
 
 #: src/app/(app)/activity/page.jsx
 msgid "Loading activity"
@@ -5875,6 +5991,10 @@ msgstr "動画クリップを作成しました"
 #: src/components/workspace/ActivityRow.jsx
 msgid "Made by {model}"
 msgstr "作成元: {model}"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Make"
+msgstr "作成"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Making a video clip"
@@ -6156,6 +6276,10 @@ msgstr "月間プラン"
 msgid "More"
 msgstr "詳細"
 
+#: src/components/content/AccountsTab.jsx
+msgid "More about posting on {label}"
+msgstr "{label}への投稿について"
+
 #: src/app/(app)/connections/page.jsx
 #~ msgid "More sources"
 #~ msgstr "その他のソース"
@@ -6360,8 +6484,13 @@ msgid "No account needed. Nothing is sent anywhere but your own model provider."
 msgstr "アカウントは不要です。データはご自身のモデルプロバイダー以外には送信されません。"
 
 #: src/components/content/AccountsTab.jsx
-msgid "No accounts available yet"
-msgstr "利用可能なアカウントはまだありません"
+#~ msgid "No accounts available yet"
+#~ msgstr "利用可能なアカウントはまだありません"
+
+#. placeholder {0}: connected.map((p) => p.label).join(", ")
+#: src/components/content/AccountsTab.jsx
+msgid "No accounts in {0} yet. Add them there, then refresh."
+msgstr "{0}にアカウントがまだありません。そこに追加してから、更新してください。"
 
 #: src/app/(app)/activity/page.jsx
 msgid "No activity yet"
@@ -6673,6 +6802,10 @@ msgstr "{total} 件の投稿はどれも公開されませんでした。必要�
 msgid "None of these — start a new one"
 msgstr "これら以外 — 新しいものを開始する"
 
+#: src/components/content/AccountsTab.jsx
+msgid "None on yet. Switch on where this brand posts."
+msgstr "まだ何もオンになっていません。このブランドが投稿する場所をオンにしてください。"
+
 #: src/components/settings/AgentAccess.jsx
 msgid "None yet. An agent shows up here once you allow it."
 msgstr "まだありません。エージェントは許可するとここに表示されます。"
@@ -6933,6 +7066,10 @@ msgstr "これらのフィルターに一致するものはありません。"
 msgid "Nothing needs you right now."
 msgstr "今、あなたが必要なものはありません。"
 
+#: src/components/content/AnalyticsView.jsx
+msgid "Nothing posted yet"
+msgstr "まだ何も投稿されていません"
+
 #: src/app/(app)/execute/page.jsx
 msgid "Nothing proposed yet"
 msgstr "まだ何も提案されていません"
@@ -7037,9 +7174,13 @@ msgstr "数値が戻ってくる"
 msgid "Numbers from"
 msgstr "数値の取得元"
 
-#: src/components/AppSidebar.jsx
-#~ msgid "Off"
-#~ msgstr "オフ"
+#: src/components/content/AnalyticsView.jsx
+msgid "Numbers land here after the first post goes out, and on Refresh once it has synced."
+msgstr "最初の投稿が公開され、同期後に更新すると、ここに数値が表示されます。"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Off"
+msgstr "オフ"
 
 #: src/components/TelemetryCard.jsx
 msgid "Off by default — Duct runs its backend here, and nothing leaves unless you say so."
@@ -7140,8 +7281,8 @@ msgid "One model at {foundAt}"
 msgstr "{foundAt} に 1 個のモデル"
 
 #: src/components/audit/AuditWorkspace.jsx
-msgid "One moment — Duct has a quick question"
-msgstr "少々お待ちください — Ductから質問があります"
+#~ msgid "One moment — Duct has a quick question"
+#~ msgstr "少々お待ちください — Ductから質問があります"
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "One sentence"
@@ -7216,8 +7357,8 @@ msgid "Open"
 msgstr "開く"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Open {scheduler} →"
-msgstr "{scheduler} を開く →"
+#~ msgid "Open {scheduler} →"
+#~ msgstr "{scheduler} を開く →"
 
 #: src/components/content/VendorKeyForm.jsx
 msgid "Open {vendor}"
@@ -7269,6 +7410,7 @@ msgid "Open plan board →"
 msgstr "計画ボードを開く →"
 
 #: src/components/content/AnalyticsView.jsx
+#: src/components/content/PostMiniCard.jsx
 msgid "Open post"
 msgstr "投稿を開く"
 
@@ -7291,6 +7433,10 @@ msgstr "現在のプランを開く"
 #: src/components/workspace/ActivityRow.jsx
 msgid "Open the document →"
 msgstr "ドキュメントを開く →"
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Open the plan board"
+msgstr "プランボードを開く"
 
 #: src/components/workspace/MemoryRows.jsx
 msgid "Open the project timeline"
@@ -7652,6 +7798,10 @@ msgstr "「ティア」タブで、そのモデルのひとつをティアに選
 msgid "Pick the account to use:"
 msgstr "使用するアカウントを選択してください:"
 
+#: src/components/content/AccountsTab.jsx
+msgid "Pick the one posts go out through."
+msgstr "投稿が公開されるものを選択してください。"
+
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Pick the ones Duct may use, up to {MAX_MODELS}. They join the tier pickers, and the first is used when a tier doesn’t name one."
 msgstr "Duct が使えるモデルを最大 {MAX_MODELS} 個選んでください。ティアの選択肢に加わり、ティアで指定がないときは最初のモデルが使われます。"
@@ -7765,6 +7915,14 @@ msgstr "投稿の下書き"
 msgid "Post now"
 msgstr "今すぐ投稿"
 
+#: src/components/content/AccountsTab.jsx
+msgid "Post on {label}"
+msgstr "{label}に投稿する"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Post only"
+msgstr "投稿のみ"
+
 #: src/components/content/PostCard.jsx
 msgid "post preview"
 msgstr "投稿プレビュー"
@@ -7805,6 +7963,10 @@ msgstr "投稿済み"
 msgid "Posted {postedOn}"
 msgstr "投稿済み {postedOn}"
 
+#: src/components/content/AccountsTab.jsx
+msgid "Posting by hand"
+msgstr "手動で投稿"
+
 #: src/app/(app)/content/page.jsx
 msgid "posts"
 msgstr "投稿"
@@ -7812,6 +7974,10 @@ msgstr "投稿"
 #: src/components/AppNav.jsx
 msgid "Posts"
 msgstr "投稿"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Posts go out through {primaryLabel}."
+msgstr "投稿は{primaryLabel}を通じて公開されます。"
 
 #: src/lib/userProfile.js
 msgid "Practitioner"
@@ -7860,6 +8026,10 @@ msgstr "前のスライド"
 msgid "Previous week"
 msgstr "前週"
 
+#: src/components/content/AccountsTab.jsx
+msgid "Primary"
+msgstr "プライマリ"
+
 #: src/components/content/BrandContextForm.jsx
 msgid "Primary color"
 msgstr "プライマリカラー"
@@ -7875,6 +8045,10 @@ msgstr "主要な成長戦略"
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Primary persona name"
 msgstr "主要なペルソナ名"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Primary scheduler"
+msgstr "プライマリ スケジューラ"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Primary segment"
@@ -7992,6 +8166,10 @@ msgstr "提案、承認、ロールバックがここに表示されます。"
 #: src/app/(app)/activity/page.jsx
 #~ msgid "Proposals, approvals, rollbacks and artifact versions land here, each with who did it."
 #~ msgstr "提案、承認、ロールバック、アーティファクトのバージョンが、それぞれ実行者とともにここに表示されます。"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Proposed a plan"
+msgstr "プランを提案しました"
 
 #: src/app/(app)/execute/page.jsx
 msgid "Proposed by"
@@ -8570,6 +8748,14 @@ msgstr "リクエストに失敗しました（{status}）。"
 msgid "research"
 msgstr "リサーチ"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Researched a pillar"
+msgstr "ピラーを調査しました"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Researching a pillar"
+msgstr "ピラーを調査中"
+
 #: src/components/audit/AuditReport.jsx
 #: src/lib/auditEvents.js
 msgid "Researching competitors"
@@ -8690,8 +8876,16 @@ msgid "Review what changed"
 msgstr "変更内容を確認"
 
 #: src/components/workspace/ActivityRow.jsx
+msgid "Reviewed a post"
+msgstr "投稿をレビューしました"
+
+#: src/components/workspace/ActivityRow.jsx
 msgid "Reviewed the post"
 msgstr "投稿をレビュー済み"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Reviewing a post"
+msgstr "投稿をレビュー中"
 
 #: src/components/audit/AuditReport.jsx
 msgid "Reviewing Open Graph completeness…"
@@ -8887,6 +9081,7 @@ msgid "sandboxed"
 msgstr "サンドボックス化済み"
 
 #: src/components/connections/ProviderCard.jsx
+#: src/components/content/AccountsTab.jsx
 #: src/components/content/DiscoverPage.jsx
 #: src/components/content/PostViewport.jsx
 #: src/components/memory/MemoryTimeline.jsx
@@ -8982,8 +9177,8 @@ msgid "Saved the draft"
 msgstr "下書きを保存しました"
 
 #: src/components/workspace/ActivityRow.jsx
-msgid "Saved the plan"
-msgstr "プランを保存しました"
+#~ msgid "Saved the plan"
+#~ msgstr "プランを保存しました"
 
 #: src/components/insights/AccountSelect.jsx
 msgid "Saved to this project, so you won’t be asked again."
@@ -9063,8 +9258,12 @@ msgid "Scheduled runs happen with no app open, so they always need a key."
 msgstr "スケジュールされた実行はアプリが開いていなくても行われるため、常にキーが必要です。"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Scheduler"
-msgstr "スケジューラー"
+#~ msgid "Scheduler"
+#~ msgstr "スケジューラー"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Schedulers"
+msgstr "スケジューラ"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Schema"
@@ -10283,6 +10482,10 @@ msgstr "テキスト"
 msgid "Text cards"
 msgstr "テキストカード"
 
+#: src/lib/contentEnums.js
+msgid "Text post"
+msgstr "テキスト投稿"
+
 #: src/components/audit/ExecutionOffer.jsx
 msgid "Thanks! We’ll be in touch at <0>{contact}</0> to scope this out."
 msgstr "ありがとうございます！<0>{contact}</0>にご連絡し、詳細を検討させていただきます。"
@@ -10320,6 +10523,10 @@ msgstr "接続を解除できませんでした。もう一度お試しくださ
 #: src/app/authorize/page.jsx
 msgid "That didn't go through. Try again in a moment."
 msgstr "処理できませんでした。しばらくしてからもう一度お試しください。"
+
+#: src/components/content/AccountsTab.jsx
+msgid "That didn't save — your change has been put back. Try again."
+msgstr "保存されませんでした — 変更は元に戻されました。もう一度お試しください。"
 
 #: src/components/content/AccountsTab.jsx
 msgid "That didn't save — your selection has been put back. Try again."
@@ -11162,8 +11369,8 @@ msgid "Unknown connector"
 msgstr "不明なコネクタ"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Unlink all"
-msgstr "すべてリンク解除"
+#~ msgid "Unlink all"
+#~ msgstr "すべてリンク解除"
 
 #: src/components/connections/ProjectAccountSelect.jsx
 msgid "Unnamed account"
@@ -11685,6 +11892,10 @@ msgstr "Ductが計画する元"
 #~ msgid "What Duct spent running your agents. These are charges on your own provider key — Duct never bills them."
 #~ msgstr "Ductがエージェントの実行に費やした費用です。これらはご自身のプロバイダーキーに対する請求であり、Ductが請求することはありません。"
 
+#: src/components/content/AccountsTab.jsx
+msgid "What Duct writes for {label}"
+msgstr "Ductが{label}のために作成するもの"
+
 #: src/app/(app)/connections/page.jsx
 msgid "What each campaign costs and what it brings back."
 msgstr "各キャンペーンの費用とその効果。"
@@ -11736,6 +11947,10 @@ msgstr "ビジネスの内容"
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "What this page will hold"
 msgstr "このページの内容"
+
+#: src/components/content/AccountsTab.jsx
+msgid "What to know about this channel"
+msgstr "このチャネルについて知っておくべきこと"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "What to remember"
@@ -11923,6 +12138,10 @@ msgstr "勝利"
 msgid "Winning hooks"
 msgstr "効果的なフック"
 
+#: src/components/content/AccountsTab.jsx
+msgid "Wins"
+msgstr "成果"
+
 #: src/lib/navigation.js
 msgid "Work"
 msgstr "作業"
@@ -11938,6 +12157,10 @@ msgstr "作業中"
 #: src/components/workspace/AgentChat.jsx
 msgid "Working it through"
 msgstr "検討中"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Working on a side task"
+msgstr "サイドタスクを処理中"
 
 #: src/components/audit/AuditReport.jsx
 #: src/components/PipelineProgress.jsx
@@ -12123,6 +12346,10 @@ msgstr "サインイン済みです"
 msgid "You've been invited to <0>{projectName}</0>"
 msgstr "<0>{projectName}</0> に招待されました"
 
+#: src/components/content/AccountsTab.jsx
+msgid "Your {label} account"
+msgstr "あなたの{label}アカウント"
+
 #: src/components/ChatSidebar.jsx
 msgid "your account"
 msgstr "アカウント"
@@ -12152,20 +12379,20 @@ msgid "Your answer"
 msgstr "回答"
 
 #: src/components/insights/InsightsWorkspace.jsx
-msgid "Your answer decides what Duct looks at. Skip if you'd rather it choose."
-msgstr "あなたの回答がDuctが何を見るかを決定します。Ductに任せる場合はスキップしてください。"
+#~ msgid "Your answer decides what Duct looks at. Skip if you'd rather it choose."
+#~ msgstr "あなたの回答がDuctが何を見るかを決定します。Ductに任せる場合はスキップしてください。"
 
 #: src/lib/agentSession.js
 msgid "Your answer didn't go through — the network dropped it."
 msgstr "回答が送信されませんでした — ネットワークでドロップされました。"
 
 #: src/components/audit/AuditWorkspace.jsx
-msgid "Your answers sharpen the findings. Skip if you'd rather Duct decide."
-msgstr "あなたの回答が指摘事項を明確にします。Ductに任せる場合はスキップしてください。"
+#~ msgid "Your answers sharpen the findings. Skip if you'd rather Duct decide."
+#~ msgstr "あなたの回答が指摘事項を明確にします。Ductに任せる場合はスキップしてください。"
 
 #: src/components/workspace/QuestionsCard.jsx
-msgid "Your answers sharpen the result. Skip if you'd rather Duct decide."
-msgstr "あなたの回答が結果を明確にします。Ductに任せる場合はスキップしてください。"
+#~ msgid "Your answers sharpen the result. Skip if you'd rather Duct decide."
+#~ msgstr "あなたの回答が結果を明確にします。Ductに任せる場合はスキップしてください。"
 
 #: src/app/(app)/artifacts/page.jsx
 msgid "your artifacts"

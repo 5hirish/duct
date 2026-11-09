@@ -446,6 +446,11 @@ msgstr "O {label} publica o post e a primeira resposta."
 msgid "{label} score"
 msgstr "Pontuação {label}"
 
+#: src/app/(app)/content/page.jsx
+#: src/components/content/PlanBoard.jsx
+msgid "{label}, {count} posts"
+msgstr "{label}, {count} posts"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{landingPages, plural, one {# landing page} other {# landing pages}}"
 msgstr "{landingPages, plural, one {# página de destino} other {# páginas de destino}}"
@@ -458,9 +463,17 @@ msgstr "{landingPages, plural, one {# página} other {# páginas}}"
 msgid "{left} left"
 msgstr "Restam {left}"
 
+#: src/components/content/PlanBoard.jsx
+msgid "{left} to go"
+msgstr "{left} restantes"
+
 #: src/components/content/FormatLibrary.jsx
 msgid "{linkedCount, plural, one {# linked style} other {# linked styles}}"
 msgstr "{linkedCount, plural, one {# estilo vinculado} other {# estilos vinculados}}"
+
+#: src/components/content/AccountsTab.jsx
+msgid "{linkedHere, plural, one {# account} other {# accounts}} via {primaryLabel}"
+msgstr "{linkedHere, plural, one {# conta} other {# contas}} via {primaryLabel}"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{llmsLines} lines"
@@ -541,6 +554,14 @@ msgstr "{notesLeft, plural, one {# caractere restante} other {# caracteres resta
 #: src/app/(app)/connections/page.jsx
 msgid "{omitted, plural, one {# more was left out; choose specific repositories on GitHub to reach it.} other {# more were left out; choose specific repositories on GitHub to reach them.}}"
 msgstr "{omitted, plural, one {Mais # ficou de fora; escolha repositórios específicos no GitHub para incluí-lo.} other {Mais # ficaram de fora; escolha repositórios específicos no GitHub para incluí-los.}}"
+
+#: src/components/content/AccountsTab.jsx
+msgid "{onCount} on · {linkedCount} linked via {primaryLabel}"
+msgstr "{onCount} ativadas · {linkedCount} vinculadas via {primaryLabel}"
+
+#: src/components/content/AccountsTab.jsx
+msgid "{onCount} on, all posted by hand"
+msgstr "{onCount} ativadas, todas publicadas manualmente"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "{oppCount} Opp"
@@ -624,8 +645,16 @@ msgid "{posted} of {total} posted"
 msgstr "{posted} de {total} publicados"
 
 #: src/components/content/PlanBoard.jsx
+msgid "{posted} of {total} posted, {missed} missed, {drafted} drafted"
+msgstr "{posted} publicados de {total}, {missed} perdidos, {drafted} rascunhados"
+
+#: src/components/content/PlanBoard.jsx
 msgid "{posted} of its {total} posts went out. The next plan learns from them."
 msgstr "{posted} de seus {total} posts foram publicados. O próximo plano aprende com eles."
+
+#: src/components/content/PlanBoard.jsx
+msgid "{posted} posted · {left} to go"
+msgstr "{posted} publicados · {left} restantes"
 
 #: src/components/audit/AuditReport.jsx
 msgid "{posts, plural, one {# post} other {# posts}}"
@@ -678,6 +707,14 @@ msgstr "{resultCount, plural, one {# comando} other {# comandos}}"
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{robotsLines} lines"
 msgstr "{robotsLines} linhas"
+
+#: src/components/content/AnalyticsView.jsx
+msgid "{scheduler} hasn’t reported a post for {names} and {more} more yet."
+msgstr "{scheduler} ainda não relatou um post para {names} e mais {more} ainda."
+
+#: src/components/content/AnalyticsView.jsx
+msgid "{scheduler} hasn’t reported a post for {names} yet."
+msgstr "{scheduler} ainda não relatou um post para {names}."
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "{score}/100 — {label}. Weighted average across all 9 SEO categories."
@@ -1047,8 +1084,8 @@ msgid "A change that matches a guardrail arrives blocked and can never apply on 
 msgstr "Uma alteração que corresponde a uma diretriz chega bloqueada e nunca pode ser aplicada sozinha. Agentes veem as regras e propõem em torno delas. Uma regra sem correspondência é apenas uma orientação."
 
 #: src/components/content/ContentWorkspace.jsx
-msgid "A clearer brief produces sharper content. Skip if you'd rather Duct decide."
-msgstr "Um resumo mais claro produz conteúdo mais preciso. Pule se preferir que Duct decida."
+#~ msgid "A clearer brief produces sharper content. Skip if you'd rather Duct decide."
+#~ msgstr "Um resumo mais claro produz conteúdo mais preciso. Pule se preferir que Duct decida."
 
 #: src/lib/agentSession.js
 msgid "A connected account doesn't have access to that data. Check its permissions in the Toolbox."
@@ -1081,6 +1118,10 @@ msgstr "Uma constatação, escrita para você"
 #: src/components/content/DraftsQueue.jsx
 msgid "A good default for {channelLabel} until five posts have numbers."
 msgstr "Um bom padrão para {channelLabel} até que cinco posts tenham números."
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "A helper agent answered"
+msgstr "Um agente auxiliar respondeu"
 
 #: src/app/(app)/connections/page.jsx
 msgid "A key is scoped to ONE ad account — make sure it's the right one."
@@ -1222,6 +1263,14 @@ msgstr "Conta: {accountName}"
 #: src/app/(app)/content/page.jsx
 msgid "accounts"
 msgstr "contas"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Accounts"
+msgstr "Contas"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Accounts via {primaryLabel}"
+msgstr "Contas via {primaryLabel}"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 #~ msgid "Acme Inc."
@@ -1528,6 +1577,7 @@ msgstr "todos"
 #: src/app/(app)/activity/page.jsx
 #: src/app/(app)/artifacts/page.jsx
 #: src/components/connections/ConnectorBrowser.jsx
+#: src/components/content/PlanBoard.jsx
 #: src/components/content/PlanList.jsx
 #: src/components/memory/MemoryTimeline.jsx
 msgid "All"
@@ -1846,6 +1896,10 @@ msgstr "Arquivar esta conversa (seus artefatos de relatório permanecem na bibli
 #~ msgid "Are my conversions real people?"
 #~ msgstr "Minhas conversões são pessoas reais?"
 
+#: src/lib/contentEnums.js
+msgid "Article"
+msgstr "Artigo"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "artifact"
 msgstr "artefato"
@@ -1952,6 +2006,10 @@ msgstr "Peça a quem te convidou para enviar um novo, ou <0>entrar</0> se você 
 msgid "Asked {0}"
 msgstr "Perguntou {0}"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Asked a helper agent"
+msgstr "Perguntou a um agente auxiliar"
+
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Asks freely · nothing applies without you"
 msgstr "Pergunta livremente · nada se aplica sem você"
@@ -1963,6 +2021,10 @@ msgstr "Pergunta quando importa · alterações permitidas aplicam-se por conta 
 #: src/lib/projectsApi.js
 msgid "Assisted"
 msgstr "Assistido"
+
+#: src/components/content/AccountsTab.jsx
+msgid "At {scheduler}"
+msgstr "Em {scheduler}"
 
 #: src/components/workspace/ChatInput.jsx
 msgid "Attach a file"
@@ -2068,6 +2130,10 @@ msgstr "Tempo médio de exibição (s)"
 msgid "Avg TTFB"
 msgstr "Média TTFB"
 
+#: src/components/content/AccountsTab.jsx
+msgid "Avoid"
+msgstr "Evitar"
+
 #: src/app/(app)/execute/page.jsx
 msgid "Awaiting review"
 msgstr "Aguardando revisão"
@@ -2152,6 +2218,10 @@ msgstr "Grandes Apostas"
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Biggest fixes"
 msgstr "Maiores correções"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Bio"
+msgstr "Bio"
 
 #: src/components/AppSidebar.jsx
 msgid "Blocked"
@@ -2424,6 +2494,15 @@ msgstr "As alterações se aplicam a rascunhos futuros que usarem este formato."
 msgid "Changes v{baseVersion} → v{targetVersion}"
 msgstr "Alterações v{baseVersion} → v{targetVersion}"
 
+#: src/app/(app)/content/page.jsx
+#: src/components/content/PlanBoard.jsx
+msgid "Channel"
+msgstr "Canal"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Channels"
+msgstr "Canais"
+
 #: src/components/models/UsagePanel.jsx
 msgid "charged at a fraction of the rate"
 msgstr "cobrado a uma fração da taxa"
@@ -2475,10 +2554,15 @@ msgstr "Verificou as fontes conectadas"
 msgid "Checked connected tools"
 msgstr "Verificou ferramentas conectadas"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Checked the numbers"
+msgstr "Verificou os números"
+
 #: src/components/audit/AuditReport.jsx
 msgid "Checking structured data coverage…"
 msgstr "Verificando cobertura de dados estruturados…"
 
+#: src/components/workspace/ActivityRow.jsx
 #: src/components/workspace/AgentChat.jsx
 msgid "Checking the numbers"
 msgstr "Verificando os números"
@@ -2537,8 +2621,8 @@ msgid "Choose them for tiers"
 msgstr "Escolher para os níveis"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Choose which accounts this project posts to — they're pre-selected when scheduling and used for analytics."
-msgstr "Escolha para quais contas este projeto publica — elas são pré-selecionadas ao agendar e usadas para análise."
+#~ msgid "Choose which accounts this project posts to — they're pre-selected when scheduling and used for analytics."
+#~ msgstr "Escolha para quais contas este projeto publica — elas são pré-selecionadas ao agendar e usadas para análise."
 
 #: src/components/content/PostViewport.jsx
 msgid "Choosing hashtags…"
@@ -2840,8 +2924,8 @@ msgstr "Conecte sua primeira fonte"
 #~ msgstr "Conecte sua conta do LinkedIn, X, TikTok, Instagram ou YouTube no PostBridge, depois atualize para vinculá-la a este projeto."
 
 #: src/components/content/AccountsTab.jsx
-msgid "Connect your LinkedIn, X, TikTok, Instagram or YouTube account in your scheduler, then refresh to link it to this project."
-msgstr "Conecte sua conta do LinkedIn, X, TikTok, Instagram ou YouTube no seu agendador e depois atualize para vinculá-la a este projeto."
+#~ msgid "Connect your LinkedIn, X, TikTok, Instagram or YouTube account in your scheduler, then refresh to link it to this project."
+#~ msgstr "Conecte sua conta do LinkedIn, X, TikTok, Instagram ou YouTube no seu agendador e depois atualize para vinculá-la a este projeto."
 
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "Connect your PostBridge account"
@@ -2996,12 +3080,20 @@ msgid "Context window"
 msgstr "Janela de contexto"
 
 #: src/components/workspace/QuestionsCard.jsx
-msgid "Continue →"
-msgstr "Continuar →"
+msgid "Continue"
+msgstr "Continuar"
+
+#: src/components/workspace/QuestionsCard.jsx
+#~ msgid "Continue →"
+#~ msgstr "Continuar →"
 
 #: src/components/audit/AuditWorkspace.jsx
-msgid "Continue audit →"
-msgstr "Continuar auditoria →"
+msgid "Continue audit"
+msgstr "Continuar auditoria"
+
+#: src/components/audit/AuditWorkspace.jsx
+#~ msgid "Continue audit →"
+#~ msgstr "Continuar auditoria →"
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Continue chat"
@@ -3651,6 +3743,10 @@ msgstr "Descartar notificação de atualização"
 msgid "dismissed"
 msgstr "descartado"
 
+#: src/components/content/AccountsTab.jsx
+msgid "Display name"
+msgstr "Nome de exibição"
+
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Docs / Help"
 msgstr "Documentação / Ajuda"
@@ -3725,6 +3821,14 @@ msgstr "Rascunhe a descrição, público e concorrentes de um projeto"
 #: src/components/content/PostMiniCard.jsx
 msgid "Draft post"
 msgstr "Rascunho de post"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Drafted a post"
+msgstr "Rascunhou um post"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Drafting a post"
+msgstr "Rascunhando um post"
 
 #: src/components/content/ContentWorkspace.jsx
 msgid "Drafting post"
@@ -3908,12 +4012,12 @@ msgid "Duct proposes this plan."
 msgstr "Duct propõe este plano."
 
 #: src/components/content/AccountsTab.jsx
-msgid "Duct publishes through a scheduler you connect, with your own account. Connect one to schedule posts and see how they do."
-msgstr "O Duct publica por um agendador que você conecta, com a sua própria conta. Conecte um para agendar posts e ver como eles se saem."
+#~ msgid "Duct publishes through a scheduler you connect, with your own account. Connect one to schedule posts and see how they do."
+#~ msgstr "O Duct publica por um agendador que você conecta, com a sua própria conta. Conecte um para agendar posts e ver como eles se saem."
 
 #: src/components/content/AccountsTab.jsx
-msgid "Duct publishes through these, with your own accounts, and reads each post's numbers back from them."
-msgstr "O Duct publica por eles, com as suas próprias contas, e lê de volta os números de cada post."
+#~ msgid "Duct publishes through these, with your own accounts, and reads each post's numbers back from them."
+#~ msgstr "O Duct publica por eles, com as suas próprias contas, e lê de volta os números de cada post."
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Duct reads \"last week\" and \"yesterday\" in {chosenZone}."
@@ -4470,6 +4574,10 @@ msgstr "Finalize o login com o Google no seu navegador — esta janela continuar
 msgid "Finish the security check above, then try again."
 msgstr "Conclua a verificação de segurança acima e tente novamente."
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Finished a side task"
+msgstr "Concluiu uma tarefa secundária"
+
 #: src/components/content/TextPostEditor.jsx
 msgid "First comment"
 msgstr "Primeiro comentário"
@@ -4926,6 +5034,10 @@ msgstr "Proteções"
 #: src/components/AppSidebar.jsx
 msgid "Guest"
 msgstr "Convidado"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Handle"
+msgstr "Identificador"
 
 #: src/components/AppSidebar.jsx
 msgid "Handled by the OS — change it in your system notification settings"
@@ -5601,8 +5713,8 @@ msgid "Link"
 msgstr "Link"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Link all"
-msgstr "Vincular tudo"
+#~ msgid "Link all"
+#~ msgstr "Vincular tudo"
 
 #: src/components/content/AnalyticsView.jsx
 #: src/components/content/PlanDayOne.jsx
@@ -5614,8 +5726,8 @@ msgid "Linked"
 msgstr "Vinculado"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Linked accounts"
-msgstr "Contas vinculadas"
+#~ msgid "Linked accounts"
+#~ msgstr "Contas vinculadas"
 
 #: src/components/memory/MemoryTimeline.jsx
 #~ msgid "Linked from chat — outside the filters below"
@@ -5679,8 +5791,12 @@ msgid "Loading {many}…"
 msgstr "Carregando {many}…"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Loading accounts…"
-msgstr "Carregando contas…"
+msgid "Loading accounts"
+msgstr "Carregando contas"
+
+#: src/components/content/AccountsTab.jsx
+#~ msgid "Loading accounts…"
+#~ msgstr "Carregando contas…"
 
 #: src/app/(app)/activity/page.jsx
 msgid "Loading activity"
@@ -5875,6 +5991,10 @@ msgstr "Criou um clipe de vídeo"
 #: src/components/workspace/ActivityRow.jsx
 msgid "Made by {model}"
 msgstr "Criado por {model}"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Make"
+msgstr "Fazer"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Making a video clip"
@@ -6156,6 +6276,10 @@ msgstr "Plano mensal"
 msgid "More"
 msgstr "Mais"
 
+#: src/components/content/AccountsTab.jsx
+msgid "More about posting on {label}"
+msgstr "Mais sobre postar em {label}"
+
 #: src/app/(app)/connections/page.jsx
 #~ msgid "More sources"
 #~ msgstr "Mais fontes"
@@ -6360,8 +6484,13 @@ msgid "No account needed. Nothing is sent anywhere but your own model provider."
 msgstr "Nenhuma conta necessária. Nada é enviado para outro lugar além do seu próprio provedor de modelo."
 
 #: src/components/content/AccountsTab.jsx
-msgid "No accounts available yet"
-msgstr "Nenhuma conta disponível ainda"
+#~ msgid "No accounts available yet"
+#~ msgstr "Nenhuma conta disponível ainda"
+
+#. placeholder {0}: connected.map((p) => p.label).join(", ")
+#: src/components/content/AccountsTab.jsx
+msgid "No accounts in {0} yet. Add them there, then refresh."
+msgstr "Nenhuma conta em {0} ainda. Adicione-as lá e depois atualize."
 
 #: src/app/(app)/activity/page.jsx
 msgid "No activity yet"
@@ -6673,6 +6802,10 @@ msgstr "Nenhum de seus {total} posts foi publicado. As ideias ainda estão abaix
 msgid "None of these — start a new one"
 msgstr "Nenhum desses — comece um novo"
 
+#: src/components/content/AccountsTab.jsx
+msgid "None on yet. Switch on where this brand posts."
+msgstr "Nenhum ativado ainda. Ative onde esta marca posta."
+
 #: src/components/settings/AgentAccess.jsx
 msgid "None yet. An agent shows up here once you allow it."
 msgstr "Nenhum ainda. Um agente aparece aqui depois que você o permite."
@@ -6933,6 +7066,10 @@ msgstr "Nada corresponde a esses filtros."
 msgid "Nothing needs you right now."
 msgstr "Nada precisa de você agora."
 
+#: src/components/content/AnalyticsView.jsx
+msgid "Nothing posted yet"
+msgstr "Nada postado ainda"
+
 #: src/app/(app)/execute/page.jsx
 msgid "Nothing proposed yet"
 msgstr "Nada proposto ainda"
@@ -7037,9 +7174,13 @@ msgstr "Os números voltam"
 msgid "Numbers from"
 msgstr "Números de"
 
-#: src/components/AppSidebar.jsx
-#~ msgid "Off"
-#~ msgstr "Desativado"
+#: src/components/content/AnalyticsView.jsx
+msgid "Numbers land here after the first post goes out, and on Refresh once it has synced."
+msgstr "Os números aparecem aqui depois que o primeiro post é publicado e ao Atualizar, assim que sincronizado."
+
+#: src/components/content/AccountsTab.jsx
+msgid "Off"
+msgstr "Desativado"
 
 #: src/components/TelemetryCard.jsx
 msgid "Off by default — Duct runs its backend here, and nothing leaves unless you say so."
@@ -7140,8 +7281,8 @@ msgid "One model at {foundAt}"
 msgstr "Um modelo em {foundAt}"
 
 #: src/components/audit/AuditWorkspace.jsx
-msgid "One moment — Duct has a quick question"
-msgstr "Só um momento — o Duct tem uma pergunta rápida"
+#~ msgid "One moment — Duct has a quick question"
+#~ msgstr "Só um momento — o Duct tem uma pergunta rápida"
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "One sentence"
@@ -7216,8 +7357,8 @@ msgid "Open"
 msgstr "Abrir"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Open {scheduler} →"
-msgstr "Abrir {scheduler} →"
+#~ msgid "Open {scheduler} →"
+#~ msgstr "Abrir {scheduler} →"
 
 #: src/components/content/VendorKeyForm.jsx
 msgid "Open {vendor}"
@@ -7269,6 +7410,7 @@ msgid "Open plan board →"
 msgstr "Abrir painel de planejamento →"
 
 #: src/components/content/AnalyticsView.jsx
+#: src/components/content/PostMiniCard.jsx
 msgid "Open post"
 msgstr "Abrir post"
 
@@ -7291,6 +7433,10 @@ msgstr "Abrir o plano atual"
 #: src/components/workspace/ActivityRow.jsx
 msgid "Open the document →"
 msgstr "Abrir o documento →"
+
+#: src/components/content/AnalyticsView.jsx
+msgid "Open the plan board"
+msgstr "Abrir o quadro de planejamento"
 
 #: src/components/workspace/MemoryRows.jsx
 msgid "Open the project timeline"
@@ -7652,6 +7798,10 @@ msgstr "Escolha um dos modelos dele para um nível na aba Níveis. Só aparecem 
 msgid "Pick the account to use:"
 msgstr "Escolha a conta a usar:"
 
+#: src/components/content/AccountsTab.jsx
+msgid "Pick the one posts go out through."
+msgstr "Escolha por onde os posts são publicados."
+
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Pick the ones Duct may use, up to {MAX_MODELS}. They join the tier pickers, and the first is used when a tier doesn’t name one."
 msgstr "Escolha os que o Duct pode usar, até {MAX_MODELS}. Eles entram nos seletores de nível, e o primeiro é usado quando um nível não indica nenhum."
@@ -7765,6 +7915,14 @@ msgstr "Rascunho de post"
 msgid "Post now"
 msgstr "Publicar agora"
 
+#: src/components/content/AccountsTab.jsx
+msgid "Post on {label}"
+msgstr "Postar em {label}"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Post only"
+msgstr "Apenas post"
+
 #: src/components/content/PostCard.jsx
 msgid "post preview"
 msgstr "prévia do post"
@@ -7805,6 +7963,10 @@ msgstr "Publicado"
 msgid "Posted {postedOn}"
 msgstr "Publicado {postedOn}"
 
+#: src/components/content/AccountsTab.jsx
+msgid "Posting by hand"
+msgstr "Postagem manual"
+
 #: src/app/(app)/content/page.jsx
 msgid "posts"
 msgstr "posts"
@@ -7812,6 +7974,10 @@ msgstr "posts"
 #: src/components/AppNav.jsx
 msgid "Posts"
 msgstr "Posts"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Posts go out through {primaryLabel}."
+msgstr "Os posts são publicados através de {primaryLabel}."
 
 #: src/lib/userProfile.js
 msgid "Practitioner"
@@ -7860,6 +8026,10 @@ msgstr "Slide anterior"
 msgid "Previous week"
 msgstr "Semana anterior"
 
+#: src/components/content/AccountsTab.jsx
+msgid "Primary"
+msgstr "Principal"
+
 #: src/components/content/BrandContextForm.jsx
 msgid "Primary color"
 msgstr "Cor primária"
@@ -7875,6 +8045,10 @@ msgstr "Principais movimentos de crescimento"
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Primary persona name"
 msgstr "Nome da persona principal"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Primary scheduler"
+msgstr "Agendador principal"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Primary segment"
@@ -7992,6 +8166,10 @@ msgstr "Propostas, aprovações e reversões chegam aqui."
 #: src/app/(app)/activity/page.jsx
 #~ msgid "Proposals, approvals, rollbacks and artifact versions land here, each with who did it."
 #~ msgstr "Propostas, aprovações, reversões e versões de artefatos chegam aqui, cada uma com quem as fez."
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Proposed a plan"
+msgstr "Propôs um plano"
 
 #: src/app/(app)/execute/page.jsx
 msgid "Proposed by"
@@ -8570,6 +8748,14 @@ msgstr "A solicitação falhou ({status})."
 msgid "research"
 msgstr "pesquisa"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Researched a pillar"
+msgstr "Pesquisou um pilar"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Researching a pillar"
+msgstr "Pesquisando um pilar"
+
 #: src/components/audit/AuditReport.jsx
 #: src/lib/auditEvents.js
 msgid "Researching competitors"
@@ -8690,8 +8876,16 @@ msgid "Review what changed"
 msgstr "Revisar o que mudou"
 
 #: src/components/workspace/ActivityRow.jsx
+msgid "Reviewed a post"
+msgstr "Revisou um post"
+
+#: src/components/workspace/ActivityRow.jsx
 msgid "Reviewed the post"
 msgstr "Revisou o post"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Reviewing a post"
+msgstr "Revisando um post"
 
 #: src/components/audit/AuditReport.jsx
 msgid "Reviewing Open Graph completeness…"
@@ -8887,6 +9081,7 @@ msgid "sandboxed"
 msgstr "em sandbox"
 
 #: src/components/connections/ProviderCard.jsx
+#: src/components/content/AccountsTab.jsx
 #: src/components/content/DiscoverPage.jsx
 #: src/components/content/PostViewport.jsx
 #: src/components/memory/MemoryTimeline.jsx
@@ -8982,8 +9177,8 @@ msgid "Saved the draft"
 msgstr "Salvou o rascunho"
 
 #: src/components/workspace/ActivityRow.jsx
-msgid "Saved the plan"
-msgstr "Salvou o plano"
+#~ msgid "Saved the plan"
+#~ msgstr "Salvou o plano"
 
 #: src/components/insights/AccountSelect.jsx
 msgid "Saved to this project, so you won’t be asked again."
@@ -9063,8 +9258,12 @@ msgid "Scheduled runs happen with no app open, so they always need a key."
 msgstr "Execuções agendadas acontecem sem o app aberto, então sempre precisam de uma chave."
 
 #: src/components/content/AccountsTab.jsx
-msgid "Scheduler"
-msgstr "Agendador"
+#~ msgid "Scheduler"
+#~ msgstr "Agendador"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Schedulers"
+msgstr "Agendadores"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Schema"
@@ -10283,6 +10482,10 @@ msgstr "Texto"
 msgid "Text cards"
 msgstr "Cartões de texto"
 
+#: src/lib/contentEnums.js
+msgid "Text post"
+msgstr "Post de texto"
+
 #: src/components/audit/ExecutionOffer.jsx
 msgid "Thanks! We’ll be in touch at <0>{contact}</0> to scope this out."
 msgstr "Obrigado! Entraremos em contato em <0>{contact}</0> para definir o escopo."
@@ -10320,6 +10523,10 @@ msgstr "Não deu para desconectar. Tente de novo."
 #: src/app/authorize/page.jsx
 msgid "That didn't go through. Try again in a moment."
 msgstr "Isso não funcionou. Tente novamente em um momento."
+
+#: src/components/content/AccountsTab.jsx
+msgid "That didn't save — your change has been put back. Try again."
+msgstr "Não foi salvo — sua alteração foi revertida. Tente novamente."
 
 #: src/components/content/AccountsTab.jsx
 msgid "That didn't save — your selection has been put back. Try again."
@@ -11162,8 +11369,8 @@ msgid "Unknown connector"
 msgstr "Conector desconhecido"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Unlink all"
-msgstr "Desvincular tudo"
+#~ msgid "Unlink all"
+#~ msgstr "Desvincular tudo"
 
 #: src/components/connections/ProjectAccountSelect.jsx
 msgid "Unnamed account"
@@ -11685,6 +11892,10 @@ msgstr "Do que o Duct planeja"
 #~ msgid "What Duct spent running your agents. These are charges on your own provider key — Duct never bills them."
 #~ msgstr "O que o Duct gastou executando seus agentes. Essas são cobranças na sua própria chave de provedor — o Duct nunca as fatura."
 
+#: src/components/content/AccountsTab.jsx
+msgid "What Duct writes for {label}"
+msgstr "O que Duct escreve para {label}"
+
 #: src/app/(app)/connections/page.jsx
 msgid "What each campaign costs and what it brings back."
 msgstr "O que cada campanha custa e o que ela traz de volta."
@@ -11736,6 +11947,10 @@ msgstr "O que o negócio faz"
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "What this page will hold"
 msgstr "O que esta página conterá"
+
+#: src/components/content/AccountsTab.jsx
+msgid "What to know about this channel"
+msgstr "O que saber sobre este canal"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "What to remember"
@@ -11923,6 +12138,10 @@ msgstr "Ganho"
 msgid "Winning hooks"
 msgstr "Ganchos vencedores"
 
+#: src/components/content/AccountsTab.jsx
+msgid "Wins"
+msgstr "Conquistas"
+
 #: src/lib/navigation.js
 msgid "Work"
 msgstr "Trabalho"
@@ -11938,6 +12157,10 @@ msgstr "Trabalhando"
 #: src/components/workspace/AgentChat.jsx
 msgid "Working it through"
 msgstr "Processando"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Working on a side task"
+msgstr "Trabalhando em uma tarefa secundária"
 
 #: src/components/audit/AuditReport.jsx
 #: src/components/PipelineProgress.jsx
@@ -12123,6 +12346,10 @@ msgstr "Você está conectado"
 msgid "You've been invited to <0>{projectName}</0>"
 msgstr "Você foi convidado para <0>{projectName}</0>"
 
+#: src/components/content/AccountsTab.jsx
+msgid "Your {label} account"
+msgstr "Sua conta {label}"
+
 #: src/components/ChatSidebar.jsx
 msgid "your account"
 msgstr "sua conta"
@@ -12152,20 +12379,20 @@ msgid "Your answer"
 msgstr "Sua resposta"
 
 #: src/components/insights/InsightsWorkspace.jsx
-msgid "Your answer decides what Duct looks at. Skip if you'd rather it choose."
-msgstr "Sua resposta decide o que o Duct analisa. Pule se preferir que ele escolha."
+#~ msgid "Your answer decides what Duct looks at. Skip if you'd rather it choose."
+#~ msgstr "Sua resposta decide o que o Duct analisa. Pule se preferir que ele escolha."
 
 #: src/lib/agentSession.js
 msgid "Your answer didn't go through — the network dropped it."
 msgstr "Sua resposta não foi enviada — a rede a descartou."
 
 #: src/components/audit/AuditWorkspace.jsx
-msgid "Your answers sharpen the findings. Skip if you'd rather Duct decide."
-msgstr "Suas respostas aprimoram as constatações. Pule se preferir que o Duct decida."
+#~ msgid "Your answers sharpen the findings. Skip if you'd rather Duct decide."
+#~ msgstr "Suas respostas aprimoram as constatações. Pule se preferir que o Duct decida."
 
 #: src/components/workspace/QuestionsCard.jsx
-msgid "Your answers sharpen the result. Skip if you'd rather Duct decide."
-msgstr "Suas respostas aprimoram o resultado. Pule se preferir que o Duct decida."
+#~ msgid "Your answers sharpen the result. Skip if you'd rather Duct decide."
+#~ msgstr "Suas respostas aprimoram o resultado. Pule se preferir que o Duct decida."
 
 #: src/app/(app)/artifacts/page.jsx
 msgid "your artifacts"

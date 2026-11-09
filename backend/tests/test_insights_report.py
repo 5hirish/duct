@@ -643,3 +643,46 @@ async def test_the_shared_fan_out_keeps_only_the_platforms_the_project_linked(mo
     monkeypatch.setattr(metrics, "_linked_platforms", lambda *a, **k: set())
     unscoped = await metrics.collect_reported_posts(None, _Proj())
     assert len(unscoped.rows) == 2  # nothing linked: show all, as the tab does
+
+
+async def test_the_fan_out_asks_only_the_schedulers_it_is_handed(monkeypatch):
+    """The Analytics tab narrows the read to the schedulers the project uses:
+    a stale key at one the project never posts through must not be asked."""
+    from dataclasses import dataclass
+
+    import service.publishers.metrics as metrics
+
+    @dataclass(frozen=True)
+    class _Spec:
+        id: str
+        label: str = ""
+
+    asked: list[str] = []
+
+    class _Pub:
+        def __init__(self, sid):
+            self.sid = sid
+
+        async def __aenter__(self):
+            asked.append(self.sid)
+            return self
+
+        async def __aexit__(self, *_a):
+            return False
+
+        async def reported_posts(self, *, refresh=False):
+            return []
+
+    class _Proj:
+        id = uuid.uuid4()
+        user_id = uuid.uuid4()
+
+    monkeypatch.setattr(metrics, "connected_specs", lambda *a, **k: [_Spec("zernio"), _Spec("post_bridge")])
+    monkeypatch.setattr(metrics, "publisher_for", lambda _uid, sid, _db: _Pub(sid))
+    monkeypatch.setattr(metrics, "_linked_platforms", lambda *a, **k: set())
+
+    result = await metrics.collect_reported_posts(None, _Proj(), specs=[_Spec("zernio")])
+    assert asked == ["zernio"] and not result.failures
+    asked.clear()
+    await metrics.collect_reported_posts(None, _Proj())
+    assert asked == ["zernio", "post_bridge"]   # unnarrowed: every connected one

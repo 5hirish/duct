@@ -5,7 +5,7 @@ import { msg } from "@lingui/core/macro";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { ChevronDown } from "lucide-react";
 import { POST_STATUS_LABELS, PostStatus } from "../../lib/contentEnums";
-import { AgendaGroup, agendaGroups, planItems, startOfDay } from "../../lib/contentSchedule";
+import { AgendaGroup, agendaGroups, onChannel, planItems, startOfDay } from "../../lib/contentSchedule";
 import { formatDate } from "../../lib/format";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -49,7 +49,7 @@ const NONE_LABELS = {
  *     lets the page scroll, with week headings pinned under the top bar
  *   - today: the reader's today, for scenes and tests
  */
-export default function PlanList({ plan, postsById = NO_POSTS, onReviseDay, scroll = "self", today }) {
+export default function PlanList({ plan, postsById = NO_POSTS, onReviseDay, scroll = "self", today, channel = null }) {
   const { i18n } = useLingui();
   const [filter, setFilter] = useState(ALL);
   const [allMissed, setAllMissed] = useState(false);
@@ -59,8 +59,8 @@ export default function PlanList({ plan, postsById = NO_POSTS, onReviseDay, scro
   const dayStamp = day.getTime();
 
   const items = useMemo(
-    () => planItems(plan, postsById, { locale: i18n.locale, today: new Date(dayStamp) }),
-    [plan, postsById, i18n.locale, dayStamp]
+    () => planItems(plan, postsById, { locale: i18n.locale, today: new Date(dayStamp) }).filter((it) => onChannel(it, channel)),
+    [plan, postsById, i18n.locale, dayStamp, channel]
   );
 
   const counts = useMemo(() => {

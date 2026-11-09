@@ -92,6 +92,29 @@ def requested_period(start: date, days: int | None = None) -> PlanPeriod:
     return PlanPeriod(start=start, days=days)
 
 
+def link_post_to_day(days: list, index: int, post_id: object) -> list | None:
+    """The plan's days with ``days[index]`` pointing at its drafted post, or
+    None when nothing changes (no such day, or already linked).
+
+    A slot is drafted from the moment its post exists. The link used to be
+    written when the drafting chat ended, so a chat cut off by a server
+    restart left a saved draft the board never found: the day still offered
+    "Draft post", and the next accepted plan was free to rewrite it, because
+    :func:`keep_drafted_days` keeps a day only by its ``post_id`` (2026-11-08)."""
+    if not (0 <= index < len(days)) or not isinstance(days[index], dict):
+        return None
+    day = dict(days[index])
+    status = day.get("status") or "pending"
+    if day.get("post_id") == str(post_id) and status != "pending":
+        return None
+    day["post_id"] = str(post_id)
+    if status == "pending":
+        day["status"] = "draft"
+    linked = list(days)
+    linked[index] = day
+    return linked
+
+
 def keep_drafted_days(old_days: list, new_days: list) -> tuple[list, list[int]]:
     """A revision of a plan whose posts are partly drafted. A day with a post
     (``post_id``) is the draft's slot: the board finds the post through it,

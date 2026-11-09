@@ -74,13 +74,14 @@ from agents.core.memory_tools import build_memory_tools_lc
 from agents.content.assessment import assess, reassess_post
 from agents.content.channels import (
     Platform,
-    brand_platforms,
     channel_payload,
     copy_problems,
     primary_channel,
     resolve as resolve_channel,
 )
-from agents.content.plan_period import PlanPeriod, plan_end
+from agents.content.channel_config import linked_pairs, load_channel_config
+from agents.content.plan_period import PlanPeriod, link_post_to_day, plan_end
+from agents.content.persistence import link_artifact
 from agents.content.plan_proposal import PROPOSED, build_proposal
 from agents.content.publishing import (
     SLIDE_RENDER,
@@ -90,6 +91,7 @@ from agents.content.publishing import (
     default_account,
     is_queued_at_publisher,
     is_text_only,
+    linked_accounts,
     load_media,
     metrics_sync,
     no_sync_message,
@@ -1191,8 +1193,27 @@ def build_content_tools_lc(
                     # pending → draft (see routes/content.py PATCH + the UI).
                     row = ContentPost(**values, status=ContentStatus.PENDING)
                     db.add(row)
+                # A draft for a plan day fills that day now, in the same
+                # commit, not when the chat ends: a chat cut off mid-way used
+                # to leave the board offering to draft the day again.
+                if session.plan_id is not None and session.day_index is not None:
+                    plan_row = db.get(ContentPlan, session.plan_id)
+                    days = link_post_to_day(plan_row.days or [], session.day_index, row.id) if plan_row else None
+                    if days is not None:
+                        plan_row.days = days
+                        plan_row.updated_at = utcnow()
+                        db.add(plan_row)
                 db.commit()
                 db.refresh(row)
+                if session.post_id != row.id and session.conversation_id is not None:
+                    # "Open the draft → its chat" finds the conversation by
+                    # this link. It too used to wait for the chat to end, so
+                    # a draft whose chat was cut off reopened on a new one.
+                    try:
+                        link_artifact(db, session.conversation_id, "post", row.id)
+                    except Exception:
+                        logger.warning("content: failed to link conversation %s → post %s",
+                                       session.conversation_id, row.id, exc_info=True)
                 session.post_id = row.id
                 logger.info(
                     "content: post %s upserted (slug=%s, layout=%s, slides=%d, images=%d)",
@@ -1286,6 +1307,7 @@ def build_content_tools_lc(
                 proj = db.get(Project, project_id)
                 if proj is None:
                     return _err(f"Project {project_id} not found.")
+                channel_config = load_channel_config(proj.brand_channels, linked_pairs(linked_accounts(db, project_id)))
                 payload = {
                     "project_id":            str(proj.id),
                     "project_name":          proj.name,
@@ -1299,11 +1321,12 @@ def build_content_tools_lc(
                     "content_brand":         proj.content_brand,
                     "content_pillars":       proj.content_pillars,
                     "content_visual_assets": proj.content_visual_assets,
-                    # Where the brand already posts, as the platform values a
-                    # plan day's `platforms` takes.
-                    "active_channels":       brand_platforms(
-                        (proj.brand_channels or {}).get("active_channels")
-                    ),
+                    # Where the brand posts, as the platform values a plan
+                    # day's `platforms` takes, and what the person said about
+                    # each channel (Accounts tab; channel_config).
+                    "active_channels":       channel_config.enabled(),
+                    "channels":              channel_config.profiles(),
+                    "primary_publisher":     channel_config.primary_publisher,
                 }
                 return _ok(payload)
         except Exception as exc:

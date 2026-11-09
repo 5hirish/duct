@@ -65,7 +65,8 @@ from agents.content.artifacts import (
     parse_artifact_json,
 )
 from agents.content.events import STEP_LABELS, ContentEvent, ContentStep, StepStatus
-from agents.content.channels import brand_platforms
+from agents.content.channel_config import linked_pairs, load_channel_config
+from agents.content.publishing import linked_accounts
 from agents.content.performance import AccountPerformance, load_account_performance
 from agents.content.plan_period import MAX_PLAN_DAYS, PlanPeriod, default_period, plan_end
 from agents.content.voice_rules import voice_rules_of, writing_samples_of
@@ -78,6 +79,7 @@ from agents.content.prompts import (
     build_orchestrator_system_prompt,
     build_plan_review_prompt,
     build_plan_user_prompt,
+    build_post_revise_prompt,
     build_post_user_prompt,
     build_reference_diagnosis_prompt,
 )
@@ -189,7 +191,8 @@ VISION_PROVIDERS = frozenset({Provider.ANTHROPIC})
 ASK_USER_DESCRIPTION = (
     "Ask the user up to 3 questions when their answer would materially change "
     "the plan or the post: the direction after a review (two to four options in "
-    "their words, plus free text), a missing brand voice, an audience you cannot "
+    "their words, each a label of two to five words with one short clause under "
+    "it), a missing brand voice, an audience you cannot "
     "infer, which of two tools or directions they want. Ask early, and never ask "
     "for something already in the brand context or the project memory."
 )
@@ -283,6 +286,7 @@ def _load_brand_context(project_id: UUID) -> ContentBrandContext:
         # truth); content-specific fields stay in content_brand. Fall back to the
         # legacy content_brand values for projects edited before this split.
         channels_blob = proj.brand_channels or {}
+        channel_config = load_channel_config(channels_blob, linked_pairs(linked_accounts(db, proj.id)))
         brand_voice = str(channels_blob.get("brand_voice") or brand_blob.get("brand_voice") or "")
         audience = _compose_audience(proj.audience) or str(brand_blob.get("audience") or "")
 
@@ -303,7 +307,8 @@ def _load_brand_context(project_id: UUID) -> ContentBrandContext:
             features=features,
             pillars=pillars,
             visual=visual,
-            active_channels=brand_platforms(channels_blob.get("active_channels")),
+            active_channels=channel_config.enabled(),
+            channel_profiles=channel_config.profiles(),
             writing_samples=writing_samples_of(brand_blob),
             voice_rules=voice_rules_of(brand_blob),
         )
@@ -837,17 +842,28 @@ class ContentRunner:
         pillar: str | None = None,
         format_slug: str = "",
         channel: str | None = None,
+        existing_post_id: UUID | None = None,
         chat_idle_timeout: float = CHAT_IDLE_TIMEOUT,
         llm: Any = None,
     ) -> None:
-        """Run a draft_post session end-to-end: load, write, then chat."""
+        """Run a draft_post session end-to-end: load, write, then chat.
+
+        ``existing_post_id`` is the post a plan day already holds. With it, or
+        with a session already bound to a post (opened from the post page),
+        the opening turn reviews the saved post and asks, instead of drafting
+        over it."""
         from agents.content.channels import resolve as resolve_channel
 
         session = get_session(session_id) or create_draft_session(session_id, project_id)
         ch = resolve_channel(channel)  # sync, no DB — safe before the first emit
         session.channel = ch.id
+        if existing_post_id is not None:
+            session.post_id = existing_post_id
+        revising = session.post_id is not None
 
         async def _opening(brand: ContentBrandContext) -> str:
+            if revising:
+                return build_post_revise_prompt(brand, day, channel=ch)
             return build_post_user_prompt(
                 brand, day,
                 topic=topic, pillar=pillar, format_slug=format_slug,

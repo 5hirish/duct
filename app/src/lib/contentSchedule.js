@@ -238,6 +238,24 @@ export function planItems(plan, postsById = {}, { locale, today = startOfDay(new
   return rows;
 }
 
+/** The platforms a plan day posts to: the saved post's once there is one, the day's before. */
+export function dayPlatforms(day, post) {
+  const list = Array.isArray(post?.platforms) && post.platforms.length ? post.platforms : day?.platforms;
+  return Array.isArray(list) ? list.filter(Boolean) : [];
+}
+
+/** True when the item is on `channel` (or when no channel is asked for). */
+export function onChannel(item, channel) {
+  return !channel || dayPlatforms(item.day, item.post).includes(channel);
+}
+
+/** The channels a plan's days are on, most used first: [{ channel, count }]. */
+export function planChannels(items) {
+  const counts = new Map();
+  for (const it of items) for (const c of dayPlatforms(it.day, it.post)) counts.set(c, (counts.get(c) || 0) + 1);
+  return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([channel, count]) => ({ channel, count }));
+}
+
 /** The counts a plan's header says: how much went out, how much was missed. */
 export function planProgress(items) {
   const out = { total: items.length, posted: 0, drafted: 0, missed: 0, pending: 0 };

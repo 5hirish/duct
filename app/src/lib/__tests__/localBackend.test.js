@@ -51,6 +51,23 @@ describe("settledBackend", () => {
     expect(reconcileStoredSession).toHaveBeenCalledTimes(1);
   });
 
+  it("hands a render that waited the same promise once the answer is in", async () => {
+    globalThis.window = {
+      __TAURI__: { core: { invoke: vi.fn(async () => ({ version: "0.7.2", capabilities: {} })) } },
+    };
+    expect(localBackend.backendPromise()).toBeNull();
+    const waited = localBackend.initLocalBackend();
+    await waited;
+    // The gate's retry must call use() on this, not read the settled value.
+    expect(localBackend.backendPromise()).toBe(waited);
+  });
+
+  it("never makes a browser wait on a promise", () => {
+    globalThis.window = {};
+    localBackend.settledBackend();
+    expect(localBackend.backendPromise()).toBeNull();
+  });
+
   it("does not judge the session against a sidecar that failed to start", async () => {
     globalThis.window = {
       __TAURI__: {
