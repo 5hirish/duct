@@ -547,6 +547,8 @@ async def _run_draft_worker(
         if req.plan_id is not None and req.day_index is not None:
             with next(db_session()) as db:
                 plan = db.get(ContentPlan, req.plan_id)
+                if plan is not None and plan.project_id != req.project_id:
+                    plan = None  # the route refuses this; a second guard costs nothing
                 if plan and 0 <= req.day_index < len(plan.days):
                     from agents.content.schema import Day
                     raw = plan.days[req.day_index]
@@ -602,6 +604,13 @@ async def run_post_stream(
 ) -> StreamingResponse:
     """Start a single-post draft session. SSE stream for the lifetime."""
     _project_for_user(db, user, req.project_id)
+    if req.plan_id is not None:
+        # The plan seeds the day and takes the post's link at the first save,
+        # so it has to be this project's: a plan id from another project
+        # would read that project's day and write the post into its board.
+        plan = _row_for_user(db, user, ContentPlan, req.plan_id, "Plan")
+        if plan.project_id != req.project_id:
+            raise HTTPException(404, "Plan not found")
     session_id = str(uuid.uuid4())
     _session_created_at[session_id] = time.monotonic()
     create_draft_session(session_id, req.project_id, plan_id=req.plan_id)

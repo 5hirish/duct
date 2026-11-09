@@ -1208,6 +1208,11 @@ def build_content_tools_lc(
                 # to leave the board offering to draft the day again.
                 if session.plan_id is not None and session.day_index is not None:
                     plan_row = db.get(ContentPlan, session.plan_id)
+                    # Only this project's plan: the session's plan id came in
+                    # on the request, and a post must never land on another
+                    # project's board however it was addressed.
+                    if plan_row is not None and plan_row.project_id != project_id:
+                        plan_row = None
                     days = link_post_to_day(plan_row.days or [], session.day_index, row.id) if plan_row else None
                     if days is not None:
                         plan_row.days = days
