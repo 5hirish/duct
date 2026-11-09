@@ -344,6 +344,22 @@ it is a claim about the code, not a way to quiet the check.
   `initials`.
   Use these instead of a component-local `fmtDate`/`fmtNum`/`prettify` — the
   per-component copies had drifted apart before they were consolidated.
+- `lib/analyticsReport.js` + `components/content/AnalyticsReport.jsx` +
+  `components/content/report/GrowthReportView.jsx` — the Analytics tab's
+  growth report. The backend answers one payload (`getAnalyticsReport`); the
+  lib reads it into the one state the tab is in (`reportState`: no sources,
+  empty, generating, failed, fresh, stale), the sources a person may tick
+  (`reconcileSelection` never leaves nothing ticked while something is
+  ready) and the rows a block can draw (`chartRows` coerces the measure and
+  drops rows without one; `drawableBlocks` skips a block type the app does
+  not know rather than crashing the report). `AnalyticsReport` owns the
+  pickers, the states and the wait (polling the read while a run writes,
+  `pollWhileVisible`); `GrowthReportView` draws the blocks and is what the
+  artifact library renders for `GROWTH_REPORT_JSON` too, so the stored copy
+  and the live one cannot diverge. Model text fills clamped slots under
+  translated labels; the only large type is the verdict. Nothing here
+  regenerates on its own: Refresh is the one thing that spends a model run.
+  Every state is a scene in `/preview` over `lib/__fixtures__/growthReport.mjs`.
 - `lib/contentMetrics.js` — a content post's numbers, read the same way on
   every screen: `metricValue` / `metricsOf` walk `METRIC_ALIASES`, the mirror
   of `backend/service/content_metrics.py` that a backend test parses and holds

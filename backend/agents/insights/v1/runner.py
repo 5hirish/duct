@@ -53,6 +53,7 @@ redeploy. See ``agents/core/session.py`` for the port this implements.
 from __future__ import annotations
 
 import logging
+from dataclasses import dataclass, field
 from typing import Any, Callable
 from uuid import UUID, uuid4
 
@@ -83,6 +84,7 @@ from agents.core.memory_tools import build_memory_tools_lc
 from agents.core.quota import credential_identity
 from agents.core.session import BaseAgentSession
 from agents.insights.brief import DEFAULT_FORMAT, parse_brief
+from agents.insights.report import parse_report
 from agents.insights.data_tools import build_data_tools_lc
 from agents.insights.subagents import (
     build_general_purpose_subagent,
@@ -92,6 +94,8 @@ from agents.insights.subagents import (
 from agents.insights.prompts.autonomous import (
     CAPABILITIES_PHASE_3,
     CAPABILITIES_UNATTENDED,
+    DELIVERABLE_BRIEF,
+    DELIVERABLE_REPORT,
     build_insights_system_prompt,
     build_insights_user_prompt,
     deliverable_format_block,
@@ -143,7 +147,23 @@ LIMITS = RunLimits(
 
 # Re-exported: the scratch-space verbs and the summarization floor are the
 # shared session's (agents/core/deep_session.py); tests read them from here.
-__all__ = ["AutonomousInsightsRunner", "FILESYSTEM_TOOLS", "LIMITS", "SUMMARIZATION_FLOOR_TOKENS"]
+__all__ = ["AutonomousInsightsRunner", "FILESYSTEM_TOOLS", "LIMITS", "ReportResult", "SUMMARIZATION_FLOOR_TOKENS"]
+
+# How many times a refused report payload goes back to the model. One is
+# enough in practice (a trailing comma, a string where a number goes); two
+# bounds the cost of a model that cannot write JSON at all.
+REPORT_REPAIR_TURNS = 2
+
+
+@dataclass
+class ReportResult:
+    """What a report run produced: the validated report, or why not."""
+
+    report: dict | None = None
+    problems: list[str] = field(default_factory=list)
+    versions: int = 0
+    repaired: bool = False
+
 
 # How long a session waits for a follow-up before closing itself. Matches audit
 # and content; the route's own inactivity pruner is the longer backstop.
@@ -213,6 +233,8 @@ class AutonomousInsightsRunner:
         system_prompt: str = "",
         on_system_prompt: Callable[[str], None] | None = None,
         replay: dict[tuple[str, str, str], str] | None = None,
+        deliverable: str = DELIVERABLE_BRIEF,
+        connected_tools: bool | None = None,
     ) -> Any:
         """Assemble the agent: memory tools, mid-run questions, planning.
 
@@ -246,6 +268,17 @@ class AutonomousInsightsRunner:
         interactive shape), which only this function knows; the caller that
         records a run's context needs its fingerprint without re-deriving
         those decisions.
+
+        ``deliverable`` picks the contract the prompt ends with: a brief, or
+        the Analytics tab's report (``agents/insights/report.py``).
+
+        ``connected_tools`` mounts the user's MCP servers. ``None`` keeps the
+        rule interactive sessions have always had (mounted when there is a
+        session to approve a call, never on a replay). A report run passes
+        ``True`` deliberately: the person chose OpenSEO or PostHog as a
+        source, both are presets whose read-only tools Duct trusts, and with
+        no pause to mount, every other tool answers ``needs_approval`` rather
+        than running (``agents/core/mcp_tools.py``).
         """
         # Recorded before the default is filled in: a caller-supplied model is
         # a deliberate choice (tests, and any caller that already resolved one),
@@ -309,8 +342,17 @@ class AutonomousInsightsRunner:
         # binder mounts nothing when no server is connected, so most sessions
         # keep the prefix they had.
         mcp_tools: list[Any] = []
-        if interactive and session is not None and replay is None:
-            mcp_tools = build_mcp_tools_lc(user_id, pause=interrupt_pause, log_prefix="insights-v1")
+        mount_mcp = (
+            connected_tools
+            if connected_tools is not None
+            else (interactive and session is not None and replay is None)
+        )
+        if mount_mcp and replay is None:
+            mcp_tools = build_mcp_tools_lc(
+                user_id,
+                pause=interrupt_pause if interactive and session is not None else None,
+                log_prefix="insights-v1",
+            )
             tools += mcp_tools
         # Data reach. The verifier gets the SAME tool objects, so it inherits
         # the parent's project scoping and credential closure rather than
@@ -387,6 +429,7 @@ class AutonomousInsightsRunner:
             ),
             can_execute=bool(execution_tools),
             can_use_connected_tools=bool(mcp_tools),
+            deliverable=deliverable,
         )
         if on_system_prompt is not None:
             on_system_prompt(prompt_text)
@@ -693,6 +736,126 @@ class AutonomousInsightsRunner:
         # A run that reached no conclusion worth keeping is reported as such
         # rather than dressed up as an empty brief.
         return written[-1] if written else {}
+
+
+    async def run_report(
+        self,
+        emit: Callable,
+        *,
+        llm: Any = None,
+        prompt: str,
+        report_plan: str,
+        template: str = "",
+        business_context: str = "",
+        user_context: str = "",
+        memory: str = "",
+        data_sources: str = "",
+        project_id: UUID | None = None,
+        user_id: UUID | None = None,
+        remember: bool = True,
+        connected_tools: bool = False,
+        compress: bool = True,
+        start_version: int = 0,
+        repair_turns: int = REPORT_REPAIR_TURNS,
+    ) -> ReportResult:
+        """One unattended turn that writes the Analytics tab's report.
+
+        The same agent and tools as ``run_once``, two differences: the prompt
+        ends with the report contract instead of the brief's, and the closing
+        tag is parsed against ``GrowthReport`` rather than stored as prose.
+        A payload the schema refuses is not lost quietly: the problems go
+        back to the model as one more turn on the same thread ("the report
+        did not validate: …, write the whole object again"), up to
+        ``repair_turns`` times, because the alternative is a tab that says
+        "generating" and then nothing. The thread is new each run: a report
+        is a snapshot, not a conversation.
+
+        ``emit`` is wrapped by ``ArtifactPersister`` upstream, so emitting
+        ARTIFACT_VERSION with the validated report is what stores it.
+        ``start_version`` is the version the template's artifact group already
+        holds, so a refresh is v(n+1) of the same group rather than a
+        collision on ``(group_id, version)`` that drops the new report.
+        """
+        agent = self.build_agent(
+            llm=llm,
+            session=None,
+            emit=emit,
+            project_id=project_id,
+            user_id=user_id,
+            remember=remember,
+            interactive=False,
+            # A report proposes nothing: the tab reads, the chat acts.
+            execute=False,
+            compress=compress,
+            deliverable=DELIVERABLE_REPORT,
+            connected_tools=connected_tools,
+        )
+        result = ReportResult(versions=start_version)
+
+        async def _on_artifact(raw: str, turn_text: str) -> None:
+            parsed = parse_report(raw)
+            if parsed.ok:
+                result.report = parsed.report.model_dump()
+                result.problems = []
+                result.versions += 1
+                await emit({
+                    "event": AgentEvent.ARTIFACT_VERSION,
+                    "version_id": result.versions,
+                    "label": "Report" if result.versions - start_version == 1 else f"Report, take {result.versions - start_version}",
+                    "payload": {
+                        "title": parsed.report.title,
+                        "format": "report",
+                        "template": template,
+                        "report": result.report,
+                    },
+                })
+                logger.info("insights: report %r, %d blocks", parsed.report.title, len(parsed.report.blocks))
+            else:
+                result.problems = parsed.problems
+                logger.warning("insights: report payload refused — %s", "; ".join(parsed.problems)[:400])
+
+        thread_id = str(uuid4())
+        config = {"configurable": {"thread_id": thread_id}, "recursion_limit": LIMITS.recursion}
+        common = dict(
+            emit=emit,
+            on_artifact_close=_on_artifact,
+            log_prefix="insights-v1",
+            config=config,
+            provider=self.provider,
+            model=self.model,
+            conversation_id=thread_id,
+            user_id=str(user_id or ""),
+        )
+        await stream_agent(
+            agent,
+            build_insights_user_prompt(
+                prompt=prompt,
+                business_context=business_context,
+                user_context=user_context,
+                memory=memory,
+                data_sources=data_sources,
+                report_plan=report_plan,
+            ),
+            **common,
+        )
+        repairs = 0
+        while result.report is None and repairs < repair_turns:
+            repairs += 1
+            result.repaired = True
+            await stream_agent(agent, _repair_prompt(result.problems), **common)
+        await emit({"event": AgentEvent.PIPELINE_FINISHED, "status": StepStatus.SUCCESS})
+        return result
+
+
+def _repair_prompt(problems: list[str]) -> str:
+    listed = "\n".join(f"- {p}" for p in problems) or "- the payload was not a JSON object"
+    return (
+        "The report you wrote did not validate, so the app could not draw it:\n"
+        f"{listed}\n\n"
+        "Write the whole report again inside <duct_artifact> … </duct_artifact> with "
+        "`format: report`, as one JSON object and nothing else — the same numbers, the "
+        "same blocks, with these problems fixed. Do not fetch anything again."
+    )
 
 
 # ---------------------------------------------------------------------------

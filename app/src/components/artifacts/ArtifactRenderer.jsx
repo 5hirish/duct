@@ -17,9 +17,11 @@ import { cn } from "@/lib/utils";
 // artifact of that type is actually on screen.
 const AuditReportV1 = lazy(() => import("@/components/audit/AuditReportV1"));
 const ChartSpecView = lazy(() => import("./ChartSpecView"));
+const GrowthReportView = lazy(() => import("@/components/content/report/GrowthReportView"));
 
 export const CONTENT_TYPES = {
   REPORT_JSON: "application/vnd.duct.report+json",
+  GROWTH_REPORT_JSON: "application/vnd.duct.growth-report+json",
   TABLE_JSON: "application/vnd.duct.table+json",
   CHART_JSON: "application/vnd.duct.chart+json",
   DIFF_JSON: "application/vnd.duct.diff+json",
@@ -259,6 +261,17 @@ export default function ArtifactRenderer({ artifact, content }) {
   const ct = artifact?.content_type || "";
   const structured = artifact?.structured_json?.structured_data || null;
 
+  // The Analytics tab's growth report: blocks the app draws from structured_json.
+  if (ct === CONTENT_TYPES.GROWTH_REPORT_JSON) {
+    const report = artifact?.structured_json || null;
+    return report ? (
+      <Suspense fallback={<SkeletonDocument className="p-2" label={t`Loading the artifact`} />}>
+        <GrowthReportView report={report} className="p-4" />
+      </Suspense>
+    ) : (
+      <p className="app-subtle text-sm p-2"><Trans>This report has nothing stored to draw.</Trans></p>
+    );
+  }
   // Structured report (vendor type; legacy rows used application/json)
   if (structured && (ct === CONTENT_TYPES.REPORT_JSON || ct === "application/json" || artifact.kind === "report")) {
     return (

@@ -203,6 +203,34 @@ def render_insights() -> str:
         f"Opening user turn · ~{approx_tokens(turn):,} tokens",
         fenced(turn),
     ))
+    out.append(render_insights_report())
+    return "\n".join(out)
+
+
+def render_insights_report() -> str:
+    """The Analytics tab's report (agents/insights/report.py) runs the same
+    agent with the report contract in place of the brief's, and the template
+    plan in the user turn."""
+    from agents.insights.prompts.autonomous import REPORT_CONTRACT, report_plan_block
+    from agents.insights.report_templates import SOURCES, STATUS_READY, SourceState, template
+
+    out = [section(
+        f"Report contract · ~{approx_tokens(REPORT_CONTRACT):,} tokens",
+        "Replaces \"Writing the brief\" when the run writes the Analytics tab's report.\n\n"
+        + fenced(REPORT_CONTRACT),
+    )]
+    tmpl = template("growth_overview")
+    chosen = [
+        SourceState(SOURCES["gsc"], STATUS_READY, "northwind.example"),
+        SourceState(SOURCES["publishers"], STATUS_READY, "Zernio"),
+        SourceState(SOURCES["posthog"], STATUS_READY, "PostHog"),
+    ]
+    plan = report_plan_block(tmpl, chosen, date_from="2026-10-01", date_to="2026-10-30")
+    out.append(section(
+        f"Report plan block · ~{approx_tokens(plan):,} tokens",
+        "Per project, in the user turn: the template, the sources the person ticked and the blocks to fill.\n\n"
+        + fenced(plan),
+    ))
     return "\n".join(out)
 
 
