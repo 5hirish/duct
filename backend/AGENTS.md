@@ -683,6 +683,41 @@ Postgres `DATABASE_URL` names.
   input) inside 30 minutes joins the earlier Apify run instead of paying for a
   new one. In process; the API runs one worker.
 - `routes/generate.py` — `POST /api/insights/generate` for interactive brief + LangChain synthesis envelope
+- `routes/content_reports.py` — the Analytics tab's **growth report**: the
+  insights agent, unattended, over the sources the person ticked, writing
+  the `GrowthReport` the app draws (`agents/insights/report.py`) rather than
+  a brief. `GET /content/analytics/report` answers templates, the sources
+  that can feed the chosen one, the latest stored copy (`stale` after
+  `REPORT_TTL`, a day) and whether a run is writing; `POST` starts one, or
+  joins the one already writing the same project and template. Nothing
+  regenerates by itself: a report is a model run on the person's key, so the
+  stale copy is served and Refresh is the only thing that spends again.
+  Stored through `ArtifactPersister` as one artifact group per project and
+  template (`kind = "growth-report"`, `GROWTH_REPORT_JSON`), so a refresh is
+  the next version and the library keeps the history. Three things worth
+  knowing before changing it:
+  - **The templates are data** (`agents/insights/report_templates.py`): a
+    question, the sources that can answer it, and the blocks to fill, each
+    naming the sources that can fill it. A block none of the chosen sources
+    can fill is left out of the plan the model gets (`report_plan_block`),
+    never left for a guess. A source is one of three kinds: a connector with
+    an insights catalog, the project's schedulers (one source, however many
+    hold accounts), or an MCP preset whose read-only tools Duct trusts
+    (OpenSEO, PostHog). A report run mounts the MCP tools with no pause, so
+    anything that would ask first answers `needs_approval` instead.
+  - **The schedulers are a FetchData entity** (`social_post_metrics`,
+    `agents/insights/catalog/publishers.py`), read through
+    `service/publishers/metrics.collect_reported_posts`, the same fan-out the
+    Analytics tab's per-post table uses, so the agent and the table cannot
+    disagree about a post's numbers. They are a vendor key on the owner, not
+    a connector on the user, so `fetchers.fetch_entity` branches to
+    `fetch_publishers` before resolving connector credentials, and
+    `setup.data_sources_block` adds their line by hand.
+  - **A refused payload gets a repair turn, never a silent loss.**
+    `AutonomousInsightsRunner.run_report` parses the closing tag against
+    `GrowthReport`; counts over the limits are clamped, anything else goes
+    back to the model as problems, up to `REPORT_REPAIR_TURNS`. The route
+    records the failure on its run entry so the tab can say what happened.
 - `routes/project_members.py` — project members + email invitations (`docs/engineering/2026-08-16-project-collaboration-plan.md`)
 - `service/membership.py` — project access checks (owner vs collaborator) and invite token handling
 - `data/google_ads/` — `google-ads-report.json` (demo brief), `raw/demo_raw_payload.json`
@@ -1202,6 +1237,14 @@ don't fit.
   through `structured_output`, not `with_structured_output`: it asks Claude
   for its own JSON-schema output, since the integration's default forces a
   tool call that Fable 5.1 refuses.
+- `agents/insights/report.py` + `prompts/autonomous.REPORT_CONTRACT` — the
+  structured deliverable beside the brief. One agent, two contracts: the
+  system prompt ends with `ARTIFACT_CONTRACT` (prose) or `REPORT_CONTRACT`
+  (blocks with inline rows), chosen by `build_insights_system_prompt(
+  deliverable=…)`, two cached prefixes rather than one per project; which
+  template and sources ride in the user turn as `<report_plan>`.
+  `VIZ_PROTOCOL` (which chart answers which question) reaches both, because
+  the HTML brief draws charts too and drew a pie of twenty queries once.
 - `agents/insights/totals.py` — **Duct adds up a pull; the model quotes the
   sum.** `fetch_entity` puts `totals`, `rates` and per-dimension `subtotals`
   on every row report, from the catalog's `agg`, `ratio` and `weight`, and

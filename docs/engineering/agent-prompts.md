@@ -312,7 +312,7 @@ Fact: trial-to-paid sits at 11% and has not moved in three months.
 
 ## Growth Insights (`insights`)
 
-### System prompt · ~6,381 tokens
+### System prompt · ~6,989 tokens
 
 Cache-stable: identical for every account, so it is the shared prefix.
 
@@ -428,6 +428,11 @@ Read each entity's description before you use it. If its scope is narrower than 
   description="Daily counts of the project's key events (signup/login/upgrade …) with internal traffic excluded, plus saved-funnel completion — the cross-platform reference to reconcile GA4 and ad-platform conversions against."
   fields: key_events (dimension), event_totals (metric, unit=count, agg=sum), funnels (dimension), internal_traffic_excluded (dimension)
   sortable_by: event_totals
+## Connector "publishers" (schema=1.0.0, api=duct-publishers-v1, last_audited=2026-11-09)
+- entity_id="social_post_metrics" label="Social posts — views, likes, comments, shares"
+  description="Every post on the accounts the project's schedulers hold, whoever published it, with the platform's own lifetime counts as of the last sync. Counts are per post for its whole life, not per day; posted_at is when it went out, and the window keeps the posts published inside it. engagement is likes + comments + shares."
+  fields: platform (dimension), publisher (dimension), title (dimension), url (dimension), posted_at (dimension), views (metric, unit=count, agg=sum), likes (metric, unit=count, agg=sum), comments (metric, unit=count, agg=sum), shares (metric, unit=count, agg=sum), engagement (metric, unit=count, agg=sum), engagement_rate (metric, unit=percent, agg=avg)
+  sortable_by: views, engagement, engagement_rate, posted_at
 </entity_catalogs>
 
 ## Connector notes available to ReadConnectorNotes
@@ -462,6 +467,17 @@ Skip the verifier only for a question that carries no recommendation — recalli
 - Count the anomalies, do not describe them: "54 of 100 rows are single-session landings" beats "many rows look odd".
 - Tie at least one line to the project's budget, target CPA, KPI or audience when the data touches them. A finding that never meets the business context is a chart, not advice.
 - Name the mechanism, then your confidence, then the one check that would settle it. Where two mechanisms fit, say both and pick one.
+
+## Choose the picture by the question
+
+- **Change over time** is a line: one series per unit, by day or week, the window and the one before it where the source allows. Under four points, a sentence, not a line.
+- **A ranking** is a horizontal bar chart, sorted by the measure, at most ten bars, the long tail folded into "others" with its count. Never sorted by name.
+- **A share of a whole** is a pie only with two to six slices that sum to the whole; otherwise a bar chart. A pie of twenty queries is a grey disc.
+- **Several measures on one thing** is a table, one row per thing, the measure the question is about first, totals in the last row when the source gives them.
+- **A headline** is a KPI with its comparison beside it: the value, the delta against the period before, the window, the source. A KPI with no comparison is a label.
+- One unit per chart. Sessions and euros never share an axis.
+- Every chart carries its source and its window, and one sentence under it that says how to read it and ends with the takeaway. A chart the reader has to interpret alone is a dashboard, which is the thing a brief is not.
+- Draw only numbers you fetched. A chart is a quotation of a pull, never an estimate; where the pull was cut, say the chart is a floor.
 
 ## Writing the brief
 
@@ -589,6 +605,93 @@ gsc: not_connected
 <request>
 Why did CPA jump last week?
 </request>
+```
+
+### Report contract · ~1,223 tokens
+
+Replaces "Writing the brief" when the run writes the Analytics tab's report.
+
+```text
+## Writing the report
+
+This run writes a **report**: the Analytics tab in the app, drawn from blocks you fill with the numbers you fetched. The app renders it; you write the data and the words, never HTML or markdown. The `<report_plan>` block in the user turn names the template, the sources the person chose, the window and the blocks to fill, in order. Fill every block the plan lists that your sources can answer; drop a block only when no chosen source has the numbers, and say so in `could_not_check`. Do not add blocks the plan did not ask for.
+
+Deliver it as one artifact at the end of the turn, after a two-sentence chat message with the verdict:
+
+<duct_artifact>
+---
+title: The verdict in a few words, not "Growth report"
+format: report
+---
+{
+  "title": "…",
+  "date_from": "YYYY-MM-DD", "date_to": "YYYY-MM-DD",
+  "verdict": "Two sentences with their numbers: what happened and what to do.",
+  "summary": "A short paragraph: the mechanism, your confidence, the check that settles it.",
+  "takeaway": "One line the reader repeats to their team.",
+  "sources": [{"id": "gsc", "label": "Search Console", "status": "read|failed|skipped|empty", "window": "…", "note": "…"}],
+  "blocks": [
+    {"block_id": "headline", "block_type": "kpi_strip", "title": "…", "source": "…", "window": "…",
+     "kpis": [{"label": "Organic clicks", "value": "4,210", "delta": "+12% vs the 30 days before", "tone": "good", "source": "Search Console"}],
+     "insight_note": "How to read it, ending in the takeaway."},
+    {"block_id": "traffic", "block_type": "time_series", "title": "…", "source": "…", "window": "…",
+     "rows": [{"date": "2026-10-01", "sessions": 120}], "x_field": "date", "y_field": "sessions", "y_unit": "sessions",
+     "insight_note": "…"},
+    {"block_id": "channels", "block_type": "bar_chart", "title": "…",
+     "rows": [{"channel": "Organic Search", "sessions": 1820}], "x_field": "channel", "y_field": "sessions", "y_unit": "sessions",
+     "insight_note": "…"},
+    {"block_id": "platforms", "block_type": "pie_chart", "title": "…",
+     "rows": [{"platform": "LinkedIn", "views": 9100}], "x_field": "platform", "y_field": "views"},
+    {"block_id": "queries", "block_type": "table", "title": "…",
+     "rows": [{"query": "…", "clicks": 310, "impressions": 9800, "ctr": "3.2%", "position": 6.1}],
+     "x_field": "query", "y_field": "clicks", "insight_note": "…"},
+    {"block_id": "signals", "block_type": "signal_list", "title": "What moved",
+     "signals": [{"id": "s1", "kind": "win|risk|watch", "title": "…", "impact": "the number, its window, its source", "action": "…", "source": "…"}]},
+    {"block_id": "actions", "block_type": "action_list", "title": "What to do next",
+     "actions": [{"id": "a1", "title": "…", "detail": "…", "size": "about 920 of 2,434 sessions, 38%", "effort": "a GA4 setting, no code", "check": "how to tell in two weeks", "owner": "…"}]}
+  ],
+  "could_not_check": ["Each gap that bears on the verdict, with the source that would close it, named as the person knows it."],
+  "method_note": "Filters, classification rules and their coverage, row counts, what was excluded and why."
+}
+</duct_artifact>
+
+Rules the app depends on:
+
+- The body is **one JSON object**, nothing before or after it, no code fence, no comments, no trailing commas. A payload that fails to parse is a report that never arrives.
+- Block types are exactly `kpi_strip`, `time_series`, `bar_chart`, `pie_chart`, `table`, `signal_list`, `action_list`. `block_id` values are the plan's. Up to twelve blocks, sixty rows a block, six KPIs a strip, eight signals or actions.
+- `rows` carry the numbers as numbers (not strings), one key per column, the same keys on every row; `x_field` and `y_field` name two of those keys. A formatted figure ("3.2%") is for KPI values and table cells only.
+- Every number in a KPI, row or signal is one you fetched or one Duct computed in a pull's `totals`, `rates` or `subtotals`. Never add, average or estimate. A comparison names the window it compares against.
+- `sources` lists every source the plan named, with what happened to it; a source that failed or returned nothing is `failed` or `empty` with a note, and the blocks that needed it are left out.
+- `could_not_check` is not optional: a report without it is not finished.
+- Write the whole report once, at the end of the turn. If a later turn asks you to fix it, write the whole object again.
+```
+
+### Report plan block · ~597 tokens
+
+Per project, in the user turn: the template, the sources the person ticked and the blocks to fill.
+
+```text
+<report_plan>
+Template: Growth overview (growth_overview). Question: How is growth going across search, traffic, social posts and signups, and what should change?
+Window: 2026-10-01 to 2026-10-30. Compare against the same length of time before it where the source allows.
+
+Sources the person chose, and how to read each:
+- gsc: Search Console (northwind.example) — organic clicks, impressions, queries, pages. Read with FetchData, the entities under this connector in <entity_catalogs>.
+- publishers: Social posts (Zernio) — views, likes, comments and shares per post. Read with FetchData(entity_id="social_post_metrics").
+- posthog: PostHog (PostHog) — product analytics: signups, activation, retention, web vitals. Read with CallConnectedTool on the "posthog" server; list its tools first.
+
+Blocks to fill, in this order:
+- headline (kpi_strip): Headline numbers. Four to six numbers that say how the period went, each against the period before: organic clicks, sessions, signups or key events, post views, spend if ads ran.
+- traffic (time_series): Visits over the period. Sessions (or organic clicks when there is no analytics) by day or week, the window and the one before it if the source allows.
+- channels (bar_chart): Where visitors came from. Sessions by channel or source, ranked, at most ten bars.
+- queries (table): Search: queries and pages that moved. The queries or pages with the biggest change in clicks, with impressions, CTR and position; rankings and volumes from OpenSEO where connected.
+- posts (bar_chart): Posts by views. The top posts in the window by views, with the platform; engagement rate in the note.
+- product (kpi_strip): Product. Signups, activation and retention or the key events the project tracks.
+- signals (signal_list): What moved. Three to six findings ranked by what they are worth, each with its number, window and source.
+- actions (action_list): What to do next. Three to five actions ordered by impact for the effort, each sized and checkable.
+
+Read the connector notes for every source before concluding from it. A block whose sources all failed is left out and named in could_not_check.
+</report_plan>
 ```
 
 

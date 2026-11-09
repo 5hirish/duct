@@ -465,7 +465,7 @@ msgstr "Quedan {left}"
 
 #: src/components/content/PlanBoard.jsx
 msgid "{left} to go"
-msgstr "{left} restantes"
+msgstr "{left} por hacer"
 
 #: src/components/content/FormatLibrary.jsx
 #~ msgid "{linkedCount, plural, one {# linked style} other {# linked styles}}"
@@ -473,7 +473,7 @@ msgstr "{left} restantes"
 
 #: src/components/content/AccountsTab.jsx
 msgid "{linkedHere, plural, one {# account} other {# accounts}} via {primaryLabel}"
-msgstr "{linkedHere, plural, one {# cuenta} other {# cuentas}} mediante {primaryLabel}"
+msgstr "{linkedHere, plural, one {# cuenta} other {# cuentas}} vía {primaryLabel}"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{llmsLines} lines"
@@ -557,7 +557,7 @@ msgstr "{omitted, plural, one {# más quedó fuera; elige repositorios concretos
 
 #: src/components/content/AccountsTab.jsx
 msgid "{onCount} on · {linkedCount} linked via {primaryLabel}"
-msgstr "{onCount} activas · {linkedCount} vinculadas mediante {primaryLabel}"
+msgstr "{onCount} activas · {linkedCount} vinculadas vía {primaryLabel}"
 
 #: src/components/content/AccountsTab.jsx
 msgid "{onCount} on, all posted by hand"
@@ -646,7 +646,7 @@ msgstr "{posted} de {total} publicadas"
 
 #: src/components/content/PlanBoard.jsx
 msgid "{posted} of {total} posted, {missed} missed, {drafted} drafted"
-msgstr "{posted} publicadas de {total}, {missed} omitidas, {drafted} en borrador"
+msgstr "{posted} de {total} publicadas, {missed} omitidas, {drafted} redactadas"
 
 #: src/components/content/PlanBoard.jsx
 msgid "{posted} of its {total} posts went out. The next plan learns from them."
@@ -654,7 +654,7 @@ msgstr "{posted} de sus {total} publicaciones salieron. El próximo plan aprende
 
 #: src/components/content/PlanBoard.jsx
 msgid "{posted} posted · {left} to go"
-msgstr "{posted} publicadas · {left} restantes"
+msgstr "{posted} publicadas · {left} por hacer"
 
 #: src/components/audit/AuditReport.jsx
 msgid "{posts, plural, one {# post} other {# posts}}"
@@ -1169,7 +1169,7 @@ msgstr "Una receta que el agente de redacción sigue. Indica a qué se aplica, l
 
 #: src/components/content/FormatLibrary.jsx
 msgid "A reusable recipe — structure, hook rules, image prompt rules — that the drafting agent follows for the media and channels you pick."
-msgstr "Una receta reutilizable —estructura, reglas de gancho, reglas de prompt de imagen— que el agente de redacción sigue para los medios y canales que elijas."
+msgstr "Una receta reutilizable —estructura, reglas de gancho, reglas de indicaciones de imagen— que el agente de redacción sigue para los medios y canales que elijas."
 
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "A run stopped on an error"
@@ -1193,7 +1193,7 @@ msgstr "Una solicitud de inicio de sesión dura diez minutos. Vuelve a empezar d
 
 #: src/components/content/FormatLibrary.jsx
 msgid "A swipe-through lesson, one idea per slide. Use when the post teaches or lists; not for a personal story."
-msgstr "Una lección deslizable, una idea por diapositiva. Úsala cuando la publicación enseñe o liste; no para una historia personal."
+msgstr "Una lección deslizable, una idea por diapositiva. Úsala cuando la publicación enseñe o enumere; no para una historia personal."
 
 #: src/components/connections/ProjectAccountSelect.jsx
 msgid "a teammate's account"
@@ -1222,6 +1222,10 @@ msgstr "Abandonar esta conversación y empezar una nueva (lo que produjo se mant
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "About"
 msgstr "Acerca de"
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "About the growth report"
+msgstr "Sobre el informe de crecimiento"
 
 #: src/lib/memoryApi.js
 msgid "About you"
@@ -1278,7 +1282,7 @@ msgstr "Cuentas"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Accounts via {primaryLabel}"
-msgstr "Cuentas mediante {primaryLabel}"
+msgstr "Cuentas vía {primaryLabel}"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 #~ msgid "Acme Inc."
@@ -1300,6 +1304,10 @@ msgstr "Acción"
 #: src/components/audit/AuditReportV1.jsx
 msgid "Action Plan"
 msgstr "Plan de acción"
+
+#: src/components/content/report/GrowthReportView.jsx
+msgid "Action:"
+msgstr "Acción:"
 
 #: src/components/commands/CommandPalette.jsx
 msgid "Actions"
@@ -2555,6 +2563,10 @@ msgstr "Comprobar conexión"
 msgid "Check the connection. Behind a corporate proxy, Duct respects HTTPS_PROXY."
 msgstr "Revisa la conexión. Detrás de un proxy corporativo, Duct respeta HTTPS_PROXY."
 
+#: src/components/content/report/GrowthReportView.jsx
+msgid "Check:"
+msgstr "Verificar:"
+
 #: src/components/insights/desk/DeskCards.jsx
 #~ msgid "Checked"
 #~ msgstr "Revisado"
@@ -2612,6 +2624,10 @@ msgstr "Elige {entity} para {projectName}"
 #: src/components/models/ModelPicker.jsx
 msgid "Choose a model"
 msgstr "Elige un modelo"
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "Choose an account in the Toolbox first"
+msgstr "Elige una cuenta en la Caja de herramientas primero"
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Choose one"
@@ -2844,6 +2860,7 @@ msgstr "Conectar {vendor}"
 msgid "Connect a model"
 msgstr "Conectar un modelo"
 
+#: src/components/content/AnalyticsReport.jsx
 #: src/components/content/PlanDayOne.jsx
 msgid "Connect a scheduler"
 msgstr "Conectar un programador"
@@ -2905,6 +2922,10 @@ msgstr "Conectar GitHub"
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Connect one data source"
 msgstr "Conectar una fuente de datos"
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "Connect Search Console or Google Analytics, a scheduler for your posts, or an analytics MCP server such as PostHog or OpenSEO. The report reads whichever you tick."
+msgstr "Conecta Search Console o Google Analytics, un programador para tus publicaciones, o un servidor MCP de análisis como PostHog u OpenSEO. El informe lee lo que marques."
 
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Connect without a key"
@@ -3258,6 +3279,10 @@ msgstr "No se pudieron cargar los análisis."
 msgid "Couldn't load brand context."
 msgstr "No se pudo cargar el contexto de marca."
 
+#: src/components/content/AnalyticsReport.jsx
+msgid "Couldn't load the report."
+msgstr "No se pudo cargar el informe."
+
 #: src/components/connections/McpConnectors.jsx
 msgid "Couldn't load them. {loadError}"
 msgstr "No se pudieron cargar. {loadError}"
@@ -3309,6 +3334,10 @@ msgstr "No se pudo guardar. Intenta de nuevo."
 #: src/components/connections/McpConnectors.jsx
 msgid "Couldn't search the MCP Registry."
 msgstr "No se pudo buscar el Registro MCP."
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "Couldn't start the report."
+msgstr "No se pudo iniciar el informe."
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Couldn't use {name}"
@@ -3433,7 +3462,7 @@ msgstr "Personalizar formato integrado"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Customised built-in"
-msgstr "Personalizado integrado"
+msgstr "Integrado personalizado"
 
 #: src/components/content/ReminderSetting.jsx
 msgid "Daily reminder"
@@ -3750,7 +3779,7 @@ msgstr "descartado"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Display name"
-msgstr "Nombre de visualización"
+msgstr "Nombre a mostrar"
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Docs / Help"
@@ -4088,6 +4117,10 @@ msgstr "Los informes, auditorías y publicaciones de Duct parten de este perfil.
 msgid "Duct's guess"
 msgstr "La suposición de Duct"
 
+#: src/components/content/AnalyticsReport.jsx
+msgid "Duct's insights agent reads the sources you tick, puts search, traffic, posts and signups on one page, and says what moved and what to do. A report is kept for a day; Refresh writes it again on your own model key."
+msgstr "El agente de hallazgos de Duct lee las fuentes que marques, pone la búsqueda, el tráfico, las publicaciones y los registros en una página, y dice qué cambió y qué hacer. Un informe se guarda por un día; Actualizar lo escribe de nuevo con tu propia clave de modelo."
+
 #: src/lib/modelTiers.js
 msgid "Duct's key"
 msgstr "Clave de Duct"
@@ -4248,6 +4281,10 @@ msgstr "Carrusel educativo"
 #: src/components/content/FormatLibrary.jsx
 msgid "educational-carousel"
 msgstr "educational-carousel"
+
+#: src/components/content/report/GrowthReportView.jsx
+msgid "Effort:"
+msgstr "Esfuerzo:"
 
 #: src/components/ProjectMembers.jsx
 msgid "Email address to invite"
@@ -4461,6 +4498,7 @@ msgid "FAIL"
 msgstr "FALLO"
 
 #: src/app/(app)/content/page.jsx
+#: src/components/content/report/GrowthReportView.jsx
 msgid "failed"
 msgstr "fallido"
 
@@ -4584,7 +4622,7 @@ msgstr "Completa la verificación de seguridad anterior, luego inténtalo de nue
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Finished a side task"
-msgstr "Finalizó una tarea secundaria"
+msgstr "Terminó una tarea secundaria"
 
 #: src/components/content/TextPostEditor.jsx
 msgid "First comment"
@@ -5019,6 +5057,10 @@ msgstr "Informe de crecimiento"
 msgid "Growth Manager"
 msgstr "Gerente de Crecimiento"
 
+#: src/components/content/AnalyticsReport.jsx
+msgid "Growth report"
+msgstr "Informe de crecimiento"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Growth stage context or constraints <0>(optional)</0>"
 msgstr "Contexto o restricciones de la etapa de crecimiento <0>(opcional)</0>"
@@ -5214,6 +5256,10 @@ msgstr "Cómo funcionan los conectores MCP"
 #: src/components/content/BrandContextForm.jsx
 msgid "How posts sound and what they must (or must not) say."
 msgstr "Cómo suenan las publicaciones y qué deben (o no deben) decir."
+
+#: src/components/content/report/GrowthReportView.jsx
+msgid "How this was computed"
+msgstr "Cómo se calculó esto"
 
 #: src/app/(app)/memory/page.jsx
 #~ msgid "How you like to be worked with. Every agent reads it; only you can see it."
@@ -6373,6 +6419,10 @@ msgstr "Necesita atención · {reason}"
 #~ msgid "Needs reconnecting"
 #~ msgstr "Necesita reconectarse"
 
+#: src/components/content/AnalyticsReport.jsx
+msgid "Needs signing in again"
+msgstr "Necesita iniciar sesión de nuevo"
+
 #: src/lib/contentReview.js
 msgid "Needs work"
 msgstr "Necesita trabajo"
@@ -6720,6 +6770,10 @@ msgstr "Ningún proyecto todavía"
 msgid "No provider recorded."
 msgstr "Ningún proveedor registrado."
 
+#: src/components/content/AnalyticsReport.jsx
+msgid "No report yet"
+msgstr "Aún no hay informe"
+
 #: src/components/content/DiscoverPage.jsx
 msgid "No results returned. Try different hashtags or a wider niche."
 msgstr "Ningún resultado devuelto. Prueba diferentes hashtags o un nicho más amplio."
@@ -6845,6 +6899,7 @@ msgstr "Aún no confirmado"
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/McpConnectors.jsx
 #: src/components/content/AccountsTab.jsx
+#: src/components/content/AnalyticsReport.jsx
 msgid "Not connected"
 msgstr "No conectado"
 
@@ -7024,6 +7079,10 @@ msgstr "Nada aquí con estos filtros."
 #~ msgid "Nothing here yet."
 #~ msgstr "Nada aquí aún."
 
+#: src/components/content/report/GrowthReportView.jsx
+msgid "nothing in the window"
+msgstr "nada en la ventana"
+
 #: src/components/connections/ConnectorBrowser.jsx
 msgid "Nothing in this list matches “{query}”."
 msgstr "Nada en esta lista coincide con “{query}”."
@@ -7112,6 +7171,10 @@ msgstr "Nada almacenado aún."
 #~ msgid "Nothing to preview yet."
 #~ msgstr "Nada que previsualizar aún."
 
+#: src/components/content/AnalyticsReport.jsx
+msgid "Nothing to read from yet"
+msgstr "Nada para leer aún"
+
 #: src/components/insights/Desk.jsx
 msgid "Nothing to report yet."
 msgstr "Nada que informar aún."
@@ -7178,7 +7241,7 @@ msgstr "Cifras de"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "Numbers land here after the first post goes out, and on Refresh once it has synced."
-msgstr "Los números aparecen aquí después de la primera publicación y al actualizar una vez que se haya sincronizado."
+msgstr "Los números aparecen aquí después de que se publica la primera publicación, y al Actualizar una vez que se haya sincronizado."
 
 #: src/components/content/AccountsTab.jsx
 msgid "Off"
@@ -7452,6 +7515,7 @@ msgstr "Abrir la línea de tiempo del proyecto"
 msgid "Open the tab to see what happened and what to do."
 msgstr "Abre la pestaña para ver qué pasó y qué hacer."
 
+#: src/components/content/AnalyticsReport.jsx
 #: src/components/insights/InsightsWorkspace.jsx
 #: src/components/workspace/AgentChat.jsx
 msgid "Open the Toolbox"
@@ -7639,6 +7703,10 @@ msgstr "Más de 10 MB"
 msgid "Owner"
 msgstr "Propietario"
 
+#: src/components/content/report/GrowthReportView.jsx
+msgid "Owner:"
+msgstr "Propietario:"
+
 #: src/app/not-found.js
 msgid "Page not found"
 msgstr "Página no encontrada"
@@ -7801,7 +7869,7 @@ msgstr "Elige la cuenta a usar:"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Pick the one posts go out through."
-msgstr "Elige por cuál se envían las publicaciones."
+msgstr "Elige por cuál se publican las publicaciones."
 
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Pick the ones Duct may use, up to {MAX_MODELS}. They join the tier pickers, and the first is used when a tier doesn’t name one."
@@ -7978,7 +8046,7 @@ msgstr "Publicaciones"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Posts go out through {primaryLabel}."
-msgstr "Las publicaciones se envían a través de {primaryLabel}."
+msgstr "Las publicaciones se publican a través de {primaryLabel}."
 
 #: src/lib/userProfile.js
 msgid "Practitioner"
@@ -8267,6 +8335,10 @@ msgstr "se ejecutó solo"
 msgid "Reach"
 msgstr "Alcance"
 
+#: src/components/content/report/GrowthReportView.jsx
+msgid "read"
+msgstr "leído"
+
 #: src/components/onboarding/DocumentPicker.jsx
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read"
@@ -8283,6 +8355,10 @@ msgstr "Leyó una memoria"
 #: src/components/connections/McpConnectors.jsx
 msgid "Read and write pages in your Notion workspace."
 msgstr "Lee y escribe páginas en tu espacio de trabajo de Notion."
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "Read from"
+msgstr "Leer de"
 
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Read full screen"
@@ -8364,6 +8440,10 @@ msgstr "Leyendo…"
 #: src/components/settings/AgentAccess.jsx
 msgid "README, docs, landing copy"
 msgstr "README, documentación, textos de la landing"
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "Reads {names}. The first report takes a minute or two and is kept for a day."
+msgstr "Lee {names}. El primer informe tarda uno o dos minutos y se guarda por un día."
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Reads it, drafts the profile"
@@ -8524,6 +8604,10 @@ msgstr "Actualizar ahora"
 #: src/components/content/AnalyticsView.jsx
 msgid "Refresh numbers"
 msgstr "Actualizar cifras"
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "Refresh report"
+msgstr "Actualizar informe"
 
 #: src/components/LocalInsightDetail.jsx
 msgid "Refreshing live data..."
@@ -8698,6 +8782,10 @@ msgstr "Informar de un error"
 #: src/components/audit/ShareReport.jsx
 msgid "Report link"
 msgstr "Enlace del informe"
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "Report template"
+msgstr "Plantilla de informe"
 
 #: src/app/(app)/artifacts/page.jsx
 #: src/lib/memoryApi.js
@@ -8927,6 +9015,7 @@ msgstr "Revocar {rowName}"
 msgid "Revoke invitation to {invitee}"
 msgstr "Revocar invitación a {invitee}"
 
+#: src/components/content/report/GrowthReportView.jsx
 #: src/components/GoogleAdsReport.js
 msgid "Risk"
 msgstr "Riesgo"
@@ -9202,7 +9291,7 @@ msgstr "Guardados"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Saving makes this project’s own copy, which replaces the built-in here. Reset it later to go back."
-msgstr "Al guardar se crea una copia propia de este proyecto, que reemplaza la integrada aquí. Restablécela más tarde para volver."
+msgstr "Al guardar se crea una copia propia de este proyecto, que reemplaza a la integrada aquí. Restablécela más tarde para volver."
 
 #: src/components/content/AccountsTab.jsx
 #: src/components/content/BrandContextForm.jsx
@@ -9697,7 +9786,7 @@ msgstr "Shift+Enter para una nueva línea · Esc para detener"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Ships with Duct · customising makes your own copy"
-msgstr "Se incluye con Duct · al personalizar se crea tu propia copia"
+msgstr "Se envía con Duct · personalizar crea tu propia copia"
 
 #: src/app/(app)/settings/profile/page.jsx
 #~ msgid "Shirish"
@@ -9976,6 +10065,10 @@ msgstr "Sitio a auditar"
 msgid "Sitemap"
 msgstr "Mapa del sitio"
 
+#: src/components/content/report/GrowthReportView.jsx
+msgid "Size:"
+msgstr "Tamaño:"
+
 #: src/components/content/PostViewport.jsx
 msgid "Sketching image prompts…"
 msgstr "Bocetando indicaciones de imagen…"
@@ -9997,6 +10090,10 @@ msgstr "Omitir por ahora"
 #: src/app/layout.js
 msgid "Skip to main content"
 msgstr "Saltar al contenido principal"
+
+#: src/components/content/report/GrowthReportView.jsx
+msgid "skipped"
+msgstr "omitido"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Skipped {name}"
@@ -10118,6 +10215,10 @@ msgstr "Fuente"
 msgid "Source: {source}"
 msgstr "Fuente: {source}"
 
+#: src/components/content/report/GrowthReportView.jsx
+msgid "Sources:"
+msgstr "Fuentes:"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "SPA pages"
 msgstr "Páginas SPA"
@@ -10211,6 +10312,7 @@ msgid "Starting session…"
 msgstr "Iniciando sesión…"
 
 #: src/app/(app)/audit/seo/page.jsx
+#: src/components/content/AnalyticsReport.jsx
 msgid "Starting…"
 msgstr "Iniciando…"
 
@@ -10418,6 +10520,10 @@ msgstr "Toma {number}, publicando"
 #: src/components/insights/desk/DeskCards.jsx
 msgid "Take a fresh look"
 msgstr "Echar un nuevo vistazo"
+
+#: src/components/content/report/GrowthReportView.jsx
+msgid "Takeaway:"
+msgstr "Conclusión:"
 
 #: src/components/content/PostVideo.jsx
 msgid "Takes"
@@ -10794,6 +10900,10 @@ msgstr "La dirección https pública que sirve la API con el formato de OpenAI, 
 msgid "The reply is ready when you are."
 msgstr "La respuesta está lista cuando tú lo estés."
 
+#: src/components/content/AnalyticsReport.jsx
+msgid "The report could not be written."
+msgstr "El informe no pudo ser escrito."
+
 #: src/components/content/DiscoverPage.jsx
 msgid "The research agent cites what you saved when it proposes topics."
 msgstr "El agente de investigación cita lo que guardaste cuando propone temas."
@@ -11001,7 +11111,7 @@ msgstr "Este dispositivo"
 
 #: src/components/content/SpecEditorInner.jsx
 msgid "This document uses markup the visual editor can’t show, so you’re editing it as text. Nothing was changed."
-msgstr "Este documento usa marcado que el editor visual no puede mostrar, así que lo estás editando como texto. No se cambió nada."
+msgstr "Este documento usa marcado que el editor visual no puede mostrar, así que lo estás editando como texto. Nada fue cambiado."
 
 #: src/components/models/TierCard.jsx
 msgid "This engine runs Anthropic models only, so {tierNameLower} jobs run on <0>{servesName}</0> — this engine's default."
@@ -11111,6 +11221,10 @@ msgstr "la memoria de este proyecto"
 msgid "This removes the project and its configuration from this browser, and cannot be undone. Saved reports stay where they are."
 msgstr "Esto elimina el proyecto y su configuración de este navegador, y no se puede deshacer. Los informes guardados permanecen donde están."
 
+#: src/components/artifacts/ArtifactRenderer.jsx
+msgid "This report has nothing stored to draw."
+msgstr "Este informe no tiene nada almacenado para mostrar."
+
 #: src/components/settings/AgentConsent.jsx
 msgid "This request has expired"
 msgstr "Esta solicitud ha caducado"
@@ -11186,6 +11300,10 @@ msgstr "hilo"
 #: src/components/insights/desk/DeskLists.jsx
 #~ msgid "Threads"
 #~ msgstr "Hilos"
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "Ticked sources are read into the report."
+msgstr "Las fuentes marcadas se leen en el informe."
 
 #: src/app/(app)/settings/models/page.jsx
 msgid "Tiers"
@@ -11296,6 +11414,7 @@ msgstr "Pruebas, renovaciones, reembolsos y MRR en App Store y Play."
 #: src/components/AppErrorPanel.jsx
 #: src/components/connections/McpConnectors.jsx
 #: src/components/connections/ProviderCard.jsx
+#: src/components/content/AnalyticsReport.jsx
 #: src/components/LoadError.jsx
 msgid "Try again"
 msgstr "Intentar de nuevo"
@@ -11760,6 +11879,7 @@ msgstr "era “{replacedTitle}”"
 msgid "was “{replacedTitle}” until {replacedUntil}"
 msgstr "era “{replacedTitle}” hasta {replacedUntil}"
 
+#: src/components/content/report/GrowthReportView.jsx
 #: src/components/GoogleAdsReport.js
 msgid "Watch"
 msgstr "Ver"
@@ -11851,6 +11971,10 @@ msgstr "Qué cambió en {projectName} y quién lo hizo"
 #: src/components/insights/desk/DeskCards.jsx
 msgid "What changed since {since}?"
 msgstr "¿Qué cambió desde {since}?"
+
+#: src/components/content/report/GrowthReportView.jsx
+msgid "What could not be checked"
+msgstr "Lo que no se pudo verificar"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "What currently limits this metric most? <0>(optional)</0>"
@@ -12133,6 +12257,7 @@ msgstr "Se mantendrá solo en esta sesión del navegador — se borrará al cerr
 msgid "Will be stored in your OS keychain on this machine. Duct can use it only while the app is open, so anything that runs while it’s closed waits until you’re back."
 msgstr "Se almacenará en el llavero de tu sistema operativo en esta máquina. Duct solo puede usarlo mientras la app está abierta, así que lo que se ejecutaría con ella cerrada espera a que vuelvas."
 
+#: src/components/content/report/GrowthReportView.jsx
 #: src/components/GoogleAdsReport.js
 msgid "Win"
 msgstr "Ganancia"
@@ -12190,6 +12315,10 @@ msgstr "Trabajando…"
 msgid "Worth adding next"
 msgstr "Vale la pena añadir a continuación"
 
+#: src/components/content/AnalyticsReport.jsx
+msgid "Write the report"
+msgstr "Escribir el informe"
+
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Write to me in"
 msgstr "Escríbeme en"
@@ -12214,6 +12343,14 @@ msgstr "Escribiendo el pie de foto…"
 msgid "Writing the hook…"
 msgstr "Escribiendo el gancho…"
 
+#: src/components/content/AnalyticsReport.jsx
+msgid "Writing the report"
+msgstr "Escribiendo el informe"
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "Writing the report · reading {names}"
+msgstr "Escribiendo el informe · leyendo {names}"
+
 #: src/components/audit/AuditReport.jsx
 #: src/components/PipelineProgress.jsx
 msgid "Writing your report…"
@@ -12223,9 +12360,22 @@ msgstr "Escribiendo tu informe…"
 msgid "writing…"
 msgstr "escribiendo…"
 
+#: src/components/content/AnalyticsReport.jsx
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Writing…"
 msgstr "Escribiendo…"
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "Written {when}"
+msgstr "Escrito {when}"
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "Written {when} · kept until {until}"
+msgstr "Escrito {when} · guardado hasta {until}"
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "Written {when}, older than {ttl} hours. The numbers may have moved; Refresh writes it again."
+msgstr "Escrito {when}, hace más de {ttl} horas. Los números pueden haber cambiado; Actualizar lo escribe de nuevo."
 
 #: src/components/connections/logos.jsx
 msgid "xAI"

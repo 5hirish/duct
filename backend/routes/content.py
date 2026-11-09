@@ -135,6 +135,7 @@ from service.analytics import capture_event
 from service.auth import get_current_user, get_user_provider_keys
 from service.content_metrics import merge_manual_metrics
 from service.publishers import PublisherError, PublisherSpec, Target
+from service.publishers.metrics import collect_reported_posts
 from service.publishers.registry import NO_SCHEDULER, all_specs, publisher_for, spec_for
 from service.vendor_keys import VendorNotConnected
 from service.membership import get_project_for_user, get_project_row_for_user
@@ -2942,20 +2943,24 @@ async def list_content_analytics(
     linked_platforms = {link.platform for link in links if link.platform}
     asked = _analytics_schedulers(publishing.connected, links, load_channel_config(proj.brand_channels).primary_publisher)
 
-    reported: list[tuple[PublisherSpec, object]] = []
-    failures: list[tuple[PublisherError, PublisherSpec]] = []
-    for spec in asked:
-        pub = _open_publisher(db, proj, spec.id)
-        try:
-            async with pub:
-                reported += [(spec, r) for r in await pub.reported_posts(refresh=refresh)]
-        except PublisherError as exc:
-            failures.append((exc, spec))
-    if failures and len(failures) == len(asked):
-        raise _publisher_http_error(*failures[0])
+    # One fan-out for the tab and the agent's social_post_metrics entity
+    # (service/publishers/metrics.py), narrowed to the schedulers this
+    # project uses. A scheduler that fails answers as a notice beside the
+    # rows the others gave; it is the page's error only when every one did.
+    collected = await collect_reported_posts(db, proj, refresh=refresh, specs=asked)
+    reported = collected.rows
+    if collected.all_failed:
+        spec, exc = collected.failures[0]
+        if isinstance(exc, PublisherError):
+            raise _publisher_http_error(exc, spec)
+        raise HTTPException(400, str(exc))
     notices = [
-        AnalyticsNotice(publisher=spec.id, label=spec.label, message=_friendly_publisher_error(exc, spec))
-        for exc, spec in failures
+        AnalyticsNotice(
+            publisher=spec.id,
+            label=spec.label,
+            message=_friendly_publisher_error(exc, spec) if isinstance(exc, PublisherError) else str(exc),
+        )
+        for spec, exc in collected.failures
     ]
 
     # Index this project's local posts so each analytics row can be tied back to
