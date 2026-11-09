@@ -847,6 +847,16 @@ def build_content_tools_lc(
     class HistoryArgs(BaseModel):
         limit: int = Field(30, ge=1, le=100, description="Max rows to return. Default 30, max 100.")
 
+    class FormatArgs(BaseModel):
+        media: str = Field(
+            "",
+            description="Keep only formats for this media kind: video, slideshow, image, text or article. Empty = all.",
+        )
+        channel: str = Field(
+            "",
+            description="Keep only formats that apply on this channel (tiktok, linkedin, twitter, ...). Empty = all.",
+        )
+
     class AnalyticsArgs(BaseModel):
         days: int = Field(30, ge=1, le=365, description="How many days back to read, from today.")
 
@@ -1360,25 +1370,38 @@ def build_content_tools_lc(
             logger.exception("fetch_topic_bank failed")
             return _err(f"fetch_topic_bank failed: {exc}")
 
-    async def fetch_format_library() -> str:
+    async def fetch_format_library(media: str = "", channel: str = "") -> str:
+        # Built-ins from disk plus the project's own rows, one shape, filtered
+        # by what the agent is making (agents/content/formats.py). The slide
+        # renderer inlines the whole caption-style registry, so no CSS rides
+        # along: the spec names the classes and the engine already has them.
         try:
-            from agents.content.styles import css_for
+            from agents.content import formats as format_library
             with _open_db() as db:
                 rows = db.exec(
                     select(ContentFormat).where(ContentFormat.project_id == project_id)
                 ).all()
-                out = []
-                for r in rows:
-                    data = r.data or {}
-                    linked = data.get("linked_styles") or data.get("caption_classes") or []
-                    out.append({
-                        "id":   str(r.id),
-                        "slug": r.slug,
-                        "name": r.name,
-                        "data": data,
-                        "resolved_css": css_for(linked),
-                    })
-                return _ok({"formats": out})
+                library = format_library.library(rows)
+            picked = format_library.select(
+                library, media=(media or "").strip().lower() or None,
+                channel=(channel or "").strip().lower() or None,
+            )
+            return _ok({
+                "formats": [
+                    {
+                        "slug": f["slug"],
+                        "name": f["name"],
+                        "source": f["source"],
+                        "description": f["description"],
+                        "media": f["media"],
+                        "channels": f["channels"],
+                        "spec_markdown": f["spec_markdown"],
+                    }
+                    for f in picked
+                ],
+                "filtered_by": {"media": media or "", "channel": channel or ""},
+                "total_in_library": len(library),
+            })
         except Exception as exc:
             logger.exception("fetch_format_library failed")
             return _err(f"fetch_format_library failed: {exc}")
@@ -2528,10 +2551,15 @@ def build_content_tools_lc(
         ),
         _bind(
             fetch_format_library, ContentTool.FETCH_FORMAT_LIBRARY,
-            "Return the per-project content formats (name, slug, full JSONB data) "
-            "AND resolved_css — the shared base engine CSS plus the format's linked "
-            "styles, ready to inline verbatim into the slides <style> block. Do not "
-            "write caption/hook/layout CSS yourself; use resolved_css and its classes.",
+            "Return the format library: the built-in recipes plus this project's own, "
+            "each with slug, name, description (what it is for and when to use it), "
+            "the media kinds and channels it applies to, and spec_markdown, the full "
+            "recipe to follow. Filter with media (video|slideshow|image|text|article) "
+            "and channel so you read only what fits the post; an empty filter returns "
+            "all. Put the chosen slug in the day's / post's format_slug. Never write "
+            "caption, hook or layout CSS: the renderer inlines the shared style "
+            "registry and the spec names its classes.",
+            FormatArgs,
         ),
         _bind(
             fetch_avatar_library, ContentTool.FETCH_AVATAR_LIBRARY,

@@ -64,7 +64,7 @@ class Day(BaseModel):
     status: Literal["pending", "draft", "posted", "discarded"] = "pending"
     post_type: Literal["slideshow", "video", "image", "text"] = "slideshow"
     post_id: UUID | None = None
-    format_slug: str = ""   # which library format to build with (e.g. "format-d")
+    format_slug: str = ""   # which library format to build with (e.g. "ugc-carousel")
     avatar_id: UUID | None = None
     platforms: list[Platform] = Field(default_factory=lambda: [Platform.TIKTOK])
     # The bet this slot makes. Declared rather than left to extra="ignore",
@@ -690,7 +690,7 @@ class PostDraft(BaseModel):
     topic: str
     topic_id: str | None = None
     post_type: Literal["slideshow", "video", "image", "text"] = "slideshow"
-    format_slug: str = ""   # which library format to build with (e.g. "format-d")
+    format_slug: str = ""   # which library format to build with (e.g. "ugc-carousel")
     layout: SlideLayout = SlideLayout.FULL_BLEED
     avatar_id: UUID | None = None
     slide_count: int = Field(default=7, ge=1, le=20)

@@ -34,6 +34,7 @@
   "dependencies": {
     "@lingui/core": "^6.11.0",
     "@lingui/react": "^6.11.0",
+    "@mdxeditor/editor": "4.5.0",
     "@nivo/core": "^0.99.0",
     "@nivo/heatmap": "^0.99.0",
     "class-variance-authority": "^0.7.1",

@@ -7,10 +7,9 @@ body-dark) are intentionally NOT here yet — those need per-project tokens
 and will land in a later tokenized pass.
 
 Why a registry: the slide-builder sub-agent used to invent CSS on every
-run, so captions drifted. Now a format links to a set of style keys, and
-the agent inlines `base_css() + css_for(linked)` verbatim into one
-<style> block instead of writing its own. The Library previews these the
-same way.
+run, so captions drifted. Now the renderer (templates.py) inlines the whole
+registry into every slideshow and a format's spec names the classes per
+slide; the agent writes no CSS. The Library previews the same CSS.
 
 Source of truth lives in code (curated, versioned) and is served read-only
 via GET /api/content/styles.

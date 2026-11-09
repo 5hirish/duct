@@ -71,7 +71,7 @@ function makePlan(id, name, start, count, { strategy = {}, topic = (i) => TOPICS
       pillar: PILLARS[i % PILLARS.length],
       post_type: TYPES[i % TYPES.length],
       platforms: PLATFORMS[i % PLATFORMS.length],
-      format_slug: i % 3 === 0 ? "format-d" : "",
+      format_slug: i % 3 === 0 ? "ugc-carousel" : "",
       status: "pending",
     })),
   };

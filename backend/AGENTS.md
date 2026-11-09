@@ -736,6 +736,15 @@ agents/
     │                     content_brand (no migration). The old prompt constants are the
     │                     defaults. Values ride in the USER turn; the text writer refuses
     │                     a banned word as it refuses an over-length post
+    ├── formats.py      — the format library: built-in recipes in data/formats/*.md
+    │                     (frontmatter on the Agent Skills shape: name is the slug,
+    │                     description says what and when, media and channels say
+    │                     where it applies) beside a project's own content_formats
+    │                     rows, one shape. A row with a built-in's slug replaces it
+    │                     for that project; deleting the row brings it back. The
+    │                     agent reads it through fetch_format_library(media, channel)
+    │                     and follows spec_markdown; the renderer inlines the whole
+    │                     caption-style registry, so a format declares no CSS
     ├── plan_period.py  — the period a plan manages: one post per date, at most 30. The
     │                     person picks the month in progress (default; under a week left
     │                     rolls over to the next month) or 7, 14, 30 days (PlanRequest
