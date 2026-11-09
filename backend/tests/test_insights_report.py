@@ -600,3 +600,46 @@ def test_the_data_sources_block_names_the_schedulers():
 
     assert "- publishers: not_connected (no scheduler connected" in block
     assert "RequestConnection" not in block.split("publishers")[1]
+
+
+async def test_the_shared_fan_out_keeps_only_the_platforms_the_project_linked(monkeypatch):
+    """One scheduler key can hold several brands' accounts; the project's links
+    say which posts are its own. The tab applied that scope and the agent's
+    entity did not, so the scope lives in the one fan-out both read."""
+    from dataclasses import dataclass
+
+    import service.publishers.metrics as metrics
+    from service.publishers.base import ReportedPost
+
+    @dataclass(frozen=True)
+    class _Spec:
+        id: str = "zernio"
+        label: str = "Zernio"
+
+    class _Pub:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *_a):
+            return False
+
+        async def reported_posts(self, *, refresh=False):
+            return [
+                ReportedPost(ref="a", platform="linkedin", title="Ours"),
+                ReportedPost(ref="b", platform="tiktok", title="Another brand on the same key"),
+            ]
+
+    class _Proj:
+        id = uuid.uuid4()
+        user_id = uuid.uuid4()
+
+    monkeypatch.setattr(metrics, "connected_specs", lambda *a, **k: [_Spec()])
+    monkeypatch.setattr(metrics, "publisher_for", lambda *a, **k: _Pub())
+    monkeypatch.setattr(metrics, "_linked_platforms", lambda *a, **k: {"linkedin"})
+
+    scoped = await metrics.collect_reported_posts(None, _Proj())
+    assert [r.title for _, r in scoped.rows] == ["Ours"]
+
+    monkeypatch.setattr(metrics, "_linked_platforms", lambda *a, **k: set())
+    unscoped = await metrics.collect_reported_posts(None, _Proj())
+    assert len(unscoped.rows) == 2  # nothing linked: show all, as the tab does

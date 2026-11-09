@@ -7,9 +7,14 @@ the posting side next to search and traffic. Each used to be its own loop
 over the connected schedulers, and two loops over paid vendor APIs drift in
 the one way that matters: which failures stop the read.
 
-The rule, held here: **one scheduler failing is a notice, every scheduler
-failing is an error.** On 2026-11-08 a stale PostBridge key hid a working
-Zernio behind "PostBridge didn't accept the saved API key".
+Two rules, held here so both readers keep them. **One scheduler failing is
+a notice, every scheduler failing is an error**: on 2026-11-08 a stale
+PostBridge key hid a working Zernio behind "PostBridge didn't accept the
+saved API key". And **the rows are scoped to the platforms the project
+linked** (Content → Accounts) when it linked any: one scheduler key can hold
+several brands' accounts, and the project's links are what say which posts
+are this project's. The route applied that scope and the agent's entity did
+not, until the scope moved here.
 """
 
 from __future__ import annotations
@@ -19,6 +24,9 @@ from uuid import UUID
 
 from sqlmodel import Session
 
+from sqlalchemy import select
+
+from models.content.social_link import ContentSocialLink
 from models.project import Project
 from service.publishers.base import PublisherError, PublisherSpec, ReportedPost
 from service.publishers.registry import connected_specs, publisher_for
@@ -45,15 +53,31 @@ async def collect_reported_posts(
     reports numbers on. Never raises for a scheduler that fails; the caller
     reads ``failures`` and decides whether none answering is its error."""
     asked = connected_specs(proj.user_id, db)
+    linked = _linked_platforms(db, proj.id)
     out = ReportedPosts(asked=asked)
     for spec in asked:
         try:
             pub = publisher_for(proj.user_id, spec.id, db)
             async with pub:
-                out.rows.extend((spec, r) for r in await pub.reported_posts(refresh=refresh))
+                out.rows.extend(
+                    (spec, r)
+                    for r in await pub.reported_posts(refresh=refresh)
+                    if not linked or r.platform in linked
+                )
         except (PublisherError, VendorNotConnected) as exc:
             out.failures.append((spec, exc))
     return out
+
+
+def _linked_platforms(db: Session, project_id: UUID) -> set[str]:
+    """The platforms this project linked accounts on; empty means "show all",
+    the Accounts tab's own reading. Read here rather than through
+    ``agents/content/publishing.linked_accounts`` because a service module
+    importing from ``agents/`` is the layering this tree avoids."""
+    rows = db.execute(
+        select(ContentSocialLink.platform).where(ContentSocialLink.project_id == project_id)
+    ).scalars().all()
+    return {p for p in rows if p}
 
 
 def as_rows(result: ReportedPosts) -> list[dict]:

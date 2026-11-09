@@ -16,15 +16,18 @@ PUBLISHERS_SOURCE = "publishers"
 
 SOCIAL_POST_METRICS = "social_post_metrics"
 
+# Literal strings inside the catalog, not the constants above:
+# scripts/build_integrations.py reads every ENTITY_CATALOG with
+# ast.literal_eval, which cannot follow a name.
 ENTITY_CATALOG = {
-    "connector_id": PUBLISHERS_SOURCE,
+    "connector_id": "publishers",
     "schema_version": "1.0.0",
     "last_audited": "2026-11-09",
     "api_version": "duct-publishers-v1",
     "audit_notes": "Rows are service/publishers/metrics.as_rows over ReportedPost; every scheduler adapter maps into that shape.",
     "entities": [
         {
-            "entity_id": SOCIAL_POST_METRICS,
+            "entity_id": "social_post_metrics",
             "label": "Social posts — views, likes, comments, shares",
             "fetch_fn": "fetch_social_post_metrics",
             "description": (
@@ -50,3 +53,6 @@ ENTITY_CATALOG = {
         },
     ],
 }
+
+assert ENTITY_CATALOG["connector_id"] == PUBLISHERS_SOURCE
+assert ENTITY_CATALOG["entities"][0]["entity_id"] == SOCIAL_POST_METRICS
