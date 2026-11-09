@@ -214,8 +214,8 @@ msgid "{changeCount, plural, one {# change} other {# changes}}"
 msgstr "{changeCount, plural, one {# alteração} other {# alterações}}"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "{charCount, plural, one {# char} other {# chars}}"
-#~ msgstr "{charCount, plural, one {# caractere} other {# caracteres}}"
+msgid "{charCount, plural, one {# char} other {# chars}}"
+msgstr "{charCount, plural, one {# caractere} other {# caracteres}}"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{competitorCount, plural, one {# competitor} other {# competitors}}"
@@ -468,8 +468,8 @@ msgid "{left} to go"
 msgstr "{left} restantes"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "{linkedCount, plural, one {# linked style} other {# linked styles}}"
-#~ msgstr "{linkedCount, plural, one {# estilo vinculado} other {# estilos vinculados}}"
+msgid "{linkedCount, plural, one {# linked style} other {# linked styles}}"
+msgstr "{linkedCount, plural, one {# estilo vinculado} other {# estilos vinculados}}"
 
 #: src/components/content/AccountsTab.jsx
 msgid "{linkedHere, plural, one {# account} other {# accounts}} via {primaryLabel}"
@@ -754,8 +754,8 @@ msgid "{slideCount, plural, one {# slide} other {# slides}}"
 msgstr "{slideCount, plural, one {# slide} other {# slides}}"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "{slides, plural, one {# slide} other {# slides}}"
-#~ msgstr "{slides, plural, one {# slide} other {# slides}}"
+msgid "{slides, plural, one {# slide} other {# slides}}"
+msgstr "{slides, plural, one {# slide} other {# slides}}"
 
 #: src/components/content/SynthesisPanel.jsx
 msgid "{slideShare} of posts · <0>{slideEng}</0> eng."
@@ -878,20 +878,20 @@ msgid "{wordCount} words"
 msgstr "{wordCount} palavras"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "# My Format\n"
-#~ "\n"
-#~ "## Slide Structure\n"
-#~ "\n"
-#~ "| Slide | Type |\n"
-#~ "|-------|------|\n"
-#~ "| 1 | Hook |"
-#~ msgstr "# Meu Formato\n"
-#~ "\n"
-#~ "## Estrutura do Slide\n"
-#~ "\n"
-#~ "| Slide | Tipo |\n"
-#~ "|-------|------|\n"
-#~ "| 1 | Gancho |"
+msgid "# My Format\n"
+"\n"
+"## Slide Structure\n"
+"\n"
+"| Slide | Type |\n"
+"|-------|------|\n"
+"| 1 | Hook |"
+msgstr "# Meu Formato\n"
+"\n"
+"## Estrutura do Slide\n"
+"\n"
+"| Slide | Tipo |\n"
+"|-------|------|\n"
+"| 1 | Gancho |"
 
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 #~ msgid "← Artifacts"
@@ -1160,16 +1160,8 @@ msgstr "Um projeto começa a partir de um site. Duct o lê e rascunha o restante
 #~ msgstr ""
 
 #: src/components/content/FormatLibrary.jsx
-msgid "A recipe the drafting agent follows. Say what it applies to, then write the spec."
-msgstr "Uma receita que o agente de rascunho segue. Diga a que se aplica, depois escreva a especificação."
-
-#: src/components/content/FormatLibrary.jsx
-#~ msgid "A reusable recipe — slide structure, caption styles, image prompt rules — that the drafting agent follows."
-#~ msgstr "Uma receita reutilizável — estrutura de slides, estilos de legendas, regras de prompt de imagem — que o agente de rascunho segue."
-
-#: src/components/content/FormatLibrary.jsx
-msgid "A reusable recipe — structure, hook rules, image prompt rules — that the drafting agent follows for the media and channels you pick."
-msgstr "Uma receita reutilizável — estrutura, regras de gancho, regras de prompt de imagem — que o agente de rascunho segue para a mídia e os canais que você escolher."
+msgid "A reusable recipe — slide structure, caption styles, image prompt rules — that the drafting agent follows."
+msgstr "Uma receita reutilizável — estrutura de slides, estilos de legendas, regras de prompt de imagem — que o agente de rascunho segue."
 
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "A run stopped on an error"
@@ -1190,10 +1182,6 @@ msgstr "Uma solicitação de entrada dura dez minutos. Comece novamente a partir
 #: src/components/workspace/ComposerDials.jsx
 #~ msgid "A styled page with its own charts and sortable tables. Costs more to write, reads better, forwards as one file"
 #~ msgstr "Uma página estilizada com seus próprios gráficos e tabelas classificáveis. Mais cara para escrever, melhor para ler, encaminha como um único arquivo"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "A swipe-through lesson, one idea per slide. Use when the post teaches or lists; not for a personal story."
-msgstr "Uma lição em carrossel, uma ideia por slide. Use quando o post ensina ou lista; não para uma história pessoal."
 
 #: src/components/connections/ProjectAccountSelect.jsx
 msgid "a teammate's account"
@@ -1743,10 +1731,6 @@ msgstr "Qualquer agente usando este token perde o acesso ao Duct imediatamente. 
 msgid "Any MCP server"
 msgstr "Qualquer servidor MCP"
 
-#: src/components/content/FormatLibrary.jsx
-msgid "Any media"
-msgstr "Qualquer mídia"
-
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Any time"
 msgstr "A qualquer momento"
@@ -1808,10 +1792,6 @@ msgstr "Aplica-se a partir da sua próxima mensagem"
 #: src/components/workspace/ComposerDials.jsx
 msgid "Applies from your next session"
 msgstr "Aplica-se a partir da sua próxima sessão"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Applies to"
-msgstr "Aplica-se a"
 
 #: src/components/TelemetryCard.jsx
 msgid "Applies to the bundled backend next time you open Duct."
@@ -2196,8 +2176,8 @@ msgid "Base styles"
 msgstr "Estilos base"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "Base styles the slide builder inlines for this format. Browse them in Library → Styles."
-#~ msgstr "Estilos base que o construtor de slides incorpora para este formato. Navegue por eles em Biblioteca → Estilos."
+msgid "Base styles the slide builder inlines for this format. Browse them in Library → Styles."
+msgstr "Estilos base que o construtor de slides incorpora para este formato. Navegue por eles em Biblioteca → Estilos."
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Behind the app"
@@ -2326,10 +2306,6 @@ msgstr "Construído por qualquer pessoa"
 #: src/components/connections/ConnectorBrowser.jsx
 msgid "Built by Duct"
 msgstr "Criado por Duct"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Built-in"
-msgstr "Integrado"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "business"
@@ -2516,7 +2492,6 @@ msgid "Channel"
 msgstr "Canal"
 
 #: src/components/content/AccountsTab.jsx
-#: src/components/content/FormatLibrary.jsx
 msgid "Channels"
 msgstr "Canais"
 
@@ -3422,18 +3397,9 @@ msgstr "Intervalo personalizado…"
 msgid "Customers, clients and partners are never named unless you say so."
 msgstr "Clientes e parceiros nunca são nomeados a menos que você diga."
 
-#: src/components/content/FormatLibrary.jsx
 #: src/components/models/TierSummary.jsx
 msgid "Customise"
 msgstr "Personalizar"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Customise built-in format"
-msgstr "Personalizar formato integrado"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Customised built-in"
-msgstr "Personalizado integrado"
 
 #: src/components/content/ReminderSetting.jsx
 msgid "Daily reminder"
@@ -3509,12 +3475,12 @@ msgid "Default account"
 msgstr "Conta padrão"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "Default slides"
-#~ msgstr "Slides padrão"
+msgid "Default slides"
+msgstr "Slides padrão"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "Define a reusable post recipe. The spec doc is what the drafting agent reads."
-#~ msgstr "Defina uma receita de post reutilizável. O documento de especificação é o que o agente de rascunho lê."
+msgid "Define a reusable post recipe. The spec doc is what the drafting agent reads."
+msgstr "Defina uma receita de post reutilizável. O documento de especificação é o que o agente de rascunho lê."
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Define your North Star metric and current growth stage. Channel-specific KPIs stay in report generation."
@@ -4241,14 +4207,6 @@ msgstr "editado por você"
 msgid "editorial / minimal / bold"
 msgstr "editorial / minimalista / negrito"
 
-#: src/components/content/FormatLibrary.jsx
-msgid "Educational carousel"
-msgstr "Carrossel educacional"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "educational-carousel"
-msgstr "educational-carousel"
-
 #: src/components/ProjectMembers.jsx
 msgid "Email address to invite"
 msgstr "Endereço de e-mail para convidar"
@@ -4325,10 +4283,6 @@ msgstr "Eventos, funis e insights da sua análise de produto."
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Every agent reads this, on every project. Only you can see it."
 msgstr "Todo agente lê isso, em todo projeto. Só você pode ver."
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Every channel"
-msgstr "Todos os canais"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 #~ msgid "Every dashboard called it healthy"
@@ -4606,10 +4560,6 @@ msgstr "Primeiro prompt"
 msgid "Fix These First"
 msgstr "Corrija Estes Primeiro"
 
-#: src/components/content/FormatLibrary.jsx
-msgid "Fixed, so your copy stands in for the built-in"
-msgstr "Corrigido, então sua cópia substitui o integrado"
-
 #: src/app/(app)/execute/page.jsx
 msgid "Fixes from an audit or a conversation land here for you to approve."
 msgstr "Correções de uma auditoria ou conversa chegam aqui para você aprovar."
@@ -4639,16 +4589,16 @@ msgid "Format"
 msgstr "Formato"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "Format D — UGC / Raw Authentic"
-#~ msgstr "Formato D — UGC / Autêntico Bruto"
+msgid "Format D — UGC / Raw Authentic"
+msgstr "Formato D — UGC / Autêntico Bruto"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "Format spec"
-#~ msgstr "Especificação de formato"
+msgid "Format spec"
+msgstr "Especificação de formato"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "format-d"
-#~ msgstr "format-d"
+msgid "format-d"
+msgstr "format-d"
 
 #: src/app/(app)/content/page.jsx
 #: src/components/content/FormatLibrary.jsx
@@ -5252,8 +5202,8 @@ msgid "HubSpot"
 msgstr "HubSpot"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "Human-friendly title"
-#~ msgstr "Título amigável para humanos"
+msgid "Human-friendly title"
+msgstr "Título amigável para humanos"
 
 #: src/components/AgentDrawer.jsx
 #~ msgid "Human-in-the-loop agent handoffs — coming soon"
@@ -5742,8 +5692,8 @@ msgid "Linked from chat, outside the filters below"
 msgstr "Vinculado do chat, fora dos filtros abaixo"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "Linked styles"
-#~ msgstr "Estilos vinculados"
+msgid "Linked styles"
+msgstr "Estilos vinculados"
 
 #: src/components/content/AccountsTab.jsx
 msgid "LinkedIn, X, TikTok, Instagram and YouTube, side by side."
@@ -5985,10 +5935,6 @@ msgid "Lower impact · More effort"
 msgstr "Impacto menor · Mais esforço"
 
 #: src/components/content/FormatLibrary.jsx
-msgid "Lowercase, hyphens"
-msgstr "Minúsculas, hífens"
-
-#: src/components/content/FormatLibrary.jsx
 msgid "Lowercase, numbers, hyphens only"
 msgstr "Minúsculas, números, hífens apenas"
 
@@ -6078,10 +6024,6 @@ msgstr "Medido"
 #: src/components/audit/AuditReport.jsx
 msgid "Measuring E-E-A-T signals…"
 msgstr "Medindo sinais E-E-A-T…"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Media"
-msgstr "Mídia"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "medical claims, perfect, flawless"
@@ -6517,8 +6459,8 @@ msgstr "Nenhuma chave de API necessária"
 #~ msgstr "Nenhum artefato ainda"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "No base styles available."
-#~ msgstr "Nenhum estilo base disponível."
+msgid "No base styles available."
+msgstr "Nenhum estilo base disponível."
 
 #: src/components/settings/AgentAccess.jsx
 msgid "No browser? Use a token"
@@ -7065,14 +7007,6 @@ msgstr "Nada corresponde a esses filtros."
 msgid "Nothing needs you right now."
 msgstr "Nada precisa de você agora."
 
-#: src/components/content/FormatLibrary.jsx
-msgid "Nothing picked = any media"
-msgstr "Nada selecionado = qualquer mídia"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Nothing picked = every channel"
-msgstr "Nada selecionado = todos os canais"
-
 #: src/components/content/AnalyticsView.jsx
 msgid "Nothing posted yet"
 msgstr "Nada postado ainda"
@@ -7110,8 +7044,8 @@ msgid "Nothing stored yet."
 msgstr "Nada armazenado ainda."
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "Nothing to preview yet."
-#~ msgstr "Nada para pré-visualizar ainda."
+msgid "Nothing to preview yet."
+msgstr "Nada para pré-visualizar ainda."
 
 #: src/components/insights/Desk.jsx
 msgid "Nothing to report yet."
@@ -7286,10 +7220,6 @@ msgstr "Um modelo em {foundAt}"
 #: src/components/audit/AuditWorkspace.jsx
 #~ msgid "One moment — Duct has a quick question"
 #~ msgstr "Só um momento — o Duct tem uma pergunta rápida"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "One or two sentences. The agent reads this to pick between formats, so say what it does and when to use it."
-msgstr "Uma ou duas frases. O agente lê isso para escolher entre os formatos, então diga o que ele faz e quando usá-lo."
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "One sentence"
@@ -8002,6 +7932,7 @@ msgstr "Preferências"
 #~ msgstr "apresentar"
 
 #: src/components/audit/AuditStepProgress.jsx
+#: src/components/content/FormatLibrary.jsx
 #: src/components/workspace/SplitWorkspace.jsx
 msgid "Preview"
 msgstr "Visualizar"
@@ -8431,10 +8362,6 @@ msgstr "Raciocina antes de responder. Melhor em sites complexos."
 msgid "Recent"
 msgstr "Recente"
 
-#: src/components/content/FormatLibrary.jsx
-msgid "Recipes the drafting agent follows. Each one says which media and channels it is for; the built-ins can be customised."
-msgstr "Receitas que o agente de rascunho segue. Cada uma diz para qual mídia e canais é; as integradas podem ser personalizadas."
-
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Recommended"
 msgstr "Recomendado"
@@ -8770,27 +8697,11 @@ msgstr "Redefinir"
 msgid "Reset failed."
 msgstr "Redefinição falhou."
 
-#: src/components/content/FormatLibrary.jsx
-msgid "Reset format"
-msgstr "Redefinir formato"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Reset to built-in"
-msgstr "Redefinir para o integrado"
-
 #: src/app/(app)/settings/models/page.jsx
 #: src/app/(app)/settings/profile/page.jsx
 #: src/components/models/TierSummary.jsx
 msgid "Reset to defaults"
 msgstr "Redefinir para padrões"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Reset to the built-in?"
-msgstr "Redefinir para o integrado?"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Resetting…"
-msgstr "Redefinindo…"
 
 #: src/components/workspace/SplitWorkspace.jsx
 msgid "Resize panes"
@@ -8834,8 +8745,8 @@ msgid "Returning errors"
 msgstr "Retornando erros"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "Reusable post recipes the drafting agent pulls at generation time."
-#~ msgstr "Receitas de post reutilizáveis que o agente de rascunho usa no momento da geração."
+msgid "Reusable post recipes the drafting agent pulls at generation time."
+msgstr "Receitas de post reutilizáveis que o agente de rascunho usa no momento da geração."
 
 #: src/lib/connectorCatalog.js
 msgid "Revenue"
@@ -9116,10 +9027,6 @@ msgstr "Falha ao salvar."
 msgid "Save manager account"
 msgstr "Salvar conta de gerente"
 
-#: src/components/content/FormatLibrary.jsx
-msgid "Save my copy"
-msgstr "Salvar minha cópia"
-
 #: src/components/content/PostMetricsForm.jsx
 msgid "Save numbers"
 msgstr "Salvar números"
@@ -9200,10 +9107,6 @@ msgstr "salvo na sua conta Duct"
 #: src/components/content/PostMetricsForm.jsx
 msgid "Saves"
 msgstr "Salvos"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Saving makes this project’s own copy, which replaces the built-in here. Reset it later to go back."
-msgstr "Salvar cria a cópia própria deste projeto, que substitui a integrada aqui. Redefina-a mais tarde para voltar."
 
 #: src/components/content/AccountsTab.jsx
 #: src/components/content/BrandContextForm.jsx
@@ -9696,10 +9599,6 @@ msgstr "Shift+Enter para uma nova linha"
 msgid "Shift+Enter for a new line · Esc to stop"
 msgstr "Shift+Enter para uma nova linha · Esc para parar"
 
-#: src/components/content/FormatLibrary.jsx
-msgid "Ships with Duct · customising makes your own copy"
-msgstr "Vem com Duct · personalizar cria sua própria cópia"
-
 #: src/app/(app)/settings/profile/page.jsx
 #~ msgid "Shirish"
 #~ msgstr "Shirish"
@@ -10124,12 +10023,8 @@ msgid "SPA pages"
 msgstr "Páginas SPA"
 
 #: src/components/content/FormatLibrary.jsx
-msgid "Spec document"
-msgstr "Documento de especificação"
-
-#: src/components/content/FormatLibrary.jsx
-#~ msgid "Spec document (Markdown)"
-#~ msgstr "Documento de especificação (Markdown)"
+msgid "Spec document (Markdown)"
+msgstr "Documento de especificação (Markdown)"
 
 #: src/components/GoogleAdsReport.js
 msgid "Spend"
@@ -10152,8 +10047,8 @@ msgid "Spent"
 msgstr "Gasto"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "Stable key — lowercase, hyphens"
-#~ msgstr "Chave estável — minúsculas, hífens"
+msgid "Stable key — lowercase, hyphens"
+msgstr "Chave estável — minúsculas, hífens"
 
 #: src/lib/modelTiers.js
 msgid "Standard"
@@ -10186,10 +10081,6 @@ msgstr "Começar de novo"
 #: src/components/insights/desk/DeskDayOne.jsx
 #~ msgid "Start with a question"
 #~ msgstr "Comece com uma pergunta"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Start with a title, then the structure as a table, then the rules…"
-msgstr "Comece com um título, depois a estrutura como uma tabela, depois as regras…"
 
 #: src/components/connections/ConnectorBrowser.jsx
 msgid "Start with these"
@@ -10700,12 +10591,8 @@ msgid "The first line is the hook."
 msgstr "A primeira linha é o gancho."
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "The full recipe — slide structure, image prompt rules, failure modes. GFM tables supported."
-#~ msgstr "A receita completa — estrutura do slide, regras de prompt de imagem, modos de falha. Tabelas GFM suportadas."
-
-#: src/components/content/FormatLibrary.jsx
-msgid "The full recipe — structure, hook rules, image prompt rules, failure modes. Write it like a brief to a new hire; headings and tables help the agent find things."
-msgstr "A receita completa — estrutura, regras de gancho, regras de prompt de imagem, modos de falha. Escreva como um resumo para um novo contratado; títulos e tabelas ajudam o agente a encontrar as coisas."
+msgid "The full recipe — slide structure, image prompt rules, failure modes. GFM tables supported."
+msgstr "A receita completa — estrutura do slide, regras de prompt de imagem, modos de falha. Tabelas GFM suportadas."
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "The key works, but the account has no credit"
@@ -10999,10 +10886,6 @@ msgstr "Esta cópia do Duct é mais antiga que os servidores MCP. Atualize-a par
 #: src/app/(app)/settings/profile/page.jsx
 msgid "This device"
 msgstr "Este dispositivo"
-
-#: src/components/content/SpecEditorInner.jsx
-msgid "This document uses markup the visual editor can’t show, so you’re editing it as text. Nothing was changed."
-msgstr "Este documento usa marcação que o editor visual não consegue exibir, então você está editando-o como texto. Nada foi alterado."
 
 #: src/components/models/TierCard.jsx
 msgid "This engine runs Anthropic models only, so {tierNameLower} jobs run on <0>{servesName}</0> — this engine's default."
@@ -11909,10 +11792,6 @@ msgstr "Sobre o que é meu site, de fato?"
 msgid "What is this?"
 msgstr "O que é isto?"
 
-#: src/components/content/FormatLibrary.jsx
-msgid "What it is for"
-msgstr "Para que serve"
-
 #: src/components/insights/ToolApproval.jsx
 msgid "What it will send"
 msgstr "O que ele enviará"
@@ -11920,10 +11799,6 @@ msgstr "O que ele enviará"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "What kind of memory"
 msgstr "Que tipo de memória"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "What kind of post this recipe makes."
-msgstr "Que tipo de post esta receita cria."
 
 #: src/components/workspace/ComposerDials.jsx
 #~ msgid "What shape the brief takes"
@@ -12009,10 +11884,6 @@ msgstr "De onde vêm os dados?"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Where it applies"
 msgstr "Onde se aplica"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Where it is offered. The plan only pulls it for posts on these channels."
-msgstr "Onde é oferecido. O plano só o puxa para posts nestes canais."
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Where the funnel actually breaks"
@@ -12429,10 +12300,6 @@ msgstr "Sua conexão está boa, mas os servidores do Duct não estão respondend
 #: src/components/content/PlanBoard.jsx
 msgid "your content plan"
 msgstr "seu plano de conteúdo"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Your copy of <0>{deletingName}</0> will be removed and the built-in version comes back. Posts already drafted with it are unaffected."
-msgstr "Sua cópia de <0>{deletingName}</0> será removida e a versão integrada voltará. Posts já rascunhados com ela não serão afetados."
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Your core themes. The agent runs one research sub-agent per pillar."

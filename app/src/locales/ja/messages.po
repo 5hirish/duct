@@ -214,8 +214,8 @@ msgid "{changeCount, plural, one {# change} other {# changes}}"
 msgstr "{changeCount, plural, other {# 変更}}"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "{charCount, plural, one {# char} other {# chars}}"
-#~ msgstr "{charCount, plural, other {# 文字}}"
+msgid "{charCount, plural, one {# char} other {# chars}}"
+msgstr "{charCount, plural, other {# 文字}}"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{competitorCount, plural, one {# competitor} other {# competitors}}"
@@ -468,8 +468,8 @@ msgid "{left} to go"
 msgstr "残り{left}件"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "{linkedCount, plural, one {# linked style} other {# linked styles}}"
-#~ msgstr "{linkedCount, plural, other {# リンクされたスタイル}}"
+msgid "{linkedCount, plural, one {# linked style} other {# linked styles}}"
+msgstr "{linkedCount, plural, other {# リンクされたスタイル}}"
 
 #: src/components/content/AccountsTab.jsx
 msgid "{linkedHere, plural, one {# account} other {# accounts}} via {primaryLabel}"
@@ -754,8 +754,8 @@ msgid "{slideCount, plural, one {# slide} other {# slides}}"
 msgstr "{slideCount, plural, one {# スライド} other {# スライド}}"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "{slides, plural, one {# slide} other {# slides}}"
-#~ msgstr "{slides, plural, one {# スライド} other {# スライド}}"
+msgid "{slides, plural, one {# slide} other {# slides}}"
+msgstr "{slides, plural, one {# スライド} other {# スライド}}"
 
 #: src/components/content/SynthesisPanel.jsx
 msgid "{slideShare} of posts · <0>{slideEng}</0> eng."
@@ -878,20 +878,20 @@ msgid "{wordCount} words"
 msgstr "{wordCount} 語"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "# My Format\n"
-#~ "\n"
-#~ "## Slide Structure\n"
-#~ "\n"
-#~ "| Slide | Type |\n"
-#~ "|-------|------|\n"
-#~ "| 1 | Hook |"
-#~ msgstr "# マイフォーマット\n"
-#~ "\n"
-#~ "## スライド構成\n"
-#~ "\n"
-#~ "| スライド | タイプ |\n"
-#~ "|-------|------|\n"
-#~ "| 1 | フック |"
+msgid "# My Format\n"
+"\n"
+"## Slide Structure\n"
+"\n"
+"| Slide | Type |\n"
+"|-------|------|\n"
+"| 1 | Hook |"
+msgstr "# マイフォーマット\n"
+"\n"
+"## スライド構成\n"
+"\n"
+"| スライド | タイプ |\n"
+"|-------|------|\n"
+"| 1 | フック |"
 
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 #~ msgid "← Artifacts"
@@ -1160,16 +1160,8 @@ msgstr "プロジェクトはサイトから始まります。Ductがそれを�
 #~ msgstr ""
 
 #: src/components/content/FormatLibrary.jsx
-msgid "A recipe the drafting agent follows. Say what it applies to, then write the spec."
-msgstr "ドラフトエージェントが従うレシピです。適用対象を記述し、仕様を記述します。"
-
-#: src/components/content/FormatLibrary.jsx
-#~ msgid "A reusable recipe — slide structure, caption styles, image prompt rules — that the drafting agent follows."
-#~ msgstr "下書きエージェントが従う、再利用可能なレシピ — スライド構造、キャプションスタイル、画像プロンプトルールなど。"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "A reusable recipe — structure, hook rules, image prompt rules — that the drafting agent follows for the media and channels you pick."
-msgstr "ドラフトエージェントが、選択したメディアとチャネルに対して従う、再利用可能なレシピ（構造、フックルール、画像プロンプトルール）です。"
+msgid "A reusable recipe — slide structure, caption styles, image prompt rules — that the drafting agent follows."
+msgstr "下書きエージェントが従う、再利用可能なレシピ — スライド構造、キャプションスタイル、画像プロンプトルールなど。"
 
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "A run stopped on an error"
@@ -1190,10 +1182,6 @@ msgstr "サインインリクエストは10分間有効です。エージェン�
 #: src/components/workspace/ComposerDials.jsx
 #~ msgid "A styled page with its own charts and sortable tables. Costs more to write, reads better, forwards as one file"
 #~ msgstr "独自のグラフと並べ替え可能なテーブルを備えたスタイル付きページ。作成コストは高くなりますが、読みやすく、1つのファイルとして転送できます"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "A swipe-through lesson, one idea per slide. Use when the post teaches or lists; not for a personal story."
-msgstr "スライドごとに1つのアイデアを提示する、スワイプ形式のレッスンです。投稿が教える内容やリスト形式の場合に使用します。個人的な話には使用しません。"
 
 #: src/components/connections/ProjectAccountSelect.jsx
 msgid "a teammate's account"
@@ -1743,10 +1731,6 @@ msgstr "このトークンを使用するエージェントは直ちにDuctへ�
 msgid "Any MCP server"
 msgstr "任意のMCPサーバー"
 
-#: src/components/content/FormatLibrary.jsx
-msgid "Any media"
-msgstr "すべてのメディア"
-
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Any time"
 msgstr "いつでも"
@@ -1808,10 +1792,6 @@ msgstr "次回のメッセージから適用されます"
 #: src/components/workspace/ComposerDials.jsx
 msgid "Applies from your next session"
 msgstr "次回のセッションから適用されます"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Applies to"
-msgstr "適用対象"
 
 #: src/components/TelemetryCard.jsx
 msgid "Applies to the bundled backend next time you open Duct."
@@ -2196,8 +2176,8 @@ msgid "Base styles"
 msgstr "基本スタイル"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "Base styles the slide builder inlines for this format. Browse them in Library → Styles."
-#~ msgstr "このフォーマットのためにスライドビルダーがインライン化する基本スタイルです。ライブラリ → スタイルで閲覧できます。"
+msgid "Base styles the slide builder inlines for this format. Browse them in Library → Styles."
+msgstr "このフォーマットのためにスライドビルダーがインライン化する基本スタイルです。ライブラリ → スタイルで閲覧できます。"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Behind the app"
@@ -2326,10 +2306,6 @@ msgstr "誰でも構築可能"
 #: src/components/connections/ConnectorBrowser.jsx
 msgid "Built by Duct"
 msgstr "Ductが作成"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Built-in"
-msgstr "組み込み"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "business"
@@ -2516,7 +2492,6 @@ msgid "Channel"
 msgstr "チャネル"
 
 #: src/components/content/AccountsTab.jsx
-#: src/components/content/FormatLibrary.jsx
 msgid "Channels"
 msgstr "チャネル"
 
@@ -3422,18 +3397,9 @@ msgstr "カスタム範囲…"
 msgid "Customers, clients and partners are never named unless you say so."
 msgstr "顧客、クライアント、パートナーは、あなたが指示しない限り、名前を挙げられることはありません。"
 
-#: src/components/content/FormatLibrary.jsx
 #: src/components/models/TierSummary.jsx
 msgid "Customise"
 msgstr "カスタマイズ"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Customise built-in format"
-msgstr "組み込みフォーマットをカスタマイズ"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Customised built-in"
-msgstr "カスタマイズされた組み込み"
 
 #: src/components/content/ReminderSetting.jsx
 msgid "Daily reminder"
@@ -3509,12 +3475,12 @@ msgid "Default account"
 msgstr "デフォルトアカウント"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "Default slides"
-#~ msgstr "デフォルトスライド"
+msgid "Default slides"
+msgstr "デフォルトスライド"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "Define a reusable post recipe. The spec doc is what the drafting agent reads."
-#~ msgstr "再利用可能な投稿レシピを定義します。仕様書は下書きエージェントが読み取るものです。"
+msgid "Define a reusable post recipe. The spec doc is what the drafting agent reads."
+msgstr "再利用可能な投稿レシピを定義します。仕様書は下書きエージェントが読み取るものです。"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Define your North Star metric and current growth stage. Channel-specific KPIs stay in report generation."
@@ -4241,14 +4207,6 @@ msgstr "あなたが編集しました"
 msgid "editorial / minimal / bold"
 msgstr "エディトリアル / ミニマル / ボールド"
 
-#: src/components/content/FormatLibrary.jsx
-msgid "Educational carousel"
-msgstr "教育的なカルーセル"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "educational-carousel"
-msgstr "educational-carousel"
-
 #: src/components/ProjectMembers.jsx
 msgid "Email address to invite"
 msgstr "招待するメールアドレス"
@@ -4325,10 +4283,6 @@ msgstr "製品分析からのイベント、ファネル、インサイト。"
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Every agent reads this, on every project. Only you can see it."
 msgstr "すべてのエージェントがすべてのプロジェクトでこれを読みます。あなただけが見ることができます。"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Every channel"
-msgstr "すべてのチャネル"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 #~ msgid "Every dashboard called it healthy"
@@ -4606,10 +4560,6 @@ msgstr "最初のプロンプト"
 msgid "Fix These First"
 msgstr "まずこれらを修正"
 
-#: src/components/content/FormatLibrary.jsx
-msgid "Fixed, so your copy stands in for the built-in"
-msgstr "修正済み。あなたのコピーが組み込みの代わりに使用されます。"
-
 #: src/app/(app)/execute/page.jsx
 msgid "Fixes from an audit or a conversation land here for you to approve."
 msgstr "監査または会話からの修正は、あなたの承認のためにここに表示されます。"
@@ -4639,16 +4589,16 @@ msgid "Format"
 msgstr "形式"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "Format D — UGC / Raw Authentic"
-#~ msgstr "フォーマットD — UGC / 生の信頼性"
+msgid "Format D — UGC / Raw Authentic"
+msgstr "フォーマットD — UGC / 生の信頼性"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "Format spec"
-#~ msgstr "フォーマット仕様"
+msgid "Format spec"
+msgstr "フォーマット仕様"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "format-d"
-#~ msgstr "format-d"
+msgid "format-d"
+msgstr "format-d"
 
 #: src/app/(app)/content/page.jsx
 #: src/components/content/FormatLibrary.jsx
@@ -5252,8 +5202,8 @@ msgid "HubSpot"
 msgstr "HubSpot"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "Human-friendly title"
-#~ msgstr "人間が読みやすいタイトル"
+msgid "Human-friendly title"
+msgstr "人間が読みやすいタイトル"
 
 #: src/components/AgentDrawer.jsx
 #~ msgid "Human-in-the-loop agent handoffs — coming soon"
@@ -5742,8 +5692,8 @@ msgid "Linked from chat, outside the filters below"
 msgstr "以下のフィルター外のチャットからリンク済み"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "Linked styles"
-#~ msgstr "リンク済みスタイル"
+msgid "Linked styles"
+msgstr "リンク済みスタイル"
 
 #: src/components/content/AccountsTab.jsx
 msgid "LinkedIn, X, TikTok, Instagram and YouTube, side by side."
@@ -5985,10 +5935,6 @@ msgid "Lower impact · More effort"
 msgstr "低影響 · 高労力"
 
 #: src/components/content/FormatLibrary.jsx
-msgid "Lowercase, hyphens"
-msgstr "小文字、ハイフン"
-
-#: src/components/content/FormatLibrary.jsx
 msgid "Lowercase, numbers, hyphens only"
 msgstr "小文字、数字、ハイフンのみ"
 
@@ -6078,10 +6024,6 @@ msgstr "測定済み"
 #: src/components/audit/AuditReport.jsx
 msgid "Measuring E-E-A-T signals…"
 msgstr "E-E-A-Tシグナルを測定中…"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Media"
-msgstr "メディア"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "medical claims, perfect, flawless"
@@ -6517,8 +6459,8 @@ msgstr "APIキーは不要です"
 #~ msgstr "まだアーティファクトはありません"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "No base styles available."
-#~ msgstr "利用可能な基本スタイルはありません。"
+msgid "No base styles available."
+msgstr "利用可能な基本スタイルはありません。"
 
 #: src/components/settings/AgentAccess.jsx
 msgid "No browser? Use a token"
@@ -7065,14 +7007,6 @@ msgstr "これらのフィルターに一致するものはありません。"
 msgid "Nothing needs you right now."
 msgstr "今、あなたが必要なものはありません。"
 
-#: src/components/content/FormatLibrary.jsx
-msgid "Nothing picked = any media"
-msgstr "何も選択されていません = すべてのメディア"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Nothing picked = every channel"
-msgstr "何も選択されていません = すべてのチャネル"
-
 #: src/components/content/AnalyticsView.jsx
 msgid "Nothing posted yet"
 msgstr "まだ何も投稿されていません"
@@ -7110,8 +7044,8 @@ msgid "Nothing stored yet."
 msgstr "まだ何も保存されていません。"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "Nothing to preview yet."
-#~ msgstr "まだプレビューするものはありません。"
+msgid "Nothing to preview yet."
+msgstr "まだプレビューするものはありません。"
 
 #: src/components/insights/Desk.jsx
 msgid "Nothing to report yet."
@@ -7286,10 +7220,6 @@ msgstr "{foundAt} に 1 個のモデル"
 #: src/components/audit/AuditWorkspace.jsx
 #~ msgid "One moment — Duct has a quick question"
 #~ msgstr "少々お待ちください — Ductから質問があります"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "One or two sentences. The agent reads this to pick between formats, so say what it does and when to use it."
-msgstr "1、2文で記述してください。エージェントがフォーマットを選択する際にこれを読み込むため、何をするものか、いつ使用するかを説明してください。"
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "One sentence"
@@ -8002,6 +7932,7 @@ msgstr "設定"
 #~ msgstr "現在"
 
 #: src/components/audit/AuditStepProgress.jsx
+#: src/components/content/FormatLibrary.jsx
 #: src/components/workspace/SplitWorkspace.jsx
 msgid "Preview"
 msgstr "プレビュー"
@@ -8431,10 +8362,6 @@ msgstr "回答前の理由。複雑なサイトでより効果的です。"
 msgid "Recent"
 msgstr "最近"
 
-#: src/components/content/FormatLibrary.jsx
-msgid "Recipes the drafting agent follows. Each one says which media and channels it is for; the built-ins can be customised."
-msgstr "ドラフト作成エージェントが従うレシピです。それぞれがどのメディアとチャネル用であるかを示し、組み込みのものはカスタマイズ可能です。"
-
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Recommended"
 msgstr "おすすめ"
@@ -8770,27 +8697,11 @@ msgstr "リセット"
 msgid "Reset failed."
 msgstr "リセットに失敗しました。"
 
-#: src/components/content/FormatLibrary.jsx
-msgid "Reset format"
-msgstr "フォーマットをリセット"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Reset to built-in"
-msgstr "組み込みにリセット"
-
 #: src/app/(app)/settings/models/page.jsx
 #: src/app/(app)/settings/profile/page.jsx
 #: src/components/models/TierSummary.jsx
 msgid "Reset to defaults"
 msgstr "デフォルトにリセット"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Reset to the built-in?"
-msgstr "組み込みにリセットしますか？"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Resetting…"
-msgstr "リセット中…"
 
 #: src/components/workspace/SplitWorkspace.jsx
 msgid "Resize panes"
@@ -8834,8 +8745,8 @@ msgid "Returning errors"
 msgstr "エラーを返しています"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "Reusable post recipes the drafting agent pulls at generation time."
-#~ msgstr "ドラフト作成エージェントが生成時に使用する、再利用可能な投稿レシピ。"
+msgid "Reusable post recipes the drafting agent pulls at generation time."
+msgstr "ドラフト作成エージェントが生成時に使用する、再利用可能な投稿レシピ。"
 
 #: src/lib/connectorCatalog.js
 msgid "Revenue"
@@ -9116,10 +9027,6 @@ msgstr "保存に失敗しました。"
 msgid "Save manager account"
 msgstr "マネージャーアカウントを保存"
 
-#: src/components/content/FormatLibrary.jsx
-msgid "Save my copy"
-msgstr "コピーを保存"
-
 #: src/components/content/PostMetricsForm.jsx
 msgid "Save numbers"
 msgstr "数値を保存"
@@ -9200,10 +9107,6 @@ msgstr "Ductアカウントに保存済み"
 #: src/components/content/PostMetricsForm.jsx
 msgid "Saves"
 msgstr "保存"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Saving makes this project’s own copy, which replaces the built-in here. Reset it later to go back."
-msgstr "保存すると、このプロジェクト独自のコピーが作成され、ここにある組み込みのものが置き換えられます。後でリセットして元に戻すことができます。"
 
 #: src/components/content/AccountsTab.jsx
 #: src/components/content/BrandContextForm.jsx
@@ -9696,10 +9599,6 @@ msgstr "Shift+Enterで改行"
 msgid "Shift+Enter for a new line · Esc to stop"
 msgstr "Shift+Enterで改行・Escで停止"
 
-#: src/components/content/FormatLibrary.jsx
-msgid "Ships with Duct · customising makes your own copy"
-msgstr "Ductに付属 · カスタマイズすると独自のコピーが作成されます"
-
 #: src/app/(app)/settings/profile/page.jsx
 #~ msgid "Shirish"
 #~ msgstr "シリシュ"
@@ -10124,12 +10023,8 @@ msgid "SPA pages"
 msgstr "SPAページ"
 
 #: src/components/content/FormatLibrary.jsx
-msgid "Spec document"
-msgstr "仕様書"
-
-#: src/components/content/FormatLibrary.jsx
-#~ msgid "Spec document (Markdown)"
-#~ msgstr "仕様書 (Markdown)"
+msgid "Spec document (Markdown)"
+msgstr "仕様書 (Markdown)"
 
 #: src/components/GoogleAdsReport.js
 msgid "Spend"
@@ -10152,8 +10047,8 @@ msgid "Spent"
 msgstr "使用済み"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "Stable key — lowercase, hyphens"
-#~ msgstr "安定したキー — 小文字、ハイフン"
+msgid "Stable key — lowercase, hyphens"
+msgstr "安定したキー — 小文字、ハイフン"
 
 #: src/lib/modelTiers.js
 msgid "Standard"
@@ -10186,10 +10081,6 @@ msgstr "やり直す"
 #: src/components/insights/desk/DeskDayOne.jsx
 #~ msgid "Start with a question"
 #~ msgstr "質問から始める"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Start with a title, then the structure as a table, then the rules…"
-msgstr "タイトルから始め、次に構造をテーブルとして、そしてルールを記述してください…"
 
 #: src/components/connections/ConnectorBrowser.jsx
 msgid "Start with these"
@@ -10700,12 +10591,8 @@ msgid "The first line is the hook."
 msgstr "最初の1行がフックです。"
 
 #: src/components/content/FormatLibrary.jsx
-#~ msgid "The full recipe — slide structure, image prompt rules, failure modes. GFM tables supported."
-#~ msgstr "完全なレシピ — スライド構造、画像プロンプトルール、失敗モード。GFMテーブルに対応しています。"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "The full recipe — structure, hook rules, image prompt rules, failure modes. Write it like a brief to a new hire; headings and tables help the agent find things."
-msgstr "完全なレシピ — 構造、フックルール、画像プロンプトルール、失敗モード。新入社員へのブリーフのように記述してください。見出しとテーブルはエージェントが情報を見つけるのに役立ちます。"
+msgid "The full recipe — slide structure, image prompt rules, failure modes. GFM tables supported."
+msgstr "完全なレシピ — スライド構造、画像プロンプトルール、失敗モード。GFMテーブルに対応しています。"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "The key works, but the account has no credit"
@@ -10999,10 +10886,6 @@ msgstr "このDuctはMCPサーバーより古いです。接続するにはア�
 #: src/app/(app)/settings/profile/page.jsx
 msgid "This device"
 msgstr "このデバイス"
-
-#: src/components/content/SpecEditorInner.jsx
-msgid "This document uses markup the visual editor can’t show, so you’re editing it as text. Nothing was changed."
-msgstr "このドキュメントはビジュアルエディタでは表示できないマークアップを使用しているため、テキストとして編集しています。何も変更されていません。"
 
 #: src/components/models/TierCard.jsx
 msgid "This engine runs Anthropic models only, so {tierNameLower} jobs run on <0>{servesName}</0> — this engine's default."
@@ -11909,10 +11792,6 @@ msgstr "私のサイトは実際には何についてですか？"
 msgid "What is this?"
 msgstr "これは何ですか？"
 
-#: src/components/content/FormatLibrary.jsx
-msgid "What it is for"
-msgstr "何のためのものか"
-
 #: src/components/insights/ToolApproval.jsx
 msgid "What it will send"
 msgstr "送信する内容"
@@ -11920,10 +11799,6 @@ msgstr "送信する内容"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "What kind of memory"
 msgstr "どのようなメモリ"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "What kind of post this recipe makes."
-msgstr "このレシピで作成される投稿の種類。"
 
 #: src/components/workspace/ComposerDials.jsx
 #~ msgid "What shape the brief takes"
@@ -12009,10 +11884,6 @@ msgstr "データはどこから来ていますか？"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Where it applies"
 msgstr "適用範囲"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Where it is offered. The plan only pulls it for posts on these channels."
-msgstr "提供場所。このプランは、これらのチャネルの投稿にのみ適用されます。"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Where the funnel actually breaks"
@@ -12429,10 +12300,6 @@ msgstr "接続は正常ですが、Ductのサーバーが応答していませ�
 #: src/components/content/PlanBoard.jsx
 msgid "your content plan"
 msgstr "コンテンツプラン"
-
-#: src/components/content/FormatLibrary.jsx
-msgid "Your copy of <0>{deletingName}</0> will be removed and the built-in version comes back. Posts already drafted with it are unaffected."
-msgstr "<0>{deletingName}</0>のコピーは削除され、組み込みバージョンに戻ります。これですでに下書きされた投稿は影響を受けません。"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Your core themes. The agent runs one research sub-agent per pillar."
