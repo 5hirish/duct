@@ -196,6 +196,7 @@ def test_a_stranger_cannot_publish_someone_elses_post(db, content, stranger):
         "/api/content/assets?project_id={id}",
         "/api/content/brand?project_id={id}",
         "/api/content/linked-accounts?project_id={id}",
+        "/api/content/channels?project_id={id}",
     ],
 )
 def test_a_stranger_naming_the_project_is_told_it_does_not_exist(db, content, project, stranger, path):

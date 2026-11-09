@@ -14,21 +14,23 @@ import { useLeaveOnProjectSwitch } from "@/hooks/useActiveProjectId";
 import LoadError from "@/components/LoadError";
 
 /**
- * Per-post draft workspace. Two routes here:
+ * One post, in one of two places:
  *
- *   /content/posts/{postId}         — existing post; renders viewport
- *                                      seeded from GET /api/content/posts/{id};
- *                                      no SSE session is started unless the
- *                                      user clicks "Ask Duct to revise".
+ *   the workspace — chat on the left, the post on the right, bound to this
+ *     post. A draft (or an unsaved one) always opens here: it is still being
+ *     made, and its own chat resumes when it has one. Anything else opens
+ *     here with ?revise=1.
  *
- *   /content/posts/{postId}?revise=1 — open the workspace AND start a
- *                                      draft_post SSE session bound to
- *                                      this post id (for re-drafting).
+ *   the read-only view — a scheduled, posted or failed post, with Publish
+ *     and "Revise with Duct". No session starts until that button.
  *
- * For MVP this page always starts a draft_post session if the URL carries
- * ?revise=1, otherwise it shows the existing post in a read-only viewport
- * wrapped in a "Revise with Duct →" CTA.
+ * Every link to a post is the plain URL; this page decides. Drafts opened on
+ * the read-only view from the plan board and the drafts queue (2026-11-08),
+ * where nothing could be changed and the chat was one more click away.
  */
+// Statuses that open in the workspace without being asked to.
+const IN_THE_MAKING = new Set([PostStatus.PENDING, PostStatus.DRAFT]);
+
 export default function PostDetailPage() {
   const { t } = useLingui();
   const { postId } = useParams();
@@ -78,8 +80,18 @@ export default function PostDetailPage() {
     );
   }
 
-  // Revise mode → open a workspace + SSE session targeting this post.
-  if (revise) {
+  const canPublish = post.status !== PostStatus.POSTED;
+  const publishModal = (
+    <PublishModal
+      open={publishOpen}
+      onClose={() => setPublishOpen(false)}
+      post={post}
+      onPublished={(updated) => setPost(updated)}
+    />
+  );
+
+  // A post still being made opens in the workspace, bound to this post.
+  if (revise || IN_THE_MAKING.has(post.status)) {
     const projectId = post.project_id || getActiveProjectId();
     return (
       <div className="h-full">
@@ -106,14 +118,15 @@ export default function PostDetailPage() {
             <PostViewport
               payload={payload || { type: "post", ...post }}
               onSendMessage={onSendMessage}
+              canPublish={canPublish}
+              onPublish={() => setPublishOpen(true)}
             />
           )}
         />
+        {publishModal}
       </div>
     );
   }
-
-  const canPublish = post.status !== PostStatus.POSTED;
 
   return (
     <div className="h-full">
@@ -134,12 +147,7 @@ export default function PostDetailPage() {
         )}
       </PostViewport>
 
-      <PublishModal
-        open={publishOpen}
-        onClose={() => setPublishOpen(false)}
-        post={post}
-        onPublished={(updated) => setPost(updated)}
-      />
+      {publishModal}
     </div>
   );
 }

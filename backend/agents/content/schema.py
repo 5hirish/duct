@@ -160,8 +160,13 @@ class ContentBrandContext(BaseModel):
     features: list[AppFeature] = Field(default_factory=list)
     pillars: list[ContentPillar] = Field(default_factory=list)
     visual: ContentVisualAssets = Field(default_factory=ContentVisualAssets)
-    # Where the brand already posts, as Platform values (channels.brand_platforms).
+    # Where the brand posts, as Platform values: the person's choice in the
+    # Accounts tab, the crawl's list before they made one
+    # (channel_config.active_platforms).
     active_channels: list[str] = Field(default_factory=list)
+    # What they said about each channel they switched on: handle, bio, notes,
+    # the media they want there (channel_config.ChannelProfile.words()).
+    channel_profiles: dict[str, dict] = Field(default_factory=dict)
     # The project's own voice (agents/content/voice_rules.py): posts it wrote,
     # for the writer to match, and the rules a text post keeps.
     writing_samples: list[str] = Field(default_factory=list)
@@ -233,6 +238,9 @@ class ContentSession(BaseAgentSession):
     mode: RunMode
     plan_id: UUID | None = None
     post_id: UUID | None = None
+    # The plan day this draft fills (with plan_id), so submit_post links the
+    # post onto its slot the moment the post exists (plan_period.link_post_to_day).
+    day_index: int | None = None
     # The plan the agent put forward and nobody has accepted yet
     # (agents/content/plan_proposal.py). submit_plan sets it; the accept
     # route writes it and clears it; reject clears it.

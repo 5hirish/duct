@@ -170,7 +170,7 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
             (postId || onRevise) && (
               <span className="flex items-center gap-0.5 text-xs text-muted-foreground group-hover/row:text-foreground group-focus-visible/row:text-foreground">
                 <span className="opacity-0 transition-opacity group-hover/row:opacity-100 group-focus-visible/row:opacity-100">
-                  <Trans>Draft post</Trans>
+                  {postId ? <Trans>Open post</Trans> : <Trans>Draft post</Trans>}
                 </span>
                 <ChevronRight className="size-4" aria-hidden />
               </span>
@@ -308,7 +308,10 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
   // stopPropagation keeps a Month chip's click from also firing the day cell.
   // `group/row` is what the row variant's hover and focus styles key off.
   if (postId) {
-    const href = status === "draft" ? `/content/posts/${postId}?revise=1` : `/content/posts/${postId}`;
+    // The plain URL: the post page opens a draft in its workspace and a
+    // published post read-only. Reopening a saved draft reviews it and asks
+    // (backend run_draft); it no longer drafts over it.
+    const href = `/content/posts/${postId}`;
     return (
       <Link
         href={href}

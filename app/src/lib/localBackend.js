@@ -96,6 +96,15 @@ async function isListening(url) {
  * rejects — a sidecar that fails to start should surface as a message in the
  * UI, not an unhandled rejection during boot.
  */
+/**
+ * The promise a render already waited on, or null while nothing has. A
+ * component that suspended on it reads it through `use()` on every later
+ * render too: see `LocalBackendGate`.
+ */
+export function backendPromise() {
+  return pending;
+}
+
 export function initLocalBackend() {
   if (!pending) pending = resolved ? Promise.resolve(resolved) : resolve().then(settle);
   return pending;

@@ -86,13 +86,25 @@ const TOOL_WORDS = {
   fetch_discovered_references: msg`Read the discovered references`,
   fetch_post: msg`Opened the post`,
   fetch_slide_context: msg`Read the slide`,
-  submit_plan: msg`Saved the plan`,
+  submit_plan: msg`Proposed a plan`,
   submit_post_draft: msg`Saved the draft`,
   edit_slide: msg`Edited a slide`,
   submit_assessment: msg`Reviewed the post`,
   publish_post: msg`Published the post`,
   mark_posted: msg`Marked as posted`,
   log_metrics: msg`Logged metrics`,
+};
+
+// The sub-agents a runner can dispatch, by the name the model calls them
+// (content: agents/content/subagents; insights: agents/insights/subagents),
+// as what they do while running and what they did once back. The name is a
+// code identifier and never the row's words.
+const SUBAGENT_WORDS = {
+  research_pillar: { running: msg`Researching a pillar`, done: msg`Researched a pillar` },
+  draft_post: { running: msg`Drafting a post`, done: msg`Drafted a post` },
+  review_post: { running: msg`Reviewing a post`, done: msg`Reviewed a post` },
+  verify: { running: msg`Checking the numbers`, done: msg`Checked the numbers` },
+  "general-purpose": { running: msg`Working on a side task`, done: msg`Finished a side task` },
 };
 
 // What each block of a run's context is called on the row. The keys are the
@@ -264,6 +276,15 @@ function useSummary(activity, named) {
       }
       const lead = activity.status === StepStatus.RUNNING ? t`Using ${tool}` : t`Used ${tool}`;
       return { lead, detail: server, aside: "" };
+    }
+    case ActivityKind.SUBAGENT: {
+      const words = SUBAGENT_WORDS[activity.title];
+      const running = activity.status === StepStatus.RUNNING;
+      const lead = words
+        ? i18n._(running ? words.running : words.done)
+        : running ? t`Asked a helper agent` : t`A helper agent answered`;
+      // The brief says what was asked; the answer replaces it once it is back.
+      return { lead, detail: meta.summary || meta.brief || "", aside: "" };
     }
     default:
       return { lead: t`Asked ${activity.title}`, detail: meta.brief || "", aside: "" };

@@ -28,7 +28,8 @@ import { msg } from "@lingui/core/macro";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
-import { connectVendorKey, getContentAnalytics, listPublishers } from "@/lib/contentApi";
+import Link from "next/link";
+import { connectVendorKey, getContentAnalytics, listLinkedAccounts, listPublishers } from "@/lib/contentApi";
 import ConnectorGate, { schedulerOptions } from "./ConnectorGate";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
 import { compactNumber, dayKey, formatDate, formatNumber, titleCase, toDate } from "@/lib/format";
@@ -54,7 +55,14 @@ function safeHref(u) {
 }
 
 
-export default function AnalyticsView({ projectId, onLinkAccounts }) {
+// The three reads, injectable so /preview can draw the tab's states over data.
+const API_READS = Object.freeze({
+  publishers: listPublishers,
+  linked: listLinkedAccounts,
+  analytics: getContentAnalytics,
+});
+
+export default function AnalyticsView({ projectId, onLinkAccounts, reads = API_READS }) {
   const { t, i18n } = useLingui();
   // Axis/cell dates follow the interface language, as the labels around them do.
   const shortDate = (d) => formatDate(d, { withYear: false, locale: i18n.locale, fallback: "—" });
@@ -62,17 +70,24 @@ export default function AnalyticsView({ projectId, onLinkAccounts }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
+  // A scheduler that was asked and did not answer. The rows the others gave
+  // still show; this is a line beside them, not the page's error.
+  const [notices, setNotices] = useState([]);
   const [sortKey, setSortKey] = useState("views"); // views | likes | date
   // null until known, and left null when it can't be read: the tab then
   // loads as before and the analytics call says what went wrong.
   const [publishers, setPublishers] = useState(null);
+  // The accounts this project linked. "No numbers yet" means two different
+  // things with and without one: link an account, or wait for a post to go
+  // out. On 2026-11-08 the tab told someone with a linked account to link one.
+  const [linked, setLinked] = useState([]);
   const noScheduler = Array.isArray(publishers) && !publishers.some((p) => p.connected);
 
   const load = useCallback(async (refresh = false) => {
     if (refresh) setRefreshing(true); else setLoading(true);
     setError("");
     try {
-      const pubs = await listPublishers(projectId).catch(() => null);
+      const pubs = await reads.publishers(projectId).catch(() => null);
       setPublishers(pubs);
       // With no scheduler there is nothing to read, and asking would only
       // put the server's "connect one" sentence where the gate says it better.
@@ -80,8 +95,15 @@ export default function AnalyticsView({ projectId, onLinkAccounts }) {
         setRows([]);
         return;
       }
-      const data = await getContentAnalytics(projectId, { refresh });
-      setRows(Array.isArray(data) ? data : []);
+      const [links, data] = await Promise.all([
+        reads.linked(projectId).catch(() => []),
+        reads.analytics(projectId, { refresh }),
+      ]);
+      setLinked(Array.isArray(links) ? links : []);
+      // { rows, notices } since schedulers answer separately; a bare list is
+      // an older server.
+      setRows(Array.isArray(data) ? data : Array.isArray(data?.rows) ? data.rows : []);
+      setNotices(Array.isArray(data?.notices) ? data.notices : []);
     } catch (e) {
       setError(e.message || t`Couldn't load analytics.`);
     } finally {
@@ -173,13 +195,16 @@ export default function AnalyticsView({ projectId, onLinkAccounts }) {
         </Button>
       </div>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
+      {notices.map((n) => (
+        <p key={n.publisher} className="text-sm text-warning" role="status">{n.message}</p>
+      ))}
 
       {loading ? (
         <div className="flex items-center justify-center gap-2 py-24 text-sm text-muted-foreground">
           <RefreshCw className="size-4 animate-spin" /> <Trans>Fetching analytics from your schedulers…</Trans>
         </div>
-      ) : rows.length === 0 ? (
+      ) : rows.length === 0 && linked.length === 0 ? (
         // "Link the accounts in the Accounts tab" was a correct instruction
         // with nothing to click, on the one tab where the reader has already
         // decided they want this to work. The button is that same sentence.
@@ -201,6 +226,25 @@ export default function AnalyticsView({ projectId, onLinkAccounts }) {
           }
         >
           <Trans>Numbers arrive once posts go out through your scheduler and the accounts are linked.</Trans>
+        </EmptyState>
+      ) : rows.length === 0 ? (
+        // Linked, and nothing reported yet: the next step is a post, not a link.
+        <EmptyState
+          icon={BarChart2}
+          title={t`Nothing posted yet`}
+          actions={
+            <>
+              <Button size="sm" asChild>
+                <Link href="/content/plan"><Trans>Open the plan board</Trans></Link>
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => load(true)} disabled={refreshing}>
+                <RefreshCw className={`size-3.5 ${refreshing ? "animate-spin" : ""}`} aria-hidden="true" />
+                {refreshing ? <Trans>Syncing…</Trans> : <Trans>Refresh numbers</Trans>}
+              </Button>
+            </>
+          }
+        >
+          <LinkedSummary linked={linked} publishers={publishers} />
         </EmptyState>
       ) : (
         <>
@@ -354,6 +398,28 @@ export default function AnalyticsView({ projectId, onLinkAccounts }) {
 
 /** Analytics before any scheduler is connected: what the tab shows once one
  *  is, and the schedulers that unlock it. Exported for /preview. */
+/** "Zernio hasn't reported a post for @kestrel on LinkedIn yet": the linked
+ *  accounts by name, so the person can see the tab knows them. */
+function LinkedSummary({ linked, publishers }) {
+  const names = linked
+    .slice(0, 3)
+    .map((l) => `@${String(l.username || "").replace(/^@/, "")} (${platformMeta(l.platform).label})`)
+    .join(", ");
+  const more = linked.length - Math.min(linked.length, 3);
+  const scheduler = (publishers || []).find((p) => p.id === linked[0]?.publisher)?.label || linked[0]?.publisher || "";
+  return (
+    <>
+      {more > 0 ? (
+        <Trans>{scheduler} hasn&rsquo;t reported a post for {names} and {more} more yet.</Trans>
+      ) : (
+        <Trans>{scheduler} hasn&rsquo;t reported a post for {names} yet.</Trans>
+      )}{" "}
+      <Trans>Numbers land here after the first post goes out, and on Refresh once it has synced.</Trans>
+    </>
+  );
+}
+
+
 export function AnalyticsGate({ publishers, onConnect }) {
   const { t } = useLingui();
   return (

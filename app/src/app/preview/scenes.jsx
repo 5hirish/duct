@@ -92,7 +92,7 @@ import PlanKanban from "@/components/content/PlanKanban";
 import PlanStrategy from "@/components/content/PlanStrategy";
 import PlanDayOne from "@/components/content/PlanDayOne";
 import AccountsTab from "@/components/content/AccountsTab";
-import { AnalyticsGate } from "@/components/content/AnalyticsView";
+import AnalyticsView, { AnalyticsGate } from "@/components/content/AnalyticsView";
 import { DiscoverGate } from "@/components/content/DiscoverPage";
 import PlanList from "@/components/content/PlanList";
 import { PlanPeriodMenu, PlanPeriodToggle } from "@/components/content/PlanPeriodPicker";
@@ -583,8 +583,11 @@ const TOOL_TRAFFIC = [
   }),
   use("WebFetch", "t5", { url: "https://docs.litellm.ai/docs/proxy/deploy" }),
   returned("WebFetch", "t5", { status: "ok", url: "https://docs.litellm.ai/docs/proxy/deploy", truncated: true }),
-  use("task", "t6", { subagent_type: "verifier", description: "Check every number in the brief against the pulls it cites." }),
+  use("task", "t6", { subagent_type: "verify", description: "Check every number in the brief against the pulls it cites." }),
   { kind: "tool_result", data: { name: "task", tool_use_id: "t6", result: "Checked 9 figures. Two were stated without their window; both corrected.", is_error: false } },
+  use("task", "t6b", { subagent_type: "research_pillar", description: "Fresh angles for the before-and-after pillar." }),
+  { kind: "tool_result", data: { name: "task", tool_use_id: "t6b", result: "Six candidate topics, three with a sound trending this week.", is_error: false } },
+  use("task", "t6c", { subagent_type: "research_pillar", description: "Fresh angles for the cheat-sheet pillar." }),
   use("SearchMemory", "t7", { query: "pricing change" }),
   returned("SearchMemory", "t7", { count: 2, memories: [{ title: "Pricing changed on 4 Sept" }, { title: "Mobile is the growth channel" }] }),
   use("ListDataSources", "t8", {}),
@@ -732,6 +735,82 @@ const TOOL_APPROVAL = {
     null,
     2,
   ),
+};
+
+// The AskUserQuestion pause in the shape the agent is told to write
+// (agents/core/lc.py): a label that is the choice itself, one clause under it.
+// The card draws these as rows; a question whose options are all a word or
+// three and carry no description gets chips instead.
+const QUESTIONS_DIRECTION = {
+  event: AgentEvent.QUESTIONS_REQUIRED,
+  interrupt_id: "preview-questions-direction",
+  questions: [
+    {
+      question: "Where should the plan for 8–30 November go?",
+      header: "Direction",
+      multiSelect: false,
+      options: [
+        { label: "Keep the current plan", description: "The 23 days as scheduled: 16 videos, 4 slideshows, 3 cheat sheets." },
+        { label: "Pivot to cheat sheets", description: "More image cheat sheets and shopping carousels to break the saves stall." },
+        { label: "Double down on video", description: "Before-and-afters only, the format with the best completion." },
+        { label: "Start over", description: "Clear the schedule and draft a new angle for one audience." },
+      ],
+    },
+  ],
+};
+
+const QUESTIONS_QUICK = {
+  event: AgentEvent.QUESTIONS_REQUIRED,
+  interrupt_id: "preview-questions-quick",
+  questions: [
+    {
+      question: "Which channel should the first week lead on?",
+      header: "Channel",
+      multiSelect: false,
+      options: [{ label: "Instagram" }, { label: "TikTok" }, { label: "YouTube Shorts" }],
+    },
+    {
+      question: "What should the posts push?",
+      header: "Goal",
+      multiSelect: true,
+      options: [{ label: "Trial sign-ups" }, { label: "Saves" }, { label: "Follows" }, { label: "Comments" }],
+    },
+  ],
+};
+
+const QUESTIONS_EDGES = {
+  event: AgentEvent.QUESTIONS_REQUIRED,
+  interrupt_id: "preview-questions-edges",
+  questions: [
+    {
+      question: "Welche Zielgruppe soll der Plan für die zweite Novemberhälfte in den Mittelpunkt stellen?",
+      header: "Zielgruppe",
+      multiSelect: false,
+      options: [
+        {
+          label: "Wiederkehrende Kundinnen und Kunden mit abgelaufener Testphase",
+          description: "Die Gruppe mit der höchsten Abschlussquote im Oktober, aber ohne einen einzigen gespeicherten Beitrag seit drei Wochen.",
+        },
+        { label: "Neue Besucher aus der Suche", description: "Kurze Erklärvideos, die die erste Frage beantworten." },
+      ],
+    },
+    {
+      question: "Keep the Thursday slot?",
+      header: "Slot",
+      multiSelect: false,
+      options: [{ label: "Yes" }],
+    },
+    {
+      question: "Which of the three series carries on, if any?",
+      header: "Series",
+      multiSelect: true,
+      options: [
+        { label: "Before and after", description: "Six episodes posted, completion holding." },
+        { label: "One-minute cheat sheet", description: "Three posted, the only series with saves." },
+        { label: "Founder diary", description: "Two posted, no signal yet." },
+      ],
+    },
+  ],
 };
 
 const TOOL_APPROVAL_LONG = {
@@ -968,7 +1047,7 @@ function RegistryScenario({ id = "today", query, answer = "results", servers = M
 }
 
 /** One generated plan through the real board view, every control live. */
-function PlanScenario({ id, view = PlanView.LIST }) {
+function PlanScenario({ id, view = PlanView.LIST, channel = null }) {
   const today = useMemo(() => startOfDay(new Date()), []);
   const data = useMemo(() => planScenario(id, today), [id, today]);
   const [current, setCurrent] = useState(view);
@@ -989,6 +1068,7 @@ function PlanScenario({ id, view = PlanView.LIST }) {
       onStartPlan={() => {}}
       onRevisePlan={() => {}}
       onReviseDay={() => {}}
+      defaultChannel={channel}
     />
   );
 }
@@ -1014,7 +1094,7 @@ function PlanViewportScene({ scenario, status, replaces = false }) {
   return (
     <div style={{ height: 720, display: "flex" }} className="bg-background">
       <div className="flex-1 min-w-0">
-        <PlanViewport payload={payload} sessionId="preview" onSendMessage={() => {}} onReviseDay={() => {}} />
+        <PlanViewport payload={payload} sessionId="preview" onSendMessage={() => {}} />
       </div>
     </div>
   );
@@ -1325,10 +1405,89 @@ const SCHEDULER_ACCOUNTS = [
   { id: "acc_li", publisher: "zernio", publisher_label: "Zernio", platform: "linkedin", username: "solomoney", display_name: "Solo Money" },
   { id: "acc_x", publisher: "zernio", publisher_label: "Zernio", platform: "twitter", username: "solomoneyhq", needs_reconnect: true },
 ];
-const loadsAccounts = (publishers, accounts = [], linked = []) => async () => ({ publishers, accounts, linked });
+// The guide the agent is given per channel, as GET /content/channels carries
+// it (backend agents/content/platform_guides.py), shortened to what a scene
+// needs to show the shape: a cadence line, limit chips and three lists.
+const GUIDE_CHECKED = "2026-11";
+// The guides as the backend ships them (agents/content/platform_guides.py,
+// dumped by guide_payload), so the scene shows what the agent is told rather
+// than a paraphrase that drifts. Regenerate when that table changes.
+const CHANNEL_GUIDES = {
+  tiktok: {"formats": ["Video 9:16, 15 s to 10 min uploads; 21 to 60 s finishes most often", "Photo carousel (photo mode), up to 35 photos, with a sound", "On-screen text for the sound-off viewer"], "limits": ["Caption 4,000 characters; the first 50 carry the search weight", "3 to 5 hashtags", "Links in the caption are not clickable"], "wins": ["Completion and rewatches first, then shares and saves", "A hook in the first second and a payoff that makes the loop", "Captions written as the search phrase a viewer would type; creators can set a video's search keywords", "A trending sound only when it fits the post"], "avoid": ["Watermarked reposts from other apps", "Twenty hashtags", "Undisclosed AI-made footage: it is labelled and viewers can turn it down"], "cadence": "Daily if the quality holds, three to five a week at least", "media": ["video", "slideshow", "image"]},
+  instagram: {"formats": ["Reels 9:16 up to 3 min; 15 to 90 s is the working range", "Carousel 4:5, up to 20 slides; slide 2 is shown to people who scrolled past slide 1", "Single image 4:5; Stories 9:16 for the daily touch"], "limits": ["Caption 2,200 characters, folded after about 125", "At most 5 hashtags", "No clickable link in a caption: bio or sticker"], "wins": ["Sends per reach, then watch time and saves", "Carousels with a sound also surface in Reels", "Keywords in the caption and on-screen text: Instagram search reads them", "Alt text on every image"], "avoid": ["Undisclosed AI-generated content: reach drops", "Hashtags as the first line", "Engagement bait"], "cadence": "Three to five posts a week, a Story most days", "media": ["video", "slideshow", "image"]},
+  youtube: {"formats": ["Shorts 9:16 up to 3 min; 15 to 50 s is the sweet spot", "Long-form 16:9 with chapters when the topic needs more than a minute"], "limits": ["Title 100 characters, about 60 visible", "Description 5,000 characters; the first three hashtags show above the title", "More than 60 hashtags and none count"], "wins": ["Shorts: viewed vs swiped away, then rewatches and a loop that ends where it began", "Long-form: click-through and retention; the title carries the keyword", "Captions on, because many Shorts play muted"], "avoid": ["Mass-produced or repetitive uploads: YouTube calls it inauthentic content and demonetises it", "Realistic altered or synthetic footage without the AI disclosure", "A Short that restates a long video's title and nothing else"], "cadence": "Two or three Shorts a week; one long-form a week or fortnight", "media": ["video"]},
+  facebook: {"formats": ["Reels (every video posts as one); keep it under 90 s", "Photo and carousel posts", "Text posts that ask something; link posts sparingly"], "limits": ["63,206 characters; about three lines show before 'See more'", "Hashtags optional, at most 2 or 3"], "wins": ["Watch time and shares, then comments worth reading", "Native video over links to video", "A question in the first line"], "avoid": ["A link in the post body: reach is cut, so it goes in the first comment", "Engagement bait ('tag a friend who…')", "Posting more than once a day"], "cadence": "Three to five posts a week", "media": ["video", "slideshow", "image", "text"]},
+  twitter: {"formats": ["A post of 280 characters (Premium can write longer, but the feed shows the first lines)", "A thread: a hook post and five to eight that pay it off", "Native video up to 2 min 20 s on a free account; images 16:9 or 4:5"], "limits": ["280 characters per post, every link counts as 23", "0 or 1 hashtag"], "wins": ["Replies weigh far more than likes, so write the post that gets answered", "Native media and text; an outbound link belongs in the first reply", "The first line is the whole post for most readers"], "avoid": ["A link in the post itself: reach drops hard on a free account", "Hashtag strings", "Reposting the LinkedIn version unchanged"], "cadence": "One to three a day, replies included", "media": ["text", "image", "video"]},
+  linkedin: {"formats": ["Text post; the first 210 characters are what shows before 'see more'", "Document carousel (a PDF of 8 to 12 pages) for a how-to", "Vertical video of 1 to 2 min; polls; a newsletter for the long form"], "limits": ["3,000 characters", "0 to 3 hashtags", "No outbound link in the post body"], "wins": ["Comments and dwell time, especially in the first hour", "A specific story or a number in the first two lines", "Replying to every comment the same day"], "avoid": ["Template-shaped AI prose: it is down-ranked", "A link in the post: put it in a comment", "Tagging people who will not reply"], "cadence": "Three to five posts a week, weekday mornings", "media": ["text", "slideshow", "image", "video"]},
+  blog: {"formats": ["An article of 800 to 1,500 words, as long as the answer needs and no longer", "One H1, an H2 per question the reader has, 40 to 60 words of direct answer under each", "A short FAQ at the end, and a figure or table where a comparison is made"], "limits": ["Title under 60 characters with the keyword in it", "Meta description 120 to 155 characters", "One topic per article; a second topic is a second article"], "wins": ["The answer in the first paragraph: search and AI answers both quote it", "Named sources, dates and numbers, which is what gets cited", "Internal links to the two posts a reader would want next", "An author, a date, and an update when the facts change"], "avoid": ["Thin generated prose padded to a word count", "Keyword-stuffed headings", "Publishing without a canonical URL"], "cadence": "One or two a week, and a refresh of an old post a month", "media": ["article"]},
+  wordpress: {"formats": ["An article of 800 to 1,500 words in blocks: heading, paragraph, list, image, table", "One H1 (the title), an H2 per question, 40 to 60 words of answer under each", "A featured image at 1200 by 675 with alt text"], "limits": ["Title under 60 characters; slug three to five words", "Excerpt and meta description 120 to 155 characters", "One category, three to five tags"], "wins": ["The answer in the first paragraph; FAQ and Article schema from the SEO plugin", "Internal links to related posts and a clear next step", "Scheduled publishing at a steady hour"], "avoid": ["Thin generated prose", "Uncategorised posts and empty alt text", "A second H1 inside the body"], "cadence": "One or two a week", "media": ["article"]},
+};
+const CHANNEL_ORDER = ["tiktok", "instagram", "youtube", "facebook", "twitter", "linkedin", "blog", "wordpress"];
+const CHANNEL_LABELS = { tiktok: "TikTok", instagram: "Instagram", youtube: "YouTube", facebook: "Facebook", twitter: "Twitter / X", linkedin: "LinkedIn", blog: "Blog", wordpress: "WordPress" };
+const EMPTY_CHANNEL_PROFILE = { enabled: false, username: "", display_name: "", bio: "", notes: "", target_media: [] };
+// GET /content/channels for a project: every channel Duct offers, in its
+// order, with the project's profile for each and the linked accounts on it.
+const channelsFixture = ({ primary = "", profiles = {}, linked = [] } = {}) => ({
+  primary_publisher: primary,
+  chosen: Object.keys(profiles).length > 0,
+  channels: CHANNEL_ORDER.map((id) => ({
+    id,
+    label: CHANNEL_LABELS[id],
+    enabled: Boolean(profiles[id]?.enabled),
+    supported: ["tiktok", "twitter", "linkedin"].includes(id),
+    long_form: id === "blog" || id === "wordpress",
+    profile: { ...EMPTY_CHANNEL_PROFILE, ...profiles[id] },
+    guide: { platform: id, ...CHANNEL_GUIDES[id], checked: GUIDE_CHECKED },
+    accounts: linked.filter((a) => a.platform === id),
+  })),
+});
+const LINKED_LI = [{ account_id: "acc_li", publisher: "zernio", platform: "linkedin", username: "solomoney" }];
+const loadsAccounts = (publishers, accounts = [], linked = [], channels = channelsFixture()) =>
+  async () => ({ publishers, accounts, linked, channels });
+// The preview never writes: a save resolves after a beat, so the optimistic
+// state and the Saved flash can be seen without a backend.
+const PREVIEW_SAVE = { linked: () => acceptKey(), channels: () => acceptKey() };
 const ACCOUNTS_NONE = loadsAccounts(SCHEDULERS_NONE);
-const ACCOUNTS_BOTH = loadsAccounts(SCHEDULERS_BOTH, SCHEDULER_ACCOUNTS, [{ account_id: "acc_li", publisher: "zernio" }]);
+const ACCOUNTS_BOTH = loadsAccounts(
+  SCHEDULERS_BOTH, SCHEDULER_ACCOUNTS, LINKED_LI,
+  channelsFixture({ primary: "zernio", profiles: { linkedin: { enabled: true }, twitter: { enabled: true } }, linked: LINKED_LI }),
+);
 const ACCOUNTS_COLLABORATOR = loadsAccounts(SCHEDULERS_NONE.map((p) => ({ ...p, is_owner: false })));
+const ACCOUNTS_BY_HAND = loadsAccounts(SCHEDULERS_NONE, [], [], channelsFixture({
+  profiles: {
+    blog: { enabled: true, username: "", display_name: "Solo Money blog", notes: "Hugo site, published by hand on Tuesdays.", target_media: ["article"] },
+    linkedin: { enabled: true, username: "solomoney" },
+  },
+}));
+const ACCOUNTS_OTHER_SCHEDULER = loadsAccounts(
+  SCHEDULERS_BOTH, SCHEDULER_ACCOUNTS, LINKED_LI,
+  channelsFixture({ primary: "zernio", profiles: { tiktok: { enabled: true, username: "solomoney.app" }, linkedin: { enabled: true } }, linked: LINKED_LI }),
+);
+const ACCOUNTS_CHANNEL_OPEN = loadsAccounts(
+  SCHEDULERS_BOTH, SCHEDULER_ACCOUNTS, LINKED_LI,
+  channelsFixture({
+    primary: "zernio",
+    profiles: { linkedin: { enabled: true, username: "solomoney", display_name: "Solo Money", bio: "Money habits for people who freelance.", target_media: ["text", "slideshow"] }, twitter: { enabled: true } },
+    linked: LINKED_LI,
+  }),
+);
+const ACCOUNTS_GERMAN = loadsAccounts(
+  SCHEDULERS_BOTH, SCHEDULER_ACCOUNTS, LINKED_LI,
+  channelsFixture({
+    primary: "zernio",
+    profiles: {
+      linkedin: {
+        enabled: true,
+        username: "solomoney",
+        display_name: "Solo Money – Finanzwissen für Selbstständige und Freiberuflerinnen",
+        bio: "Wir erklären Altersvorsorge, Steuervorauszahlungen und Liquiditätsplanung für Selbstständige in verständlicher Sprache, ohne Fachchinesisch und ohne Produktempfehlungen, die uns jemand bezahlt hat.",
+        notes: "Beiträge erscheinen werktags zwischen 7 und 9 Uhr. Keine Hashtag-Ketten, keine Emojis am Zeilenanfang, Links grundsätzlich im ersten Kommentar. Zahlen immer mit Quelle, am liebsten Destatis oder die Deutsche Rentenversicherung.",
+        target_media: ["text"],
+      },
+    },
+    linked: LINKED_LI,
+  }),
+);
 const NO_SCHEDULER = { connected: false };
 const A_SCHEDULER = { connected: true };
 // What the preview does with a pasted key: accept it after a beat, the way
@@ -1508,6 +1667,7 @@ const DISCOVER_POSTS_SPARSE = [
   { id: "s1", text: "#grwm", hashtags: ["grwm"], is_slideshow: false, play_count: 12_000, digg_count: 300 },
   { id: "s2", text: "", hashtags: ["outfit"], is_slideshow: false, play_count: 8_000, digg_count: 120 },
 ];
+
 
 export const SCENES = [
   {
@@ -2283,6 +2443,43 @@ export const SCENES = [
       <div className="max-w-xl">
         <PauseCard pause={TOOL_APPROVAL_LONG} onAnswer={() => {}} />
         <PauseCard pause={TOOL_APPROVAL} onAnswer={() => {}} disabled />
+      </div>
+    ),
+  },
+  {
+    id: "questions-direction",
+    state: "one question · four options with descriptions · a disabled copy",
+    group: "QuestionsCard",
+    title: "The agent asks for a direction",
+    note: "Drawn through PauseCard, the way the chat draws it. The question is the heaviest line; each option is a row with its label on its own line and the clause that tells it apart under it, a radio mark carrying the picked state without colour. Other is the last row and opens its field inside the row. Continue stays off until something is picked; Let Duct decide is the quiet way out. The second card is disabled, as it is while an answer is on its way.",
+    render: () => (
+      <div className="max-w-xl">
+        <PauseCard pause={QUESTIONS_DIRECTION} onAnswer={() => {}} />
+        <PauseCard pause={{ ...QUESTIONS_DIRECTION, interrupt_id: "preview-questions-disabled" }} onAnswer={() => {}} disabled />
+      </div>
+    ),
+  },
+  {
+    id: "questions-quick",
+    state: "two questions · short options · one multiple choice",
+    group: "QuestionsCard",
+    title: "Short options, as chips",
+    note: "Options of a word or three with no description are chips, the yes/no shape. The second question is a multiple choice: picked chips carry a tick as well as the fill, and the answer travels as one comma-joined string. Continue needs every question answered.",
+    render: () => (
+      <div className="max-w-xl">
+        <PauseCard pause={QUESTIONS_QUICK} onAnswer={() => {}} />
+      </div>
+    ),
+  },
+  {
+    id: "questions-edges",
+    state: "German-length labels · a single option · three questions · a multiple choice with descriptions",
+    group: "QuestionsCard",
+    title: "The question card at its edges",
+    note: "A label that wraps keeps the mark on its first line and the description under the whole label; a question with one option still gets Other; three questions stack with one Continue. Pick Other in the German question to see the field open inside the row on a phone.",
+    render: () => (
+      <div className="max-w-xl">
+        <PauseCard pause={QUESTIONS_EDGES} onAnswer={() => {}} />
       </div>
     ),
   },
@@ -3461,6 +3658,14 @@ export const SCENES = [
     ),
   },
   {
+    id: "plan-board-channel",
+    state: "mid-month · one channel picked · list",
+    group: "PlanBoardView",
+    title: "The board on one channel",
+    note: "The channel chips in the header filter the list, the Kanban and the calendar alike, and the progress line under the plan's name counts what is shown: pick TikTok and the bar is TikTok's. The line itself is a period, a bar and words; posted, missed and to-go each have a word, so it reads in greyscale.",
+    render: () => <PlanScenario id="mid-month" channel="tiktok" />,
+  },
+  {
     id: "plan-board-empty",
     state: "voice and pillars set, no connector yet",
     group: "PlanDayOne",
@@ -3519,6 +3724,28 @@ export const SCENES = [
     ),
   },
   {
+    id: "analytics-linked-empty",
+    state: "a scheduler connected · one account linked · nothing reported yet",
+    group: "AnalyticsView",
+    title: "Analytics with an account and no posts",
+    note: "Linked and empty is not the same zero as unlinked and empty: the first asks for a post, the second for a link. This one names the linked account and its scheduler and sends the person to the plan board; it never says Link an account.",
+    render: () => (
+      <div className="p-5">
+        <AnalyticsView
+          projectId="preview"
+          onLinkAccounts={() => {}}
+          reads={{
+            publishers: async () => SCHEDULERS_BOTH,
+            linked: async () => [{ account_id: "acc_li", publisher: "zernio", platform: "linkedin", username: "kestrel" }],
+            // With an account linked at Zernio only Zernio is asked, so a stale
+            // key at the other scheduler raises no notice here.
+            analytics: async () => ({ rows: [], notices: [] }),
+          }}
+        />
+      </div>
+    ),
+  },
+  {
     id: "discover-no-apify",
     state: "Apify not connected",
     group: "ConnectorGate",
@@ -3540,22 +3767,22 @@ export const SCENES = [
   },
   {
     id: "accounts-no-scheduler",
-    state: "nothing connected",
+    state: "nothing connected, every channel off",
     group: "AccountsTab",
     title: "Accounts, before any scheduler",
-    note: "Nothing is a default: with no scheduler connected nothing publishes, so the tab says what it does once one is, offers each scheduler with the platforms it reports numbers for (the difference worth choosing on), and shows the accounts list it fills in. Connect opens the key field in the card.",
+    note: "The schedulers section opens on its pitch: what the tab does once one is connected, each scheduler with the platforms it reports numbers for, and the accounts list it fills in. The channels list stays usable under it, because a channel can be on with no scheduler at all.",
     render: () => (
-      <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_NONE} /></div>
+      <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_NONE} save={PREVIEW_SAVE} /></div>
     ),
   },
   {
     id: "accounts-two-schedulers",
-    state: "both connected, one account linked, one needing a reconnect",
+    state: "both connected, Zernio primary, one account linked",
     group: "AccountsTab",
     title: "Accounts at two schedulers",
-    note: "Each account says which scheduler holds it, because that is the one a post to it goes through. An account the scheduler reports as disconnected says where to fix it.",
+    note: "Two schedulers can be connected; the Primary radio says which one posts go out through, and the linked count counts only its accounts. Each channel row says in one line how it is posted: via the primary scheduler, by hand, or off.",
     render: () => (
-      <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_BOTH} /></div>
+      <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_BOTH} save={PREVIEW_SAVE} /></div>
     ),
   },
   {
@@ -3565,7 +3792,47 @@ export const SCENES = [
     title: "When the scheduler is the owner's to connect",
     note: "A project publishes through its owner's scheduler, so Connect tells anyone else who sets it up rather than offering a key that would never be used.",
     render: () => (
-      <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_COLLABORATOR} /></div>
+      <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_COLLABORATOR} save={PREVIEW_SAVE} /></div>
+    ),
+  },
+  {
+    id: "accounts-by-hand",
+    state: "no scheduler, Blog and LinkedIn on by hand, Blog open",
+    group: "AccountsTab",
+    title: "Channels with no scheduler",
+    note: "A channel that is on with no account behind it is posted by hand, and the plan still covers it. Blog is open on its profile: the person's words about the channel ride into the agent's opening turn, and an article channel offers only Article as its media.",
+    render: () => (
+      <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_BY_HAND} save={PREVIEW_SAVE} defaultOpen={["blog"]} /></div>
+    ),
+  },
+  {
+    id: "accounts-other-scheduler",
+    state: "Zernio primary, PostBridge holds the TikTok account",
+    group: "AccountsTab",
+    title: "An account at the scheduler that is not primary",
+    note: "Only the primary scheduler's accounts can be linked, because that is the one a post goes out through. An account held at the other scheduler is shown muted with where it is, so switching Primary is the fix and the row is not a dead end.",
+    render: () => (
+      <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_OTHER_SCHEDULER} save={PREVIEW_SAVE} defaultOpen={["tiktok"]} /></div>
+    ),
+  },
+  {
+    id: "accounts-channel-open",
+    state: "LinkedIn open: guide popover, accounts, profile",
+    group: "AccountsTab",
+    title: "A channel opened",
+    note: "What the agent is told, at a glance: the cadence in one line, the limits as chips, and Make / Wins / Avoid behind the \"?\" (the card's chevron is the only expander). Under it the accounts at the primary scheduler with Link, and the profile form. Link does the whole job: the channel goes on, the fields fill from the account, every media kind is on. Media chips commit on click, fields on blur or Save; all chips on is the stored empty list.",
+    render: () => (
+      <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_CHANNEL_OPEN} save={PREVIEW_SAVE} defaultOpen={["linkedin"]} defaultGuideOpen={["linkedin"]} /></div>
+    ),
+  },
+  {
+    id: "accounts-german",
+    state: "a German-length display name, bio and notes",
+    group: "AccountsTab",
+    title: "A channel profile at German length",
+    note: "The fields grow with what is typed and the display name truncates nowhere: a long profile must not widen the row or push the switch off its line.",
+    render: () => (
+      <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_GERMAN} save={PREVIEW_SAVE} defaultOpen={["linkedin"]} /></div>
     ),
   },
   {

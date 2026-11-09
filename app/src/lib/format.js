@@ -40,13 +40,22 @@ export function formatDate(value, { withYear = true, locale, fallback = "" } = {
   });
 }
 
+// Spaces ICU versions disagree on. Node's ICU writes a range's dash between
+// thin spaces (U+2009) where Chromium and WebKit write plain ones, so the
+// server's HTML and the first client render differed by a character nobody
+// can see, and React threw the tree away as a hydration mismatch (the plan
+// board header, 2026-11-08). Plain spaces are what both browsers print.
+const ICU_SPACES = /[\u2009\u202f]/g;
+
 /** "Oct 7 – 31", "Oct 28 – Nov 3": a span of days, the way the locale writes
  * one, so the month is not repeated when it does not change. */
 export function formatDateRange(start, end, { locale } = {}) {
   const a = toDate(start);
   const b = toDate(end);
   if (!a || !b) return "";
-  return new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" }).formatRange(a, b);
+  return new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" })
+    .formatRange(a, b)
+    .replace(ICU_SPACES, " ");
 }
 
 /** "3:04 PM". */

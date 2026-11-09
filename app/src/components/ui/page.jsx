@@ -226,10 +226,10 @@ export function TileGrid({ size = "md", cols, className, children, ...props }) {
 }
 
 /** The "?" beside a title: the page's explanation, for whoever asks. */
-export function HelpTip({ label, children, className }) {
+export function HelpTip({ label, children, className, defaultOpen = false }) {
   const { t } = useLingui();
   return (
-    <Popover>
+    <Popover defaultOpen={defaultOpen}>
       <PopoverTrigger asChild>
         <button
           type="button"

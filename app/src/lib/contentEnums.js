@@ -22,6 +22,10 @@ export const Platform = Object.freeze({
   BLUESKY:         "bluesky",
   PINTEREST:       "pinterest",
   GOOGLE_BUSINESS: "google_business",
+  // The brand's own site: an article, published by hand or through the
+  // site's own tooling (backend agents/content/channels.py).
+  BLOG:            "blog",
+  WORDPRESS:       "wordpress",
 });
 
 export const PLATFORM_LABELS = Object.freeze({
@@ -35,6 +39,8 @@ export const PLATFORM_LABELS = Object.freeze({
   [Platform.BLUESKY]:         "Bluesky",
   [Platform.PINTEREST]:       "Pinterest",
   [Platform.GOOGLE_BUSINESS]: "Google Business",
+  [Platform.BLOG]:            "Blog",
+  [Platform.WORDPRESS]:       "WordPress",
 });
 
 // Mirrors ContentStatus in backend/agents/content/schema.py.
@@ -96,9 +102,24 @@ export const DRAFT_CHANNELS = Object.freeze([
   { id: Platform.TWITTER,  textFirst: true },
 ]);
 
+// An article channel is written as text whatever playbook stands in for it.
+const LONG_FORM = new Set([Platform.BLOG, Platform.WORDPRESS]);
+
 export function isTextChannel(id) {
-  return DRAFT_CHANNELS.some((c) => c.id === id && c.textFirst);
+  return LONG_FORM.has(id) || DRAFT_CHANNELS.some((c) => c.id === id && c.textFirst);
 }
+
+// The kinds of media a channel can be asked to take (backend platform_guides.MEDIA_KINDS).
+export const MediaKind = Object.freeze({
+  VIDEO: "video", SLIDESHOW: "slideshow", IMAGE: "image", TEXT: "text", ARTICLE: "article",
+});
+export const MEDIA_KIND_LABELS = Object.freeze({
+  [MediaKind.VIDEO]: msg`Video`,
+  [MediaKind.SLIDESHOW]: msg`Slideshow`,
+  [MediaKind.IMAGE]: msg`Image`,
+  [MediaKind.TEXT]: msg`Text post`,
+  [MediaKind.ARTICLE]: msg`Article`,
+});
 
 // Mirrors CloneApproach in backend/agents/content/schema.py: how closely a
 // cloned post copies its reference, derived there from FIT × PROOF.

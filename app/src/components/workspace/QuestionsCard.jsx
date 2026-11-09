@@ -1,13 +1,43 @@
 "use client";
 
 import { useState } from "react";
+import { Check } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+// The sentinel an "Other" pick stores until the person types; never sent.
+const OTHER = "__other__";
+// Chips hold a word or three. Past this, or with a description, an option is
+// a row: on 2026-11-08 a plan review put four twenty-word options in centred
+// pills and the card was unreadable. Rows are the AskUserQuestion shape the
+// agent is told to write (agents/core/lc.py), chips the yes/no degenerate case.
+const CHIP_LABEL_MAX_CHARS = 24;
+// A multi-select answer travels as one string, the way the single one does.
+const ANSWER_JOIN = ", ";
+
+function optionLabel(opt) {
+  return typeof opt === "string" ? opt : opt.label || "";
+}
+
+function optionDescription(opt) {
+  return typeof opt === "string" ? "" : opt.description || "";
+}
+
+function isChipList(options) {
+  return options.every((opt) => !optionDescription(opt) && optionLabel(opt).length <= CHIP_LABEL_MAX_CHARS);
+}
+
+function toggle(list, value) {
+  return list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
+}
 
 /**
- * The AskUserQuestion card: one or more questions with option chips, an
- * "Other" free-text escape, and a skip that lets the agent decide. The copy
- * is a prop because the same card sits in three agents with three voices.
+ * The AskUserQuestion card: up to three questions, each a single or multiple
+ * choice over the options the agent wrote, an "Other" row for an answer of the
+ * person's own, and a skip that lets the agent decide. Resolves to one string
+ * per question. The copy is a prop because the same card sits in three agents
+ * with three voices.
  */
 export default function QuestionsCard({
   questions,
@@ -16,31 +46,46 @@ export default function QuestionsCard({
   // The copy props default to the card's own voice, resolved below so the
   // defaults follow the interface language.
   title,
-  hint,
   submitLabel,
   skipLabel,
 }) {
   const { t } = useLingui();
   const titleText = title ?? t`Duct has a quick question`;
-  const hintText = hint ?? t`Your answers sharpen the result. Skip if you'd rather Duct decide.`;
-  const submitText = submitLabel ?? t`Continue →`;
+  const submitText = submitLabel ?? t`Continue`;
   const skipText = skipLabel ?? t`Let Duct decide`;
-  const [answers, setAnswers] = useState({});
+  // Per question: the picked label (or OTHER) for a single choice, the list of
+  // picked labels for a multiple one; `freeText` holds what "Other" typed.
+  const [picks, setPicks] = useState({});
   const [freeText, setFreeText] = useState({});
 
-  function handleSelect(question, label) {
-    setAnswers((prev) => ({ ...prev, [question]: label }));
-    if (label !== "__other__") setFreeText((prev) => ({ ...prev, [question]: "" }));
+  function pick(q, label) {
+    setPicks((prev) => ({
+      ...prev,
+      [q.question]: q.multiSelect ? toggle(prev[q.question] || [], label) : label,
+    }));
   }
 
-  function handleFreeText(question, text) {
-    setFreeText((prev) => ({ ...prev, [question]: text }));
-    setAnswers((prev) => ({ ...prev, [question]: text }));
+  function isPicked(q, label) {
+    const current = picks[q.question];
+    return q.multiSelect ? (current || []).includes(label) : current === label;
   }
 
-  function handleSubmit() {
+  function resolve(q) {
+    const typed = (freeText[q.question] || "").trim();
+    const current = picks[q.question];
+    if (q.multiSelect) {
+      return (current || []).map((label) => (label === OTHER ? typed : label)).filter(Boolean).join(ANSWER_JOIN);
+    }
+    return current === OTHER ? typed : current || "";
+  }
+
+  const allAnswered = questions.every((q) => resolve(q) !== "");
+
+  function handleSubmit(event) {
+    event.preventDefault();
+    if (disabled || !allAnswered) return;
     const resolved = {};
-    for (const q of questions) resolved[q.question] = freeText[q.question] || answers[q.question] || "";
+    for (const q of questions) resolved[q.question] = resolve(q);
     onSubmit(resolved);
   }
 
@@ -51,82 +96,140 @@ export default function QuestionsCard({
     onSubmit(resolved);
   }
 
-  const allAnswered = questions.every((q) => {
-    const ans = answers[q.question];
-    return ans && ans.trim() !== "";
-  });
-
   return (
-    <div className="rounded-xl border border-warning/30 bg-warning/5 p-4 space-y-4 my-3">
-      <div className="space-y-0.5">
-        <p className="text-sm font-semibold">{titleText}</p>
-        <p className="text-xs text-muted-foreground">{hintText}</p>
-      </div>
+    <form onSubmit={handleSubmit} className="my-3 space-y-4 rounded-xl border border-warning/30 bg-warning/5 p-4">
+      <p className="text-xs font-medium text-muted-foreground">{titleText}</p>
 
-      {questions.map((q) => (
-        <div key={q.question} className="space-y-2">
-          <p className="text-sm font-medium">{q.question}</p>
-          <div className="flex flex-wrap gap-2">
-            {(q.options || []).map((opt) => {
-              const label = opt.label || opt;
-              const selected = answers[q.question] === label;
-              return (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => handleSelect(q.question, label)}
-                  aria-pressed={selected}
-                  className={`rounded-full border px-3 py-1 text-xs transition-colors ${
-                    selected
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-background hover:bg-muted"
-                  }`}
-                >
-                  {label}
-                  {opt.description && <span className="ml-1 opacity-60">— {opt.description}</span>}
-                </button>
-              );
-            })}
-            <button
-              type="button"
-              onClick={() => handleSelect(q.question, "__other__")}
-              aria-pressed={answers[q.question] === "__other__"}
-              className={`rounded-full border px-3 py-1 text-xs transition-colors ${
-                answers[q.question] === "__other__"
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-background hover:bg-muted"
-              }`}
-            >
-              <Trans>Other</Trans>
-            </button>
-          </div>
-          {answers[q.question] === "__other__" && (
-            <input
-              type="text"
-              placeholder={t`Type your answer…`}
-              aria-label={t`Your answer`}
-              value={freeText[q.question] || ""}
-              onChange={(e) => handleFreeText(q.question, e.target.value)}
-              className="w-full rounded-3xl border border-control bg-input/50 px-3 py-1.5 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30 md:text-sm"
-              autoFocus
-            />
-          )}
-        </div>
-      ))}
+      {questions.map((q) => {
+        const options = q.options || [];
+        const chips = isChipList(options);
+        const otherOn = isPicked(q, OTHER);
+        const otherField = otherOn && (
+          <Input
+            type="text"
+            placeholder={t`Type your answer…`}
+            aria-label={t`Your answer`}
+            value={freeText[q.question] || ""}
+            onChange={(e) => setFreeText((prev) => ({ ...prev, [q.question]: e.target.value }))}
+            disabled={disabled}
+            autoFocus
+          />
+        );
+        return (
+          <fieldset key={q.question} className="min-w-0 space-y-2" disabled={disabled}>
+            <legend className="text-sm font-semibold text-pretty">{q.question}</legend>
+            {chips ? (
+              <>
+                <div role={q.multiSelect ? "group" : "radiogroup"} className="flex flex-wrap gap-2">
+                  {options.map((opt) => (
+                    <Chip key={optionLabel(opt)} multi={q.multiSelect} selected={isPicked(q, optionLabel(opt))} onClick={() => pick(q, optionLabel(opt))}>
+                      {optionLabel(opt)}
+                    </Chip>
+                  ))}
+                  <Chip multi={q.multiSelect} selected={otherOn} onClick={() => pick(q, OTHER)}>
+                    <Trans>Other</Trans>
+                  </Chip>
+                </div>
+                {otherField}
+              </>
+            ) : (
+              <div role={q.multiSelect ? "group" : "radiogroup"} className="space-y-1.5">
+                {options.map((opt) => (
+                  <OptionRow
+                    key={optionLabel(opt)}
+                    multi={q.multiSelect}
+                    selected={isPicked(q, optionLabel(opt))}
+                    label={optionLabel(opt)}
+                    description={optionDescription(opt)}
+                    onClick={() => pick(q, optionLabel(opt))}
+                  />
+                ))}
+                <OptionRow multi={q.multiSelect} selected={otherOn} label={t`Other`} onClick={() => pick(q, OTHER)}>
+                  {otherField}
+                </OptionRow>
+              </div>
+            )}
+          </fieldset>
+        );
+      })}
 
-      <div className="flex items-center gap-2 pt-1">
-        <Button size="sm" onClick={handleSubmit} disabled={disabled || !allAnswered}>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button size="sm" type="submit" disabled={disabled || !allAnswered}>
           {submitText}
         </Button>
-        <button
-          type="button"
-          onClick={handleSkip}
-          disabled={disabled}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-40"
-        >
+        <Button size="sm" type="button" variant="ghost" onClick={handleSkip} disabled={disabled}>
           {skipText}
-        </button>
+        </Button>
       </div>
+    </form>
+  );
+}
+
+// The picked state has a shape as well as a colour: a filled dot for one of
+// many, a ticked box for any of many, so it survives greyscale and reads as
+// the native control it stands in for.
+function Mark({ multi, selected }) {
+  if (multi) {
+    return (
+      <span
+        aria-hidden="true"
+        className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-[4px] border ${
+          selected ? "border-primary bg-primary text-primary-foreground" : "border-control bg-background"
+        }`}
+      >
+        {selected && <Check className="size-3" strokeWidth={3} />}
+      </span>
+    );
+  }
+  return (
+    <span
+      aria-hidden="true"
+      className={`mt-0.5 size-4 shrink-0 rounded-full ${selected ? "border-5 border-primary" : "border border-control bg-background"}`}
+    />
+  );
+}
+
+// A full-width row: label on its own line, the clause that tells it apart
+// under it, left-aligned so four of them scan as a list. `children` is the
+// "Other" row's text field, which opens inside the row it belongs to.
+function OptionRow({ multi, selected, label, description, onClick, children }) {
+  return (
+    <div
+      className={`rounded-lg border transition-colors ${
+        selected ? "border-primary bg-primary/5" : "border-border bg-background hover:bg-muted/50"
+      }`}
+    >
+      <button
+        type="button"
+        role={multi ? "checkbox" : "radio"}
+        aria-checked={selected}
+        onClick={onClick}
+        className="flex min-h-11 w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed"
+      >
+        <Mark multi={multi} selected={selected} />
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-medium">{label}</span>
+          {description && <span className="mt-0.5 block text-xs text-pretty text-muted-foreground">{description}</span>}
+        </span>
+      </button>
+      {children && <div className="px-3 pb-3 pl-10">{children}</div>}
     </div>
+  );
+}
+
+function Chip({ multi, selected, onClick, children }) {
+  return (
+    <button
+      type="button"
+      role={multi ? "checkbox" : "radio"}
+      aria-checked={selected}
+      onClick={onClick}
+      className={`inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed ${
+        selected ? "border-primary bg-primary font-medium text-primary-foreground" : "border-border bg-background hover:bg-muted"
+      }`}
+    >
+      {multi && selected && <Check className="size-3.5" aria-hidden="true" />}
+      {children}
+    </button>
   );
 }

@@ -327,11 +327,6 @@ export default function InsightsWorkspace({
     return `/insights/session?${qs}`;
   }, [agent.conversationId, conversationId, projectId]);
 
-  const questionsCopy = useMemo(
-    () => ({ hint: t`Your answer decides what Duct looks at. Skip if you'd rather it choose.` }),
-    [t],
-  );
-
   const chat = (
     <AgentChat
       title={t`Insights`}
@@ -364,7 +359,6 @@ export default function InsightsWorkspace({
       onRetrySend={agent.send}
       onRetry={handleRetry}
       onStop={() => agent.stop({ keepReady: agent.opened })}
-      questionsCopy={questionsCopy}
       connectReturnTo={connectReturnTo}
       composerTools={
         <ComposerDials projectId={projectId} autonomy={autonomy} onAutonomyChange={setAutonomy} deferred />

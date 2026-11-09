@@ -265,3 +265,28 @@ async def test_a_resume_records_its_row_but_draws_no_notice():
     await announce_context(Recorder(), emit, {"resume": True, "blocks": {"resume_primer": "…"}})
     assert len(recorded) == 1
     assert events == []
+
+
+@pytest.mark.asyncio
+async def test_a_proposed_plan_is_a_success_not_a_failure():
+    # submit_plan answers "proposed" since plans became proposals; the row
+    # painted red for a tool that had done exactly what it was asked.
+    body = json.dumps({"status": "proposed", "plan_id": "", "days": 23, "kept_days": []})
+    events, _ = await run_call("submit_plan", {"title": "November"}, body)
+
+    assert events[-1]["kind"] == ActivityKind.ACTION
+    assert events[-1]["status"] == StepStatus.SUCCESS
+    assert events[-1]["meta"]["status"] == "proposed"
+
+
+@pytest.mark.asyncio
+async def test_opening_a_saved_post_is_named_by_its_topic_and_not_a_failure():
+    # fetch_post returns the post with its own ``status`` ("draft"); that is
+    # the post's state, not the call's verdict, and the row said the id.
+    post_id = "a9997d11-0197-4a71-ad09-b1f8cb4afbaa"
+    body = json.dumps({"post_id": post_id, "status": "draft", "topic": "Why 80% guess their face shape wrong", "slides": []})
+    events, _ = await run_call("fetch_post", {"post_id": post_id}, body)
+
+    assert events[0]["title"] == ""  # the id names nothing to the person
+    assert events[-1]["status"] == StepStatus.SUCCESS
+    assert events[-1]["title"] == "Why 80% guess their face shape wrong"

@@ -3,7 +3,7 @@
 import { useLingui } from "@lingui/react/macro";
 import { PostStatus } from "../../lib/contentEnums";
 import { STATUS_ORDER, statusMeta } from "../../lib/contentStatus";
-import { planItems, startOfDay } from "../../lib/contentSchedule";
+import { onChannel, planItems, startOfDay } from "../../lib/contentSchedule";
 import { cn } from "@/lib/utils";
 import PostMiniCard from "./PostMiniCard";
 
@@ -39,10 +39,10 @@ const COLUMNS = STATUS_ORDER.map((key) => {
  *     scroll, lane headers pinned under the top bar
  *   - today: the reader's today, for scenes and tests
  */
-export default function PlanKanban({ plan, postsById = {}, onReviseDay, scroll = "self", today }) {
+export default function PlanKanban({ plan, postsById = {}, onReviseDay, scroll = "self", today, channel = null }) {
   const { i18n } = useLingui();
   const page = scroll === "page";
-  const items = planItems(plan, postsById, { locale: i18n.locale, today: today || startOfDay(new Date()) });
+  const items = planItems(plan, postsById, { locale: i18n.locale, today: today || startOfDay(new Date()) }).filter((it) => onChannel(it, channel));
 
   const grouped = Object.fromEntries(COLUMNS.map((c) => [c.key, []]));
   for (const it of items) (grouped[it.status] = grouped[it.status] || []).push(it);

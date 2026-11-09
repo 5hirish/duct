@@ -32,6 +32,7 @@ from typing import TYPE_CHECKING
 from utils.formatting import number, percent
 
 from agents.content.plan_period import MAX_PLAN_DAYS
+from agents.content.platform_guides import render_channel_guides
 from agents.content.text_prompts import text_post_user_prompt, text_system_prompt
 from agents.content.voice_rules import render_voice_stanza
 
@@ -1185,14 +1186,22 @@ Now:
 """
 
 
-def _brand_stanza(brand: ContentBrandContext) -> str:
+def _brand_stanza(brand: ContentBrandContext, channels: list[str] | None = None) -> str:
     """Render brand snapshot — used in the FIRST USER MESSAGE (not the
-    system prompt) so the cached prefix stays stable across sessions."""
+    system prompt) so the cached prefix stays stable across sessions.
+
+    ``channels`` are the ones this turn writes for: a draft's one channel, or
+    None for a plan, which gets every channel the brand posts on. Each comes
+    with its guide (platform_guides), so the rules per platform ride in the
+    user turn and the system prompt stays one string."""
     pillars = "\n".join(
         f"  - {p.id}: {p.name} — {p.description}" + (f" (research: {p.research_hint})" if p.research_hint else "")
         for p in brand.pillars
     ) or "  (no pillars yet — ask the user)"
     features = "\n".join(f"  - {f.id}: {f.name} — {f.description}" for f in brand.features) or "  (none)"
+    wanted = [c for c in (channels if channels is not None else brand.active_channels) if c]
+    block = render_channel_guides(wanted, brand.channel_profiles)
+    guides = f"\n{block}\n" if block else ""
     return f"""\
 ## BRAND CONTEXT (project_id={brand.project_id})
 
@@ -1215,7 +1224,7 @@ Features:
 
 Pillars:
 {pillars}
-"""
+{guides}"""
 
 
 # The exact PostDraft JSON the orchestrator must emit when it drafts a post
@@ -1423,6 +1432,15 @@ def _channel_directive(channel, mode: RunMode = "draft_post") -> str:
         )
     if channel is None or getattr(channel, "id", "tiktok") == "tiktok":
         return "TARGET CHANNEL: TikTok — apply the TikTok playbook below."
+    if getattr(getattr(channel, "rules", None), "long_form", False):
+        return (
+            f"TARGET CHANNEL: {channel.label} — a long-form article, not a social post. "
+            "Write it as one text post in Markdown: a title under 60 characters with "
+            "the keyword, the answer in the first paragraph, an H2 per question the "
+            "reader has, 800 to 1,500 words, a short FAQ, named sources. No slides, "
+            "no hashtags, no image prompts; the <channel_guides> block in the opening "
+            "message has the rest."
+        )
     if getattr(channel, "supported", False):
         return f"TARGET CHANNEL: {channel.label} — apply the {channel.label} playbook below."
     return (
@@ -1663,10 +1681,11 @@ Now:
    to test next period, and the one thing that would change the result
    most. An opinion, not a menu.
 3. Ask for a direction with ONE AskUserQuestion carrying two to four options
-   in their words — for example "keep the plan as it is for the rest of the
-   period", "plan the next period on the bets that worked", "change the
-   mix: <what you would change>", "start over" — plus whatever they want to
-   type. Write todos for this turn in their words too ("review what the
+   in their words. Each option is a label of two to five words that is the
+   choice itself ("Keep the current plan", "Plan on the bets that worked",
+   "Change the mix", "Start over") with one clause under twelve words as its
+   description saying what that would mean here; the free-text row is added
+   for them. Write todos for this turn in their words too ("review what the
    plan did so far", "ask where to take it next").
 4. Do NOT call research_trends and do NOT call submit_plan on this turn.
 
@@ -1837,6 +1856,50 @@ def _research_stanza(research: "ContentResearchContext | None") -> str:
     return "\n".join(parts)
 
 
+def build_post_revise_prompt(
+    brand: ContentBrandContext,
+    day: "Day | None",
+    *,
+    channel=None,
+) -> str:
+    """Opening turn for a draft_post session on a post that is already saved:
+    a plan day with a post, or a post opened with "Revise with Duct".
+
+    A review turn, like the plan's: read the saved post, say what you would
+    change, ask. On 2026-11-08 the kickoff was the drafting prompt whichever
+    the slot held, so reopening a saved post rewrote it unasked."""
+    target = (
+        f"topic={day.topic} · pillar={day.pillar} · post_type={day.post_type}"
+        if day is not None
+        else "the post this session was opened on"
+    )
+    return f"""\
+{_brand_stanza(brand, [channel.id] if channel is not None else None)}
+
+{brand.project_name} already has a saved post in this slot ({target}).
+
+{_channel_directive(channel)}
+
+This is a REVIEW turn, not a drafting one. The post is theirs; you are
+reading it back before anything changes.
+
+1. Call write_todos in their words ("read the saved post", "say what I'd
+   change", "ask what they want").
+2. Call fetch_post with no arguments: it opens the post this session is on.
+   Read it whole, slides and caption included.
+3. Tell them in four lines at most what the post is, what works, and the one
+   or two things you would change and why. An opinion, not a menu.
+4. Ask with ONE AskUserQuestion what they want: keep it as it is, apply the
+   changes you named, change something they name, or start the slot over.
+   Labels of two to five words, one clause each.
+5. Do NOT call submit_post_draft, generate_image, edit_slide or publish_post
+   on this turn. Nothing of theirs changes until they answer.
+
+When they answer, carry on under the write-phase rules for what they chose,
+editing the saved post (its slides, caption and hashtags) rather than
+drafting a new one, and say what you changed."""
+
+
 def build_post_user_prompt(
     brand: ContentBrandContext,
     day: "Day | None",
@@ -1878,7 +1941,7 @@ def build_post_user_prompt(
     if getattr(channel, "text_first", False):
         voice = render_voice_stanza(brand.voice_rules, brand.writing_samples)
         return text_post_user_prompt(
-            brand_stanza=f"{_brand_stanza(brand)}\n{voice}", project_name=brand.project_name,
+            brand_stanza=f"{_brand_stanza(brand, [channel.id])}\n{voice}", project_name=brand.project_name,
             channel=channel, target=target, recent_lines=recent_lines,
         )
     avatar_summary = (
@@ -1891,7 +1954,7 @@ def build_post_user_prompt(
     samples = render_voice_stanza(brand.voice_rules, brand.writing_samples, with_rules=False)
     samples_block = f"{samples}\n\n" if samples else ""
     return f"""\
-{_brand_stanza(brand)}
+{_brand_stanza(brand, [channel.id] if channel is not None else None)}
 
 {samples_block}Draft one post for {brand.project_name}.
 

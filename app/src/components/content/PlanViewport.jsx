@@ -59,11 +59,10 @@ const REJECTED_MESSAGE = "I rejected this plan.";
  *   - payload: { type: "plan", id, name, days[], character, strategy, status?, proposal_id?, replaces_plan_id?, ... }
  *   - steps: live pipeline steps from the workspace (drives the loading ladder)
  *   - building: the plan is still being built (no payload yet, run not failed)
- *   - onReviseDay?(dayIndex)
  *   - onSendMessage?(text): a chat turn into the live session; absent on a read-only pane
  *   - sessionId?: the session the proposal was made in
  */
-export default function PlanViewport({ payload, steps = [], building = false, onReviseDay, onSendMessage, sessionId }) {
+export default function PlanViewport({ payload, steps = [], building = false, onSendMessage, sessionId }) {
   const { t, i18n } = useLingui();
   // Accept answers with the saved plan. It is shown at once rather than
   // waiting for the session's own PLAN_GENERATED echo, and dropped the
@@ -122,7 +121,9 @@ export default function PlanViewport({ payload, steps = [], building = false, on
       />
 
       <PlanStrategy strategy={plan.strategy} days={plan.days} />
-      <PlanList plan={plan} onReviseDay={onReviseDay} />
+      {/* No day action on purpose: drafting from a day is the plan board's job, and
+          a route out of the session would end the planning turn. */}
+      <PlanList plan={plan} />
     </div>
   );
 }
