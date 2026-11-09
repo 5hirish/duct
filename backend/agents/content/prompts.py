@@ -39,7 +39,8 @@ from agents.content.voice_rules import render_voice_stanza
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from agents.content.performance import AccountPerformance, Measure
+    from agents.content.channel_mix import ChannelMix
+    from agents.content.performance import AccountPerformance, Measure, Standout
     from agents.content.plan_period import PlanPeriod
     from agents.content.schema import (
         Avatar,
@@ -557,11 +558,11 @@ the strip is for the person, not for you.
      competitor keywords) is worth one call, and when two tools could answer,
      ask the person which. Dispatch research_pillar sub-agents in parallel for
      pillars whose topics are thin or that the direction points at. Then
-     compose the plan yourself: balanced pillar mix, varied hooks and hook
-     emotions, a post-type mix weighted by the account's own history (see
-     EXPLORE / EXPLOIT in the mode notes), one named experiment, series that
-     chain follows, seasonal hooks on their dates, every day on channels the
-     brand posts on. Emit <duct_artifact>{"type":"plan",...}</duct_artifact>
+     compose the plan yourself: each channel's days and mix from its own
+     history, judged on the brand's goal (see EXPLORE / EXPLOIT in the mode
+     notes), varied hooks and hook emotions, one named experiment, series
+     that chain follows, seasonal hooks on their dates, every day on channels
+     the brand posts on. Emit <duct_artifact>{"type":"plan",...}</duct_artifact>
      and call submit_plan with the same payload.
    - submit_plan is a PROPOSAL. The viewport shows it with Accept, Modify and
      Reject; nothing is saved until the person accepts. After Accept, carry
@@ -1347,7 +1348,8 @@ FIELD RULES:
 - A day bound for X ("twitter") or LinkedIn ("linkedin") is `post_type`
   "text" with `format_slug` "": those channels are words first, and the
   person drafts it with a writer for that channel. Every other day is visual.
-  Text days sit outside EXPLORE / EXPLOIT, which ranks the visual types.
+  A text day is judged in its own channel's section like any other day; only
+  its post type is fixed.
 - `hook_type`, `funnel_stage` (awareness / consideration / conversion) and
   `objective` are the bets each post makes. Fill all three: the next plan
   grades them against what the posts earned. `hook_emotion` is the emotion
@@ -1357,34 +1359,45 @@ FIELD RULES:
 - `strategy.experiment` says what the plan tests, on how many days, judged
   by which metric; `strategy.review_notes` says what the review of the last
   period changed in this one. Both are shown to the person.
-- `strategy.exploit` / `strategy.explore` name a post_type, or "" when there
-  is nothing to exploit (no history) or nothing left to test. The evidence
+- `strategy.exploit` / `strategy.explore` name the post_type you scale and
+  the one you test on the channel with the most days, or "" when there is
+  nothing to exploit (no history) or nothing left to test. The evidence
   fields quote the numbers from <account_performance>, never invented ones.
 - `character` is the persona narrating the month; fill what you know.
 """
 
 _EXPLORE_EXPLOIT_BRIEF = """\
-EXPLORE / EXPLOIT — the post-type mix comes from the account's own history,
-never a fixed ratio. The <account_performance> block in the opening turn has
-the numbers.
-- Rank on completion, saves and shares, never likes. An unproven type, or a
-  bet only a few posts measured, is a hint, not proof. A metric the block
-  says was not recorded is unknown, not zero.
-- EXPLOIT: the type the block names under `exploit` gets the largest share of
-  the plan.
-- EXPLORE: at least one post in every seven tests the first type under
-  `explore`. Never zero a type out for having no history; that is how it
-  never gets any.
-- No history yet: there is nothing to exploit. Spread the plan across the
-  types and let the next plan's numbers decide.
-- Past bets: repeat the hook_type, funnel_stage and objective that earned;
-  drop the ones that did not.
-- Best times: when the block lists windows, recommend them in
+EXPLORE / EXPLOIT — each channel's share of the plan and its mix come from
+that channel's own history, judged on the brand's goal, never a fixed ratio.
+The <account_performance> block in the opening turn has the numbers: the
+goal line, the days each channel gets, then one section per channel.
+- The goal line says what "earned" means for this brand and which numbers
+  stand for it. Never likes. An unproven type, or a bet only a few posts
+  measured, is a hint, not proof. A metric the block says was not recorded
+  is unknown, not zero.
+- DAYS: give each channel the days the block lists, one either way at
+  most. A day counts for the channel listed first in its `platforms`; a
+  visual day may add the other visual channels it fits. The counts already
+  move effort slowly toward the channels that earn the goal and keep every
+  channel tested, so do not move them further unless the person asks.
+- EXPLOIT, per channel: most of a channel's days go to what leads there:
+  its `exploit` type, its best pillars and hooks, and topics in the line of
+  its best posts. Its weakest posts are not repeated as they were.
+- EXPLORE, per channel: at least one day in five on each channel, and
+  never fewer than one, tests what its section lists under `explore`, or a
+  pillar or hook it has barely tried. Never zero a type or a pillar out for
+  having no history; that is how it never gets any.
+- A channel with no history has nothing to exploit: spread its days across
+  its types and the pillars, and let the next plan's numbers decide.
+- Past bets: repeat the pillar, hook_type, funnel_stage and objective that
+  earned on a channel; drop the ones that did not.
+- Best times: when a channel's section lists windows, recommend them in
   `strategy.best_times`. They are UTC; convert them when you know where the
   audience is.
 Record the choice in `strategy`. It is shown to the person above the plan, so
 write it for them: the type you scale and the numbers that earned it, the type
-you test and why. Plain words only: never "exploit", "explore", "leader" or
+you test and why, and in `review_notes` how many days each channel got and
+why it moved. Plain words only: never "exploit", "explore", "leader" or
 "baseline" in those fields, which are this brief's words, not theirs. With no
 history, `exploit` and `lesson` stay "" (a goal is not a lesson). Keep
 `best_times` to days and an hour in the audience's own time, like
@@ -1537,12 +1550,12 @@ def _plan_steps(brand: ContentBrandContext, *, has_direction: bool) -> str:
 1. If brand voice / audience / value_prop / content_goal is empty above,
    ask up to 3 AskUserQuestion items to fill the gaps before planning.
 2. {research_step}
-3. Compose the plan: balanced pillar distribution favouring under-used
-   pillars from pillar_history and the pillars the review found missed;
-   varied hook EMOTIONS (never the same twice in a row) and hook types;
-   the post-type mix <account_performance> calls for (exploit the leader,
-   test the explore type at least once in every seven posts); every day on
-   channels from "Posts on"; one named experiment (which days, judged by
+3. Compose the plan: each channel's days and mix as <account_performance>
+   sets them (EXPLORE / EXPLOIT): pillars weighted toward what earns the
+   goal on each channel, every pillar at least once in the plan, under-used
+   pillars from pillar_history and the ones the review found missed on the
+   explore days; varied hook EMOTIONS (never the same twice in a row) and
+   hook types; every day on channels from "Posts on"; one named experiment (which days, judged by
    which metric); a narrative arc. Tag every day with hook_type,
    hook_emotion, funnel_stage, objective and series, and record the choice
    in `strategy`, review_notes included.
@@ -1575,7 +1588,7 @@ def build_plan_user_prompt(
     formats: list[dict],
     avatars: list["Avatar | dict"],
     research: "ContentResearchContext | None" = None,
-    performance: "AccountPerformance | None" = None,
+    performance: "ChannelMix | None" = None,
     period: "PlanPeriod | None" = None,
     *,
     review: str = "",
@@ -1618,7 +1631,7 @@ def build_plan_user_prompt(
 
 {optional}
 
-{_performance_stanza(performance)}
+{_channel_mix_stanza(performance)}
 
 {_period_line(period, brand.project_name)}
 
@@ -1638,7 +1651,7 @@ def build_plan_review_prompt(
     brand: ContentBrandContext,
     *,
     review: str,
-    performance: "AccountPerformance | None",
+    performance: "ChannelMix | None",
     period: "PlanPeriod | None",
     business: str = "",
     voice: str = "",
@@ -1667,7 +1680,7 @@ def build_plan_review_prompt(
 
 {optional}
 
-{_performance_stanza(performance)}
+{_channel_mix_stanza(performance)}
 
 You manage {brand.project_name}'s content plan. The period in front of you is
 {span}. This is the REVIEW turn: the person wants to know where the plan
@@ -1700,7 +1713,20 @@ When they answer, that is the planning turn:
 {_plan_steps(brand, has_direction=True)}"""
 
 
-_SIGNAL_NAMES = {"completion_rate": "completion", "saves": "saves", "shares": "shares", "views": "views"}
+_SIGNAL_NAMES = {
+    "completion_rate": "completion", "saves": "saves", "shares": "shares", "views": "views",
+    "intent": "saves + shares", "engagement": "comments + shares + saves", "reached": "reach",
+}
+
+# What each goal counts, in the words the goal line uses.
+_GOAL_LINES = {
+    "intent": (
+        "intent: saves + shares per post, the closest step to a signup or a sale "
+        "these numbers reach (conversions themselves are not measured)"
+    ),
+    "engagement": "engagement: comments + shares + saves per post",
+    "reach": "reach: people reached per post (reach where the channel reports it, else views)",
+}
 
 
 def _measure_text(metric: str, measure: "Measure") -> str:
@@ -1711,49 +1737,52 @@ def _measure_text(metric: str, measure: "Measure") -> str:
     return f"{name} {value} ({measure.measured})"
 
 
-def _performance_stanza(perf: "AccountPerformance | None") -> str:
-    """Render the account's posting history as an <account_performance> block.
+def _posts(n: int) -> str:
+    return f"{n} post" if n == 1 else f"{n} posts"
 
-    Per-project data, so it rides in the user turn. Unknown metrics are said
-    to be unknown in words — an absent number printed as 0 is how a model
-    concludes a format failed when nobody measured it.
-    """
-    from agents.content.performance import BET_DIMENSIONS, MIN_MEASURED_POSTS, RANKING_SIGNALS, UNTESTED, VIEWS
 
-    def block(lines: list[str]) -> str:
-        return "\n".join(["<account_performance>", *lines, "</account_performance>"])
+def _block(lines: list[str]) -> str:
+    return "\n".join(["<account_performance>", *lines, "</account_performance>"])
 
-    if perf is None:
-        return block([
-            "  The posting history could not be read this run. Plan as if nothing is",
-            "  proven, and say so in strategy.",
-        ])
+
+_UNREADABLE = [
+    "  The posting history could not be read this run. Plan as if nothing is",
+    "  proven, and say so in strategy.",
+]
+
+
+def _standout(x: "Standout") -> str:
+    return f'"{x.topic[:80]}" ({x.pillar or "no pillar"}) {number(x.score)}'
+
+
+def _performance_lines(perf: "AccountPerformance", *, scope: str = "the plan") -> list[str]:
+    """One history (the account's or one channel's) as block lines. Unknown
+    metrics are said to be unknown in words: an absent number printed as 0
+    is how a model concludes a format failed when nobody measured it."""
+    from agents.content.performance import GRADED_DIMENSIONS, MIN_MEASURED_POSTS, UNTESTED, VIEWS
+
     if not perf.has_history:
-        return block([
-            "  No published posts yet, so there is nothing to exploit. Spread the plan",
+        return [
+            f"  No published posts yet, so there is nothing to exploit. Spread {scope}",
             f"  across {', '.join(perf.explore)} so the next plan has evidence to weigh.",
-        ])
-
+        ]
     lines: list[str] = []
     if perf.ranked_by:
         lines.append(
-            f"  From the last {perf.posts} published posts, ranked by median "
+            f"  From the last {_posts(perf.posts)} published, ranked by median "
             f"{_SIGNAL_NAMES[perf.ranked_by]}. (n) is how many posts recorded the metric."
         )
     else:
-        lines.append(
-            f"  From the last {perf.posts} published posts. None recorded completion, saves\n"
-            "  or shares on enough posts to rank, so no type is proven yet."
-        )
+        signals = " or ".join(_SIGNAL_NAMES[m] for m in perf.metrics if m != VIEWS)
+        lines.append(f"  From the last {_posts(perf.posts)} published. Too few recorded {signals}")
+        lines.append("  to rank, so no type is proven yet.")
     lines.append("  post types:")
     for group in perf.types:
         if group.verdict == UNTESTED:
             lines.append(f"    - {group.key} · untested · no posts yet")
             continue
-        measures = " · ".join(
-            _measure_text(m, group.measures[m]) for m in (*RANKING_SIGNALS, VIEWS)
-        )
-        lines.append(f"    - {group.key} · {group.verdict} · {group.posts} posts · {measures}")
+        measures = " · ".join(_measure_text(m, group.measures[m]) for m in perf.metrics)
+        lines.append(f"    - {group.key} · {group.verdict} · {_posts(group.posts)} · {measures}")
 
     if perf.exploit:
         lines.append(f"  exploit: {perf.exploit}")
@@ -1764,16 +1793,20 @@ def _performance_stanza(perf: "AccountPerformance | None") -> str:
     else:
         lines.append("  explore: every type has evidence; spend the test slot on the least-tried hook_type")
 
-    if perf.ranked_by and any(perf.bets.get(d) for d in BET_DIMENSIONS):
+    if perf.ranked_by and any(perf.bets.get(d) for d in GRADED_DIMENSIONS):
         lines.append(f"  past bets, ranked by {_SIGNAL_NAMES[perf.ranked_by]}:")
-        for dimension in BET_DIMENSIONS:
+        for dimension in GRADED_DIMENSIONS:
             graded = perf.bets.get(dimension) or []
             if graded:
                 entries = " | ".join(
-                    f"{g.key} {g.posts} posts, {_measure_text(perf.ranked_by, g.measures[perf.ranked_by])}"
+                    f"{g.key} {_posts(g.posts)}, {_measure_text(perf.ranked_by, g.measures[perf.ranked_by])}"
                     for g in graded
                 )
                 lines.append(f"    {dimension}: {entries}")
+
+    if perf.ranked_by and perf.best:
+        lines.append(f"  best posts: {' | '.join(_standout(x) for x in perf.best)}")
+        lines.append(f"  weakest posts: {' | '.join(_standout(x) for x in perf.weakest)}")
 
     if perf.hours_utc or perf.weekdays:
         lines.append(f"  best posting times, UTC, from {perf.timed_posts} posts with views:")
@@ -1783,8 +1816,47 @@ def _performance_stanza(perf: "AccountPerformance | None") -> str:
                     f"{w.label} median {number(w.median_views)} views ({w.posts} posts)" for w in windows
                 )
                 lines.append(f"    {label}: {entries}")
+    return lines
 
-    return block(lines)
+
+def _channel_mix_stanza(mix: "ChannelMix | None") -> str:
+    """The plan's <account_performance> block: the goal, the days each channel
+    gets (agents/content/channel_mix.py decided them), then each channel's own
+    history. Per-project data, so it rides in the user turn."""
+    from agents.content.channel_mix import UNTESTED
+
+    if mix is None:
+        return _block(_UNREADABLE)
+    source = (
+        f' Read from the content goal: "{mix.goal.source[:160]}".' if mix.goal.source
+        else " No content goal is set."
+    )
+    lines = [f"  goal: {_GOAL_LINES[mix.goal.kind.value]}.{source}"]
+    lines.append(
+        f"  days by channel, {mix.days} in this plan (a day counts for the channel listed first in its platforms):"
+    )
+    per_post = _SIGNAL_NAMES[mix.goal.measure]
+    for c in mix.channels:
+        if c.last_days is not None:
+            before = f"last plan {c.last_days} of {mix.last_plan_days}"
+        else:
+            before = "not in the last plan" if mix.last_plan_days else "no plan before this one"
+        if c.standing == UNTESTED:
+            judged = f"untested: {per_post} on {_posts(c.goal_per_post.measured)}, too few to judge"
+        else:
+            judged = (
+                f"{c.standing}: {number(c.goal_per_post.median)} {per_post} a post "
+                f"over {_posts(c.goal_per_post.measured)}"
+            )
+        lines.append(f"    - {c.channel}: {c.days} days ({before}) · {judged}")
+    lines.append("  These counts already move effort slowly toward the channels that earn the goal (a quarter")
+    lines.append(f"  at most per plan) and keep every channel at {mix.floor} days or more so it stays tested; a")
+    lines.append("  channel new to the plan takes its days from the others.")
+
+    for c in mix.channels:
+        lines.append(f"  {c.channel}:")
+        lines.extend(f"  {line}" for line in _performance_lines(c.performance, scope="its days"))
+    return _block(lines)
 
 
 def _research_stanza(research: "ContentResearchContext | None") -> str:

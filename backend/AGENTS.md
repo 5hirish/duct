@@ -795,10 +795,20 @@ agents/
     │                     post already scheduled there. performance.py is the plan's half.
     │                     Its route sits beside POST /content/posts/{id}/skip, whose
     │                     reason becomes a feedback memory the next draft reads
-    ├── performance.py  — the account's own history for a plan: type ranking (completion,
-    │                     saves, shares; never likes), explore/exploit, graded bets, best
-    │                     posting times. An unrecorded metric is unknown, never zero.
-    │                     Visual posts only: a tweet's numbers never steer a TikTok plan
+    ├── performance.py  — the signals one history gives a plan: type ranking (never
+    │                     likes), explore/exploit, graded bets (pillar, hook, funnel stage,
+    │                     objective), best and weakest posts, best posting times. An
+    │                     unrecorded metric is unknown, never zero; a goal measure that
+    │                     sums metrics (saves + shares) sums only the ones recorded
+    ├── channel_mix.py  — what a plan gives each channel: the brand's content goal picks
+    │                     the measure (reach, engagement, or intent = saves + shares, since
+    │                     conversions are not measured), every channel is summarised on
+    │                     its own posts (a tweet never ranks a TikTok), and its share of
+    │                     the days moves from the last plan's toward the channels that
+    │                     return more of the goal per post: a quarter at most per plan,
+    │                     never below a post a week, only once two channels can be
+    │                     compared. A day counts for its first platform. The plan turn's
+    │                     <account_performance> block is this, rendered
     └── tools.py, subagents/, prompts.py, schema.py, artifacts.py, enrichment.py
 ```
 
