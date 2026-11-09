@@ -17,8 +17,8 @@ Design, mirroring the reporting agent's structured-content → template pattern:
     before any image is generated (soft-gated image generation).
 
 CSS is the full style registry (`css_for(None)` = base engine + every caption
-style), so any `caption_style` the agent picks always resolves regardless of a
-format's curated `linked_styles`.
+style), so any `caption_style` the agent picks always resolves; a format's spec
+names classes, it does not have to declare them.
 """
 
 from __future__ import annotations
@@ -380,7 +380,7 @@ def render_slides_html(
       slides: ordered structured slides.
       resolved_css: optional CSS override. Defaults to the FULL registry
         (`css_for(None)` = base engine + every caption style) so any
-        caption_style resolves regardless of a format's linked_styles.
+        caption_style a spec names resolves.
 
     Returns the `<!doctype html>…</html>` string stored as ContentPost.slides_html.
     """

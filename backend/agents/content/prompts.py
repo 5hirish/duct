@@ -95,8 +95,9 @@ like that emotion to a reader skimming with the sound off.
 """
 
 _SLIDE_COUNT_BRIEF = """\
-SLIDE COUNT: 7 = Format D default (highest completion rate). 10 = Format A
-educational deep-dive only. 5 = comment-bait / trend-response only.
+SLIDE COUNT: the format's spec decides. 7 = the UGC carousel default
+(highest completion rate). 8-10 = educational carousel only. 5 = comment-bait
+/ trend-response only.
 
 NO SLIDE COUNTERS ("1/4", "2/4"). They signal "this is a list" and give
 the viewer permission to exit after each slide. Omit entirely.
@@ -533,7 +534,12 @@ the strip is for the person, not for you.
 1. Load context. First action: call fetch_brand_context. If brand or
    pillars are empty, use AskUserQuestion (max 3 questions per turn) to
    fill the gaps. Then fetch_content_history + fetch_format_library +
-   fetch_avatar_library so you know what's shipped + available styles.
+   fetch_avatar_library so you know what's shipped + which recipes exist.
+   Formats are skill files: each says which media kinds and channels it
+   applies to. Filter fetch_format_library by the post's media and channel,
+   pick the one whose description fits the idea, and put its slug in
+   format_slug. A text channel takes a text format; a video day takes a
+   video format; never a slideshow recipe for a tweet.
 2. Plan mode (plan_month). The opening message tells you which of two
    turns this is:
    - A REVIEW turn (the message carries a <plan_review> block): read what the
@@ -1029,7 +1035,7 @@ array:
 {{"type": "post", "project_id": "<uuid>",
   "post_dir_slug": "YYYY-MM-DD-NNN",
   "pillar": "<id>", "topic": "<title>",
-  "post_type": "slideshow", "format_slug": "format-d",
+  "post_type": "slideshow", "format_slug": "ugc-carousel",
   "layout": "full-bleed", "slide_count": 7,
   "slides": [
     {{"slide_id": "slide-01", "kind": "photo", "role": "hook",
@@ -1239,7 +1245,7 @@ write slides_html and do NOT generate images here.
 {"type": "post", "project_id": "<uuid>",
  "post_dir_slug": "YYYY-MM-DD-NNN",
  "pillar": "<pillar id>", "topic": "<topic title>",
- "post_type": "slideshow", "format_slug": "format-d",
+ "post_type": "slideshow", "format_slug": "ugc-carousel",
  "layout": "full-bleed",
  "slide_count": 7,
  "slides": [
@@ -1319,7 +1325,7 @@ submit_plan to see what it accepts.
  "days": [
    {"topic": "<topic title>", "pillar": "<pillar id>",
     "topic_id": "<id from research, optional>",
-    "post_type": "video", "format_slug": "format-d",
+    "post_type": "video", "format_slug": "short-video-script",
     "platforms": ["tiktok"],
     "hook_type": "curiosity_gap", "hook_emotion": "curiosity",
     "funnel_stage": "awareness", "objective": "saves",
@@ -1592,7 +1598,7 @@ def build_plan_user_prompt(
     )
     format_lines = (
         "\n".join(f"  - {f.get('slug', '?')}: {f.get('name', '')}" for f in formats)
-        or "  (no formats — use Format D defaults)"
+        or "  (no formats)"
     )
     avatar_lines = (
         "\n".join(

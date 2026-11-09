@@ -42,6 +42,7 @@ import { CookieConsent } from "@/components/CookieConsent";
 import LoadError from "@/components/LoadError";
 import CloneFromUrlDialog from "@/components/content/CloneFromUrlDialog";
 import CloneSourceNote from "@/components/content/CloneSourceNote";
+import { FormatCard, FormatDetailSheet, FormatEditorSheet } from "@/components/content/FormatLibrary";
 import { DeskConnectFirst } from "@/components/insights/desk/DeskCards";
 import FirstSourceCelebration from "@/components/connections/FirstSourceCelebration";
 import DeskActivity, { activityGridClass } from "@/components/insights/desk/DeskActivity";
@@ -1671,6 +1672,101 @@ const DISCOVER_POSTS_SPARSE = [
   { id: "s2", text: "", hashtags: ["outfit"], is_slideshow: false, play_count: 8_000, digg_count: 120 },
 ];
 
+
+// ---------------------------------------------------------------------------
+// Format library — the built-ins beside a project's own, and the editor that
+// needs no Markdown. Specs are short stand-ins for the real recipes.
+// ---------------------------------------------------------------------------
+
+const FORMAT_SPEC = `# Educational Carousel — one idea per slide, built to be saved
+
+**The format for teaching.** A carousel is the highest-engagement format on LinkedIn and Instagram because every swipe is a signal.
+
+## Slide Structure (6–10 slides)
+
+| Slide | Role | What it does | Caption style |
+|-------|------|--------------|---------------|
+| 1 | Hook | The promise or the pain, in under 10 words. | \`hook\` |
+| 2 | Stakes | Why this matters now. Ends on a tension. | \`cap-stroke\` |
+| 3 to N−2 | One idea each | One point per slide: headline ≤ 7 words, one line ≤ 20. | \`body-neutral\` |
+| N | CTA | One ask, matched to the objective. | \`cap-stroke\` |
+
+## Copy rules
+
+- One idea per slide. If a slide needs "and", split it.
+- Concrete over abstract: a number, a name, an example.
+- No slide counters ("1/8").
+
+> Treat slide 2 as a second hook: Instagram resurfaces a carousel from it.
+`;
+
+const FORMATS_FIXTURE = [
+  {
+    id: null, slug: "educational-carousel", name: "Educational Carousel", source: "builtin",
+    description: "A swipe-through lesson, one idea per slide, that people save and send. Use when the post teaches, compares or lists; not for a personal story.",
+    media: ["slideshow"], channels: ["linkedin", "instagram", "tiktok", "facebook"],
+    data: { spec_markdown: FORMAT_SPEC },
+  },
+  {
+    id: "f-1", slug: "ugc-carousel", name: "Our UGC carousel", source: "custom", overrides_builtin: true,
+    description: "Seven iPhone photos of one narrator, bold text on every slide. Ours keeps the dark bridge slides but drops the CTA question.",
+    media: ["slideshow"], channels: ["tiktok", "instagram"],
+    data: { spec_markdown: "# UGC Carousel\n\nSeven slides, one person." },
+    updated_at: new Date(Date.now() - 36e5 * 5).toISOString(),
+  },
+  {
+    id: null, slug: "short-video-script", name: "Short Video Script", source: "builtin",
+    description: "A 15 to 30 second vertical video with a three-second hook, one payoff and a reason to follow.",
+    media: ["video"], channels: ["tiktok", "instagram", "youtube", "threads", "facebook"],
+    data: { spec_markdown: "# Short Video Script\n\nHook in three seconds." },
+  },
+  {
+    id: "f-2", slug: "founder-weekly-note-with-a-very-long-name-that-wraps", name: "Founder weekly note — what we learned shipping this week, in the founder's own words", source: "custom",
+    description: "",
+    media: [], channels: [],
+    data: { spec_markdown: "" },
+    updated_at: new Date(Date.now() - 864e5 * 40).toISOString(),
+  },
+];
+
+function FormatGridScene() {
+  return (
+    <div className="@container p-5">
+      <div className="grid grid-cols-1 gap-3 @lg:grid-cols-2 @2xl:grid-cols-3">
+        {FORMATS_FIXTURE.map((f) => (
+          <FormatCard key={f.slug} format={f} onView={() => {}} onEdit={() => {}} onDelete={f.source === "builtin" ? null : () => {}} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FormatEditorScene({ initial }) {
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="p-5">
+      <Button size="sm" onClick={() => setOpen(true)}>Open editor</Button>
+      <FormatEditorSheet
+        open={open}
+        onOpenChange={setOpen}
+        projectId="preview"
+        initial={initial}
+        onSaved={() => setOpen(false)}
+        save={async () => {}}
+      />
+    </div>
+  );
+}
+
+function FormatDetailScene({ format }) {
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="p-5">
+      <Button size="sm" onClick={() => setOpen(true)}>Open format</Button>
+      <FormatDetailSheet format={format} open={open} onOpenChange={setOpen} onEdit={() => {}} onDelete={() => {}} />
+    </div>
+  );
+}
 
 export const SCENES = [
   {
@@ -4122,6 +4218,38 @@ export const SCENES = [
         />
       </div>
     ),
+  },
+  {
+    id: "format-library-grid",
+    state: "a built-in, a customised built-in, a custom with no spec, a name that wraps",
+    group: "FormatLibrary",
+    title: "The format library as a grid",
+    note: "Built-ins carry the sparkle badge and no delete; a customised built-in offers reset instead. Each card says what it applies to: media kinds as words, channels as glyphs, and \"Any media · Every channel\" for a format that declared nothing. Sweep 448–720 for the badge row wrapping under a long description.",
+    render: () => <FormatGridScene />,
+  },
+  {
+    id: "format-editor-builtin",
+    state: "customising a built-in · slug locked · spec in the visual editor",
+    group: "FormatLibrary",
+    title: "Customise a built-in format",
+    note: "The slug is read-only so the copy stands in for the built-in, the header says what saving does, and the spec opens in the visual editor: headings, bold, lists and a real table from the toolbar, Markdown kept underneath (toggle Source on the right of the toolbar). No slider, no linked styles: the spec carries the slide count and names its caption classes.",
+    render: () => <FormatEditorScene initial={FORMATS_FIXTURE[0]} />,
+  },
+  {
+    id: "format-editor-new",
+    state: "a new format · nothing picked yet",
+    group: "FormatLibrary",
+    title: "A new format from nothing",
+    note: "Empty filters read as any media and every channel, and say so beside the chips rather than leaving a blank row. The editor shows its placeholder until the first keystroke.",
+    render: () => <FormatEditorScene initial={{}} />,
+  },
+  {
+    id: "format-detail-builtin",
+    state: "read view of a built-in",
+    group: "FormatLibrary",
+    title: "A built-in format, read",
+    note: "Customise where Edit would be, no delete, and the footer says the format ships with Duct. The applicability row repeats what the card said so the sheet stands alone.",
+    render: () => <FormatDetailScene format={FORMATS_FIXTURE[0]} />,
   },
 ];
 

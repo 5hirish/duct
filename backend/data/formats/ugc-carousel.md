@@ -1,25 +1,22 @@
-> **Duct adaptation note (not part of the original spec).**
-> The CSS for `cap-stroke` / `cap-pill` / `cap-raw` / `cap-whisper` /
-> `hook-headline` and the slide engine lives in Duct's shared **style registry**
-> (Library → Styles). This format's **linked styles** resolve to that CSS, and
-> `build_slides_html` inlines it verbatim (`fetch_format_library` →
-> `resolved_css`) into one `<style>` block — it does **not** write caption/hook
-> CSS from scratch. So the class names below are real, shipped classes; the old
-> `formats/css/*` files and the `tiktok-gen` skill are not used in Duct.
-
+---
+name: ugc-carousel
+title: UGC Carousel
+description: A seven-slide photo carousel that reads as one real person's discovery, shot on an iPhone with bold text over every photo. Use for first-person story arcs, "I tried X" posts and emotional reveals on TikTok and Instagram; not for lists, data or anything a brand would say about itself.
+media: [slideshow]
+channels: [tiktok, instagram]
 ---
 
-# Format D — UGC / Raw Authentic
+# UGC Carousel — raw, authentic, iPhone-shot
 
-**Default format for all posts.**
+**The default slideshow format.** A photo carousel that looks like a real person posted it from their phone: one person, one discovery, five photos and two dark slides.
 
 ---
 
 ## Philosophy
 
-Every slide (1–5) has a real iPhone photo. The text overlay is how she's talking to you — direct, a little urgent, no polish. Slides 6–7 break to a dark background to signal a different moment.
+Every slide (1–5) has a real iPhone photo. The text overlay is how the narrator talks to you — direct, a little urgent, no polish. Slides 6–7 break to a dark background to signal a different moment.
 
-The reference: viral beauty carousels that get 1M+ views with iPhone photos + two lines of bold text on every slide.
+The reference: viral carousels in beauty, fitness, money and productivity that get 1M+ views with iPhone photos + two lines of bold text on every slide.
 
 ---
 
@@ -32,8 +29,8 @@ The reference: viral beauty carousels that get 1M+ views with iPhone photos + tw
 | 3 | Finding 1 + self-test | iPhone photo or illustration | `cap-stroke` (personal story arc) · `cap-pill` (comparative/educational — see Caption Styles) |
 | 4 | Finding 2 + cliffhanger | iPhone photo or illustration | `cap-stroke` — escalating tension |
 | 5 | Emotional peak / revelation | iPhone photo only | `cap-raw` — quiet, intimate |
-| 6 | Personal bridge | Dark `#1A0A10` — no photo | `bridge-statement` (bridge.css) |
-| 7 | Comment bait CTA | Dark `#1A0A10` — no photo | `cta-question` (cta.css) |
+| 6 | Personal bridge | Dark text card — no photo | `body-neutral` (`kind: text`) |
+| 7 | Comment bait CTA | Dark text card — no photo | `body-neutral` (`kind: text`) |
 
 If the post is a personal story arc, the emotional peak slide needs a real face — don't use an illustration there. Slides 6–7 stay dark to signal a different moment.
 
@@ -47,11 +44,11 @@ Each of slides 1–5 uses one of three background types. Decide before generatin
 
 One woman across all five slides, five different settings. Use when the post IS a personal story — the viewer should feel they're following the same creator through her discovery. Builds the "I know this person" feeling that drives follows.
 
-**Use for:** `ai_pov`, `glow_up_identity`, any first-person discovery arc.
+**Use for:** any first-person discovery arc — "I tried X", "I noticed Y", a before and after lived by one person.
 
 **Setting rotation — suggested defaults for variety:**
 
-These are starting points when no stronger narrative reason exists. Override whenever a setting better serves the story moment (see skill.md — Step 3E). The setting should earn its place.
+These are starting points when no stronger narrative reason exists. Override whenever a setting better serves the story moment. The setting should earn its place.
 
 | Slide | Suggested default | Override when… |
 |-------|------------------|----------------|
@@ -63,7 +60,7 @@ These are starting points when no stronger narrative reason exists. Override whe
 
 **How to generate consistent character:**
 1. Generate slide 1 first. Get approval on the face before continuing.
-2. For slides 2–5: pass the approved `slide-01-bg.jpeg` as `input_image_path`.
+2. For slides 2–5: pass slide 1's approved image as the reference image.
 3. Prepend to every subsequent prompt:
    ```
    Same person as the reference image — maintain her facial features, skin tone,
@@ -79,7 +76,7 @@ These are starting points when no stronger narrative reason exists. Override whe
 
 Different people per slide. Use when the content IS the visual comparison — each slide's subject demonstrates the concept being taught.
 
-**Use for:** `face_shape` (showing different face shapes), `color_aura` (showing different seasons/undertones), `transformation` (before/after different people). Any post where diversity of subjects adds credibility.
+**Use for:** comparisons and taxonomies — "the four kinds of X", "this vs that", before/after on different people. Any post where diversity of subjects adds credibility.
 
 Generate each slide independently with its own prompt. No reference image.
 
@@ -87,9 +84,9 @@ Generate each slide independently with its own prompt. No reference image.
 
 ### 3. Pinterest-style illustration or diagram
 
-An editorial illustration — hand-drawn aesthetic, minimal line work, flat colour or light wash. Should look like something saved from a beauty/style Pinterest board, not a polished brand infographic.
+An editorial illustration — hand-drawn aesthetic, minimal line work, flat colour or light wash. Should look like something saved from a Pinterest board, not a polished brand infographic.
 
-**Use for:** face shape silhouettes, colour season wheels, measurement diagrams, "this vs that" visual comparisons. Slides 2–4 on educational posts where a photo of a person communicates the concept less clearly than a drawing.
+**Use for:** silhouettes, wheels, measurement diagrams, "this vs that" visual comparisons. Slides 2–4 on educational posts where a photo of a person communicates the concept less clearly than a drawing.
 
 **Don't use on the emotional peak slide in a story arc** — that slide needs a real face. Fine on any slide in a purely educational/illustration post.
 
@@ -99,7 +96,7 @@ Prompt guidance in the Gemini Image Prompt Template section below.
 
 ## Caption Styles
 
-Three classes from the shared style registry (Library → Styles), linked by this format.
+Three classes from the shared style registry (Library → Styles).
 
 | Class | Visual | Use on | Don't use on |
 |-------|--------|--------|--------------|
@@ -107,7 +104,7 @@ Three classes from the shared style registry (Library → Styles), linked by thi
 | `cap-pill` | Each line on its own solid black pill. Readable even on bright/busy photos. | Slide 3 **when** the content is a genuine comparison or data-heavy list (multiple named items, sequential options). | Slide 1, slide 5. Also avoid on bright/high-energy outdoor photos — dark pill backgrounds look heavy. Use `cap-stroke` for slide 3 when the finding is a personal first-person revelation, not a data chart. |
 | `cap-raw` | Clean white text, no outline, no background. Looks like the TikTok text tool. | Slide 5 (emotional peak — intimate, quiet). Sadness/disbelief hooks. | Any bright photo — text disappears. Only use when photo is dark (golden hour, indoor, overcast). |
 
-Slide 1 uses `hook-headline` / `hook-sub` from `hook-bottom.css` — not the caption classes above.
+Slide 1 uses `hook-headline` / `hook-sub` — not the caption classes above.
 
 **One caption block per slide.** Real high-performing TikTok carousels use a single stacked text block per slide — not a large headline with a smaller subtitle below it. Use `<br>` to break at natural speech pauses; all lines stay the same weight and size. The `-sub` variant classes exist for genuinely different register text (like a whispered aside), not as a default subtitle on every slide. When in doubt: one block, same class throughout.
 
@@ -115,9 +112,9 @@ Each class's CSS + usage lives in the style registry (Library → Styles); the s
 
 ---
 
-## Per-slide expression and gesture guidance (Format D)
+## Per-slide expression and gesture guidance
 
-These are execution defaults for Format D's visual language. The emotional arc from skill.md always takes priority — if the copy's emotional moment conflicts with these defaults, the copy wins. These are starting points, not mandates.
+These are execution defaults for this format's visual language. The post's emotional arc always takes priority — if the copy's emotional moment conflicts with these defaults, the copy wins. These are starting points, not mandates.
 
 ### Composition by viewer relationship
 
@@ -149,26 +146,11 @@ These are execution defaults for Format D's visual language. The emotional arc f
 
 ## Layout: All Photo Slides
 
-All slides 1–5 use `class="slide slide-hook"`. CSS defined in `hook-bottom.css`:
+All slides 1–5 are photo slides (`kind: photo`). The engine gives them:
 - Background image: `.bg` class, full-bleed, `object-position: center 15%`
 - Gradient: `.grad` class, bottom-to-top, darkens lower 65% of the slide
 - Caption block: `.cap-bottom` class, anchored above the TikTok caption bar
 - Text safe zone: clears TikTok action buttons on the right and the caption bar at the bottom
-
----
-
-## Face Shape Anatomy Reference
-
-**Fill in [FACE SHAPE] using these anatomical descriptions — copy the exact language into prompts.**
-
-| Shape | Anatomical description for prompt |
-|-------|----------------------------------|
-| Heart | Wide forehead (widest point of face), high prominent cheekbones, face narrows significantly toward a pointed chin — overall silhouette is an inverted triangle, wider at hairline than at jaw |
-| Oval | Face slightly longer than wide, gentle rounded jawline, forehead slightly wider than jaw, balanced proportions with no single feature dominating |
-| Round | Face as wide as it is long, fullest at cheeks, short forehead-to-chin distance, soft rounded jaw with no sharp angles |
-| Square | Wide angular forehead, wide jaw, strong defined jawline approximately equal width to forehead — face looks roughly square in overall outline |
-
-**If the post content claims the model has a specific face shape, her actual face in the image MUST match. Describe the anatomy explicitly in the prompt. Do not assume the model will be generated with the right shape — you must specify it.**
 
 ---
 
@@ -181,7 +163,6 @@ Fill in every field below before generating. Vague fields produce the AI look. T
 #### Fields to fill in
 
 **1. Subject — physical features**
-- Face shape: [copy exact anatomical description from Face Shape Reference above — required for face_shape pillar posts]
 - Age: [22–26]
 - Attractiveness anchor: ALWAYS include — "naturally attractive and healthy-looking — the kind of person you'd genuinely follow" — Gemini defaults to neutral/average without this, which reads as tired or unappealing
 - Ethnicity and skin: [e.g. "South Asian woman, medium-warm brown skin with golden undertone, slight natural flush across cheeks"]
@@ -191,10 +172,10 @@ Fill in every field below before generating. Vague fields produce the AI look. T
 - Makeup: [none — bare skin / mascara only, no liner / subtle tinted moisturiser, no concealer]
 
 **2. Content-driven features — mandatory cross-check**
-Before writing the prompt, check: does the copy claim she has face shape X? Hairstyle Y? Outfit colour Z? These MUST be visible in the image:
-- Face shape post — describe the face shape anatomy explicitly
-- Hairstyle post — that exact hairstyle must be on her head
-- Colour/season post — that colour must be in her outfit or what she's holding
+Before writing the prompt, check: does the copy claim something about the narrator — a hairstyle, an outfit colour, an object in hand, a visible result? These MUST be visible in the image:
+- A claim about her appearance — describe it explicitly in the prompt
+- A product or object the copy names — it is in frame
+- A result the copy claims — it is visible, not implied
 
 **3. Scene direction**
 - Expression: [MICRO-EXPRESSION — not just an emotion, describe the specific muscle movements. e.g. "left corner of mouth barely raised in a wry almost-smile, brow relaxed, eyes direct and steady — the look of someone who has accepted a difficult truth. Not performing emotion."]
@@ -275,9 +256,9 @@ Different outfit appropriate to the new setting.
 Use for educational slides where a diagram communicates the concept better than a photo.
 
 ```
-[DESCRIBE THE CONCEPT — e.g. "face shape silhouette diagram showing heart face shape",
-"colour season wheel divided into warm/cool/neutral sections",
-"before/after hairstyle sketch for square face"].
+[DESCRIBE THE CONCEPT — e.g. "silhouette diagram of the four body types",
+"a wheel divided into warm/cool/neutral sections",
+"before/after sketch of one habit swap"].
 
 Style: hand-drawn editorial illustration. Pinterest beauty board aesthetic.
 Loose ink line work or brush strokes. Flat or light watercolour wash.
@@ -297,19 +278,18 @@ flat wash colour, loose sketch, not polished, not corporate, not infographic
 
 | Content | What to illustrate |
 |---------|-------------------|
-| Face shape | Minimal face outline silhouette — just the jawline, cheekbones, forehead curve. One shape per slide. |
-| Colour season | Abstract colour swatch arrangement or a loose wheel — warm vs cool tones shown as organic colour blocks. |
-| Hairstyle | Loose sketch of the hairstyle shape around a head outline — like a salon consultation sketch. |
-| Measurement / proportion | Simple line diagram with a single measurement marked — e.g. "2 inches below the chin" shown as a dotted line. |
+| A taxonomy | Minimal outline silhouettes — one type per slide. |
+| A spectrum | Abstract swatches or a loose wheel — the poles shown as organic blocks. |
+| A method | Loose sketch of the thing being done — like a consultation sketch. |
+| Measurement / proportion | Simple line diagram with a single measurement marked as a dotted line. |
 
 ---
 
 ## Styling
 
-Do **not** write caption/hook/layout CSS by hand. The slide builder calls
-`fetch_format_library`, takes this format's `resolved_css` (the shared base
-engine + its linked styles), and inlines it verbatim into the single `<style>`
-block. Use the shipped classes:
+Do **not** write caption/hook/layout CSS. The slide renderer inlines the
+shared style registry (Library → Styles) into every slideshow, so the classes
+below are already there — name them per slide and nothing else:
 
 | Class | Use on |
 |-------|--------|
@@ -321,13 +301,13 @@ block. Use the shipped classes:
 | `body-neutral` | Text-only fallback when no photo was generated |
 
 The engine (slide shell, safe zones, film grain, photo `.bg` + `.grad`,
-`.cap-bottom`) is always included by `resolved_css`. Slides 6–7 (bridge / CTA)
+`.cap-bottom`) is always included. Slides 6–7 (bridge / CTA)
 are brand-colored and not yet in the shared registry — render those with simple
 dark background + white/accent text for now.
 
 ---
 
-## What makes Format D fail
+## What makes this format fail
 
 - Same photo repeated on multiple slides — lazy, kills the UGC feel
 - Studio / ring light / cream backdrop in any image — kills authenticity immediately

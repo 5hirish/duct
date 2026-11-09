@@ -42,7 +42,7 @@ from collections.abc import AsyncGenerator
 from datetime import datetime, timezone
 from enum import StrEnum
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID, uuid4
 
 import anyio.from_thread
@@ -83,6 +83,7 @@ from agents.content.publishing import (
 )
 from agents.content.video import VIDEO_POST_TYPE, cut_of, take_for, video_takes
 from agents.content.events import ContentEvent
+from agents.content import formats as format_library
 from agents.content.styles import base_css, list_styles
 from agents.content.schema import (
     ContentAnswerRequest,
@@ -547,6 +548,8 @@ async def _run_draft_worker(
         if req.plan_id is not None and req.day_index is not None:
             with next(db_session()) as db:
                 plan = db.get(ContentPlan, req.plan_id)
+                if plan is not None and plan.project_id != req.project_id:
+                    plan = None  # the route refuses this; a second guard costs nothing
                 if plan and 0 <= req.day_index < len(plan.days):
                     from agents.content.schema import Day
                     raw = plan.days[req.day_index]
@@ -602,6 +605,13 @@ async def run_post_stream(
 ) -> StreamingResponse:
     """Start a single-post draft session. SSE stream for the lifetime."""
     _project_for_user(db, user, req.project_id)
+    if req.plan_id is not None:
+        # The plan seeds the day and takes the post's link at the first save,
+        # so it has to be this project's: a plan id from another project
+        # would read that project's day and write the post into its board.
+        plan = _row_for_user(db, user, ContentPlan, req.plan_id, "Plan")
+        if plan.project_id != req.project_id:
+            raise HTTPException(404, "Plan not found")
     session_id = str(uuid.uuid4())
     _session_created_at[session_id] = time.monotonic()
     create_draft_session(session_id, req.project_id, plan_id=req.plan_id)
@@ -2081,27 +2091,59 @@ class FormatIn(BaseModel):
     name:       str = ""
     data:       dict = Field(default_factory=dict)
 
+    @field_validator("slug")
+    @classmethod
+    def _slug_shape(cls, v: str) -> str:
+        v = (v or "").strip().lower()
+        if not format_library.SLUG_RE.match(v):
+            raise ValueError("slug must be lowercase letters, digits and single hyphens")
+        return v
+
+    @field_validator("data")
+    @classmethod
+    def _data_shape(cls, v: dict) -> dict:
+        # An unknown media kind or channel would be a filter nothing matches:
+        # the format would silently never be offered. 422 now instead.
+        return format_library.validate_data(v)
+
 
 class FormatOut(BaseModel):
-    id:         UUID
-    project_id: UUID
-    slug:       str
-    name:       str
-    data:       dict
-    created_at: str
-    updated_at: str
+    # A built-in has no row and so no id; the app edits it by POSTing its slug,
+    # which creates the project's own copy. `overrides_builtin` says a custom
+    # row is standing in for one, so deleting it is "reset", not "delete".
+    id:                UUID | None = None
+    project_id:        UUID
+    slug:              str
+    name:              str
+    source:            Literal["builtin", "custom"]
+    description:       str = ""
+    media:             list[str] = Field(default_factory=list)
+    channels:          list[str] = Field(default_factory=list)
+    overrides_builtin: bool = False
+    data:              dict
+    created_at:        str = ""
+    updated_at:        str = ""
 
 
-def _format_out(f: ContentFormat) -> FormatOut:
+def _format_out(project_id: UUID, rec: dict) -> FormatOut:
     return FormatOut(
-        id=f.id,
-        project_id=f.project_id,
-        slug=f.slug,
-        name=f.name,
-        data=f.data or {},
-        created_at=f.created_at.isoformat(),
-        updated_at=f.updated_at.isoformat(),
+        id=rec.get("id"),
+        project_id=project_id,
+        slug=rec["slug"],
+        name=rec["name"],
+        source=rec["source"],
+        description=rec.get("description", ""),
+        media=rec.get("media", []),
+        channels=rec.get("channels", []),
+        overrides_builtin=bool(rec.get("overrides_builtin")),
+        data=rec.get("data") or {},
+        created_at=rec.get("created_at", ""),
+        updated_at=rec.get("updated_at", ""),
     )
+
+
+def _row_out(f: ContentFormat) -> FormatOut:
+    return _format_out(f.project_id, format_library.custom_record(f))
 
 
 @router.get("/content/formats")
@@ -2110,11 +2152,13 @@ def list_formats(
     user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> list[FormatOut]:
+    """The project's library: its own formats plus every built-in it has not
+    replaced (agents/content/formats.py)."""
     _project_for_user(db, user, project_id)
     rows = db.execute(
-        select(ContentFormat).where(ContentFormat.project_id == project_id).order_by(ContentFormat.slug)
+        select(ContentFormat).where(ContentFormat.project_id == project_id)
     ).scalars().all()
-    return [_format_out(r) for r in rows]
+    return [_format_out(project_id, rec) for rec in format_library.library(rows)]
 
 
 @router.post("/content/formats", status_code=201)
@@ -2137,12 +2181,12 @@ def upsert_format(
         db.add(existing)
         db.commit()
         db.refresh(existing)
-        return _format_out(existing)
+        return _row_out(existing)
     row = ContentFormat(**body.model_dump())
     db.add(row)
     db.commit()
     db.refresh(row)
-    return _format_out(row)
+    return _row_out(row)
 
 
 @router.patch("/content/formats/{format_id}")
@@ -2161,7 +2205,7 @@ def patch_format(
     db.add(row)
     db.commit()
     db.refresh(row)
-    return _format_out(row)
+    return _row_out(row)
 
 
 @router.delete("/content/formats/{format_id}")

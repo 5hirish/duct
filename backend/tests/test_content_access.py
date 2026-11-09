@@ -270,3 +270,30 @@ def test_every_route_on_the_router_demands_a_signed_in_caller():
         if "get_current_user" not in set(dependency_names(r.dependant))
     ]
     assert missing == [], f"routes reachable without a user: {missing}"
+
+
+# ---------------------------------------------------------------------------
+# A draft session's plan is this project's plan
+# ---------------------------------------------------------------------------
+
+
+def test_a_draft_cannot_be_seeded_from_another_projects_plan(db, content, stranger):
+    """The plan id on a draft request seeds the day and takes the post's link
+    at the first save, so a plan the caller cannot see is a 404 before any
+    session exists, and a plan they can see but named with another project is
+    refused too."""
+    theirs = Project(user_id=stranger.id, name="Stranger's brand", slug="strangers-brand")
+    db.add(theirs)
+    db.commit()
+    db.refresh(theirs)
+    db.add(ProjectMember(project_id=theirs.id, user_id=stranger.id, role=ROLE_OWNER))
+    db.commit()
+
+    res = client(db, stranger).post("/api/content/post/stream", json={
+        "project_id": str(theirs.id),
+        "plan_id": str(content["plan"].id),
+        "day_index": 0,
+    })
+    assert res.status_code == 404
+    db.refresh(content["plan"])
+    assert content["plan"].days in ([], None)
