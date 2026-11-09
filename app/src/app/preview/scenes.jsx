@@ -93,6 +93,9 @@ import PlanStrategy from "@/components/content/PlanStrategy";
 import PlanDayOne from "@/components/content/PlanDayOne";
 import AccountsTab from "@/components/content/AccountsTab";
 import AnalyticsView, { AnalyticsGate } from "@/components/content/AnalyticsView";
+import AnalyticsReport from "@/components/content/AnalyticsReport";
+import GrowthReportView from "@/components/content/report/GrowthReportView";
+import { GROWTH_REPORT, reportPayload } from "@/lib/__fixtures__/growthReport.mjs";
 import { DiscoverGate } from "@/components/content/DiscoverPage";
 import PlanList from "@/components/content/PlanList";
 import { PlanPeriodMenu, PlanPeriodToggle } from "@/components/content/PlanPeriodPicker";
@@ -3710,6 +3713,56 @@ export const SCENES = [
     render: () => (
       <div className="p-5">
         <PlanDayOne brand={PLAN_BRAND_READY} accounts={[]} scheduler={NO_SCHEDULER} vendors={PLAN_VENDORS_COLLABORATOR} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
+      </div>
+    ),
+  },
+  // The growth report over fixtures: `reads` answers the GET with one state
+  // and the POST with the "generating" one, so every state is a URL.
+  ...[
+    ["no_sources", "nothing connected", "Growth report, nothing to read from", "Every source is a dashed chip with its reason; the panel sends the person to the Toolbox or to a scheduler. Nothing to click that would spend a model run."],
+    ["empty", "sources ready, never written", "Growth report, before the first run", "Ready sources are ticked by default and the one button writes the report. The line under it names what will be read and how long it keeps."],
+    ["generating", "a run writing, no earlier copy", "Growth report being written", "The status line names the sources being read and the skeleton has the loaded layout's shape, so the swap changes texture, not geometry."],
+    ["generating_with_old", "a run writing over a stale copy", "Refreshing a stale report", "The day-old report stays readable, dimmed, while the new one is written; the pickers are disabled for the run."],
+    ["fresh", "written three hours ago", "Growth report, fresh", "The whole report: verdict, KPIs with their deltas, a line, ranked bars, a table, a pie with its legend, signals, actions, and the gaps at the foot."],
+    ["stale", "written forty hours ago", "Growth report, stale", "Served as it is, with the status line saying how old it is and Refresh as the primary button. Nothing regenerates by itself."],
+    ["failed", "the run failed, no earlier copy", "Growth report run failed", "The failure is said in the backend's words with the validation problems under it, and Try again is right there."],
+    ["failed_with_old", "the run failed, an older copy exists", "Refresh failed, old report kept", "A failed refresh never takes away the report the person had; the error sits above it."],
+  ].map(([state, label, title, note]) => ({
+    id: `analytics-report-${state.replace(/_/g, "-")}`,
+    state: label,
+    group: "AnalyticsReport",
+    title,
+    note,
+    render: () => (
+      <div className="p-5">
+        <AnalyticsReport
+          projectId="preview"
+          onLinkAccounts={() => {}}
+          reads={{
+            get: async () => reportPayload(state),
+            generate: async () => reportPayload("generating", { report: reportPayload(state).report }),
+          }}
+        />
+      </div>
+    ),
+  })),
+  {
+    id: "growth-report-view",
+    state: "the stored report alone",
+    group: "GrowthReportView",
+    title: "A growth report, as the artifact library shows it",
+    note: "The same view the Analytics tab draws, with no pickers: this is what opens from the library and the artifact pane.",
+    render: () => <div className="p-5"><GrowthReportView report={GROWTH_REPORT} /></div>,
+  },
+  {
+    id: "growth-report-view-sparse",
+    state: "one KPI block and one gap",
+    group: "GrowthReportView",
+    title: "A report with one block",
+    note: "A run that could read one source writes one block and says what it could not check. The layout holds at the smallest count.",
+    render: () => (
+      <div className="p-5">
+        <GrowthReportView report={{ ...GROWTH_REPORT, blocks: GROWTH_REPORT.blocks.slice(0, 1), sources: GROWTH_REPORT.sources.slice(0, 1), could_not_check: ["Everything but Search Console: no other source was connected."] }} />
       </div>
     ),
   },

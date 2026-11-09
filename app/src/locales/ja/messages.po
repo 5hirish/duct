@@ -1211,6 +1211,10 @@ msgstr "この会話を破棄して新しい会話を開始する（生成され
 msgid "About"
 msgstr "概要"
 
+#: src/components/content/AnalyticsReport.jsx
+msgid "About the growth report"
+msgstr "成長レポートについて"
+
 #: src/lib/memoryApi.js
 msgid "About you"
 msgstr "あなたについて"
@@ -1288,6 +1292,10 @@ msgstr "アクション"
 #: src/components/audit/AuditReportV1.jsx
 msgid "Action Plan"
 msgstr "アクションプラン"
+
+#: src/components/content/report/GrowthReportView.jsx
+msgid "Action:"
+msgstr "アクション:"
 
 #: src/components/commands/CommandPalette.jsx
 msgid "Actions"
@@ -2530,6 +2538,10 @@ msgstr "接続を確認"
 msgid "Check the connection. Behind a corporate proxy, Duct respects HTTPS_PROXY."
 msgstr "接続を確認してください。企業プロキシの背後では、DuctはHTTPS_PROXYを尊重します。"
 
+#: src/components/content/report/GrowthReportView.jsx
+msgid "Check:"
+msgstr "確認:"
+
 #: src/components/insights/desk/DeskCards.jsx
 #~ msgid "Checked"
 #~ msgstr "確認済み"
@@ -2587,6 +2599,10 @@ msgstr "{projectName}の{entity}を選択"
 #: src/components/models/ModelPicker.jsx
 msgid "Choose a model"
 msgstr "モデルを選択"
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "Choose an account in the Toolbox first"
+msgstr "まずツールボックスでアカウントを選択してください"
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Choose one"
@@ -2819,6 +2835,7 @@ msgstr "{vendor} を接続"
 msgid "Connect a model"
 msgstr "モデルを接続"
 
+#: src/components/content/AnalyticsReport.jsx
 #: src/components/content/PlanDayOne.jsx
 msgid "Connect a scheduler"
 msgstr "スケジューラーを接続"
@@ -2880,6 +2897,10 @@ msgstr "GitHubを接続"
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Connect one data source"
 msgstr "データソースを1つ接続"
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "Connect Search Console or Google Analytics, a scheduler for your posts, or an analytics MCP server such as PostHog or OpenSEO. The report reads whichever you tick."
+msgstr "Search ConsoleまたはGoogle Analytics、投稿のスケジューラ、またはPostHogやOpenSEOなどのアナリティクスMCPサーバーを接続してください。レポートはチェックしたものを読み込みます。"
 
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Connect without a key"
@@ -3233,6 +3254,10 @@ msgstr "アナリティクスを読み込めませんでした。"
 msgid "Couldn't load brand context."
 msgstr "ブランドコンテキストを読み込めませんでした。"
 
+#: src/components/content/AnalyticsReport.jsx
+msgid "Couldn't load the report."
+msgstr "レポートを読み込めませんでした。"
+
 #: src/components/connections/McpConnectors.jsx
 msgid "Couldn't load them. {loadError}"
 msgstr "読み込めませんでした。{loadError}"
@@ -3284,6 +3309,10 @@ msgstr "保存できませんでした。もう一度お試しください。"
 #: src/components/connections/McpConnectors.jsx
 msgid "Couldn't search the MCP Registry."
 msgstr "MCPレジストリを検索できませんでした。"
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "Couldn't start the report."
+msgstr "レポートを開始できませんでした。"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Couldn't use {name}"
@@ -4054,6 +4083,10 @@ msgstr "Duct のブリーフ、監査、投稿はすべてこのプロフィー�
 msgid "Duct's guess"
 msgstr "Ductの推測"
 
+#: src/components/content/AnalyticsReport.jsx
+msgid "Duct's insights agent reads the sources you tick, puts search, traffic, posts and signups on one page, and says what moved and what to do. A report is kept for a day; Refresh writes it again on your own model key."
+msgstr "Ductのインサイトエージェントは、チェックしたソースを読み込み、検索、トラフィック、投稿、サインアップを1ページにまとめ、何が変化し、何をすべきかを伝えます。レポートは1日間保持されます。更新すると、ご自身のモデルキーで再度作成されます。"
+
 #: src/lib/modelTiers.js
 msgid "Duct's key"
 msgstr "Ductのキー"
@@ -4206,6 +4239,10 @@ msgstr "あなたが編集しました"
 #: src/components/content/BrandContextForm.jsx
 msgid "editorial / minimal / bold"
 msgstr "エディトリアル / ミニマル / ボールド"
+
+#: src/components/content/report/GrowthReportView.jsx
+msgid "Effort:"
+msgstr "労力:"
 
 #: src/components/ProjectMembers.jsx
 msgid "Email address to invite"
@@ -4415,6 +4452,7 @@ msgid "FAIL"
 msgstr "失敗"
 
 #: src/app/(app)/content/page.jsx
+#: src/components/content/report/GrowthReportView.jsx
 msgid "failed"
 msgstr "失敗"
 
@@ -4969,6 +5007,10 @@ msgstr "グロースブリーフ"
 msgid "Growth Manager"
 msgstr "グロースマネージャー"
 
+#: src/components/content/AnalyticsReport.jsx
+msgid "Growth report"
+msgstr "成長レポート"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Growth stage context or constraints <0>(optional)</0>"
 msgstr "グロースステージのコンテキストまたは制約 <0>(オプション)</0>"
@@ -5164,6 +5206,10 @@ msgstr "MCPコネクタの仕組み"
 #: src/components/content/BrandContextForm.jsx
 msgid "How posts sound and what they must (or must not) say."
 msgstr "投稿のトーンと、何を言うべきか（または言うべきでないか）。"
+
+#: src/components/content/report/GrowthReportView.jsx
+msgid "How this was computed"
+msgstr "計算方法"
 
 #: src/app/(app)/memory/page.jsx
 #~ msgid "How you like to be worked with. Every agent reads it; only you can see it."
@@ -6315,6 +6361,10 @@ msgstr "注意が必要です · {reason}"
 #~ msgid "Needs reconnecting"
 #~ msgstr "再接続が必要です"
 
+#: src/components/content/AnalyticsReport.jsx
+msgid "Needs signing in again"
+msgstr "再度サインインが必要です"
+
 #: src/lib/contentReview.js
 msgid "Needs work"
 msgstr "要修正"
@@ -6663,6 +6713,10 @@ msgstr "まだプロジェクトがありません"
 msgid "No provider recorded."
 msgstr "プロバイダーは記録されていません。"
 
+#: src/components/content/AnalyticsReport.jsx
+msgid "No report yet"
+msgstr "まだレポートがありません"
+
 #: src/components/content/DiscoverPage.jsx
 msgid "No results returned. Try different hashtags or a wider niche."
 msgstr "結果が返されませんでした。別のハッシュタグを試すか、より広いニッチを試してください。"
@@ -6788,6 +6842,7 @@ msgstr "未確認"
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/McpConnectors.jsx
 #: src/components/content/AccountsTab.jsx
+#: src/components/content/AnalyticsReport.jsx
 msgid "Not connected"
 msgstr "未接続"
 
@@ -6967,6 +7022,10 @@ msgstr "これらのフィルターでは何も見つかりません。"
 #~ msgid "Nothing here yet."
 #~ msgstr "ここにはまだ何もありません。"
 
+#: src/components/content/report/GrowthReportView.jsx
+msgid "nothing in the window"
+msgstr "ウィンドウに何もありません"
+
 #: src/components/connections/ConnectorBrowser.jsx
 msgid "Nothing in this list matches “{query}”."
 msgstr "このリストには「{query}」に一致するものがありません。"
@@ -7046,6 +7105,10 @@ msgstr "まだ何も保存されていません。"
 #: src/components/content/FormatLibrary.jsx
 msgid "Nothing to preview yet."
 msgstr "まだプレビューするものはありません。"
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "Nothing to read from yet"
+msgstr "まだ読み込むものがありません"
 
 #: src/components/insights/Desk.jsx
 msgid "Nothing to report yet."
@@ -7383,6 +7446,7 @@ msgstr "プロジェクトタイムラインを開く"
 msgid "Open the tab to see what happened and what to do."
 msgstr "何が起こったか、どうすればよいかを確認するにはタブを開いてください。"
 
+#: src/components/content/AnalyticsReport.jsx
 #: src/components/insights/InsightsWorkspace.jsx
 #: src/components/workspace/AgentChat.jsx
 msgid "Open the Toolbox"
@@ -7569,6 +7633,10 @@ msgstr "10 MBを超えています"
 #: src/components/ProjectMembers.jsx
 msgid "Owner"
 msgstr "オーナー"
+
+#: src/components/content/report/GrowthReportView.jsx
+msgid "Owner:"
+msgstr "所有者:"
 
 #: src/app/not-found.js
 msgid "Page not found"
@@ -8199,6 +8267,10 @@ msgstr "自動実行されました"
 msgid "Reach"
 msgstr "リーチ"
 
+#: src/components/content/report/GrowthReportView.jsx
+msgid "read"
+msgstr "読み込み済み"
+
 #: src/components/onboarding/DocumentPicker.jsx
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read"
@@ -8215,6 +8287,10 @@ msgstr "メモリを読み込みました"
 #: src/components/connections/McpConnectors.jsx
 msgid "Read and write pages in your Notion workspace."
 msgstr "あなたのNotionワークスペースでページを読み書きします。"
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "Read from"
+msgstr "読み込み元"
 
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Read full screen"
@@ -8296,6 +8372,10 @@ msgstr "読み込み中…"
 #: src/components/settings/AgentAccess.jsx
 msgid "README, docs, landing copy"
 msgstr "README、ドキュメント、ランディングページの文面"
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "Reads {names}. The first report takes a minute or two and is kept for a day."
+msgstr "{names}を読み込みます。最初のレポート作成には1〜2分かかり、1日間保持されます。"
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Reads it, drafts the profile"
@@ -8452,6 +8532,10 @@ msgstr "今すぐ更新"
 #: src/components/content/AnalyticsView.jsx
 msgid "Refresh numbers"
 msgstr "数値を更新"
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "Refresh report"
+msgstr "レポートを更新"
 
 #: src/components/LocalInsightDetail.jsx
 msgid "Refreshing live data..."
@@ -8626,6 +8710,10 @@ msgstr "バグを報告"
 #: src/components/audit/ShareReport.jsx
 msgid "Report link"
 msgstr "レポートリンク"
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "Report template"
+msgstr "レポートテンプレート"
 
 #: src/app/(app)/artifacts/page.jsx
 #: src/lib/memoryApi.js
@@ -8839,6 +8927,7 @@ msgstr "{rowName} を取り消す"
 msgid "Revoke invitation to {invitee}"
 msgstr "{invitee}への招待を取り消す"
 
+#: src/components/content/report/GrowthReportView.jsx
 #: src/components/GoogleAdsReport.js
 msgid "Risk"
 msgstr "リスク"
@@ -9876,6 +9965,10 @@ msgstr "監査対象サイト"
 msgid "Sitemap"
 msgstr "サイトマップ"
 
+#: src/components/content/report/GrowthReportView.jsx
+msgid "Size:"
+msgstr "サイズ:"
+
 #: src/components/content/PostViewport.jsx
 msgid "Sketching image prompts…"
 msgstr "画像プロンプトをスケッチ中…"
@@ -9897,6 +9990,10 @@ msgstr "今回はスキップ"
 #: src/app/layout.js
 msgid "Skip to main content"
 msgstr "メインコンテンツへスキップ"
+
+#: src/components/content/report/GrowthReportView.jsx
+msgid "skipped"
+msgstr "スキップ済み"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Skipped {name}"
@@ -10018,6 +10115,10 @@ msgstr "ソース"
 msgid "Source: {source}"
 msgstr "ソース: {source}"
 
+#: src/components/content/report/GrowthReportView.jsx
+msgid "Sources:"
+msgstr "ソース:"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "SPA pages"
 msgstr "SPAページ"
@@ -10103,6 +10204,7 @@ msgid "Starting session…"
 msgstr "セッションを開始しています…"
 
 #: src/app/(app)/audit/seo/page.jsx
+#: src/components/content/AnalyticsReport.jsx
 msgid "Starting…"
 msgstr "開始中…"
 
@@ -10310,6 +10412,10 @@ msgstr "テイク {number}、公開中"
 #: src/components/insights/desk/DeskCards.jsx
 msgid "Take a fresh look"
 msgstr "再確認する"
+
+#: src/components/content/report/GrowthReportView.jsx
+msgid "Takeaway:"
+msgstr "要点:"
 
 #: src/components/content/PostVideo.jsx
 msgid "Takes"
@@ -10682,6 +10788,10 @@ msgstr "OpenAI 形式の API を提供する公開 https アドレス（通常�
 msgid "The reply is ready when you are."
 msgstr "準備ができたら返信できます。"
 
+#: src/components/content/AnalyticsReport.jsx
+msgid "The report could not be written."
+msgstr "レポートを作成できませんでした。"
+
 #: src/components/content/DiscoverPage.jsx
 msgid "The research agent cites what you saved when it proposes topics."
 msgstr "リサーチエージェントは、トピックを提案するときに保存した投稿を引用します。"
@@ -10995,6 +11105,10 @@ msgstr "このプロジェクトのメモリ"
 msgid "This removes the project and its configuration from this browser, and cannot be undone. Saved reports stay where they are."
 msgstr "これにより、このブラウザからプロジェクトとその設定が削除され、元に戻すことはできません。保存されたレポートはそのまま残ります。"
 
+#: src/components/artifacts/ArtifactRenderer.jsx
+msgid "This report has nothing stored to draw."
+msgstr "このレポートには描画するデータが保存されていません。"
+
 #: src/components/settings/AgentConsent.jsx
 msgid "This request has expired"
 msgstr "このリクエストは期限切れです"
@@ -11070,6 +11184,10 @@ msgstr "スレッド"
 #: src/components/insights/desk/DeskLists.jsx
 #~ msgid "Threads"
 #~ msgstr "スレッド"
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "Ticked sources are read into the report."
+msgstr "チェックされたソースはレポートに読み込まれます。"
 
 #: src/app/(app)/settings/models/page.jsx
 msgid "Tiers"
@@ -11180,6 +11298,7 @@ msgstr "App StoreとPlay全体でのトライアル、更新、払い戻し、MR
 #: src/components/AppErrorPanel.jsx
 #: src/components/connections/McpConnectors.jsx
 #: src/components/connections/ProviderCard.jsx
+#: src/components/content/AnalyticsReport.jsx
 #: src/components/LoadError.jsx
 msgid "Try again"
 msgstr "再試行"
@@ -11644,6 +11763,7 @@ msgstr "「{replacedTitle}」でした"
 msgid "was “{replacedTitle}” until {replacedUntil}"
 msgstr "{replacedUntil}まで「{replacedTitle}」でした"
 
+#: src/components/content/report/GrowthReportView.jsx
 #: src/components/GoogleAdsReport.js
 msgid "Watch"
 msgstr "視聴"
@@ -11735,6 +11855,10 @@ msgstr "{projectName}で何が変更され、誰が変更したか"
 #: src/components/insights/desk/DeskCards.jsx
 msgid "What changed since {since}?"
 msgstr "{since} 以降、何が変わりましたか？"
+
+#: src/components/content/report/GrowthReportView.jsx
+msgid "What could not be checked"
+msgstr "確認できなかったもの"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "What currently limits this metric most? <0>(optional)</0>"
@@ -12005,6 +12129,7 @@ msgstr "このブラウザセッションのみで保持されます — タブ�
 msgid "Will be stored in your OS keychain on this machine. Duct can use it only while the app is open, so anything that runs while it’s closed waits until you’re back."
 msgstr "このマシンのOSキーチェーンに保存されます。Ductがこれを使えるのはアプリが開いている間だけなので、閉じている間に実行される処理は、次にアプリを開くまで待機します。"
 
+#: src/components/content/report/GrowthReportView.jsx
 #: src/components/GoogleAdsReport.js
 msgid "Win"
 msgstr "勝利"
@@ -12062,6 +12187,10 @@ msgstr "作業中…"
 msgid "Worth adding next"
 msgstr "次に追加すべきもの"
 
+#: src/components/content/AnalyticsReport.jsx
+msgid "Write the report"
+msgstr "レポートを作成"
+
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Write to me in"
 msgstr "で私に書いてください"
@@ -12086,6 +12215,14 @@ msgstr "キャプションを書き込み中…"
 msgid "Writing the hook…"
 msgstr "フックを書いています…"
 
+#: src/components/content/AnalyticsReport.jsx
+msgid "Writing the report"
+msgstr "レポートを作成中"
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "Writing the report · reading {names}"
+msgstr "レポートを作成中 · {names}を読み込み中"
+
 #: src/components/audit/AuditReport.jsx
 #: src/components/PipelineProgress.jsx
 msgid "Writing your report…"
@@ -12095,9 +12232,22 @@ msgstr "レポートを作成中…"
 msgid "writing…"
 msgstr "書き込み中…"
 
+#: src/components/content/AnalyticsReport.jsx
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Writing…"
 msgstr "書き込み中…"
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "Written {when}"
+msgstr "{when}に作成済み"
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "Written {when} · kept until {until}"
+msgstr "{when}に作成済み · {until}まで保持"
+
+#: src/components/content/AnalyticsReport.jsx
+msgid "Written {when}, older than {ttl} hours. The numbers may have moved; Refresh writes it again."
+msgstr "{when}に作成済み、{ttl}時間以上経過しています。数値が変動している可能性があります。更新すると再度作成されます。"
 
 #: src/components/connections/logos.jsx
 msgid "xAI"

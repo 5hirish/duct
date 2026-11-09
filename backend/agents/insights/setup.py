@@ -214,7 +214,10 @@ def render_data_sources(sources: list[dict]) -> str:
     for src in sources:
         status = str(src.get("status") or "")
         line = f"- {src.get('connector_id', '')}: {status}"
-        hint = _SOURCE_STATUS_HINTS.get(status, "")
+        # A row may bring its own hint: the schedulers are connected in
+        # Content → Accounts, and "RequestConnection" would send the agent
+        # down a tool that cannot do it.
+        hint = str(src.get("hint") or _SOURCE_STATUS_HINTS.get(status, ""))
         if status == "bound" and (src.get("account_id") or src.get("account_name")):
             account = str(src.get("account_id") or "")
             name = str(src.get("account_name") or "")
@@ -252,7 +255,9 @@ def data_sources_block(run: InsightsRun, *, user_id: UUID | None) -> str:
 
         with next(db_session()) as db:
             sources = list_data_sources(db, user_id=user_id, project_id=run.project_id)
-        return render_data_sources([s.as_dict() for s in sources])
+            rows = [s.as_dict() for s in sources]
+            rows.append(_publishers_source(db, run.project_id))
+        return render_data_sources(rows)
     except Exception:
         logger.warning("insights: data sources block unavailable", exc_info=True)
         return ""
@@ -315,3 +320,27 @@ async def memory_blocks(
         except Exception:
             logger.debug("insights: MEMORY_RECALLED emit failed", exc_info=True)
     return context.text
+
+
+def _publishers_source(db, project_id: UUID) -> dict:
+    """The project's schedulers as one data-source line. They are a vendor key
+    on the owner, not a connector on the user, so ``list_data_sources`` never
+    sees them; without this line the agent read ``social_post_metrics`` in
+    the catalog and had no way to know whether the project could answer it."""
+    from agents.insights.catalog.publishers import PUBLISHERS_SOURCE
+    from models.project import Project
+    from service.publishers.registry import connected_specs
+
+    proj = db.get(Project, project_id)
+    specs = connected_specs(proj.user_id, db) if proj is not None else []
+    if specs:
+        return {
+            "connector_id": PUBLISHERS_SOURCE,
+            "status": "bound",
+            "account_id": ", ".join(s.label for s in specs),
+        }
+    return {
+        "connector_id": PUBLISHERS_SOURCE,
+        "status": "not_connected",
+        "hint": "no scheduler connected — the owner connects PostBridge or Zernio in Content → Accounts",
+    }

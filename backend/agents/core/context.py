@@ -9,6 +9,8 @@ a paid-ads insights run produce a clean, comparable ``<business_context>`` block
 
 from __future__ import annotations
 
+from typing import Any
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from agents.core.prompts import xml_block
@@ -240,3 +242,57 @@ def format_agent_context(data: dict | None) -> str:
         "agent_context",
         "Stored working context for this project (maintained across sessions):\n" + body,
     )
+
+
+def competitor_names(competition: dict | None) -> list[str]:
+    """Competitor names off the project's competition blob: strings, or
+    dicts with a name (and maybe a URL), as onboarding writes them."""
+    names: list[str] = []
+    for item in (competition or {}).get("competitors") or []:
+        if isinstance(item, str) and item.strip():
+            names.append(item.strip())
+        elif isinstance(item, dict):
+            name = str(item.get("name") or item.get("url") or "").strip()
+            if name:
+                names.append(name)
+    return names
+
+
+def business_context_from_project(project: Any) -> BusinessContext:
+    """The ``BusinessContext`` a stored project row implies.
+
+    The browser sends one with every interactive request, built from the same
+    fields; a run with no browser (the scheduled brief, the Analytics tab's
+    report, the content plan) has only the row. One mapping, so the agent
+    reads the same project whichever door it came through — the content
+    runner carried its own copy until this existed.
+    """
+    targets = project.targets if isinstance(getattr(project, "targets", None), dict) else {}
+    competition = project.competition if isinstance(getattr(project, "competition", None), dict) else {}
+    audience = project.audience if isinstance(getattr(project, "audience", None), dict) else {}
+    goals = [
+        str(targets[k]).strip()
+        for k in ("north_star_metric", "north_star_goal_window", "primary_kpi")
+        if targets.get(k)
+    ]
+    return BusinessContext.coerce({
+        "business_name": project.company_name or project.name or "",
+        "business_description": project.pitch or project.description or "",
+        "industry": project.industry or "",
+        "business_model": project.business_model or "",
+        "positioning_statement": str(competition.get("positioning_statement") or competition.get("compare_against") or ""),
+        "audience_segment": str(audience.get("primary_segment") or ""),
+        "business_goals": "; ".join(goals),
+        "competitors": competitor_names(competition),
+        "primary_organic_kpi": str(targets.get("primary_kpi") or ""),
+        "monthly_budget": _number(targets.get("monthly_budget")),
+        "target_cpa": _number(targets.get("target_cpa")),
+        "target_roas": _number(targets.get("target_roas")),
+    })
+
+
+def _number(value: Any) -> float:
+    try:
+        return float(value) if value not in (None, "") else 0.0
+    except (TypeError, ValueError):
+        return 0.0
