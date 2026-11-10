@@ -1,6 +1,6 @@
 "use client";
 
-// The Plan tab before the first plan, and the first thing Content Studio
+// The Plans tab before the first plan, and the first thing Content Studio
 // shows anyone, because Plan is its opening tab.
 //
 // It replaces "No plan yet" with what Duct already knows (the DeskDayOne

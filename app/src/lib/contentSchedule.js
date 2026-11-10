@@ -217,6 +217,28 @@ export function planState(plan, today = startOfDay(new Date())) {
   return PlanState.RUNNING;
 }
 
+const STATE_RANK = { [PlanState.RUNNING]: 0, [PlanState.UPCOMING]: 1, [PlanState.ENDED]: 2 };
+
+/**
+ * The plan picker's order: the plan running today first, then the ones ahead,
+ * soonest first, then the ones that ended, latest first. A plan with no date
+ * reads as ahead and goes last among them.
+ */
+export function orderPlans(plans, today = startOfDay(new Date())) {
+  const keyed = (Array.isArray(plans) ? plans : []).map((plan) => ({
+    plan,
+    state: planState(plan, today),
+    start: planStartOf(plan)?.getTime() ?? Infinity,
+  }));
+  keyed.sort((a, b) => {
+    const byState = STATE_RANK[a.state] - STATE_RANK[b.state];
+    if (byState) return byState;
+    if (a.start === b.start) return 0;
+    return a.state === PlanState.ENDED ? b.start - a.start : a.start - b.start;
+  });
+  return keyed.map((k) => k.plan);
+}
+
 /**
  * Every day of a plan with its effective schedule, in date order, the plan's
  * own order breaking ties and undated days last. The one place the views get
@@ -266,6 +288,48 @@ export function planProgress(items) {
     else out.drafted += 1;
   }
   return out;
+}
+
+/**
+ * What is left to act on in a plan, as of `today`: the days that passed with
+ * nothing drafted (`missed`) and the days from today on still waiting for a
+ * draft (`open`), the ones a revision can still change. Drafted and posted
+ * days count for neither: a revision keeps them.
+ */
+export function planOutlook(plan, today = startOfDay(new Date())) {
+  const out = { state: planState(plan, today), missed: 0, open: 0 };
+  for (const it of planItems(plan, {}, { today })) {
+    if (it.schedule.missed) out.missed += 1;
+    else if (it.status === "pending" && it.schedule.date && it.schedule.date >= today) out.open += 1;
+  }
+  return out;
+}
+
+/** The first day from `today` on still waiting for a draft: { day, index } as planItems has it, or null. */
+export function nextOpenDay(plan, today = startOfDay(new Date())) {
+  return (
+    planItems(plan, {}, { today }).find(
+      (it) => it.status === "pending" && it.schedule.date && it.schedule.date >= today
+    ) || null
+  );
+}
+
+/** The next steps a plan session offers over its composer. */
+export const PlanAction = Object.freeze({ REVISE: "revise", CATCH_UP: "catch_up" });
+
+/**
+ * Which of them a plan offers, from its dates and days alone, so they are
+ * instant and always true: revise what is left while a day ahead still waits
+ * for a draft, and catch up when days passed with nothing drafted and there
+ * are days ahead to fit them into. Nothing for an ended plan.
+ */
+export function planActions(plan, today = startOfDay(new Date())) {
+  if (!plan || !Array.isArray(plan.days) || plan.days.length === 0) return [];
+  const { state, missed, open } = planOutlook(plan, today);
+  if (state === PlanState.ENDED || open === 0) return [];
+  const actions = [{ id: PlanAction.REVISE }];
+  if (missed > 0) actions.push({ id: PlanAction.CATCH_UP, missed });
+  return actions;
 }
 
 export const AgendaGroup = Object.freeze({ MISSED: "missed", WEEK: "week", EARLIER: "earlier", UNDATED: "undated" });

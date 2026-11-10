@@ -238,6 +238,52 @@ def create_draft_session(
 
 
 # ---------------------------------------------------------------------------
+# A plan proposal that outlived its session
+# ---------------------------------------------------------------------------
+
+
+def _held_proposal_sync(session: ContentSession):
+    from sqlmodel import Session
+
+    from agents.content.plan_proposal import held_proposal
+    from db.session import get_engine
+
+    engine = get_engine()
+    if engine is None:
+        return None
+    with Session(engine) as db:
+        return held_proposal(db, getattr(session, "conversation_id", None))
+
+
+async def _restore_proposal(session: ContentSession, emit: EmitFn) -> None:
+    """Show a resumed plan session the proposal its conversation still holds,
+    with Accept, Modify and Reject, as the session that made it did
+    (agents/content/plan_proposal.py). Only one made against the plan this
+    session manages: a proposal for another plan, or a new plan for a period
+    that has one since, would write over the wrong thing. ``replay``, because
+    it is the same proposal, not a second one."""
+    from agents.content.plan_proposal import PROPOSED
+
+    if getattr(session, "proposal", None) is not None:
+        return
+    try:
+        held = await asyncio.to_thread(_held_proposal_sync, session)
+    except Exception:
+        logger.warning("content: held proposal not read for session %s", session.session_id, exc_info=True)
+        return
+    if held is None or held.project_id != session.project_id or held.replaces_plan_id != session.plan_id:
+        return
+    session.proposal = held
+    await emit({
+        "event": ContentEvent.PLAN_GENERATED,
+        "session_id": session.session_id,
+        "plan_id": str(held.replaces_plan_id) if held.replaces_plan_id else None,
+        "payload": held.payload(PROPOSED),
+        "replay": True,
+    })
+
+
+# ---------------------------------------------------------------------------
 # Brand context loader
 # ---------------------------------------------------------------------------
 
@@ -805,6 +851,7 @@ class ContentRunner:
             session.active_channels = list(brand.active_channels or [])
             today = utcnow().date()
             performance = await _channel_mix(project_id, brand, (managed or default_period(today)).days)
+            session.channel_mix = performance
             business = await _safely(asyncio.to_thread(_load_business_block, project_id), "", "business context")
             voice = render_voice_stanza(brand.voice_rules, brand.writing_samples, with_rules=False)
             review = await _safely(
@@ -1353,6 +1400,11 @@ class ContentRunner:
             )
             session.needs_reprime = True
 
+        async def _on_resume(snapshot: Any) -> None:
+            await _reprime_if_no_checkpoint(snapshot)
+            if is_plan:
+                await _restore_proposal(session, emit)
+
         loop = DeepSession(
             agent,
             session=session,
@@ -1369,7 +1421,7 @@ class ContentRunner:
             on_tool_result=_on_tool_result,
             finish_payload=_finish_payload,
             after_turn=_nudge_if_empty,
-            on_resume=_reprime_if_no_checkpoint,
+            on_resume=_on_resume,
         )
         await loop.run(opening_prompt, resume=resume, chat_idle_timeout=chat_idle_timeout)
 

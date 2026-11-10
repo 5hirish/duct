@@ -15,13 +15,22 @@ route (write) share, so what the person saw is what lands:
 * every other day takes the proposal;
 * a period with no plan yet takes the proposal whole.
 
-No DB session is opened here except in :func:`apply_proposal`; the merge is
-plain data so it can be previewed and tested without one.
+A proposal is also **held on the conversation** (``agent_conversations.meta``),
+because the session is only in the server's memory: a deploy or a reload used
+to lose a plan the person had not decided on yet, and the board went on
+showing the old one while the chat said the new one was made. A resumed
+session takes it back (the runner's resume hook) and shows it again; Accept
+and Reject release it. Accept merges against the plan **as it stands then**,
+not as it stood when the agent proposed: a day drafted, or gone by, while the
+proposal waited is kept like any other.
+
+No DB session is opened here: the merge is plain data so it can be previewed
+and tested without one, and the writers below take the caller's session.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import date, timedelta
 from typing import Any
 from uuid import UUID, uuid4
@@ -31,6 +40,10 @@ from agents.content.plan_period import PlanPeriod, default_period, keep_drafted_
 PROPOSED = "proposed"
 ACCEPTED = "accepted"
 REJECTED = "rejected"
+
+# Where a conversation holds the proposal waiting on the person
+# (``AgentConversation.meta``, the catch-all that needs no migration).
+HELD_PROPOSAL_KEY = "plan_proposal"
 
 
 @dataclass
@@ -47,6 +60,41 @@ class PlanProposal:
     kept_days: list[int]      # indexes kept from the live plan (drafted or past)
     replaces_plan_id: UUID | None
     created: date = field(default_factory=date.today)
+    # The agent's own days, before the merge: Accept merges them again
+    # against the plan as it is by then.
+    proposed_days: list[dict] = field(default_factory=list)
+
+    def to_json(self) -> dict[str, Any]:
+        out = asdict(self)
+        out.update(
+            project_id=str(self.project_id),
+            start_date=self.start_date.isoformat(),
+            created=self.created.isoformat(),
+            replaces_plan_id=str(self.replaces_plan_id) if self.replaces_plan_id else None,
+        )
+        return out
+
+    @classmethod
+    def from_json(cls, raw: Any) -> "PlanProposal | None":
+        """The proposal a conversation holds, or None for anything that is not one."""
+        if not isinstance(raw, dict):
+            return None
+        try:
+            return cls(
+                proposal_id=str(raw["proposal_id"]),
+                project_id=UUID(str(raw["project_id"])),
+                name=str(raw.get("name") or ""),
+                start_date=date.fromisoformat(str(raw["start_date"])),
+                character=dict(raw.get("character") or {}),
+                strategy=dict(raw.get("strategy") or {}),
+                days=list(raw.get("days") or []),
+                kept_days=[int(i) for i in raw.get("kept_days") or []],
+                replaces_plan_id=UUID(str(raw["replaces_plan_id"])) if raw.get("replaces_plan_id") else None,
+                created=date.fromisoformat(str(raw.get("created") or raw["start_date"])),
+                proposed_days=list(raw.get("proposed_days") or []),
+            )
+        except (KeyError, TypeError, ValueError):
+            return None
 
     def payload(self, status: str = PROPOSED) -> dict[str, Any]:
         """The PLAN_GENERATED payload: the plan as the viewport renders it,
@@ -117,6 +165,8 @@ def build_proposal(
         days=days,
         kept_days=kept,
         replaces_plan_id=live_plan_id,
+        created=today,
+        proposed_days=list(new_days),
     )
 
 
@@ -132,6 +182,7 @@ def apply_proposal(db: Any, proposal: PlanProposal, *, now: Any):
     row = db.get(ContentPlan, proposal.replaces_plan_id) if proposal.replaces_plan_id else None
     if row is not None and row.project_id != proposal.project_id:
         row = None
+    days = proposal.days
     if row is None:
         row = ContentPlan(
             project_id=proposal.project_id,
@@ -143,13 +194,46 @@ def apply_proposal(db: Any, proposal: PlanProposal, *, now: Any):
         if proposal.name:
             row.name = proposal.name
         row.updated_at = now
+        if proposal.proposed_days:
+            days, _ = merge_proposal(
+                row.days, proposal.proposed_days, start=row.start_date or proposal.start_date, today=now.date()
+            )
     row.character = proposal.character
     row.strategy = proposal.strategy
-    row.days = proposal.days
+    row.days = days
     db.add(row)
     db.commit()
     db.refresh(row)
     return row
+
+
+def hold_proposal(db: Any, conversation_id: UUID | None, proposal: PlanProposal | None) -> None:
+    """Keep ``proposal`` on its conversation until the person decides, or
+    release it (``None``). A newer proposal replaces an older one, as on the
+    session. No-op without a conversation; the caller commits nothing else."""
+    if conversation_id is None:
+        return
+    from models.content.conversation import AgentConversation
+
+    conv = db.get(AgentConversation, conversation_id)
+    if conv is None:
+        return
+    meta = {k: v for k, v in (conv.meta or {}).items() if k != HELD_PROPOSAL_KEY}
+    if proposal is not None:
+        meta[HELD_PROPOSAL_KEY] = proposal.to_json()
+    conv.meta = meta
+    db.add(conv)
+    db.commit()
+
+
+def held_proposal(db: Any, conversation_id: UUID | None) -> PlanProposal | None:
+    """The proposal a conversation is waiting on the person for, if any."""
+    if conversation_id is None:
+        return None
+    from models.content.conversation import AgentConversation
+
+    conv = db.get(AgentConversation, conversation_id)
+    return PlanProposal.from_json((conv.meta or {}).get(HELD_PROPOSAL_KEY)) if conv is not None else None
 
 
 def day_date(start: date | None, index: int) -> date | None:
@@ -159,11 +243,14 @@ def day_date(start: date | None, index: int) -> date | None:
 
 __all__ = [
     "ACCEPTED",
+    "HELD_PROPOSAL_KEY",
     "PROPOSED",
     "REJECTED",
     "PlanProposal",
     "apply_proposal",
     "build_proposal",
     "day_date",
+    "held_proposal",
+    "hold_proposal",
     "merge_proposal",
 ]

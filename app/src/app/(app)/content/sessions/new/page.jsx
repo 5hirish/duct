@@ -2,13 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Trans } from "@lingui/react/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import ContentWorkspace from "@/components/content/ContentWorkspace";
 import PlanViewport from "@/components/content/PlanViewport";
+import PlanQuickActions from "@/components/content/PlanQuickActions";
 import { getPlan, listPlans } from "@/lib/contentApi";
 import { parseDate, planCovering } from "@/lib/contentSchedule";
+import { PlanStatus } from "@/lib/contentEnums";
 import { getActiveProjectId } from "@/lib/projects";
 import { useLeaveOnProjectSwitch } from "@/hooks/useActiveProjectId";
+import { useTrailTitle } from "@/lib/pageTitle";
+import { planDisplayName } from "@/lib/planStrategy";
 
 /**
  * The plan manager: a plan_month session over one period's plan.
@@ -16,7 +20,7 @@ import { useLeaveOnProjectSwitch } from "@/hooks/useActiveProjectId";
  *   ?plan=<id>              — revise that plan. Its conversation is reopened
  *                             when it has one, and the pane shows the plan
  *                             straight away.
- *   ?start=<day>&days=<n>   — plan that period (the Plan tab's "New plan" and
+ *   ?start=<day>&days=<n>   — plan that period (the Plans tab's "New plan" and
  *                             "Plan ahead", once someone picked how far).
  *   neither                 — the plan covering today, or a new one for the
  *                             month in progress when none does.
@@ -35,6 +39,10 @@ export default function NewPlanSessionPage() {
   const [setup, setSetup] = useState(null); // { projectId, plan, start, days }
   // The plan is written into the project the page opened on.
   useLeaveOnProjectSwitch();
+  const { t } = useLingui();
+  // The trail says which plan: its name while revising one, "New" otherwise.
+  const shortId = setup?.plan?.id?.slice(0, 8) || "";
+  useTrailTitle(setup?.plan ? planDisplayName(setup.plan.name) || t`Plan ${shortId}` : "");
 
   useEffect(() => {
     const projectId = getActiveProjectId();
@@ -52,7 +60,6 @@ export default function NewPlanSessionPage() {
       const plan = meta ? await getPlan(meta.id).catch(() => meta) : null;
       if (cancelled) return;
       setSetup({ projectId, plan, start: plan ? null : start, days: plan ? null : days });
-      if (plan) setPlanId(plan.id);
     })();
     return () => { cancelled = true; };
   }, [router]);
@@ -90,6 +97,15 @@ export default function NewPlanSessionPage() {
             building={building}
             onSendMessage={onSendMessage}
             sessionId={sessionId}
+          />
+        )}
+        renderFooter={({ payload, idle, onSendMessage }) => (
+          // A proposal waiting on Accept, Modify or Reject is the next step on
+          // its own; a rejected one leaves the plan the page opened on.
+          <PlanQuickActions
+            plan={payload && payload.status !== PlanStatus.REJECTED ? payload : plan}
+            hidden={!idle || payload?.status === PlanStatus.PROPOSED}
+            onSend={onSendMessage}
           />
         )}
       />

@@ -112,7 +112,7 @@ def _plans(engine) -> list:
         return db.execute(select(ContentPlan)).scalars().all()
 
 
-def _accept(engine, session):
+def _accept(engine, session, now=None):
     """What the accept route does once the person clicks: write the proposal."""
     from sqlmodel import Session
 
@@ -120,7 +120,7 @@ def _accept(engine, session):
     from utils.dates import utcnow
 
     with Session(engine) as db:
-        row = apply_proposal(db, session.proposal, now=utcnow())
+        row = apply_proposal(db, session.proposal, now=now or utcnow())
         session.plan_id, session.proposal = row.id, None
         return row
 
@@ -155,6 +155,19 @@ def test_a_submit_proposes_and_writes_nothing_until_accepted(engine):
     assert stored.id == row.id and [d["topic"] for d in stored.days] == ["third0", "third1", "third2"]
 
 
+def test_the_proposal_carries_the_mix_the_plan_was_made_from(engine):
+    from agents.content.channel_mix import Goal, GoalKind, build_mix
+    from agents.content.schema import make_session
+
+    session = make_session("s", uuid4(), "plan_month")
+    session.period_start, session.period_days = date(2031, 10, 7), 3
+    session.channel_mix = build_mix([], ["tiktok", "linkedin"], Goal(GoalKind.INTENT), 3, None)
+    _submit(session, _days(3))
+    mix = session.proposal.strategy["mix"]
+    assert [c["channel"] for c in mix["channels"]] == ["tiktok", "linkedin"]
+    assert _accept(engine, session).strategy["mix"] == mix
+
+
 def test_a_proposal_on_a_live_plan_keeps_drafted_days_and_the_past(engine):
     """Accept replaces the plan from today on: a drafted day stays because the
     board finds the draft through it, and a day before today stays because
@@ -182,7 +195,8 @@ def test_a_proposal_on_a_live_plan_keeps_drafted_days_and_the_past(engine):
     from datetime import datetime, timezone
 
     # Today is day index 1, so index 0 is the past.
-    content_tools.utcnow = lambda: datetime(2026, 10, 2, 12, tzinfo=timezone.utc)  # type: ignore[assignment]
+    today = datetime(2026, 10, 2, 12, tzinfo=timezone.utc)
+    content_tools.utcnow = lambda: today  # type: ignore[assignment]
     try:
         result = _submit(session, _days(3, "new"))
     finally:
@@ -191,10 +205,89 @@ def test_a_proposal_on_a_live_plan_keeps_drafted_days_and_the_past(engine):
     assert result["kept_days"] == [0, 1]
     assert [d["topic"] for d in session.proposal.days] == ["past", "drafted", "new2"]
 
-    _accept(engine, session)
+    _accept(engine, session, now=today)
     (stored,) = _plans(engine)
     assert stored.id == plan_id
     assert [d["topic"] for d in stored.days] == ["past", "drafted", "new2"]
+
+
+def test_accept_merges_against_the_plan_as_it_is_by_then(engine):
+    """A proposal can wait days now (it is held on the conversation), and the
+    plan moves meanwhile: a day drafted, or gone by, while it waited stays."""
+    from datetime import datetime, timezone
+
+    from sqlmodel import Session
+
+    from agents.content.schema import make_session
+    from models.content import ContentPlan
+
+    project, start = uuid4(), date(2031, 10, 1)
+    with Session(engine) as db:
+        row = ContentPlan(project_id=project, start_date=start, days=_days(3, "old"))
+        db.add(row)
+        db.commit()
+        db.refresh(row)
+        plan_id = row.id
+    session = make_session("s", project, "plan_month")
+    session.plan_id, session.period_start, session.period_days = plan_id, start, 3
+    _submit(session, _days(3, "new"))
+
+    drafted = str(uuid4())
+    with Session(engine) as db:
+        row = db.get(ContentPlan, plan_id)
+        row.days = [row.days[0], row.days[1], {**row.days[2], "post_id": drafted}]
+        db.add(row)
+        db.commit()
+    _accept(engine, session, now=datetime(2031, 10, 2, 9, tzinfo=timezone.utc))
+    (stored,) = _plans(engine)
+    assert [d["topic"] for d in stored.days] == ["old0", "new1", "old2"]
+    assert stored.days[2]["post_id"] == drafted
+
+
+def test_a_proposal_is_held_on_its_conversation_until_the_person_decides(engine):
+    from sqlmodel import Session
+
+    from agents.content.plan_proposal import HELD_PROPOSAL_KEY, held_proposal, hold_proposal
+    from agents.content.schema import make_session
+    from models.content.conversation import AgentConversation
+
+    project = uuid4()
+    with Session(engine) as db:
+        conv = AgentConversation(agent_type="tiktok_studio", project_id=project, mode="plan_month")
+        db.add(conv)
+        db.commit()
+        conv_id = conv.id
+    session = make_session("s", project, "plan_month")
+    session.conversation_id = conv_id
+    session.period_start, session.period_days = date(2031, 10, 7), 3
+    _submit(session, _days(3, "kept"))
+
+    with Session(engine) as db:
+        held = held_proposal(db, conv_id)
+        assert held == session.proposal, "the same proposal, round-tripped"
+
+    # The person decides: the conversation lets go of it and says what they chose.
+    from agents.content.persistence import load_events
+    from routes.content import _record_plan_decision
+
+    with Session(engine) as db:
+        _record_plan_decision(db, session, held, "rejected")
+        assert HELD_PROPOSAL_KEY not in db.get(AgentConversation, conv_id).meta
+        (decision,) = load_events(db, conv_id)
+        assert (decision.kind, decision.data["decision"]) == ("plan_decision", "rejected")
+        hold_proposal(db, conv_id, held)
+        assert held_proposal(db, conv_id) == held
+
+
+def test_a_plan_built_on_one_unproven_hook_is_refused(engine):
+    from agents.content.schema import make_session
+
+    session = make_session("s", uuid4(), "plan_month")
+    session.period_start, session.period_days = date(2031, 10, 7), 8
+    days = [{**d, "hook_type": "transformation_reveal" if i < 3 else f"hook{i}"} for i, d in enumerate(_days(8))]
+    result = _submit(session, days)
+    assert result["status"] == "error" and "transformation_reveal is on 3 of tiktok's 8 days" in result["message"]
+    assert session.proposal is None
 
 
 def test_a_day_on_a_channel_the_brand_does_not_post_on_is_refused(engine):

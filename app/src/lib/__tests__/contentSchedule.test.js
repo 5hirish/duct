@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_PLAN_DAYS, PlanLength, monthPeriod, nextPlanStart, planPeriodOptions, planStartOf, AgendaGroup, PlanState, agendaGroups, isMissed, planItems, planProgress, planState } from "../contentSchedule";
+import { MAX_PLAN_DAYS, PlanLength, monthPeriod, nextPlanStart, planPeriodOptions, planStartOf, AgendaGroup, PlanState, agendaGroups, isMissed, planItems, orderPlans, planProgress, planState, PlanAction, planActions, planOutlook, nextOpenDay } from "../contentSchedule";
 import { planScenario, randomPlan } from "../__fixtures__/planScenarios.mjs";
 
 // The same rules as backend/tests/test_content_plan_period.py: the buttons
@@ -102,5 +102,50 @@ describe("a plan read on a given day", () => {
       const p = planProgress(items);
       expect(p.posted + p.missed + p.pending + p.drafted).toBe(p.total);
     }
+  });
+});
+
+describe("orderPlans", () => {
+  const today = new Date(2026, 10, 9);
+  const plan = (id, start) => ({ id, start_date: start, days: Array.from({ length: 7 }, () => ({})) });
+
+  it("puts today's plan first, then what is ahead, then what ended", () => {
+    const plans = [
+      plan("sep", "2026-09-01"),
+      plan("dec", "2026-12-01"),
+      plan("nov", "2026-11-06"),
+      plan("oct", "2026-10-01"),
+      plan("nov-late", "2026-11-20"),
+      plan("undated", null),
+    ];
+    expect(orderPlans(plans, today).map((p) => p.id)).toEqual(["nov", "nov-late", "dec", "undated", "oct", "sep"]);
+  });
+});
+
+describe("planActions", () => {
+  const today = new Date(2026, 10, 9);
+  const plan = (start, statuses) => ({ id: "p", start_date: start, days: statuses.map((status) => ({ status })) });
+
+  it("offers a revision while a day ahead waits, and a catch-up for days missed", () => {
+    // Nov 6–12: the 6th and 8th passed undrafted, the 7th was drafted.
+    const running = plan("2026-11-06", ["pending", "draft", "pending", "pending", "pending", "posted", "pending"]);
+    expect(planOutlook(running, today)).toMatchObject({ missed: 2, open: 3 });
+    expect(planActions(running, today)).toEqual([{ id: PlanAction.REVISE }, { id: PlanAction.CATCH_UP, missed: 2 }]);
+  });
+
+  it("offers nothing once the plan has ended or every day ahead is drafted", () => {
+    expect(planActions(plan("2026-10-01", ["pending", "pending"]), today)).toEqual([]);
+    expect(planActions(plan("2026-11-08", ["pending", "draft", "posted"]), today)).toEqual([]);
+    expect(planActions(null, today)).toEqual([]);
+  });
+
+  it("names the first day from today on still waiting for a draft", () => {
+    const running = plan("2026-11-06", ["pending", "draft", "pending", "draft", "pending"]);
+    expect(nextOpenDay(running, today)?.index).toBe(4);
+    expect(nextOpenDay(plan("2026-11-06", ["pending", "draft", "posted", "draft"]), today)).toBe(null);
+  });
+
+  it("offers only a revision for a plan that has not started", () => {
+    expect(planActions(plan("2026-12-01", ["pending", "pending"]), today)).toEqual([{ id: PlanAction.REVISE }]);
   });
 });

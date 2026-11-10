@@ -16,6 +16,7 @@ from uuid import uuid4
 import pytest
 
 from agents.content.performance import (
+    FLAT,
     PROVEN,
     UNPROVEN,
     UNTESTED,
@@ -315,3 +316,27 @@ def test_a_strategy_naming_an_unknown_type_is_refused():
     PlanDraft.model_validate({**base, "strategy": {"exploit": "", "explore": ""}})
     with pytest.raises(ValidationError):
         PlanDraft.model_validate({**base, "strategy": {"exploit": "reels"}})
+
+
+def test_a_type_that_earned_nothing_is_measured_not_proven():
+    """MaxAura, 2026-11-08: three videos with 0 saves and shares between them
+    were the "proven" type to scale, over slideshows with four times the views."""
+    perf = summarise(
+        [*[_post("video", saves=0, shares=0, views=261) for _ in range(3)],
+         *[_post("slideshow", saves=1, shares=0, views=1062) for _ in range(2)]],
+        ladder=("intent", "completion_rate"),
+    )
+    verdicts = {t.key: t.verdict for t in perf.types}
+    assert (verdicts["video"], verdicts["slideshow"]) == (FLAT, UNPROVEN)
+    assert perf.exploit is None
+    assert perf.explore == ["image", "slideshow", "video"], "untested, then unproven, then flat"
+
+
+def test_a_hook_one_post_tried_is_graded_a_hint():
+    perf = summarise(
+        [_post("video", hook="transformation_reveal", saves=4),
+         *[_post("slideshow", hook="myth_bust", saves=3) for _ in range(3)]],
+        ladder=("saves",),
+    )
+    graded = {g.key: g.verdict for g in perf.bets["hook_type"]}
+    assert graded == {"transformation_reveal": UNPROVEN, "myth_bust": PROVEN}

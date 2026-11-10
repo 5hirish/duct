@@ -466,6 +466,42 @@ def test_a_run_on_title_is_sent_back_to_be_a_headline():
     assert "body" in out["message"]
 
 
+@pytest.mark.parametrize("raw, shown", [
+    ("Plan ID: f192d35a657b4dadb2269a16fc35ef7f approved for November", "Plan approved for November"),
+    ("-23% clicks after the redirect [id f192d35a-657b-4dad-b226-9a16fc35ef7f]",
+     "-23% clicks after the redirect"),
+    # Nothing to drop: a 40-character commit hash is not an id cut short.
+    ("Deployed 4f28e6fa0c1b2d3e4f5a6b7c8d9e0f1a2b3c4d5e (Target CPA $45)",
+     "Deployed 4f28e6fa0c1b2d3e4f5a6b7c8d9e0f1a2b3c4d5e (Target CPA $45)"),
+])
+def test_a_title_names_things_not_ids(raw, shown):
+    from service.memory import readable_title
+
+    assert readable_title(raw) == shown
+
+
+def test_an_id_in_a_title_is_dropped_not_sent_back(engine, project, monkeypatch):
+    """The 2026-11-09 title: 99 characters with its id, a headline without it."""
+    import db.session as db_session_module
+    from agents.core.memory_tools import _remember_sync
+
+    def _session():
+        with Session(engine) as session:
+            yield session
+
+    monkeypatch.setattr(db_session_module, "get_session", _session)
+    out = _remember_sync(
+        {"kind": "decision", "title": (
+            "23-day TikTok content plan generated and registered "
+            "(Plan ID: f192d35a-657b-4dad-b226-9a16fc35ef7f)"
+        )},
+        project_id=project.id, user_id=None, conversation_id=None,
+        agent_type="content", scope="project", source_type="agent",
+    )
+    assert out["status"] == "remembered"
+    assert out["memory"]["title"] == "23-day TikTok content plan generated and registered"
+
+
 # ---------------------------------------------------------------------------
 # System writers
 # ---------------------------------------------------------------------------

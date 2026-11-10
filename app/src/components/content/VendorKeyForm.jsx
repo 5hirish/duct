@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
  *   - "card"   : the whole surface — a tab that has nothing to show until the
  *                key is in (Accounts, Discover). Carries its own heading.
  *   - "inline" : the field alone, for a row that already says what the
- *                vendor is for (the Plan tab's checklist). No heading, no
+ *                vendor is for (the Plans tab's checklist). No heading, no
  *                description; the caller's row is both.
  */
 export default function VendorKeyForm({ vendor, homeUrl, description, isOwner = true, onConnect, layout = "card" }) {

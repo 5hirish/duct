@@ -176,6 +176,11 @@ class EventKind(StrEnum):
     # live one drew; before this they vanished on reload for every agent.
     MEMORY_RECALLED = "memory_recalled"
     MEMORY_WRITTEN = "memory_written"
+    # The person's verdict on a plan the agent proposed: {decision (accepted |
+    # rejected), proposal_id, plan_id, name}. Written by the accept and reject
+    # routes, not the stream, and read by memory consolidation, so a plan only
+    # proposed is never remembered as made. The chat draws nothing for it.
+    PLAN_DECISION = "plan_decision"
 
 
 class RunStatus(StrEnum):
@@ -369,6 +374,7 @@ AG_UI_EVENT_KIND: dict[EventKind, str] = {
     EventKind.COMPACTED:   "Custom",
     EventKind.MEMORY_RECALLED: "Custom",
     EventKind.MEMORY_WRITTEN:  "Custom",
+    EventKind.PLAN_DECISION:   "Custom",
 }
 
 

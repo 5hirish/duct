@@ -325,6 +325,35 @@ async def test_resume_of_an_idle_thread_is_silent_and_ready(plan_session, emitte
     assert emitted.events[0]["resumed"] is True
 
 
+async def test_resume_shows_the_proposal_its_conversation_held(plan_session, emitted, monkeypatch):
+    """A deploy between the agent proposing and the person deciding lost the
+    plan: the board kept the old one and the chat said a new one was made.
+    The conversation holds it now, and a resumed session shows it again, but
+    only over the plan it was made against."""
+    from datetime import date
+
+    import agents.content.v1.runner as content_runner
+    from agents.content.events import ContentEvent
+    from agents.content.plan_proposal import build_proposal
+
+    held = build_proposal(
+        project_id=PROJECT, draft_name="November", character={}, strategy={}, new_days=[{"topic": "t"}],
+        live_days=None, live_plan_id=None, period=None, today=date(2031, 10, 1),
+    )
+    monkeypatch.setattr(content_runner, "_held_proposal_sync", lambda _session: held)
+    plan_session.conversation_id = uuid.uuid4()
+    await _drive(plan_session, emitted, fake_llm("x"), resume=True)
+
+    (shown,) = [e for e in emitted.events if e["event"] == ContentEvent.PLAN_GENERATED]
+    assert shown["replay"] is True and shown["payload"]["proposal_id"] == held.proposal_id
+    assert plan_session.proposal is held
+
+    plan_session.proposal, plan_session.plan_id = None, uuid.uuid4()
+    emitted.events.clear()
+    await _drive(plan_session, emitted, fake_llm("x"), resume=True)
+    assert plan_session.proposal is None, "a proposal for a new plan never lands on an existing one"
+
+
 async def test_resume_of_a_pre_checkpoint_conversation_primes_the_first_message(plan_session, emitted, monkeypatch):
     """A conversation recorded before the thread was durable has a transcript
     in the DB and no checkpoint. Its summary rides on the user's first

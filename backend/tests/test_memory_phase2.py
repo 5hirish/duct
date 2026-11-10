@@ -581,6 +581,22 @@ def test_a_closed_and_a_swept_trigger_pay_for_one_model_call(db, project, servic
     assert sorted(r.skipped for r in results) == ["", "too few new turns"]
 
 
+def test_a_plan_only_proposed_is_never_read_as_made(db, project, service_db):
+    """On 2026-11-08 a pivot the person never accepted was remembered as
+    "Pivoted November … to cheat sheets"; the board still ran the old plan."""
+    from agents.content.plan_proposal import HELD_PROPOSAL_KEY
+
+    conv = _conversation(db, project, turns=6)
+    conv.meta = {**(conv.meta or {}), HELD_PROPOSAL_KEY: {"proposal_id": "p1"}}
+    db.add(conv)
+    db.commit()
+    assert consolidation._read_pending(conv.id, force=True).transcript.endswith(consolidation.OPEN_PROPOSAL_LINE)
+
+    decided = AgentEventRow(conversation_id=conv.id, seq=7, kind=EventKind.PLAN_DECISION,
+                            data={"decision": "rejected", "name": "November plan"})
+    assert '[7] person rejected the proposed plan "November plan"' in build_transcript([decided])
+
+
 def test_the_transcript_carries_what_a_tool_returned(db, project):
     conv = _conversation(db, project, turns=1)
     rows = [

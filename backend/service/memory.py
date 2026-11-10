@@ -114,6 +114,29 @@ def _clean(text: str, limit: int) -> str:
     return out[:limit].rstrip()
 
 
+# A title is read by a person, in one row of the desk and the timeline. An id
+# there is noise: on 2026-11-09 consolidation copied "(Plan ID: f192d35a-…)"
+# out of a tool result into a title, and the agent never needs it from the
+# title, because its tools find the plan by name and date.
+_UUID = r"\b[0-9a-fA-F]{8}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{12}\b"
+_BRACKETED_ID = re.compile(rf"\s*[(\[][^()\[\]]*{_UUID}[^()\[\]]*[)\]]")
+_LABELLED_ID = re.compile(rf"(?:\bid\b\s*[:#=]?\s*)?{_UUID}", re.I)
+# What a removed id leaves dangling. A leading hyphen is not on the list: it is
+# the minus in "-23% clicks", not punctuation.
+_LEADING_LEFTOVERS = " \t:;,–—"
+_TRAILING_LEFTOVERS = " \t:;,–—-"
+
+
+def readable_title(title: str) -> str:
+    """The title without raw ids, for every writer: tools, consolidation, system."""
+    raw = str(title or "").strip()
+    out = _LABELLED_ID.sub("", _BRACKETED_ID.sub("", raw))
+    if out == raw:
+        return raw
+    out = re.sub(r"\s+([,.;:!?])", r"\1", re.sub(r"[ \t]{2,}", " ", out))
+    return out.lstrip(_LEADING_LEFTOVERS).rstrip(_TRAILING_LEFTOVERS)
+
+
 def short_id(value: UUID | str) -> str:
     """Compact citable id (``m_a1b2c3d4``) — what the model writes and the UI chips."""
     return f"m_{str(value).replace('-', '')[:8]}"
@@ -262,7 +285,7 @@ def remember(
     try:
         scope = (scope or SCOPE_PROJECT).strip()
         kind = (kind or "").strip()
-        title = _clean(title, TITLE_MAX)
+        title = _clean(readable_title(title), TITLE_MAX)
         kind = canonical_kind(kind)
         if kind in PERSONAL_KINDS and scope != SCOPE_USER:
             # A fact about a person never becomes project memory, whoever

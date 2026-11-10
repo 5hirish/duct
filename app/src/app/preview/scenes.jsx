@@ -56,7 +56,7 @@ import { saveText } from "@/lib/download";
 import { ArtifactGallery } from "@/components/artifacts/ArtifactCards";
 import { ChartJsonView } from "@/components/artifacts/ArtifactRenderer";
 import { DESK_SCENARIOS, deskScenario } from "@/lib/__fixtures__/deskScenarios.mjs";
-import { KANBAN_SCENARIO_IDS, PLAN_SCENARIOS, planScenario } from "@/lib/__fixtures__/planScenarios.mjs";
+import { KANBAN_SCENARIO_IDS, PLAN_PICKER_SCENARIOS, PLAN_SCENARIOS, planPickerScenario, planScenario } from "@/lib/__fixtures__/planScenarios.mjs";
 import { PlanBoardView, PlanView } from "@/components/content/PlanBoard";
 import { startOfDay } from "@/lib/contentSchedule";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
@@ -102,6 +102,7 @@ import PlanList from "@/components/content/PlanList";
 import { PlanPeriodMenu, PlanPeriodToggle } from "@/components/content/PlanPeriodPicker";
 import { planPeriodOptions } from "@/lib/contentSchedule";
 import PlanViewport from "@/components/content/PlanViewport";
+import PlanQuickActions from "@/components/content/PlanQuickActions";
 import PostMetricsForm from "@/components/content/PostMetricsForm";
 import PostVideo from "@/components/content/PostVideo";
 import VendorKeyForm from "@/components/content/VendorKeyForm";
@@ -1050,6 +1051,53 @@ function RegistryScenario({ id = "today", query, answer = "results", servers = M
   );
 }
 
+/**
+ * The board with its plan picker open, over one of the picker's situations,
+ * relative to today. Picking a plan shows it; the running plan's posts come
+ * from its board scenario.
+ */
+function PlanPickerScenario({ id }) {
+  const today = useMemo(() => startOfDay(new Date()), []);
+  const plans = useMemo(() => planPickerScenario(id, today), [id, today]);
+  const board = useMemo(() => planScenario("mid-month", today), [today]);
+  const [activeId, setActiveId] = useState(board.plan.id);
+  const plan = plans.find((p) => p.id === activeId) || plans[0];
+  return (
+    <div style={{ minHeight: 600 }}>
+      <PlanBoardView
+        plans={plans}
+        activeId={plan.id}
+        onSelectPlan={setActiveId}
+        plan={plan}
+        postsById={plan.id === board.plan.id ? board.postsById : {}}
+        view={PlanView.LIST}
+        onViewChange={() => {}}
+        calView="month"
+        onCalViewChange={() => {}}
+        today={today}
+        onStartPlan={() => {}}
+        onRevisePlan={() => {}}
+        onReviseDay={() => {}}
+        pickerOpen
+      />
+    </div>
+  );
+}
+
+/** A plan session's composer with the quick actions over it, for one plan scenario. */
+function PlanQuickActionsScene({ scenario }) {
+  const today = useMemo(() => startOfDay(new Date()), []);
+  const { plan } = useMemo(() => planScenario(scenario, today), [scenario, today]);
+  const [sent, setSent] = useState("");
+  return (
+    <div className="max-w-[720px]">
+      <PlanQuickActions plan={plan} today={today} onSend={setSent} />
+      <ChatInput onSend={() => {}} draftKey={`preview:plan-actions-${scenario}`} placeholder="Ask Duct to refine the plan or post…" />
+      {sent && <p className="mt-3 px-3 text-xs text-muted-foreground">Sent as your message: {sent}</p>}
+    </div>
+  );
+}
+
 /** One generated plan through the real board view, every control live. */
 function PlanScenario({ id, view = PlanView.LIST, channel = null }) {
   const today = useMemo(() => startOfDay(new Date()), []);
@@ -1345,6 +1393,34 @@ const PLAN_STRATEGY_COLD = {
   explore_evidence: "Spreading the month across all three types; next month's numbers decide.",
 };
 
+// A three-channel plan as the agent hands it over since #529: the agent's
+// fields, plus the facts the plan stored from its channel mix, plus days
+// spread the way that mix split them. The lesson keeps the snake_case hook
+// names the history block uses, as a model copies them.
+const PLAN_STRATEGY_DAYS = [
+  ...Array.from({ length: 9 }, () => ({ post_type: "video", platforms: ["tiktok", "instagram"] })),
+  ...Array.from({ length: 4 }, () => ({ post_type: "slideshow", platforms: ["tiktok"] })),
+  ...Array.from({ length: 3 }, () => ({ post_type: "image", platforms: ["tiktok"] })),
+  ...Array.from({ length: 4 }, () => ({ post_type: "slideshow", platforms: ["instagram"] })),
+  ...Array.from({ length: 2 }, () => ({ post_type: "image", platforms: ["instagram"] })),
+  ...Array.from({ length: 6 }, () => ({ post_type: "text", platforms: ["linkedin"] })),
+];
+const PLAN_STRATEGY_MIX = {
+  ...PLAN_STRATEGY,
+  lesson: "transformation_reveal hooks reached 6.5% completion against 1.9% for question_open_loop, so more reveals.",
+  review_notes:
+    "TikTok earned the most saves and shares per post, so it gets three more days; LinkedIn trails and gives one back, still more than a post a week. Instagram has no results yet and keeps its share.",
+  experiment: "Three image posts on TikTok, judged on saves against the video median.",
+  mix: {
+    goal: "intent",
+    channels: [
+      { channel: "tiktok", last_days: 13, standing: "leads", scaling: "video", testing: ["image"] },
+      { channel: "instagram", last_days: 6, standing: "untested", scaling: "", testing: [] },
+      { channel: "linkedin", last_days: 7, standing: "trails", scaling: "text", testing: [] },
+    ],
+  },
+};
+
 const PLAN_STRATEGY_ALL_PROVEN = {
   exploit: "slideshow",
   exploit_evidence:
@@ -1367,7 +1443,7 @@ const PLAN_MONTH = {
   }),
 };
 
-// The brand context the first-run Plan tab reads back. A project that came
+// The brand context the first-run Plans tab reads back. A project that came
 // through the audit usually has a voice and pillars and no linked account.
 const PLAN_BRAND_READY = {
   description: "Budgeting for freelancers who invoice in euros.",
@@ -1946,6 +2022,19 @@ export const SCENES = [
         project={{ id: "p1", name: "Sictec Infotech, Inc.", company: { name: "Sictec Infotech, Inc.", website_url: "https://sictec.example" } }}
         placeholder="Ask about &ldquo;Next growth milestone&rdquo; — or anything else"
       />
+    ),
+  },
+  {
+    id: "session-composer-connecting",
+    state: "the session opening, or its stream re-attaching",
+    group: "DeskComposer",
+    title: "The session composer while it connects",
+    note: "Every agent's composer while its session is opened or its stream re-attached (AgentChat passes `connecting`): no Stop, because there is no turn to stop yet and a Stop here used to cancel the connection, and Esc does nothing. The spinner and the word stand where Stop goes. Send stays off until the session is attached.",
+    render: () => (
+      <div className="max-w-[720px] space-y-4">
+        <ChatInput onSend={() => {}} disabled isStreaming onStop={() => {}} connecting="Connecting…" />
+        <ChatInput onSend={() => {}} disabled isStreaming onStop={() => {}} connecting="Reconnecting…" />
+      </div>
     ),
   },
   {
@@ -2667,6 +2756,30 @@ export const SCENES = [
     title: `Plan — ${scenario.title}`,
     note: `${scenario.expect} Switch to Kanban and Calendar from the toolbar; sweep the frame from phone to wide.`,
     render: () => <PlanScenario id={scenario.id} />,
+  })),
+  // The plan session's quick actions over its composer, from the board's
+  // scenarios: chosen from the plan's days in code, never by the model.
+  ...[
+    ["mid-month", "a running plan with missed days", "Both chips: revise what is left, and catch up on the missed count."],
+    ["planned-ahead", "a plan that has not started", "Only the revision: nothing can have been missed yet."],
+    ["ended-done", "an ended plan", "No chips at all, so the composer stands alone."],
+  ].map(([scenario, state, expect]) => ({
+    id: `plan-quick-actions-${scenario}`,
+    state,
+    group: "PlanQuickActions",
+    title: `Plan session quick actions — ${state}`,
+    note: `${expect} A chip sends its request as the person's own message (shown under the composer here). The session hides them while a turn runs or a proposal waits on Accept, Modify or Reject; at phone width they wrap rather than scroll.`,
+    render: () => <PlanQuickActionsScene scenario={scenario} />,
+  })),
+  // The board's plan picker: every plan as a rich row, from
+  // lib/__fixtures__/planScenarios.mjs relative to today. Opens on mount.
+  ...PLAN_PICKER_SCENARIOS.map((scenario) => ({
+    id: `plan-picker-${scenario.id}`,
+    state: scenario.title,
+    group: "PlanPicker",
+    title: `Plan picker — ${scenario.title}`,
+    note: `${scenario.expect} Arrow keys move between plans and Enter picks one; sweep the frame to phone width, where the menu keeps a 16px margin.`,
+    render: () => <PlanPickerScenario id={scenario.id} />,
   })),
   // The Toolbox catalogue at every size it has to hold, from
   // lib/__fixtures__/connectorCatalogs.mjs, the sets the catalogue tests
@@ -3737,7 +3850,7 @@ export const SCENES = [
     state: "inline · Apify refused the key",
     group: "VendorKeyForm",
     title: "The key field inside a row",
-    note: "The same field with no card around it, for a row that already says what the vendor is for (the Plan tab's checklist). Submit any key: the refusal appears under the field the same way it does in the card.",
+    note: "The same field with no card around it, for a row that already says what the vendor is for (the Plans tab's checklist). Submit any key: the refusal appears under the field the same way it does in the card.",
     render: () => (
       <div className="max-w-sm p-5">
         <VendorKeyForm layout="inline" vendor="Apify" homeUrl="https://console.apify.com" onConnect={() => refuseKey("apify")} />
@@ -3768,7 +3881,7 @@ export const SCENES = [
     id: "plan-board-empty",
     state: "voice and pillars set, no connector yet",
     group: "PlanDayOne",
-    title: "The Plan tab, before the first plan",
+    title: "The Plans tab, before the first plan",
     note: "The first screen of Content Studio for a new project, and the usual case after the audit: the voice and pillars it drafted, neither connector's key saved. It used to be a dashed \"No plan yet\" box. Now it says what a plan is, reads back what Duct will plan from, takes the PostBridge and Apify keys right in their rows, asks how far ahead to plan (the month in progress, or 1 week, 2 weeks, 30 days, each naming its dates), and shows a sample week in the same list the plan workspace uses. Paste anything into a key field and press Enter: the preview refuses it the way a wrong key is refused. What to check: the button is the heaviest thing on the screen; the checklist sits beside the sample from @3xl and above it below that; the sample is dimmed, labelled and cannot be tabbed into.",
     render: () => (
       <div className="p-5">
@@ -4001,7 +4114,7 @@ export const SCENES = [
     state: "Oct 7, Nov 1 with a plan from Nov 10, and Oct 28",
     group: "PlanPeriodPicker",
     title: "How far ahead a new plan looks",
-    note: "The Plan tab's \"Plan ahead\" and \"New plan\" menus, and the toggles the first-run screen uses for the same choice. Every option names the dates it will plan, by the run's own rules: the month in progress, or 1 week, 2 weeks, 30 days, never more than 30. What to check: \"Plan ahead\" starts on Nov 1 and stops the day before the plan already made from Nov 10, so the month is offered as \"9 days\" and the longer lengths, which come to the same dates, are not offered twice; the toggles are for Oct 28, so the month is November, not the four days left of October.",
+    note: "The Plans tab's \"Plan ahead\" and \"New plan\" menus, and the toggles the first-run screen uses for the same choice. Every option names the dates it will plan, by the run's own rules: the month in progress, or 1 week, 2 weeks, 30 days, never more than 30. What to check: \"Plan ahead\" starts on Nov 1 and stops the day before the plan already made from Nov 10, so the month is offered as \"9 days\" and the longer lengths, which come to the same dates, are not offered twice; the toggles are for Oct 28, so the month is November, not the four days left of October.",
     render: () => <PlanPeriodScene />,
   },
   {
@@ -4030,27 +4143,43 @@ export const SCENES = [
   },
   {
     id: "plan-strategy",
-    state: "history: doubling down on video, testing image",
+    state: "three channels, each on its own history",
     group: "PlanStrategy",
-    title: "The strategy a plan chose",
-    note: "Above the plan, on the Plan tab and in the live workspace. The two choices the account's own history led to, each with the agent's evidence, then what past posts taught it and when to post. What to check: the two choices sit side by side from @xl and stack below it; the notes' text lines up with the choices' text above; nothing here is a pill.",
-    render: () => <div className="bg-card"><PlanStrategy strategy={PLAN_STRATEGY} /></div>,
+    title: "What the plan bets on, by channel",
+    note: "One row per channel the plan's days are on: what that channel's own history says to lean on and to try, counted from its days, and how its share moved since the last plan and why. Instagram has no results yet, so it shows the mix it is trying; LinkedIn makes only text, so it leans on nothing. The agent's reasons are behind the ?, with the hook names written as words. Check: the channel names share one column from @xl and stack below it; the change line never wraps onto its own row at desktop width.",
+    render: () => <div className="bg-card"><PlanStrategy strategy={PLAN_STRATEGY_MIX} days={PLAN_STRATEGY_DAYS} /></div>,
+  },
+  {
+    id: "plan-strategy-card",
+    state: "on the board page",
+    group: "PlanStrategy",
+    title: "The board's strategy card",
+    note: "The same rows in the quiet card the full-bleed board route uses, where a ruled strip would float between the toolbar and the list.",
+    render: () => <div className="bg-background p-4"><PlanStrategy strategy={PLAN_STRATEGY_MIX} days={PLAN_STRATEGY_DAYS} variant="card" /></div>,
+  },
+  {
+    id: "plan-strategy-one-channel",
+    state: "the board filtered to one channel",
+    group: "PlanStrategy",
+    title: "One channel picked",
+    note: "With a channel chip picked on the board, the card says that channel's row alone, the way the list below shows that channel's posts alone.",
+    render: () => <div className="bg-card"><PlanStrategy strategy={PLAN_STRATEGY_MIX} days={PLAN_STRATEGY_DAYS} channel="tiktok" /></div>,
   },
   {
     id: "plan-strategy-cold",
     state: "no posting history yet",
     group: "PlanStrategy",
     title: "The strategy of a first plan",
-    note: "An account with nothing published: nothing to double down on, one type named to test, and no notes row because there is no history to learn from or time.",
-    render: () => <div className="bg-card"><PlanStrategy strategy={PLAN_STRATEGY_COLD} /></div>,
+    note: "An account with nothing published: no channel leans on anything, each shows the mix it is trying, and the ? has only the agent's reason for testing.",
+    render: () => <div className="bg-card"><PlanStrategy strategy={PLAN_STRATEGY_COLD} days={PLAN_STRATEGY_DAYS} /></div>,
   },
   {
-    id: "plan-strategy-all-proven",
-    state: "every type proven, long evidence",
+    id: "plan-strategy-legacy",
+    state: "a plan made before the channel mix",
     group: "PlanStrategy",
-    title: "Nothing left untested",
-    note: "Evidence longer than two lines clamps and carries the whole sentence in a tooltip (tab to it). The testing column says every type has results rather than going blank.",
-    render: () => <div className="bg-card"><PlanStrategy strategy={PLAN_STRATEGY_ALL_PROVEN} /></div>,
+    title: "An older plan",
+    note: "A plan stored before plans kept their channel mix has the agent's one choice and no per-channel facts: the choice lands on its busiest channel, the channel the prompt named, and the others show their mix. No up or down arrows, because nothing recorded the last plan's split.",
+    render: () => <div className="bg-card"><PlanStrategy strategy={PLAN_STRATEGY_ALL_PROVEN} days={PLAN_STRATEGY_DAYS} /></div>,
   },
   {
     id: "plan-viewport-strategy",
@@ -4091,7 +4220,7 @@ export const SCENES = [
     state: "accepted",
     group: "PlanViewport",
     title: "The plan, saved",
-    note: "What the pane shows once Accept has landed, or when the session's PLAN_GENERATED echo arrives with status accepted: the bar gives way to one chip. A plan from before proposals existed has no status and shows nothing in this slot (the scene above).",
+    note: "What the pane shows once Accept has landed, or when the session's PLAN_GENERATED echo arrives with status accepted: the bar gives way to one chip and Draft the next post, which opens the post workspace on the first day from today still waiting for a draft (its topic in the tooltip). Accept sends nothing into the chat: the agent hears of it with the person's next message. A plan from before proposals existed has no status and shows nothing in this slot (the scene above).",
     render: () => <PlanViewportScene scenario="fresh" status="accepted" />,
   },
   {

@@ -8,7 +8,9 @@ the plans that produced the posts — with no network and no model call:
   a thousand people finished beats one ten thousand people tapped past.
 * **Explore / exploit.** The proven leader is the type to scale; the untested
   and the too-thin-to-judge are the ones a plan must keep testing, because a
-  type that is never planned never earns the history to be planned.
+  type that is never planned never earns the history to be planned. Proven
+  means enough posts measured *and* something earned: three videos with no
+  saves or shares between them are measured, and flat, not a type to scale.
 * **Graded bets.** The hook, funnel stage and objective each planned post was
   a bet on, scored by the same signal, so a plan learns strategy and not only
   format.
@@ -91,9 +93,13 @@ _BET_VALUE_CHARS = 40
 
 WEEKDAYS: tuple[str, ...] = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 
-# Verdicts on a post type.
+# Verdicts on a post type or a bet. Unproven is too few posts measured to
+# say: a hint. Flat is enough measured and nothing earned. Only proven is
+# evidence to scale; on 2026-11-08 a plan put 14 of 23 days on video for
+# three posts with 0 saves, and 9 days on one hook a single post had tried.
 PROVEN = "proven"
 UNPROVEN = "unproven"
+FLAT = "flat"
 UNTESTED = "untested"
 
 
@@ -273,6 +279,16 @@ def ranking_signal(samples: list[PostSample], ladder: tuple[str, ...] = RANKING_
     return None
 
 
+def verdict_on(samples: list[PostSample], signal: str | None) -> str:
+    """Proven, flat or unproven: what ``samples`` say on ``signal``."""
+    if signal is None:
+        return UNPROVEN
+    m = measure(samples, signal)
+    if m.measured < MIN_MEASURED_POSTS:
+        return UNPROVEN
+    return PROVEN if (m.median or 0) > 0 else FLAT
+
+
 def _ranked(groups: list[GroupStats], signal: str | None) -> list[GroupStats]:
     """Best score first; unknown scores after every known one, then by volume."""
     def key(g: GroupStats) -> tuple:
@@ -289,22 +305,23 @@ def rank_types(
 ) -> tuple[list[GroupStats], str | None, list[str]]:
     """Every post type with a verdict, the one to exploit, and those to explore.
 
-    Proven types lead, best first; then unproven ones; then the untested.
-    Explore lists the untested before the unproven — no data at all is the
-    bigger blind spot than thin data.
+    Proven types lead, best first; then unproven, flat, and the untested.
+    Explore lists the untested first (no data at all is the bigger blind spot
+    than thin data), then the unproven, then the flat: kept at the floor,
+    since a type that earned nothing may have had the wrong posts, but never
+    scaled.
     """
     by_type = _by_type(samples)
-    proven, unproven = [], []
+    sorted_by: dict[str, list[GroupStats]] = {PROVEN: [], UNPROVEN: [], FLAT: []}
     for post_type, group in by_type.items():
-        enough = signal is not None and measure(group, signal).measured >= MIN_MEASURED_POSTS
-        (proven if enough else unproven).append(_group(post_type, group, PROVEN if enough else UNPROVEN, metrics))
+        verdict = verdict_on(group, signal)
+        sorted_by[verdict].append(_group(post_type, group, verdict, metrics))
     untested = [_group(t, [], UNTESTED, metrics) for t in known_types if t not in by_type]
 
-    proven = _ranked(proven, signal)
-    unproven = _ranked(unproven, signal)
+    proven, unproven, flat = (_ranked(sorted_by[v], signal) for v in (PROVEN, UNPROVEN, FLAT))
     exploit = proven[0].key if proven else None
-    explore = [g.key for g in untested] + [g.key for g in unproven]
-    return proven + unproven + untested, exploit, explore
+    explore = [g.key for g in (*untested, *unproven, *flat)]
+    return proven + unproven + flat + untested, exploit, explore
 
 
 def _bet_value(sample: PostSample, dimension: str) -> str:
@@ -315,8 +332,14 @@ def _bet_value(sample: PostSample, dimension: str) -> str:
     and objective exist only on the plan; the pillar only on the post.
     """
     if dimension == PILLAR:
-        return sample.pillar.strip().lower()[:_BET_VALUE_CHARS]
+        return bet_key(sample.pillar)
     raw = sample.hook_type if dimension == "hook_type" and sample.hook_type else sample.bet.get(dimension)
+    return bet_key(raw)
+
+
+def bet_key(raw: object) -> str:
+    """A bet's value as it is bucketed and graded, so a planned day can be
+    matched to its record."""
     return str(raw or "").strip().lower()[:_BET_VALUE_CHARS]
 
 
@@ -325,7 +348,8 @@ def grade_bets(
     metrics: tuple[str, ...] = (*RANKING_SIGNALS, VIEWS),
 ) -> dict[str, list[GroupStats]]:
     """Per graded dimension (the pillar and the plan's three bets), each
-    value's record on the ranking signal, best first."""
+    value's record on the ranking signal, best first, with its verdict: a
+    hook one post tried is a hint, never a strategy."""
     graded: dict[str, list[GroupStats]] = {}
     for dimension in GRADED_DIMENSIONS:
         buckets: dict[str, list[PostSample]] = defaultdict(list)
@@ -333,7 +357,9 @@ def grade_bets(
             value = _bet_value(s, dimension)
             if value:
                 buckets[value].append(s)
-        groups = [_group(value, group, metrics=metrics) for value, group in buckets.items()]
+        groups = [
+            _group(value, group, verdict_on(group, signal), metrics=metrics) for value, group in buckets.items()
+        ]
         graded[dimension] = _ranked(groups, signal)[:TOP_BETS]
     return graded
 
@@ -441,6 +467,10 @@ def planned_bets(plan_days: list[list]) -> dict[str, dict]:
 
 
 __all__ = [
+    "FLAT",
+    "PROVEN",
+    "UNPROVEN",
+    "UNTESTED",
     "AccountPerformance",
     "GroupStats",
     "Measure",
@@ -449,6 +479,7 @@ __all__ = [
     "Standout",
     "Window",
     "best_posting_times",
+    "bet_key",
     "grade_bets",
     "measure",
     "planned_bets",
@@ -457,4 +488,5 @@ __all__ = [
     "read_metric",
     "standouts",
     "summarise",
+    "verdict_on",
 ]

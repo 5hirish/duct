@@ -55,6 +55,7 @@ from agents.content.persistence import (
     last_user_turn_at,
     list_conversations,
     load_events,
+    plan_decisions_since,
     resolve_or_create_conversation,
 )
 from agents.content.schema import DraftPostRequest, PlanRequest
@@ -900,18 +901,35 @@ def _decisions_block(session: Any) -> str:
 
     try:
         with next(db_session()) as db:
-            rows = user_decisions_since(db, conversation_id, last_user_turn_at(db, conversation_id))
+            since = last_user_turn_at(db, conversation_id)
+            rows = user_decisions_since(db, conversation_id, since)
+            plans = plan_decisions_since(db, conversation_id, since)
     except Exception:  # noqa: BLE001 — a missing reminder must never block a message
         logger.warning("agents: change-set decisions unavailable", exc_info=True)
         return ""
-    if not rows:
-        return ""
-    lines = "\n".join(f"- {r.created_at:%Y-%m-%d %H:%M} UTC: {r.summary}" for r in rows)
-    return xml_block(
-        "change_set_decisions",
-        "The user acted on your proposed change sets since their last message. "
-        "Take these as settled; call GetChangeSetStatus for per-change detail.\n" + lines,
-    ) + "\n\n"
+    out = ""
+    if rows:
+        lines = "\n".join(f"- {r.created_at:%Y-%m-%d %H:%M} UTC: {r.summary}" for r in rows)
+        out += xml_block(
+            "change_set_decisions",
+            "The user acted on your proposed change sets since their last message. "
+            "Take these as settled; call GetChangeSetStatus for per-change detail.\n" + lines,
+        ) + "\n\n"
+    if plans:
+        # Accept sends no message (it used to send "Carry on", and the agent
+        # went on to draft posts in the plan's pane), so this is how it hears.
+        lines = "\n".join(
+            f"- {r.created_at:%Y-%m-%d %H:%M} UTC: {(r.data or {}).get('decision', '')} "
+            f"\"{(r.data or {}).get('name', '')}\""
+            for r in plans
+        )
+        out += xml_block(
+            "plan_decisions",
+            "The user decided on the plan you proposed since their last message. Take it as "
+            "settled: an accepted plan is saved and on their board, so do not propose it again "
+            "or start drafting its posts unless they ask.\n" + lines,
+        ) + "\n\n"
+    return out
 
 
 def _inject_working_context(session: Any, content: str | list, version_id: int | None) -> str | list:

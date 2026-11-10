@@ -43,6 +43,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 
+from agents.content.plan_proposal import HELD_PROPOSAL_KEY
 from agents.core.events import EventKind
 from agents.engines import ProviderKeyRequired, resolve_job_run
 from agents.models import get_api_key_kwargs, takes_temperature
@@ -82,6 +83,13 @@ SKIP_TOO_FEW = "too few new turns"
 # MAX_TRANSCRIPT_CHARS.
 TOOL_INPUT_CHARS = 300
 TOOL_RESULT_CHARS = 1_500
+# Said after the transcript of a conversation whose plan proposal is still
+# waiting on the person (plan_proposal.HELD_PROPOSAL_KEY): code knows it was
+# never applied, and a model reading "submit_plan returned" may not.
+OPEN_PROPOSAL_LINE = (
+    "[open] The plan the agent proposed is still waiting for the person's decision: "
+    "nothing in it has been applied."
+)
 # Their result is memory already, or bookkeeping with nothing to remember.
 _TOOLS_WITHOUT_FACTS = frozenset({"RememberFact", "SearchMemory", "GetMemory", "write_todos"})
 
@@ -106,7 +114,12 @@ class ExtractedEntry(BaseModel):
     """One durable fact the session established."""
 
     kind: str = Field(description=f"One of: {', '.join(sorted(PROJECT_KINDS))}.")
-    title: str = Field(description="The fact in one line, with its number or date if it has one.")
+    title: str = Field(
+        description=(
+            "The fact in one line, with its number or date if it has one, naming things "
+            "as a person would, never by an id."
+        ),
+    )
     body: str = Field(
         default="",
         description="What was observed, why it matters, and how to apply it next time.",
@@ -173,6 +186,11 @@ other dated events, changes made to the site or account, what a change did once 
 its numbers came in, conclusions with the evidence behind them, things to watch. Dated metrics are the \
 exception to rule 2 — a value for a named period is exactly what memory is for.
 
+A plan or change the agent only PROPOSED is not a decision and not a state. \
+Remember it as made only where the transcript says the person accepted it \
+("person accepted the proposed plan"); one still open or rejected is at most \
+the direction the person asked for, never "replaced" or "pivoted".
+
 Do NOT remember: anything a tool can say again, running commentary, restated \
 questions, praise, or judgements about the person. Prefer fewer, sharper entries: \
 at most {max_entries}, and zero is a perfectly good answer for a session that \
@@ -224,6 +242,8 @@ def _event_line(row: AgentEventRow) -> str:
         name = data.get("name", "")
         args = _clip(data.get("input"), TOOL_INPUT_CHARS)
         return f"[{row.seq}] agent called {name}" + (f" with {args}" if args else "")
+    if row.kind == EventKind.PLAN_DECISION:
+        return f"[{row.seq}] person {data.get('decision', 'decided on')} the proposed plan \"{data.get('name', '')}\""
     if row.kind == EventKind.TOOL_RESULT and data.get("name") not in _TOOLS_WITHOUT_FACTS:
         verdict = "failed" if data.get("is_error") else "returned"
         return f"[{row.seq}] {data.get('name', '')} {verdict}: {_clip(data.get('result'), TOOL_RESULT_CHARS)}"
@@ -389,6 +409,8 @@ def _read_pending(conversation_id: UUID, *, force: bool) -> _Pending | str:
         transcript = build_transcript(rows)
         if not transcript.strip():
             return "empty transcript"
+        if (conv.meta or {}).get(HELD_PROPOSAL_KEY):
+            transcript += f"\n{OPEN_PROPOSAL_LINE}"
         return _Pending(
             project_id=project_id,
             transcript=transcript,
@@ -770,7 +792,7 @@ class ArtifactFinding(BaseModel):
     """One durable finding lifted out of a report, with the section it came from."""
 
     kind: str = Field(description="conclusion | incident | metric | watch.")
-    title: str = Field(description="The finding in one line.")
+    title: str = Field(description="The finding in one line, naming things as a person would, never by an id.")
     body: str = Field(default="", description="Why it matters and what to do about it.")
     entity_key: str = Field(default="", description="What it is about, as type:id (e.g. 'page:/pricing').")
     attribute: str = Field(default="", description="Which property of that entity.")

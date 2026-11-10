@@ -12,6 +12,7 @@ import { PostStatus } from "@/lib/contentEnums";
 import { getActiveProjectId } from "@/lib/projects";
 import { useLeaveOnProjectSwitch } from "@/hooks/useActiveProjectId";
 import LoadError from "@/components/LoadError";
+import { useTrailTitle } from "@/lib/pageTitle";
 
 /**
  * One post, in one of two places:
@@ -40,6 +41,8 @@ export default function PostDetailPage() {
   const [err, setErr] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
   const [publishOpen, setPublishOpen] = useState(false);
+  // The trail names the post by its hook, the way its card does, not "#a9997d".
+  useTrailTitle(post?.hook_text || post?.topic || "");
   // A post belongs to one project; the sidebar naming another is a request
   // to work there.
   useLeaveOnProjectSwitch();
