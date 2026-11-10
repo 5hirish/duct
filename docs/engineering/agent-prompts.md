@@ -40,7 +40,8 @@ holds each agent's `ContextSpec`.
 | 9 | `<data_sources>` |  |
 | 10 | `<deliverable_format>` |  |
 | 11 | `<autonomy>` |  |
-| 12 | `<request>` | the ask |
+| 12 | `<current_date>` |  |
+| 13 | `<request>` | the ask |
 
 ### What each agent declares
 
@@ -565,7 +566,7 @@ The user has connected outside tools to Duct over MCP: an SEO tool, a workspace,
 - Name the server and tool behind any number you take from one, the way you cite a window for FetchData.
 ```
 
-### Opening user turn · ~333 tokens
+### Opening user turn · ~395 tokens
 
 ```text
 <business_context>
@@ -601,6 +602,10 @@ google_ads: bound (Northwind — Search)
 ga4: available (no property chosen)
 gsc: not_connected
 </data_sources>
+
+<current_date>
+Today is Friday 2026-10-30. The last complete day is 2026-10-29; today's numbers are still partial. Resolve relative periods such as "last week" or "the last four weeks" against these dates.
+</current_date>
 
 <request>
 Why did CPA jump last week?

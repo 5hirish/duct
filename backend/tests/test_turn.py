@@ -197,3 +197,43 @@ def test_audit_suppresses_the_paid_section_it_declared_off():
     )
     assert "Acme" in out
     assert "5000" not in out and "Target CPA" not in out
+
+
+# ---------------------------------------------------------------------------
+# Today's date (2026-11-10: two of three failed eval briefs guessed the window)
+# ---------------------------------------------------------------------------
+
+def test_the_date_names_today_and_the_last_complete_day():
+    from datetime import date
+
+    from agents.core.turn import current_date_block
+
+    block = current_date_block(date(2026, 11, 10))
+    assert "Tuesday 2026-11-10" in block and "last complete day is 2026-11-09" in block
+
+
+def test_the_date_is_the_last_block_before_the_ask():
+    """It changes daily, so anything after it would lose the cross-run cache."""
+    from agents.core.turn import BLOCK_ORDER
+
+    assert BLOCK_ORDER[-2:] == ("current_date", "request")
+
+
+def test_the_insights_turn_tells_the_model_what_day_it_is():
+    from datetime import date
+
+    from agents.insights.prompts.autonomous import build_insights_user_prompt
+
+    turn = build_insights_user_prompt(prompt="How did last week go?", today=date(2026, 11, 10))
+    assert turn.index("<current_date>") < turn.index("<request>")
+    assert "2026-11-10" in turn
+
+
+def test_a_resumed_thread_is_told_the_date_again():
+    from datetime import date, timedelta
+
+    from agents.insights.v1.runner import _resumed_opening
+
+    opening = _resumed_opening("And this week?", "")
+    assert (date.today() - timedelta(days=1)).isoformat() in opening
+    assert opening.endswith("And this week?")
