@@ -1,0 +1,52 @@
+# Each changelog entry that reaches main becomes a Discussion in Announcements.
+#
+# The changelog page reaches people who already visit getduct.ai; a Discussion
+# reaches everyone watching the repository, in their GitHub notifications, with
+# a thread to reply in. The post is made by .github/scripts/announce_changelog.py
+# from site/changelog/feed.xml, and it skips an entry already announced, so a
+# re-run is safe. Nothing here needs a secret: the job's own token may write
+# discussions and nothing else.
+name: announce
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/changelog/feed.xml'
+  workflow_dispatch:
+    inputs:
+      guid:
+        description: >-
+          Announce one entry by its feed guid (duct-changelog-YYYY-MM-DD), for
+          an entry that merged before this workflow existed. Skipped if it is
+          already posted.
+        required: true
+
+permissions:
+  contents: read
+  discussions: write
+
+concurrency:
+  group: announce
+  cancel-in-progress: false
+
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # The feed as it stood before this push is what decides which entries are new.
+          fetch-depth: 0
+      - name: Post new changelog entries
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BEFORE: ${{ github.event.before }}
+          GUID: ${{ inputs.guid }}
+        run: |
+          if [ -n "$GUID" ]; then
+            python3 .github/scripts/announce_changelog.py --guid "$GUID"
+          else
+            python3 .github/scripts/announce_changelog.py --before "$BEFORE"
+          fi
