@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="../assets/apple-icon.svg"/>
+<title>AI Agents for Marketing: What They Do and How to Run One</title>
+<link rel="canonical" href="https://getduct.ai/blog/ai-agents-for-marketing"/>
+<meta name="description" content="A complete guide to AI agents for marketing: the jobs they fit, what they must never do alone, where your data goes, what one costs, and how to start today."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="article"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:url" content="https://getduct.ai/blog/ai-agents-for-marketing"/>
+<meta property="og:title" content="AI Agents for Marketing: What They Do and How to Run One"/>
+<meta property="og:description" content="The jobs an agent fits, the ones it must never do alone, where your data goes, and what one brief costs to run: $0.005 on the cheapest model, measured."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/blog-ai-agents-for-marketing.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta property="article:author" content="Shirish Kadam"/>
+<meta property="article:section" content="Guide"/>
+<meta property="article:tag" content="ai agents for marketing"/>
+<meta property="article:tag" content="ai agents"/>
+<meta property="article:tag" content="marketing analytics"/>
+<meta property="article:tag" content="growth"/>
+<meta property="article:published_time" content="2026-11-14T00:00:00+00:00"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="AI Agents for Marketing: What They Do and How to Run One"/>
+<meta name="twitter:description" content="The jobs an agent fits, the ones it must never do alone, where your data goes, and what one brief costs to run: $0.005 on the cheapest model, measured."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/blog-ai-agents-for-marketing.jpg"/>
+<link rel="alternate" type="application/rss+xml" title="Duct Blog" href="/blog/feed.xml"/>
+<link rel="stylesheet" href="../assets/duct.css"/>
+<script src="../assets/config.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "inLanguage": "en",
+  "headline": "AI Agents for Marketing: What They Do, What They Don't, How to Run One",
+  "description": "A complete guide to AI agents for marketing: the jobs they fit, what they must never do alone, where your data goes, what one costs, and how to start today.",
+  "datePublished": "2026-11-14T00:00:00+00:00",
+  "dateModified": "2026-11-14T00:00:00+00:00",
+  "articleSection": "Guide",
+  "wordCount": 2256,
+  "author": {
+    "@type": "Person",
+    "name": "Shirish Kadam",
+    "url": "https://shirishkadam.com",
+    "sameAs": [
+      "https://github.com/5hirish",
+      "https://x.com/5hirish",
+      "https://youtube.com/@5hirish"
+    ]
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Duct",
+    "url": "https://getduct.ai"
+  },
+  "image": [
+    "https://getduct.ai/blog/assets/ai-agents-for-marketing/hero.webp",
+    "https://getduct.ai/assets/og/blog-ai-agents-for-marketing.jpg"
+  ],
+  "mainEntityOfPage": "https://getduct.ai/blog/ai-agents-for-marketing",
+  "isPartOf": {
+    "@type": "Blog",
+    "name": "Duct Blog",
+    "url": "https://getduct.ai/blog/"
+  },
+  "keywords": [
+    "ai agents for marketing",
+    "ai agents",
+    "marketing analytics",
+    "growth"
+  ],
+  "citation": [
+    {
+      "@type": "CreativeWork",
+      "name": "agentic AI examples",
+      "url": "https://www.braze.com/resources/articles/agentic-ai-marketing-examples"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "TEPA paper",
+      "url": "https://arxiv.org/abs/2608.07429"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "inLanguage": "en",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://getduct.ai/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "https://getduct.ai/blog/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "AI Agents for Marketing: What They Do, What They Don't, How to Run One",
+      "item": "https://getduct.ai/blog/ai-agents-for-marketing"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "inLanguage": "en",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is an AI agent for marketing?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Software that reads your marketing tools, decides for itself what to look at next, writes up what it found, and proposes changes for a person to approve. It differs from an automation, which follows fixed steps, and from a chatbot, which answers from what you type rather than from your data."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can an AI agent change my Google Ads account?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It should only propose. In a well-built agent the change is staged with a preview, a guardrail check and a rollback, and a person presses Apply. Ask any vendor whether the agent has an approve tool it can call itself; if the answer is yes, the gate is a prompt, not a rule."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How much does an AI marketing agent cost to run?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The model bill is the main cost. One measured weekly brief cost a median of $0.0052 on DeepSeek V4 Flash across 18 trials, with 4 model calls each. A frontier model costs tens of times more per run. The agent's own price is separate; Duct is free during its beta and uses your API key."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Where does my marketing data go when an agent reads it?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Through the model provider you chose, under your key, and into whatever the vendor stores. For Duct's downloadable app that is a hosted service holding your projects and encrypted tool connections, with your model key kept in your operating system's keychain. The self-host build keeps everything on your machine."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What should I ask a vendor before buying an AI agent for marketing?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Which tools it reads together, not one at a time. What it can change without a click. Whether the approval is enforced in code or asked for in a prompt. What one run costs on your own model. And whether it tells you, afterwards, if the change worked."
+      }
+    }
+  ]
+}
+</script>
+<style>
+#reading-progress {
+  position: fixed; top: 0; left: 0; width: 0%; height: 3px;
+  background: var(--orange); z-index: 200; transition: width .1s linear;
+}
+.post-author {
+  display: flex; gap: 20px; align-items: flex-start;
+  max-width: 700px; margin: 48px auto 0; padding: 28px 24px;
+  border-top: 1px solid var(--border);
+}
+.post-author-avatar {
+  width: 64px; height: 64px; border-radius: 50%;
+  object-fit: cover; flex-shrink: 0; background: var(--off);
+  border: 1px solid var(--border);
+}
+.post-author-name {
+  font-family: var(--serif); font-size: 18px; color: var(--navy);
+  letter-spacing: -.2px; margin-bottom: 6px;
+}
+.post-author-bio { font-size: 14px; font-weight: 300; color: var(--navy-3); line-height: 1.7; }
+.post-author-bio a { color: var(--orange); text-decoration: none; }
+.post-author-bio a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.post-author-links { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; }
+.post-author-links a {
+  font-size: 13px; font-weight: 500; color: var(--navy-2); text-decoration: none;
+  border-bottom: 1px solid var(--border); padding-bottom: 1px; transition: border-color .2s;
+}
+.post-author-links a:hover { border-color: var(--navy); }
+.article-nav {
+  display: flex; justify-content: space-between; gap: 24px;
+  max-width: 700px; margin: 0 auto; padding: 32px 24px 64px;
+}
+.article-nav a {
+  font-size: 14px; font-weight: 500; color: var(--navy-3);
+  text-decoration: none; transition: color .2s; max-width: 46%;
+}
+.article-nav a:hover { color: var(--navy); }
+.article-nav-next { margin-left: auto; text-align: right; }
+.article-nav-all { font-size: 13px; color: var(--navy-3); border-bottom: 1px solid var(--border); align-self: center; }
+.prose .post-tags { list-style: none; padding: 0; margin: 48px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.prose .post-tags li { font-size: 13px; font-weight: 500; color: var(--navy-2); background: var(--off); border: 1px solid var(--border); border-radius: 999px; padding: 3px 12px; margin: 0; }
+.post-hero { max-width: 700px; margin: 0 auto; padding: 0 24px; }
+.post-hero img { width: 100%; height: auto; display: block; border-radius: var(--r-lg); border: 1px solid var(--border); }
+.post-toc { margin: 0 0 40px; padding: 20px 24px; background: var(--off); border: 1px solid var(--border); border-radius: var(--r-lg); }
+.prose .post-toc-title { font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--navy); margin: 0 0 10px; }
+.post-toc ol { margin: 0; padding-left: 20px; }
+.prose .post-toc li { font-size: 15px; margin-bottom: 4px; }
+.prose .post-toc a { border-bottom: none; }
+.prose h2, .prose h3 { scroll-margin-top: 88px; }
+.post-figure { margin: 36px 0; }
+.prose .post-figure img { height: auto; margin: 0; border: 1px solid var(--border); background: var(--white); }
+.post-figure figcaption, .post-quote figcaption { font-size: 13px; color: var(--navy-3); line-height: 1.6; margin-top: 10px; }
+.post-quote { margin: 36px 0; }
+.post-quote blockquote { margin: 0; }
+.post-quote blockquote p { font-family: var(--serif); font-size: 19px; line-height: 1.55; margin: 0 0 10px; }
+.post-quote figcaption { padding-left: 27px; }
+.post-table { margin: 28px 0 32px; overflow-x: auto; border: 1px solid var(--border); border-radius: var(--r); }
+.post-table table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 1.55; color: var(--navy-3); }
+.post-table th { text-align: left; font-weight: 600; color: var(--navy); background: var(--off); }
+.post-table th, .post-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; min-width: 120px; }
+.post-table tr:last-child td { border-bottom: none; }
+.post-table code { font-size: 12px; }
+.prose .post-embed {
+  display: flex; align-items: center; gap: 16px; margin: 28px 0; padding: 18px 20px;
+  border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--white);
+  color: var(--navy-3); transition: border-color .15s, background .15s;
+}
+.prose .post-embed:hover { border-color: var(--orange); background: var(--off); }
+.post-embed .ic { font-size: 28px; color: var(--navy); flex-shrink: 0; }
+.post-embed-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.post-embed-title { font-size: 16px; color: var(--navy); }
+.post-embed-desc { font-size: 14px; font-weight: 300; line-height: 1.5; }
+.post-embed-host { margin-left: auto; font-size: 12px; color: var(--navy-3); flex-shrink: 0; }
+.post-video { position: relative; margin: 32px 0; aspect-ratio: 16 / 9; border-radius: var(--r-lg); overflow: hidden; background: var(--navy); }
+.prose .post-video-facade { display: block; position: absolute; inset: 0; border: none; color: #fff; }
+.prose .post-video-facade img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; margin: 0; border-radius: 0; }
+.post-video-facade::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(13,15,26,.95) 0%, rgba(13,15,26,.75) 30%, rgba(13,15,26,0) 70%); }
+.post-video-play {
+  position: absolute; z-index: 1; left: 50%; top: 42%; transform: translate(-50%, -50%); width: 72px; height: 72px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; background: var(--orange); font-size: 30px; color: #fff;
+  box-shadow: 0 8px 24px rgba(13,15,26,.35); transition: transform .15s;
+}
+.post-video-facade:hover .post-video-play, .post-video-facade:focus-visible .post-video-play { transform: translate(-50%, -50%) scale(1.08); }
+.post-video-caption { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; padding: 20px 24px; display: flex; flex-direction: column; gap: 4px; }
+.post-video-title { font-family: var(--serif); font-size: 19px; line-height: 1.3; }
+.post-video-note { font-size: 13px; color: #c9ccd8; }
+.post-video iframe { width: 100%; height: 100%; border: 0; display: block; }
+@media (max-width: 640px) {
+  .post-video-title { font-size: 16px; }
+  .post-video-caption { padding: 14px 16px; }
+  .post-author { flex-direction: column; gap: 16px; }
+  .article-nav { flex-direction: column; gap: 16px; }
+  .article-nav a { max-width: 100%; }
+  .article-nav-next { text-align: left; margin-left: 0; }
+  .post-embed-host { display: none; }
+}
+</style>
+</head>
+<body>
+
+<a href="#prose" class="skip-link">Skip to content</a>
+
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PKL589SW" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<div id="reading-progress" role="progressbar" aria-label="Reading progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+
+<!-- GENERATED FILE — edit blog/posts/ai-agents-for-marketing.md and run scripts/build_blog.py -->
+<nav id="nav" aria-label="Main navigation">
+<div style="display:flex;align-items:center;gap:10px">
+<a href="/" class="logo">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<span style="font-size:12px;font-weight:500;color:var(--navy-3);letter-spacing:.02em">blog</span>
+</div>
+<div class="nav-links">
+<div class="nav-dropdown">
+  <a href="/#use-cases" class="nav-link">Solutions</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/for-product-intelligence" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
+      <span class="dm-text"><strong>PMs &amp; growth teams</strong><span>Why did signups drop? Read across analytics, ads and revenue</span></span>
+    </a>
+    <a href="/for-organic-growth" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sprout"/></svg></span>
+      <span class="dm-text"><strong>SEO &amp; content teams</strong><span>Search Console, GA4 and the audit, in one place</span></span>
+    </a>
+    <a href="/for-paid-ads" class="dm-item">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#megaphone"/></svg></span>
+      <span class="dm-text"><strong>Performance marketers</strong><span>Spend against retention and revenue, not ROAS alone</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#briefcase"/></svg></span>
+      <span class="dm-text"><strong>Sales / RevOps</strong><span>Pipeline &amp; revenue intelligence</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shopping-cart"/></svg></span>
+      <span class="dm-text"><strong>E-commerce / DTC</strong><span>ROAS, LTV &amp; retention synthesis</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+    <span class="dm-item disabled" aria-disabled="true">
+      <span class="dm-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#handshake"/></svg></span>
+      <span class="dm-text"><strong>Customer Success</strong><span>Early churn &amp; health score signals</span></span>
+      <span class="tag-soon">Soon</span>
+    </span>
+  </div>
+  </div>
+</div>
+<div class="nav-dropdown">
+  <a href="/tools/" class="nav-link">Free Tools</a>
+  <div class="dropdown-menu">
+  <div class="dropdown-menu-inner">
+    <a href="/tools/utm-builder" class="dm-item">
+      <span class="dm-text"><strong>UTM Builder</strong><span>Build GA4-compliant UTM links with live preview</span></span>
+    </a>
+    <a href="/tools/ctr-calculator" class="dm-item">
+      <span class="dm-text"><strong>CTR Calculator</strong><span>Click-through rate from impressions and clicks</span></span>
+    </a>
+    <a href="/tools/cpc-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPC Calculator</strong><span>Cost per click from spend and volume</span></span>
+    </a>
+    <a href="/tools/cpm-calculator" class="dm-item">
+      <span class="dm-text"><strong>CPM Calculator</strong><span>Cost per 1,000 impressions</span></span>
+    </a>
+    <a href="/tools/engagement-rate-calculator" class="dm-item">
+      <span class="dm-text"><strong>Engagement Rate Calculator</strong><span>Engagement vs followers, reach, or impressions</span></span>
+    </a>
+    <a href="/tools/roas-calculator" class="dm-item">
+      <span class="dm-text"><strong>ROAS Calculator</strong><span>Return on ad spend from revenue and spend</span></span>
+    </a>
+    <a href="/tools/marketing-roi-calculator" class="dm-item">
+      <span class="dm-text"><strong>Marketing ROI Calculator</strong><span>ROI and profit from campaign spend vs revenue</span></span>
+    </a>
+    <div class="dm-sep" aria-hidden="true"></div>
+    <a href="/tools/" class="dm-item">
+      <span class="dm-text"><strong>See all tools</strong><span>SaaS metrics, CAC/LTV, CPA, weekly brief, and more</span></span>
+    </a>
+  </div>
+  </div>
+</div>
+<a href="/integrations/" class="nav-link">Integrations</a>
+<a href="/#how" class="nav-link">How it works</a>
+<a href="/blog/" class="nav-link">Blog</a>
+<a href="https://github.com/5hirish/duct" class="nav-link nav-gh" target="_blank" rel="noopener" title="Duct on GitHub"><img src="/assets/icons/github.svg" width="18" height="18" alt="" aria-hidden="true"/><span class="nav-gh-label">GitHub</span></a>
+<a href="/download" class="btn btn-orange" style="padding:8px 18px;font-size:13px" data-duct-download data-duct-download-short>Download →</a>
+<div class="nav-lang" data-duct-lang-menu>
+<button type="button" class="nav-lang-btn" aria-expanded="false" aria-controls="nav-lang-list" aria-label="Language"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#globe"/></svg><span class="nav-lang-code" data-duct-lang-code>EN</span><svg class="ic nav-lang-caret" aria-hidden="true"><use href="/assets/icons.svg#chevron-down"/></svg></button>
+<div class="nav-lang-menu" id="nav-lang-list">
+<div class="dropdown-menu-inner">
+<a class="nav-lang-item" href="/" hreflang="en" lang="en" data-duct-lang-link="en" data-code="EN" aria-current="true">English</a>
+<a class="nav-lang-item" href="/es/" hreflang="es" lang="es" data-duct-lang-link="es" data-code="ES">Español</a>
+<a class="nav-lang-item" href="/pt-br/" hreflang="pt-BR" lang="pt-BR" data-duct-lang-link="pt-br" data-code="PT">Português (Brasil)</a>
+<a class="nav-lang-item" href="/de/" hreflang="de" lang="de" data-duct-lang-link="de" data-code="DE">Deutsch</a>
+<a class="nav-lang-item" href="/ja/" hreflang="ja" lang="ja" data-duct-lang-link="ja" data-code="JA">日本語</a>
+</div>
+</div>
+</div>
+</div>
+</nav>
+
+<header class="article-header">
+<p class="tag">Guide</p>
+<h1>AI Agents for Marketing: What They Do, What They Don&#x27;t, How to Run One</h1>
+<div class="article-meta">Nov 14 2026 · 10 min read · By Shirish Kadam</div>
+<p class="article-made">Claude Code drafted this guide from the six guides it links, the Duct repository and the sources named inline, drew the figure, and generated the hero. Shirish checked every number, link and claim about Duct before it was published.</p>
+</header>
+
+<main>
+<figure class="post-hero"><img src="assets/ai-agents-for-marketing/hero.webp" srcset="assets/ai-agents-for-marketing/hero-768.webp 768w, assets/ai-agents-for-marketing/hero.webp 1320w" sizes="(max-width: 700px) calc(100vw - 48px), 652px" width="1320" height="743" fetchpriority="high" alt="A Roman mosaic of a whole aqueduct: a spring feeds a basin, a channel runs across tall arches to a distribution tank with an orange gate, and three pipes carry the water down to a fountain, a bath house and a mill wheel"/></figure>
+<article id="prose" class="prose">
+<p><strong>An AI agent for marketing is software that reads your marketing tools, decides what to look at next, writes up what it found, and proposes changes that you approve.</strong> It differs from the automations you already run because it chooses its own steps, and from a chatbot because it reads your real data and can act on it. The jobs it fits are the ones that take you a morning each week; the jobs it must never do alone are the ones that spend or delete.</p>
+<p>I built one. Duct is an open-source agent that reads Google Ads, GA4, Search Console, Stripe and nine other tools together, and it exists because I was bad at the Monday report and did not enjoy it (I leave it to you to guess which came first). Since March, 739 of the 1,427 commits on its main branch carry a coding agent's name beside mine. So this guide is written from inside: what works, what costs what, and what I would not let an agent do with my own accounts.</p>
+<p>Each section below is the short answer to one question, with a link to the full guide on it. If you only read one, read the one on approval.</p>
+<nav class="post-toc" aria-label="In this post">
+<p class="post-toc-title">In this post</p>
+<ol>
+<li><a href="#what-does-an-ai-agent-for-marketing-actually-do">What does an AI agent for marketing actually do?</a></li>
+<li><a href="#is-this-different-from-the-automation-i-already-have">Is this different from the automation I already have?</a></li>
+<li><a href="#which-marketing-jobs-should-an-agent-do-and-which-should-it-not">Which marketing jobs should an agent do, and which should it not?</a></li>
+<li><a href="#what-does-a-week-with-an-agent-look-like">What does a week with an agent look like?</a></li>
+<li><a href="#where-does-my-data-go-and-who-sees-it">Where does my data go, and who sees it?</a></li>
+<li><a href="#do-i-need-agentic-ai-or-just-an-agent">Do I need &quot;agentic AI&quot;, or just an agent?</a></li>
+<li><a href="#what-does-it-cost-to-run">What does it cost to run?</a></li>
+<li><a href="#how-do-i-start-this-afternoon">How do I start, this afternoon?</a></li>
+<li><a href="#what-an-agent-cannot-do-yet">What an agent cannot do yet</a></li>
+<li><a href="#faq">FAQ</a></li>
+</ol>
+</nav>
+<h2 id="what-does-an-ai-agent-for-marketing-actually-do">What does an AI agent for marketing actually do?</h2>
+<p><strong>It does the reading you do by hand, across every tool at once, and writes down what moved and why.</strong> The pages that rank for this question are vendor guides. Salesforce's says "AI agents for marketing are advanced, specialized software systems that automate and execute a variety of marketing tasks", and lists campaign activation and segmentation at enterprise scale. Braze's <a href="https://www.braze.com/resources/articles/agentic-ai-marketing-examples">agentic AI examples</a> are a streaming service, a bank and a sports broadcaster. None of them describes a two-person team's week, and none of them names a cost.</p>
+<p>Here is the week, as it runs on a shipping agent:</p>
+<figure class="post-figure" data-zoom><img src="assets/ai-agents-for-marketing/one-week-with-an-agent.svg" width="1000" height="590" loading="lazy" decoding="async" alt="A five-stage flow: your tools feed the agent, which reads across them and writes a brief; the brief may carry a proposed change, which waits at an orange approval step for you; only after that does it apply."/><figcaption>The agent reads, remembers and proposes. The orange step is the only place where your accounts change.</figcaption></figure>
+<p>The thirteen tools in the first box are the ones Duct reads today, from the <a href="/integrations/">integrations page</a>. The work in the second box is the part a dashboard cannot do: a dashboard shows one tool; the agent holds Google Ads next to Stripe next to GA4 and asks why the numbers disagree. In the <a href="/blog/ai-agent-examples-marketing">seven agent examples for marketing</a> guide, each job is listed with the tools it reads, what it produces and what it is allowed to change.</p>
+<h2 id="is-this-different-from-the-automation-i-already-have">Is this different from the automation I already have?</h2>
+<p><strong>Yes, and the difference is one sentence: an automation follows the steps you wrote; an agent chooses its next step from what it just read.</strong> A Zapier flow that posts a Slack message when a form is filled is an automation. A chatbot answers from what you type. An agent reads your Search Console, notices a page lost impressions, opens GA4 to see whether the sessions went with them, and then checks whether you shipped anything that week.</p>
+<p>The three-question test from the <a href="/blog/ai-agent-vs-chatbot-vs-automation">agent vs chatbot vs automation</a> guide: does it choose its own next step, does it read more than one source, and can it change something? Two or three yeses is an agent. The guide walks one job, the weekly growth report, through all three forms, and shows the line of code where "agent" ends and "automation" begins. Most teams need an agent for the reading and an automation for the routine, and the mistake is buying the first to do the second.</p>
+<h2 id="which-marketing-jobs-should-an-agent-do-and-which-should-it-not">Which marketing jobs should an agent do, and which should it not?</h2>
+<p><strong>Give it the jobs that are reading and comparing; keep the jobs that are spending and deleting behind your own click.</strong> This is the decision I make for every job before Duct gets it, and it is the decision table I would want from any vendor:</p>
+<div class="post-table" role="region" aria-label="Table: The job, Agent, Automation, By hand, Why" tabindex="0">
+<table>
+<thead><tr><th scope="col">The job</th><th scope="col">Agent</th><th scope="col">Automation</th><th scope="col">By hand</th><th scope="col">Why</th></tr></thead>
+<tbody>
+<tr><td>The Monday read of ads, analytics and billing</td><td>✓</td><td></td><td></td><td>three tools, one question, and the answer changes every week</td></tr>
+<tr><td>"Why did signups drop last week"</td><td>✓</td><td></td><td></td><td>the cause is in a tool you did not think to open</td></tr>
+<tr><td>Keyword gap from Search Console</td><td>✓</td><td></td><td></td><td>a comparison that is tedious by hand and needs judgment about intent</td></tr>
+<tr><td>Pausing a campaign at a spend cap</td><td></td><td>✓</td><td></td><td>a fixed rule; an agent adds nothing but latency</td></tr>
+<tr><td>Posting the weekly numbers to Slack</td><td></td><td>✓</td><td></td><td>once the brief exists, delivery is a pipe</td></tr>
+<tr><td>Changing a bid, a budget or an audience</td><td>proposes</td><td></td><td>approves</td><td>reversible, but it spends money; a person signs</td></tr>
+<tr><td>Deleting an audience, an event or a campaign</td><td>proposes</td><td></td><td>approves</td><td>not reversible; no setting should ever let this auto-apply</td></tr>
+<tr><td>Deciding what the quarter's goal is</td><td></td><td></td><td>✓</td><td>an agent can brief the decision, it cannot own it</td></tr>
+</tbody>
+</table>
+</div>
+<p>The last three rows are the whole argument of the <a href="/blog/human-in-the-loop-ai-agents">human in the loop</a> guide. Braze puts it well in the article above: "Building in human checkpoints and audit trails is what allows teams to move fast with confidence." The guide goes further than a checkpoint: it shows a gate that is enforced by the absence of a tool. In Duct there is no approve or apply tool in the list the model can call, so the model cannot be talked into approving its own proposal, and the rule lives in <a href="https://github.com/5hirish/duct/blob/main/backend/service/execution/policy.py">one policy file</a> rather than in a prompt that asks nicely.</p>
+<h2 id="what-does-a-week-with-an-agent-look-like">What does a week with an agent look like?</h2>
+<p><strong>One request on Monday morning, a brief back in a few minutes, and one or two proposed changes waiting for a decision.</strong> The <a href="/blog/what-is-an-agentic-workflow">agentic workflow</a> guide walks the six steps of Duct's weekly brief, trigger, gather, compare, check, write, approve, and names who decides each one. The trigger is still you, or a cron job you set up: Duct has an unattended entry point for the brief, and nothing in the product schedules it yet, which is the first limit the guide admits. The step worth knowing about is the one that moved out of the model. Replaying a real brief, the model reasoned correctly and then added wrong: 2,504 sessions where its own rows summed to 2,681. Totals, rates and subtotals are now computed in code and handed to the model (<a href="https://github.com/5hirish/duct/pull/238">#238</a>), which is the practical form of a rule I now apply to every agent: let the model decide, never let it count.</p>
+<p>A second thing the week needs is memory with dates. Budgets change, campaigns pause, pages redirect, and an agent that remembers "campaign enabled" from ninety days ago and asserts it today is worse than one that remembers nothing. The <a href="https://arxiv.org/abs/2608.07429">TEPA paper</a> measured it: append-only memory scored 0.210, no memory 0.309, memory that revokes stale facts 0.950. Duct shows the age of every remembered fact and re-reads the source before stating an old one as current.</p>
+<h2 id="where-does-my-data-go-and-who-sees-it">Where does my data go, and who sees it?</h2>
+<p><strong>Through the model you chose, under your own key, and into whatever the agent's vendor stores; ask every vendor those three questions and expect three straight answers.</strong> The <a href="/blog/local-ai-agents">local AI agents</a> guide is the one I was most nervous to write, because the honest answer about my own product is in two halves. The Duct you download is a thin desktop shell that talks to the hosted service: your projects and your tool connections live there, encrypted, and the shell loads a hosted web app. What stays on your machine is the model key, in the operating system's keychain, sent with a request only when a job runs. The self-host build runs the whole backend on your laptop with a local database and nothing leaving the machine, and almost nobody runs it. Both are true; a product page that says only the second is lying by selection.</p>
+<p>The guide has the same table for cloud agents, self-hosted agents and desktop agents with your own key, so you can place any product on it in a minute.</p>
+<h2 id="do-i-need-agentic-ai-or-just-an-agent">Do I need "agentic AI", or just an agent?</h2>
+<p><strong>Just an agent, for almost every marketing job; "agentic" is the word for a system of several agents that plan and check each other, and it costs more per run.</strong> Workday, Domo and a dozen others have written the <a href="/blog/ai-agents-vs-agentic-ai">agents vs agentic AI</a> comparison in the abstract. The guide does it on a product that is both: Duct's insights agent runs alone for most of a brief, and hands its data to a second, cheaper verifier agent, which checks the numbers before the first one recommends anything. The guide says what the verifier checks, what it cannot yet measure, and what to ask in a demo so that "agentic" on a slide turns into a number you can check.</p>
+<h2 id="what-does-it-cost-to-run">What does it cost to run?</h2>
+<p><strong>Cents per brief on a cheap model, dollars on an expensive one, and the model bill is yours either way.</strong> Duct is free during its beta and brings no model of its own: you give it your own API key (Google, Anthropic, OpenAI, OpenRouter or xAI), and every job is routed to one of three rungs, heavy, standard and light, so that a memory note does not run on the model you reserve for the hard question.</p>
+<p>The one number I can stand behind is measured, not estimated. Duct's eval gate runs the weekly brief against a synthetic account before any change to the agent merges, and records the cost:</p>
+<div class="post-table" role="region" aria-label="Table: What, Model, Median cost per run, Model calls, Recorded" tabindex="0">
+<table>
+<thead><tr><th scope="col">What</th><th scope="col">Model</th><th scope="col">Median cost per run</th><th scope="col">Model calls</th><th scope="col">Recorded</th></tr></thead>
+<tbody>
+<tr><td>One weekly brief, on the synthetic test account</td><td>DeepSeek V4 Flash via OpenRouter</td><td>$0.0052</td><td>4</td><td>18 trials, Sep 30 2026</td></tr>
+</tbody>
+</table>
+</div>
+<p>The source is the <a href="https://github.com/5hirish/duct/blob/main/backend/tests/eval/baselines.json">eval baselines file</a> in the repository. The honest half of the row is the column it leaves out: that case passes its own checks 77.8% of the time on that model, which is why the cheapest rung is for memory and recaps, not for the brief you act on. On the default Gemini ladder a brief runs on Flash, and I do not yet have a published baseline for it, so I will not quote one. The <a href="/blog/what-is-harness-engineering">harness engineering</a> post has the wider point: the cheaper the model, the more the code around it decides the result.</p>
+<h2 id="how-do-i-start-this-afternoon">How do I start, this afternoon?</h2>
+<p><strong>Connect two tools, ask one question you already know the answer to, and read what comes back before you trust it with a question you don't.</strong> In order:</p>
+<ol>
+<li><strong>Pick the job from the table above that costs you the most time.</strong> For most teams it is the Monday read.</li>
+<li><strong>Connect the two tools that job reads first</strong>, not all thirteen. Search Console and GA4 for organic; Google Ads and Stripe for paid.</li>
+<li><strong>Ask a question whose answer you know.</strong> "Why did organic sessions drop in the second week of September?" when you remember the redirect. If the agent finds the redirect, it has earned the next question.</li>
+<li><strong>Read one proposed change without approving it.</strong> Check that the preview says exactly what will change and that there is a way back.</li>
+<li><strong>Make it the Monday habit</strong>, a request or a cron job, and spend the morning it gives back on the row of the table that says "by hand".</li>
+</ol>
+<p><a href="/download">Download Duct</a> does the first three in about ten minutes, and the <a href="/open-source">open-source</a> build is the same code if you would rather read it first.</p>
+<h2 id="what-an-agent-cannot-do-yet">What an agent cannot do yet</h2>
+<p><strong>It cannot tell you whether the change it proposed worked, and it does not learn from a rejection.</strong> Both are open issues in Duct's tracker, not features in a deck. "Did it work?", a verdict on every applied change, is <a href="https://github.com/5hirish/duct/issues/243">#243</a>; rejecting a change with a reason so the agent stops proposing it is <a href="https://github.com/5hirish/duct/issues/241">#241</a>; and a HubSpot connector is still a placeholder (<a href="https://github.com/5hirish/duct/issues/320">#320</a>). I would rather you read the gaps here than find them in week two. Oh, and the Japanese version of this site was translated by a machine, and it shows.</p>
+<h2 id="faq">FAQ</h2>
+<h3 id="what-is-an-ai-agent-for-marketing">What is an AI agent for marketing?</h3>
+<p>Software that reads your marketing tools, decides for itself what to look at next, writes up what it found, and proposes changes for a person to approve. It differs from an automation, which follows fixed steps, and from a chatbot, which answers from what you type rather than from your data.</p>
+<h3 id="can-an-ai-agent-change-my-google-ads-account">Can an AI agent change my Google Ads account?</h3>
+<p>It should only propose. In a well-built agent the change is staged with a preview, a guardrail check and a rollback, and a person presses Apply. Ask any vendor whether the agent has an approve tool it can call itself; if the answer is yes, the gate is a prompt, not a rule.</p>
+<h3 id="how-much-does-an-ai-marketing-agent-cost-to-run">How much does an AI marketing agent cost to run?</h3>
+<p>The model bill is the main cost. One measured weekly brief cost a median of $0.0052 on DeepSeek V4 Flash across 18 trials, with 4 model calls each. A frontier model costs tens of times more per run. The agent's own price is separate; Duct is free during its beta and uses your API key.</p>
+<h3 id="where-does-my-marketing-data-go-when-an-agent-reads-it">Where does my marketing data go when an agent reads it?</h3>
+<p>Through the model provider you chose, under your key, and into whatever the vendor stores. For Duct's downloadable app that is a hosted service holding your projects and encrypted tool connections, with your model key kept in your operating system's keychain. The self-host build keeps everything on your machine.</p>
+<h3 id="what-should-i-ask-a-vendor-before-buying-an-ai-agent-for-marketing">What should I ask a vendor before buying an AI agent for marketing?</h3>
+<p>Which tools it reads together, not one at a time. What it can change without a click. Whether the approval is enforced in code or asked for in a prompt. What one run costs on your own model. And whether it tells you, afterwards, if the change worked.</p>
+<ul class="post-tags" aria-label="Tags"><li>ai agents for marketing</li><li>ai agents</li><li>marketing analytics</li><li>growth</li></ul>
+</article>
+
+<aside class="post-author" aria-label="About the author">
+  <img class="post-author-avatar" src="https://github.com/5hirish.png" width="64" height="64" loading="lazy" alt="Shirish Kadam"/>
+  <div>
+    <p class="post-author-name">Shirish Kadam</p>
+    <p class="post-author-bio">Product manager and engineer in Spain. I maintain <a href="https://github.com/5hirish/duct" rel="noopener">Duct</a>, an open-source AI agent that reads across your product and growth stack. MIT licensed, runs on your own machine.</p>
+    <div class="post-author-links">
+      <a href="https://github.com/5hirish" rel="noopener">GitHub</a>
+      <a href="https://x.com/5hirish" rel="noopener">X</a>
+      <a href="https://youtube.com/@5hirish" rel="noopener">Ship with AI</a>
+      <a href="https://shirishkadam.com" rel="noopener">Blog</a>
+    </div>
+  </div>
+</aside>
+
+<nav class="article-nav" aria-label="More articles">
+<a class="article-nav-prev" href="/blog/ai-agents-vs-agentic-ai">← AI Agents vs Agentic AI: The Difference, in a Marketer&#x27;s Terms</a>
+<a class="article-nav-all" href="/blog/">All posts</a>
+</nav>
+</main>
+
+<!-- The closer is the product, not a pitch: the same bridge the tools pages
+     end on, with a shot, so a post is not the one page on the site that ends
+     in text alone. Which one depends on the post's audience. -->
+<section class="duct-bridge" aria-label="About Duct">
+  <div class="duct-bridge-inner">
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">Reading three tools together is the whole job. Duct does it on your machine.</p>
+      <p class="duct-bridge-body">Ask why signups dropped. Duct reads Search Console, GA4 and your ads and revenue tools together, answers with the sources it read, and proposes the change. You approve it. Open source, free with your own keys.</p>
+      <p class="duct-bridge-actions"><a href="/download" class="btn btn-orange" data-duct-download>Download Duct&nbsp;↓</a><a href="/" class="duct-bridge-link">How Duct works&nbsp;→</a></p>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="../assets/media/insights-session.webp" srcset="../assets/media/insights-session-768.webp 768w, ../assets/media/insights-session-1536.webp 1536w, ../assets/media/insights-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="An insights session: the question, the sources it read, two findings, and the brief beside it"/>
+      <figcaption>Why are signups down? Asked once, answered from four tools.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<footer class="footer-expanded">
+<div class="footer-top">
+<div class="footer-brand">
+<a href="/" class="logo" style="font-size:20px">duct <span class="logo-mark" aria-hidden="true"></span></a>
+<p>An open-source project by Alleviate Lab. An AI agent that reads across your growth stack, acts with your approval, and remembers. MIT licensed.</p>
+</div>
+<div class="footer-cols" role="navigation" aria-label="Footer navigation">
+<div class="footer-col">
+<h4>Use Cases</h4>
+<a href="/for-product-intelligence">Product Intelligence</a>
+<a href="/for-organic-growth">Organic Growth</a>
+<a href="/for-paid-ads">Paid Ads Intelligence</a>
+</div>
+<div class="footer-col">
+<h4>Free Tools</h4>
+<a href="/tools/utm-builder">UTM Builder</a>
+<a href="/tools/ctr-calculator">CTR Calculator</a>
+<a href="/tools/cpc-calculator">CPC Calculator</a>
+<a href="/tools/cpm-calculator">CPM Calculator</a>
+<a href="/tools/engagement-rate-calculator">Engagement Rate Calculator</a>
+<a href="/tools/roas-calculator">ROAS Calculator</a>
+<a href="/tools/marketing-roi-calculator">Marketing ROI Calculator</a>
+<a href="/tools/">See all free tools →</a>
+</div>
+<div class="footer-col">
+<h4>Product</h4>
+<a href="/download">Download for Desktop</a>
+<a href="/seo-audit">Free SEO Audit</a>
+<a href="/integrations/">Integrations</a>
+<a href="/mcp">MCP servers</a>
+<a href="/compare">Compare</a>
+<a href="/changelog/">Changelog</a>
+</div>
+<div class="footer-col">
+<h4>Resources</h4>
+<a href="/blog/">Blog</a>
+<a href="/doctrine">Doctrine</a>
+<a href="/open-source">Open source</a>
+<a href="/about">About</a>
+</div>
+<div class="footer-col">
+<h4>Community</h4>
+<a href="https://github.com/5hirish/duct" rel="noopener">GitHub repository</a>
+<a href="https://github.com/5hirish/duct/discussions" rel="noopener">Discussions</a>
+<a href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">Contributing</a>
+<a href="https://youtube.com/@5hirish" rel="noopener">Ship with AI (YouTube)</a>
+<a href="https://x.com/5hirish" rel="noopener">X / Twitter</a>
+</div>
+</div>
+<div class="footer-bottom-row">
+<span>© 2026 Alleviate Lab · Spain · Built in the open by <a href="https://github.com/5hirish" rel="noopener" style="color:inherit">Shirish Kadam</a>.</span>
+<nav class="footer-legal" aria-label="Legal">
+<a href="https://github.com/5hirish/duct/blob/main/LICENSE" rel="noopener">Licence (MIT)</a>
+<a href="/privacy">Privacy Policy</a>
+<a href="/terms">Terms of Service</a>
+<a href="#" data-consent-settings>Cookie settings</a>
+</nav>
+<nav class="footer-lang" aria-label="Language">
+<a href="/" hreflang="en" data-duct-lang-link="en">English</a>
+<a href="/es/" hreflang="es" data-duct-lang-link="es">Español</a>
+<a href="/pt-br/" hreflang="pt-BR" data-duct-lang-link="pt-br">Português</a>
+<a href="/de/" hreflang="de" data-duct-lang-link="de">Deutsch</a>
+<a href="/ja/" hreflang="ja" data-duct-lang-link="ja">日本語</a>
+</nav>
+</div>
+</footer>
+
+<script src="../assets/duct.js" defer></script>
+<script src="../assets/duct-download.js" defer></script>
+<script>
+(function () {
+  var bar = document.getElementById('reading-progress');
+  window.addEventListener('scroll', function () {
+    var top = window.scrollY || document.documentElement.scrollTop;
+    var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+    var pct = height > 0 ? Math.round((top / height) * 100) : 0;
+    bar.style.width = pct + '%';
+    bar.setAttribute('aria-valuenow', pct);
+  }, { passive: true });
+})();
+</script>
+
+</body>
+</html>
