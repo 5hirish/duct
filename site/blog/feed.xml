@@ -9,7 +9,17 @@
     <managingEditor>hello@getduct.ai (Shirish Kadam)</managingEditor>
     <webMaster>hello@getduct.ai (Shirish Kadam)</webMaster>
     <copyright>MIT licensed project. Posts © Alleviate Lab.</copyright>
-    <lastBuildDate>Tue, 10 Nov 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 12 Nov 2026 00:00:00 GMT</lastBuildDate>
+
+    <item>
+      <title>AI Agents vs Agentic AI: The Difference, in a Marketer&#x27;s Terms</title>
+      <link>https://getduct.ai/blog/ai-agents-vs-agentic-ai</link>
+      <guid isPermaLink="true">https://getduct.ai/blog/ai-agents-vs-agentic-ai</guid>
+      <pubDate>Thu, 12 Nov 2026 00:00:00 GMT</pubDate>
+      <author>hello@getduct.ai (Shirish Kadam)</author>
+      <category>Guide</category>
+      <description>One agent does a task. An agentic system adds a planner and a checker. Here is the day I found a second agent in Duct that I had not meant to ship, and what it taught me about the word.</description>
+    </item>
 
     <item>
       <title>Local AI Agents: What Stays on Your Machine, What Leaves It</title>
