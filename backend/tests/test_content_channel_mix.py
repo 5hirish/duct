@@ -26,6 +26,8 @@ from agents.content.channel_mix import (
     floor_days,
     goal_from,
     load_channel_mix,
+    mix_snapshot,
+    overreaching_hooks,
 )
 from agents.content.performance import INTENT, REACHED, PostSample, read_metric
 
@@ -175,6 +177,42 @@ def test_the_last_plan_counts_days_by_the_channel_each_was_made_for():
     assert (by["tiktok"].last_days, by["linkedin"].last_days) == (3, 1)
     assert by["instagram"].last_days is None  # it rode along, it was not planned for
     assert mix.last_plan_days == 4
+
+
+def test_a_plan_keeps_each_channels_facts_for_the_board():
+    """The board says per channel what the plan scales and tests and how its
+    share moved; those facts are code's, never the strategy's one sentence."""
+    samples = [
+        *[_post("tiktok", post_type="video", saves=40, share_count=10) for _ in range(3)],
+        *[_post("tiktok", post_type="slideshow", saves=5, share_count=1) for _ in range(3)],
+        *[_post("linkedin", post_type="text", share_count=2) for _ in range(3)],
+    ]
+    last_plan = [{"platforms": ["tiktok"]}] * 20 + [{"platforms": ["linkedin"]}] * 10
+    snap = mix_snapshot(build_mix(samples, ["tiktok", "linkedin"], INTENT_GOAL, 30, last_plan))
+
+    assert snap["goal"] == "intent"
+    tiktok, linkedin = snap["channels"]
+    assert (tiktok["channel"], tiktok["last_days"], tiktok["standing"]) == ("tiktok", 20, LEADS)
+    assert tiktok["scaling"] == "video" and "image" in tiktok["testing"]
+    assert (linkedin["last_days"], linkedin["standing"]) == (10, TRAILS)
+
+
+def test_a_hook_the_history_has_not_proven_takes_at_most_a_quarter_of_a_channel():
+    """One post tried transformation_reveal and a plan gave it 9 of 23 days."""
+    samples = [
+        PostSample(post_type="video", perf={"saves": 2}, channel="tiktok", hook_type="transformation_reveal"),
+        *[PostSample(post_type="slideshow", perf={"saves": 5}, channel="tiktok", hook_type="myth_bust") for _ in range(3)],
+    ]
+    mix = build_mix(samples, ["tiktok"], INTENT_GOAL, 22, None)
+    day = lambda hook: {"platforms": ["tiktok"], "hook_type": hook}  # noqa: E731
+    days = [day("transformation_reveal")] * 9 + [day("myth_bust")] * 10 + [day("")] * 3
+
+    (over,) = overreaching_hooks(mix, days)
+    assert (over.hook, over.days, over.cap, over.channel_days) == ("transformation_reveal", 9, 6, 22)
+    assert over.record == "1 measured post"
+    assert overreaching_hooks(mix, [day("transformation_reveal")] * 6 + [day("x")] * 16)[0].hook == "x", (
+        "a hook no post tried is held to the same cap, and a proven one is not"
+    )
 
 
 def test_the_block_tells_the_model_the_goal_the_days_and_each_channel():

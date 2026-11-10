@@ -26,6 +26,7 @@ from service.membership import accessible_projects, get_project_for_user, member
 from service.project_draft import (
     DRAFT_SOURCES,
     FIELDS,
+    LEGACY_PILLARS_KEY,
     clean_labels,
     reconcile_save,
     snapshot,
@@ -72,6 +73,14 @@ class ProjectIn(BaseModel):
         if len(json.dumps(v)) > _JSONB_MAX_BYTES:
             raise ValueError("Section payload too large (max 128 KB).")
         return v
+
+    @field_validator("brand_channels", mode="after")
+    @classmethod
+    def _no_second_pillar_list(cls, v: dict) -> dict:
+        # Pillars live in projects.content_pillars (service/project_draft.py).
+        # A device that drafted before that still carries its copy here, and
+        # saving it back would grow the second list again, one nobody reads.
+        return {k: val for k, val in v.items() if k != LEGACY_PILLARS_KEY}
 
 
 class DraftFieldIn(BaseModel):

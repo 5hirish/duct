@@ -537,6 +537,11 @@ Postgres `DATABASE_URL` names.
   held, and records what it replaced in its `activity_logs` row so
   `POST /api/user/projects/{id}/edits/{activity_id}/undo` (`revert_fields`)
   puts it back, skipping any field changed since (issue #512).
+  Pillars are one list, `projects.content_pillars.items`: the planner reads
+  it, the Brand tab edits it (and labels it `user`), and a draft's names land
+  there through `pillar_rows`. Drafts used to write
+  `brand_channels.content_pillars`, which nothing read, so MCP-written pillars
+  never reached a plan; a save drops that key if an old device sends it.
 - `routes/mcp_server.py` + `service/mcp_server/` — Duct as an MCP server at
   `POST /mcp`, for the person's own agent (Claude Code, Codex, Cursor,
   OpenCode). Stateless JSON-RPC with no SDK: five methods, no sessions, no
@@ -799,7 +804,10 @@ agents/
     │                     likes), explore/exploit, graded bets (pillar, hook, funnel stage,
     │                     objective), best and weakest posts, best posting times. An
     │                     unrecorded metric is unknown, never zero; a goal measure that
-    │                     sums metrics (saves + shares) sums only the ones recorded
+    │                     sums metrics (saves + shares) sums only the ones recorded.
+    │                     Proven is three measured posts that earned something: fewer is
+    │                     a hint (unproven), and enough that earned nothing is flat,
+    │                     tested at the floor and never scaled
     ├── channel_mix.py  — what a plan gives each channel: the brand's content goal picks
     │                     the measure (reach, engagement, or intent = saves + shares, since
     │                     conversions are not measured), every channel is summarised on
@@ -808,7 +816,18 @@ agents/
     │                     return more of the goal per post: a quarter at most per plan,
     │                     never below a post a week, only once two channels can be
     │                     compared. A day counts for its first platform. The plan turn's
-    │                     <account_performance> block is this, rendered
+    │                     <account_performance> block is this, rendered, and the plan
+    │                     keeps its per-channel facts as strategy.mix (mix_snapshot) so
+    │                     the board says what each channel leans on without a sentence.
+    │                     submit_plan refuses a hook its channel has not proven on more
+    │                     than a quarter of that channel's days (overreaching_hooks)
+    ├── plan_proposal.py — a plan is proposed, then accepted: what Accept writes, merged
+    │                     against the plan as it stands at Accept. The proposal is held
+    │                     on the conversation (meta.plan_proposal) so a deploy does not
+    │                     lose it; a resumed session shows it again (replay), and the
+    │                     accept and reject routes release it and append a
+    │                     plan_decision event, which memory consolidation reads so a
+    │                     plan only proposed is never remembered as made
     └── tools.py, subagents/, prompts.py, schema.py, artifacts.py, enrichment.py
 ```
 
@@ -1079,8 +1098,8 @@ don't fit.
 - `utils/formatting.py` — `money()`, `number()`, `percent()`, `multiplier()`,
   `safe_divide()`.
 - `service/memory.py` — agent memory (`project_memories`): `remember()` is the
-  ONLY write path (it redacts secrets, dedupes, honours the pause switch, and
-  closes the previous value of a state key), `search()` is the only read path
+  ONLY write path (it redacts secrets, drops raw ids from titles, dedupes,
+  honours the pause switch, and closes the previous value of a state key), `search()` is the only read path
   (Postgres FTS, SQLite LIKE), and `build_memory_context()` assembles the prompt
   blocks. Never write the table directly and never re-render the digest locally
   — the supersession and never-raise contracts live in that module.

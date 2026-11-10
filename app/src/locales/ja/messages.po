@@ -77,15 +77,35 @@ msgstr "{0, plural, one {# 件の下書きが準備完了} other {# 件の下書
 msgid "{0, plural, one {# draft waiting for you} other {# drafts waiting for you}}"
 msgstr "{0, plural, one {# 件の下書きがあなたを待っています} other {# 件の下書きがあなたを待っています}}"
 
+#. placeholder {0}: -row.change
+#: src/components/content/PlanStrategy.jsx
+msgid "{0, plural, one {# fewer than last plan} other {# fewer than last plan}}"
+msgstr "{0, plural, other {# 前回のプランより少ない}}"
+
 #. placeholder {0}: items.length
 #: src/components/memory/MemoryTimeline.jsx
 msgid "{0, plural, one {# match} other {# matches}}"
 msgstr "{0, plural, other {# 一致}}"
 
+#. placeholder {0}: row.change
+#: src/components/content/PlanStrategy.jsx
+msgid "{0, plural, one {# more than last plan} other {# more than last plan}}"
+msgstr "{0, plural, other {# 前回のプランより多い}}"
+
 #. placeholder {0}: doc.pages
 #: src/components/onboarding/DocumentPicker.jsx
 #~ msgid "{0, plural, one {# page} other {# pages}}"
 #~ msgstr "{0, plural, other {# ページ}}"
+
+#. placeholder {0}: plans.length
+#: src/components/content/PlansIndex.jsx
+#~ msgid "{0, plural, one {# plan} other {# plans}}"
+#~ msgstr "{0, plural, one {# プラン} other {# プラン}}"
+
+#. placeholder {0}: row.posts
+#: src/components/content/PlanStrategy.jsx
+msgid "{0, plural, one {# post} other {# posts}}"
+msgstr "{0, plural, other {# 投稿}}"
 
 #. placeholder {0}: group.ok
 #: src/components/insights/InsightsWorkspace.jsx
@@ -96,6 +116,11 @@ msgstr "{0, plural, other {# プル}}"
 #: src/components/connections/ConnectorBrowser.jsx
 msgid "{0, plural, one {# source} other {# sources}}"
 msgstr "{0, plural, other {# ソース}}"
+
+#. placeholder {0}: action.missed
+#: src/components/content/PlanQuickActions.jsx
+msgid "{0, plural, one {Catch up on # missed post} other {Catch up on # missed posts}}"
+msgstr "見逃した{0, plural, other {# 件の投稿}}に対応する"
 
 #. placeholder {0}: items.length
 #: src/components/insights/desk/DeskQueue.jsx
@@ -168,6 +193,11 @@ msgstr "{0}件の一致"
 #: src/components/connections/EndpointProviderCard.jsx
 #~ msgid "{0} models at {1}"
 #~ msgstr ""
+
+#. placeholder {0}: action.missed
+#: src/components/content/PlanQuickActions.jsx
+msgid "{0} planned posts were missed. Fit the best of their topics into the days ahead, without crowding any channel or moving the days I've drafted."
+msgstr "{0} 件の計画された投稿が見逃されました。それらのトピックの中から最適なものを今後の日程に組み込み、どのチャネルも混雑させず、私が下書きした日程は変更しないでください。"
 
 #. placeholder {0}: group.ok
 #. placeholder {1}: group.failed
@@ -463,7 +493,7 @@ msgstr "{landingPages, plural, other {# ページ}}"
 msgid "{left} left"
 msgstr "残り{left}文字"
 
-#: src/components/content/PlanBoard.jsx
+#: src/components/content/PlanProgress.jsx
 msgid "{left} to go"
 msgstr "残り{left}件"
 
@@ -483,7 +513,7 @@ msgstr "{llmsLines} 行"
 msgid "{messageCount, plural, one {# message} other {# messages}}"
 msgstr "{messageCount, plural, other {# メッセージ}}"
 
-#: src/components/content/PlanBoard.jsx
+#: src/components/content/PlanProgress.jsx
 msgid "{missed, plural, one {# missed} other {# missed}}"
 msgstr "{missed, plural, other {# 件の未投稿}}"
 
@@ -640,11 +670,11 @@ msgstr "{platform} · {scheduler} 経由"
 msgid "{postCount} posts · {avgViewsText} avg views"
 msgstr "{postCount} 投稿 · {avgViewsText} 平均ビュー"
 
-#: src/components/content/PlanBoard.jsx
+#: src/components/content/PlanProgress.jsx
 msgid "{posted} of {total} posted"
 msgstr "{total} 件中 {posted} 件を投稿済み"
 
-#: src/components/content/PlanBoard.jsx
+#: src/components/content/PlanProgress.jsx
 msgid "{posted} of {total} posted, {missed} missed, {drafted} drafted"
 msgstr "{total}件中{posted}件投稿済み、{missed}件見逃し、{drafted}件下書き済み"
 
@@ -652,7 +682,7 @@ msgstr "{total}件中{posted}件投稿済み、{missed}件見逃し、{drafted}�
 msgid "{posted} of its {total} posts went out. The next plan learns from them."
 msgstr "{total} 件の投稿のうち {posted} 件が公開されました。次のプランはそれらから学習します。"
 
-#: src/components/content/PlanBoard.jsx
+#: src/components/content/PlanProgress.jsx
 msgid "{posted} posted · {left} to go"
 msgstr "{posted}件投稿済み · 残り{left}件"
 
@@ -2505,7 +2535,7 @@ msgid "Changed in the account after you approved it, so it was not applied. Ask 
 msgstr "承認後にアカウントで変更があったため、適用されませんでした。新しい提案を依頼してください。"
 
 #: src/app/(app)/execute/page.jsx
-#: src/components/AppNav.jsx
+#: src/lib/breadcrumbs.js
 #: src/lib/navigation.js
 msgid "Changes"
 msgstr "変更"
@@ -2525,6 +2555,7 @@ msgstr "チャネル"
 
 #: src/components/content/AccountsTab.jsx
 #: src/components/content/FormatLibrary.jsx
+#: src/components/content/PlanPicker.jsx
 msgid "Channels"
 msgstr "チャネル"
 
@@ -2754,6 +2785,10 @@ msgstr "OpenCode 用のコマンド"
 #: src/components/content/PostMetricsForm.jsx
 msgid "Comments"
 msgstr "コメント"
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Comments, shares and saves per post."
+msgstr "投稿あたりのコメント、シェア、保存数。"
 
 #: src/components/content/PostViewport.jsx
 msgid "Commit edits"
@@ -3065,8 +3100,8 @@ msgid "Content plan"
 msgstr "コンテンツプラン"
 
 #: src/app/(app)/content/page.jsx
-#: src/components/AppNav.jsx
 #: src/components/content/ContentWorkspace.jsx
+#: src/lib/breadcrumbs.js
 #: src/lib/navigation.js
 #: src/lib/usageApi.js
 msgid "Content Studio"
@@ -3145,7 +3180,7 @@ msgstr "ChatGPTで続行"
 #~ msgid "conversation"
 #~ msgstr "会話"
 
-#: src/components/AppNav.jsx
+#: src/lib/breadcrumbs.js
 msgid "Conversation"
 msgstr "会話"
 
@@ -3426,6 +3461,10 @@ msgstr "重大な影響"
 #: src/components/AgentDrawer.jsx
 #~ msgid "Cross-agent invocations — coming soon"
 #~ msgstr "クロスエージェント呼び出し — 近日公開"
+
+#: src/components/content/PlanPicker.jsx
+msgid "Current"
+msgstr "現在"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Current growth stage (milestone-based)"
@@ -3801,8 +3840,8 @@ msgstr "ドキュメントプレビュー"
 
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 #: src/app/(app)/artifacts/page.jsx
-#: src/components/AppNav.jsx
 #: src/components/insights/desk/DeskLists.jsx
+#: src/lib/breadcrumbs.js
 #: src/lib/navigation.js
 msgid "Documents"
 msgstr "ドキュメント"
@@ -3855,6 +3894,10 @@ msgstr "プロジェクトの説明、ターゲット、競合の下書きを作
 #: src/components/content/PostMiniCard.jsx
 msgid "Draft post"
 msgstr "下書き投稿"
+
+#: src/components/content/PlanViewport.jsx
+msgid "Draft the next post"
+msgstr "次の投稿を下書きする"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Drafted a post"
@@ -4237,6 +4280,14 @@ msgstr "Ductが読み取る各ソースは、対象期間とともにここに�
 msgid "Earlier"
 msgstr "以前"
 
+#: src/components/content/PlanStrategy.jsx
+msgid "earns less per post"
+msgstr "投稿あたりの獲得数が少ない"
+
+#: src/components/content/PlanStrategy.jsx
+msgid "earns the most per post"
+msgstr "投稿あたりの獲得数が最も多い"
+
 #: src/app/(app)/connections/page.jsx
 msgid "EC private key (PEM)"
 msgstr "EC秘密鍵 (PEM)"
@@ -4313,6 +4364,10 @@ msgstr "Ductのサーバーで暗号化されているため、どのデバイ�
 #: src/lib/credentialStorage.js
 msgid "Encrypted on this computer only, so nothing running elsewhere can use it, including scheduled reports."
 msgstr "このコンピューターでのみ暗号化されているため、スケジュールされたレポートを含め、他の場所で実行されているものは使用できません。"
+
+#: src/components/content/PlanPicker.jsx
+msgid "Ended"
+msgstr "終了済み"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "Engagement"
@@ -4769,7 +4824,7 @@ msgstr "Gemini · 無料枠で最初の監査をカバー"
 msgid "Generate an EC P-256 key pair, upload the PUBLIC half at ads.apple.com → Account Settings → API, then paste the private key here. Apple has no browser sign-in for this — key material is the official method."
 msgstr "EC P-256キーペアを生成し、公開鍵をads.apple.com → アカウント設定 → APIにアップロードし、秘密鍵をここに貼り付けてください。Appleにはブラウザサインインがありません — キーマテリアルが公式の方法です。"
 
-#: src/components/AppNav.jsx
+#: src/lib/breadcrumbs.js
 msgid "Generate Insight"
 msgstr "インサイトを生成"
 
@@ -4832,7 +4887,7 @@ msgstr "{providerName}からキーを取得 →"
 msgid "Get a new free audit →"
 msgstr "新しい無料監査を取得 →"
 
-#: src/components/AppNav.jsx
+#: src/lib/breadcrumbs.js
 msgid "Get started"
 msgstr "開始する"
 
@@ -5215,8 +5270,8 @@ msgid "High volume, low judgement"
 msgstr "大量、低判断"
 
 #: src/app/(app)/insights/organic-growth/[slug]/page.jsx
-#: src/components/AppNav.jsx
 #: src/components/LocalInsightDetail.jsx
+#: src/lib/breadcrumbs.js
 #: src/lib/navigation.js
 msgid "Home"
 msgstr "ホーム"
@@ -5556,6 +5611,10 @@ msgstr "サインインは完了しましたが、アクセスを渡しません
 #~ msgid "Its sign-in stopped working, so Duct can’t use it until you reconnect."
 #~ msgstr "サインインが機能しなくなりました。そのため、再接続するまでDuctはそれを使用できません。"
 
+#: src/components/content/PlanStrategy.jsx
+msgid "Judged on"
+msgstr "評価基準"
+
 #: src/components/workspace/ContextRing.jsx
 msgid "Just compacted — recounted on the next call"
 msgstr "圧縮済み — 次回の呼び出し時に再計算されます"
@@ -5679,6 +5738,10 @@ msgstr "支払い遅延のクライアント？この言葉をそのまま"
 #: src/components/UpdateToast.jsx
 msgid "Later"
 msgstr "後で"
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Leans on"
+msgstr "活用"
 
 #: src/components/content/PlanStrategy.jsx
 msgid "Learned"
@@ -5905,6 +5968,10 @@ msgstr "モデルを読み込み中…"
 msgid "Loading plan…"
 msgstr "プランを読み込み中…"
 
+#: src/components/content/PlansIndex.jsx
+#~ msgid "Loading plans…"
+#~ msgstr "プランを読み込み中…"
+
 #: src/lib/contentEvents.js
 msgid "Loading post history"
 msgstr "投稿履歴を読み込み中"
@@ -5981,6 +6048,10 @@ msgstr "メトリクスを記録しました"
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Longer than the platform allows: {at}"
 msgstr "プラットフォームの上限を超えています：{at}"
+
+#: src/components/content/PlanQuickActions.jsx
+msgid "Look at how this plan is doing so far and revise the days from today on. Keep the days I've already drafted."
+msgstr "これまでの計画の進捗を確認し、今日以降の日程を修正してください。すでに下書きした日程は維持してください。"
 
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "Look into it"
@@ -6301,8 +6372,8 @@ msgid "Models"
 msgstr "モデル"
 
 #: src/app/(app)/settings/models/page.jsx
-#: src/components/AppNav.jsx
 #: src/components/AppSidebar.jsx
+#: src/lib/breadcrumbs.js
 msgid "Models & providers"
 msgstr "モデルとプロバイダー"
 
@@ -6460,7 +6531,7 @@ msgstr "送信しない"
 msgid "Never used"
 msgstr "未使用"
 
-#: src/components/AppNav.jsx
+#: src/lib/breadcrumbs.js
 msgid "New"
 msgstr "新規"
 
@@ -6778,6 +6849,10 @@ msgstr "まだレポートがありません"
 #: src/components/content/DiscoverPage.jsx
 msgid "No results returned. Try different hashtags or a wider niche."
 msgstr "結果が返されませんでした。別のハッシュタグを試すか、より広いニッチを試してください。"
+
+#: src/components/content/PlanStrategy.jsx
+msgid "no results yet"
+msgstr "まだ結果がありません"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "no schema"
@@ -7354,6 +7429,10 @@ msgstr "{foundAt} に 1 個のモデル"
 msgid "One or two sentences. The agent reads this to pick between formats, so say what it does and when to use it."
 msgstr "1、2文で記述してください。エージェントはこれを読んでフォーマットを選択するため、何をするものか、いつ使用するかを記述してください。"
 
+#: src/components/content/PlanQuickActions.jsx
+msgid "One planned post was missed. Fit its topic into the days ahead if it is still worth making, without crowding any channel or moving the days I've drafted."
+msgstr "1 件の計画された投稿が見逃されました。まだ作成する価値がある場合は、そのトピックを今後の日程に組み込み、どのチャネルも混雑させず、私が下書きした日程は変更しないでください。"
+
 #: src/app/(app)/audit/seo/page.jsx
 msgid "One sentence"
 msgstr "1文"
@@ -7478,6 +7557,10 @@ msgstr "モデル設定を開く →"
 #: src/app/(app)/content/page.jsx
 msgid "Open plan board →"
 msgstr "計画ボードを開く →"
+
+#: src/app/(app)/content/page.jsx
+#~ msgid "Open plans →"
+#~ msgstr "プランを開く →"
 
 #: src/components/content/AnalyticsView.jsx
 #: src/components/content/PostMiniCard.jsx
@@ -7828,6 +7911,10 @@ msgstr "保留中"
 msgid "Pending invitations"
 msgstr "保留中の招待"
 
+#: src/components/content/PlanStrategy.jsx
+msgid "People reached per post."
+msgstr "投稿あたりのリーチ人数。"
+
 #: src/components/content/PostMetricsForm.jsx
 msgid "Performance"
 msgstr "パフォーマンス"
@@ -7921,14 +8008,14 @@ msgid "Placeholder text on {at}"
 msgstr "{at} にプレースホルダーテキスト"
 
 #: src/app/(app)/content/page.jsx
-msgid "plan"
-msgstr "プラン"
+#~ msgid "plan"
+#~ msgstr "プラン"
 
-#: src/components/AppNav.jsx
+#: src/lib/breadcrumbs.js
 msgid "Plan"
 msgstr "プラン"
 
-#: src/components/content/PlanBoard.jsx
+#: src/app/(app)/content/sessions/new/page.jsx
 msgid "Plan {shortId}"
 msgstr "プラン {shortId}"
 
@@ -7944,6 +8031,10 @@ msgstr "プランを破棄しました。代わりにDuctに何を計画する�
 msgid "Plan strategy"
 msgstr "プランの戦略"
 
+#: src/components/content/PlanPicker.jsx
+msgid "Plan: {name}"
+msgstr "プラン: {name}"
+
 #: src/lib/contentSchedule.js
 msgid "Planned"
 msgstr "計画済み"
@@ -7951,6 +8042,14 @@ msgstr "計画済み"
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Planning crawl"
 msgstr "クロール計画中"
+
+#: src/app/(app)/content/page.jsx
+msgid "plans"
+msgstr "プラン"
+
+#: src/lib/breadcrumbs.js
+msgid "Plans"
+msgstr "プラン"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "Plans that learn"
@@ -8041,7 +8140,7 @@ msgstr "手動で投稿"
 msgid "posts"
 msgstr "投稿"
 
-#: src/components/AppNav.jsx
+#: src/lib/breadcrumbs.js
 msgid "Posts"
 msgstr "投稿"
 
@@ -8178,8 +8277,8 @@ msgstr "進捗"
 
 #: src/app/(app)/content/page.jsx
 #: src/app/(app)/execute/page.jsx
-#: src/components/AppNav.jsx
 #: src/components/memory/MemoryPage.jsx
+#: src/lib/breadcrumbs.js
 msgid "Project"
 msgstr "プロジェクト"
 
@@ -8223,8 +8322,8 @@ msgstr "プロジェクト設定 → APIキー → 読み取りスコープを�
 #: src/app/(app)/project/[projectId]/members/page.jsx
 #: src/app/(app)/project/[projectId]/memory/page.jsx
 #: src/app/(app)/projects/page.jsx
-#: src/components/AppNav.jsx
 #: src/components/commands/AppCommands.jsx
+#: src/lib/breadcrumbs.js
 msgid "Projects"
 msgstr "プロジェクト"
 
@@ -8988,6 +9087,10 @@ msgstr "コンテンツピラーを確認中…"
 msgid "Revise plan"
 msgstr "プランを修正"
 
+#: src/components/content/PlanQuickActions.jsx
+msgid "Revise the rest of the plan"
+msgstr "残りの計画を修正する"
+
 #: src/components/content/PostViewport.jsx
 msgid "Revise with Duct"
 msgstr "Ductで修正"
@@ -9290,6 +9393,10 @@ msgstr "Ductアカウントに保存済み"
 msgid "Saves"
 msgstr "保存"
 
+#: src/components/content/PlanStrategy.jsx
+msgid "Saves and shares per post, the closest sign of intent the posts report."
+msgstr "投稿が示す意図の最も近い兆候。投稿あたりの保存数とシェア数。"
+
 #: src/components/content/FormatLibrary.jsx
 msgid "Saving makes this project’s own copy, which replaces the built-in here. Reset it later to go back."
 msgstr "保存すると、このプロジェクト独自のコピーが作成され、ここで組み込みを置き換えます。後でリセットして元に戻すことができます。"
@@ -9305,8 +9412,8 @@ msgid "Saving…"
 msgstr "保存中…"
 
 #: src/components/content/PlanStrategy.jsx
-msgid "Scaling"
-msgstr "スケール"
+#~ msgid "Scaling"
+#~ msgstr "スケール"
 
 #: src/components/audit/AuditReport.jsx
 msgid "Scan couldn't finish"
@@ -9518,7 +9625,7 @@ msgstr "キーやパスワードを見ること"
 msgid "See your projects and what Duct knows about each"
 msgstr "プロジェクトと、Ductが各プロジェクトについて知っていることを見る"
 
-#: src/components/content/PlanBoard.jsx
+#: src/components/content/PlanPicker.jsx
 msgid "Select a plan"
 msgstr "プランを選択"
 
@@ -9631,7 +9738,7 @@ msgid "SEO audit"
 msgstr "SEO監査"
 
 #: src/app/(app)/audit/seo/page.jsx
-#: src/components/AppNav.jsx
+#: src/lib/breadcrumbs.js
 #: src/lib/navigation.js
 #: src/lib/usageApi.js
 msgid "SEO Audit"
@@ -9687,7 +9794,7 @@ msgstr "セッション失敗"
 #~ msgid "Session settings: thinking, model tier and brief format"
 #~ msgstr "セッション設定：思考、モデルティア、ブリーフ形式"
 
-#: src/components/AppNav.jsx
+#: src/lib/breadcrumbs.js
 msgid "Sessions"
 msgstr "セッション"
 
@@ -10420,6 +10527,10 @@ msgstr "サブエージェント"
 msgid "Suggest an improvement"
 msgstr "改善を提案"
 
+#: src/components/content/PlanQuickActions.jsx
+msgid "Suggested next steps"
+msgstr "次のステップの提案"
+
 #: src/components/memory/MemoryTimeline.jsx
 #~ msgid "superseded"
 #~ msgstr "置き換えられました"
@@ -10576,8 +10687,8 @@ msgid "Test and connect"
 msgstr "テストして接続"
 
 #: src/components/content/PlanStrategy.jsx
-msgid "Testing"
-msgstr "テスト"
+#~ msgid "Testing"
+#~ msgstr "テスト"
 
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Testing…"
@@ -11355,7 +11466,7 @@ msgid "Tone"
 msgstr "トーン"
 
 #: src/app/(app)/connections/page.jsx
-#: src/components/AppNav.jsx
+#: src/lib/breadcrumbs.js
 #: src/lib/navigation.js
 msgid "Toolbox"
 msgstr "ツールボックス"
@@ -11407,6 +11518,10 @@ msgstr "地域でトレンドの投稿 — サウンドとフォーマットの�
 #: src/app/(app)/connections/page.jsx
 msgid "Trials, renewals, refunds and MRR across the App Store and Play."
 msgstr "App StoreとPlay全体でのトライアル、更新、払い戻し、MRR。"
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Tries"
+msgstr "試行"
 
 #: src/components/connections/BringAnyTool.jsx
 #~ msgid "Try"
@@ -11534,6 +11649,10 @@ msgstr "無題のスレッド"
 #: src/components/insights/Desk.jsx
 msgid "Up next"
 msgstr "次"
+
+#: src/components/content/PlanPicker.jsx
+msgid "Upcoming"
+msgstr "予定"
 
 #: src/components/UpdateToast.jsx
 msgid "Update failed: {error}"
@@ -12069,9 +12188,17 @@ msgstr "{label}のフィードで「もっと見る」の前に表示される�
 msgid "What the business does"
 msgstr "ビジネスの内容"
 
+#: src/components/content/PlanStrategy.jsx
+msgid "What the plan bets on"
+msgstr "プランが重視するもの"
+
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "What this page will hold"
 msgstr "このページの内容"
+
+#: src/components/content/PlanStrategy.jsx
+msgid "What this plan tests"
+msgstr "このプランが検証するもの"
 
 #: src/components/content/AccountsTab.jsx
 msgid "What to know about this channel"
@@ -12222,21 +12349,33 @@ msgstr "重要な理由。オプション。"
 msgid "Why it worked:"
 msgstr "成功理由:"
 
+#: src/components/content/PlanStrategy.jsx
+msgid "Why lean on {leaned}"
+msgstr "なぜ{leaned}を活用するのか"
+
 #: src/components/content/DraftsQueue.jsx
 msgid "Why not? The next draft learns from it."
 msgstr "なぜしないのですか？次の下書きはそれから学びます。"
 
 #: src/components/content/PlanStrategy.jsx
-msgid "Why scale it"
-msgstr "なぜスケールするのか"
+#~ msgid "Why scale it"
+#~ msgstr "なぜスケールするのか"
 
 #: src/components/content/PlanStrategy.jsx
-msgid "Why test it"
-msgstr "なぜテストするのか"
+#~ msgid "Why test it"
+#~ msgstr "なぜテストするのか"
 
 #: src/components/content/PlanStrategy.jsx
 msgid "Why this plan"
 msgstr "なぜこのプランなのか"
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Why this split"
+msgstr "なぜこの配分なのか"
+
+#: src/components/content/PlanStrategy.jsx
+msgid "Why try {tried}"
+msgstr "なぜ{tried}を試行するのか"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Why we rebuilt onboarding from scratch"
@@ -12579,6 +12718,10 @@ msgstr "接続は正常ですが、Ductのサーバーが応答していませ�
 #: src/components/content/PlanBoard.jsx
 msgid "your content plan"
 msgstr "コンテンツプラン"
+
+#: src/components/content/PlansIndex.jsx
+#~ msgid "your content plans"
+#~ msgstr "コンテンツプラン"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Your copy of <0>{deletingName}</0> will be removed and the built-in version comes back. Posts already drafted with it are unaffected."

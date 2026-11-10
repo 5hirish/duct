@@ -1373,8 +1373,11 @@ The <account_performance> block in the opening turn has the numbers: the
 goal line, the days each channel gets, then one section per channel.
 - The goal line says what "earned" means for this brand and which numbers
   stand for it. Never likes. An unproven type, or a bet only a few posts
-  measured, is a hint, not proof. A metric the block says was not recorded
-  is unknown, not zero.
+  measured, is a hint, not proof. A flat one had enough posts measured and
+  they earned nothing: never scale it. A metric the block says was not
+  recorded is unknown, not zero.
+- HOOKS: a hook its channel has not proven goes on at most a quarter of that
+  channel's days; submit_plan refuses more. Spread the rest across hooks.
 - DAYS: give each channel the days the block lists, one either way at
   most. A day counts for the channel listed first in its `platforms`; a
   visual day may add the other visual channels it fits. The counts already
@@ -1398,7 +1401,9 @@ Record the choice in `strategy`. It is shown to the person above the plan, so
 write it for them: the type you scale and the numbers that earned it, the type
 you test and why, and in `review_notes` how many days each channel got and
 why it moved. Plain words only: never "exploit", "explore", "leader" or
-"baseline" in those fields, which are this brief's words, not theirs. With no
+"baseline" in those fields, which are this brief's words, not theirs, and
+never a snake_case name ("transformation reveal hooks", not
+transformation_reveal). With no
 history, `exploit` and `lesson` stay "" (a goal is not a lesson). Keep
 `best_times` to days and an hour in the audience's own time, like
 "Tue, Thu · 19:00".
@@ -1759,7 +1764,9 @@ def _performance_lines(perf: "AccountPerformance", *, scope: str = "the plan") -
     """One history (the account's or one channel's) as block lines. Unknown
     metrics are said to be unknown in words: an absent number printed as 0
     is how a model concludes a format failed when nobody measured it."""
-    from agents.content.performance import GRADED_DIMENSIONS, MIN_MEASURED_POSTS, UNTESTED, VIEWS
+    from agents.content.performance import FLAT, GRADED_DIMENSIONS, MIN_MEASURED_POSTS, UNPROVEN, UNTESTED, VIEWS
+
+    marks = {UNPROVEN: " (a hint)", FLAT: " (earned nothing)"}
 
     if not perf.has_history:
         return [
@@ -1787,7 +1794,7 @@ def _performance_lines(perf: "AccountPerformance", *, scope: str = "the plan") -
     if perf.exploit:
         lines.append(f"  exploit: {perf.exploit}")
     else:
-        lines.append(f"  exploit: none yet (no type has {MIN_MEASURED_POSTS} measured posts)")
+        lines.append(f"  exploit: none yet (no type has {MIN_MEASURED_POSTS} measured posts that earned the goal)")
     if perf.explore:
         lines.append(f"  explore: {', '.join(perf.explore)}")
     else:
@@ -1800,6 +1807,7 @@ def _performance_lines(perf: "AccountPerformance", *, scope: str = "the plan") -
             if graded:
                 entries = " | ".join(
                     f"{g.key} {_posts(g.posts)}, {_measure_text(perf.ranked_by, g.measures[perf.ranked_by])}"
+                    f"{marks.get(g.verdict, '')}"
                     for g in graded
                 )
                 lines.append(f"    {dimension}: {entries}")

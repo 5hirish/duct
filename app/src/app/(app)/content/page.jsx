@@ -1,7 +1,6 @@
 "use client";
 
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronDown, CopyPlus, Plus } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
@@ -38,12 +37,14 @@ import { Page, PageHeader } from "@/components/ui/page";
 const AnalyticsView = lazy(() => import("@/components/content/AnalyticsView"));
 const DiscoverPage = lazy(() => import("@/components/content/DiscoverPage"));
 
-const TABS = ["plan", "posts", "analytics", "discover", "library", "brand", "accounts"];
+const TABS = ["plans", "posts", "analytics", "discover", "library", "brand", "accounts"];
+// Links written while the tab was called "plan" still land on it.
+const TAB_ALIASES = { plan: "plans" };
 
 // The tab ids double as their labels in English; the catalogue needs a message
 // per id so the other languages can say something else.
 const TAB_LABELS = {
-  plan: msg`plan`,
+  plans: msg`plans`,
   posts: msg`posts`,
   analytics: msg`analytics`,
   discover: msg`discover`,
@@ -54,7 +55,7 @@ const TAB_LABELS = {
 
 export default function ContentLandingPage() {
   const { t, i18n } = useLingui();
-  const [tab, setTab] = useState("plan");
+  const [tab, setTab] = useState("plans");
   const projectId = useActiveProjectId();
   const project = useMemo(() => (projectId ? getProjectById(projectId) : null), [projectId]);
   const projectName = project?.profile?.company?.name || project?.name || t`Project`;
@@ -64,7 +65,8 @@ export default function ContentLandingPage() {
   // whole hub suspend for a value only the first render needs.
   useEffect(() => {
     const wanted = new URLSearchParams(window.location.search).get("tab");
-    if (TABS.includes(wanted)) setTab(wanted);
+    const resolved = TAB_ALIASES[wanted] || wanted;
+    if (TABS.includes(resolved)) setTab(resolved);
   }, []);
 
   if (projectId === "") {
@@ -114,8 +116,8 @@ export default function ContentLandingPage() {
           each one loads its project's data on mount, and the Posts tab's
           loading flag would otherwise never reset for the new project. */}
       <div key={projectId}>
-        {tab === "plan"      && <PlanTab      projectId={projectId} onOpenTab={setTab} />}
-        {tab === "posts"     && <PostsTab     projectId={projectId} />}
+        {tab === "plans"     && <PlanTab      projectId={projectId} onOpenTab={setTab} />}
+        {tab === "posts"     && <PostsTab     projectId={projectId} onOpenTab={setTab} />}
         <Suspense fallback={<Skeleton className="h-64 w-full rounded-xl" />}>
           {tab === "analytics" && (
             <AnalyticsView projectId={projectId} onLinkAccounts={() => setTab("accounts")} />
@@ -131,7 +133,7 @@ export default function ContentLandingPage() {
 }
 
 // ---------------------------------------------------------------------------
-// Plan tab
+// Plans tab
 // ---------------------------------------------------------------------------
 
 function PlanTab({ projectId, onOpenTab }) {
@@ -208,7 +210,7 @@ function postRank(p) {
   return [1, p.day_index ?? 999];
 }
 
-function PostsTab({ projectId }) {
+function PostsTab({ projectId, onOpenTab }) {
   const { t, i18n } = useLingui();
   const router = useRouter();
   const [posts, setPosts] = useState([]);
@@ -320,7 +322,7 @@ function PostsTab({ projectId }) {
         <p className="mb-3 text-sm text-muted-foreground"><Trans>No posts yet. Write one for TikTok, LinkedIn or X, draft them from a plan, or clone a TikTok that worked.</Trans></p>
         <div className="flex flex-wrap items-center justify-center gap-2">
           {newPostMenu}
-          <Button asChild variant="outline" size="sm"><Link href="/content/plan"><Trans>Open plan board →</Trans></Link></Button>
+          <Button variant="outline" size="sm" onClick={() => onOpenTab?.("plans")}><Trans>Open plan board →</Trans></Button>
           {cloneButton}
         </div>
         {cloneDialog}

@@ -10,6 +10,13 @@
 // bar (components/AppNav.jsx) reads with useSyncExternalStore.
 //
 // One page header a screen (check:layout holds that), so one slot is enough.
+//
+// A full-bleed workspace has no page header: its trail is built from the path,
+// whose last segment is an id ("#a9997d") or "new". useTrailTitle lets it name
+// the thing open instead, through the same slot, with `present` left false so
+// the bar keeps the trail.
+
+import { useEffect } from "react";
 
 const EMPTY = Object.freeze({ present: false, visible: false, title: "", back: null });
 
@@ -49,4 +56,13 @@ export function pageTitleSnapshot() {
 /** The server never has a page header mounted. */
 export function pageTitleServerSnapshot() {
   return EMPTY;
+}
+
+/** Name the last crumb of a workspace's trail while it is mounted; "" leaves the path's word. */
+export function useTrailTitle(title) {
+  const text = typeof title === "string" ? title.trim() : "";
+  useEffect(() => {
+    publishPageTitle({ title: text });
+    return () => publishPageTitle({ title: "" });
+  }, [text]);
 }

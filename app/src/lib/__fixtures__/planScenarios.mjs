@@ -58,6 +58,18 @@ const WITH_HISTORY = {
   explore_evidence: "Two image posts so far, too few to judge",
   lesson: "Question hooks out-completed curiosity gaps 51% to 33%, so more of them",
   best_times: "Tue, Thu · 19:00",
+  review_notes:
+    "TikTok earned the most saves and shares per post, so it gets two more days; LinkedIn trails and gives one back, still a post a week.",
+  experiment: "Image posts on TikTok, judged on saves against the video median",
+  // What the plan stored from its channel mix (backend channel_mix.mix_snapshot).
+  mix: {
+    goal: "intent",
+    channels: [
+      { channel: "tiktok", last_days: 16, standing: "leads", scaling: "video", testing: ["image"] },
+      { channel: "instagram", last_days: 6, standing: "untested", scaling: "", testing: [] },
+      { channel: "linkedin", last_days: 7, standing: "trails", scaling: "text", testing: [] },
+    ],
+  },
 };
 
 function makePlan(id, name, start, count, { strategy = {}, topic = (i) => TOPICS[i % TOPICS.length] } = {}) {
@@ -181,6 +193,41 @@ export const PLAN_SCENARIOS = [
     },
   },
 ];
+
+// The plan picker's situations: a project's plans as the listing returns them,
+// days included, built from the board's scenarios so the two agree.
+const LONG_PLAN_NAME =
+  "Novemberplan: Vorher-Nachher-Serie für leerstehende Wohnungen, Preisgespräche und Maklertage (8. Nov – 30. Nov)";
+
+export const PLAN_PICKER_SCENARIOS = [
+  {
+    id: "several",
+    title: "One running, one ahead, two ended",
+    expect: "The menu opens on the running plan, checked; then the one ahead, then the ended ones newest first. Each row says its state, its dates, how far it got and its channels.",
+    build: (today) => ["ended-nothing-posted", "planned-ahead", "mid-month", "ended-done"].map((id) => planScenario(id, today).plan),
+  },
+  {
+    id: "one",
+    title: "A first plan, running",
+    expect: "One plan, so no menu: its name is a plain title.",
+    build: (today) => [planScenario("mid-month", today).plan],
+  },
+  {
+    id: "long-name",
+    title: "A German-length name with its dates in brackets",
+    expect: "The name truncates on one line, in the trigger and in its row, with the whole of it in the tooltip; the bracketed dates are dropped because the line under it says them.",
+    build: (today) => {
+      const running = planScenario("mid-month", today).plan;
+      return [{ ...running, name: LONG_PLAN_NAME }, planScenario("planned-ahead", today).plan];
+    },
+  },
+];
+
+export function planPickerScenario(id, today) {
+  const s = PLAN_PICKER_SCENARIOS.find((x) => x.id === id);
+  if (!s) throw new Error(`no plan picker scenario "${id}"`);
+  return s.build(today);
+}
 
 export function planScenario(id, today) {
   const s = PLAN_SCENARIOS.find((x) => x.id === id);

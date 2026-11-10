@@ -34,8 +34,11 @@ import { captureSlideDocToPng } from "../../lib/slideCapture";
  *     Called every render with the latest plan/post payload from the agent.
  *     onSendMessage(text) sends a chat turn into the live session (used by the
  *     viewport for "approve & generate images" / per-slide regenerate).
+ *   - renderFooter?: ({ payload, idle, onSendMessage }) => ReactNode, drawn over
+ *     the composer (the plan session's quick actions). `idle` is true while
+ *     the session waits for the person: no turn running, nothing parked.
  */
-export default function ContentWorkspace({ mode, context, renderViewport }) {
+export default function ContentWorkspace({ mode, context, renderViewport, renderFooter }) {
   const { t, i18n } = useLingui();
   const [payload, setPayload] = useState(null);
   const [channelNote, setChannelNote] = useState(null);
@@ -75,11 +78,16 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
         }
         break;
 
+      // The pane shows this session's kind of artifact and no other: a plan
+      // session that drafts a post, asked to in chat, must not swap the plan
+      // for a post the plan pane cannot show (it read as the plan vanishing).
       case ContentEvent.PLAN_GENERATED:
+        if (mode !== "plan_month") break;
         setPayload({ type: "plan", ...event.payload });
         break;
 
       case ContentEvent.POST_DRAFT_UPDATED: {
+        if (mode === "plan_month") break;
         const base = { type: "post", ...event.payload };
         const ip = event.inline_preview;
         if (!ip?.data_uri) {
@@ -233,6 +241,15 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
           stepLabels={stepLabels}
           inputPlaceholder={t`Ask Duct to refine the plan or post…`}
           inputAriaLabel={t`Message the content agent`}
+          footer={
+            renderFooter
+              ? renderFooter({
+                  payload,
+                  idle: agent.phase === Phase.READY && !agent.reconnecting,
+                  onSendMessage: agent.send,
+                })
+              : null
+          }
         />
       }
     />

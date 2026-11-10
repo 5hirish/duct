@@ -49,6 +49,7 @@ from service.project_draft import (
     PROVENANCE_INFERRED,
     PROVENANCE_USER,
     get_value,
+    incoming,
     is_blank,
     persona_rows,
 )
@@ -310,7 +311,10 @@ def draft_project(args: DraftArgs, caller: Caller) -> dict[str, Any]:
     kept = [
         {
             "field": name,
-            "reason": _kept_reason(name, sent[name], get_value(project, name), labels.get(name), fields[name]["provenance"]),
+            "reason": _kept_reason(
+                name, incoming(project, name, sent[name]), get_value(project, name),
+                labels.get(name), fields[name]["provenance"],
+            ),
         }
         for name in sent
         if name not in landed

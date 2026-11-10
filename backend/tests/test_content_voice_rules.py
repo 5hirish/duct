@@ -217,6 +217,19 @@ def test_the_brand_route_shows_the_defaults_and_keeps_what_was_saved(db, project
     assert saved["content_brand"][SAMPLES_KEY] == [SAMPLE]
 
 
+def test_pillars_saved_on_the_brand_tab_are_marked_as_the_persons(db, project, owner):
+    """So a crawl or an outside agent's draft never replaces them
+    (service/project_draft.py): the Brand tab and drafts share one list."""
+    api = _api(db, owner)
+    pillars = {"items": [{"id": "color_seasons", "name": "Color seasons", "description": "Typed."}]}
+
+    saved = api.put(f"/api/content/brand?project_id={project.id}", json={"content_pillars": pillars}).json()
+
+    assert saved["content_pillars"] == pillars
+    db.refresh(project)
+    assert project.provenance["content_pillars"] == "user"
+
+
 def test_the_brand_route_holds_the_caps(db, project, owner):
     api = _api(db, owner)
 

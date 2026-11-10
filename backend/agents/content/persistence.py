@@ -172,6 +172,20 @@ def last_user_turn_at(db: Session, conversation_id: UUID):
     ).first()
 
 
+def plan_decisions_since(db: Session, conversation_id: UUID, since) -> list[AgentEventRow]:
+    """The person's Accept or Reject on a proposed plan after ``since``. A
+    click on the pane is no message, so the agent hears of it only through
+    these rows (routes/agents.py, the next turn's decisions block)."""
+    stmt = (
+        select(AgentEventRow)
+        .where(AgentEventRow.conversation_id == conversation_id)
+        .where(AgentEventRow.kind == EventKind.PLAN_DECISION)
+    )
+    if since is not None:
+        stmt = stmt.where(AgentEventRow.created_at > since)
+    return list(db.exec(stmt.order_by(AgentEventRow.seq)))
+
+
 def get_conversation(db: Session, conversation_id: UUID) -> AgentConversation | None:
     return db.get(AgentConversation, conversation_id)
 

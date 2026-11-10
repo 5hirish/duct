@@ -79,10 +79,11 @@ from agents.content.channels import (
     primary_channel,
     resolve as resolve_channel,
 )
+from agents.content.channel_mix import mix_snapshot, overreaching_hooks
 from agents.content.channel_config import linked_pairs, load_channel_config
 from agents.content.plan_period import PlanPeriod, link_post_to_day, plan_end
 from agents.content.persistence import link_artifact
-from agents.content.plan_proposal import PROPOSED, build_proposal
+from agents.content.plan_proposal import PROPOSED, build_proposal, hold_proposal
 from agents.content.publishing import (
     SLIDE_RENDER,
     MediaUnreadable,
@@ -980,12 +981,26 @@ def build_content_tools_lc(
                         f"This brand posts on {', '.join(sorted(active))}. Days name {', '.join(strays)}, "
                         "which it does not post on: keep every day's platforms within the brand's channels."
                     )
+            new_days = [d.model_dump(mode="json") for d in draft.days]
+            # A hook only one post tried is a hint, and a plan built on it is
+            # a guess repeated: held in code, because the brief said so and a
+            # plan still put 9 of 23 days on one (channel_mix.HINT_SHARE).
+            overreach = overreaching_hooks(session.channel_mix, new_days)
+            if overreach:
+                return _err(" ".join(
+                    f"{o.hook} is on {o.days} of {o.channel}'s {o.channel_days} days, and {o.channel}'s history "
+                    f"backs it with {o.record}: a hint, not proof. Give it at most {o.cap} of those days."
+                    for o in overreach
+                ) + " Spread the rest over other hooks; a hook earns more days once its posts earn the goal.")
+            strategy = draft.strategy.model_dump(mode="json")
+            if session.channel_mix is not None:
+                strategy["mix"] = mix_snapshot(session.channel_mix)
             proposal = build_proposal(
                 project_id=project_id,
                 draft_name=draft.name,
                 character=draft.character.model_dump(mode="json"),
-                strategy=draft.strategy.model_dump(mode="json"),
-                new_days=[d.model_dump(mode="json") for d in draft.days],
+                strategy=strategy,
+                new_days=new_days,
                 live_days=live_days,
                 live_plan_id=live_id,
                 period=(
@@ -996,6 +1011,13 @@ def build_content_tools_lc(
                 today=utcnow().date(),
             )
             session.proposal = proposal
+            # Held on the conversation as well: the session lives in this
+            # process, and a deploy before the person decides used to lose it.
+            try:
+                with _open_db() as db:
+                    hold_proposal(db, getattr(session, "conversation_id", None), proposal)
+            except Exception:
+                logger.warning("content: proposal for session %s not held", session.session_id, exc_info=True)
             logger.info(
                 "content: plan proposed for session %s (%d days, %d kept, replaces %s)",
                 session.session_id, len(proposal.days), len(proposal.kept_days), proposal.replaces_plan_id,

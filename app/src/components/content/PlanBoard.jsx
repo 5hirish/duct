@@ -3,14 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LayoutGrid, CalendarDays, CalendarCheck, CalendarPlus, List, PencilLine, Plus } from "lucide-react";
-import { Plural, Trans, useLingui } from "@lingui/react/macro";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Trans, useLingui } from "@lingui/react/macro";
 import {
   VENDOR,
   connectVendorKey,
@@ -28,6 +21,9 @@ import PlanKanban from "@/components/content/PlanKanban";
 import PlanList from "@/components/content/PlanList";
 import PlanCalendar from "@/components/content/PlanCalendar";
 import PlanStrategy from "@/components/content/PlanStrategy";
+import PlanProgress from "@/components/content/PlanProgress";
+import PlanPicker from "@/components/content/PlanPicker";
+import { planDisplayName } from "@/lib/planStrategy";
 import PlanDayOne from "@/components/content/PlanDayOne";
 import {
   PlanState,
@@ -81,33 +77,9 @@ function startOfToday() {
 const VIEW_KEY = "duct_plan_view";
 export const PlanView = Object.freeze({ LIST: "list", KANBAN: "kanban", CALENDAR: "calendar" });
 
-/**
- * The plan board: loads the project's plans and hands them to PlanBoardView.
- * Renders directly inside the Content "Plan" tab (no separate route hop). Pass
- * `initialPlanId` to preselect (e.g. from a query param). Before the first plan
- * it is `PlanDayOne`, whose "fix this" links call `onOpenTab(tab)`; a caller
- * outside Content Studio's tabs leaves it out and the links navigate there.
- * `fill` is the full-bleed /content/plan route: the board is a framed box that
- * scrolls itself; on the Content Studio page the page scrolls.
- */
-export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab, fill = false }) {
-  const { t, i18n } = useLingui();
-  const router = useRouter();
-  const [plans, setPlans] = useState([]);
-  const [activeId, setActiveId] = useState(initialPlanId || "");
-  const [plan, setPlan] = useState(null); // full plan (days + posts)
-  const [postsById, setPostsById] = useState({}); // full posts by id
+/** The board's view, remembered per browser; the list until a choice is read back. */
+function usePlanView() {
   const [view, setViewState] = useState(PlanView.LIST);
-  const [calView, setCalView] = useState("month"); // "month" | "week"
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  // What the first-run screen shows back: null is "could not tell", which
-  // it renders differently from "nothing set".
-  const [sources, setSources] = useState({ brand: null, accounts: null, vendors: {} });
-  // Bumped by the retry button. Both loads below key off it, because a
-  // failure in either leaves the same empty board.
-  const [reloadKey, setReloadKey] = useState(0);
-
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(VIEW_KEY);
@@ -124,6 +96,66 @@ export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab, fi
       // Not worth failing a click over.
     }
   }, []);
+  return [view, setView];
+}
+
+/**
+ * Where drafting a day goes: the post workspace, carrying the plan, the day
+ * and the day's first channel, which is the channel it was made for.
+ */
+export function draftDayHref(plan, index) {
+  const day = Array.isArray(plan?.days) ? plan.days[index] : null;
+  const channel = (Array.isArray(day?.platforms) && day.platforms[0]) || "tiktok";
+  const params = new URLSearchParams();
+  if (plan?.id) params.set("plan_id", plan.id);
+  params.set("day", String(index));
+  params.set("channel", channel);
+  return `/content/posts/new?${params.toString()}`;
+}
+
+/**
+ * What the first-run screen shows back for a project with no plan: its
+ * brand, linked accounts, whether a scheduler is connected, and the Apify
+ * key. Each read may fail on its own; null is "could not tell".
+ */
+async function loadFirstRunSources(projectId) {
+  const [brand, accounts, publishers, apify] = await Promise.all([
+    getBrandContext(projectId).catch(() => null),
+    listLinkedAccounts(projectId).catch(() => null),
+    listPublishers(projectId).catch(() => null),
+    getVendorKeyStatus(VENDOR.APIFY, projectId).catch(() => null),
+  ]);
+  // Any scheduler connected is enough: which one is the Accounts tab's question.
+  const scheduler = publishers ? { connected: publishers.some((p) => p.connected) } : null;
+  return { brand, accounts, scheduler, vendors: { [VENDOR.APIFY]: apify } };
+}
+
+/**
+ * The plan board: loads the project's plans and hands them to PlanBoardView.
+ * Content Studio's Plans tab and the full-bleed /content/plan route both use
+ * it. Pass `initialPlanId` to preselect (e.g. from a query param). Before the first plan
+ * it is `PlanDayOne`, whose "fix this" links call `onOpenTab(tab)`; a caller
+ * outside Content Studio's tabs leaves it out and the links navigate there.
+ * `fill` is the full-bleed /content/plan route: the board is a framed box that
+ * scrolls itself; on the Content Studio page the page scrolls.
+ */
+export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab, fill = false }) {
+  const { t, i18n } = useLingui();
+  const router = useRouter();
+  const [plans, setPlans] = useState([]);
+  const [activeId, setActiveId] = useState(initialPlanId || "");
+  const [plan, setPlan] = useState(null); // full plan (days + posts)
+  const [postsById, setPostsById] = useState({}); // full posts by id
+  const [view, setView] = usePlanView();
+  const [calView, setCalView] = useState("month"); // "month" | "week"
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  // What the first-run screen shows back: null is "could not tell", which
+  // it renders differently from "nothing set".
+  const [sources, setSources] = useState({ brand: null, accounts: null, vendors: {} });
+  // Bumped by the retry button. Both loads below key off it, because a
+  // failure in either leaves the same empty board.
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (!projectId) return;
@@ -136,19 +168,12 @@ export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab, fi
         // Only a project with no plan shows its sources, so only it waits
         // for them. Either failing leaves its part of the screen out.
         if (list.length === 0) {
-          const [brand, accounts, publishers, apify] = await Promise.all([
-            getBrandContext(projectId).catch(() => null),
-            listLinkedAccounts(projectId).catch(() => null),
-            listPublishers(projectId).catch(() => null),
-            getVendorKeyStatus(VENDOR.APIFY, projectId).catch(() => null),
-          ]);
+          const found = await loadFirstRunSources(projectId);
           if (cancelled) return;
-          // Any scheduler connected is enough: which one is the Accounts tab's question.
-          const scheduler = publishers ? { connected: publishers.some((p) => p.connected) } : null;
-          setSources({ brand, accounts, scheduler, vendors: { [VENDOR.APIFY]: apify } });
+          setSources(found);
         }
         setPlans(list);
-        // The plan for today's period first: the Plan tab manages it.
+        // The plan for today's period first.
         setActiveId((prev) => prev || initialPlanId || planCovering(list, new Date())?.id || list[0]?.id || "");
       } catch (e) {
         if (!cancelled) setError(e.message || "");
@@ -193,15 +218,10 @@ export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab, fi
   }, []);
 
   // Pending card → open the creation split-view, carrying the day's primary channel.
-  const reviseDay = useCallback((index) => {
-    const day = Array.isArray(plan?.days) ? plan.days[index] : null;
-    const channel = (Array.isArray(day?.platforms) && day.platforms[0]) || "tiktok";
-    const params = new URLSearchParams();
-    if (activeId) params.set("plan_id", activeId);
-    params.set("day", String(index));
-    params.set("channel", channel);
-    router.push(`/content/posts/new?${params.toString()}`);
-  }, [plan, activeId, router]);
+  const reviseDay = useCallback(
+    (index) => router.push(draftDayHref({ ...plan, id: activeId }, index)),
+    [plan, activeId, router]
+  );
 
   if (error) {
     return (
@@ -274,6 +294,7 @@ export function PlanBoardView({
   onReviseDay,
   fill = false,
   defaultChannel = null,
+  pickerOpen = false,
 }) {
   const { t, i18n } = useLingui();
   const activeMeta = plans.find((p) => p.id === activeId) || plan || null;
@@ -309,24 +330,11 @@ export function PlanBoardView({
       <div className={cn("flex shrink-0 flex-wrap items-center justify-between gap-3", fill && "border-b border-border/60 px-4 py-2.5")}>
         <div className="flex min-w-0 flex-col gap-0.5">
           {plans.length > 1 ? (
-            <Select value={activeId} onValueChange={onSelectPlan}>
-              <SelectTrigger className="h-8 w-[220px]">
-                <SelectValue placeholder={t`Select a plan`} />
-              </SelectTrigger>
-              <SelectContent>
-                {plans.map((p) => {
-                  const shortId = p.id.slice(0, 8);
-                  return (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.name || t`Plan ${shortId}`}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
+            // The plan's name is the board's title, and the way to every other plan.
+            <PlanPicker plans={plans} value={activeId} onChange={onSelectPlan} today={today} defaultOpen={pickerOpen} />
           ) : (
             <h2 className="truncate text-sm font-semibold">
-              {activeMeta?.name || <Trans>Monthly plan</Trans>}
+              {planDisplayName(activeMeta?.name) || <Trans>Monthly plan</Trans>}
             </h2>
           )}
           {total > 0 && <PlanProgress period={periodLabel} progress={progress} ended={ended} />}
@@ -374,11 +382,7 @@ export function PlanBoardView({
       )}
 
       {plan && (
-        <PlanStrategy
-          strategy={plan.strategy}
-          days={plan.days}
-          className={fill ? "border-b border-border/60 px-4 py-3" : ""}
-        />
+        <PlanStrategy strategy={plan.strategy} days={plan.days} channel={picked} variant={fill ? "strip" : "card"} />
       )}
 
       {!plan ? (
@@ -442,49 +446,6 @@ function PlanEnded({ end, posted, total, next, others, current, onStartPlan, onO
   );
 }
 
-/**
- * The one line under the plan's name: when it runs, and how far it has got,
- * as a bar with its words. The bar is the comparison every count needs;
- * posted, missed and still-to-come each have a word as well as a colour, so
- * the line reads in greyscale and to a screen reader. "0 of 23 posted" on
- * day one read as a failure; "23 to go" is the same fact the right way up.
- */
-function PlanProgress({ period, progress, ended }) {
-  const { t } = useLingui();
-  const { total, posted, missed, drafted } = progress;
-  const left = Math.max(total - posted - missed, 0);
-  const pct = (n) => `${(n / total) * 100}%`;
-  const label = ended
-    ? t`${posted} of ${total} posted`
-    : posted === 0 && missed === 0
-      ? t`${left} to go`
-      : t`${posted} posted · ${left} to go`;
-  return (
-    <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-      {period && (
-        <span className="inline-flex shrink-0 items-center gap-1.5">
-          <CalendarDays className="size-3.5" aria-hidden="true" />
-          <span className="tabular-nums">{period}</span>
-        </span>
-      )}
-      <span
-        className="flex h-1.5 w-28 shrink-0 overflow-hidden rounded-full bg-muted"
-        role="img"
-        aria-label={t`${posted} of ${total} posted, ${missed} missed, ${drafted} drafted`}
-      >
-        {posted > 0 && <span className="h-full bg-success" style={{ width: pct(posted) }} />}
-        {missed > 0 && <span className="h-full bg-warning" style={{ width: pct(missed) }} />}
-        {drafted > 0 && <span className="h-full bg-foreground/35" style={{ width: pct(drafted) }} />}
-      </span>
-      <span className="tabular-nums whitespace-nowrap">{label}</span>
-      {missed > 0 && (
-        <span className="tabular-nums whitespace-nowrap text-warning">
-          <Plural value={missed} one="# missed" other="# missed" />
-        </span>
-      )}
-    </div>
-  );
-}
 
 /**
  * Every channel the plan's days are on, as glyph chips with counts, and

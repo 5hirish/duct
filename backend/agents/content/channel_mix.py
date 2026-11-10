@@ -25,6 +25,7 @@ No network and no model call, like ``performance.py``: the runner calls
 
 from __future__ import annotations
 
+import math
 import re
 from collections import defaultdict
 from dataclasses import dataclass, field
@@ -35,13 +36,16 @@ from uuid import UUID
 from agents.content.channels import primary_channel, resolve
 from agents.content.performance import (
     ENGAGEMENT,
+    FLAT,
     INTENT,
     LOOKBACK_POSTS,
     MIN_MEASURED_POSTS,
+    PROVEN,
     REACHED,
     AccountPerformance,
     Measure,
     PostSample,
+    bet_key,
     measure,
     planned_bets,
     summarise,
@@ -62,6 +66,14 @@ FLOOR_DAYS_PER_WEEK = 1
 # How many recent published posts are read across all channels before each
 # channel keeps its own last LOOKBACK_POSTS.
 _READ_POSTS = 240
+# A hook a channel's history has not proven goes on at most this share of
+# that channel's days (rounded up, and never fewer than HINT_MIN_DAYS, so a
+# channel with a handful of days is not made to use a new hook on each). One
+# post that worked is a lead to test, not a plan: on 2026-11-08 a plan put 9
+# of 23 days on a hook one post had tried.
+HINT_SHARE = 0.25
+HINT_MIN_DAYS = 2
+HOOK = "hook_type"
 
 
 class GoalKind(StrEnum):
@@ -268,6 +280,79 @@ def build_mix(
     )
 
 
+@dataclass(frozen=True)
+class HookOverreach:
+    """A hook a plan leans on harder than the channel's history backs it."""
+
+    channel: str
+    hook: str
+    days: int
+    cap: int
+    channel_days: int
+    record: str  # what the history says: "1 measured post", "3 posts that earned nothing"
+
+
+def hint_cap(channel_days: int) -> int:
+    """The most days of a channel one unproven hook may take."""
+    return max(HINT_MIN_DAYS, math.ceil(channel_days * HINT_SHARE))
+
+
+def overreaching_hooks(mix: ChannelMix | None, days: list[dict]) -> list[HookOverreach]:
+    """Every hook a plan's days put on more of a channel than ``hint_cap``
+    allows, unless that channel's own history proves it. A day counts for its
+    first platform, as the split does; a day naming no hook counts for none."""
+    on: dict[str, int] = defaultdict(int)
+    hooks: dict[tuple[str, str], int] = defaultdict(int)
+    for day in days or []:
+        if not isinstance(day, dict):
+            continue
+        channel = primary_channel(day.get("platforms"))
+        on[channel] += 1
+        hook = bet_key(day.get(HOOK))
+        if hook:
+            hooks[(channel, hook)] += 1
+    reports = {c.channel: c.performance for c in (mix.channels if mix is not None else [])}
+    out = []
+    for (channel, hook), count in sorted(hooks.items()):
+        cap = hint_cap(on[channel])
+        perf = reports.get(channel)
+        record = next((g for g in perf.bets.get(HOOK, []) if g.key == hook), None) if perf else None
+        if count <= cap or (record is not None and record.verdict == PROVEN):
+            continue
+        measured = record.measured(perf.ranked_by) if record is not None else 0
+        if record is not None and record.verdict == FLAT:
+            said = f"{measured} posts that earned nothing"
+        elif measured:
+            said = f"{measured} measured post{'' if measured == 1 else 's'}"
+        else:
+            said = "no measured posts"
+        out.append(HookOverreach(channel, hook, count, cap, on[channel], said))
+    return out
+
+
+def mix_snapshot(mix: ChannelMix) -> dict:
+    """The facts a plan keeps from the mix it was made from, for the board.
+
+    The strategy's sentences are the model's and name one channel at best;
+    these are code's, per channel, so the board can say what each channel
+    scales and tests and how its share moved without trusting a sentence to
+    have said it. Stored as ``strategy["mix"]`` beside the model's fields.
+    """
+    return {
+        "goal": str(mix.goal.kind),
+        "channels": [
+            {
+                "channel": c.channel,
+                "last_days": c.last_days,
+                "standing": c.standing,
+                "scaling": c.performance.exploit or "",
+                "testing": list(c.performance.explore),
+            }
+            for c in mix.channels
+        ],
+    }
+
+
 def load_channel_mix(project_id: UUID, channels: list[str], goal: Goal, days: int) -> ChannelMix:
     """Read the project's published posts and plans, and build the mix.
 
@@ -323,5 +408,8 @@ __all__ = [
     "build_mix",
     "floor_days",
     "goal_from",
+    "hint_cap",
     "load_channel_mix",
+    "mix_snapshot",
+    "overreaching_hooks",
 ]

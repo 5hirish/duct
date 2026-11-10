@@ -95,7 +95,7 @@ class RememberFactArgs(BaseModel):
         description=(
             f"A headline of at most {TITLE_HEADLINE_MAX} characters: the subject first, with its "
             "number or date if it has one ('Pricing page sessions fell 9% week over week'). "
-            "Everything else goes in body."
+            "Name things as a person would, never by an id. Everything else goes in body."
         ),
     )
     body: str = Field(
@@ -199,9 +199,11 @@ def _entry_payload(row, *, full: bool = False) -> dict:
 
 def _remember_sync(args: dict, *, project_id, user_id, conversation_id, agent_type, scope, source_type) -> dict:
     from db.session import get_session as db_session
-    from service.memory import remember, short_id
+    from service.memory import readable_title, remember, short_id
 
-    title = str(args.get("title") or "").strip()
+    # Measured without the ids remember() strips, so an id never gets an
+    # otherwise short headline sent back for a rewrite.
+    title = readable_title(args.get("title"))
     if len(title) > TITLE_HEADLINE_MAX:
         return {
             "status": "not_stored",

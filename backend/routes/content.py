@@ -139,6 +139,7 @@ from service.publishers.metrics import collect_reported_posts
 from service.publishers.registry import NO_SCHEDULER, all_specs, publisher_for, spec_for
 from service.vendor_keys import VendorNotConnected
 from service.membership import get_project_for_user, get_project_row_for_user
+from service.project_draft import edit_fields
 from service.provider_keys import stored_keys_for
 from utils.dates import now_iso, utcnow
 
@@ -927,7 +928,10 @@ def put_brand_context(
     if body.content_brand is not None:
         proj.content_brand = body.content_brand
     if body.content_pillars is not None:
-        proj.content_pillars = body.content_pillars
+        # The person's own list, labelled theirs: a crawl or an outside
+        # agent's draft never replaces it (service/project_draft.py rule 1).
+        sent = body.content_pillars
+        edit_fields(proj, {"content_pillars": (sent.get("items") if isinstance(sent, dict) else sent) or []})
     if body.content_visual_assets is not None:
         proj.content_visual_assets = body.content_visual_assets
     if body.slug is not None:
@@ -1063,6 +1067,30 @@ def _proposal_for(db: Session, user: User, body: PlanDecision):
     return session, proposal
 
 
+def _record_plan_decision(db: Session, session, proposal, decision: str, *, plan_id=None) -> None:
+    """Release the proposal its conversation held and say in the transcript
+    what the person decided. Memory reads that transcript: without the line,
+    a plan the agent only proposed was remembered as a pivot made."""
+    from agents.content.persistence import append_event
+    from agents.content.plan_proposal import hold_proposal
+    from agents.core.events import EventKind
+
+    conversation_id = getattr(session, "conversation_id", None)
+    if conversation_id is None:
+        return
+    try:
+        hold_proposal(db, conversation_id, None)
+        append_event(db, conversation_id, EventKind.PLAN_DECISION, {
+            "decision": decision,
+            "proposal_id": proposal.proposal_id,
+            "plan_id": str(plan_id) if plan_id else None,
+            "name": proposal.name,
+        })
+    except Exception:
+        db.rollback()
+        logger.warning("content: plan decision not recorded for conversation %s", conversation_id, exc_info=True)
+
+
 @router.post("/content/plans/accept")
 async def accept_plan(
     body: PlanDecision,
@@ -1078,6 +1106,7 @@ async def accept_plan(
     row = apply_proposal(db, proposal, now=utcnow())
     session.plan_id = row.id
     session.proposal = None
+    _record_plan_decision(db, session, proposal, ACCEPTED, plan_id=row.id)
     _link_conversation_artifact(body.session_id, "plan")
     payload = proposal.payload(ACCEPTED)
     payload["id"] = str(row.id)
@@ -1102,6 +1131,7 @@ async def reject_plan(
 
     session, proposal = _proposal_for(db, user, body)
     session.proposal = None
+    _record_plan_decision(db, session, proposal, REJECTED)
     await _emit(session.event_queue, {
         "event": ContentEvent.PLAN_GENERATED,
         "session_id": body.session_id,

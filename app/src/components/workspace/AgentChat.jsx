@@ -894,6 +894,10 @@ export default function AgentChat({
         disabled={inputDisabled}
         isStreaming={isStreaming}
         onStop={onStop}
+        // Opening the session or re-attaching its stream: nothing to stop yet.
+        connecting={
+          reconnecting && !isFailed ? t`Reconnecting…` : phase === Phase.STARTING ? t`Connecting…` : ""
+        }
         draft={draft}
         draftKey={draftKey}
         placeholder={placeholder}

@@ -27,13 +27,14 @@ from routes import user_projects
 from service.auth import get_current_user
 from service.membership import ensure_owner_membership
 from service.project_draft import (
-    FIELDS,
     PROVENANCE_CRAWL,
     PROVENANCE_DOCUMENT,
     PROVENANCE_INFERRED,
     PROVENANCE_USER,
     RANK,
+    SAVED_FIELDS,
     UNTITLED_PROJECT,
+    edit_fields,
     merge_draft,
     reconcile_save,
     snapshot,
@@ -103,6 +104,31 @@ def test_the_settings_pages_empty_persona_row_is_not_a_persona():
 def test_a_draft_cannot_claim_to_be_the_person():
     with pytest.raises(ValueError):
         merge_draft(_project(), _draft(pitch=("Mine now", PROVENANCE_USER)))
+
+
+def test_drafted_pillars_land_in_the_list_the_planner_reads():
+    """An outside agent's pillars used to land beside brand_voice, where no
+    plan ever read them, while the planner read content_pillars."""
+    from agents.content.schema import ContentPillar
+
+    project = _project()
+    merge_draft(project, _draft(content_pillars=(["Color seasons, explained", "Outfit ideas"], PROVENANCE_DOCUMENT)))
+    rows = project.content_pillars["items"]
+    assert [ContentPillar.model_validate(r).id for r in rows] == ["color_seasons_explained", "outfit_ideas"]
+    assert "content_pillars" not in (project.brand_channels or {})
+
+    rows[0]["description"] = "What the person wrote about it."
+    assert merge_draft(project, _draft(content_pillars=(["Color seasons, explained", "Outfit ideas"], PROVENANCE_DOCUMENT))) == []
+    assert project.content_pillars["items"][0]["description"] == "What the person wrote about it."
+
+
+def test_pillars_typed_on_the_brand_tab_are_the_persons():
+    project = _project(content_pillars={"items": [{"id": "x", "name": "Inferred", "description": ""}]},
+                       provenance={"content_pillars": PROVENANCE_INFERRED})
+    edit_fields(project, {"content_pillars": [{"id": "mine", "name": "Mine", "description": "Typed."}]})
+    merge_draft(project, _draft(content_pillars=(["From the site"], PROVENANCE_CRAWL)))
+    assert project.content_pillars["items"] == [{"id": "mine", "name": "Mine", "description": "Typed."}]
+    assert project.provenance["content_pillars"] == PROVENANCE_USER
 
 
 # ---------------------------------------------------------------------------
@@ -258,6 +284,25 @@ def test_a_label_the_server_does_not_know_never_fails_a_save(api):
     assert res.json()["provenance"] == {"name": PROVENANCE_USER, "pitch": PROVENANCE_USER}
 
 
+def test_a_save_drops_the_pillar_list_nothing_reads(api):
+    import uuid
+
+    api.user = _user(api.session, "ana@acme.example")
+    project_id = uuid.uuid4()
+    api.client.post(f"/api/user/projects/{project_id}/draft", json={"fields": _draft(
+        content_pillars=(["Color seasons"], PROVENANCE_CRAWL),
+    )})
+    # A device that drafted before the one list still carries its copy.
+    res = api.client.put(f"/api/user/projects/{project_id}", json=_body(
+        brand_channels={"brand_voice": "Friendly", "content_pillars": ["Stale"]},
+        provenance={"content_pillars": PROVENANCE_DOCUMENT},
+    ))
+    assert res.json()["brand_channels"] == {"brand_voice": "Friendly"}
+    project = api.session.get(Project, project_id)
+    assert [r["name"] for r in project.content_pillars["items"]] == ["Color seasons"]
+    assert project.provenance["content_pillars"] == PROVENANCE_CRAWL, "a save does not relabel what it does not carry"
+
+
 def test_a_draft_reaches_only_a_project_the_caller_belongs_to(api):
     owner = _user(api.session, "ana@acme.example")
     project = Project(user_id=owner.id, name="Acme", slug="acme")
@@ -296,4 +341,57 @@ def test_the_app_ranks_and_names_the_fields_the_way_the_server_does():
     ranks = dict(re.findall(r"\[(PROVENANCE_[A-Z]+)\]: (\d)", source))
     assert {constants[name]: int(rank) for name, rank in ranks.items()} == RANK
     paths = source.split("const FIELD_PATHS = Object.freeze({")[1].split("});")[0]
-    assert set(re.findall(r"^\s+([a-z_]+):", paths, re.M)) == set(FIELDS) | {"favicon"}
+    # The browser drafts what its own save sends, and the favicon it keeps.
+    assert set(re.findall(r"^\s+([a-z_]+):", paths, re.M)) == set(SAVED_FIELDS) | {"favicon"}
+
+
+# ---------------------------------------------------------------------------
+# The fold: one pillar list for projects drafted before it
+# ---------------------------------------------------------------------------
+
+def _run_migration(engine, step: str) -> None:
+    import importlib.util
+
+    from alembic.migration import MigrationContext
+    from alembic.operations import Operations
+
+    path = Path(__file__).resolve().parents[1] / "alembic/versions/7f3b9c1d2e4a_one_pillar_list.py"
+    spec = importlib.util.spec_from_file_location("one_pillar_list", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    with engine.begin() as conn, Operations.context(MigrationContext.configure(conn)):
+        getattr(module, step)()
+
+
+def test_the_fold_keeps_the_planners_rows_and_moves_names_only_into_an_empty_list():
+    engine = make_sqlite_engine(drop_partial_indexes=True)
+    owner = User(email="ana@acme.example", full_name="Ana")
+    drafted_only = _project(name="Drafted", slug="drafted", brand_channels={"brand_voice": "Friendly", "content_pillars": ["Color seasons", "Color seasons"]},
+                            provenance={"content_pillars": PROVENANCE_INFERRED})
+    both = _project(name="Both", slug="both", brand_channels={"content_pillars": ["Newer names"]},
+                    content_pillars={"items": [{"id": "old", "name": "Old", "description": "Typed."}]},
+                    provenance={"content_pillars": PROVENANCE_INFERRED, "pitch": PROVENANCE_USER})
+    with Session(engine) as session:
+        session.add(owner)
+        session.commit()
+        for project in (drafted_only, both):
+            project.user_id = owner.id
+            session.add(project)
+        session.commit()
+        ids = drafted_only.id, both.id
+
+    _run_migration(engine, "upgrade")
+
+    with Session(engine) as session:
+        drafted_only, both = (session.get(Project, i) for i in ids)
+        assert drafted_only.brand_channels == {"brand_voice": "Friendly"}
+        assert drafted_only.content_pillars == {"items": [{"id": "color_seasons", "name": "Color seasons", "description": ""}]}
+        assert drafted_only.provenance == {"content_pillars": PROVENANCE_INFERRED}
+        assert both.brand_channels == {}
+        assert both.content_pillars["items"][0]["name"] == "Old", "the rows every plan was made from win"
+        assert both.provenance == {"pitch": PROVENANCE_USER}, "the label described the names, so it goes"
+
+    _run_migration(engine, "downgrade")
+    with Session(engine) as session:
+        assert session.get(Project, ids[1]).brand_channels == {"content_pillars": ["Old"]}
+    engine.dispose()

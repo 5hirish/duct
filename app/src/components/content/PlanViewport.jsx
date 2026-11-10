@@ -1,19 +1,21 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
+import Link from "next/link";
 import { msg } from "@lingui/core/macro";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
-import { Check } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import PlanList from "./PlanList";
 import PlanStrategy from "./PlanStrategy";
+import { draftDayHref } from "./PlanBoard";
 import PipelineProgress from "../PipelineProgress";
 import { acceptPlan, rejectPlan } from "../../lib/contentApi";
 import { PlanStatus } from "../../lib/contentEnums";
 import { ContentStep } from "../../lib/contentEvents";
-import { planEndOf, planStartOf } from "../../lib/contentSchedule";
+import { nextOpenDay, planEndOf, planStartOf } from "../../lib/contentSchedule";
 import { formatDateRange } from "../../lib/format";
 
 // Loading ladder mirrors the audit report: the two fixed backend steps
@@ -36,10 +38,12 @@ const PLAN_LINES = [
   msg`Sequencing the posting cadence…`,
 ];
 
-// What the chat is told after a decision, so the agent carries on in the
-// right direction. Prompts to the model, not interface copy: the same
-// register as PostViewport's review request, and English like it.
-const ACCEPTED_MESSAGE = "I accepted the plan. Carry on.";
+// What the chat is told after a Reject, so the agent asks what to plan
+// instead. A prompt to the model, not interface copy: the same register as
+// PostViewport's review request, and English like it. Accept sends nothing:
+// it used to send "Carry on", and the agent went on to draft posts, which
+// swapped the plan in this pane for a post it cannot show. The next message
+// the person sends tells the agent instead (routes/agents.py, plan_decisions).
 const REJECTED_MESSAGE = "I rejected this plan.";
 
 /**
@@ -135,7 +139,7 @@ export default function PlanViewport({ payload, steps = [], building = false, on
 /**
  * One slot under the plan's header, with one of four things in it:
  *   proposed  → the consequence of Accept in a line, then Accept / Modify / Reject
- *   accepted  → "Saved as your plan"
+ *   accepted  → "Saved as your plan", and a way to draft the next open day
  *   rejected  → the quiet note that the plan was discarded
  *   no status → nothing (a plan saved before proposals existed)
  *
@@ -159,9 +163,18 @@ function PlanDecision({ plan, sessionId, onSendMessage, onAccepted }) {
     );
   }
   if (plan.status === PlanStatus.ACCEPTED) {
+    // The turn is over, so leaving the session for the post workspace ends nothing.
+    const next = plan.id ? nextOpenDay(plan) : null;
     return (
-      <div className="shrink-0 border-b border-border/60 px-4 py-2">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border/60 px-4 py-2">
         <Badge variant="success"><Check aria-hidden="true" /> <Trans>Saved as your plan</Trans></Badge>
+        {next && (
+          <Button asChild size="sm" variant="outline" className="h-7">
+            <Link href={draftDayHref(plan, next.index)} title={next.day?.topic || undefined}>
+              <Trans>Draft the next post</Trans> <ArrowRight className="size-3.5" aria-hidden="true" />
+            </Link>
+          </Button>
+        )}
       </div>
     );
   }
@@ -175,7 +188,6 @@ function PlanDecision({ plan, sessionId, onSendMessage, onAccepted }) {
     try {
       const out = await acceptPlan(sessionId, plan.proposal_id);
       onAccepted(out);
-      onSendMessage?.(ACCEPTED_MESSAGE);
     } catch {
       setError(t`Couldn't save the plan. Try again.`);
       setPending(null);

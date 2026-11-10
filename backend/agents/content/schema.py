@@ -248,6 +248,9 @@ class ContentSession(BaseAgentSession):
     # The brand's channels, read once at the opening so submit_plan can refuse
     # a day bound for a platform the brand does not post on.
     active_channels: list[str] = field(default_factory=list)
+    # The channel mix the opening turn was built from (channel_mix.ChannelMix),
+    # so submit_plan stores its facts on the plan for the board to show.
+    channel_mix: Any = None
     # True while the opening turn is the review of the plan so far, before any
     # direction was given: a turn that ends without a plan is then correct,
     # and the recovery nudge asks for a direction instead of a plan.
