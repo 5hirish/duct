@@ -1,6 +1,6 @@
 # Agent harnesses we learn from
 
-**Author:** Shirish Kadam · **Updated:** 2026-10-26
+**Author:** Shirish Kadam · **Updated:** 2026-11-10
 
 Three coding-agent harnesses are built in the open by teams who hit every problem our agent shell hits, a year ahead of us and with more users. Reading them is cheaper than rediscovering their answers.
 
@@ -10,7 +10,7 @@ Reference material, not rules: the rules a reading produced live in the area `AG
 
 ## At a glance
 
-- **Three harnesses and one index:** Codex, OpenCode and pi at a pinned revision; awesome-harness-engineering for sources.
+- **Three harnesses, one index, one board:** Codex, OpenCode and pi at a pinned revision; awesome-harness-engineering for sources; the Harness Leaderboard for what holds up when measured.
 - **Same problems, worked answers:** reconnect, resume, pauses that outlive a process, flicker-free streaming, actionable errors.
 - **Two days of fixes:** 17 of 27 exposed gaps closed on 2026-09-04 and 05; nine open, one half done, sized in the Reference.
 - **Evidence, never opinion:** each finding is a file and line at a named revision. No code is pasted here.
@@ -22,8 +22,8 @@ Codex has the most complete client protocol, OpenCode has our shape, and pi show
 | Harness | Why it matters to us | Last read |
 |---|---|---|
 | **Codex** (OpenAI), `github.com/openai/codex` | The desktop and IDE apps are clients of `codex app-server`, a JSON-RPC server whose thread / turn / item contract is the most fully specified agent-UI protocol in the open. The desktop app is closed; the TUI in the same repo is the reference client. | `de78740`, 2026-09-04; the shallow clone at `../codex` is gone (2026-10-25), re-clone to refresh |
-| **OpenCode** (Anomaly), `github.com/anomalyco/opencode` (moved from `sst/opencode`; default branch `dev`) | A TypeScript server and clients over a session / message / part model with an SSE event bus, mid-migration to an event-sourced v2. Provider-agnostic, and the closest in shape to our Next.js app talking to a backend. | `5cf9f51`, 2026-09-04 |
-| **pi** (Earendil), `github.com/earendil-works/pi` (moved from `badlogic/pi-mono`; docs at `pi.dev/docs/latest`) | A deliberately small TypeScript agent loop and TUI: the reference for how little harness you need. Explicit steer-versus-follow-up input modes, abortable retry, session trees. | `9841914`, 2026-09-05 |
+| **OpenCode** (Anomaly), `github.com/anomalyco/opencode` (moved from `sst/opencode`; default branch `dev`) | A TypeScript server and clients over a session / message / part model with an SSE event bus, mid-migration to an event-sourced v2. Provider-agnostic, and the closest in shape to our Next.js app talking to a backend. | `5cf9f51`, 2026-09-04, for the client protocol (Reference below). `98e4b53`, 2026-11-10, for the v2 runner's cost habits: [OpenCode 2 reading](2026-11-10-opencode-2-harness-reading.md) |
+| **pi** (Earendil), `github.com/earendil-works/pi` (moved from `badlogic/pi-mono`; docs at `pi.dev/docs/latest`) | A deliberately small TypeScript agent loop and TUI: the reference for how little harness you need. Explicit steer-versus-follow-up input modes, abortable retry, session trees. | `9841914`, 2026-09-05, for input modes and retry (Reference below). `6273031`, 2026-11-10, for cost habits: [OpenCode 2 and pi reading](2026-11-10-opencode-2-harness-reading.md) |
 
 ## One index feeds the reading list
 
@@ -34,6 +34,18 @@ A harness is read at a revision; an index is read for leads. This one curates th
 | Index | What we took | Last read |
 |---|---|---|
 | **awesome-harness-engineering**, `github.com/ai-boost/awesome-harness-engineering` (raw README, no clone needed) | The rules in [the agent rulebook](agent-engineering.md) and four records of the same day: [eval gating](2026-09-27-agent-eval-gating-design.md), [insights code execution](2026-09-27-insights-code-execution-design.md), [execution approvals](2026-09-27-execution-approval-ux-research.md) and [memory freshness](2026-09-27-memory-freshness-design.md). Found through it: the audit graph had none of the shared middleware (fixed; `tests/test_agent_assembly.py` holds it), and a stopped process left its runs `running` (fixed; `cancel_orphaned_runs`). | `5592ad5`, 2026-09-27 |
+
+## People and boards we follow
+
+A harness shows one team's answer; a board shows which answers hold up when measured. Follow the sources that publish their method and their mistakes.
+
+> **Rule:** read the board's own page and changelog, never a write-up of it. On 2026-11-10 news summaries still described OpenCode as last a day after the board showed it first.
+
+| Source | Why it matters to us | Last read |
+|---|---|---|
+| **Harness Leaderboard**, Joel Niklaus (Hugging Face, harness optimization; `niklaus.ai`), `huggingface.co/spaces/joelniklaus/harness-leaderboard` | Same model, nine harnesses, three attempts, cost metered outside the harness. Its `CHANGELOG.md`, `LAB_NOTEBOOK.md` and `docs/decisions.md` record each measurement mistake as it is found: wrong context windows, replies cut by provider defaults, a bridge that dropped tool calls. | Board v0.1.3, 2026-11-10: [OpenCode 2 reading](2026-11-10-opencode-2-harness-reading.md) |
+| **Harness Lens**, `huggingface.co/spaces/harness-hub/harness-lens` | A dictionary of how 34 harnesses differ (prompt, tools, edit format, compaction, permissions), each claim linked to its source. The place to look up one mechanism across harnesses. | Not read yet |
+| **Liu and Han, 2026**, arXiv 2610.04433 | Cited by the board for the finding that swapping a harness flips about as many tasks as re-running the same one. The reason our eval needs repeats. | Not read yet |
 
 ## How to read one
 
