@@ -2,6 +2,8 @@
 name: mosaic-panel
 description: Generate a Roman mosaic threshold panel for an empty state, error state, 404 or onboarding screen, and ship it as a WebP the app can load. Use when a surface needs illustration rather than another icon.
 argument-hint: "<state the panel is for, e.g. 'connector rate-limited'>"
+metadata:
+  internal: "true"
 ---
 
 Duct's illustrations are square Roman mosaic panels — the kind set into a

@@ -68,6 +68,18 @@ across Meta Ads, Stripe and RevenueCat), and Customer Success (at-risk accounts
 from NPS, usage and support signals). Follow along in
 [Issues](https://github.com/5hirish/duct/issues) and at [getduct.ai](https://getduct.ai).
 
+## 🧩 For your coding agent
+
+Ask Claude Code, Codex or Cursor "is my site ready to launch?" and it reads
+your live pages and the repository behind them, checks what the page promises
+against what the code does, scores the launch out of 100 and gives you three
+ranked fixes, each as a diff it applies only when you say yes. No Duct account,
+nothing sent to us.
+
+```bash
+npx skills add 5hirish/duct
+```
+
 ## 🔑 Use your ChatGPT subscription
 
 Sign in with your own ChatGPT plan in the desktop app and Duct runs on it. No

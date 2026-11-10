@@ -2,6 +2,8 @@
 name: add-blog-post
 description: Research, write, illustrate and publish a post on the Duct blog that ranks in search and gets cited by answer engines (ChatGPT, Perplexity, Google AI Overviews, Claude). Runs a research arm first (demand, the pages answer engines cite today, primary sources, Duct's first-hand evidence), then writes for extraction, draws the hero, renders, lists and verifies the post, and keeps the publishing cadence. Use for "write a blog post", "next post", "blog about <topic or URL>", or a blog content calendar.
 argument-hint: "<topic, question or source URL> [Engineering|Design|Growth|Guide|Announcement|Story]"
+metadata:
+  internal: "true"
 ---
 
 A post exists to be **found, quoted and trusted**: found by search, quoted by

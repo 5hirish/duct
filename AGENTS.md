@@ -32,6 +32,16 @@ replaces was not a supported form, so Claude Code discovered none of these
 skills at all. Adding one means creating the directory and both symlinks —
 copies drift, so never copy.
 
+`skills/` at the root is a different shelf: skills **for Duct's users**, which
+they install into their own repositories with `npx skills add 5hirish/duct`.
+They must work in any repository, so they name no path, script or convention
+of this one, and they get no `.claude/` or `.cursor/` symlink. The `skills`
+CLI scans `skills/` *and* `.agents/skills/`, so every contributor skill carries
+`metadata: internal: "true"` in its frontmatter, which hides it from the
+default install. A new contributor skill without that line is offered to
+every user who installs Duct's skills; a skill in `skills/` with it is offered
+to nobody.
+
 MCP servers get no such shared file, because none can exist: VS Code names the
 key `servers` rather than `mcpServers`, Codex is TOML, Zed calls them
 `context_servers` and puts them among its other settings, and Cursor expands
@@ -73,6 +83,7 @@ the area you are editing; site conventions do not apply to `backend/`.
 | `app/` | Next.js App Router (JS, not TS), Cloudflare Workers | [`app/AGENTS.md`](app/AGENTS.md) |
 | `desktop/` | Tauri v2 shell; OS-keychain BYO provider keys | [`desktop/AGENTS.md`](desktop/AGENTS.md) |
 | `site/` | Static HTML/CSS/JS, no build step | [`site/AGENTS.md`](site/AGENTS.md) |
+| `skills/` | User-facing Agent Skills (`npx skills add 5hirish/duct`) | above, "How the instruction files work" |
 | `docs/` | Engineering plans and reference material | [`docs/README.md`](docs/README.md) |
 | `scripts/` | Deploy/env plumbing and repo hygiene | below |
 | `design/` | Storyboards (Claude Design) and the Remotion film | [`design/motion/README.md`](design/motion/README.md) |

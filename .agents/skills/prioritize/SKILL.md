@@ -2,6 +2,8 @@
 name: prioritize
 description: Product management for Duct — find what deserves attention, run it through the lean prioritization bar, file it as a properly-typed and scheduled GitHub issue, keep the board honest, and report where things stand.
 argument-hint: "<idea, issue number, short description, or 'sweep' / 'readout' / 'sprint'>"
+metadata:
+  internal: "true"
 ---
 
 Development here is 100% agent-executed, so implementation speed is not the

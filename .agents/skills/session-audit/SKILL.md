@@ -2,6 +2,8 @@
 name: session-audit
 description: Independent audit of a stored Duct agent session. Pulls it from the database (the context the model read, every tool call and payload, the reply, artifact versions, memories, cost), solves the same task yourself on the same data before reading Duct's answer, grades both against a fixed rubric, diagnoses the gap to a prompt, tool, harness, model or product cause, and records proposals in a private ledger so audits compound. Use for "audit session X", "review the last brief", "how good was that answer", "compare Duct against <another agent>".
 argument-hint: "<conversation-id | list> [--agent insights|audit|content] [--focus artifact|reply|run]"
+metadata:
+  internal: "true"
 ---
 
 Duct's agents run unattended on other people's data, and the only regular
