@@ -381,6 +381,7 @@ def resolve_chat_model(
             **_retry_kwargs(provider),
             **get_api_key_kwargs(provider, api_key, base_url=base_url or default_base_url(provider)),
         )
+        llm = _bound_reply(llm, provider)
     return _within_ducts_window(llm, model)
 
 
@@ -500,6 +501,37 @@ SDK_RETRIES_GEMINI = 1
 
 def _retry_kwargs(provider: Provider) -> dict:
     return {"max_retries": SDK_RETRIES_GEMINI if provider is Provider.GOOGLE_GENAI else SDK_RETRIES}
+
+
+#: The most a single OpenRouter reply may run to, reasoning included. A brief
+#: call writes about 4,000 tokens; this leaves room for deep reasoning and a
+#: long report. Claude Code's default reply limit is the same figure.
+OPENROUTER_REPLY_TOKENS = 32_000
+
+
+def _bound_reply(llm: Any, provider: Provider) -> Any:
+    """A reply limit for OpenRouter, which reserves credit against it.
+
+    ChatOpenRouter sends no ``max_tokens`` unless told, and OpenRouter then
+    holds the account's balance against the model's whole output limit before
+    the call starts: 131,072 tokens on DeepSeek V4 Flash. On 2026-11-10 every
+    eval trial died on that reservation (``PaymentRequiredResponseError``,
+    "can only afford 96603") while a trial actually writes about 4,100. A
+    customer on a small OpenRouter balance hits the same wall on every call,
+    and on an expensive model the reservation alone can exceed a few dollars.
+    A model whose profile lists a lower output limit gets that instead, since
+    asking for more than a model can write is a 400 on some hosts. Other
+    providers bill what was written and are left alone.
+    """
+    if provider is not Provider.OPENROUTER or getattr(llm, "max_tokens", None):
+        return llm
+    own = (getattr(llm, "profile", None) or {}).get("max_output_tokens")
+    limit = min(OPENROUTER_REPLY_TOKENS, own) if isinstance(own, int) and own > 0 else OPENROUTER_REPLY_TOKENS
+    try:
+        llm.max_tokens = limit
+    except (AttributeError, TypeError, ValueError):  # a model class that refuses assignment
+        logger.debug("lc: could not set a reply limit on %s", type(llm).__name__, exc_info=True)
+    return llm
 
 
 def _cache_kwargs(provider: Provider, cache_key: str) -> dict:

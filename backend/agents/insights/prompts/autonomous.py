@@ -21,6 +21,7 @@ failure mode this agent exists to eliminate.
 
 from __future__ import annotations
 
+from datetime import date
 from typing import Any
 
 from agents.core.persona import with_confidentiality
@@ -30,7 +31,7 @@ from agents.core.prompts import (
     MEMORY_DISCIPLINE,
     xml_block,
 )
-from agents.core.turn import TurnContext, build_turn, spec_for
+from agents.core.turn import TurnContext, build_turn, current_date_block, spec_for
 from agents.registry import AgentType
 
 PERSONA = """\
@@ -665,6 +666,7 @@ def build_insights_user_prompt(
     artifact_format: str = "",
     autonomy: str = "",
     report_plan: str = "",
+    today: date | None = None,
 ) -> str:
     """The USER turn: everything per-project, in context-then-task order.
 
@@ -686,6 +688,7 @@ def build_insights_user_prompt(
     ctx.set("data_sources", data_sources)
     ctx.set("deliverable_format", deliverable_format_block(artifact_format))
     ctx.set("autonomy", xml_block("autonomy", AUTONOMY_POSTURE.get(autonomy, "")))
+    ctx.set("current_date", current_date_block(today))
     # The report's plan: an unlisted tag, so it renders after the ordered
     # blocks and just before the request (agents/core/turn.py).
     if report_plan:

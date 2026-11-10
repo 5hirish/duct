@@ -83,6 +83,7 @@ from agents.core.mcp_tools import build_mcp_tools_lc
 from agents.core.memory_tools import build_memory_tools_lc
 from agents.core.quota import credential_identity
 from agents.core.session import BaseAgentSession
+from agents.core.turn import current_date_block
 from agents.insights.brief import DEFAULT_FORMAT, parse_brief
 from agents.insights.report import parse_report
 from agents.insights.data_tools import build_data_tools_lc
@@ -867,7 +868,9 @@ def _resumed_opening(prompt: str, artifact_format: str, memory: str = "") -> str
     route found it stale, then the format preference, then the ask."""
     if not prompt:
         return ""
-    parts = [memory.strip(), deliverable_format_block(artifact_format), prompt]
+    # A thread reopened days later still believes the date its first turn
+    # carried, so the date rides on every resume, after the cached thread.
+    parts = [memory.strip(), deliverable_format_block(artifact_format), current_date_block(), prompt]
     return "\n\n".join(p for p in parts if p)
 
 

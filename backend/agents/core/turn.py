@@ -38,6 +38,7 @@ not to "tidy" into declaration order.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import date, timedelta
 
 from agents.core.prompts import xml_block
 
@@ -60,6 +61,7 @@ BLOCK_ORDER: tuple[str, ...] = (
     "data_sources",       # connection + account state — per run
     "deliverable_format", # per-run posture
     "autonomy",           # per-run posture
+    "current_date",       # changes every day: last before the ask, so it never splits the prefix above
     "request",            # the ask itself — different every turn
 )
 
@@ -100,6 +102,27 @@ class ContextSpec:
         an agent that passes one means it.
         """
         return bool(getattr(self, block, True))
+
+
+def current_date_block(today: date | None = None) -> str:
+    """Today's date, and the last day whose numbers are complete.
+
+    Without it a model resolves "the last four weeks" against whatever date it
+    imagines. On 2026-11-10 two of three failed eval briefs did exactly that:
+    one compared February with March 2026, the other October 1 to 28, and
+    both correctly reported flat traffic in windows that held none of the
+    change the question was about. ``today`` defaults to the day the fetchers
+    count from (``utils.dates.last_n_days``), so the date the model is told and
+    the window a default fetch reads cannot disagree. Pass one to pin it, as the
+    prompt dump does to stay deterministic.
+    """
+    today = today or date.today()
+    yesterday = today - timedelta(days=1)
+    return xml_block("current_date", (
+        f"Today is {today:%A} {today.isoformat()}. The last complete day is "
+        f"{yesterday.isoformat()}; today's numbers are still partial. Resolve relative "
+        "periods such as \"last week\" or \"the last four weeks\" against these dates."
+    ))
 
 
 #: What an agent that declares nothing gets.
@@ -188,6 +211,7 @@ def spec_for(agent_type: str) -> ContextSpec:
 __all__ = [
     "BLOCK_ORDER",
     "ContextSpec",
+    "current_date_block",
     "DEFAULT_SPEC",
     "MEMORY_BLOCKS",
     "TurnContext",

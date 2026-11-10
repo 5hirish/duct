@@ -620,3 +620,38 @@ def test_the_sdk_retries_nothing_underneath_the_reported_retry(provider, model, 
 
     llm = resolve_chat_model(provider, model, api_key)
     assert llm.max_retries == expected, provider
+
+
+# ---------------------------------------------------------------------------
+# OpenRouter reserves credit against the reply limit, so one is always sent
+# ---------------------------------------------------------------------------
+
+def test_openrouter_sends_a_reply_limit_so_credit_is_not_reserved_for_the_maximum():
+    """Without one, OpenRouter held a DeepSeek call's balance against 131,072
+    output tokens and refused it on a small balance (2026-11-10)."""
+    from agents.core.lc import OPENROUTER_REPLY_TOKENS, resolve_chat_model
+
+    llm = resolve_chat_model(Provider.OPENROUTER, "deepseek/deepseek-v4-flash", "sk-or-test")
+
+    assert llm.max_tokens == OPENROUTER_REPLY_TOKENS
+    assert llm._default_params["max_tokens"] == OPENROUTER_REPLY_TOKENS
+
+
+def test_a_model_that_writes_less_than_the_cap_keeps_its_own_limit():
+    from agents.core.lc import Provider as P, _bound_reply
+
+    class Small:
+        max_tokens = None
+        profile = {"max_output_tokens": 8_192}
+
+    assert _bound_reply(Small(), P.OPENROUTER).max_tokens == 8_192
+
+
+def test_direct_vendors_get_no_reply_limit_from_duct():
+    from agents.core.lc import _bound_reply
+
+    class Direct:
+        max_tokens = None
+        profile = {"max_output_tokens": 128_000}
+
+    assert _bound_reply(Direct(), Provider.ANTHROPIC).max_tokens is None

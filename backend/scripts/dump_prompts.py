@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from datetime import date
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -90,6 +91,8 @@ FIXTURE_DATA_SOURCES = (
 )
 
 FIXTURE_REQUEST = "Why did CPA jump last week?"
+# A fixed day, so the dump stays byte-identical whatever day it is run.
+FIXTURE_TODAY = date(2026, 10, 30)
 
 # A reference post for the clone prompts: a carousel that outran its
 # creator's following, snake_case as a saved reference stores it. Invented.
@@ -198,6 +201,7 @@ def render_insights() -> str:
         user_context=user_context_block(_profile()),
         memory=FIXTURE_MEMORY,
         data_sources=FIXTURE_DATA_SOURCES,
+        today=FIXTURE_TODAY,
     )
     out.append(section(
         f"Opening user turn · ~{approx_tokens(turn):,} tokens",
