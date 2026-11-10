@@ -26,6 +26,14 @@ published without one. The same script, with no arguments, holds
 
 ### Added
 
+- **A launch check for your coding agent.** `npx skills add 5hirish/duct`
+  installs the `launch-check` skill into Claude Code, Codex, Cursor or any
+  agent that reads skills. It reads up to ten live pages and the repository
+  behind them, checks whether the analytics tag ships and the one conversion
+  event is sent, scores the launch out of 100 and writes three ranked fixes to
+  `duct-launch-check.md`, applying a diff only on a yes. No account, no call to
+  Duct. The twelve contributor skills are marked internal, so the install
+  offers only this one (#536).
 - **Duct speaks Simplified Chinese.** The interface, the site under `/zh-cn/`
   and a Chinese README, machine-translated against the glossary, which now
   pins every product term for `zh-CN` and renders "agent" as 智能体 rather than

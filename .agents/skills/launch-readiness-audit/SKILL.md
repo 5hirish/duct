@@ -2,6 +2,8 @@
 name: launch-readiness-audit
 description: Audit a page or blog post for launch readiness across SEO, mobile responsiveness, AI crawler discoverability, and UX copy quality. Use when the user asks for an audit, readiness review, or pre-launch checklist for site/blog content.
 argument-hint: "<target-path-or-url> [\"<audience/context>\"]"
+metadata:
+  internal: "true"
 ---
 
 Runs a structured launch-readiness audit for one page/post. The full standard — rubric, weightings and checklists — is contained in this file; nothing external is required.

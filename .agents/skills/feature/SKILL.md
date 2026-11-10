@@ -3,6 +3,8 @@ name: feature
 description: Start a new branch safely from main. Handles uncommitted changes, stashing, unfinished merges, and branch naming conventions automatically.
 argument-hint: "<description of work>"
 disable-model-invocation: true
+metadata:
+  internal: "true"
 ---
 
 # Start New Branch

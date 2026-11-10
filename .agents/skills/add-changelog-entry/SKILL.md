@@ -2,6 +2,8 @@
 name: add-changelog-entry
 description: Write a new release entry on the public Duct changelog at site/changelog/ — from git history, in the voice of someone who uses the product
 argument-hint: "[\"<release name>\"] [\"<date>\"] [\"<version badge>\"]"
+metadata:
+  internal: "true"
 ---
 
 Turns what shipped since the last published release into one human-readable entry

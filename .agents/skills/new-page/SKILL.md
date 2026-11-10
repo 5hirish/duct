@@ -2,6 +2,8 @@
 name: new-page
 description: Create a new audience-specific landing page following the for-*.html pattern
 argument-hint: "<audience-slug> \"<title suffix>\" \"<hero headline>\" \"<hero subtext>\""
+metadata:
+  internal: "true"
 ---
 
 Creates a new `for-<audience-slug>.html` page for one audience. Keeps the site's
