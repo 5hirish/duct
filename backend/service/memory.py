@@ -121,6 +121,9 @@ def _clean(text: str, limit: int) -> str:
 _UUID = r"\b[0-9a-fA-F]{8}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{12}\b"
 _BRACKETED_ID = re.compile(rf"\s*[(\[][^()\[\]]*{_UUID}[^()\[\]]*[)\]]")
 _LABELLED_ID = re.compile(rf"(?:\bid\b\s*[:#=]?\s*)?{_UUID}", re.I)
+# Read no further than a title could be: past this, every pattern below is
+# being asked about text no headline holds, at a cost that grows with it.
+_TITLE_SCAN_MAX = 4 * TITLE_MAX
 # What a removed id leaves dangling. A leading hyphen is not on the list: it is
 # the minus in "-23% clicks", not punctuation.
 _LEADING_LEFTOVERS = " \t:;,–—"
@@ -129,11 +132,14 @@ _TRAILING_LEFTOVERS = " \t:;,–—-"
 
 def readable_title(title: str) -> str:
     """The title without raw ids, for every writer: tools, consolidation, system."""
-    raw = str(title or "").strip()
+    raw = str(title or "").strip()[:_TITLE_SCAN_MAX]
     out = _LABELLED_ID.sub("", _BRACKETED_ID.sub("", raw))
     if out == raw:
         return raw
-    out = re.sub(r"\s+([,.;:!?])", r"\1", re.sub(r"[ \t]{2,}", " ", out))
+    # Runs are one character once collapsed, so the second pass is a fixed
+    # two-character match: "\s+" before the punctuation backtracked over every
+    # run of spaces (CodeQL, polynomial regex on uncontrolled data).
+    out = re.sub(r"[ \t]([,.;:!?])", r"\1", re.sub(r"[ \t]{2,}", " ", out))
     return out.lstrip(_LEADING_LEFTOVERS).rstrip(_TRAILING_LEFTOVERS)
 
 
