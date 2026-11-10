@@ -30,6 +30,12 @@ published without one. The same script, with no arguments, holds
   and a Chinese README, machine-translated against the glossary, which now
   pins every product term for `zh-CN` and renders "agent" as 智能体 rather than
   代理, the word for a proxy. A native speaker's pass is #537.
+- **Duct asks for a GitHub star, rarely and only after it helped.** After a
+  third run that made something, once a run has ended and never on the first
+  day, a corner card offers "Star on GitHub" beside "Something missing? Tell
+  us". At most twice ever, 60 days apart, never again after a star; any other
+  notice takes the corner first. The account menu always has "Star Duct on
+  GitHub" (#539).
 
 ### Changed
 

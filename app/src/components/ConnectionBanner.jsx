@@ -20,6 +20,7 @@ import { RefreshCw, WifiOff } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { msg } from "@lingui/core/macro";
 import { Button } from "@/components/ui/button";
+import { useHoldCorner } from "@/components/ui/corner-notice";
 import { STATUS, probe, watchConnection } from "@/lib/connection";
 import { isLocalBackendActive } from "@/lib/localBackend";
 import { isDesktopShell } from "@/lib/shell";
@@ -63,6 +64,8 @@ export default function ConnectionBanner() {
   const [retrying, setRetrying] = useState(false);
 
   useEffect(() => watchConnection(setStatus), []);
+  // From the other corner too: nothing asks a favour while Duct is unreachable.
+  useHoldCorner(status !== STATUS.OK);
 
   const retry = useCallback(async () => {
     setRetrying(true);

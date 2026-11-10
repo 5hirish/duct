@@ -39,6 +39,7 @@ import { AUTONOMY_ASK } from "@/lib/projectsApi";
 import { CornerNotice } from "@/components/ui/corner-notice";
 import { CalendarPlus, FolderOpen, Plus, RefreshCw } from "lucide-react";
 import { CookieConsent } from "@/components/CookieConsent";
+import { StarAskNotice, StarAskView } from "@/components/StarAsk";
 import LoadError from "@/components/LoadError";
 import CloneFromUrlDialog from "@/components/content/CloneFromUrlDialog";
 import CloneSourceNote from "@/components/content/CloneSourceNote";
@@ -242,6 +243,32 @@ function DialogScene({ label, ...props }) {
       </Button>
       <ConnectorDialog open={open} onOpenChange={setOpen} {...props} />
     </>
+  );
+}
+
+// The star ask's card, live: Star swaps to the thank-you, Not now and the ✕
+// put it away, and a button brings it back. The rules that decide when it
+// appears are lib/starAsk.js and its tests; nothing here imitates them.
+function StarAskScene({ start = StarAskView.ASK }) {
+  const [view, setView] = useState(start);
+  if (!view) {
+    return (
+      <Button size="sm" variant="outline" onClick={() => setView(StarAskView.ASK)}>
+        Ask again
+      </Button>
+    );
+  }
+  return (
+    <StarAskNotice
+      view={view}
+      onStar={(event) => {
+        // Stay in the preview; the real card opens the repository.
+        event.preventDefault();
+        setView(StarAskView.THANKS);
+      }}
+      onNotNow={() => setView(null)}
+      onClose={() => setView(null)}
+    />
   );
 }
 
@@ -2142,6 +2169,22 @@ export const SCENES = [
     ),
   },
   {
+    id: "star-ask",
+    state: "asking: after three good runs, never on day one, never mid-run",
+    group: "StarAsk",
+    title: "Is Duct earning its keep?",
+    note: "The GitHub star ask, iOS's rating prompt in the corner: it appears 8 s after a run that made something ends, at most twice ever, 60 days apart, and never again after a star or a second no. Check that Star on GitHub is the one heavy thing, that Not now sits at the same height beside it, and that \"Something missing? Tell us\" is quiet but on every showing: the star and the feedback link are offered to everyone together, so nobody unhappy is routed away from either. No star count, no reward. Click Star to see the thank-you. The two actions share the row at equal width while both fit and stack at full width when they do not (German, Japanese), the way iOS lays out an alert's actions; open it with ?lang=de to see the stack.",
+    render: () => <StarAskScene />,
+  },
+  {
+    id: "star-ask-thanks",
+    state: "after Star: the thank-you, then gone",
+    group: "StarAsk",
+    title: "Thank you",
+    note: "What the card turns into on Star. It counts down four seconds only while this window has focus, because the star opened GitHub in front of it and a thank-you that expired behind the browser was said to nobody. The star fills in the brand orange with one zoom (stripped under reduced motion), the only celebration. It thanks the gesture rather than claiming a star was given: nothing checks.",
+    render: () => <StarAskScene start={StarAskView.THANKS} />,
+  },
+  {
     id: "context-compression",
     state: "on (default) — toggle for off",
     group: "ContextCompressionCard",
@@ -3318,7 +3361,7 @@ export const SCENES = [
     state: "signed in, open",
     group: "AppSidebar",
     title: "The account menu, whole",
-    note: "Five groups in the order people look: you (Profile, Your memory), what runs your work (models, usage, your own agent), how the app looks and talks to you (language, appearance, notifications, cookies), feedback, then Log out alone. Check that every setting shows its current value the same way, muted on the right, and that no row wraps at this width in German. Manage projects is in the project switcher now, beside the projects.",
+    note: "Five groups in the order people look: you (Profile, Your memory), what runs your work (models, usage, your own agent), how the app looks and talks to you (language, appearance, notifications, cookies), feedback (a bug, an idea, a star on GitHub), then Log out alone. The star row is the permanent home of the corner ask, which is why that ask can be rare: a star from here counts, and the corner never asks again. Check that every setting shows its current value the same way, muted on the right, and that no row wraps at this width in German. Manage projects is in the project switcher now, beside the projects.",
     render: () => (
       <DropdownMenu defaultOpen modal={false}>
         <DropdownMenuTrigger asChild>

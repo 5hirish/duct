@@ -13,6 +13,7 @@ import { AuditNavProvider } from "../../lib/auditNavContext";
 import LocalBackendGate from "../../components/LocalBackendGate.jsx";
 import UpdateToast from "../../components/UpdateToast.jsx";
 import ReloadToast from "../../components/ReloadToast.jsx";
+import StarAsk from "../../components/StarAsk.jsx";
 import ConnectionBanner from "../../components/ConnectionBanner.jsx";
 import DailyDraftsReminder from "../../components/content/DailyDraftsReminder.jsx";
 import { CommandProvider } from "../../components/commands/CommandRegistry";
@@ -45,6 +46,9 @@ export default function AppLayout({ children }) {
       {/* Desktop and web never both speak: UpdateToast is shell-only,
           ReloadToast browser-only. */}
       <ReloadToast />
+      {/* The one notice that asks rather than tells: it yields the corner to
+          all of the others (ui/corner-notice.jsx has the rule). */}
+      <StarAsk />
       <ConnectionBanner />
     </LocalBackendGate>
   );

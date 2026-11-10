@@ -2726,6 +2726,7 @@ msgid "Cloning a TikTok"
 msgstr "Clonando um TikTok"
 
 #: src/components/audit/ExecutionOffer.jsx
+#: src/components/StarAsk.jsx
 msgid "Close"
 msgstr "Fechar"
 
@@ -3807,6 +3808,10 @@ msgstr "Descartar"
 msgid "Dismiss project update"
 msgstr "Descartar atualização do projeto"
 
+#: src/components/StarAsk.jsx
+msgid "Dismiss the star request"
+msgstr "Dispensar o pedido de estrela"
+
 #: src/components/ReloadToast.jsx
 #: src/components/UpdateToast.jsx
 msgid "Dismiss update notification"
@@ -4449,6 +4454,10 @@ msgstr "Cada post, cada conta"
 #: src/app/(app)/artifacts/page.jsx
 msgid "Every report Duct writes lands here, with each version kept."
 msgstr "Todo relatório que Duct escreve chega aqui, com cada versão mantida."
+
+#: src/components/StarAsk.jsx
+msgid "Every star helps the next team find Duct."
+msgstr "Cada estrela ajuda a próxima equipe a encontrar o Duct."
 
 #: src/components/content/PlanStrategy.jsx
 #~ msgid "Every type has results"
@@ -5400,6 +5409,10 @@ msgstr "Se um estranho perguntasse o que você faz, o que você diria?"
 msgid "If it asks you to sign in, that happens in your browser and you come straight back here."
 msgstr "Se ele pedir para você entrar, isso acontece no seu navegador e você volta direto para cá."
 
+#: src/components/StarAsk.jsx
+msgid "If it’s saved you time, a star on GitHub helps the next team find it."
+msgstr "Se economizou seu tempo, uma estrela no GitHub ajuda a próxima equipe a encontrá-lo."
+
 #: src/components/insights/desk/DeskLists.jsx
 #: src/lib/contentEnums.js
 msgid "Image"
@@ -5538,6 +5551,10 @@ msgstr "Convidado · expira {when}"
 #: src/components/content/PlanDayOne.jsx
 msgid "Invoicing"
 msgstr "Faturamento"
+
+#: src/components/StarAsk.jsx
+msgid "Is Duct earning its keep?"
+msgstr "O Duct está valendo a pena?"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Issue distribution across all findings"
@@ -7006,6 +7023,10 @@ msgstr "Não listado? Qualquer servidor MCP remoto se conecta pelo seu endereço
 #: src/lib/contentEnums.js
 msgid "Not my voice"
 msgstr "Não é minha voz"
+
+#: src/components/StarAsk.jsx
+msgid "Not now"
+msgstr "Agora não"
 
 #: src/components/models/ModelPicker.jsx
 msgid "not on {engine}"
@@ -10303,6 +10324,10 @@ msgstr "Algo deu errado do nosso lado"
 msgid "Something interrupted the audit. Your site is fine — this was on our end."
 msgstr "Algo interrompeu a auditoria. Seu site está bem — isso foi um problema nosso."
 
+#: src/components/StarAsk.jsx
+msgid "Something missing? <0>Tell us</0>"
+msgstr "Falta alguma coisa? <0>Conte para a gente</0>"
+
 #: src/components/connections/ConnectorBrowser.jsx
 msgid "Something needs attention"
 msgstr "Algo precisa de atenção"
@@ -10370,6 +10395,14 @@ msgstr "Padrão"
 #: src/components/models/UsagePanel.jsx
 msgid "Standard — the everyday model"
 msgstr "Padrão — o modelo do dia a dia"
+
+#: src/components/AppSidebar.jsx
+msgid "Star Duct on GitHub"
+msgstr "Estrele o Duct no GitHub"
+
+#: src/components/StarAsk.jsx
+msgid "Star on GitHub"
+msgstr "Dê uma estrela no GitHub"
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Start a fresh conversation"
@@ -10705,6 +10738,10 @@ msgstr "Cartões de texto"
 #: src/lib/contentEnums.js
 msgid "Text post"
 msgstr "Post de texto"
+
+#: src/components/StarAsk.jsx
+msgid "Thank you"
+msgstr "Obrigado"
 
 #: src/components/audit/ExecutionOffer.jsx
 msgid "Thanks! We’ll be in touch at <0>{contact}</0> to scope this out."

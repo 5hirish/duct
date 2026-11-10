@@ -132,6 +132,15 @@ export const AnalyticsEvent = {
   // how it signs in (oauth | key | none). Fired once the server is saved,
   // never at the click — a sign-in abandoned at the vendor is not a connect.
   McpServerConnected: "mcp_server_connected",
+
+  // The GitHub star ask (#539, components/StarAsk.jsx). Three events because
+  // the one question is shown → starred, and whether the second showing
+  // ever earns its place. `method` on a star is where it came from
+  // (notice | menu); on a dismissal, how (not_now | close). A star is the
+  // click on the way to GitHub: nothing checks that one was given.
+  StarAskShown: "star_ask_shown",
+  StarAskStarred: "star_ask_starred",
+  StarAskDismissed: "star_ask_dismissed",
 };
 
 /**
@@ -139,7 +148,7 @@ export const AnalyticsEvent = {
  * every event that carries one. Adding a param means adding it here.
  */
 export const AnalyticsParam = {
-  Method: "method",       // how they signed up: "google"; how an MCP server signs in: "oauth" | "key" | "none"
+  Method: "method",       // how they signed up: "google"; how an MCP server signs in: "oauth" | "key" | "none"; a star ask answered
   Provider: "provider",   // connector id: "ga4" | "google_ads" | "meta_ads" | ...
   Agent: "agent",         // agent_type that produced an artifact
   Kind: "kind",           // artifact kind, or change-set kind

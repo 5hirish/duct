@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { Trans } from "@lingui/react/macro";
 
 import { Button } from "@/components/ui/button";
+import { useHoldCorner } from "@/components/ui/corner-notice";
 
 /**
  * The consent question, as a bar rather than a blocking overlay: the page stays
@@ -14,6 +15,8 @@ import { Button } from "@/components/ui/button";
  */
 export function CookieConsent({ onAccept, onDecline }) {
   const heading = useRef(null);
+  // One question at a time along the bottom edge: this one is the law's.
+  useHoldCorner();
 
   // Move focus to the question when it appears, or a screen reader is never
   // told it is there — the same thing the site build does on `showBanner`.
