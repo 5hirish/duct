@@ -21,6 +21,7 @@ import {
   ArrowUpRight,
   Bug,
   Lightbulb,
+  Star,
   UserRound,
   Brain,
   Cookie,
@@ -67,16 +68,8 @@ import {
 } from "@/lib/notify";
 import { CONSENT_SETTINGS_EVENT } from "@/lib/consent";
 import { isDesktopShell } from "@/lib/shell";
-
-// Where "this is broken" and "this should exist" go. Two places on purpose,
-// and .github/ISSUE_TEMPLATE/config.yml already draws the line: issues are for
-// tracked, actionable work, discussions for open-ended proposals. Straight to
-// the bug form rather than the chooser — blank issues are disabled, so
-// /issues/new only ever bounces there anyway.
-const GITHUB_ISSUES_URL =
-  "https://github.com/5hirish/duct/issues/new?template=bug_report.yml";
-const GITHUB_DISCUSSIONS_URL =
-  "https://github.com/5hirish/duct/discussions/new?category=ideas";
+import { REPO_URL, REPORT_BUG_URL, SUGGEST_IDEA_URL } from "@/lib/feedbackLinks";
+import { StarFrom, recordStar } from "@/components/StarAsk";
 
 // The wordmark is the brand, lower-case by design, and not copy: it is the one
 // string on the sidebar a translator must never touch.
@@ -366,7 +359,7 @@ function ProfileMenuItem() {
  *   Profile · Your memory
  *   Models & providers · Usage · Connect your AI agent
  *   Language · Appearance · Notifications · Cookie settings
- *   Report a bug · Suggest an improvement
+ *   Report a bug · Suggest an improvement · Star Duct on GitHub
  *   Log out
  *
  * It was nine rows in one block with nothing between them: Profile sixth,
@@ -447,15 +440,23 @@ export function AccountMenuItems({ guest = false, onSignOut }) {
           reroutes target="_blank" to the system browser inside the desktop
           shell, where a new tab would otherwise go nowhere at all. */}
       <DropdownMenuItem asChild>
-        <a href={GITHUB_ISSUES_URL} target="_blank" rel="noreferrer noopener">
+        <a href={REPORT_BUG_URL} target="_blank" rel="noreferrer noopener">
           <Bug className="size-4" />
           <span><Trans>Report a bug</Trans></span>
         </a>
       </DropdownMenuItem>
       <DropdownMenuItem asChild>
-        <a href={GITHUB_DISCUSSIONS_URL} target="_blank" rel="noreferrer noopener">
+        <a href={SUGGEST_IDEA_URL} target="_blank" rel="noreferrer noopener">
           <Lightbulb className="size-4" />
           <span><Trans>Suggest an improvement</Trans></span>
+        </a>
+      </DropdownMenuItem>
+      {/* Always here, so the corner ask (StarAsk) can afford to be rare. A
+          star from this row counts as one, and the corner never asks again. */}
+      <DropdownMenuItem asChild>
+        <a href={REPO_URL} target="_blank" rel="noreferrer noopener" onClick={() => recordStar(StarFrom.MENU)}>
+          <Star className="size-4" />
+          <span><Trans>Star Duct on GitHub</Trans></span>
         </a>
       </DropdownMenuItem>
       <DropdownMenuSeparator />

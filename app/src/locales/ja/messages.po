@@ -2726,6 +2726,7 @@ msgid "Cloning a TikTok"
 msgstr "TikTokをクローン中"
 
 #: src/components/audit/ExecutionOffer.jsx
+#: src/components/StarAsk.jsx
 msgid "Close"
 msgstr "閉じる"
 
@@ -3807,6 +3808,10 @@ msgstr "閉じる"
 msgid "Dismiss project update"
 msgstr "プロジェクトの更新を閉じる"
 
+#: src/components/StarAsk.jsx
+msgid "Dismiss the star request"
+msgstr "星のリクエストを閉じる"
+
 #: src/components/ReloadToast.jsx
 #: src/components/UpdateToast.jsx
 msgid "Dismiss update notification"
@@ -4449,6 +4454,10 @@ msgstr "すべての投稿、すべてのアカウント"
 #: src/app/(app)/artifacts/page.jsx
 msgid "Every report Duct writes lands here, with each version kept."
 msgstr "Duct が作成するすべてのレポートはここに保存され、各バージョンが保持されます。"
+
+#: src/components/StarAsk.jsx
+msgid "Every star helps the next team find Duct."
+msgstr "すべての星が、次のチームがDuctを見つけるのに役立ちます。"
 
 #: src/components/content/PlanStrategy.jsx
 #~ msgid "Every type has results"
@@ -5400,6 +5409,10 @@ msgstr "もし見知らぬ人にあなたの仕事内容を尋ねられたら、
 msgid "If it asks you to sign in, that happens in your browser and you come straight back here."
 msgstr "サインインを求められた場合、それはブラウザで行われ、すぐにここに戻ります。"
 
+#: src/components/StarAsk.jsx
+msgid "If it’s saved you time, a star on GitHub helps the next team find it."
+msgstr "もし時間を節約できたなら、GitHubでの星が次のチームがDuctを見つけるのに役立ちます。"
+
 #: src/components/insights/desk/DeskLists.jsx
 #: src/lib/contentEnums.js
 msgid "Image"
@@ -5538,6 +5551,10 @@ msgstr "招待済み · {when}に期限切れ"
 #: src/components/content/PlanDayOne.jsx
 msgid "Invoicing"
 msgstr "請求"
+
+#: src/components/StarAsk.jsx
+msgid "Is Duct earning its keep?"
+msgstr "Ductは役に立っていますか？"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Issue distribution across all findings"
@@ -7006,6 +7023,10 @@ msgstr "リストにありませんか？任意のリモートMCPサーバーは
 #: src/lib/contentEnums.js
 msgid "Not my voice"
 msgstr "私の声ではない"
+
+#: src/components/StarAsk.jsx
+msgid "Not now"
+msgstr "今はしない"
 
 #: src/components/models/ModelPicker.jsx
 msgid "not on {engine}"
@@ -10303,6 +10324,10 @@ msgstr "こちら側で問題が発生しました"
 msgid "Something interrupted the audit. Your site is fine — this was on our end."
 msgstr "監査が中断されました。サイトは問題ありません。これはこちら側の問題でした。"
 
+#: src/components/StarAsk.jsx
+msgid "Something missing? <0>Tell us</0>"
+msgstr "何か足りませんか？ <0>教えてください</0>"
+
 #: src/components/connections/ConnectorBrowser.jsx
 msgid "Something needs attention"
 msgstr "対応が必要です"
@@ -10370,6 +10395,14 @@ msgstr "標準"
 #: src/components/models/UsagePanel.jsx
 msgid "Standard — the everyday model"
 msgstr "標準 — 日常的なモデル"
+
+#: src/components/AppSidebar.jsx
+msgid "Star Duct on GitHub"
+msgstr "GitHubでDuctに星を付ける"
+
+#: src/components/StarAsk.jsx
+msgid "Star on GitHub"
+msgstr "GitHubで星を付ける"
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Start a fresh conversation"
@@ -10705,6 +10738,10 @@ msgstr "テキストカード"
 #: src/lib/contentEnums.js
 msgid "Text post"
 msgstr "テキスト投稿"
+
+#: src/components/StarAsk.jsx
+msgid "Thank you"
+msgstr "ありがとうございます"
 
 #: src/components/audit/ExecutionOffer.jsx
 msgid "Thanks! We’ll be in touch at <0>{contact}</0> to scope this out."

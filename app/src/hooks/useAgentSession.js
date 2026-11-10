@@ -63,6 +63,7 @@ import {
 } from "../lib/agentSession";
 import { clearSessionHandle, readSessionHandle, writeSessionHandle } from "../lib/agentSessionHandle";
 import { forgetDetachedRun, rememberDetachedRun } from "../lib/liveRuns";
+import { RunMoment, announceRun, runMoment } from "../lib/starAsk";
 import { consumeSseStream } from "../lib/sse";
 import { useAgentNotifications } from "./useAgentNotifications";
 
@@ -132,6 +133,11 @@ export function useAgentSession({
   // lands — and a resumed session replays both. Activation is "the product made
   // something", once, so identity is remembered for the life of the hook.
   const countedArtifacts = useRef(new Set());
+  // Whether the run in progress made something, by the same count: the star
+  // ask's moment (lib/starAsk.js) is a run that made something and ended well.
+  // Spent at the run's end, not reset at its start, because a fast stream can
+  // deliver its artifact in the same batch as the phase change that started it.
+  const madeThisRun = useRef(false);
 
   const trackArtifact = useCallback(
     (event) => {
@@ -160,10 +166,22 @@ export function useAgentSession({
 
       if (!identity || countedArtifacts.current.has(identity)) return;
       countedArtifacts.current.add(identity);
+      madeThisRun.current = true;
       trackEvent(AnalyticsEvent.ArtifactGenerated, { agent, kind });
     },
     [agentType],
   );
+  // Runs starting and ending, for whoever listens (the star ask). Read off
+  // the phase, as notifications are, so no workspace has to remember to say.
+  const lastPhase = useRef(state.phase);
+  useEffect(() => {
+    const moment = runMoment(lastPhase.current, state.phase, madeThisRun.current);
+    lastPhase.current = state.phase;
+    if (!moment) return;
+    if (moment !== RunMoment.STARTED) madeThisRun.current = false;
+    announceRun(moment);
+  }, [state.phase]);
+
   const stateRef = useRef(state);
   stateRef.current = state;
   const bodyRef = useRef(body);

@@ -2720,6 +2720,7 @@ msgid "Cloning a TikTok"
 msgstr ""
 
 #: src/components/audit/ExecutionOffer.jsx
+#: src/components/StarAsk.jsx
 msgid "Close"
 msgstr ""
 
@@ -3801,6 +3802,10 @@ msgstr ""
 msgid "Dismiss project update"
 msgstr ""
 
+#: src/components/StarAsk.jsx
+msgid "Dismiss the star request"
+msgstr ""
+
 #: src/components/ReloadToast.jsx
 #: src/components/UpdateToast.jsx
 msgid "Dismiss update notification"
@@ -4442,6 +4447,10 @@ msgstr ""
 
 #: src/app/(app)/artifacts/page.jsx
 msgid "Every report Duct writes lands here, with each version kept."
+msgstr ""
+
+#: src/components/StarAsk.jsx
+msgid "Every star helps the next team find Duct."
 msgstr ""
 
 #: src/components/content/PlanStrategy.jsx
@@ -5394,6 +5403,10 @@ msgstr ""
 msgid "If it asks you to sign in, that happens in your browser and you come straight back here."
 msgstr ""
 
+#: src/components/StarAsk.jsx
+msgid "If it’s saved you time, a star on GitHub helps the next team find it."
+msgstr ""
+
 #: src/components/insights/desk/DeskLists.jsx
 #: src/lib/contentEnums.js
 msgid "Image"
@@ -5531,6 +5544,10 @@ msgstr ""
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Invoicing"
+msgstr ""
+
+#: src/components/StarAsk.jsx
+msgid "Is Duct earning its keep?"
 msgstr ""
 
 #: src/components/audit/AuditReportV1.jsx
@@ -6999,6 +7016,10 @@ msgstr ""
 
 #: src/lib/contentEnums.js
 msgid "Not my voice"
+msgstr ""
+
+#: src/components/StarAsk.jsx
+msgid "Not now"
 msgstr ""
 
 #: src/components/models/ModelPicker.jsx
@@ -10297,6 +10318,10 @@ msgstr ""
 msgid "Something interrupted the audit. Your site is fine — this was on our end."
 msgstr ""
 
+#: src/components/StarAsk.jsx
+msgid "Something missing? <0>Tell us</0>"
+msgstr ""
+
 #: src/components/connections/ConnectorBrowser.jsx
 msgid "Something needs attention"
 msgstr ""
@@ -10363,6 +10388,14 @@ msgstr ""
 
 #: src/components/models/UsagePanel.jsx
 msgid "Standard — the everyday model"
+msgstr ""
+
+#: src/components/AppSidebar.jsx
+msgid "Star Duct on GitHub"
+msgstr ""
+
+#: src/components/StarAsk.jsx
+msgid "Star on GitHub"
 msgstr ""
 
 #: src/components/workspace/AgentChat.jsx
@@ -10698,6 +10731,10 @@ msgstr ""
 
 #: src/lib/contentEnums.js
 msgid "Text post"
+msgstr ""
+
+#: src/components/StarAsk.jsx
+msgid "Thank you"
 msgstr ""
 
 #: src/components/audit/ExecutionOffer.jsx

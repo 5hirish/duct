@@ -242,6 +242,9 @@ export default function ChatInput({
   return (
     <div className="border-t border-border/60 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))]">
       <div
+        // The box a person types in. The star ask (components/StarAsk.jsx)
+        // measures it and never sits over it.
+        data-composer=""
         className={`relative mx-auto max-w-3xl rounded-xl border bg-card focus-within:border-ring ${dragging ? "border-ring" : ""}`}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}

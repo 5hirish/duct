@@ -577,7 +577,18 @@ the page.
   persistent condition its owner already tracks in state. `ConnectionBanner`
   deliberately takes the opposite corner (`sm:left-4`) so the two never fight;
   below `sm` it is a full-width bar and wins on DOM order, which is correct —
-  a lost backend outranks a pending refresh.
+  a lost backend outranks a pending refresh. **Precedence is one rule: a
+  notice that tells outranks one that asks.** Tellers (every `CornerNotice`,
+  plus `ConnectionBanner` and `CookieConsent` through `useHoldCorner`) hold the
+  corner while mounted; an asker passes `yields`, reads `useCornerTaken()`,
+  never appears while it is held and steps aside when a teller arrives.
+  `StarAsk` (#539) is the only asker: the GitHub star request after a run that
+  made something, on the rules in `lib/starAsk.js` (three good runs, never day
+  one, never mid-run, never over the message box, which is why `ChatInput`
+  carries `data-composer`; two showings ever, 60 days apart, never after a
+  star or a second no). Its permanent home is "Star Duct on GitHub" in the
+  account menu, which is what lets the corner ask stay rare. A new notice
+  that asks for something yields; one that tells does nothing extra.
 - Agent shells: `hooks/useAgentSession` (the session lifecycle),
   `workspace/AgentChat` (the transcript pane), `workspace/SplitWorkspace`
   (split + responsive), `PipelineProgress` (the working ladder),

@@ -2335,6 +2335,7 @@ msgid "Cloning a TikTok"
 msgstr "正在克隆 TikTok"
 
 #: src/components/audit/ExecutionOffer.jsx
+#: src/components/StarAsk.jsx
 msgid "Close"
 msgstr "关闭"
 
@@ -3250,6 +3251,10 @@ msgstr "忽略"
 msgid "Dismiss project update"
 msgstr "忽略项目更新"
 
+#: src/components/StarAsk.jsx
+msgid "Dismiss the star request"
+msgstr "关闭星标请求"
+
 #: src/components/ReloadToast.jsx
 #: src/components/UpdateToast.jsx
 msgid "Dismiss update notification"
@@ -3820,6 +3825,10 @@ msgstr "每个帖子，每个账户"
 #: src/app/(app)/artifacts/page.jsx
 msgid "Every report Duct writes lands here, with each version kept."
 msgstr "Duct 编写的每份报告都会在此处显示，并保留每个版本。"
+
+#: src/components/StarAsk.jsx
+msgid "Every star helps the next team find Duct."
+msgstr "每个星标都能帮助更多团队发现 Duct。"
 
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Every version of it goes with it. This cannot be undone."
@@ -4641,6 +4650,10 @@ msgstr "如果陌生人问你做什么，你会怎么说？"
 msgid "If it asks you to sign in, that happens in your browser and you come straight back here."
 msgstr "如果它要求你登录，那将在你的浏览器中进行，然后你会直接回到这里。"
 
+#: src/components/StarAsk.jsx
+msgid "If it’s saved you time, a star on GitHub helps the next team find it."
+msgstr "如果它为你节省了时间，在 GitHub 上点个星标就能帮助更多团队发现它。"
+
 #: src/components/insights/desk/DeskLists.jsx
 #: src/lib/contentEnums.js
 msgid "Image"
@@ -4767,6 +4780,10 @@ msgstr "已邀请 · {when} 过期"
 #: src/components/content/PlanDayOne.jsx
 msgid "Invoicing"
 msgstr "开票"
+
+#: src/components/StarAsk.jsx
+msgid "Is Duct earning its keep?"
+msgstr "Duct 帮上忙了吗？"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Issue distribution across all findings"
@@ -6069,6 +6086,10 @@ msgstr "未列出？任何远程 MCP 服务器都可以通过其地址连接。"
 #: src/lib/contentEnums.js
 msgid "Not my voice"
 msgstr "不是我的风格"
+
+#: src/components/StarAsk.jsx
+msgid "Not now"
+msgstr "暂不"
 
 #: src/components/models/ModelPicker.jsx
 msgid "not on {engine}"
@@ -8982,6 +9003,10 @@ msgstr "我们这边出了点问题"
 msgid "Something interrupted the audit. Your site is fine — this was on our end."
 msgstr "审计被中断了。你的网站没问题——这是我们这边的问题。"
 
+#: src/components/StarAsk.jsx
+msgid "Something missing? <0>Tell us</0>"
+msgstr "缺少什么？<0>告诉我们</0>"
+
 #: src/components/connections/ConnectorBrowser.jsx
 msgid "Something needs attention"
 msgstr "需要注意的事项"
@@ -9037,6 +9062,14 @@ msgstr "标准"
 #: src/components/models/UsagePanel.jsx
 msgid "Standard — the everyday model"
 msgstr "标准——日常模型"
+
+#: src/components/AppSidebar.jsx
+msgid "Star Duct on GitHub"
+msgstr "在 GitHub 上为 Duct 点星标"
+
+#: src/components/StarAsk.jsx
+msgid "Star on GitHub"
+msgstr "在 GitHub 上点星标"
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Start a fresh conversation"
@@ -9340,6 +9373,10 @@ msgstr "文本卡片"
 #: src/lib/contentEnums.js
 msgid "Text post"
 msgstr "文本帖子"
+
+#: src/components/StarAsk.jsx
+msgid "Thank you"
+msgstr "谢谢"
 
 #: src/components/audit/ExecutionOffer.jsx
 msgid "Thanks! We’ll be in touch at <0>{contact}</0> to scope this out."
