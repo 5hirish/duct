@@ -56,7 +56,7 @@ DEFAULT_TIMEZONE = "UTC"
 #: ``app/src/i18n/locales.js`` and ``app/lingui.config.mjs``; a tag outside
 #: this set is stored as "" so a stale client can never pin an account to a
 #: language the app cannot render.
-INTERFACE_LANGUAGES: frozenset[str] = frozenset({"en", "es", "pt-BR", "de", "ja"})
+INTERFACE_LANGUAGES: frozenset[str] = frozenset({"en", "es", "pt-BR", "de", "ja", "zh-CN"})
 
 
 @dataclass(frozen=True)

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>ChatGPT Ads，根据实际收入衡量 | Duct</title>
+<link rel="canonical" href="https://getduct.ai/zh-cn/integrations/chatgpt-ads"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/integrations/chatgpt-ads"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/integrations/chatgpt-ads"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/integrations/chatgpt-ads"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/integrations/chatgpt-ads"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/integrations/chatgpt-ads"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/integrations/chatgpt-ads"/>
+<link rel="alternate" hreflang="zh-CN" href="https://getduct.ai/zh-cn/integrations/chatgpt-ads"/>
+<meta property="og:locale" content="zh_CN"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="将 ChatGPT Ads (OpenAI Ads) 连接到 Duct，并将其花费与 Stripe 和 GA4 一起读取。广告 API 不报告转化，因此 Duct 根据收入来判断该渠道。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/zh-cn/integrations/chatgpt-ads"/>
+<meta property="og:title" content="ChatGPT Ads，根据实际收入衡量"/>
+<meta property="og:description" content="ChatGPT Ads 报告点击次数和花费，而不是转化。Duct 将其与 Stripe 和 GA4 一起读取，因此你可以看到这些点击带来了什么。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/integrations-chatgpt-ads.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="ChatGPT Ads，根据实际收入衡量"/>
+<meta name="twitter:description" content="OpenAI Ads API 没有转化数据。Duct 根据 Stripe 结算的收入来衡量 ChatGPT Ads。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/integrations-chatgpt-ads.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookie，坦白说","We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold.":"我们使用 PostHog 来了解哪些页面促成了注册，以及 Duct 在何处阻碍了你，包括隐藏你输入的所有内容的访问回放。拒绝会关闭 PostHog，Duct 仍能正常运行。Google Analytics 也会统计访问量并设置自己的 Cookie，无论你选择什么。我们不会出售任何数据。","Privacy Policy":"隐私政策","Decline":"拒绝","Accept":"接受","{n} stars on GitHub":"{n} GitHub 星","UTM Builder":"UTM 构建器","SaaS Metrics Benchmark Calculator":"SaaS 指标基准计算器","Weekly Marketing Brief Generator":"每周营销简报生成器","CAC / LTV Calculator":"CAC / LTV 计算器","MRR Growth Rate Calculator":"MRR 增长率计算器","Engagement Rate Calculator":"互动率计算器","CTR Calculator":"CTR 计算器","CPM Calculator":"CPM 计算器","CPC Calculator":"CPC 计算器","CPA Calculator":"CPA 计算器","Marketing ROI Calculator":"营销 ROI 计算器","ROAS Calculator":"ROAS 计算器","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Menu":"菜单","Free Tools":"免费工具","Solutions":"解决方案","Download Duct ↓":"下载 Duct ↓","Language":"语言","Enlarged screenshot":"放大后的截图","Close":"关闭","Fit to screen":"适应屏幕","Zoom in":"放大","Enlarge":"放大","Universal · Apple silicon and Intel":"通用 · Apple 芯片和 Intel","Windows 10 and later":"Windows 10 及更高版本","Runs on any distribution":"可在任何发行版上运行","Debian and Ubuntu":"Debian 和 Ubuntu","Download ↓":"下载 ↓","Download for {label} ↓":"下载适用于 {label} ↓","Example numbers. Change any field and calculate again for yours.":"示例数字。修改任意字段，重新计算你的结果。"};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"zh-CN","name":"ChatGPT Ads，根据实际收入衡量","url":"https://getduct.ai/zh-cn/integrations/chatgpt-ads","description":"将 ChatGPT Ads (OpenAI Ads) 连接到 Duct，并将其花费与 Stripe 和 GA4 一起读取。广告 API 不报告转化，因此 Duct 根据收入来判断该渠道。","about":{"@type":"SoftwareApplication","name":"ChatGPT Ads"},"isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"zh-CN","itemListElement":[{"@type":"ListItem","position":1,"name":"主页","item":"https://getduct.ai/zh-cn/"},{"@type":"ListItem","position":2,"name":"集成","item":"https://getduct.ai/zh-cn/integrations/"},{"@type":"ListItem","position":3,"name":"ChatGPT Ads","item":"https://getduct.ai/zh-cn/integrations/chatgpt-ads"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"zh-CN","mainEntity":[{"@type":"Question","name":"Duct 能看到 ChatGPT Ads 的转化吗？","acceptedAnswer":{"@type":"Answer","text":"不，因为 OpenAI Ads API 不报告这些数据；像素转化仅在 Ads Manager 中显示。Duct 根据 Stripe 结算的金额和 GA4 看到的数据来衡量渠道，这才是决定预算的数字。"}},{"@type":"Question","name":"Duct 会更改我的 ChatGPT Ads 广告系列吗？","acceptedAnswer":{"@type":"Answer","text":"不。该连接器是只读的。Duct 可以建议在广告系列或渠道之间调整预算；你需要在 Ads Manager 中进行更改。"}},{"@type":"Question","name":"ChatGPT Ads 和 OpenAI Ads 是同一个东西吗？","acceptedAnswer":{"@type":"Answer","text":"是的。OpenAI 通过其 Ads Manager 和 Ads API 销售在 ChatGPT 中运行的广告。Duct 应用将该连接器列为 OpenAI Ads。"}},{"@type":"Question","name":"免费吗？","acceptedAnswer":{"@type":"Answer","text":"是的。Duct 可免费使用你自己的模型密钥或你已有的 ChatGPT 套餐，核心部分采用 MIT 许可。付费套餐稍后会捆绑模型；目前开源的部分不会转为付费。哪些会收费。"}}]}
+</script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">跳到内容</a>
+
+<!-- GENERATED by scripts/build_integrations.py from the backend and scripts/integrations/connectors.py.
+     Do not edit this file: edit those and run the script. -->
+<!-- EXPERIMENT: &#x27;chatgpt ads&#x27; is 14,800 searches a month at KD 12, and its page one is OpenAI, Reddit and news. Hypothesis: advertisers testing the new channel want a way to measure it, and the gap the API leaves (no conversions) is the reason to install. Measured by download clicks per visit and GSC impressions for chatgpt ads queries. -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/zh-cn/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="ig-hero">
+<div class="ig-hero-text">
+<nav class="ig-crumbs" aria-label="面包屑"><a href="/zh-cn/integrations/">集成</a><span aria-hidden="true">/</span><span aria-current="page">ChatGPT Ads</span></nav>
+<div class="ig-lockup" aria-hidden="true"><img src="/assets/icons/openai-ads.svg" width="40" height="40" alt=""/><span class="ig-plus">+</span><span class="logo">duct <span class="logo-mark"></span></span></div>
+<h1>ChatGPT Ads，<em>以收入衡量。</em></h1>
+<p class="hero-sub">OpenAI Ads API 报告展示次数、点击次数和花费。没有转化数据。Duct 会同时读取 Stripe 和 GA4 的数据，这样你就能看到点击实际带来了什么。</p>
+<div class="ig-cta">
+<a class="btn btn-orange btn-lg" href="/zh-cn/download" data-duct-download>下载 Duct ↓</a>
+<a class="btn btn-ghost btn-lg" href="/zh-cn/integrations/">所有集成</a>
+</div>
+<ul class="ig-facts" aria-label="一览"><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>广告 API 密钥</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg><span>读取四个数据集</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>只读</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>检查于 2026 年 9 月 29 日</span></li></ul>
+<p class="ig-alias">在 Duct 应用中列为 OpenAI Ads。</p>
+</div>
+<figure class="ig-mock reveal">
+<div class="ig-mock-panel" aria-hidden="true">
+<div class="ig-sources"><img src="/assets/icons/openai-ads.svg" width="34" height="34" alt=""/><img src="/assets/icons/stripe.svg" width="34" height="34" alt=""/><img src="/assets/icons/googleanalytics.svg" width="34" height="34" alt=""/></div>
+<svg class="ig-flow" viewBox="0 0 170 30" width="170" height="30" aria-hidden="true"><g class="ig-flow-bed"><path pathLength="1" d="M15 0C15 16 85 14 85 30"/><path pathLength="1" d="M85 0V30"/><path pathLength="1" d="M155 0C155 16 85 14 85 30"/></g><g class="ig-flow-water"><path d="M15 0C15 16 85 14 85 30"/><path d="M85 0V30"/><path d="M155 0C155 16 85 14 85 30"/></g></svg>
+<div class="ig-answer"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg><span>本月来自 ChatGPT 的 312 次点击。其中 9 次在 Stripe 转化为付费客户：每个 204 美元。</span></div>
+</div>
+<figcaption>一个示例答案。你的数据将从你自己的账户中读取。</figcaption>
+</figure>
+</section>
+
+<!-- SESSION: shot by scripts/shots/shoot.mjs from the story's CONNECTOR_SESSIONS -->
+<section class="shot ig-shot">
+<figure class="shot-frame reveal">
+<img src="/assets/media/session-chatgpt-ads.webp" srcset="/assets/media/session-chatgpt-ads-768.webp 768w, /assets/media/session-chatgpt-ads-1536.webp 1536w, /assets/media/session-chatgpt-ads.webp 3072w" sizes="(max-width: 860px) calc(100vw - 48px), 1536px" loading="lazy" decoding="async" width="3072" height="2052" alt="一次 Duct 运行：询问 ChatGPT Ads 带来了什么，Duct 读取其花费和点击次数，通过 GA4 追踪到 Stripe，并撰写一份简报，计算该渠道每个付费客户的成本"/>
+<figcaption>询问 ChatGPT Ads 带来了什么。它自己的报告只到点击，因此 Duct 通过 GA4 追踪点击到 Stripe，并计算该渠道每个付费客户的成本。</figcaption>
+</figure>
+</section>
+
+<div class="channel" aria-hidden="true"></div>
+
+<!-- ASK -->
+<section class="ig-sec" id="ask">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">提问</p>
+<h2>你可以<em>直接提问</em>的问题</h2>
+</div>
+<ul class="ig-qs">
+<li class="ig-q reveal" style="transition-delay:0.00s"><p>本月 ChatGPT Ads 的花费，在 Stripe 结算的金额中，买了什么？</p><span class="ig-q-joins"><img src="/assets/icons/openai-ads.svg" width="18" height="18" alt=""/><img src="/assets/icons/stripe.svg" width="18" height="18" alt=""/><span>ChatGPT Ads + Stripe</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.06s"><p>来自 ChatGPT 的访客是在着陆页上互动，还是离开？</p><span class="ig-q-joins"><img src="/assets/icons/openai-ads.svg" width="18" height="18" alt=""/><img src="/assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><span>ChatGPT Ads + GA4</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.12s"><p>每个付费客户的成本：ChatGPT Ads 还是 Google Ads？</p><span class="ig-q-joins"><img src="/assets/icons/openai-ads.svg" width="18" height="18" alt=""/><img src="/assets/icons/google-ads.svg" width="18" height="18" alt=""/><img src="/assets/icons/stripe.svg" width="18" height="18" alt=""/><span>ChatGPT Ads + Google Ads + Stripe</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.18s"><p>哪个 ChatGPT 广告系列赢得了下周的预算？</p><span class="ig-q-joins"><img src="/assets/icons/openai-ads.svg" width="18" height="18" alt=""/><img src="/assets/icons/stripe.svg" width="18" height="18" alt=""/><img src="/assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><span>ChatGPT Ads + Stripe + GA4</span></span></li>
+</ul>
+</div>
+</section>
+
+<!-- ACCESS: generated from the catalogue and the executor registry -->
+<section class="ig-sec ig-access" id="access">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">访问</p>
+<h2>它读取的内容。<em>它能更改的内容。</em></h2>
+</div>
+<div class="ig-cols reveal">
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg>它读取什么</h3>
+<ul class="ig-reads">
+<li><b>广告账户</b><span class="ig-fields"><span>名称</span><span>货币</span></span></li>
+<li><b>广告系列</b><span class="ig-fields"><span>名称</span></span></li>
+<li><b>广告系列表现</b><span class="ig-fields"><span>展示次数</span><span>点击次数</span><span>花费</span><span>CTR</span><span>CPC</span><span>CPM</span></span></li>
+<li><b>每日账户总计</b><span class="ig-fields"><span>展示次数</span><span>点击次数</span><span>花费</span></span></li>
+</ul>
+<p class="ig-note">OpenAI Ads API v1 · 于 2026 年 9 月 29 日对照抓取代码检查 · <a href="https://github.com/5hirish/duct/blob/main/backend/service/openai/ads/fetch.py" rel="noopener">阅读源代码</a></p>
+</div>
+<div class="ig-col ig-readonly">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>它可以更改什么</h3>
+<p class="ig-readonly-big">无。</p>
+<p>Duct 没有 ChatGPT Ads 的更改操作，因此它无法编辑 ChatGPT Ads 中的任何内容。它仍然可以推荐你进行更改。</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- KNOWS: the knowledge pack, in plain words -->
+<section class="ig-sec ig-knows" id="knows">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">知识</p>
+<h2>Duct 已经了解的 <em>关于 ChatGPT Ads 的信息</em></h2>
+</div>
+<ol class="ig-k">
+<li class="reveal" style="transition-delay:0.00s"><span class="ig-k-num">01</span><h3>Ads API 无法查看转化。</h3><p>其指标包括展示次数、点击次数、花费、CTR、CPC 和 CPM。像素转化仅在 Ads Manager 中显示，因此 Duct 从不单独以 CPC 来判断渠道的好坏。它会检查 Stripe。</p></li>
+<li class="reveal" style="transition-delay:0.06s"><span class="ig-k-num">02</span><h3>一个供应商的两个单元。</h3><p>洞察报告花费为小数 (18.42)；像素报告美分 (1499)。混合它们会导致 100 倍的错误，因此 Duct 在比较之前会进行转换。</p></li>
+<li class="reveal" style="transition-delay:0.12s"><span class="ig-k-num">03</span><h3>一个密钥，一个广告账户。</h3><p>广告 API 密钥精确地对应一个广告账户。Duct 会首先读取是哪个账户，因此来自错误账户的密钥会显示错误信息而不是看起来为空。</p></li>
+<li class="reveal" style="transition-delay:0.18s"><span class="ig-k-num">04</span><h3>只有账单支付方知道。</h3><p>每个广告平台都会报告其归因的转化。Duct 将它们与 Stripe 进行核对，而不是相互核对。</p></li>
+</ol>
+<p class="ig-k-src"><a href="https://github.com/5hirish/duct/blob/main/backend/agents/knowledge/openai_ads.md" rel="noopener">阅读 Duct 智能体使用的 ChatGPT Ads 笔记 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></a></p>
+</div>
+</section>
+
+<!-- PAIRS -->
+<section class="ig-sec" id="pairs">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">协同更好</p>
+<h2>ChatGPT Ads <em>与合作伙伴</em>的回答</h2>
+</div>
+<div class="ig-pairs">
+<a class="ig-pair reveal" style="transition-delay:0.00s" href="/zh-cn/integrations/stripe"><span class="ig-pair-logos"><img src="/assets/icons/openai-ads.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/stripe.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">ChatGPT 点击带来了多少已结算收入？</span><span class="ig-pair-go">ChatGPT Ads + Stripe <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.06s" href="/zh-cn/integrations/ga4"><span class="ig-pair-logos"><img src="/assets/icons/openai-ads.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/googleanalytics.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">ChatGPT 访客的行为是否与搜索访客相似？</span><span class="ig-pair-go">ChatGPT Ads + GA4 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.12s" href="/zh-cn/integrations/google-ads"><span class="ig-pair-logos"><img src="/assets/icons/openai-ads.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/google-ads.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">哪个渠道购买付费客户的成本更低？</span><span class="ig-pair-go">ChatGPT Ads + Google Ads <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+</div>
+</div>
+</section>
+
+<!-- SETUP -->
+<section class="ig-sec ig-setup" id="setup">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">设置</p>
+<h2>分<em>三步</em>连接 ChatGPT Ads</h2>
+</div>
+<ol class="ig-steps reveal">
+<li><span class="ig-step-n">1</span><p>在 OpenAI Ads Manager 中，为你想要读取的广告账户创建一个广告 API 密钥。</p></li>
+<li><span class="ig-step-n">2</span><p>在 Duct 中，打开工具箱，选择 OpenAI Ads 并粘贴密钥。</p></li>
+<li><span class="ig-step-n">3</span><p>Duct 显示密钥所属的广告账户，然后读取其广告系列和每日总计。</p></li>
+</ol>
+<div class="ig-trust reveal">
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>广告 API 密钥仅限于一个广告账户，并且 OpenAI 在 API 测试版期间按账户授予 API 访问权限。Duct 仅使用密钥进行读取；它没有 ChatGPT Ads 的更改操作。</span></p>
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>密钥和令牌由 Duct 的托管 API 加密存储，绝不会存储在你的浏览器中，你可以随时移除连接。自托管版本会将它们保存在你自己的机器上。</span></p>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">常见问题</p>
+<h2>ChatGPT Ads，<em>已解答</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">Duct 能看到 ChatGPT Ads 的转化吗？</summary>
+<p class="faq-a">不，因为 OpenAI Ads API 不报告这些数据；像素转化仅在 Ads Manager 中显示。Duct 根据 Stripe 结算的金额和 GA4 看到的数据来衡量渠道，这才是决定预算的数字。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Duct 会更改我的 ChatGPT Ads 广告系列吗？</summary>
+<p class="faq-a">不。该连接器是只读的。Duct 可以建议在广告系列或渠道之间调整预算；你需要在 Ads Manager 中进行更改。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">ChatGPT Ads 和 OpenAI Ads 是同一个东西吗？</summary>
+<p class="faq-a">是的。OpenAI 通过其 Ads Manager 和 Ads API 销售在 ChatGPT 中运行的广告。Duct 应用将该连接器列为 OpenAI Ads。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">免费吗？</summary>
+<p class="faq-a">是的。Duct 可免费使用你自己的模型密钥或你已有的 ChatGPT 套餐，核心部分采用 MIT 许可。付费套餐稍后会捆绑模型；目前开源的部分不会转为付费。<a href="/zh-cn/open-source#pricing">哪些会收费</a>。</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/zh-cn/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/zh-cn/partials/footer-expanded.html"><div class="legal-fallback"><a href="/zh-cn/">Duct</a><a href="/zh-cn/about">关于</a><a href="/zh-cn/privacy">隐私政策</a><a href="/zh-cn/terms">服务条款</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

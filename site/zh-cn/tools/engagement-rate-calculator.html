@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>互动率计算器——Duct 提供的免费工具</title>
+<link rel="canonical" href="https://getduct.ai/zh-cn/tools/engagement-rate-calculator"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/tools/engagement-rate-calculator"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/tools/engagement-rate-calculator"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/tools/engagement-rate-calculator"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/tools/engagement-rate-calculator"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/tools/engagement-rate-calculator"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/tools/engagement-rate-calculator"/>
+<link rel="alternate" hreflang="zh-CN" href="https://getduct.ai/zh-cn/tools/engagement-rate-calculator"/>
+<meta property="og:locale" content="zh_CN"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="适用于社交和增长团队的免费互动率计算器。即时计算并解读按关注者、触达量和展示量计算的互动率。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/zh-cn/tools/engagement-rate-calculator"/>
+<meta property="og:title" content="互动率计算器——Duct 提供的免费工具"/>
+<meta property="og:description" content="通过关注者、触达人数或展示次数衡量互动率，并即时对内容表现进行基准测试。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/tools-engagement-rate-calculator.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="互动率计算器——Duct 提供的免费工具"/>
+<meta name="twitter:description" content="免费计算器，可按关注者、触达量和展示量计算互动率，并提供实用的质量基准。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/tools-engagement-rate-calculator.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookie，坦白说","We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold.":"我们使用 PostHog 来了解哪些页面促成了注册，以及 Duct 在何处阻碍了你，包括隐藏你输入的所有内容的访问回放。拒绝会关闭 PostHog，Duct 仍能正常运行。Google Analytics 也会统计访问量并设置自己的 Cookie，无论你选择什么。我们不会出售任何数据。","Privacy Policy":"隐私政策","Decline":"拒绝","Accept":"接受","{n} stars on GitHub":"{n} GitHub 星","UTM Builder":"UTM 构建器","SaaS Metrics Benchmark Calculator":"SaaS 指标基准计算器","Weekly Marketing Brief Generator":"每周营销简报生成器","CAC / LTV Calculator":"CAC / LTV 计算器","MRR Growth Rate Calculator":"MRR 增长率计算器","Engagement Rate Calculator":"互动率计算器","CTR Calculator":"CTR 计算器","CPM Calculator":"CPM 计算器","CPC Calculator":"CPC 计算器","CPA Calculator":"CPA 计算器","Marketing ROI Calculator":"营销 ROI 计算器","ROAS Calculator":"ROAS 计算器","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Menu":"菜单","Free Tools":"免费工具","Solutions":"解决方案","Download Duct ↓":"下载 Duct ↓","Language":"语言","Enlarged screenshot":"放大后的截图","Close":"关闭","Fit to screen":"适应屏幕","Zoom in":"放大","Enlarge":"放大","Universal · Apple silicon and Intel":"通用 · Apple 芯片和 Intel","Windows 10 and later":"Windows 10 及更高版本","Runs on any distribution":"可在任何发行版上运行","Debian and Ubuntu":"Debian 和 Ubuntu","Download ↓":"下载 ↓","Download for {label} ↓":"下载适用于 {label} ↓","Example numbers. Change any field and calculate again for yours.":"示例数字。修改任意字段，重新计算你的结果。"};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","inLanguage":"zh-CN","name":"互动率计算器","url":"https://getduct.ai/zh-cn/tools/engagement-rate-calculator","description":"免费计算器，可按关注者、触达量和展示量计算互动率，以及每篇帖子的平均互动量。","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Organization","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"zh-CN","mainEntity":[{"@type":"Question","name":"如何计算互动率？","acceptedAnswer":{"@type":"Answer","text":"互动率 = 总互动量 ÷ 受众分母 × 100。常见的分母是关注者、触达量和展示量。最佳分母取决于你要比较的内容。"}},{"@type":"Question","name":"什么是好的互动率？","acceptedAnswer":{"@type":"Answer","text":"基准因平台和受众规模而异，但许多团队使用这种基于关注者的启发式方法：低于 1% 为低，1-3% 为平均，3-6% 为健康，高于 6% 为强。"}},{"@type":"Question","name":"我应该使用触达人数还是展示次数？","acceptedAnswer":{"@type":"Answer","text":"当你关注独立受众质量时，使用触达人数。当你的内容反复展示且你希望相对于总曝光量提高效率时，使用展示次数。"}},{"@type":"Question","name":"我可以在不同渠道之间比较互动率吗？","acceptedAnswer":{"@type":"Answer","text":"首先比较趋势，而不是绝对值。平台信息流设计、受众行为和内容格式会产生不同的基线范围。"}},{"@type":"Question","name":"什么应该算作互动？","acceptedAnswer":{"@type":"Answer","text":"通常是点赞、评论、分享、收藏、点击和回复。关键在于每周使用相同的定义，以保持趋势分析的一致性。"}}]}
+</script>
+<style>
+  .skip-link {
+    position: absolute; top: -100%; left: 16px; z-index: 300;
+    padding: 10px 20px; background: var(--navy); color: #fff;
+    font-size: 14px; font-weight: 500; border-radius: var(--r);
+    text-decoration: none; transition: top .15s;
+  }
+  .skip-link:focus { top: 16px; }
+
+  :root {
+    --orange: #2563EB;
+    --orange-h: #1D4ED8;
+  }
+  .btn-orange:hover { box-shadow: 0 8px 24px rgba(37,99,235,.28); }
+
+  .tool-hero {
+    padding: 80px 24px 48px; text-align: center;
+    max-width: 760px; margin: 0 auto;
+  }
+  .tool-hero h1 {
+    font-family: var(--serif); font-size: clamp(32px, 5vw, 52px);
+    color: var(--navy); margin: 16px 0 16px; line-height: 1.15;
+  }
+  .tool-hero h1 em { color: var(--orange); font-style: italic; }
+  .tool-hero p { font-size: 17px; color: var(--navy-3); font-weight: 300; line-height: 1.6; margin: 0; }
+
+  .tool-wrap { max-width: 900px; margin: 0 auto 80px; padding: 0 24px; }
+  .tool-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--r-lg); overflow: hidden;
+    box-shadow: 0 4px 32px rgba(0,0,0,.06);
+  }
+  .tool-inputs {
+    padding: 36px 40px; display: grid;
+    grid-template-columns: 1fr 1fr; gap: 24px 32px;
+  }
+  @media (max-width: 640px) { .tool-inputs { grid-template-columns: 1fr; padding: 24px; } }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 13px; font-weight: 500; color: var(--navy); letter-spacing: .01em; }
+  .field .field-hint { font-size: 11px; color: var(--navy-3); margin-top: -2px; }
+  .field input {
+    padding: 11px 16px; border: 1.5px solid var(--border);
+    border-radius: var(--r); font-size: 15px; font-family: var(--sans);
+    color: var(--navy); background: var(--white);
+    transition: border-color .15s; outline: none; -moz-appearance: textfield;
+  }
+  .field input::-webkit-outer-spin-button,
+  .field input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .field input:focus { border-color: var(--orange); }
+  .field input::placeholder { color: var(--navy-3); opacity: .6; }
+
+  .tool-action { padding: 0 40px 36px; display: flex; align-items: center; gap: 16px; }
+  @media (max-width: 640px) { .tool-action { padding: 0 24px 24px; flex-direction: column; align-items: stretch; } }
+
+  .tool-results { border-top: 1px solid var(--border); padding: 36px 40px; display: none; }
+  @media (max-width: 640px) { .tool-results { padding: 24px; } }
+  .tool-results.visible { display: block; }
+
+  .results-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:28px; }
+
+  .result-card { border: 1.5px solid var(--border); border-radius: var(--r); padding: 20px; }
+  .result-card.green { border-color: #22c55e; background: #f0fdf4; }
+  .result-card.amber { border-color: #f59e0b; background: #fffbeb; }
+  .result-card.red   { border-color: #ef4444; background: #fef2f2; }
+  .result-card.neutral { border-color: var(--border); background: var(--off); }
+
+  .result-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--navy-3); margin-bottom: 6px; }
+  .result-value { font-size: 26px; font-family: var(--serif); color: var(--navy); font-weight: 400; margin-bottom: 4px; line-height: 1.1; }
+  .result-badge {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 11px;
+    font-weight: 500; padding: 2px 9px; border-radius: 100px; margin-bottom: 8px;
+  }
+  .result-badge.green { background: #dcfce7; color: #15803d; }
+  .result-badge.amber { background: #fef3c7; color: #92400e; }
+  .result-badge.red { background: #fee2e2; color: #991b1b; }
+  .result-badge.neutral { background: #f1f5f9; color: var(--navy-3); }
+  .result-context { font-size: 12px; color: var(--navy-3); line-height: 1.5; margin: 0; }
+
+  .tool-cta {
+    margin-top: 28px; background: var(--navy); border-radius: var(--r);
+    padding: 28px 32px; display: flex; align-items: center;
+    justify-content: space-between; gap: 24px; flex-wrap: wrap;
+  }
+  .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
+  .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
+
+  .about-section { max-width: 760px; margin: 0 auto 80px; padding: 0 24px; }
+  .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
+  .about-section h2 em { color: var(--orange); font-style: italic; }
+  .about-section p, .about-section li { font-size: 15px; color: var(--navy-3); line-height: 1.75; margin-bottom: 12px; }
+  .about-section ul { padding-left: 20px; }
+  .about-section li { margin-bottom: 6px; }
+  .about-section strong { color: var(--navy); }
+
+  .insight-panel {
+    margin-top: 24px;
+    background: #eff6ff;
+    border: 1px solid rgba(37,99,235,.18);
+    border-left: 3px solid #2563EB;
+    border-radius: var(--r);
+    padding: 20px 24px;
+  }
+  .insight-label {
+    font-size: 10px; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; color: #2563EB; margin-bottom: 10px;
+  }
+  .insight-panel p { font-size: 14px; color: var(--navy-3); line-height: 1.7; margin: 0 0 8px; }
+  .insight-panel p:last-of-type { margin-bottom: 0; }
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"zh-CN","itemListElement":[{"@type":"ListItem","position":1,"name":"主页","item":"https://getduct.ai/zh-cn/"},{"@type":"ListItem","position":2,"name":"免费工具","item":"https://getduct.ai/zh-cn/tools/"},{"@type":"ListItem","position":3,"name":"互动率计算器","item":"https://getduct.ai/zh-cn/tools/engagement-rate-calculator"}]}
+</script>
+</head>
+<body>
+
+<!-- EXPERIMENT: Engagement calculator as lead magnet — does ranking for "engagement rate calculator" drive qualified organic signups from social and growth operators? -->
+
+<a href="#main-content" class="skip-link">跳到内容</a>
+
+<div data-duct-partial="/zh-cn/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<div class="tool-hero">
+  <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> 免费工具 · 无需注册</div>
+  <h1>互动率计算器 <em>适用于增长团队</em></h1>
+  <p>你的内容信号的有用性取决于你的互动质量。一次性计算关注者、触达人数和展示次数的互动率——无需电子表格清理。</p>
+</div>
+
+<div class="tool-wrap">
+  <div class="tool-card" role="region" aria-label="互动率计算器">
+
+    <div class="tool-inputs">
+      <div class="field">
+        <label for="inp-engagements">总互动量</label>
+        <span class="field-hint">点赞、评论、分享、保存、点击（使用你一致的定义）</span>
+        <input type="number" id="inp-engagements" placeholder="e.g. 780" min="1" inputmode="numeric" aria-required="true"/>
+      </div>
+      <div class="field">
+        <label for="inp-followers">关注者（可选）</label>
+        <span class="field-hint">用于账户级别的互动基准测试</span>
+        <input type="number" id="inp-followers" placeholder="e.g. 12500" min="0" inputmode="numeric"/>
+      </div>
+      <div class="field">
+        <label for="inp-reach">触达人数 (可选)</label>
+        <span class="field-hint">看到内容的独立用户</span>
+        <input type="number" id="inp-reach" placeholder="e.g. 9400" min="0" inputmode="numeric"/>
+      </div>
+      <div class="field">
+        <label for="inp-impressions">展示量（可选）</label>
+        <span class="field-hint">总内容浏览量，包括重复浏览</span>
+        <input type="number" id="inp-impressions" placeholder="e.g. 18400" min="0" inputmode="numeric"/>
+      </div>
+      <div class="field">
+        <label for="inp-posts">帖子数量 (可选)</label>
+        <span class="field-hint">用于计算每帖平均互动量</span>
+        <input type="number" id="inp-posts" placeholder="e.g. 6" min="0" inputmode="numeric"/>
+      </div>
+    </div>
+
+    <div class="tool-action">
+      <button class="btn btn-orange btn-lg" id="calc-btn" aria-controls="results-section">
+        计算互动率 →
+      </button>
+      <button class="btn btn-ghost" id="reset-btn" style="display:none">
+        重置
+      </button>
+    </div>
+
+    <div id="calc-form-error" class="tool-form-error" role="alert" aria-live="assertive"></div>
+
+    <div class="tool-results" id="results-section" role="region" aria-label="互动率结果" aria-live="polite">
+      <p style="font-size:13px;font-weight:500;color:var(--navy-3);margin:0 0 20px;letter-spacing:.02em;text-transform:uppercase">你的结果</p>
+      <div class="results-row" id="results-row"></div>
+
+      <div class="tool-cta">
+        <div class="tool-cta-text">
+          <p>一个互动率，一个帖子。问题是哪些帖子带来了注册。</p>
+          <p>Duct 读取你的广告、分析和收入工具数据，回答这个问题，并提出变更建议。你批准即可。</p>
+        </div>
+        <a href="/zh-cn/download" class="btn btn-orange" data-duct-download>下载 Duct ↓</a>
+      </div>
+
+      <div id="insight-panel" class="insight-panel" hidden aria-live="polite">
+        <p class="insight-label">这意味着什么</p>
+        <div id="insight-body"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<section class="duct-bridge reveal" aria-label="关于 Duct">
+  <div class="duct-bridge-inner">
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">互动率告诉你互动质量。它不会告诉你这种关注是否转化为销售线索。</p>
+      <p class="duct-bridge-body">Duct 会随着时间推移读取点击、注册和收入旁边的互动量，因此可以将带来客户的帖子与带来点赞的帖子区分开来。</p>
+      <a href="/zh-cn/" class="duct-bridge-link">Duct 工作原理 →</a>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="/assets/media/content-session.webp" srcset="/assets/media/content-session-768.webp 768w, /assets/media/content-session-1536.webp 1536w, /assets/media/content-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="Content Studio 正在起草轮播图：智能体的进度和备注在左侧，第一张幻灯片渲染在右侧，下方是批准按钮"/>
+      <figcaption>Content Studio 根据计划起草帖子，渲染第一张幻灯片以便你查看效果，并在你确认后制作其余部分。</figcaption>
+    </figure>
+  </div>
+</section>
+
+<div class="about-section reveal">
+  <h2><em>计算器的工作原理</em></h2>
+  <p>该计算器使用标准公式计算互动率：</p>
+  <ul>
+    <li><strong>按关注者计算的互动率</strong> = 互动量 ÷ 关注者 × 100</li>
+    <li><strong>按触达量计算的互动率</strong> = 互动量 ÷ 触达量 × 100</li>
+    <li><strong>按展示量计算的互动率</strong> = 互动量 ÷ 展示量 × 100</li>
+    <li><strong>每篇帖子平均互动量</strong> = 互动量 ÷ 帖子数量</li>
+  </ul>
+  <p>你可以使用一个分母或全部三个。输出结果可以帮助你比较标题质量（基于触达人数）和信息流效率（基于展示次数），同时兼顾关注者背景。</p>
+
+  <h2 style="margin-top:40px">为什么互动率<em>很重要</em></h2>
+  <p>原始互动总量可能具有误导性。一个有 500 次互动的帖子可能看起来很强劲，但如果它触达了 80,000 人，则表现不佳。互动率根据分发情况规范化质量，并让团队能够跨周和营销活动比较内容。</p>
+  <p>对于自然增长团队，互动率是消息共鸣的早期信号。如果互动率在流量下降之前下降，你可以在漏斗转化受到影响之前修复创意和定位。</p>
+
+  <h2 style="margin-top:40px">局限性</h2>
+  <ul>
+    <li>平台算法不同，因此应谨慎解读直接的跨平台比较。</li>
+    <li>互动定义因平台而异（例如，保存、点击或评论）。</li>
+    <li>此工具不区分付费和自然展示次数。</li>
+    <li>所有计算都在你的浏览器中运行。不发送或存储任何数据。</li>
+  </ul>
+</div>
+
+<section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
+  <div class="related-tools-banner-inner">
+    <p class="tag">也是免费的</p>
+    <h2 id="related-tools-heading">探索相关 <em>工具</em></h2>
+    <p class="related-tools-banner-desc">将互动质量与增长和单位经济指标结合。这些工具遵循相同的隐私优先、浏览器内模型。</p>
+    <div class="insight-links related-tools" data-related-tools data-current-tool="engagement-rate-calculator" data-related-limit="3"></div>
+  </div>
+</section>
+
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+  <p class="tag">常见问题</p>
+  <h2>常见<em>问题</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.1s">
+  <details class="faq-item">
+    <summary class="faq-q">如何计算互动率？</summary>
+    <p class="faq-a">互动率 = 总互动量 ÷ 受众分母 × 100。常见的分母是关注者、触达量和展示量。最佳分母取决于你要比较的内容。</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">什么是好的互动率？</summary>
+    <p class="faq-a">基准因平台和受众规模而异，但许多团队使用这种基于关注者的启发式方法：低于 1% 为低，1-3% 为平均，3-6% 为健康，高于 6% 为强。</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">我应该使用触达人数还是展示次数？</summary>
+    <p class="faq-a">当你关注独立受众质量时，使用触达人数。当你的内容反复展示且你希望相对于总曝光量提高效率时，使用展示次数。</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">我可以在不同渠道之间比较互动率吗？</summary>
+    <p class="faq-a">首先比较趋势，而不是绝对值。平台信息流设计、受众行为和内容格式会产生不同的基线范围。</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">什么应该算作互动？</summary>
+    <p class="faq-a">通常是点赞、评论、分享、收藏、点击和回复。关键在于每周使用相同的定义，以保持趋势分析的一致性。</p>
+  </details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-tools.html) -->
+<div data-duct-partial="/zh-cn/partials/cta-tools.html"></div>
+
+</main>
+
+<div data-duct-partial="/zh-cn/partials/footer-expanded.html"></div>
+
+<script src="/assets/tool-validation.js"></script>
+<script>
+(function () {
+  var ERR = 'calc-form-error';
+  var fieldIds = ['inp-engagements', 'inp-followers', 'inp-reach', 'inp-impressions', 'inp-posts'];
+  DuctToolFormError.bindClear(ERR, fieldIds);
+
+  function levelForRate(value) {
+    if (value >= 6) return { level: 'green', badge: 'Strong', context: 'High engagement quality relative to audience size.' };
+    if (value >= 3) return { level: 'amber', badge: 'Healthy', context: 'Good engagement. Keep testing hooks and creative variations.' };
+    if (value >= 1) return { level: 'amber', badge: 'Average', context: 'Baseline engagement. Improvement likely depends on stronger positioning and format testing.' };
+    return { level: 'red', badge: 'Low', context: 'Low engagement signal. Revisit topic relevance, hook strength, and distribution timing.' };
+  }
+
+  function fmtPercent(value) {
+    return value.toFixed(2) + '%';
+  }
+
+  function fmtNumber(value) {
+    if (value >= 1000000) return (value / 1000000).toFixed(2) + 'm';
+    if (value >= 1000) return (value / 1000).toFixed(1) + 'k';
+    return value.toFixed(0);
+  }
+
+  function makeCard(label, display, level, badge, context) {
+    var card = document.createElement('div');
+    card.className = 'result-card ' + level;
+    var lbl = document.createElement('div');
+    lbl.className = 'result-label';
+    lbl.textContent = label;
+    var val = document.createElement('div');
+    val.className = 'result-value';
+    val.textContent = display;
+    var bdg = document.createElement('span');
+    bdg.className = 'result-badge ' + level;
+    bdg.textContent = badge;
+    var ctx = document.createElement('p');
+    ctx.className = 'result-context';
+    ctx.textContent = context;
+    card.appendChild(lbl);
+    card.appendChild(val);
+    card.appendChild(bdg);
+    card.appendChild(ctx);
+    return card;
+  }
+
+  function getVal(id) {
+    var raw = document.getElementById(id).value;
+    return raw === '' ? NaN : parseFloat(raw);
+  }
+
+  function addP(node, text) {
+    var p = document.createElement('p');
+    p.textContent = text;
+    node.appendChild(p);
+  }
+
+  document.getElementById('calc-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
+    var engagements = getVal('inp-engagements');
+    var followers = getVal('inp-followers');
+    var reach = getVal('inp-reach');
+    var impressions = getVal('inp-impressions');
+    var posts = getVal('inp-posts');
+
+    if (isNaN(engagements) || engagements <= 0) {
+      DuctToolFormError.show(ERR, 'Enter total engagements greater than zero.', ['inp-engagements']);
+      document.getElementById('inp-engagements').focus();
+      return;
+    }
+
+    var hasFollowers = !isNaN(followers) && followers > 0;
+    var hasReach = !isNaN(reach) && reach > 0;
+    var hasImpressions = !isNaN(impressions) && impressions > 0;
+    if (!hasFollowers && !hasReach && !hasImpressions) {
+      DuctToolFormError.show(ERR, 'Enter at least one denominator greater than zero: followers, reach, or impressions.', ['inp-followers', 'inp-reach', 'inp-impressions']);
+      document.getElementById('inp-followers').focus();
+      return;
+    }
+
+    var row = document.getElementById('results-row');
+    while (row.firstChild) { row.removeChild(row.firstChild); }
+
+    if (hasFollowers) {
+      var byFollowers = (engagements / followers) * 100;
+      var followersState = levelForRate(byFollowers);
+      row.appendChild(makeCard('ER by Followers', fmtPercent(byFollowers), followersState.level, followersState.badge, followersState.context));
+    }
+
+    if (hasReach) {
+      var byReach = (engagements / reach) * 100;
+      var reachState = levelForRate(byReach);
+      row.appendChild(makeCard('ER by Reach', fmtPercent(byReach), reachState.level, reachState.badge, 'Useful for comparing content quality between posts with different distribution.'));
+    }
+
+    if (hasImpressions) {
+      var byImpressions = (engagements / impressions) * 100;
+      var impState = levelForRate(byImpressions);
+      row.appendChild(makeCard('ER by Impressions', fmtPercent(byImpressions), impState.level, impState.badge, 'Useful when repeat exposures are high and frequency varies.'));
+    }
+
+    if (!isNaN(posts) && posts > 0) {
+      var avgPerPost = engagements / posts;
+      row.appendChild(makeCard('Avg Engagements / Post', fmtNumber(avgPerPost), 'neutral', 'Calculated', 'Average raw interactions per post in the selected set.'));
+    }
+
+    var body = document.getElementById('insight-body');
+    while (body.firstChild) { body.removeChild(body.firstChild); }
+
+    if (hasFollowers) {
+      var erFollowers = (engagements / followers) * 100;
+      if (erFollowers >= 6) addP(body, 'You have strong audience resonance. Double down on the best-performing creative patterns and publishing windows.');
+      else if (erFollowers >= 3) addP(body, 'Performance is healthy. Use A/B creative tests to convert consistency into stronger breakout posts.');
+      else addP(body, 'Engagement quality is weak-to-average. Tighten your hook, message clarity, and audience-fit before scaling output volume.');
+    } else {
+      addP(body, 'You skipped follower-based rate, so prioritize trend tracking on reach- or impression-based engagement for reliable comparison.');
+    }
+
+    if (hasReach && hasImpressions && impressions > reach * 1.5) {
+      addP(body, 'Impressions are much higher than reach, suggesting high frequency. Watch engagement by impressions to detect creative fatigue early.');
+    }
+
+    addP(body, 'Engagement rate works best as a trend metric. Track it weekly alongside clicks, conversion rate, and pipeline impact to avoid vanity decisions.');
+
+    document.getElementById('insight-panel').removeAttribute('hidden');
+    document.getElementById('results-section').classList.add('visible');
+    document.getElementById('reset-btn').style.display = '';
+    document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  document.getElementById('reset-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
+    ['inp-engagements', 'inp-followers', 'inp-reach', 'inp-impressions', 'inp-posts'].forEach(function (id) {
+      document.getElementById(id).value = '';
+    });
+    var section = document.getElementById('results-section');
+    section.classList.remove('visible');
+    document.getElementById('reset-btn').style.display = 'none';
+    document.getElementById('insight-panel').setAttribute('hidden', '');
+    var row = document.getElementById('results-row');
+    while (row.firstChild) { row.removeChild(row.firstChild); }
+  });
+  DuctToolExample.seed(['inp-engagements', 'inp-followers', 'inp-reach', 'inp-impressions', 'inp-posts'], 'calc-btn', 'results-section');
+}());
+</script>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

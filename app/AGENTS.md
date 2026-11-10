@@ -991,7 +991,7 @@ for it every time is why "look at it" gets skipped.
 ## Interface language
 
 The interface is translated (English, Spanish, Brazilian Portuguese, German,
-Japanese) and stays translated mechanically, not by anyone remembering. Copy
+Japanese, Simplified Chinese) and stays translated mechanically, not by anyone remembering. Copy
 is written in English inline, as before; Lingui derives each message's id
 from that English, `npm run i18n:extract` writes the catalogues, and
 `scripts/i18n/fill.py` fills what is missing with a model, glossary in hand.

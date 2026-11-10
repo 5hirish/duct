@@ -8,7 +8,7 @@ var ductT = window.ductT || function (s) { var m = window.DUCT_I18N; return (m &
 // Root-absolute internal links built here follow the page's language.
 var ductLangPath = window.ductLangPath || function (path) {
   var lang = document.documentElement.getAttribute('lang') || 'en';
-  var prefix = { es: 'es', 'pt-BR': 'pt-br', de: 'de', ja: 'ja' }[lang];
+  var prefix = { es: 'es', 'pt-BR': 'pt-br', de: 'de', ja: 'ja', 'zh-CN': 'zh-cn' }[lang];
   return prefix ? '/' + prefix + path : path;
 };
 window.ductT = ductT;
@@ -972,8 +972,8 @@ if (window.__DUCT_PARTIALS_READY) {
   // A closed table, never a string built from a link's attribute: the chosen
   // code only ever selects one of these constants, so
   // nothing read from the DOM reaches the href (CodeQL js/xss-through-dom).
-  var PATH_PREFIX = { en: '', es: '/es', 'pt-br': '/pt-br', de: '/de', ja: '/ja' };
-  var PREFIXES = ['es', 'pt-br', 'de', 'ja'];
+  var PATH_PREFIX = { en: '', es: '/es', 'pt-br': '/pt-br', de: '/de', ja: '/ja', 'zh-cn': '/zh-cn' };
+  var PREFIXES = ['es', 'pt-br', 'de', 'ja', 'zh-cn'];
   function currentPrefix() {
     var path = location.pathname;
     for (var i = 0; i < PREFIXES.length; i++) {
@@ -1001,7 +1001,7 @@ if (window.__DUCT_PARTIALS_READY) {
     url.hash = location.hash;
     return url;
   }
-  var CODE = { en: 'EN', es: 'ES', 'pt-br': 'PT', de: 'DE', ja: 'JA' };
+  var CODE = { en: 'EN', es: 'ES', 'pt-br': 'PT', de: 'DE', ja: 'JA', 'zh-cn': 'ZH' };
   function remember(e) {
     var code = e.currentTarget.getAttribute('data-duct-lang-link');
     if (!Object.prototype.hasOwnProperty.call(PATH_PREFIX, code)) return;

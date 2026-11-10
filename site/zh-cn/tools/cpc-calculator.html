@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>CPC 计算器——Duct 提供的免费工具</title>
+<link rel="canonical" href="https://getduct.ai/zh-cn/tools/cpc-calculator"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/tools/cpc-calculator"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/tools/cpc-calculator"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/tools/cpc-calculator"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/tools/cpc-calculator"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/tools/cpc-calculator"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/tools/cpc-calculator"/>
+<link rel="alternate" hreflang="zh-CN" href="https://getduct.ai/zh-cn/tools/cpc-calculator"/>
+<meta property="og:locale" content="zh_CN"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="面向付费媒体团队的免费 CPC 计算器。计算每次点击成本、目标 CPC 下的预计支出以及保持在预算内所需的 CPC。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/zh-cn/tools/cpc-calculator"/>
+<meta property="og:title" content="CPC 计算器——Duct 提供的免费工具"/>
+<meta property="og:description" content="计算 CPC、支出预测和效率目标，以用于付费广告系列。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/tools-cpc-calculator.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="CPC 计算器——Duct 提供的免费工具"/>
+<meta name="twitter:description" content="免费的每次点击成本计算器，用于广告系列规划和付费媒体诊断。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/tools-cpc-calculator.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookie，坦白说","We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold.":"我们使用 PostHog 来了解哪些页面促成了注册，以及 Duct 在何处阻碍了你，包括隐藏你输入的所有内容的访问回放。拒绝会关闭 PostHog，Duct 仍能正常运行。Google Analytics 也会统计访问量并设置自己的 Cookie，无论你选择什么。我们不会出售任何数据。","Privacy Policy":"隐私政策","Decline":"拒绝","Accept":"接受","{n} stars on GitHub":"{n} GitHub 星","UTM Builder":"UTM 构建器","SaaS Metrics Benchmark Calculator":"SaaS 指标基准计算器","Weekly Marketing Brief Generator":"每周营销简报生成器","CAC / LTV Calculator":"CAC / LTV 计算器","MRR Growth Rate Calculator":"MRR 增长率计算器","Engagement Rate Calculator":"互动率计算器","CTR Calculator":"CTR 计算器","CPM Calculator":"CPM 计算器","CPC Calculator":"CPC 计算器","CPA Calculator":"CPA 计算器","Marketing ROI Calculator":"营销 ROI 计算器","ROAS Calculator":"ROAS 计算器","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Menu":"菜单","Free Tools":"免费工具","Solutions":"解决方案","Download Duct ↓":"下载 Duct ↓","Language":"语言","Enlarged screenshot":"放大后的截图","Close":"关闭","Fit to screen":"适应屏幕","Zoom in":"放大","Enlarge":"放大","Universal · Apple silicon and Intel":"通用 · Apple 芯片和 Intel","Windows 10 and later":"Windows 10 及更高版本","Runs on any distribution":"可在任何发行版上运行","Debian and Ubuntu":"Debian 和 Ubuntu","Download ↓":"下载 ↓","Download for {label} ↓":"下载适用于 {label} ↓","Example numbers. Change any field and calculate again for yours.":"示例数字。修改任意字段，重新计算你的结果。"};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","inLanguage":"zh-CN","name":"CPC 计算器","url":"https://getduct.ai/zh-cn/tools/cpc-calculator","description":"免费计算器，可计算 CPC、目标 CPC 下的预计支出以及保持在预算内所需的 CPC。","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Organization","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<style>
+  .skip-link { position:absolute; top:-100%; left:16px; z-index:300; padding:10px 20px; background:var(--navy); color:#fff; font-size:14px; font-weight:500; border-radius:var(--r); text-decoration:none; transition:top .15s; }
+  .skip-link:focus { top:16px; }
+  :root { --orange:#2563EB; --orange-h:#1D4ED8; }
+  .btn-orange:hover { box-shadow:0 8px 24px rgba(37,99,235,.28); }
+  .tool-hero { padding:80px 24px 48px; text-align:center; max-width:760px; margin:0 auto; }
+  .tool-hero h1 { font-family:var(--serif); font-size:clamp(32px,5vw,52px); color:var(--navy); margin:16px 0; line-height:1.15; }
+  .tool-hero h1 em { color:var(--orange); font-style:italic; }
+  .tool-hero p { font-size:17px; color:var(--navy-3); font-weight:300; line-height:1.6; margin:0; }
+  .tool-wrap { max-width:900px; margin:0 auto 80px; padding:0 24px; }
+  .tool-card { background:var(--white); border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden; box-shadow:0 4px 32px rgba(0,0,0,.06); }
+  .tool-inputs { padding:36px 40px; display:grid; grid-template-columns:1fr 1fr; gap:24px 32px; }
+  @media (max-width:640px) { .tool-inputs { grid-template-columns:1fr; padding:24px; } }
+  .field { display:flex; flex-direction:column; gap:6px; }
+  .field label { font-size:13px; font-weight:500; color:var(--navy); }
+  .field .field-hint { font-size:11px; color:var(--navy-3); margin-top:-2px; }
+  .field input { padding:11px 16px; border:1.5px solid var(--border); border-radius:var(--r); font-size:15px; font-family:var(--sans); color:var(--navy); outline:none; }
+  .field input:focus { border-color:var(--orange); }
+  .tool-action { padding:0 40px 36px; display:flex; align-items:center; gap:16px; }
+  @media (max-width:640px) { .tool-action { padding:0 24px 24px; flex-direction:column; align-items:stretch; } }
+  .tool-results { border-top:1px solid var(--border); padding:36px 40px; display:none; }
+  @media (max-width:640px) { .tool-results { padding:24px; } }
+  .tool-results.visible { display:block; }
+  .results-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:28px; }
+  .result-card { border:1.5px solid var(--border); border-radius:var(--r); padding:20px; }
+  .result-card.green { border-color:#22c55e; background:#f0fdf4; }
+  .result-card.amber { border-color:#f59e0b; background:#fffbeb; }
+  .result-card.red { border-color:#ef4444; background:#fef2f2; }
+  .result-card.neutral { border-color:var(--border); background:var(--off); }
+  .result-label { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--navy-3); margin-bottom:6px; }
+  .result-value { font-size:26px; font-family:var(--serif); color:var(--navy); margin-bottom:4px; }
+  .result-badge { display:inline-flex; font-size:11px; font-weight:500; padding:2px 9px; border-radius:100px; margin-bottom:8px; }
+  .result-badge.green { background:#dcfce7; color:#15803d; }
+  .result-badge.amber { background:#fef3c7; color:#92400e; }
+  .result-badge.red { background:#fee2e2; color:#991b1b; }
+  .result-badge.neutral { background:#f1f5f9; color:var(--navy-3); }
+  .result-context { font-size:12px; color:var(--navy-3); line-height:1.5; margin:0; }
+  .tool-cta { margin-top:24px; background:var(--navy); border-radius:var(--r); padding:28px 32px; display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap; }
+  .tool-cta-text p:first-child { font-size:16px; font-weight:500; color:var(--white); margin:0 0 4px; }
+  .tool-cta-text p:last-child { font-size:13px; color:rgba(255,255,255,.55); margin:0; }
+  .insight-panel { margin-top:24px; background:#eff6ff; border:1px solid rgba(37,99,235,.18); border-left:3px solid #2563EB; border-radius:var(--r); padding:20px 24px; }
+  .insight-label { font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:#2563EB; margin-bottom:10px; }
+  .insight-panel p { font-size:14px; color:var(--navy-3); line-height:1.7; margin:0 0 8px; }
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"zh-CN","itemListElement":[{"@type":"ListItem","position":1,"name":"主页","item":"https://getduct.ai/zh-cn/"},{"@type":"ListItem","position":2,"name":"免费工具","item":"https://getduct.ai/zh-cn/tools/"},{"@type":"ListItem","position":3,"name":"CPC 计算器","item":"https://getduct.ai/zh-cn/tools/cpc-calculator"}]}
+</script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">跳到内容</a>
+<div data-duct-partial="/zh-cn/partials/nav-home.html"></div>
+<main id="main-content">
+<div class="tool-hero">
+  <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> 免费工具 · 无需注册</div>
+  <h1>CPC 计算器 <em>面向付费增长</em></h1>
+  <p>你的付费流量质量仅与你的点击成本一样可靠。使用清晰的效率情景和预算阈值计算 CPC，无需清理电子表格。</p>
+</div>
+<div class="tool-wrap">
+  <div class="tool-card" role="region" aria-label="CPC 计算器">
+    <div class="tool-inputs">
+      <div class="field">
+        <label for="inp-spend">支出</label>
+        <span class="field-hint">以你的货币计的广告系列总支出</span>
+        <input type="number" id="inp-spend" placeholder="e.g. 4200" min="0" inputmode="decimal"/>
+      </div>
+      <div class="field">
+        <label for="inp-clicks">点击次数</label>
+        <span class="field-hint">在此期间产生的总点击次数</span>
+        <input type="number" id="inp-clicks" placeholder="e.g. 2800" min="1" inputmode="numeric"/>
+      </div>
+      <div class="field">
+        <label for="inp-target-cpc">目标 CPC (可选)</label>
+        <span class="field-hint">目标 CPC 下的预计支出</span>
+        <input type="number" id="inp-target-cpc" placeholder="e.g. 1.10" min="0" inputmode="decimal"/>
+      </div>
+      <div class="field">
+        <label for="inp-budget">预算上限 (可选)</label>
+        <span class="field-hint">保持在预算内所需的 CPC</span>
+        <input type="number" id="inp-budget" placeholder="e.g. 3000" min="0" inputmode="decimal"/>
+      </div>
+    </div>
+    <div class="tool-action">
+      <button class="btn btn-orange btn-lg" id="calc-btn" aria-controls="results-section">计算 CPC →</button>
+      <button class="btn btn-ghost" id="reset-btn" style="display:none">重置</button>
+    </div>
+    <div id="calc-form-error" class="tool-form-error" role="alert" aria-live="assertive"></div>
+    <div class="tool-results" id="results-section" role="region" aria-live="polite">
+      <p style="font-size:13px;font-weight:500;color:var(--navy-3);margin:0 0 20px;letter-spacing:.02em;text-transform:uppercase">你的结果</p>
+      <div class="results-row" id="results-row"></div>
+      <div class="tool-cta">
+        <div class="tool-cta-text">
+          <p>一个 CPC，一次。问题是这些点击是否转化为收入。</p>
+          <p>Duct 读取你的广告、分析和收入工具数据，回答这个问题，并提出变更建议。你批准即可。</p>
+        </div>
+        <a href="/zh-cn/download" class="btn btn-orange" data-duct-download>下载 Duct ↓</a>
+      </div>
+      <div id="insight-panel" class="insight-panel" hidden>
+        <p class="insight-label">这意味着什么</p>
+        <div id="insight-body"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<section class="duct-bridge reveal" aria-label="关于 Duct">
+  <div class="duct-bridge-inner">
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">CPC 告诉你流量成本。它不会告诉你这些点击是否转化为收入。</p>
+      <p class="duct-bridge-body">Duct 会跟踪从广告账户到 GA4 和你的收入工具的点击，这样昂贵的渠道在耗尽预算之前就会被发现。</p>
+      <a href="/zh-cn/" class="duct-bridge-link">Duct 工作原理 →</a>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="/assets/media/paid-session.webp" srcset="/assets/media/paid-session-768.webp 768w, /assets/media/paid-session-1536.webp 1536w, /assets/media/paid-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="一次洞察会话：询问广告预算在哪里流失，智能体会根据 CPA 目标评估每个广告系列，提出暂停、两个否定关键词和增加预算的建议，并在右侧撰写支出简报。"/>
+      <figcaption>找出预算流失的地方。Duct 会根据你的 CPA 目标评估每个广告系列成本，建议暂停、排除负面因素和调整预算，并等待你的批准。</figcaption>
+    </figure>
+  </div>
+</section>
+<section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
+  <div class="related-tools-banner-inner">
+    <p class="tag">也是免费的</p>
+    <h2 id="related-tools-heading">探索相关 <em>工具</em></h2>
+    <p class="related-tools-banner-desc">将 CPC 效率与 CTR 和 CPM 诊断结合，以了解付费表现是在改善还是在流失。</p>
+    <div class="insight-links related-tools" data-related-tools data-current-tool="cpc-calculator" data-related-limit="3"></div>
+  </div>
+</section>
+<!-- CTA (shared: site/partials/cta-tools.html) -->
+<div data-duct-partial="/zh-cn/partials/cta-tools.html"></div>
+</main>
+<div data-duct-partial="/zh-cn/partials/footer-expanded.html"></div>
+<script src="/assets/tool-validation.js"></script>
+<script>
+(function () {
+  var ERR = 'calc-form-error';
+  var fieldIds = ['inp-spend', 'inp-clicks', 'inp-target-cpc', 'inp-budget'];
+  DuctToolFormError.bindClear(ERR, fieldIds);
+
+  function money(v) { return (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(2)); }
+  function num(v) { return v >= 1000000 ? (v / 1000000).toFixed(2) + 'm' : (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v.toFixed(0)); }
+  function card(label, display, level, badge, context) {
+    var c = document.createElement('div'); c.className = 'result-card ' + level;
+    var l = document.createElement('div'); l.className = 'result-label'; l.textContent = label;
+    var v = document.createElement('div'); v.className = 'result-value'; v.textContent = display;
+    var b = document.createElement('span'); b.className = 'result-badge ' + level; b.textContent = badge;
+    var x = document.createElement('p'); x.className = 'result-context'; x.textContent = context;
+    c.appendChild(l); c.appendChild(v); c.appendChild(b); c.appendChild(x); return c;
+  }
+  function val(id) { var raw = document.getElementById(id).value; return raw === '' ? NaN : parseFloat(raw); }
+  function addP(node, text) { var p = document.createElement('p'); p.textContent = text; node.appendChild(p); }
+  document.getElementById('calc-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
+    var spend = val('inp-spend');
+    var clicks = val('inp-clicks');
+    var targetCpc = val('inp-target-cpc');
+    var budget = val('inp-budget');
+    var spendBad = isNaN(spend) || spend < 0;
+    var clicksBad = isNaN(clicks) || clicks <= 0;
+    if (spendBad || clicksBad) {
+      if (spendBad && clicksBad) {
+        DuctToolFormError.show(ERR, 'Enter spend (zero or greater) and clicks greater than zero.', ['inp-spend', 'inp-clicks']);
+      } else if (spendBad) {
+        DuctToolFormError.show(ERR, 'Enter a valid spend amount (zero or greater).', ['inp-spend']);
+      } else {
+        DuctToolFormError.show(ERR, 'Enter clicks greater than zero.', ['inp-clicks']);
+      }
+      document.getElementById(spendBad ? 'inp-spend' : 'inp-clicks').focus();
+      return;
+    }
+    var cpc = spend / clicks;
+    var row = document.getElementById('results-row');
+    while (row.firstChild) row.removeChild(row.firstChild);
+    var lvl = cpc <= 1.5 ? 'green' : (cpc <= 4 ? 'amber' : 'red');
+    row.appendChild(card('CPC', cpc.toFixed(2), lvl, lvl === 'green' ? 'Efficient' : (lvl === 'amber' ? 'Moderate' : 'Expensive'), 'Cost per click from your campaign data.'));
+    row.appendChild(card('Spend', money(spend), 'neutral', 'Observed', 'Total spend included in this calculation.'));
+    row.appendChild(card('Clicks', num(clicks), 'neutral', 'Observed', 'Click volume delivered in the selected period.'));
+    if (!isNaN(targetCpc) && targetCpc > 0) {
+      var projected = targetCpc * clicks;
+      row.appendChild(card('Projected Spend', money(projected), projected <= spend ? 'green' : 'red', projected <= spend ? '↓ Savings' : '↑ Higher cost', 'Spend at target CPC with current click volume.'));
+    }
+    if (!isNaN(budget) && budget > 0) {
+      var reqCpc = budget / clicks;
+      row.appendChild(card('Required CPC', reqCpc.toFixed(2), reqCpc >= cpc ? 'green' : 'amber', reqCpc >= cpc ? 'Within budget' : 'Needs efficiency', 'CPC threshold to stay inside budget at this click volume.'));
+    }
+    var body = document.getElementById('insight-body'); while (body.firstChild) body.removeChild(body.firstChild);
+    if (cpc <= 1.5) addP(body, 'Your CPC is efficient. Validate conversion quality so low click costs still drive pipeline.');
+    else if (cpc <= 4) addP(body, 'CPC is manageable. Improve relevance and audience fit to create cheaper incremental clicks.');
+    else addP(body, 'CPC is high. Refresh creatives and tighten targeting to reduce expensive click volume.');
+    document.getElementById('insight-panel').removeAttribute('hidden');
+    document.getElementById('results-section').classList.add('visible');
+    document.getElementById('reset-btn').style.display = '';
+  });
+  document.getElementById('reset-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
+    ['inp-spend','inp-clicks','inp-target-cpc','inp-budget'].forEach(function (id) { document.getElementById(id).value = ''; });
+    document.getElementById('results-section').classList.remove('visible');
+    document.getElementById('reset-btn').style.display = 'none';
+    document.getElementById('insight-panel').setAttribute('hidden', '');
+    var row = document.getElementById('results-row'); while (row.firstChild) row.removeChild(row.firstChild);
+  });
+  DuctToolExample.seed(['inp-spend', 'inp-clicks', 'inp-target-cpc', 'inp-budget'], 'calc-btn', 'results-section');
+}());
+</script>
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

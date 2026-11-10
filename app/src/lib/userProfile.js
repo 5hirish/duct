@@ -93,6 +93,7 @@ export const LANGUAGES = [
   { value: "Dutch", label: msg`Nederlands` },
   { value: "Hindi", label: msg`हिन्दी` },
   { value: "Japanese", label: msg`日本語` },
+  { value: "Simplified Chinese", label: msg`简体中文` },
 ];
 
 /**

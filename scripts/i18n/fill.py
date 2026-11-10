@@ -66,6 +66,7 @@ LOCALE_NAMES = {
     "pt-BR": "Brazilian Portuguese",
     "de": "German",
     "ja": "Japanese",
+    "zh-CN": "Simplified Chinese (mainland China)",
 }
 
 DEFAULT_MODELS = {

@@ -12911,3 +12911,7 @@ msgstr "हिन्दी"
 #: src/lib/userProfile.js
 msgid "日本語"
 msgstr "日本語"
+
+#: src/lib/userProfile.js
+msgid "简体中文"
+msgstr "简体中文"

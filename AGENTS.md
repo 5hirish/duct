@@ -397,7 +397,7 @@ before writing in an area you have not written in before.
   when the PR is linked that way — #127 sat open a week after it shipped
   because its commits said `Refs`.
 - Any change to user-facing copy in `app/` or `site/` ends with `make i18n`,
-  which translates the new and changed strings into the four other languages
+  which translates the new and changed strings into the five other languages
   and commits nothing by itself; `make check` is red until the catalogues and
   the generated `site/<lang>/` pages are current. The writing rules live in
   each area's `AGENTS.md` under "Interface language" and "Translated pages".

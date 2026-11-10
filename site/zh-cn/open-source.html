@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Duct 是开源的——MIT，可自托管，自带密钥</title>
+<link rel="canonical" href="https://getduct.ai/zh-cn/open-source"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/open-source"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/open-source"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/open-source"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/open-source"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/open-source"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/open-source"/>
+<link rel="alternate" hreflang="zh-CN" href="https://getduct.ai/zh-cn/open-source"/>
+<meta property="og:locale" content="zh_CN"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="Duct 为何开源：MIT 许可证端到端，模型密钥保存在你自己的钥匙串中，五条命令即可自托管，以及关于什么会产生费用的明确答案。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/zh-cn/open-source"/>
+<meta property="og:title" content="Duct 是开源的——MIT，可自托管，自带密钥"/>
+<meta property="og:description" content="一个能读取你整个业务的智能体，也应该是一个你可以读取的智能体。Duct 是端到端 MIT 许可的：下载它，或者克隆它并自行运行。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/open-source.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Duct 是开源的——MIT，可自托管，自带密钥"/>
+<meta name="twitter:description" content="端到端 MIT 许可。密钥保留在你的钥匙串中。下载它，我们运行服务；或克隆它，我们不会接触任何东西。免费，自带密钥。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/open-source.jpg"/>
+<link rel="alternate" type="application/rss+xml" title="Duct 博客" href="/blog/feed.xml"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookie，坦白说","We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold.":"我们使用 PostHog 来了解哪些页面促成了注册，以及 Duct 在何处阻碍了你，包括隐藏你输入的所有内容的访问回放。拒绝会关闭 PostHog，Duct 仍能正常运行。Google Analytics 也会统计访问量并设置自己的 Cookie，无论你选择什么。我们不会出售任何数据。","Privacy Policy":"隐私政策","Decline":"拒绝","Accept":"接受","{n} stars on GitHub":"{n} GitHub 星","UTM Builder":"UTM 构建器","SaaS Metrics Benchmark Calculator":"SaaS 指标基准计算器","Weekly Marketing Brief Generator":"每周营销简报生成器","CAC / LTV Calculator":"CAC / LTV 计算器","MRR Growth Rate Calculator":"MRR 增长率计算器","Engagement Rate Calculator":"互动率计算器","CTR Calculator":"CTR 计算器","CPM Calculator":"CPM 计算器","CPC Calculator":"CPC 计算器","CPA Calculator":"CPA 计算器","Marketing ROI Calculator":"营销 ROI 计算器","ROAS Calculator":"ROAS 计算器","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Menu":"菜单","Free Tools":"免费工具","Solutions":"解决方案","Download Duct ↓":"下载 Duct ↓","Language":"语言","Enlarged screenshot":"放大后的截图","Close":"关闭","Fit to screen":"适应屏幕","Zoom in":"放大","Enlarge":"放大","Universal · Apple silicon and Intel":"通用 · Apple 芯片和 Intel","Windows 10 and later":"Windows 10 及更高版本","Runs on any distribution":"可在任何发行版上运行","Debian and Ubuntu":"Debian 和 Ubuntu","Download ↓":"下载 ↓","Download for {label} ↓":"下载适用于 {label} ↓","Example numbers. Change any field and calculate again for yours.":"示例数字。修改任意字段，重新计算你的结果。"};</script>
+<script src="/assets/config.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"zh-CN","name":"Duct 是开源的","url":"https://getduct.ai/zh-cn/open-source","description":"Duct 为何开源，桌面应用与自托管安装中什么在哪里运行，如何自托管，以及什么会和不会产生费用。","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"SoftwareSourceCode","name":"Duct","codeRepository":"https://github.com/5hirish/duct","license":"https://opensource.org/licenses/MIT","programmingLanguage":["Python","JavaScript","Rust"],"isAccessibleForFree":true,"author":{"@type":"Person","name":"Shirish Kadam","url":"https://shirishkadam.com"}}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"zh-CN","mainEntity":[{"@type":"Question","name":"Duct 真的免费吗？","acceptedAnswer":{"@type":"Answer","text":"是的。Duct 采用 MIT 许可证，使用你自己的模型密钥是免费的，这一点不会改变。你直接向你的模型提供商付费，或者使用你已有的 ChatGPT 计划登录。付费计划稍后会为不愿持有密钥的团队捆绑模型访问权限；目前开源的功能不会因此变为付费。"}},{"@type":"Question","name":"我可以在没有账户的情况下运行 Duct 吗？","acceptedAnswer":{"@type":"Answer","text":"是的。克隆仓库，运行 make setup，添加一个模型提供商密钥，然后启动后端和应用。所有内容都保留在你的机器或服务器上，不涉及 Duct 账户。"}},{"@type":"Question","name":"我可以使用 Duct 进行商业用途或分叉它吗？","acceptedAnswer":{"@type":"Answer","text":"是的。MIT 许可证允许商业使用、修改和再分发。唯一的例外是 docs/guides 下的第三方文档以及 Duct 名称和标志。"}},{"@type":"Question","name":"我如何贡献？","acceptedAnswer":{"@type":"Answer","text":"从 CONTRIBUTING.md 开始。问题和讨论在 GitHub 上，路线图是一个公开的项目看板，欢迎智能体撰写的贡献，只要拉取请求说明了智能体在哪里提供了帮助。"}}]}
+</script>
+<style>
+/* ── OPEN-SOURCE-ONLY STYLES ── */
+.os-hero { padding: 120px 52px 72px; min-height: 0; }
+.os-hero h1 { font-size: clamp(38px, 5vw, 62px); max-width: 980px; }
+.os-hero .hero-sub { max-width: 600px; }
+
+/* Why: three numbered arguments, left-aligned, one measure */
+.why { padding: 0 52px 96px; }
+.why-inner { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+.why-block { background: var(--white); padding: 36px 32px 40px; }
+.why-num { font-family: var(--serif); font-size: 11px; color: var(--orange); letter-spacing: .08em; display: block; margin-bottom: 18px; }
+.why-block h2 { font-size: clamp(22px, 2.6vw, 28px); line-height: 1.2; letter-spacing: -.3px; margin-bottom: 14px; }
+.why-block p { font-size: 15px; font-weight: 300; color: var(--navy-3); line-height: 1.75; max-width: 42ch; }
+.why-block a { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--orange); }
+
+/* Where things run: the page's heavy element */
+.where { padding: 96px 52px; background: var(--off); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.where-inner { max-width: 1160px; margin: 0 auto; }
+.where-head { max-width: 640px; margin-bottom: 40px; }
+.where-head h2 { margin-bottom: 14px; }
+.where-head .sub { max-width: 56ch; }
+.where-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.where-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 28px 28px 24px; display: flex; flex-direction: column; gap: 22px; }
+.where-card.pick { position: relative; border: 1.5px solid var(--orange); box-shadow: 0 16px 48px rgba(255,92,0,.10); }
+.where-badge { position: absolute; top: -14px; left: 24px; display: inline-flex; align-items: center; gap: 6px; background: var(--orange); color: #fff; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; padding: 6px 12px; border-radius: var(--pill); }
+.where-badge .ic { font-size: 13px; }
+.where-card-head { display: flex; align-items: center; gap: 14px; }
+.where-card-head .ic { font-size: 26px; color: var(--orange); }
+.where-card-head h3 { font-family: var(--serif); font-size: 22px; color: var(--navy); letter-spacing: -.2px; line-height: 1.2; }
+.where-card-head p { font-size: 14px; color: var(--navy-3); margin-top: 2px; }
+.zones { display: grid; gap: 10px; }
+.zone { border-radius: var(--r); padding: 14px 16px 16px; border: 1.5px dashed var(--border); }
+.zone-you { background: #fff5ee; border-color: #f7c9ad; }
+.zone-cloud { background: #eef0f7; border-color: #cfd4e6; }
+.zone-label { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-2); margin-bottom: 10px; }
+.zone-label .ic { font-size: 15px; }
+.zone-label small { font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--navy-3); font-size: 12px; white-space: nowrap; }
+.pick .zone-cloud { background: #eef7f0; border-color: #bfe0c7; }
+.pick .zone-cloud .zone-label .ic { color: var(--success, #10883c); }
+.zone-items { display: flex; flex-wrap: wrap; gap: 8px; }
+.zone-item { display: inline-flex; align-items: center; gap: 7px; background: var(--white); border: 1px solid var(--border); border-radius: var(--pill); padding: 6px 12px 6px 9px; font-size: 13px; color: var(--navy); }
+.zone-item .ic { font-size: 15px; color: var(--navy-3); }
+.zone-item small { color: var(--navy-3); font-size: 12px; white-space: nowrap; }
+.zone-label, .zone-item { flex-wrap: wrap; }
+.zone-empty { font-size: 14px; color: var(--navy-3); font-style: italic; font-family: var(--serif); }
+.where-facts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; border-top: 1px solid var(--border); padding-top: 18px; }
+.where-facts li { display: flex; align-items: flex-start; gap: 10px; font-size: 14.5px; color: var(--navy); line-height: 1.5; }
+.where-facts .ic { font-size: 18px; flex-shrink: 0; margin-top: 2px; color: var(--success, #10883c); }
+.where-facts li.no .ic { color: var(--navy-3); }
+.where-facts li.no { color: var(--navy-3); }
+.where-cta { margin-top: auto; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.where-fit { font-size: 13px; color: var(--navy-3); line-height: 1.4; max-width: 30ch; }
+.where-note { font-size: 13px; font-weight: 300; color: var(--navy-3); margin-top: 16px; max-width: 72ch; }
+.where-note a { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--orange); }
+
+/* Self-host: the README's block, and a pointer to it */
+.host { padding: 96px 52px; }
+.host-inner { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: center; }
+.host-copy h2 { margin-bottom: 16px; }
+.host-copy p { font-size: 15px; font-weight: 300; color: var(--navy-3); line-height: 1.75; max-width: 46ch; margin-bottom: 14px; }
+.host-copy a { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--orange); }
+.host-code { border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; background: var(--navy); box-shadow: 0 24px 64px rgba(13,15,26,.12); }
+.host-code-bar { display: flex; align-items: center; gap: 7px; padding: 10px 16px; background: var(--navy-2); }
+.host-code-dot { width: 10px; height: 10px; border-radius: 50%; }
+.host-code-label { font-size: 12px; color: rgba(255,255,255,.55); margin-left: 8px; }
+.host-code pre { margin: 0; padding: 22px 24px 26px; overflow-x: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13.5px; line-height: 1.8; color: #fff; }
+.host-code .c { color: rgba(255,255,255,.45); }
+.host-code .p { color: var(--orange); }
+
+/* Money: one paragraph, no card, no grid */
+.money { padding: 96px 52px; background: var(--navy); }
+.money-inner { max-width: 760px; margin: 0 auto; }
+.money .tag { color: var(--orange); }
+.money h2 { color: #fff; margin-bottom: 22px; }
+.money h2 em { color: var(--orange); }
+.money p { font-size: 17px; font-weight: 300; color: rgba(255,255,255,.72); line-height: 1.8; max-width: 66ch; }
+.money p + p { margin-top: 16px; }
+.money strong { color: #fff; font-weight: 500; }
+
+@media (max-width: 1100px) {
+  .why-inner { grid-template-columns: 1fr; }
+  .where-grid { grid-template-columns: 1fr; }
+  .host-inner { grid-template-columns: 1fr; gap: 36px; }
+}
+@media (max-width: 860px) {
+  .os-hero { padding: 100px 24px 56px; }
+  .why, .where, .host, .money { padding-left: 24px; padding-right: 24px; }
+  .where, .host, .money { padding-top: 64px; padding-bottom: 64px; }
+  .why { padding-bottom: 64px; }
+}
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"zh-CN","itemListElement":[{"@type":"ListItem","position":1,"name":"主页","item":"https://getduct.ai/zh-cn/"},{"@type":"ListItem","position":2,"name":"开源","item":"https://getduct.ai/zh-cn/open-source"}]}
+</script>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">跳到内容</a>
+
+<!-- EXPERIMENT: the trust page a commercial-later OSS project needs. Hypothesis: a reader who lands
+     here can answer "is it free, what runs where, what will cost money" without opening the README,
+     and downloads or stars at a higher rate than visitors who only saw the home page. -->
+
+<!-- NAV (shared: site/partials/nav-simple.html) -->
+<div data-duct-partial="/zh-cn/partials/nav-simple.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="hero os-hero">
+<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> MIT · 公开路线图 · 自带密钥</div>
+<h1>它读取你的整个业务。<br/><em>所以你可以读取它。</em></h1>
+<p class="hero-sub">Duct 是端到端开源的：智能体、连接器、提示词、审批门、桌面外壳。下载它，我们为你运行服务。克隆它，我们不会接触任何东西。</p>
+<div class="hero-form">
+<a class="btn btn-orange btn-lg" href="/zh-cn/download" data-duct-download>下载 Duct ↓</a>
+<a class="btn btn-ghost btn-lg" href="https://github.com/5hirish/duct" rel="noopener">阅读源代码</a>
+</div>
+<p class="hero-footnote">始终免费，自带密钥 · 自行运行无需账户</p>
+</section>
+
+<!-- WHY -->
+<section class="why">
+<div class="why-inner reveal">
+<div class="why-block">
+<span class="why-num">01</span>
+<h2>请求读取所有内容的权限要求很高。</h2>
+<p>Duct 将你的广告、分析、收入和会话回放整合读取。拥有这种视角的工具不应是黑箱。每个 API 调用和每个提示词都在代码库中，在你连接任何东西之前即可阅读。</p>
+</div>
+<div class="why-block">
+<span class="why-num">02</span>
+<h2>批准门槛存在于代码中，而非提示中。</h2>
+<p>智能体可以提出变更并预览。它没有批准或应用的工具；那是你的按钮，模型永远不会看到它。<a href="/zh-cn/doctrine">该原则</a> 将每条规则链接到强制执行它的文件。</p>
+</div>
+<div class="why-block">
+<span class="why-num">03</span>
+<h2>一个人不能要求信任。他可以展示代码。</h2>
+<p>Duct 由 <a href="/zh-cn/about">西班牙的一位维护者</a> 构建，大部分输入工作由智能体完成。路线图是公开看板，决策在议题中讨论，你或你的智能体的拉取请求会得到相同的审查。</p>
+</div>
+</div>
+</section>
+
+<!-- WHERE THINGS RUN -->
+<section class="where" id="where">
+<div class="where-inner">
+<div class="where-head reveal">
+<p class="tag">什么在哪里运行</p>
+<h2>相同的代码。<em>两种运行方式。</em></h2>
+<p class="sub">下载应用，我们运行其背后的服务：登录，连接工具，提问。克隆代码，它的每个部分都由你运行。以下是各部分的位置，用简单的话来说。</p>
+</div>
+<div class="where-grid reveal" style="transition-delay:.1s">
+<article class="where-card pick">
+<span class="where-badge"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#rocket"/></svg> 大多数人从这里开始</span>
+<div class="where-card-head"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#monitor"/></svg><div><h3>桌面应用</h3><p>下载它。登录。两分钟内连接。</p></div></div>
+<div class="zones">
+<div class="zone zone-you">
+<span class="zone-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg> 保留在你的电脑上</span>
+<div class="zone-items">
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg> 你的 AI 密钥 <small>· 在钥匙串中</small></span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#user-round"/></svg> 你的 ChatGPT 登录</span>
+</div>
+</div>
+<div class="zone zone-cloud">
+<span class="zone-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg> Duct 为你承载 <small>· 已加密</small></span>
+<div class="zone-items">
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg> 工具登录 <small>· 连接一次，所有设备</small></span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg> 项目、简报、记忆 <small>· 已同步</small></span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#users"/></svg> 团队成员 <small>· 一次邀请</small></span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-line"/></svg> 使用统计 <small>· 在偏好设置中关闭</small></span>
+</div>
+</div>
+</div>
+<ul class="where-facts">
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> 免费。带上你的密钥，或你已付费的 ChatGPT 计划。</li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Google Ads、GA4 和其他工具一键连接。无需注册。</li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> 你的简报会随你到下一台电脑。一次邀请即可添加一名团队成员。</li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> 已签名构建，可自行更新。我们运行服务和数据库。</li>
+</ul>
+<div class="where-cta">
+<a class="btn btn-orange" href="/zh-cn/download" data-duct-download>下载 Duct ↓</a>
+<span class="where-fit">Mac、Windows、Linux · 免费 · 无需信用卡</span>
+</div>
+</article>
+<article class="where-card">
+<div class="where-card-head"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#server"/></svg><div><h3>自托管</h3><p>克隆它。你运行它的每个部分。</p></div></div>
+<div class="zones">
+<div class="zone zone-you">
+<span class="zone-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#server"/></svg> 在你的电脑或服务器上 <small>· 全部</small></span>
+<div class="zone-items">
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg> 你的 AI 密钥</span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg> 你的工具登录</span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg> 项目、简报、记忆</span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg> 数据库</span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#settings-2"/></svg> 登录和 OAuth 应用 <small>· 你注册它们</small></span>
+<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#refresh-cw"/></svg> 备份和升级</span>
+</div>
+</div>
+<div class="zone zone-cloud">
+<span class="zone-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#server"/></svg> 由 Duct 保管</span>
+<p class="zone-empty">什么都没有。它从不与我们通信。</p>
+</div>
+</div>
+<ul class="where-facts">
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> 免费。相同的代码，相同的智能体，没有保留版本。</li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> 在我们这里没有账户。使用统计数据甚至没有被编译进去。</li>
+<li class="no"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg> 在 Ads、GA4 或 Search Console 连接之前，需要你自己的 Google OAuth 客户端。</li>
+<li class="no"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg> 数据库、备份和每次升级都由你运行和维护。</li>
+<li class="no"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg> 除非你亲自将其托管为服务器，否则没有任何东西会跟随你到另一台机器。</li>
+</ul>
+<div class="where-cta">
+<a class="btn btn-ghost" href="#self-host">如何自托管 ↓</a>
+<span class="where-fit">关于数据存储位置的规则，或阅读代码。</span>
+</div>
+</article>
+</div>
+<p class="where-note reveal">完整详情请参阅<a href="/zh-cn/privacy">隐私政策</a>。无论你以何种方式运行它，我们都不会持有你的 AI 密钥：桌面应用将其保存在你的钥匙串中，并且只在任务运行时发送。</p>
+</div>
+</section>
+
+<!-- SELF-HOST -->
+<section class="host" id="self-host">
+<div class="host-inner">
+<div class="host-copy reveal">
+<p class="tag">自行运行</p>
+<h2>克隆它。添加一个密钥。<em>启动两部分。</em></h2>
+<p>后端是 FastAPI，应用是 Next.js，一个 Makefile 驱动两者。将模型提供商密钥添加到 env 文件，你就能在几分钟内从自己的机器读取自己的工具。</p>
+<p>《<a href="https://github.com/5hirish/duct#-self-host-it" rel="noopener">README</a>》是设置的权威指南，它也涵盖了内置后端（磁盘上的 SQLite，仅回环，无需账户）的桌面构建。<a href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">CONTRIBUTING.md</a> 列出了 CI 运行的检查。</p>
+</div>
+<!-- Mirrors the README's "Self-host it" block. If the two disagree, the README is right; fix this one. -->
+<div class="host-code reveal" style="transition-delay:.1s" aria-label="自托管命令">
+<div class="host-code-bar" aria-hidden="true">
+<span class="host-code-dot" style="background:#ff5f57"></span>
+<span class="host-code-dot" style="background:#febc2e"></span>
+<span class="host-code-dot" style="background:#28c840"></span>
+<span class="host-code-label">终端</span>
+</div>
+<pre><code><span class="p">$</span> git clone https://github.com/5hirish/duct.git &amp;&amp; cd duct
+<span class="p">$</span> make setup
+<span class="p">$</span> cp backend/.env.example backend/.env.local   <span class="c"># add one model provider key</span>
+<span class="p">$</span> make serve-backend                            <span class="c"># then, in a second terminal:</span>
+<span class="p">$</span> make serve-app</code></pre>
+</div>
+</div>
+</section>
+
+<!-- MONEY -->
+<section class="money" id="pricing">
+<div class="money-inner reveal">
+<p class="tag">什么会产生费用</p>
+<h2>免费，自带密钥。<em>始终如此。</em></h2>
+<p><strong>MIT 许可证不是试用版。</strong> 智能体、连接器和审批门是产品，它们都在代码库中。使用你自己的模型密钥，或使用你已付费的 ChatGPT 计划运行它们，你无需向我们支付任何费用。</p>
+<p><strong>未来将推出捆绑模型的付费计划</strong>，这样团队就可以在无需任何人持有 API 密钥的情况下使用 Duct，并且是在桌面应用已连接的托管服务之上。今天已开源的内容不会转为付费。如果发生任何变化，本页面会在代码之前说明。</p>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">问题</p>
+<h2>人们<em>真正会问</em>的问题</h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">Duct 真的免费吗？</summary>
+<p class="faq-a">是的。Duct 采用 MIT 许可证，使用你自己的模型密钥是免费的，这一点不会改变。你直接向你的模型提供商付费，或者使用你已有的 ChatGPT 计划登录。付费计划稍后会为不愿持有密钥的团队捆绑模型访问权限；目前开源的功能不会因此变为付费。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">我可以在没有账户的情况下运行 Duct 吗？</summary>
+<p class="faq-a">是的。克隆仓库，运行 <code>make setup</code>，添加一个模型提供商密钥，然后启动后端和应用。所有内容都保留在你的机器或服务器上，不涉及 Duct 账户。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">我可以使用 Duct 进行商业用途或分叉它吗？</summary>
+<p class="faq-a">是的。MIT 许可证允许商业使用、修改和再分发。唯一的例外是 <code>docs/guides</code> 下的第三方文档以及 Duct 名称和标志。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">我如何贡献？</summary>
+<p class="faq-a">从 <a href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">CONTRIBUTING.md</a> 开始。问题和讨论在 GitHub 上，路线图是一个公开的项目看板，欢迎智能体撰写的贡献，只要拉取请求说明了智能体在哪里提供了帮助。</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/zh-cn/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/zh-cn/partials/footer-expanded.html"><div class="legal-fallback"><a href="/zh-cn/">Duct</a><a href="/zh-cn/about">关于</a><a href="/zh-cn/privacy">隐私政策</a><a href="/zh-cn/terms">服务条款</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

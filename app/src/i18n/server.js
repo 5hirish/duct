@@ -21,11 +21,12 @@ import { messages as es } from "../locales/es/messages.mjs";
 import { messages as ptBR } from "../locales/pt-BR/messages.mjs";
 import { messages as de } from "../locales/de/messages.mjs";
 import { messages as ja } from "../locales/ja/messages.mjs";
+import { messages as zhCN } from "../locales/zh-CN/messages.mjs";
 import { messages as pseudo } from "../locales/pseudo/messages.mjs";
 
 import { LOCALE_COOKIE, PSEUDO_LOCALE, resolveLocale } from "./locales";
 
-const CATALOGS = { en, es, "pt-BR": ptBR, de, ja, [PSEUDO_LOCALE]: pseudo };
+const CATALOGS = { en, es, "pt-BR": ptBR, de, ja, "zh-CN": zhCN, [PSEUDO_LOCALE]: pseudo };
 
 /** One instance per request and locale. */
 export const getI18nInstance = cache((locale) => {
