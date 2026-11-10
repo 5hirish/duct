@@ -24,6 +24,13 @@ published without one. The same script, with no arguments, holds
 
 ## [Unreleased]
 
+### Added
+
+- **Duct speaks Simplified Chinese.** The interface, the site under `/zh-cn/`
+  and a Chinese README, machine-translated against the glossary, which now
+  pins every product term for `zh-CN` and renders "agent" as 智能体 rather than
+  代理, the word for a proxy. A native speaker's pass is #537.
+
 ### Changed
 
 - **The cookie bar and the privacy policy name Google Analytics.** Cloudflare's

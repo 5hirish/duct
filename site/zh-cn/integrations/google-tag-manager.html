@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Tag Manager AI 智能体：带回滚的跟踪修复 | Duct</title>
+<link rel="canonical" href="https://getduct.ai/zh-cn/integrations/google-tag-manager"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/integrations/google-tag-manager"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/integrations/google-tag-manager"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/integrations/google-tag-manager"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/integrations/google-tag-manager"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/integrations/google-tag-manager"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/integrations/google-tag-manager"/>
+<link rel="alternate" hreflang="zh-CN" href="https://getduct.ai/zh-cn/integrations/google-tag-manager"/>
+<meta property="og:locale" content="zh_CN"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="Duct 通过读取 GA4 和 Mixpanel 中的数据来发现损坏的跟踪，在工作区中暂存 Tag Manager 修复，并仅在你批准后发布，可随时回滚。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/zh-cn/integrations/google-tag-manager"/>
+<meta property="og:title" content="Tag Manager AI 智能体：带回滚的跟踪修复"/>
+<meta property="og:description" content="代码可以在每个页面触发，但仍可能发送错误的事件。Duct 会找到它，在 Tag Manager 中暂存修复，并在发布前等待你的操作。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/integrations-google-tag-manager.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Tag Manager AI 智能体：带回滚的跟踪修复"/>
+<meta name="twitter:description" content="周二跟踪中断。Duct 找到标签，准备好修复，等待你发布。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/integrations-google-tag-manager.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookie，坦白说","We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold.":"我们使用 PostHog 来了解哪些页面促成了注册，以及 Duct 在何处阻碍了你，包括隐藏你输入的所有内容的访问回放。拒绝会关闭 PostHog，Duct 仍能正常运行。Google Analytics 也会统计访问量并设置自己的 Cookie，无论你选择什么。我们不会出售任何数据。","Privacy Policy":"隐私政策","Decline":"拒绝","Accept":"接受","{n} stars on GitHub":"{n} GitHub 星","UTM Builder":"UTM 构建器","SaaS Metrics Benchmark Calculator":"SaaS 指标基准计算器","Weekly Marketing Brief Generator":"每周营销简报生成器","CAC / LTV Calculator":"CAC / LTV 计算器","MRR Growth Rate Calculator":"MRR 增长率计算器","Engagement Rate Calculator":"互动率计算器","CTR Calculator":"CTR 计算器","CPM Calculator":"CPM 计算器","CPC Calculator":"CPC 计算器","CPA Calculator":"CPA 计算器","Marketing ROI Calculator":"营销 ROI 计算器","ROAS Calculator":"ROAS 计算器","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Menu":"菜单","Free Tools":"免费工具","Solutions":"解决方案","Download Duct ↓":"下载 Duct ↓","Language":"语言","Enlarged screenshot":"放大后的截图","Close":"关闭","Fit to screen":"适应屏幕","Zoom in":"放大","Enlarge":"放大","Universal · Apple silicon and Intel":"通用 · Apple 芯片和 Intel","Windows 10 and later":"Windows 10 及更高版本","Runs on any distribution":"可在任何发行版上运行","Debian and Ubuntu":"Debian 和 Ubuntu","Download ↓":"下载 ↓","Download for {label} ↓":"下载适用于 {label} ↓","Example numbers. Change any field and calculate again for yours.":"示例数字。修改任意字段，重新计算你的结果。"};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"zh-CN","name":"Tag Manager AI 智能体：带回滚的跟踪修复","url":"https://getduct.ai/zh-cn/integrations/google-tag-manager","description":"Duct 通过读取 GA4 和 Mixpanel 中的数据来发现损坏的跟踪，在工作区中暂存 Tag Manager 修复，并仅在你批准后发布，可随时回滚。","about":{"@type":"SoftwareApplication","name":"Google Tag Manager"},"isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"zh-CN","itemListElement":[{"@type":"ListItem","position":1,"name":"主页","item":"https://getduct.ai/zh-cn/"},{"@type":"ListItem","position":2,"name":"集成","item":"https://getduct.ai/zh-cn/integrations/"},{"@type":"ListItem","position":3,"name":"Google Tag Manager","item":"https://getduct.ai/zh-cn/integrations/google-tag-manager"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"zh-CN","mainEntity":[{"@type":"Question","name":"Duct 可以在 Tag Manager 中更改什么？","acceptedAnswer":{"@type":"Answer","text":"四种：创建/更新 GTM 代码（工作区）、创建/更新 GTM 变量（工作区）、发布 GTM 容器版本和重新发布旧的 GTM 版本。默认情况下，每项都等待你的应用，并且每项都可以回滚。"}},{"@type":"Question","name":"Duct 会自行发布到我的实时网站吗？","acceptedAnswer":{"@type":"Answer","text":"不。发布会替换所有访问者的实时容器，因此无论项目的自主性如何，它始终等待你的操作。工作区编辑可以在辅助模式下自行应用，并且在发布之前不会更改任何实时内容。"}},{"@type":"Question","name":"回滚如何运作？","acceptedAnswer":{"@type":"Answer","text":"发布前，Duct 会记录当前生效的版本。回滚会重新发布该版本，并且活动日志会显示两者。"}},{"@type":"Question","name":"免费吗？","acceptedAnswer":{"@type":"Answer","text":"是的。Duct 可免费使用你自己的模型密钥或你已有的 ChatGPT 套餐，核心部分采用 MIT 许可。付费套餐稍后会捆绑模型；目前开源的部分不会转为付费。哪些会收费。"}}]}
+</script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">跳到内容</a>
+
+<!-- GENERATED by scripts/build_integrations.py from the backend and scripts/integrations/connectors.py.
+     Do not edit this file: edit those and run the script. -->
+<!-- EXPERIMENT: Per-tool integration searches run 10 to 50 a month (OpenSEO, Sep 2026). Hypothesis: the growth lead whose funnel went to zero overnight converts on a page that shows the fix staged with a rollback target, because the publish is the part that scares people. Measured by download clicks per visit. -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/zh-cn/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="ig-hero">
+<div class="ig-hero-text">
+<nav class="ig-crumbs" aria-label="面包屑"><a href="/zh-cn/integrations/">集成</a><span aria-hidden="true">/</span><span aria-current="page">Google Tag Manager</span></nav>
+<div class="ig-lockup" aria-hidden="true"><img src="/assets/icons/google-tag-manager.svg" width="40" height="40" alt=""/><span class="ig-plus">+</span><span class="logo">duct <span class="logo-mark"></span></span></div>
+<h1>Tag Manager，<em>回滚目标优先。</em></h1>
+<p class="hero-sub">Duct 会注意到计数何时归零，找到其背后的代码，并在工作区中暂存修复。发布会替换你的实时容器，因此该步骤始终等待你的操作，并会命名回滚版本。</p>
+<div class="ig-cta">
+<a class="btn btn-orange btn-lg" href="/zh-cn/download" data-duct-download>下载 Duct ↓</a>
+<a class="btn btn-ghost btn-lg" href="/zh-cn/integrations/">所有集成</a>
+</div>
+<ul class="ig-facts" aria-label="一览"><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>使用 Google 登录</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg><span>读取三个数据集</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>四种变更</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>检查于 2026 年 9 月 29 日</span></li></ul>
+
+</div>
+<figure class="ig-mock reveal has-change">
+<div class="ig-mock-panel" aria-hidden="true">
+<div class="ig-sources"><img src="/assets/icons/google-tag-manager.svg" width="34" height="34" alt=""/><img src="/assets/icons/googleanalytics.svg" width="34" height="34" alt=""/><img src="/assets/icons/mixpanel.svg" width="34" height="34" alt=""/></div>
+<svg class="ig-flow" viewBox="0 0 170 30" width="170" height="30" aria-hidden="true"><g class="ig-flow-bed"><path pathLength="1" d="M15 0C15 16 85 14 85 30"/><path pathLength="1" d="M85 0V30"/><path pathLength="1" d="M155 0C155 16 85 14 85 30"/></g><g class="ig-flow-water"><path d="M15 0C15 16 85 14 85 30"/><path d="M85 0V30"/><path d="M155 0C155 16 85 14 85 30"/></g></svg>
+<div class="ig-answer"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg><span>版本 14 重命名了 Connect bank 标签发送的事件。自 9 月 9 日以来，GA4 计数为零。</span></div>
+<div class="ig-change"><img src="/assets/icons/google-tag-manager.svg" width="22" height="22" alt=""/><span><b>发布容器版本 15</b><s>替换所有访问者的版本 14。可回滚。</s></span></div>
+<div class="ig-actions"><span class="ig-btn ig-btn-reject">拒绝</span><span class="ig-btn ig-btn-apply"><span class="ig-apply-idle">应用</span><span class="ig-apply-done"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg>已应用</span><svg class="ig-cursor" aria-hidden="true"><use href="/assets/icons.svg#mouse-pointer-click"/></svg></span></div>
+</div>
+<figcaption>一个示例答案。你的数据将从你自己的账户中读取。</figcaption>
+</figure>
+</section>
+
+<!-- SESSION: shot by scripts/shots/shoot.mjs from the story's CONNECTOR_SESSIONS -->
+<section class="shot ig-shot">
+<figure class="shot-frame reveal">
+<img src="/assets/media/session-tag-manager.webp" srcset="/assets/media/session-tag-manager-768.webp 768w, /assets/media/session-tag-manager-1536.webp 1536w, /assets/media/session-tag-manager.webp 3072w" sizes="(max-width: 860px) calc(100vw - 48px), 1536px" loading="lazy" decoding="async" width="3072" height="2052" alt="一次 Duct 会话：当被问及 GA4 为何停止统计某个网站事件时，Duct 发现是容器版本重命名了代码，并提出了工作区修复方案和等待批准的发布。"/>
+<figcaption>询问事件为何停止计数。Duct 发现是代码版本 14 发生了更改，在工作区中暂存修复，并为你保留发布，将版本 14 作为回滚版本。</figcaption>
+</figure>
+</section>
+
+<div class="channel" aria-hidden="true"></div>
+
+<!-- ASK -->
+<section class="ig-sec" id="ask">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">提问</p>
+<h2>你可以<em>直接提问</em>的问题</h2>
+</div>
+<ul class="ig-qs">
+<li class="ig-q reveal" style="transition-delay:0.00s"><p>为什么一个事件在 GA4 中一夜之间停止计数？</p><span class="ig-q-joins"><img src="/assets/icons/google-tag-manager.svg" width="18" height="18" alt=""/><img src="/assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><img src="/assets/icons/mixpanel.svg" width="18" height="18" alt=""/><span>Tag Manager + GA4 + Mixpanel</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.06s"><p>代码是否正在触发，或者触发了错误的内容？</p><span class="ig-q-joins"><img src="/assets/icons/google-tag-manager.svg" width="18" height="18" alt=""/><img src="/assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><span>Tag Manager + GA4</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.12s"><p>网站和应用是否仍发送相同的事件名称？</p><span class="ig-q-joins"><img src="/assets/icons/google-tag-manager.svg" width="18" height="18" alt=""/><img src="/assets/icons/mixpanel.svg" width="18" height="18" alt=""/><span>Tag Manager + Mixpanel</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.18s"><p>你能修复代码并让我批准发布吗？</p><span class="ig-q-joins"><img src="/assets/icons/google-tag-manager.svg" width="18" height="18" alt=""/><span>Tag Manager</span></span></li>
+</ul>
+</div>
+</section>
+
+<!-- ACCESS: generated from the catalogue and the executor registry -->
+<section class="ig-sec ig-access" id="access">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">访问</p>
+<h2>它读取的内容。<em>它能更改的内容。</em></h2>
+</div>
+<div class="ig-cols reveal">
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg>它读取什么</h3>
+<ul class="ig-reads">
+<li><b>账号和容器</b><span class="ig-fields"><span>账号</span><span>容器</span><span>公共 ID</span></span></li>
+<li><b>工作区标签和变量</b><span class="ig-fields"><span>名称</span><span>类型</span><span>参数</span></span></li>
+<li><b>实时容器版本</b><span class="ig-fields"><span>版本 ID</span></span></li>
+</ul>
+<p class="ig-note">Tag Manager API v2 · 已于 2026 年 9 月 29 日对照抓取代码检查 · <a href="https://github.com/5hirish/duct/blob/main/backend/service/execution/gtm_exec.py" rel="noopener">阅读源代码</a></p>
+</div>
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>它可以更改什么</h3>
+<ul class="ig-ops">
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">创建/更新 GTM 代码（工作区）</span><span class="ig-badges"><span class="ig-badge is-auto">在辅助模式下可自动应用</span></span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">创建/更新 GTM 变量（工作区）</span><span class="ig-badges"><span class="ig-badge is-auto">在辅助模式下可自动应用</span></span></li>
+<li class="is-destructive"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#triangle-alert"/></svg><span class="ig-op">发布 GTM 容器版本</span><span class="ig-badges"><span class="ig-badge is-warn">始终等你</span></span></li>
+<li class="is-destructive"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#triangle-alert"/></svg><span class="ig-op">重新发布旧的 GTM 版本</span><span class="ig-badges"><span class="ig-badge is-warn">始终等你</span></span></li>
+</ul>
+<p class="ig-note">每项变更都可回滚。默认情况下，每项变更都需你点击应用：它会以预览形式显示所影响的内容，并记录在活动日志中。<a href="/zh-cn/doctrine">批准工作原理</a></p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- KNOWS: the knowledge pack, in plain words -->
+<section class="ig-sec ig-knows" id="knows">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">知识</p>
+<h2>Duct 已知晓的<em>关于 Tag Manager 的信息</em></h2>
+</div>
+<ol class="ig-k">
+<li class="reveal" style="transition-delay:0.00s"><span class="ig-k-num">01</span><h3>未发布前，任何内容都不会生效。</h3><p>工作区中的编辑不会更改你的网站。Duct 在那里暂存其更改，并且发布（它会替换所有访问者的实时容器）始终等待你的操作。</p></li>
+<li class="reveal" style="transition-delay:0.06s"><span class="ig-k-num">02</span><h3>回滚目标优先读取。</h3><p>发布前，Duct 会记录当前生效的版本，因此回滚会重新发布原有的内容。</p></li>
+<li class="reveal" style="transition-delay:0.12s"><span class="ig-k-num">03</span><h3>触发的代码仍可能已损坏。</h3><p>代码可以在每个页面触发，但可能未发送任何有用数据。Duct 检查 GA4 或 Mixpanel 中收到的数据，而不是触发状态。</p></li>
+<li class="reveal" style="transition-delay:0.18s"><span class="ig-k-num">04</span><h3>重命名不遵循引用。</h3><p>通过 API 重命名变量会使所有代码仍指向旧名称。Duct 会在同一变更中修补代码，或者不重命名。</p></li>
+</ol>
+<p class="ig-k-src"><a href="https://github.com/5hirish/duct/blob/main/backend/agents/knowledge/gtm.md" rel="noopener">阅读 Duct 智能体所依据的 Tag Manager 笔记 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></a></p>
+</div>
+</section>
+
+<!-- PAIRS -->
+<section class="ig-sec" id="pairs">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">协同更好</p>
+<h2>Tag Manager <em>与合作伙伴</em>的响应</h2>
+</div>
+<div class="ig-pairs">
+<a class="ig-pair reveal" style="transition-delay:0.00s" href="/zh-cn/integrations/ga4"><span class="ig-pair-logos"><img src="/assets/icons/google-tag-manager.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/googleanalytics.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">哪个代码导致关键事件中断？</span><span class="ig-pair-go">Tag Manager + GA4 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.06s" href="/zh-cn/integrations/mixpanel"><span class="ig-pair-logos"><img src="/assets/icons/google-tag-manager.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/mixpanel.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">网站和应用，一个事件名称。</span><span class="ig-pair-go">Tag Manager + Mixpanel <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.12s" href="/zh-cn/integrations/microsoft-clarity"><span class="ig-pair-logos"><img src="/assets/icons/google-tag-manager.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/clarity.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">新标签是否破坏了页面？</span><span class="ig-pair-go">Tag Manager + Clarity <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+</div>
+</div>
+</section>
+
+<!-- SETUP -->
+<section class="ig-sec ig-setup" id="setup">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">设置</p>
+<h2>连接 Tag Manager <em>分三步</em></h2>
+</div>
+<ol class="ig-steps reveal">
+<li><span class="ig-step-n">1</span><p>在 Duct 中，打开工具箱并选择 Google Tag Manager。</p></li>
+<li><span class="ig-step-n">2</span><p>使用 Google 登录并允许访问以编辑和发布容器。</p></li>
+<li><span class="ig-step-n">3</span><p>选择此项目使用的容器。</p></li>
+</ol>
+<div class="ig-trust reveal">
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>Duct 在你登录时请求编辑和发布权限，因为修复代码需要这两项权限。编辑保留在工作区中，发布始终等待你的应用。</span></p>
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>密钥和令牌由 Duct 的托管 API 加密存储，绝不会存储在你的浏览器中，你可以随时移除连接。自托管版本会将它们保存在你自己的机器上。</span></p>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">常见问题</p>
+<h2>Tag Manager，<em>已回答</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">Duct 可以在 Tag Manager 中更改什么？</summary>
+<p class="faq-a">四种：创建/更新 GTM 代码（工作区）、创建/更新 GTM 变量（工作区）、发布 GTM 容器版本和重新发布旧的 GTM 版本。默认情况下，每项都等待你的应用，并且每项都可以回滚。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Duct 会自行发布到我的实时网站吗？</summary>
+<p class="faq-a">不。发布会替换所有访问者的实时容器，因此无论项目的自主性如何，它始终等待你的操作。工作区编辑可以在辅助模式下自行应用，并且在发布之前不会更改任何实时内容。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">回滚如何运作？</summary>
+<p class="faq-a">发布前，Duct 会记录当前生效的版本。回滚会重新发布该版本，并且活动日志会显示两者。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">免费吗？</summary>
+<p class="faq-a">是的。Duct 可免费使用你自己的模型密钥或你已有的 ChatGPT 套餐，核心部分采用 MIT 许可。付费套餐稍后会捆绑模型；目前开源的部分不会转为付费。<a href="/zh-cn/open-source#pricing">哪些会收费</a>。</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/zh-cn/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/zh-cn/partials/footer-expanded.html"><div class="legal-fallback"><a href="/zh-cn/">Duct</a><a href="/zh-cn/about">关于</a><a href="/zh-cn/privacy">隐私政策</a><a href="/zh-cn/terms">服务条款</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

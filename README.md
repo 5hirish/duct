@@ -4,6 +4,8 @@
 
 # Duct
 
+<p align="center"><b>English</b> · <a href="README.zh-CN.md">简体中文</a></p>
+
 **See the whole picture. Fix it in the same moment.**
 
 Duct is an open-source AI marketing agent for product and growth teams. It connects

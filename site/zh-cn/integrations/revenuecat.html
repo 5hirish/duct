@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>RevenueCat AI 分析师：应用收入与网页并列 | Duct</title>
+<link rel="canonical" href="https://getduct.ai/zh-cn/integrations/revenuecat"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/integrations/revenuecat"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/integrations/revenuecat"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/integrations/revenuecat"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/integrations/revenuecat"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/integrations/revenuecat"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/integrations/revenuecat"/>
+<link rel="alternate" hreflang="zh-CN" href="https://getduct.ai/zh-cn/integrations/revenuecat"/>
+<meta property="og:locale" content="zh_CN"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="Duct 读取 RevenueCat 的订阅、试用和 MRR，并结合 Stripe 和你的应用广告数据，使网页和应用收入显示为一个数字。只读，客户 ID 已哈希处理。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/zh-cn/integrations/revenuecat"/>
+<meta property="og:title" content="RevenueCat AI 分析师：应用收入与网页并列"/>
+<meta property="og:description" content="Stripe 查看网页。RevenueCat 查看 App Store 和 Google Play。Duct 读取两者，使 MRR 是一个数字，应用广告以此为准。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/integrations-revenuecat.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="RevenueCat AI 分析师：应用收入与网页并列"/>
+<meta name="twitter:description" content="网页 MRR 加上应用 MRR，读取为一个数字。然后对照它检查应用广告。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/integrations-revenuecat.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookie，坦白说","We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold.":"我们使用 PostHog 来了解哪些页面促成了注册，以及 Duct 在何处阻碍了你，包括隐藏你输入的所有内容的访问回放。拒绝会关闭 PostHog，Duct 仍能正常运行。Google Analytics 也会统计访问量并设置自己的 Cookie，无论你选择什么。我们不会出售任何数据。","Privacy Policy":"隐私政策","Decline":"拒绝","Accept":"接受","{n} stars on GitHub":"{n} GitHub 星","UTM Builder":"UTM 构建器","SaaS Metrics Benchmark Calculator":"SaaS 指标基准计算器","Weekly Marketing Brief Generator":"每周营销简报生成器","CAC / LTV Calculator":"CAC / LTV 计算器","MRR Growth Rate Calculator":"MRR 增长率计算器","Engagement Rate Calculator":"互动率计算器","CTR Calculator":"CTR 计算器","CPM Calculator":"CPM 计算器","CPC Calculator":"CPC 计算器","CPA Calculator":"CPA 计算器","Marketing ROI Calculator":"营销 ROI 计算器","ROAS Calculator":"ROAS 计算器","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Menu":"菜单","Free Tools":"免费工具","Solutions":"解决方案","Download Duct ↓":"下载 Duct ↓","Language":"语言","Enlarged screenshot":"放大后的截图","Close":"关闭","Fit to screen":"适应屏幕","Zoom in":"放大","Enlarge":"放大","Universal · Apple silicon and Intel":"通用 · Apple 芯片和 Intel","Windows 10 and later":"Windows 10 及更高版本","Runs on any distribution":"可在任何发行版上运行","Debian and Ubuntu":"Debian 和 Ubuntu","Download ↓":"下载 ↓","Download for {label} ↓":"下载适用于 {label} ↓","Example numbers. Change any field and calculate again for yours.":"示例数字。修改任意字段，重新计算你的结果。"};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"zh-CN","name":"RevenueCat AI 分析师：应用收入与网页并列","url":"https://getduct.ai/zh-cn/integrations/revenuecat","description":"Duct 读取 RevenueCat 的订阅、试用和 MRR，并结合 Stripe 和你的应用广告数据，使网页和应用收入显示为一个数字。只读，客户 ID 已哈希处理。","about":{"@type":"SoftwareApplication","name":"RevenueCat"},"isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"zh-CN","itemListElement":[{"@type":"ListItem","position":1,"name":"主页","item":"https://getduct.ai/zh-cn/"},{"@type":"ListItem","position":2,"name":"集成","item":"https://getduct.ai/zh-cn/integrations/"},{"@type":"ListItem","position":3,"name":"RevenueCat","item":"https://getduct.ai/zh-cn/integrations/revenuecat"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"zh-CN","mainEntity":[{"@type":"Question","name":"Duct 可以更改产品、优惠或订阅吗？","acceptedAnswer":{"@type":"Answer","text":"不。Duct 没有 RevenueCat 更改操作。它读取指标、配置和客户样本。"}},{"@type":"Question","name":"Duct 会保留哪些客户数据？","acceptedAnswer":{"@type":"Answer","text":"来自 500 名客户的样本：每位客户首次和最后一次出现的时间、国家和平台，以及他们的活跃权益，用户 ID 已哈希处理。"}},{"@type":"Question","name":"为什么是秘密密钥而不是我应用中的密钥？","acceptedAnswer":{"@type":"Answer","text":"你应用中的密钥是公共 SDK 密钥，它们无法读取 RevenueCat 的 REST API。具有读取范围的秘密 V2 密钥可以。"}},{"@type":"Question","name":"免费吗？","acceptedAnswer":{"@type":"Answer","text":"是的。Duct 可免费使用你自己的模型密钥或你已有的 ChatGPT 套餐，核心部分采用 MIT 许可。付费套餐稍后会捆绑模型；目前开源的部分不会转为付费。哪些会收费。"}}]}
+</script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">跳到内容</a>
+
+<!-- GENERATED by scripts/build_integrations.py from the backend and scripts/integrations/connectors.py.
+     Do not edit this file: edit those and run the script. -->
+<!-- EXPERIMENT: Per-tool integration searches run 10 to 50 a month (OpenSEO, Sep 2026). Hypothesis: a subscription app whose dashboards each show half the revenue converts on a page that adds the halves up. Measured by download clicks per visit. -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/zh-cn/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="ig-hero">
+<div class="ig-hero-text">
+<nav class="ig-crumbs" aria-label="面包屑"><a href="/zh-cn/integrations/">集成</a><span aria-hidden="true">/</span><span aria-current="page">RevenueCat</span></nav>
+<div class="ig-lockup" aria-hidden="true"><img src="/assets/icons/revenuecat.svg" width="40" height="40" alt=""/><span class="ig-plus">+</span><span class="logo">duct <span class="logo-mark"></span></span></div>
+<h1>RevenueCat，<em>应用收入的一半。</em></h1>
+<p class="hero-sub">Stripe 查看网页。RevenueCat 查看 App Store 和 Google Play。Duct 读取两者，使 MRR 是一个数字，并对照应用广告安装量检查它们转化成的订阅量。</p>
+<div class="ig-cta">
+<a class="btn btn-orange btn-lg" href="/zh-cn/download" data-duct-download>下载 Duct ↓</a>
+<a class="btn btn-ghost btn-lg" href="/zh-cn/integrations/">所有集成</a>
+</div>
+<ul class="ig-facts" aria-label="一览"><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>秘密密钥 (V2)</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg><span>读取三个数据集</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>只读</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>检查于 2026 年 9 月 29 日</span></li></ul>
+
+</div>
+<figure class="ig-mock reveal">
+<div class="ig-mock-panel" aria-hidden="true">
+<div class="ig-sources"><img src="/assets/icons/revenuecat.svg" width="34" height="34" alt=""/><img src="/assets/icons/stripe.svg" width="34" height="34" alt=""/><img src="/assets/icons/apple-search-ads.svg" width="34" height="34" alt=""/></div>
+<svg class="ig-flow" viewBox="0 0 170 30" width="170" height="30" aria-hidden="true"><g class="ig-flow-bed"><path pathLength="1" d="M15 0C15 16 85 14 85 30"/><path pathLength="1" d="M85 0V30"/><path pathLength="1" d="M155 0C155 16 85 14 85 30"/></g><g class="ig-flow-water"><path d="M15 0C15 16 85 14 85 30"/><path d="M85 0V30"/><path d="M155 0C155 16 85 14 85 30"/></g></svg>
+<div class="ig-answer"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg><span>应用在 Stripe 的 €18,400 之外赚取 €6,900 MRR。Android 的支付率是 iOS 的一半。</span></div>
+</div>
+<figcaption>一个示例答案。你的数据将从你自己的账户中读取。</figcaption>
+</figure>
+</section>
+
+<!-- SESSION: shot by scripts/shots/shoot.mjs from the story's CONNECTOR_SESSIONS -->
+<section class="shot ig-shot">
+<figure class="shot-frame reveal">
+<img src="/assets/media/session-revenuecat.webp" srcset="/assets/media/session-revenuecat-768.webp 768w, /assets/media/session-revenuecat-1536.webp 1536w, /assets/media/session-revenuecat.webp 3072w" sizes="(max-width: 860px) calc(100vw - 48px), 1536px" loading="lazy" decoding="async" width="3072" height="2052" alt="一次 Duct 会话：询问应用相对于网页的收入时，Duct 读取 RevenueCat 指标和 Stripe 旁边的哈希客户样本，并将应用 MRR 添加到网页 MRR"/>
+<figcaption>询问应用收入。Duct 将 RevenueCat 的应用 MRR 添加到 Stripe 的网页 MRR，并显示哪个平台支付。</figcaption>
+</figure>
+</section>
+
+<div class="channel" aria-hidden="true"></div>
+
+<!-- ASK -->
+<section class="ig-sec" id="ask">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">提问</p>
+<h2>你可以<em>直接提问</em>的问题</h2>
+</div>
+<ul class="ig-qs">
+<li class="ig-q reveal" style="transition-delay:0.00s"><p>我们的网页和应用合计 MRR 是多少？</p><span class="ig-q-joins"><img src="/assets/icons/revenuecat.svg" width="18" height="18" alt=""/><img src="/assets/icons/stripe.svg" width="18" height="18" alt=""/><span>RevenueCat + Stripe</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.06s"><p>Apple Search Ads 安装是否启动了试用？</p><span class="ig-q-joins"><img src="/assets/icons/revenuecat.svg" width="18" height="18" alt=""/><img src="/assets/icons/apple-search-ads.svg" width="18" height="18" alt=""/><span>RevenueCat + Apple Search Ads</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.12s"><p>Android 用户是否像 iOS 用户一样付费？</p><span class="ig-q-joins"><img src="/assets/icons/revenuecat.svg" width="18" height="18" alt=""/><span>RevenueCat</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.18s"><p>当前有多少试用活跃？</p><span class="ig-q-joins"><img src="/assets/icons/revenuecat.svg" width="18" height="18" alt=""/><span>RevenueCat</span></span></li>
+</ul>
+</div>
+</section>
+
+<!-- ACCESS: generated from the catalogue and the executor registry -->
+<section class="ig-sec ig-access" id="access">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">访问</p>
+<h2>它读取的内容。<em>它能更改的内容。</em></h2>
+</div>
+<div class="ig-cols reveal">
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg>它读取什么</h3>
+<ul class="ig-reads">
+<li><b>概览指标</b><span class="ig-fields"><span>活跃试用</span><span>活跃订阅</span><span>MRR</span><span>收入</span><span>新客户</span><span>活跃用户</span></span></li>
+<li><b>应用、产品、权益和优惠</b><span class="ig-fields"><span>名称</span><span>商店</span><span>标识符</span></span></li>
+<li><b>客户，500 个样本</b><span class="ig-fields"><span>首次出现</span><span>最后出现</span><span>国家/地区</span><span>平台</span><span>活跃权益</span></span></li>
+</ul>
+<p class="ig-note">RevenueCat API v2 · 对照抓取代码检查 2026 年 9 月 29 日 · <a href="https://github.com/5hirish/duct/blob/main/backend/service/revenuecat/fetch.py" rel="noopener">阅读源代码</a></p>
+</div>
+<div class="ig-col ig-readonly">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>它可以更改什么</h3>
+<p class="ig-readonly-big">无。</p>
+<p>Duct 没有 RevenueCat 变更操作，因此无法在 RevenueCat 中编辑任何内容。它仍然可以推荐你进行更改。</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- KNOWS: the knowledge pack, in plain words -->
+<section class="ig-sec ig-knows" id="knows">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">知识</p>
+<h2>Duct 已知的信息 <em>关于 RevenueCat</em></h2>
+</div>
+<ol class="ig-k">
+<li class="reveal" style="transition-delay:0.00s"><span class="ig-k-num">01</span><h3>RevenueCat 是应用收入的真相。</h3><p>安装和应用内事件是信号。RevenueCat 会看到退款、账单重试和取消，因此 Duct 会对照它检查应用广告转化，从不反向操作。</p></li>
+<li class="reveal" style="transition-delay:0.06s"><span class="ig-k-num">02</span><h3>SDK 密钥无法读取 API。</h3><p>以 appl_ 或 goog_ 开头的密钥用于应用。读取需要秘密 V2 密钥，如果你粘贴了错误的类型，Duct 会告诉你。</p></li>
+<li class="reveal" style="transition-delay:0.12s"><span class="ig-k-num">03</span><h3>客户 ID 已哈希。</h3><p>Duct 保留每个应用用户 ID 的 SHA-256：足以将一次拉取连接到下一次，但无法用于识别个人。</p></li>
+<li class="reveal" style="transition-delay:0.18s"><span class="ig-k-num">04</span><h3>指标受到严格的速率限制。</h3><p>RevenueCat 的指标 API 每分钟允许 25 次请求。Duct 会控制读取速度，而不是通过失败来触及限制。</p></li>
+</ol>
+<p class="ig-k-src"><a href="https://github.com/5hirish/duct/blob/main/backend/agents/knowledge/revenuecat.md" rel="noopener">阅读 Duct 智能体的工作依据的 RevenueCat 笔记 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></a></p>
+</div>
+</section>
+
+<!-- PAIRS -->
+<section class="ig-sec" id="pairs">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">协同更好</p>
+<h2>RevenueCat 的回答 <em>与合作伙伴</em></h2>
+</div>
+<div class="ig-pairs">
+<a class="ig-pair reveal" style="transition-delay:0.00s" href="/zh-cn/integrations/stripe"><span class="ig-pair-logos"><img src="/assets/icons/revenuecat.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/stripe.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">网页和应用收入，作为一个数字读取。</span><span class="ig-pair-go">RevenueCat + Stripe <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.06s" href="/zh-cn/integrations/apple-search-ads"><span class="ig-pair-logos"><img src="/assets/icons/revenuecat.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/apple-search-ads.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">安装量入，订阅者出。</span><span class="ig-pair-go">RevenueCat + Apple Search Ads <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.12s" href="/zh-cn/integrations/mixpanel"><span class="ig-pair-logos"><img src="/assets/icons/revenuecat.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/mixpanel.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">升级已计数，升级已支付。</span><span class="ig-pair-go">RevenueCat + Mixpanel <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+</div>
+</div>
+</section>
+
+<!-- SETUP -->
+<section class="ig-sec ig-setup" id="setup">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">设置</p>
+<h2>连接 RevenueCat <em>分三步</em></h2>
+</div>
+<ol class="ig-steps reveal">
+<li><span class="ig-step-n">1</span><p>在 RevenueCat 中，打开项目设置，然后选择 API 密钥，并创建秘密 API 密钥 (V2)。</p></li>
+<li><span class="ig-step-n">2</span><p>授予它读取项目配置、客户信息和图表指标的权限。</p></li>
+<li><span class="ig-step-n">3</span><p>在 Duct 中，打开工具箱，选择 RevenueCat 并粘贴密钥。</p></li>
+</ol>
+<div class="ig-trust reveal">
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>只读：具有读取范围的密钥无法更改产品或订阅，Duct 没有 RevenueCat 更改操作。</span></p>
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>密钥和令牌由 Duct 的托管 API 加密存储，绝不会存储在你的浏览器中，你可以随时移除连接。自托管版本会将它们保存在你自己的机器上。</span></p>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">常见问题</p>
+<h2>RevenueCat，<em>已回答</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">Duct 可以更改产品、优惠或订阅吗？</summary>
+<p class="faq-a">不。Duct 没有 RevenueCat 更改操作。它读取指标、配置和客户样本。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Duct 会保留哪些客户数据？</summary>
+<p class="faq-a">来自 500 名客户的样本：每位客户首次和最后一次出现的时间、国家和平台，以及他们的活跃权益，用户 ID 已哈希处理。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">为什么是秘密密钥而不是我应用中的密钥？</summary>
+<p class="faq-a">你应用中的密钥是公共 SDK 密钥，它们无法读取 RevenueCat 的 REST API。具有读取范围的秘密 V2 密钥可以。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">免费吗？</summary>
+<p class="faq-a">是的。Duct 可免费使用你自己的模型密钥或你已有的 ChatGPT 套餐，核心部分采用 MIT 许可。付费套餐稍后会捆绑模型；目前开源的部分不会转为付费。<a href="/zh-cn/open-source#pricing">哪些会收费</a>。</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/zh-cn/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/zh-cn/partials/footer-expanded.html"><div class="legal-fallback"><a href="/zh-cn/">Duct</a><a href="/zh-cn/about">关于</a><a href="/zh-cn/privacy">隐私政策</a><a href="/zh-cn/terms">服务条款</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

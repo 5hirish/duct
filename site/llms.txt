@@ -37,13 +37,14 @@ Duct is built and maintained by Shirish Kadam in Spain. It answers questions a s
 
 ## Languages
 
-Every page below, the free tools included, exists in five languages at the same path under a language prefix. The English page is the source; the others are generated from it and carry hreflang and their own canonical.
+Every page below, the free tools included, exists in six languages at the same path under a language prefix. The English page is the source; the others are generated from it and carry hreflang and their own canonical.
 
 - [English](https://getduct.ai/): the default, and what `x-default` points to.
 - [Español](https://getduct.ai/es/): https://getduct.ai/es/<page>
 - [Português (Brasil)](https://getduct.ai/pt-br/): https://getduct.ai/pt-br/<page>
 - [Deutsch](https://getduct.ai/de/): https://getduct.ai/de/<page>
 - [日本語](https://getduct.ai/ja/): https://getduct.ai/ja/<page>
+- [简体中文](https://getduct.ai/zh-cn/): https://getduct.ai/zh-cn/<page>
 
 The blog and the changelog are English only.
 

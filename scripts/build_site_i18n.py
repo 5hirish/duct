@@ -56,7 +56,7 @@ BASE_URL = "https://getduct.ai"
 #: URL prefix → language tag. The prefix is lowercase because URLs are; the
 #: tag is what `lang` and `hreflang` carry. Adding a language is one line here
 #: and a fill run.
-LOCALES: dict[str, str] = {"es": "es", "pt-br": "pt-BR", "de": "de", "ja": "ja"}
+LOCALES: dict[str, str] = {"es": "es", "pt-br": "pt-BR", "de": "de", "ja": "ja", "zh-cn": "zh-CN"}
 
 #: What gets translated. Blog and changelog are deliberately out: the blog is
 #: long-form content whose translation is a content decision, and the
@@ -93,7 +93,7 @@ LD_URL_KEYS = {"url", "mainEntityOfPage", "@id", "item"}
 LD_ENTITY_TYPES = {"Person", "Organization", "ContactPoint", "Brand"}
 #: What `og:locale` carries for each language tag. Facebook and LinkedIn key
 #: on this, not on `<html lang>`.
-OG_LOCALES = {"en": "en_US", "es": "es_ES", "pt-BR": "pt_BR", "de": "de_DE", "ja": "ja_JP"}
+OG_LOCALES = {"en": "en_US", "es": "es_ES", "pt-BR": "pt_BR", "de": "de_DE", "ja": "ja_JP", "zh-CN": "zh_CN"}
 
 #: Attribute value that is a name, a number or a symbol, not copy.
 NAMES = {
@@ -106,8 +106,8 @@ NAMES = {
     "Microsoft Clarity", "Clarity", "GrowthBook", "RevenueCat", "HubSpot",
     # A language's own name is never translated: someone who landed in the
     # wrong language has to be able to find theirs in the list.
-    "English", "Español", "Português", "Português (Brasil)", "Deutsch", "日本語", "Language",
-    "EN", "ES", "PT", "DE", "JA",
+    "English", "Español", "Português", "Português (Brasil)", "Deutsch", "日本語", "简体中文", "Language",
+    "EN", "ES", "PT", "DE", "JA", "ZH",
 }
 LETTERS = re.compile(r"\p{L}" if False else r"[^\W\d_]{2,}")
 HREFLANG_START = "<!-- hreflang:start -->"
@@ -712,7 +712,7 @@ def with_js_dictionary(text: str, strings: dict[str, str]) -> str:
 
 
 #: The two-letter code the language menu's button shows, per path prefix.
-LANG_CODES = {"es": "ES", "pt-br": "PT", "de": "DE", "ja": "JA"}
+LANG_CODES = {"es": "ES", "pt-br": "PT", "de": "DE", "ja": "JA", "zh-cn": "ZH"}
 
 
 def select_current(text: str, prefix: str) -> str:

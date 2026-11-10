@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>隐私政策——Duct</title>
+<meta name="description" content="Duct 的隐私政策：我们访问的 Google 用户数据及其原因，我们如何处理来自每个连接工具的数据，我们与谁共享数据，以及如何删除数据。"/>
+<meta name="robots" content="index, follow"/>
+<link rel="canonical" href="https://getduct.ai/zh-cn/privacy"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/privacy"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/privacy"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/privacy"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/privacy"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/privacy"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/privacy"/>
+<link rel="alternate" hreflang="zh-CN" href="https://getduct.ai/zh-cn/privacy"/>
+<meta property="og:locale" content="zh_CN"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/zh-cn/privacy"/>
+<meta property="og:title" content="隐私政策——Duct"/>
+<meta property="og:description" content="了解 Duct 如何收集、使用和保护你的数据。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/privacy.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="隐私政策——Duct"/>
+<meta name="twitter:description" content="了解 Duct 如何收集、使用和保护你的数据。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/privacy.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookie，坦白说","We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold.":"我们使用 PostHog 来了解哪些页面促成了注册，以及 Duct 在何处阻碍了你，包括隐藏你输入的所有内容的访问回放。拒绝会关闭 PostHog，Duct 仍能正常运行。Google Analytics 也会统计访问量并设置自己的 Cookie，无论你选择什么。我们不会出售任何数据。","Privacy Policy":"隐私政策","Decline":"拒绝","Accept":"接受","{n} stars on GitHub":"{n} GitHub 星","UTM Builder":"UTM 构建器","SaaS Metrics Benchmark Calculator":"SaaS 指标基准计算器","Weekly Marketing Brief Generator":"每周营销简报生成器","CAC / LTV Calculator":"CAC / LTV 计算器","MRR Growth Rate Calculator":"MRR 增长率计算器","Engagement Rate Calculator":"互动率计算器","CTR Calculator":"CTR 计算器","CPM Calculator":"CPM 计算器","CPC Calculator":"CPC 计算器","CPA Calculator":"CPA 计算器","Marketing ROI Calculator":"营销 ROI 计算器","ROAS Calculator":"ROAS 计算器","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Menu":"菜单","Free Tools":"免费工具","Solutions":"解决方案","Download Duct ↓":"下载 Duct ↓","Language":"语言","Enlarged screenshot":"放大后的截图","Close":"关闭","Fit to screen":"适应屏幕","Zoom in":"放大","Enlarge":"放大","Universal · Apple silicon and Intel":"通用 · Apple 芯片和 Intel","Windows 10 and later":"Windows 10 及更高版本","Runs on any distribution":"可在任何发行版上运行","Debian and Ubuntu":"Debian 和 Ubuntu","Download ↓":"下载 ↓","Download for {label} ↓":"下载适用于 {label} ↓","Example numbers. Change any field and calculate again for yours.":"示例数字。修改任意字段，重新计算你的结果。"};</script>
+<script src="/assets/config.js" defer></script>
+<style>
+.legal-page { max-width: 780px; margin: 0 auto; padding: 80px 24px 100px; }
+/* German's one-word "Datenschutzrichtlinie" is wider than a phone at 36px, and
+   one word has nowhere to wrap, so the whole page scrolled sideways. The scale
+   fits it on one line down to 320px; a long h2 hyphenates. */
+.legal-page h1 { font-family: var(--serif); font-size: clamp(22px, 7.2vw, 36px); font-weight: 700; margin-bottom: 8px; letter-spacing: -.5px; }
+.legal-page h1, .legal-page h2 { overflow-wrap: break-word; -webkit-hyphens: auto; hyphens: auto; }
+.legal-date { font-size: 13px; color: var(--navy-3); margin-bottom: 48px; }
+.legal-page h2 { font-family: var(--serif); font-size: 22px; font-weight: 700; margin: 40px 0 16px; letter-spacing: -.2px; }
+.legal-page h3 { font-size: 16px; font-weight: 600; margin: 28px 0 10px; }
+.legal-page p, .legal-page li { font-size: 15px; font-weight: 300; line-height: 1.75; color: var(--navy-2); }
+.legal-page ul { padding-left: 20px; margin: 12px 0; }
+.legal-page li { margin-bottom: 6px; }
+.legal-page a { color: var(--orange); text-decoration: underline; text-underline-offset: 2px; }
+.legal-page a:hover { color: var(--orange-h); }
+.legal-table-wrap { overflow-x: auto; margin: 16px 0 8px; }
+.legal-page table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 14px; }
+.legal-page th, .legal-page td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line, #e6e6ea); }
+.legal-page th { font-weight: 600; font-size: 13px; letter-spacing: .02em; text-transform: uppercase; color: var(--navy-3); }
+.legal-page td code { font-size: 12.5px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; }
+.legal-callout { border-left: 3px solid var(--orange); background: rgba(255,92,0,.04); padding: 16px 20px; margin: 20px 0; border-radius: 0 6px 6px 0; }
+.legal-callout p { margin: 0; }
+</style>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "inLanguage": "zh-CN",
+  "name": "隐私政策",
+  "url": "https://getduct.ai/zh-cn/privacy",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Alleviate Lab",
+    "url": "https://getduct.ai"
+  }
+}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"zh-CN","itemListElement":[{"@type":"ListItem","position":1,"name":"主页","item":"https://getduct.ai/zh-cn/"},{"@type":"ListItem","position":2,"name":"隐私政策","item":"https://getduct.ai/zh-cn/privacy"}]}
+</script>
+</head>
+<body>
+
+<!-- NAV (shared: site/partials/nav-simple.html) -->
+<div data-duct-partial="/zh-cn/partials/nav-simple.html"></div>
+
+<main>
+<article class="legal-page">
+
+<h1>隐私政策</h1>
+<p class="legal-date">最后更新：2026 年 11 月 5 日</p>
+
+<p>Alleviate Lab（“我们”）运营 Duct（<a href="https://getduct.ai">getduct.ai</a>），这是一个跨工具智能平台，它连接你的广告、分析、产品和搜索工具，综合分析它们之间的变化，并且——仅在你批准特定变更时——将该变更应用回已连接的工具。本隐私政策解释了我们收集什么、为什么收集、与谁共享、保留多久以及如何删除。</p>
+
+<h2>1. 我们访问的 Google 用户数据</h2>
+
+<p>Duct 仅通过官方 Google API 访问 Google 用户数据，并且仅限于你明确连接的 Google 账户和属性。在你完成 Google 的同意界面之前，不会访问任何内容，下方每个范围都用于其旁所述目的。</p>
+
+<h3>登录</h3>
+<div class="legal-table-wrap">
+<table>
+<thead><tr><th>范围</th><th>访问内容</th><th>Duct 为何需要它</th></tr></thead>
+<tbody>
+<tr><td><code>openid</code></td><td>稳定的 Google 账户标识符</td><td>跨会话识别你的账户</td></tr>
+<tr><td><code>userinfo.email</code></td><td>你的电子邮件地址</td><td>识别你的账户、发送报告通知并匹配项目邀请</td></tr>
+<tr><td><code>userinfo.profile</code></td><td>你的姓名和头像</td><td>显示谁已登录以及谁在共享项目中执行了操作</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>已连接的数据源</h3>
+<p>下面的每个连接器都是可选的，并单独连接。你可以选择不连接、连接部分或全部连接器，并随时断开任何连接。</p>
+<div class="legal-table-wrap">
+<table>
+<thead><tr><th>范围</th><th>访问内容</th><th>Duct 为何需要它</th></tr></thead>
+<tbody>
+<tr><td><code>adwords</code></td><td>Google Ads 广告系列、广告组、搜索词和效果指标（点击、展示、费用、转化、ROAS），以及设备和地理细分</td><td>报告付费表现，以及在你批准的情况下，添加否定关键词或暂停广告系列</td></tr>
+<tr><td><code>analytics.readonly</code></td><td>Google Analytics 4 报告数据和媒体资源配置</td><td>报告流量、转化和留存，与你的其他工具一起</td></tr>
+<tr><td><code>analytics.edit</code></td><td>Google Analytics 4 管理设置</td><td>应用已批准的配置变更，例如将事件标记为关键事件</td></tr>
+<tr><td><code>webmasters.readonly</code></td><td>Google Search Console 查询、页面、展示、点击和排名</td><td>报告自然搜索表现并显示排名变化</td></tr>
+<tr><td><code>tagmanager.readonly</code></td><td>Google Tag Manager 账户、容器、代码和触发器</td><td>审计你的衡量设置并检测损坏或缺失的跟踪</td></tr>
+<tr><td><code>tagmanager.edit.containers</code></td><td>Google Tag Manager 容器内容</td><td>准备已批准的跟踪修复作为容器变更</td></tr>
+<tr><td><code>tagmanager.publish</code></td><td>Google Tag Manager 容器版本</td><td>在你批准后发布容器版本</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>2. Duct 代表你进行的变更</h2>
+
+<p>上述某些范围允许写入。我们希望对此进行精确说明，因为这是 Duct 触及你实时账户的部分：</p>
+<ul>
+<li><strong>不会自动写入任何内容。</strong>Duct 会提出一个变更集，向你展示每个单独变更的确切前后对比，并且在你明确在应用中批准之前，不会应用任何内容。</li>
+<li><strong>批准是针对每个变更集，而非一揽子。</strong> 批准一项变更不授权未来的变更。</li>
+<li><strong>变更会被记录，并且在底层 API 允许的情况下可逆。</strong> 每项已应用的变更都会写入你的项目审计日志。</li>
+<li><strong>报告功能无需写入权限即可工作。</strong>如果你偏好只读，请连接只读范围并拒绝其余权限；Duct 的报告仍然可以运行。</li>
+</ul>
+
+<h2>3. 我们如何使用 Google 用户数据</h2>
+<ul>
+<li><strong>身份验证：</strong> 用于验证你的身份并保持你的会话</li>
+<li><strong>报告和洞察：</strong>从你连接的资产中获取数据，并生成你请求的简报、警报和审计</li>
+<li><strong>已批准的变更：</strong> 将你批准的特定变更应用到你选择的已连接账户</li>
+<li><strong>支持：</strong>诊断你向我们报告的问题，使用所需的最少数据</li>
+</ul>
+<p>我们仅使用 Google 用户数据来提供和改进这些面向用户的功能。我们不将其用于任何其他目的。</p>
+
+<h2>4. Google 用户数据的有限使用</h2>
+
+<div class="legal-callout">
+<p>Duct 使用和传输从 Google API 接收的信息到任何其他应用时，将遵守 <a href="https://developers.google.com/terms/api-services-user-data-policy" rel="noopener">Google API 服务用户数据政策</a>，包括有限使用要求。</p>
+</div>
+
+<p>具体来说，我们<strong>不</strong>会：</p>
+<ul>
+<li>使用或传输 Google 用户数据用于投放任何类型的广告，包括定向、个性化、重定向或基于兴趣的广告</li>
+<li>出售、出租或转让 Google 用户数据给数据经纪人、信息转售商或任何第三方用于其自身目的</li>
+<li>使用 Google 用户数据来评估信用度或用于贷款目的</li>
+<li>使用 Google 用户数据来构建或丰富独立的数据库或用户画像</li>
+<li>使用 Google 用户数据开发、改进或训练通用或非个性化 AI 或机器学习模型</li>
+<li>允许人类读取 Google 用户数据，除非你已就特定问题明确同意，或出于安全目的或遵守适用法律的需要，或数据已聚合和匿名化。</li>
+</ul>
+<p>网络应用中的会话回放和点击分析从不记录 Google 用户数据：屏幕上的所有文本在发送之前都会在你的浏览器中被遮盖（第 11 节）。</p>
+
+<h2>5. 你连接的其他数据源</h2>
+
+<p>Google 是 Duct 可以连接的多个来源之一。每个来源都是可选的，由你单独连接，并通过你授权的凭据访问提供商的官方 API。Duct 读取构建报告所需的指标，并且只写入你明确批准的变更。</p>
+<ul>
+<li><strong>广告：</strong> Meta Ads、Apple Search Ads、OpenAI Ads</li>
+<li><strong>产品和行为分析：</strong>Mixpanel, Microsoft Clarity</li>
+<li><strong>实验：</strong>GrowthBook</li>
+<li><strong>收入和账单：</strong>Stripe, RevenueCat</li>
+<li><strong>CRM：</strong> HubSpot</li>
+<li><strong>社交发布和分析：</strong>PostBridge，它会连接你授权的社交账户（TikTok、Instagram、YouTube、LinkedIn、X、Pinterest、Facebook、Google Business Profile）</li>
+</ul>
+<p>本政策中的承诺——不销售你的数据、不用于广告、不用于模型训练、按请求删除——适用于来自这些来源的数据，与适用于 Google 用户数据的方式完全相同。</p>
+
+<h2>6. Content Studio：上传和发布</h2>
+
+<p>如果你使用 Duct 的内容功能：</p>
+<ul>
+<li><strong>你上传的文件</strong>（图片、视频、品牌资产）会被存储，以便可以附加到草稿和已发布的帖子中。</li>
+<li><strong>生成的媒体。</strong>在 Duct 中创建的图片和视频由第三方生成式 AI 服务生成，这些服务会接收你提供的提示和任何参考图片。</li>
+<li><strong>发布。</strong>当你安排或发布帖子时，其内容和媒体会传输到 PostBridge，并进一步传输到你选择的社交平台，遵循该平台自己的条款和隐私政策。</li>
+<li><strong>公开研究数据。</strong>Duct 可以从社交平台检索公开可用的内容和指标，以提供建议。这是公开数据，而不是关于你或你的受众的个人数据。</li>
+</ul>
+<p>请勿上传你无权使用的材料，或包含他人个人数据超出你的帖子所需的文件。</p>
+
+<h2>7. Duct 桌面应用</h2>
+
+<p>桌面应用是一个原生窗口，围绕着你在浏览器中使用的同一个 Duct。有必要精确说明这意味着什么，因为“桌面应用”听起来像是“所有东西都留在这里”，但这并非我们所交付的：</p>
+<ul>
+<li><strong>我们分发的应用与我们的服务器通信。</strong>它不包含 Duct 后端自身的副本。你的项目、简报、智能体记忆、活动日志、上传内容和连接器授权都由我们存储，与你在浏览器中使用 Duct 时完全相同——这也是为什么你可以在第二台电脑上登录并找到你的工作。第 12 至 14 节涵盖我们如何存储、共享和删除它。</li>
+<li><strong>你的 AI 提供商密钥保留在你的机器上。</strong> 它们存储在你的操作系统密钥链中，仅在任务需要运行时才随请求发送。我们从不存储它们，浏览器版本提供的保存密钥选项在桌面应用中已特意关闭。</li>
+<li><strong>登录和连接器授权会打开你的系统浏览器</strong>而不是嵌入式窗口，这样你可以保留浏览器自身的保护，并且返回应用的链接中绝不会携带任何凭据。</li>
+<li><strong>桌面应用从不询问你的 Cookie。</strong> 它的使用事件和崩溃报告会发送到 PostHog，在桌面应用中，PostHog 将所有内容保存在内存中，不会写入你的机器，因此 PostHog 的 Cookie 不存在。在你刚打开的应用前出现同意栏，不值得为此打断任何人。应用的窗口确实会加载我们的网页应用，所以 Google Analytics 也会在那里运行，设置第 11 节中列出的 Google Cookie，并且不受下方开关的影响。</li>
+<li><strong>在我们分发的应用中，崩溃报告和使用数据默认开启，偏好设置中的一个开关可以关闭两者。</strong> 一旦你更改了设置，你的选择将被保留，默认设置将不再适用。崩溃报告包含导致错误的错误信息和堆栈跟踪；使用数据是你打开的屏幕和功能——绝不包含你的提供商 API 密钥、你的数据或你生成的任何内容。如果你已登录，两者都包含你的账户 ID。如果你自行构建 Duct，两者默认关闭，因为在这种情况下并非由我们运行。</li>
+<li><strong>桌面应用从不记录你的会话回放。</strong> 会话回放（第 11 节）仅存在于我们的网站和浏览器中的网页应用中。</li>
+<li><strong>更新检查</strong> 会联系我们的发布主机，询问是否存在新版本。此请求会透露你的 IP 地址和你正在运行的版本。</li>
+<li><strong>你可以选择自行运行整个系统。</strong> 源代码是公开的，可以在应用内部构建后端，或托管在你自己的服务器上。这样我们不保留任何数据，此政策也无需描述任何内容——请参阅第 16 节。</li>
+</ul>
+
+<h2>8. 自带 AI 提供商密钥</h2>
+
+<p>你可以提供你自己的 AI 提供商 API 密钥，而不是使用 Duct 的：</p>
+<ul>
+<li><strong>在桌面应用中，</strong>密钥存储在你的操作系统的钥匙串中。它们随请求发送，以便你请求的任务可以运行，我们从不存储它们；在那里，与我们一起保存密钥的选项是关闭的。</li>
+<li><strong>在网页应用中，</strong>你粘贴的密钥会保留在该浏览器会话中，并随每个请求发送。如果你选择保存它，以便不必再次粘贴，它会在静态时加密，仅在代表你发出请求时解密，绝不会由我们的 API 返回，也绝不会写入日志。你可以随时删除它。</li>
+<li>当你使用自己的密钥时，你的使用量将由该提供商在你的账户下计费，并受该提供商的条款和隐私政策约束。</li>
+<li><strong>提供商的数据设置由你配置。</strong> 提供商是否保留或训练其接收的数据，由你与该提供商账户的政策决定，而非我们——请参阅第 12 节中关于路由的说明。</li>
+</ul>
+
+<h2>9. 网站审计和潜在客户报告</h2>
+
+<p>我们的公共 SEO 审计工具会收集你提交的电子邮件地址和网站 URL，从该网站检索页面进行分析，并通过电子邮件向你发送结果报告。我们存储提交内容和报告，以便我们可以重新发送并就 Duct 与你联系。只提交你拥有或被授权审计的网站。请通过 <a href="mailto:hello@getduct.ai">hello@getduct.ai</a> 联系我们删除提交内容。</p>
+
+<h2>10. 团队项目</h2>
+
+<p>Duct 项目可以共享。如果你邀请某人，我们会向你提供的电子邮件地址发送邀请。项目成员可以看到该项目连接的来源、报告、洞察和活动历史记录，以及其他成员的姓名、电子邮件和头像。任何具有适当角色的人还可以查看和批准针对已连接账户提出的变更集。只邀请你打算授予访问权限的人。</p>
+
+<h2>11. 我们收集的其他信息</h2>
+
+<h3>使用数据</h3>
+<p>我们收集产品分析数据——访问的页面、使用的功能、你的点击、页面加载速度——以了解哪些页面促成注册以及 Duct 在何处阻碍了你。在我们的网站和浏览器中的网络应用中，这通过 PostHog 运行，并遵循下方描述的 Cookie 选择。</p>
+<p>我们还使用通过 Google Tag Manager 加载的 Google Analytics 来统计访问量并查看其来源。它在我们的网站、网页应用和桌面应用的窗口中运行。<strong>它不遵循下述 Cookie 选择：</strong>它会在每个页面加载，在您回答之前和拒绝之后。Google 会收到页面的完整地址、您的来源、您的浏览器和设备、您的 IP 地址（用于估算您的位置）以及来自下方列出的 Cookie 的标识符。这些标签还会将访问数据发送到 Google 的广告服务，包括用于构建广告受众的服务。我们目前没有运行 Google Ads。如果您不希望这样，Google 提供了一个<a href="https://tools.google.com/dlpage/gaoptout" rel="noopener">浏览器插件，可让您选择退出 Google Analytics</a>。</p>
+<p>PostHog 还会记录会话回放：对页面和你点击位置的重构，以便我们查看访问出了什么问题。回放隐藏的内容在你的浏览器中，在任何数据离开浏览器之前就已经隐藏了：</p>
+<ul>
+<li><strong>在我们的网站上，</strong>你输入到字段中的所有内容。</li>
+<li><strong>在网页应用中，</strong>你输入的所有内容，以及屏幕上的所有文本、图片、嵌入文档、图表和视频。应用的重放会显示布局、你的点击和访问路径，但从不显示页面上的数据。当 PostHog 统计应用中的点击时，它会记录点击了哪个元素，而不是元素上的文本。</li>
+</ul>
+<p>回放从不包含你的浏览器控制台日志。我们不记录按键或表单内容。</p>
+<p>当你登录时，我们的服务器也会记录你在 Duct 中执行的操作，例如启动内容计划、批准或应用变更，并关联你的账户 ID。你的 PostHog 个人资料会保存你的电子邮件地址和姓名，以便我们可以在你遇到问题时联系你。</p>
+
+<h3>AI 模型调用</h3>
+<p>对于 Duct 对 AI 模型进行的每次调用，我们只记录元数据：模型、token 数量、耗时、成本以及任何错误。绝不记录提示或响应文本。</p>
+
+<h3>Cookie 和类似技术</h3>
+
+<p>我们请求的选择涵盖 PostHog 的分析 Cookie。如果你在 EEA、英国或瑞士，我们会在 PostHog 设置任何内容之前征求你的同意。在其他地区，它默认开启，你可以随时关闭：我们页脚中的 <strong>Cookie 设置</strong> 链接，以及应用内的账户菜单，会在每个页面重新打开选择。</p>
+
+<p><strong>Google Analytics 不属于该选择范围。</strong>无论你身在何处、做出何种选择，其下方的 cookie 都会在页面加载时设置。</p>
+
+<p>拒绝意味着 PostHog 完全不加载，而非以受限模式加载。如果你在之前接受后选择拒绝，我们将停止 PostHog，删除其 Cookie 及其在浏览器存储中的副本，并重新加载页面。Google Analytics 无论如何都会继续运行。</p>
+
+<div class="legal-table-wrap">
+<table>
+<thead><tr><th>Cookie</th><th>设置者</th><th>目的</th><th>过期时间</th></tr></thead>
+<tbody>
+<tr><td><code>ph_phc_…_posthog</code></td><td>PostHog</td><td>区分不同访客，并在 <code>getduct.ai</code> 和 <code>app.getduct.ai</code> 之间保持相同的访问，因此计为一个人，而非两个人。PostHog 可能会在你的浏览器本地存储中保留相同的值</td><td>1 年</td></tr>
+<tr><td><code>_ga</code></td><td>Google Analytics</td><td>区分不同访客。设置在 <code>getduct.ai</code> 及其所有子域名上。不受上述选择限制</td><td>最长 2 年</td></tr>
+<tr><td><code>_ga_SXH5LYVTJ8</code></td><td>Google Analytics</td><td>跟踪当前访问。不属于上述选择范围</td><td>最长 2 年</td></tr>
+<tr><td><code>_gcl_au</code></td><td>Google Tag Manager</td><td>将访问与广告点击关联，用于衡量 Google Ads 效果。不受上述选择限制</td><td>90 天</td></tr>
+<tr><td><code>duct_consent</code></td><td>Duct</td><td>记住你的选择，这样你就不会在每个页面都被询问。设置在 <code>getduct.ai</code> 及其所有子域名上，因此在浏览器中回答一次也适用于应用。桌面应用从不设置它，因为它从不询问（第 7 节）。严格必要——无论你接受还是拒绝，它都存在</td><td>6 个月，之后我们会再次询问</td></tr>
+<tr><td><code>duct_consent_region</code></td><td>Duct（会话存储）</td><td>缓存你的请求来源国家，以便我们无需重复查找即可提出正确问题。严格必要</td><td>会话结束</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>下方 <em>本地存储数据</em> 中描述的身份验证令牌也是严格必要的：没有它你就无法保持登录状态。</p>
+
+<h3>诊断</h3>
+<p>当 web 应用出现故障时，它会向 PostHog 发送一份错误报告：堆栈跟踪、你的浏览器、不带查询字符串的页面路径，以及（如果你已登录）你的 account ID。web 应用还会发送每个页面加载和响应所需的时间（web vitals），这仅是时间信息。<strong>无论你是否接受 analytics cookies，web 应用都会发送错误报告和页面时间信息，</strong>因为它们不会在你的设备上存储任何内容：它们仅在该页面内存中保留，当你离开页面时即消失。在我们的网站上，这两者都属于分析的一部分，并遵循你的 cookie 选择。</p>
+<p>我们的服务器以同样的方式向 PostHog 报告其自身错误，并附带几行记录服务器启动和停止时间的日志。我们配置错误报告以避免捕获 Google 用户数据，但报告可能偶然包含一个标识符，例如媒体资源 ID。</p>
+
+<h3>活动和智能体记忆</h3>
+<p>Duct 记录项目中重要操作的活动日志，并存储其智能体从你的数据中提取的持久性笔记（例如，重复的季节性模式），以便报告随时间推移而改进。两者都限定在你的项目范围内，对你可见，并随项目删除而删除。</p>
+
+<h3>本地存储的数据</h3>
+<p>我们在你的浏览器本地存储中存储一个身份验证令牌，以保持你登录。它包含你的姓名、电子邮件和个人资料图片，并于 7 天后过期。</p>
+
+<h2>12. 我们如何共享和存储数据</h2>
+
+<p>我们不出售你的数据。我们仅在运营 Duct 所需时，与下方服务提供商共享数据，并且，除了 Google 的广告服务接收的数据外，仅在限制其用于该目的的条款下共享。</p>
+<div class="legal-table-wrap">
+<table>
+<thead><tr><th>提供商</th><th>目的</th><th>接收已连接源数据？</th></tr></thead>
+<tbody>
+<tr><td>Railway</td><td>应用托管和主数据库</td><td>是——存储为静态数据</td></tr>
+<tr><td>Cloudflare</td><td>CDN、网页应用交付、机器人防护（Turnstile）、电子邮件发送</td><td>传输中</td></tr>
+<tr><td>Anthropic、OpenAI、Google、OpenRouter</td><td>生成报告叙述、建议和内容草稿的 AI 模型</td><td>是——你请求的输出所需的数据</td></tr>
+<tr><td>生成式媒体提供商</td><td>Content Studio 中的图像和视频生成</td><td>仅提示词和参考媒体</td></tr>
+<tr><td>PostBridge</td><td>发布到你的社交账户，并从其读取分析数据</td><td>仅社交账户数据和帖子内容</td></tr>
+<tr><td>Apify</td><td>检索公开可用的社交内容用于研究</td><td>否</td></tr>
+<tr><td>PostHog</td><td>产品和网络分析、会话回放、错误和崩溃报告、页面速度测量、AI 调用元数据</td><td>否——使用事件、如第 11 节所述进行屏蔽的会话回放、错误报告、页面计时和 AI 调用元数据；绝不包含你连接工具的数据或你的提示。错误报告可能偶然包含一个标识符，如第 11 节所述</td></tr>
+<tr><td>Google（Analytics 和 Tag Manager）</td><td>网站和应用分析，以及广告衡量</td><td>否——完整的页面地址，其中可能包含内部 ID、访问和设备数据、IP 地址和 cookie 标识符，如第 11 节所述；绝不包含你连接工具的数据或你的提示</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>PostHog, Inc. 是一家美国公司，并将其接收到的数据存储在美国区域。</strong>从欧盟向其发送数据依赖于 PostHog 数据处理协议中的欧盟标准合同条款。</p>
+<p><strong>Google LLC 是一家美国公司，可能会在美国处理其接收到的数据，</strong>并遵循其数据处理条款中的保障措施。Google 广告服务接收到的数据也会按照<a href="https://policies.google.com/privacy" rel="noopener">Google 隐私政策</a>中的描述使用。</p>
+<p>当连接的源数据发送给 AI 模型提供商时，它仅用于生成你请求的输出。<strong>我们绝不会将其用于训练模型，也绝不允许任何提供商代表我们这样做。</strong> Anthropic、OpenAI 和 Google 均在 API 条款下使用，这些条款默认排除提交数据用于训练。</p>
+<p><strong>OpenRouter 是一个路由器，而不是模型提供商，</strong>需要特别说明。它会将请求转发到路由配置选择的任何底层提供商，这些提供商在是否记录或训练其接收到的数据方面有所不同。当你提供自己的 OpenRouter 密钥时，该路由配置属于你：请求的保留和训练行为受你的 OpenRouter 账户上设置的数据策略管辖，你应该将其设置为符合你所需承诺的策略。我们建议在连接密钥之前启用 OpenRouter 的零日志和无训练数据策略。无论采用哪种路由，Duct 都不会使用你的数据进行训练。</p>
+<p>我们也可能在法律要求时披露数据，并在合并或收购的情况下向继承实体披露数据，届时本政策将继续适用，直到你收到另行通知。</p>
+
+<h2>13. 数据安全</h2>
+<ul>
+<li><strong>OAuth 令牌和保存的提供商密钥在静态时加密</strong>使用 Fernet 对称加密，按用户存储在服务器端，并且绝不暴露给浏览器</li>
+<li>所有传输中的数据均通过 HTTPS/TLS 加密</li>
+<li>访问项目数据需要身份验证和该项目的验证成员身份；非成员无法读取其他项目的数据</li>
+<li>我们遵循内部数据访问的最小权限原则。</li>
+</ul>
+
+<h2>14. 数据保留和删除</h2>
+<div class="legal-table-wrap">
+<table>
+<thead><tr><th>数据</th><th>保留期限</th></tr></thead>
+<tbody>
+<tr><td>OAuth 刷新令牌和保存的提供商密钥</td><td>直到你断开源、删除密钥、删除你的账户或在提供商处撤销访问权限——以先发生者为准</td></tr>
+<tr><td>从已连接来源获取的数据</td><td>作为其生成的报告、洞察、智能体记忆和工作成果文档的一部分保留，只要你的账户处于活跃状态</td></tr>
+<tr><td>生成的报告、内容草稿、上传和审计日志</td><td>当你的账户处于活跃状态时</td></tr>
+<tr><td>身份验证令牌（浏览器）</td><td>7 天</td></tr>
+<tr><td>使用事件、错误报告和 AI 调用元数据 (PostHog)</td><td>我们的 PostHog 方案最长保留 7 年</td></tr>
+<tr><td>会话回放 (PostHog)</td><td>30 天</td></tr>
+<tr><td>Google Analytics 中的访问数据</td><td>最长 14 个月</td></tr>
+<tr><td>审计工具提交</td><td>直到你要求我们删除它们</td></tr>
+<tr><td>备份</td><td>已删除数据在删除后最多可在加密备份中保留 30 天</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>删除你的数据</h3>
+<ul>
+<li><strong>断开一个来源：</strong>将其从 Duct 的工具箱中移除。此时，其存储的凭据将被删除。</li>
+<li><strong>撤销 Duct 在 Google 的访问权限：</strong>访问 <a href="https://myaccount.google.com/permissions" rel="noopener">myaccount.google.com/permissions</a> 并移除 Duct。无论你是否仍有 Duct 账户，这都有效。</li>
+<li><strong>桌面应用：</strong> 删除应用的数据目录会移除本地数据库及其内容；当你从应用中删除提供商密钥时，它们会从你的钥匙串中移除。</li>
+<li><strong>删除你的账户及所有相关数据：</strong> 发送电子邮件至 <a href="mailto:hello@getduct.ai">hello@getduct.ai</a>。我们会在 30 天内处理删除请求，并在完成后通过电子邮件确认。</li>
+</ul>
+
+<h2>15. 你的权利</h2>
+<p>我们位于西班牙，并根据欧盟 GDPR 处理个人数据。您有权访问、更正、导出、限制处理或删除您的个人数据，并有权反对处理。我们的法律依据是履行我们与您签订的产品运营合同；出于安全和诊断的合法利益，包括第 11 节中的错误报告和服务器端事件；以及在征得您同意的情况下使用分析 Cookie 和会话回放。请通过 <a href="mailto:hello@getduct.ai">hello@getduct.ai</a> 行使这些权利；您也有权向您当地的监管机构（在西班牙是 AEPD）提出投诉。</p>
+<p>数据可能由第 12 节中列出的提供商在 EEA 境外处理，传输机制包括欧盟标准合同条款。</p>
+
+<h2>16. 开源和自托管</h2>
+<p>Duct 的源代码在 MIT 许可下发布。本政策涵盖我们在 getduct.ai 和 app.getduct.ai <strong>运营的托管服务</strong>，以及我们分发的官方桌面应用。</p>
+<p>它不涵盖他人运行的软件实例。如果你使用由第三方运营的 Duct 部署，或你自己运行的部署，则该部署的运营者是数据控制者，本政策不适用于它。发布代码并不意味着我们可以访问我们不运营的部署中持有的任何数据。</p>
+
+<h2>17. Beta 状态和变更</h2>
+<p>Duct 目前处于测试阶段，功能和数据处理实践可能会演变。我们将根据需要更新此政策，修订顶部的日期，并在变更生效前通过电子邮件通知用户账户上的重大变更。</p>
+
+<h2>18. 儿童隐私</h2>
+<p>Duct 不适用于未满 18 岁的个人。我们不会有意收集儿童信息。</p>
+
+<h2>19. 联系方式</h2>
+<p>有关隐私问题、数据访问或删除请求：</p>
+<ul>
+<li>电子邮件：<a href="mailto:hello@getduct.ai">hello@getduct.ai</a></li>
+<li>数据控制者：Alleviate Lab</li>
+<li>地点：西班牙</li>
+<li>网站：<a href="https://getduct.ai">getduct.ai</a></li>
+</ul>
+
+</article>
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/zh-cn/partials/footer-expanded.html"><div class="legal-fallback"><a href="/zh-cn/">Duct</a><a href="/zh-cn/about">关于</a><a href="/zh-cn/privacy">隐私政策</a><a href="/zh-cn/terms">服务条款</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+
+</body>
+</html>

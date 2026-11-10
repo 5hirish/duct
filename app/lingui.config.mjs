@@ -2,13 +2,15 @@ import { defineConfig } from "@lingui/cli";
 import { formatter } from "@lingui/format-po";
 
 /**
- * The four interface languages beside English, and a pseudo-locale.
+ * The five interface languages beside English, and a pseudo-locale.
  *
  * `es`, `pt-BR`, `de` and `ja` are the markets Duct is most likely to be
  * adopted in outside English *and* the largest non-English open-source
  * contributor bases; the two lists overlap almost exactly. Japanese is on it
  * instead of French because it is the large SaaS market with the lowest
- * English adoption. Adding a language is one entry here plus one line in
+ * English adoption. `zh-CN` came last and should have come first: China is
+ * one of GitHub's largest developer communities, and agent-built
+ * open-source tools there routinely ship a Chinese README on day one. Adding a language is one entry here plus one line in
  * `src/i18n/locales.js`; the catalogue fills itself (see `scripts/i18n/`).
  *
  * `pseudo` is never shipped. It stretches every string and brackets it, so a
@@ -17,7 +19,7 @@ import { formatter } from "@lingui/format-po";
  */
 export default defineConfig({
   sourceLocale: "en",
-  locales: ["en", "es", "pt-BR", "de", "ja", "pseudo"],
+  locales: ["en", "es", "pt-BR", "de", "ja", "zh-CN", "pseudo"],
   pseudoLocale: "pseudo",
   fallbackLocales: { pseudo: "en", default: "en" },
   catalogs: [

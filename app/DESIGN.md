@@ -126,7 +126,7 @@ them the same finding in different words, one titled with their own typo.
 | Model-written | findings and incidents (`project_memories` titles and bodies), change-set titles and diffs, briefs and reports, chat replies, content drafts and captions | 3 to 60 words; near-duplicates of one fact; with or without a number; confidence; language | untrusted for length and uniqueness: clamp it, merge it, rank it in code |
 | Person-written | chat messages (a thread's title *is* its first message, verbatim, `routes/agents.py`), project and company names, brand context, voice rules, writing samples, uploaded files | typos and "pls"; one word to pages; any language; emoji | the person's words: shown as theirs (`<q>`), never restyled as Duct's voice |
 | Data and vendor | connector, property, campaign and page names; URLs; metric values, units and currencies; timestamps; a provider's error sentence | identifiers with no spaces; 0 to 10⁹; missing values; data that stopped refreshing | data: tabular figures, `lib/format.js` (`formatMeasure`, `formatDelta`), say when it is old |
-| Duct's own copy | titles, labels, state sentences, empty states | five languages, German ~30% longer | fixed and translated: the only text a layout may be sized around |
+| Duct's own copy | titles, labels, state sentences, empty states | six languages, German ~30% longer, Chinese and Japanese far shorter | fixed and translated: the only text a layout may be sized around |
 
 **The axes.** Before building an agent surface, write down its range on each
 and design every extreme, not the middle:

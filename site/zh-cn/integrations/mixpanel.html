@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Mixpanel AI 分析师：清理计数，涵盖网页和应用 | Duct</title>
+<link rel="canonical" href="https://getduct.ai/zh-cn/integrations/mixpanel"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/integrations/mixpanel"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/integrations/mixpanel"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/integrations/mixpanel"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/integrations/mixpanel"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/integrations/mixpanel"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/integrations/mixpanel"/>
+<link rel="alternate" hreflang="zh-CN" href="https://getduct.ai/zh-cn/integrations/mixpanel"/>
+<meta property="og:locale" content="zh_CN"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="Duct 读取移除了员工和 QA 账户的 Mixpanel 关键事件，将其与 Stripe 进行核对，并可以标注时间轴或隐藏一个拼写错误的事件。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/zh-cn/integrations/mixpanel"/>
+<meta property="og:title" content="Mixpanel AI 分析师：清理计数，涵盖网页和应用"/>
+<meta property="og:description" content="Mixpanel 将所有平台和所有 QA 账户都视为一个名称。Duct 移除它们，检查 Stripe，并标记时间轴。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/integrations-mixpanel.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Mixpanel AI 分析师：清理计数，涵盖网页和应用"/>
+<meta name="twitter:description" content="你的升级高峰是 QA 团队造成的。Duct 将他们排除并检查 Stripe。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/integrations-mixpanel.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookie，坦白说","We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold.":"我们使用 PostHog 来了解哪些页面促成了注册，以及 Duct 在何处阻碍了你，包括隐藏你输入的所有内容的访问回放。拒绝会关闭 PostHog，Duct 仍能正常运行。Google Analytics 也会统计访问量并设置自己的 Cookie，无论你选择什么。我们不会出售任何数据。","Privacy Policy":"隐私政策","Decline":"拒绝","Accept":"接受","{n} stars on GitHub":"{n} GitHub 星","UTM Builder":"UTM 构建器","SaaS Metrics Benchmark Calculator":"SaaS 指标基准计算器","Weekly Marketing Brief Generator":"每周营销简报生成器","CAC / LTV Calculator":"CAC / LTV 计算器","MRR Growth Rate Calculator":"MRR 增长率计算器","Engagement Rate Calculator":"互动率计算器","CTR Calculator":"CTR 计算器","CPM Calculator":"CPM 计算器","CPC Calculator":"CPC 计算器","CPA Calculator":"CPA 计算器","Marketing ROI Calculator":"营销 ROI 计算器","ROAS Calculator":"ROAS 计算器","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Menu":"菜单","Free Tools":"免费工具","Solutions":"解决方案","Download Duct ↓":"下载 Duct ↓","Language":"语言","Enlarged screenshot":"放大后的截图","Close":"关闭","Fit to screen":"适应屏幕","Zoom in":"放大","Enlarge":"放大","Universal · Apple silicon and Intel":"通用 · Apple 芯片和 Intel","Windows 10 and later":"Windows 10 及更高版本","Runs on any distribution":"可在任何发行版上运行","Debian and Ubuntu":"Debian 和 Ubuntu","Download ↓":"下载 ↓","Download for {label} ↓":"下载适用于 {label} ↓","Example numbers. Change any field and calculate again for yours.":"示例数字。修改任意字段，重新计算你的结果。"};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"zh-CN","name":"Mixpanel AI 分析师：清理计数，涵盖网页和应用","url":"https://getduct.ai/zh-cn/integrations/mixpanel","description":"Duct 读取移除了员工和 QA 账户的 Mixpanel 关键事件，将其与 Stripe 进行核对，并可以标注时间轴或隐藏一个拼写错误的事件。","about":{"@type":"SoftwareApplication","name":"Mixpanel"},"isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"zh-CN","itemListElement":[{"@type":"ListItem","position":1,"name":"主页","item":"https://getduct.ai/zh-cn/"},{"@type":"ListItem","position":2,"name":"集成","item":"https://getduct.ai/zh-cn/integrations/"},{"@type":"ListItem","position":3,"name":"Mixpanel","item":"https://getduct.ai/zh-cn/integrations/mixpanel"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"zh-CN","mainEntity":[{"@type":"Question","name":"Duct 可以在 Mixpanel 中更改什么？","acceptedAnswer":{"@type":"Answer","text":"两种：添加 Mixpanel 时间线批注，以及在 Mixpanel Lexicon 中隐藏/取消隐藏事件。默认情况下，每个都等待你应用，并且每个都可以回滚。"}},{"@type":"Question","name":"为什么不是项目令牌或 API 密钥？","acceptedAnswer":{"@type":"Answer","text":"它们都无法读取 Mixpanel Query API。服务账号可以，并且其作用域限定为你授予它的项目。"}},{"@type":"Question","name":"我的项目在欧盟。这能行吗？","acceptedAnswer":{"@type":"Answer","text":"是的。连接时选择区域，Duct 会从该区域的主机读取。一个有效的密钥被拒绝通常意味着区域错误。"}},{"@type":"Question","name":"免费吗？","acceptedAnswer":{"@type":"Answer","text":"是的。Duct 可免费使用你自己的模型密钥或你已有的 ChatGPT 套餐，核心部分采用 MIT 许可。付费套餐稍后会捆绑模型；目前开源的部分不会转为付费。哪些会收费。"}}]}
+</script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">跳到内容</a>
+
+<!-- GENERATED by scripts/build_integrations.py from the backend and scripts/integrations/connectors.py.
+     Do not edit this file: edit those and run the script. -->
+<!-- EXPERIMENT: Per-tool integration searches run 10 to 50 a month (OpenSEO, Sep 2026). Hypothesis: a product lead who has chased a spike that turned out to be test accounts converts on a page that shows them removed and checked against Stripe. Measured by download clicks per visit. -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/zh-cn/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="ig-hero">
+<div class="ig-hero-text">
+<nav class="ig-crumbs" aria-label="面包屑"><a href="/zh-cn/integrations/">集成</a><span aria-hidden="true">/</span><span aria-current="page">Mixpanel</span></nav>
+<div class="ig-lockup" aria-hidden="true"><img src="/assets/icons/mixpanel.svg" width="40" height="40" alt=""/><span class="ig-plus">+</span><span class="logo">duct <span class="logo-mark"></span></span></div>
+<h1>Mixpanel，<em>不包含 QA 团队。</em></h1>
+<p class="hero-sub">Mixpanel 是唯一一个涵盖网页和应用的计数。Duct 移除内部账户后读取数据，将其与 Stripe 进行核对，并通过标注和整洁的 Lexicon 保持时间轴的准确性。</p>
+<div class="ig-cta">
+<a class="btn btn-orange btn-lg" href="/zh-cn/download" data-duct-download>下载 Duct ↓</a>
+<a class="btn btn-ghost btn-lg" href="/zh-cn/integrations/">所有集成</a>
+</div>
+<ul class="ig-facts" aria-label="一览"><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>服务账号</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg><span>读取一个数据集</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>两种变更</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>字段审计日期：2026 年 8 月 31 日</span></li></ul>
+
+</div>
+<figure class="ig-mock reveal has-change">
+<div class="ig-mock-panel" aria-hidden="true">
+<div class="ig-sources"><img src="/assets/icons/mixpanel.svg" width="34" height="34" alt=""/><img src="/assets/icons/stripe.svg" width="34" height="34" alt=""/></div>
+<svg class="ig-flow" viewBox="0 0 100 30" width="100" height="30" aria-hidden="true"><g class="ig-flow-bed"><path pathLength="1" d="M15 0C15 16 50 14 50 30"/><path pathLength="1" d="M85 0C85 16 50 14 50 30"/></g><g class="ig-flow-water"><path d="M15 0C15 16 50 14 50 30"/><path d="M85 0C85 16 50 14 50 30"/></g></svg>
+<div class="ig-answer"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg><span>升级增长 18%，直到 QA 账号被移除。然后是 4.0% 对比 4.1%。</span></div>
+<div class="ig-change"><img src="/assets/icons/mixpanel.svg" width="22" height="22" alt=""/><span><b>标注 9 月 2 日：Android 重建</b><s>时间轴上的日期备注。回滚已就绪。</s></span></div>
+<div class="ig-actions"><span class="ig-btn ig-btn-reject">拒绝</span><span class="ig-btn ig-btn-apply"><span class="ig-apply-idle">应用</span><span class="ig-apply-done"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg>已应用</span><svg class="ig-cursor" aria-hidden="true"><use href="/assets/icons.svg#mouse-pointer-click"/></svg></span></div>
+</div>
+<figcaption>一个示例答案。你的数据将从你自己的账户中读取。</figcaption>
+</figure>
+</section>
+
+<!-- SESSION: shot by scripts/shots/shoot.mjs from the story's CONNECTOR_SESSIONS -->
+<section class="shot ig-shot">
+<figure class="shot-frame reveal">
+<img src="/assets/media/session-mixpanel.webp" srcset="/assets/media/session-mixpanel-768.webp 768w, /assets/media/session-mixpanel-1536.webp 1536w, /assets/media/session-mixpanel.webp 3072w" sizes="(max-width: 860px) calc(100vw - 48px), 1536px" loading="lazy" decoding="async" width="3072" height="2052" alt="一次 Duct 会话：当被问及某次发布是否提升了升级量时，Duct 读取移除了 QA 账户的 Mixpanel 数据，检查 Stripe，并提议添加时间轴标注和隐藏一个拼写错误的事件。"/>
+<figcaption>询问此次发布是否提升了升级量。Duct 移除 QA 账户，检查 Stripe，并提议添加标注和清理 Lexicon。</figcaption>
+</figure>
+</section>
+
+<div class="channel" aria-hidden="true"></div>
+
+<!-- ASK -->
+<section class="ig-sec" id="ask">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">提问</p>
+<h2>你可以<em>直接提问</em>的问题</h2>
+</div>
+<ul class="ig-qs">
+<li class="ig-q reveal" style="transition-delay:0.00s"><p>此次发布是提升了升级量，还是只影响了测试账户？</p><span class="ig-q-joins"><img src="/assets/icons/mixpanel.svg" width="18" height="18" alt=""/><img src="/assets/icons/stripe.svg" width="18" height="18" alt=""/><span>Mixpanel + Stripe</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.06s"><p>为什么 GA4 统计的注册量少于 Mixpanel？</p><span class="ig-q-joins"><img src="/assets/icons/mixpanel.svg" width="18" height="18" alt=""/><img src="/assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><span>Mixpanel + GA4</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.12s"><p>哪些事件仍有拼写错误的孪生事件在触发？</p><span class="ig-q-joins"><img src="/assets/icons/mixpanel.svg" width="18" height="18" alt=""/><span>Mixpanel</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.18s"><p>有多少注册完全没有关联任何广告系列？</p><span class="ig-q-joins"><img src="/assets/icons/mixpanel.svg" width="18" height="18" alt=""/><span>Mixpanel</span></span></li>
+</ul>
+</div>
+</section>
+
+<!-- ACCESS: generated from the catalogue and the executor registry -->
+<section class="ig-sec ig-access" id="access">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">访问</p>
+<h2>它读取的内容。<em>它能更改的内容。</em></h2>
+</div>
+<div class="ig-cols reveal">
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg>它读取什么</h3>
+<ul class="ig-reads">
+<li><b>Mixpanel 关键事件计数</b><span class="ig-fields"><span>关键事件</span><span>事件总数</span><span>漏斗</span><span>排除内部流量</span></span></li>
+</ul>
+<p class="ig-note">Mixpanel Query API (mixpanel-query-2.0) · 字段审计于 2026 年 8 月 31 日 · <a href="https://github.com/5hirish/duct/blob/main/backend/agents/insights/catalog/mixpanel.py" rel="noopener">阅读源代码</a></p>
+</div>
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>它可以更改什么</h3>
+<ul class="ig-ops">
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">添加 Mixpanel 时间轴标注</span><span class="ig-badges"><span class="ig-badge is-auto">在辅助模式下可自动应用</span></span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">在 Mixpanel Lexicon 中隐藏/取消隐藏事件</span><span class="ig-badges"></span></li>
+</ul>
+<p class="ig-note">每项变更都可回滚。默认情况下，每项变更都需你点击应用：它会以预览形式显示所影响的内容，并记录在活动日志中。<a href="/zh-cn/doctrine">批准工作原理</a></p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- KNOWS: the knowledge pack, in plain words -->
+<section class="ig-sec ig-knows" id="knows">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">知识</p>
+<h2>Duct 已知的信息 <em>关于 Mixpanel</em></h2>
+</div>
+<ol class="ig-k">
+<li class="reveal" style="transition-delay:0.00s"><span class="ig-k-num">01</span><h3>Mixpanel 没有内部流量过滤器。</h3><p>员工和 QA 账号存在于每个漏斗中。Duct 在引用数字之前会移除你指定的模式，并说明移除了哪些。</p></li>
+<li class="reveal" style="transition-delay:0.06s"><span class="ig-k-num">02</span><h3>这是其他计数进行核对的基准。</h3><p>网页和应用向 Mixpanel 发送相同的事件名称，因此当 GA4 或广告平台存在分歧时，Duct 会将此差异视为测量错误，除非另有证明。</p></li>
+<li class="reveal" style="transition-delay:0.12s"><span class="ig-k-num">03</span><h3>拼写错误事件永久存在。</h3><p>一个旧的拼写错误的事件仍在旧版应用中触发。Duct 将其隐藏在 Lexicon 中，而不是过滤每个查询，并且从不将其添加到其对应事件中。</p></li>
+<li class="reveal" style="transition-delay:0.18s"><span class="ig-k-num">04</span><h3>未标记的不是自然流量。</h3><p>大多数注册完全没有关联任何广告系列标签。Duct 不会将缺失的标签计为自然搜索。</p></li>
+</ol>
+<p class="ig-k-src"><a href="https://github.com/5hirish/duct/blob/main/backend/agents/knowledge/mixpanel.md" rel="noopener">阅读 Duct 智能体工作的 Mixpanel 备注 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></a></p>
+</div>
+</section>
+
+<!-- PAIRS -->
+<section class="ig-sec" id="pairs">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">协同更好</p>
+<h2>Mixpanel 的回答 <em>与合作伙伴</em></h2>
+</div>
+<div class="ig-pairs">
+<a class="ig-pair reveal" style="transition-delay:0.00s" href="/zh-cn/integrations/stripe"><span class="ig-pair-logos"><img src="/assets/icons/mixpanel.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/stripe.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">升级已计数，升级已付费。</span><span class="ig-pair-go">Mixpanel + Stripe <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.06s" href="/zh-cn/integrations/ga4"><span class="ig-pair-logos"><img src="/assets/icons/mixpanel.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/googleanalytics.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">一个注册计数，而不是两个。</span><span class="ig-pair-go">Mixpanel + GA4 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.12s" href="/zh-cn/integrations/growthbook"><span class="ig-pair-logos"><img src="/assets/icons/mixpanel.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/growthbook.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">测试指标是你认为的事件吗？</span><span class="ig-pair-go">Mixpanel + GrowthBook <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+</div>
+</div>
+</section>
+
+<!-- SETUP -->
+<section class="ig-sec ig-setup" id="setup">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">设置</p>
+<h2>分<em>三步</em>连接 Mixpanel</h2>
+</div>
+<ol class="ig-steps reveal">
+<li><span class="ig-step-n">1</span><p>在 Mixpanel 中，打开“组织设置”，然后是“服务账户”，并创建一个有权访问此项目的账户。</p></li>
+<li><span class="ig-step-n">2</span><p>记下它的用户名和密钥、项目 ID，以及项目位于美国、欧盟还是印度。</p></li>
+<li><span class="ig-step-n">3</span><p>在 Duct 中，打开工具箱，选择 Mixpanel 并粘贴它们。</p></li>
+</ol>
+<div class="ig-trust reveal">
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>读取需要一个有项目访问权限的服务账号。下面的两项变更也需要它来编辑批注和 Lexicon，并且默认情况下，每个都等待你应用。</span></p>
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>密钥和令牌由 Duct 的托管 API 加密存储，绝不会存储在你的浏览器中，你可以随时移除连接。自托管版本会将它们保存在你自己的机器上。</span></p>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">常见问题</p>
+<h2>Mixpanel，<em>已解答</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">Duct 可以在 Mixpanel 中更改什么？</summary>
+<p class="faq-a">两种：添加 Mixpanel 时间线批注，以及在 Mixpanel Lexicon 中隐藏/取消隐藏事件。默认情况下，每个都等待你应用，并且每个都可以回滚。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">为什么不是项目令牌或 API 密钥？</summary>
+<p class="faq-a">它们都无法读取 Mixpanel Query API。服务账号可以，并且其作用域限定为你授予它的项目。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">我的项目在欧盟。这能行吗？</summary>
+<p class="faq-a">是的。连接时选择区域，Duct 会从该区域的主机读取。一个有效的密钥被拒绝通常意味着区域错误。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">免费吗？</summary>
+<p class="faq-a">是的。Duct 可免费使用你自己的模型密钥或你已有的 ChatGPT 套餐，核心部分采用 MIT 许可。付费套餐稍后会捆绑模型；目前开源的部分不会转为付费。<a href="/zh-cn/open-source#pricing">哪些会收费</a>。</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/zh-cn/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/zh-cn/partials/footer-expanded.html"><div class="legal-fallback"><a href="/zh-cn/">Duct</a><a href="/zh-cn/about">关于</a><a href="/zh-cn/privacy">隐私政策</a><a href="/zh-cn/terms">服务条款</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

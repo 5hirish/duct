@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Meta Ads AI 分析师：购买量只计算一次 | Duct</title>
+<link rel="canonical" href="https://getduct.ai/zh-cn/integrations/meta-ads"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/integrations/meta-ads"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/integrations/meta-ads"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/integrations/meta-ads"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/integrations/meta-ads"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/integrations/meta-ads"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/integrations/meta-ads"/>
+<link rel="alternate" hreflang="zh-CN" href="https://getduct.ai/zh-cn/integrations/meta-ads"/>
+<meta property="og:locale" content="zh_CN"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="Duct 使用 System User 令牌读取 Meta Ads，在你选择的归因窗口内将每次购买只计算一次，并与 Stripe 进行核对。只读。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/zh-cn/integrations/meta-ads"/>
+<meta property="og:title" content="Meta Ads AI 分析师：购买量只计算一次"/>
+<meta property="og:description" content="Meta 的 ROAS 看起来比 Google 的好三倍。Duct 会像 Google 一样重新计算，与 Stripe 核对，并指出哪个是正确的。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/integrations-meta-ads.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Meta Ads AI 分析师：购买量只计算一次"/>
+<meta name="twitter:description" content="Meta 可以将一次购买计算三次。Duct 只计算一次，然后与 Stripe 核对。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/integrations-meta-ads.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookie，坦白说","We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold.":"我们使用 PostHog 来了解哪些页面促成了注册，以及 Duct 在何处阻碍了你，包括隐藏你输入的所有内容的访问回放。拒绝会关闭 PostHog，Duct 仍能正常运行。Google Analytics 也会统计访问量并设置自己的 Cookie，无论你选择什么。我们不会出售任何数据。","Privacy Policy":"隐私政策","Decline":"拒绝","Accept":"接受","{n} stars on GitHub":"{n} GitHub 星","UTM Builder":"UTM 构建器","SaaS Metrics Benchmark Calculator":"SaaS 指标基准计算器","Weekly Marketing Brief Generator":"每周营销简报生成器","CAC / LTV Calculator":"CAC / LTV 计算器","MRR Growth Rate Calculator":"MRR 增长率计算器","Engagement Rate Calculator":"互动率计算器","CTR Calculator":"CTR 计算器","CPM Calculator":"CPM 计算器","CPC Calculator":"CPC 计算器","CPA Calculator":"CPA 计算器","Marketing ROI Calculator":"营销 ROI 计算器","ROAS Calculator":"ROAS 计算器","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Menu":"菜单","Free Tools":"免费工具","Solutions":"解决方案","Download Duct ↓":"下载 Duct ↓","Language":"语言","Enlarged screenshot":"放大后的截图","Close":"关闭","Fit to screen":"适应屏幕","Zoom in":"放大","Enlarge":"放大","Universal · Apple silicon and Intel":"通用 · Apple 芯片和 Intel","Windows 10 and later":"Windows 10 及更高版本","Runs on any distribution":"可在任何发行版上运行","Debian and Ubuntu":"Debian 和 Ubuntu","Download ↓":"下载 ↓","Download for {label} ↓":"下载适用于 {label} ↓","Example numbers. Change any field and calculate again for yours.":"示例数字。修改任意字段，重新计算你的结果。"};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"zh-CN","name":"Meta Ads AI 分析师：购买量只计算一次","url":"https://getduct.ai/zh-cn/integrations/meta-ads","description":"Duct 使用 System User 令牌读取 Meta Ads，在你选择的归因窗口内将每次购买只计算一次，并与 Stripe 进行核对。只读。","about":{"@type":"SoftwareApplication","name":"Meta Ads"},"isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"zh-CN","itemListElement":[{"@type":"ListItem","position":1,"name":"主页","item":"https://getduct.ai/zh-cn/"},{"@type":"ListItem","position":2,"name":"集成","item":"https://getduct.ai/zh-cn/integrations/"},{"@type":"ListItem","position":3,"name":"Meta Ads","item":"https://getduct.ai/zh-cn/integrations/meta-ads"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"zh-CN","mainEntity":[{"@type":"Question","name":"Duct 可以更改我的 Meta 广告系列吗？","acceptedAnswer":{"@type":"Answer","text":"不。Duct 没有 Meta 更改操作。它读取广告系列、广告组、广告、像素和结果，并且可以为你推荐在 Ads Manager 中进行的更改。"}},{"@type":"Question","name":"为什么 Meta 的购买计数与 Stripe 不匹配？","acceptedAnswer":{"@type":"Answer","text":"Meta 将点击后七天内和展示后一天内的购买归因于自身，并且可以将一个订单报告为三种操作类型。Stripe 计算已结算的款项。Duct 在你选择的窗口内将每次购买只计算一次，并与 Stripe 核对。"}},{"@type":"Question","name":"为什么是 System User 令牌而不是我自己的登录？","acceptedAnswer":{"@type":"Answer","text":"由个人登录生成的令牌在大约 60 天后过期，连接会无预警中断。系统用户令牌不会过期，因此每周简报会持续工作。"}},{"@type":"Question","name":"我的广告账户为两种产品投放广告。Duct 可以将它们区分开吗？","acceptedAnswer":{"@type":"Answer","text":"是的。提供广告系列名称中标记此产品的部分，Duct 会在 Meta 汇总数据之前筛选这些广告系列，这样其他产品就不会计入总数。"}},{"@type":"Question","name":"免费吗？","acceptedAnswer":{"@type":"Answer","text":"是的。Duct 可免费使用你自己的模型密钥或你已有的 ChatGPT 套餐，核心部分采用 MIT 许可。付费套餐稍后会捆绑模型；目前开源的部分不会转为付费。哪些会收费。"}}]}
+</script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">跳到内容</a>
+
+<!-- GENERATED by scripts/build_integrations.py from the backend and scripts/integrations/connectors.py.
+     Do not edit this file: edit those and run the script. -->
+<!-- EXPERIMENT: Meta Ads has open search around AI tooling (&#x27;meta ads mcp&#x27; 880 a month, KD 8, OpenSEO Sep 2026), though Duct has no MCP server yet. Hypothesis: a buyer who already distrusts Meta&#x27;s attribution converts on the recount, not on a feature list. Measured by download clicks per visit. -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/zh-cn/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="ig-hero">
+<div class="ig-hero-text">
+<nav class="ig-crumbs" aria-label="面包屑"><a href="/zh-cn/integrations/">集成</a><span aria-hidden="true">/</span><span aria-current="page">Meta Ads</span></nav>
+<div class="ig-lockup" aria-hidden="true"><img src="/assets/icons/meta.svg" width="40" height="40" alt=""/><span class="ig-plus">+</span><span class="logo">duct <span class="logo-mark"></span></span></div>
+<h1>Meta Ads，<em>只计算一次。</em></h1>
+<p class="hero-sub">Meta 将一周的点击和一天的展示归因于自身，并且可以将一次购买报告三次。Duct 读取 Meta Ads，在你选择的窗口内重新计算，并与 Stripe 核对结果。</p>
+<div class="ig-cta">
+<a class="btn btn-orange btn-lg" href="/zh-cn/download" data-duct-download>下载 Duct ↓</a>
+<a class="btn btn-ghost btn-lg" href="/zh-cn/integrations/">所有集成</a>
+</div>
+<ul class="ig-facts" aria-label="一览"><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>System User 令牌</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg><span>读取四个数据集</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>只读</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>检查于 2026 年 9 月 29 日</span></li></ul>
+
+</div>
+<figure class="ig-mock reveal">
+<div class="ig-mock-panel" aria-hidden="true">
+<div class="ig-sources"><img src="/assets/icons/meta.svg" width="34" height="34" alt=""/><img src="/assets/icons/google-ads.svg" width="34" height="34" alt=""/><img src="/assets/icons/stripe.svg" width="34" height="34" alt=""/></div>
+<svg class="ig-flow" viewBox="0 0 170 30" width="170" height="30" aria-hidden="true"><g class="ig-flow-bed"><path pathLength="1" d="M15 0C15 16 85 14 85 30"/><path pathLength="1" d="M85 0V30"/><path pathLength="1" d="M155 0C155 16 85 14 85 30"/></g><g class="ig-flow-water"><path d="M15 0C15 16 85 14 85 30"/><path d="M85 0V30"/><path d="M155 0C155 16 85 14 85 30"/></g></svg>
+<div class="ig-answer"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg><span>Meta 声称有 41 次购买，每次 €34。按一天点击归因，是 14 次，每次 €100。Google 是 €105。</span></div>
+</div>
+<figcaption>一个示例答案。你的数据将从你自己的账户中读取。</figcaption>
+</figure>
+</section>
+
+<!-- SESSION: shot by scripts/shots/shoot.mjs from the story's CONNECTOR_SESSIONS -->
+<section class="shot ig-shot">
+<figure class="shot-frame reveal">
+<img src="/assets/media/session-meta-ads.webp" srcset="/assets/media/session-meta-ads-768.webp 768w, /assets/media/session-meta-ads-1536.webp 1536w, /assets/media/session-meta-ads.webp 3072w" sizes="(max-width: 860px) calc(100vw - 48px), 1536px" loading="lazy" decoding="async" width="3072" height="2052" alt="一次 Duct 会话：当被问及为何 Meta 看起来比 Google 便宜时，Duct 读取 Meta 广告组和 Google Ads 旁边的三个归因窗口的洞察，并重新计算一天内点击的购买次数"/>
+<figcaption>询问为什么 Meta 看起来便宜三倍。Duct 会像 Google 一样重新计算其购买量，即一种操作类型和一天点击归因，并将两者并列比较。</figcaption>
+</figure>
+</section>
+
+<div class="channel" aria-hidden="true"></div>
+
+<!-- ASK -->
+<section class="ig-sec" id="ask">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">提问</p>
+<h2>你可以<em>直接提问</em>的问题</h2>
+</div>
+<ul class="ig-qs">
+<li class="ig-q reveal" style="transition-delay:0.00s"><p>以相同方式计算，Meta 真的比 Google 便宜吗？</p><span class="ig-q-joins"><img src="/assets/icons/meta.svg" width="18" height="18" alt=""/><img src="/assets/icons/google-ads.svg" width="18" height="18" alt=""/><span>Meta Ads + Google Ads</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.06s"><p>哪些广告组带来了付费客户？</p><span class="ig-q-joins"><img src="/assets/icons/meta.svg" width="18" height="18" alt=""/><img src="/assets/icons/stripe.svg" width="18" height="18" alt=""/><span>Meta Ads + Stripe</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.12s"><p>Meta 的多少归因来自展示，而非点击？</p><span class="ig-q-joins"><img src="/assets/icons/meta.svg" width="18" height="18" alt=""/><span>Meta Ads</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.18s"><p>为什么一个广告系列停止获得结果？</p><span class="ig-q-joins"><img src="/assets/icons/meta.svg" width="18" height="18" alt=""/><span>Meta Ads</span></span></li>
+</ul>
+</div>
+</section>
+
+<!-- ACCESS: generated from the catalogue and the executor registry -->
+<section class="ig-sec ig-access" id="access">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">访问</p>
+<h2>它读取的内容。<em>它能更改的内容。</em></h2>
+</div>
+<div class="ig-cols reveal">
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg>它读取什么</h3>
+<ul class="ig-reads">
+<li><b>广告系列，所有状态</b><span class="ig-fields"><span>名称</span><span>状态</span><span>目标</span><span>出价策略</span><span>每日预算</span><span>总预算</span><span>支出上限</span></span></li>
+<li><b>广告组和广告</b><span class="ig-fields"><span>名称</span><span>状态</span><span>每日预算</span><span>优化目标</span><span>出价金额</span><span>归因设置</span></span></li>
+<li><b>表现</b><span class="ig-fields"><span>支出</span><span>展示次数</span><span>点击次数</span><span>CTR</span><span>CPC</span><span>CPM</span><span>购买次数</span><span>购买价值</span><span>ROAS</span></span></li>
+<li><b>像素和自定义转化</b><span class="ig-fields"><span>名称</span><span>上次触发</span><span>事件类型</span><span>默认值</span></span></li>
+</ul>
+<p class="ig-note">Meta Marketing API v26.0 · 已与抓取代码核对 2026 年 9 月 29 日 · <a href="https://github.com/5hirish/duct/blob/main/backend/service/meta/ads/fetch.py" rel="noopener">阅读源代码</a></p>
+</div>
+<div class="ig-col ig-readonly">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>它可以更改什么</h3>
+<p class="ig-readonly-big">无。</p>
+<p>Duct 没有 Meta Ads 更改操作，因此无法编辑 Meta Ads 中的任何内容。它仍然可以为你推荐在那里进行的更改。</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- KNOWS: the knowledge pack, in plain words -->
+<section class="ig-sec ig-knows" id="knows">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">知识</p>
+<h2>Duct 已知的信息 <em>关于 Meta Ads</em></h2>
+</div>
+<ol class="ig-k">
+<li class="reveal" style="transition-delay:0.00s"><span class="ig-k-num">01</span><h3>一次购买，三种操作类型。</h3><p>同一个订单可以作为像素购买、普通购买和全渠道购买出现。将它们相加会使计数增加三倍，因此 Duct 只选择其中一个。</p></li>
+<li class="reveal" style="transition-delay:0.06s"><span class="ig-k-num">02</span><h3>归因是一种选择，而非事实。</h3><p>Meta 默认为七天点击和一天展示归因；Google 计算最后一次点击。Duct 分别向 Meta 请求一天点击、七天点击和一天展示归因数据，以便在相同条件下比较这些平台。</p></li>
+<li class="reveal" style="transition-delay:0.12s"><span class="ig-k-num">03</span><h3>已暂停的历史记录默认隐藏。</h3><p>如果没有状态列表，Meta 只返回活跃的广告系列。Duct 会请求所有状态，因此上个月关闭的广告系列仍在审计中。</p></li>
+<li class="reveal" style="transition-delay:0.18s"><span class="ig-k-num">04</span><h3>预算以美分返回。</h3><p>Meta 以最小单位报告预算，以完整货币报告支出。如果按欧元读取，每日预算 €25 会变成 €2,500。</p></li>
+</ol>
+<p class="ig-k-src"><a href="https://github.com/5hirish/duct/blob/main/backend/agents/knowledge/meta.md" rel="noopener">阅读 Duct 智能体所依据的 Meta Ads 笔记 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></a></p>
+</div>
+</section>
+
+<!-- PAIRS -->
+<section class="ig-sec" id="pairs">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">协同更好</p>
+<h2>Meta Ads 的回答 <em>与合作伙伴</em></h2>
+</div>
+<div class="ig-pairs">
+<a class="ig-pair reveal" style="transition-delay:0.00s" href="/zh-cn/integrations/stripe"><span class="ig-pair-logos"><img src="/assets/icons/meta.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/stripe.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Meta 的购买计数在 Stripe 中是否有效？</span><span class="ig-pair-go">Meta Ads + Stripe <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.06s" href="/zh-cn/integrations/google-ads"><span class="ig-pair-logos"><img src="/assets/icons/meta.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/google-ads.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Meta 和 Google，以相同方式计数。</span><span class="ig-pair-go">Meta Ads + Google Ads <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.12s" href="/zh-cn/integrations/ga4"><span class="ig-pair-logos"><img src="/assets/icons/meta.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/googleanalytics.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">Meta 点击是否会转化为持续的会话？</span><span class="ig-pair-go">Meta Ads + GA4 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+</div>
+</div>
+</section>
+
+<!-- SETUP -->
+<section class="ig-sec ig-setup" id="setup">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">设置</p>
+<h2>连接 Meta Ads <em>三步完成</em></h2>
+</div>
+<ol class="ig-steps reveal">
+<li><span class="ig-step-n">1</span><p>在 Meta Business Settings 中，打开用户，然后是系统用户，并授予其中一个系统用户访问广告账户的权限。</p></li>
+<li><span class="ig-step-n">2</span><p>为其生成一个带有 ads_read 权限的令牌（以及 business_management 权限，以便 Duct 可以列出你的账户）。</p></li>
+<li><span class="ig-step-n">3</span><p>在 Duct 中，打开工具箱，选择 Meta Ads 并粘贴令牌。</p></li>
+</ol>
+<div class="ig-trust reveal">
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>只读：令牌需要 ads_read 权限，且 Duct 没有 Meta 更改操作。System User 令牌不会像个人登录那样过期。</span></p>
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>密钥和令牌由 Duct 的托管 API 加密存储，绝不会存储在你的浏览器中，你可以随时移除连接。自托管版本会将它们保存在你自己的机器上。</span></p>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">常见问题</p>
+<h2>Meta Ads，<em>已解答</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">Duct 可以更改我的 Meta 广告系列吗？</summary>
+<p class="faq-a">不。Duct 没有 Meta 更改操作。它读取广告系列、广告组、广告、像素和结果，并且可以为你推荐在 Ads Manager 中进行的更改。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">为什么 Meta 的购买计数与 Stripe 不匹配？</summary>
+<p class="faq-a">Meta 将点击后七天内和展示后一天内的购买归因于自身，并且可以将一个订单报告为三种操作类型。Stripe 计算已结算的款项。Duct 在你选择的窗口内将每次购买只计算一次，并与 Stripe 核对。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">为什么是 System User 令牌而不是我自己的登录？</summary>
+<p class="faq-a">由个人登录生成的令牌在大约 60 天后过期，连接会无预警中断。系统用户令牌不会过期，因此每周简报会持续工作。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">我的广告账户为两种产品投放广告。Duct 可以将它们区分开吗？</summary>
+<p class="faq-a">是的。提供广告系列名称中标记此产品的部分，Duct 会在 Meta 汇总数据之前筛选这些广告系列，这样其他产品就不会计入总数。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">免费吗？</summary>
+<p class="faq-a">是的。Duct 可免费使用你自己的模型密钥或你已有的 ChatGPT 套餐，核心部分采用 MIT 许可。付费套餐稍后会捆绑模型；目前开源的部分不会转为付费。<a href="/zh-cn/open-source#pricing">哪些会收费</a>。</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/zh-cn/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/zh-cn/partials/footer-expanded.html"><div class="legal-fallback"><a href="/zh-cn/">Duct</a><a href="/zh-cn/about">关于</a><a href="/zh-cn/privacy">隐私政策</a><a href="/zh-cn/terms">服务条款</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

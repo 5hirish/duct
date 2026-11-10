@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>GrowthBook AI 分析师：测试还在运行吗？| Duct</title>
+<link rel="canonical" href="https://getduct.ai/zh-cn/integrations/growthbook"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/integrations/growthbook"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/integrations/growthbook"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/integrations/growthbook"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/integrations/growthbook"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/integrations/growthbook"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/integrations/growthbook"/>
+<link rel="alternate" hreflang="zh-CN" href="https://getduct.ai/zh-cn/integrations/growthbook"/>
+<meta property="og:locale" content="zh_CN"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="Duct 读取 GrowthBook 实验和结果，标记停止分桶或未达到样本的测试，并检查 Stripe 中的结果。只读。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/zh-cn/integrations/growthbook"/>
+<meta property="og:title" content="GrowthBook AI 分析师：测试还在运行吗？"/>
+<meta property="og:description" content="一个测试在停止分桶后，可能会显示运行中数周。Duct 在你调用它之前进行检查，并读取 Stripe 中的结果。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/integrations-growthbook.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="GrowthBook AI 分析师：测试还在运行吗？"/>
+<meta name="twitter:description" content="在 62 个用户中，有 94% 的胜率。Duct 在你调用测试前进行检查。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/integrations-growthbook.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookie，坦白说","We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold.":"我们使用 PostHog 来了解哪些页面促成了注册，以及 Duct 在何处阻碍了你，包括隐藏你输入的所有内容的访问回放。拒绝会关闭 PostHog，Duct 仍能正常运行。Google Analytics 也会统计访问量并设置自己的 Cookie，无论你选择什么。我们不会出售任何数据。","Privacy Policy":"隐私政策","Decline":"拒绝","Accept":"接受","{n} stars on GitHub":"{n} GitHub 星","UTM Builder":"UTM 构建器","SaaS Metrics Benchmark Calculator":"SaaS 指标基准计算器","Weekly Marketing Brief Generator":"每周营销简报生成器","CAC / LTV Calculator":"CAC / LTV 计算器","MRR Growth Rate Calculator":"MRR 增长率计算器","Engagement Rate Calculator":"互动率计算器","CTR Calculator":"CTR 计算器","CPM Calculator":"CPM 计算器","CPC Calculator":"CPC 计算器","CPA Calculator":"CPA 计算器","Marketing ROI Calculator":"营销 ROI 计算器","ROAS Calculator":"ROAS 计算器","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Menu":"菜单","Free Tools":"免费工具","Solutions":"解决方案","Download Duct ↓":"下载 Duct ↓","Language":"语言","Enlarged screenshot":"放大后的截图","Close":"关闭","Fit to screen":"适应屏幕","Zoom in":"放大","Enlarge":"放大","Universal · Apple silicon and Intel":"通用 · Apple 芯片和 Intel","Windows 10 and later":"Windows 10 及更高版本","Runs on any distribution":"可在任何发行版上运行","Debian and Ubuntu":"Debian 和 Ubuntu","Download ↓":"下载 ↓","Download for {label} ↓":"下载适用于 {label} ↓","Example numbers. Change any field and calculate again for yours.":"示例数字。修改任意字段，重新计算你的结果。"};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"zh-CN","name":"GrowthBook AI 分析师：测试还在运行吗？","url":"https://getduct.ai/zh-cn/integrations/growthbook","description":"Duct 读取 GrowthBook 实验和结果，标记停止分桶或未达到样本的测试，并检查 Stripe 中的结果。只读。","about":{"@type":"SoftwareApplication","name":"GrowthBook"},"isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"zh-CN","itemListElement":[{"@type":"ListItem","position":1,"name":"主页","item":"https://getduct.ai/zh-cn/"},{"@type":"ListItem","position":2,"name":"集成","item":"https://getduct.ai/zh-cn/integrations/"},{"@type":"ListItem","position":3,"name":"GrowthBook","item":"https://getduct.ai/zh-cn/integrations/growthbook"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"zh-CN","mainEntity":[{"@type":"Question","name":"Duct 会停止或更改实验吗？","acceptedAnswer":{"@type":"Answer","text":"不。Duct 从不写入 GrowthBook。它读取实验和结果，并告诉你它发现了什么；停止或重启测试由你决定。"}},{"@type":"Question","name":"Duct 如何知道测试停止了分桶？","acceptedAnswer":{"@type":"Answer","text":"它会标记一个正在运行的实验，该实验的阶段已超过 45 天，且其结果未达到上周：这是一种看起来活跃但并非如此的测试模式。"}},{"@type":"Question","name":"我们的 GrowthBook 组织有多个产品。它们会混淆吗？","acceptedAnswer":{"@type":"Answer","text":"如果你给 Duct 项目 ID，就不会。它会将实验筛选到该项目。"}},{"@type":"Question","name":"免费吗？","acceptedAnswer":{"@type":"Answer","text":"是的。Duct 可免费使用你自己的模型密钥或你已有的 ChatGPT 套餐，核心部分采用 MIT 许可。付费套餐稍后会捆绑模型；目前开源的部分不会转为付费。哪些会收费。"}}]}
+</script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">跳到内容</a>
+
+<!-- GENERATED by scripts/build_integrations.py from the backend and scripts/integrations/connectors.py.
+     Do not edit this file: edit those and run the script. -->
+<!-- EXPERIMENT: Per-tool integration searches run 10 to 50 a month (OpenSEO, Sep 2026). Hypothesis: a product team that has shipped a &#x27;winner&#x27; that wasn&#x27;t converts on a page that shows the stale-test check. Measured by download clicks per visit. -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/zh-cn/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="ig-hero">
+<div class="ig-hero-text">
+<nav class="ig-crumbs" aria-label="面包屑"><a href="/zh-cn/integrations/">集成</a><span aria-hidden="true">/</span><span aria-current="page">GrowthBook</span></nav>
+<div class="ig-lockup" aria-hidden="true"><img src="/assets/icons/growthbook.svg" width="40" height="40" alt=""/><span class="ig-plus">+</span><span class="logo">duct <span class="logo-mark"></span></span></div>
+<h1>GrowthBook，<em>在你调用测试之前。</em></h1>
+<p class="hero-sub">一个测试在停止分桶后，可能会显示运行中数周。Duct 读取你的实验和结果，检查曝光是否仍在到达且样本量是否足够大，并读取 Stripe 中的结果。</p>
+<div class="ig-cta">
+<a class="btn btn-orange btn-lg" href="/zh-cn/download" data-duct-download>下载 Duct ↓</a>
+<a class="btn btn-ghost btn-lg" href="/zh-cn/integrations/">所有集成</a>
+</div>
+<ul class="ig-facts" aria-label="一览"><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>API 密钥</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg><span>读取一个数据集</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>只读</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>字段审计日期：2026 年 8 月 31 日</span></li></ul>
+
+</div>
+<figure class="ig-mock reveal">
+<div class="ig-mock-panel" aria-hidden="true">
+<div class="ig-sources"><img src="/assets/icons/growthbook.svg" width="34" height="34" alt=""/><img src="/assets/icons/stripe.svg" width="34" height="34" alt=""/></div>
+<svg class="ig-flow" viewBox="0 0 100 30" width="100" height="30" aria-hidden="true"><g class="ig-flow-bed"><path pathLength="1" d="M15 0C15 16 50 14 50 30"/><path pathLength="1" d="M85 0C85 16 50 14 50 30"/></g><g class="ig-flow-water"><path d="M15 0C15 16 50 14 50 30"/><path d="M85 0C85 16 50 14 50 30"/></g></svg>
+<div class="ig-answer"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg><span>它显示正在运行，94% 胜率。它于 9 月 1 日停止分桶，对照组有 62 名用户。</span></div>
+</div>
+<figcaption>一个示例答案。你的数据将从你自己的账户中读取。</figcaption>
+</figure>
+</section>
+
+<!-- SESSION: shot by scripts/shots/shoot.mjs from the story's CONNECTOR_SESSIONS -->
+<section class="shot ig-shot">
+<figure class="shot-frame reveal">
+<img src="/assets/media/session-growthbook.webp" srcset="/assets/media/session-growthbook-768.webp 768w, /assets/media/session-growthbook-1536.webp 1536w, /assets/media/session-growthbook.webp 3072w" sizes="(max-width: 860px) calc(100vw - 48px), 1536px" loading="lazy" decoding="async" width="3072" height="2052" alt="一次 Duct 会话：当被问及定价测试是否可以调用时，Duct 读取 GrowthBook 和 Stripe，发现该测试在对照组低于最小样本时停止了分桶"/>
+<figcaption>询问测试是否可以调用。Duct 发现它在 9 月 1 日停止分桶，低于其最小样本，并读取 Stripe 中的真实基线。</figcaption>
+</figure>
+</section>
+
+<div class="channel" aria-hidden="true"></div>
+
+<!-- ASK -->
+<section class="ig-sec" id="ask">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">提问</p>
+<h2>你可以<em>直接提问</em>的问题</h2>
+</div>
+<ul class="ig-qs">
+<li class="ig-q reveal" style="transition-delay:0.00s"><p>这个实验准备好调用了吗？</p><span class="ig-q-joins"><img src="/assets/icons/growthbook.svg" width="18" height="18" alt=""/><span>GrowthBook</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.06s"><p>哪些正在运行的测试停止了分桶？</p><span class="ig-q-joins"><img src="/assets/icons/growthbook.svg" width="18" height="18" alt=""/><span>GrowthBook</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.12s"><p>获胜变体是否改变了收入？</p><span class="ig-q-joins"><img src="/assets/icons/growthbook.svg" width="18" height="18" alt=""/><img src="/assets/icons/stripe.svg" width="18" height="18" alt=""/><span>GrowthBook + Stripe</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.18s"><p>测试的指标是否与我们跟踪的事件匹配？</p><span class="ig-q-joins"><img src="/assets/icons/growthbook.svg" width="18" height="18" alt=""/><img src="/assets/icons/mixpanel.svg" width="18" height="18" alt=""/><span>GrowthBook + Mixpanel</span></span></li>
+</ul>
+</div>
+</section>
+
+<!-- ACCESS: generated from the catalogue and the executor registry -->
+<section class="ig-sec ig-access" id="access">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">访问</p>
+<h2>它读取的内容。<em>它能更改的内容。</em></h2>
+</div>
+<div class="ig-cols reveal">
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg>它读取什么</h3>
+<ul class="ig-reads">
+<li><b>Growthbook 实验</b><span class="ig-fields"><span>实验</span><span>结果</span><span>状态</span><span>过期运行中</span><span>运行中</span><span>功能计数</span></span></li>
+</ul>
+<p class="ig-note">GrowthBook REST API (growthbook-v1) · 字段审计日期：2026 年 8 月 31 日 · <a href="https://github.com/5hirish/duct/blob/main/backend/agents/insights/catalog/growthbook.py" rel="noopener">阅读源代码</a></p>
+</div>
+<div class="ig-col ig-readonly">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>它可以更改什么</h3>
+<p class="ig-readonly-big">无。</p>
+<p>Duct 没有 GrowthBook 更改操作，因此无法在 GrowthBook 中编辑任何内容。它仍然可以为你推荐在那里进行的更改。</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- KNOWS: the knowledge pack, in plain words -->
+<section class="ig-sec ig-knows" id="knows">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">知识</p>
+<h2>Duct 已经知道的 <em>关于 GrowthBook 的信息</em></h2>
+</div>
+<ol class="ig-k">
+<li class="reveal" style="transition-delay:0.00s"><span class="ig-k-num">01</span><h3>运行中是一个设置，而不是一个信号。</h3><p>一个实验可能显示运行中，但没有分桶任何人。Duct 会标记一个运行中但阶段已超过 45 天且结果在过去一周前停止的测试。</p></li>
+<li class="reveal" style="transition-delay:0.06s"><span class="ig-k-num">02</span><h3>在最小样本之下，它不是一个结果。</h3><p>在低于配置最小值的组中获胜的几率是带有百分号的噪音。Duct 会这样说，而不是引用它。</p></li>
+<li class="reveal" style="transition-delay:0.12s"><span class="ig-k-num">03</span><h3>双方需要相同的身份。</h3><p>如果分配哈希一个 ID，而分析连接另一个，那么只要两者不同，用户就会被错误归因。Duct 会询问双方使用哪个 ID。</p></li>
+<li class="reveal" style="transition-delay:0.18s"><span class="ig-k-num">04</span><h3>Duct 不会触碰你的标志。</h3><p>标志翻转和实验停止是产品决策。Duct 读取 GrowthBook，从不写入它。</p></li>
+</ol>
+<p class="ig-k-src"><a href="https://github.com/5hirish/duct/blob/main/backend/agents/knowledge/growthbook.md" rel="noopener">阅读 Duct 智能体工作的 GrowthBook 笔记 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></a></p>
+</div>
+</section>
+
+<!-- PAIRS -->
+<section class="ig-sec" id="pairs">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">协同更好</p>
+<h2>GrowthBook 与合作伙伴的回答 <em></em></h2>
+</div>
+<div class="ig-pairs">
+<a class="ig-pair reveal" style="transition-delay:0.00s" href="/zh-cn/integrations/stripe"><span class="ig-pair-logos"><img src="/assets/icons/growthbook.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/stripe.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">获胜者是否改变了收入？</span><span class="ig-pair-go">GrowthBook + Stripe <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.06s" href="/zh-cn/integrations/mixpanel"><span class="ig-pair-logos"><img src="/assets/icons/growthbook.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/mixpanel.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">指标是否是你认为的事件？</span><span class="ig-pair-go">GrowthBook + Mixpanel <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.12s" href="/zh-cn/integrations/ga4"><span class="ig-pair-logos"><img src="/assets/icons/growthbook.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/googleanalytics.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">变体是否改变了人们在网站上的行为？</span><span class="ig-pair-go">GrowthBook + GA4 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+</div>
+</div>
+</section>
+
+<!-- SETUP -->
+<section class="ig-sec ig-setup" id="setup">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">设置</p>
+<h2>三步连接 <em>GrowthBook</em></h2>
+</div>
+<ol class="ig-steps reveal">
+<li><span class="ig-step-n">1</span><p>在 GrowthBook 中，打开设置，然后选择 API Keys，创建一个只读密钥。</p></li>
+<li><span class="ig-step-n">2</span><p>如果你的组织运行多个产品，请记下项目 ID。</p></li>
+<li><span class="ig-step-n">3</span><p>在 Duct 中，打开工具箱，选择 GrowthBook，然后粘贴密钥和项目 ID。</p></li>
+</ol>
+<div class="ig-trust reveal">
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>只读：只读密钥就足够了，Duct 没有 GrowthBook 更改操作，它会筛选到你的项目，因此其他产品的实验不会混入。</span></p>
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>密钥和令牌由 Duct 的托管 API 加密存储，绝不会存储在你的浏览器中，你可以随时移除连接。自托管版本会将它们保存在你自己的机器上。</span></p>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">常见问题</p>
+<h2>GrowthBook，<em>已回答</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">Duct 会停止或更改实验吗？</summary>
+<p class="faq-a">不。Duct 从不写入 GrowthBook。它读取实验和结果，并告诉你它发现了什么；停止或重启测试由你决定。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Duct 如何知道测试停止了分桶？</summary>
+<p class="faq-a">它会标记一个正在运行的实验，该实验的阶段已超过 45 天，且其结果未达到上周：这是一种看起来活跃但并非如此的测试模式。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">我们的 GrowthBook 组织有多个产品。它们会混淆吗？</summary>
+<p class="faq-a">如果你给 Duct 项目 ID，就不会。它会将实验筛选到该项目。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">免费吗？</summary>
+<p class="faq-a">是的。Duct 可免费使用你自己的模型密钥或你已有的 ChatGPT 套餐，核心部分采用 MIT 许可。付费套餐稍后会捆绑模型；目前开源的部分不会转为付费。<a href="/zh-cn/open-source#pricing">哪些会收费</a>。</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/zh-cn/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/zh-cn/partials/footer-expanded.html"><div class="legal-fallback"><a href="/zh-cn/">Duct</a><a href="/zh-cn/about">关于</a><a href="/zh-cn/privacy">隐私政策</a><a href="/zh-cn/terms">服务条款</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>
