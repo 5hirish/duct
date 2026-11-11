@@ -54,14 +54,7 @@ ROWS = [
 def test_shipped_keeps_what_a_user_got_and_says_why_the_rest_went():
     kept, left = github_items(ROWS, Disclosure.SHIPPED, already=set())
     assert [i.ref for i in kept] == ["gh:r-v1.4.0", "gh:pr-412", "gh:c-bbb2222", "gh:doc-README.md"]
-    assert left == {
-        "chores, CI and tests": 1,
-        "bots": 1,
-        "commits already in a pull request": 2,
-        "dependency bumps": 1,
-        "issues": 1,
-        "internal docs": 1,
-    }
+    assert left == {"chore": 1, "bot": 1, "squashed": 2, "dependency": 1, "issue": 1, "internal_docs": 1}
 
 
 def test_a_docs_patch_never_reaches_the_prompt():
@@ -80,7 +73,7 @@ def test_everything_adds_completed_issues_and_releases_only_keeps_releases():
     assert "gh:i-90" in {i.ref for i in kept}
     kept, left = github_items(ROWS, Disclosure.RELEASES, already=set())
     assert [i.ref for i in kept] == ["gh:r-v1.4.0"]
-    assert left["outside the disclosure level"] == len(ROWS) - 1
+    assert left["disclosure"] == len(ROWS) - 1
 
 
 def test_a_story_already_on_a_plan_is_not_offered_again():
@@ -88,7 +81,7 @@ def test_a_story_already_on_a_plan_is_not_offered_again():
     already = planned_refs(plans)
     kept, left = github_items(ROWS, Disclosure.SHIPPED, already=already)
     assert "gh:pr-412" not in {i.ref for i in kept}
-    assert left["already planned"] == 1
+    assert left["already_planned"] == 1
 
 
 def test_untyped_work_is_kept_and_typed_noise_is_not():
@@ -127,7 +120,7 @@ def test_releases_and_applied_changes_lead_and_the_payload_has_no_bodies():
     assert [i.ref for i in digest.items][:2] == ["gh:r-v1.4.0", "cs:3f2a9c1d"]
     payload = digest.payload()
     assert set(payload["items"][0]) == {"ref", "kind", "title", "url"}
-    assert payload["left_out"]["bots"] == 1 and payload["worth_a_plan"] is True
+    assert payload["left_out"]["bot"] == 1 and payload["worth_a_plan"] is True
     assert digest.strategy()["window_to"] == TODAY.isoformat()
 
 

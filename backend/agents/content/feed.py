@@ -107,6 +107,37 @@ class Disclosure(StrEnum):
     EVERYTHING = "everything"  # also closed issues and docs/ changes
 
 
+class LeftOut(StrEnum):
+    """Why an event did not reach the prompt. Codes, not sentences: the app
+    words them in the reader's language (lib/contentFeed.js), and
+    ``LEFT_OUT_WORDS`` is the model's copy."""
+
+    BOT = "bot"
+    DEPENDENCY = "dependency"
+    CHORE = "chore"
+    SQUASHED = "squashed"
+    ISSUE = "issue"
+    PRERELEASE = "prerelease"
+    INTERNAL_DOCS = "internal_docs"
+    DISCLOSURE = "disclosure"
+    ALREADY_PLANNED = "already_planned"
+    OVER_CAP = "over_cap"
+
+
+LEFT_OUT_WORDS: dict[str, str] = {
+    LeftOut.BOT: "bots",
+    LeftOut.DEPENDENCY: "dependency bumps",
+    LeftOut.CHORE: "chores, CI and tests",
+    LeftOut.SQUASHED: "commits already in a pull request",
+    LeftOut.ISSUE: "issues",
+    LeftOut.PRERELEASE: "pre-releases",
+    LeftOut.INTERNAL_DOCS: "internal docs",
+    LeftOut.DISCLOSURE: "outside the disclosure level",
+    LeftOut.ALREADY_PLANNED: "already on a plan",
+    LeftOut.OVER_CAP: "over the cap",
+}
+
+
 class FeedSource(StrEnum):
     GITHUB = "github"
     DUCT = "duct"
@@ -180,7 +211,7 @@ class FeedDigest:
             "score": self.score,
             "gate": GATE_SCORE,
             "items": [i.chip() for i in self.items],
-            "left_out": dict(self.left_out),
+            "left_out": {str(k): n for k, n in self.left_out.items()},
             "notes": list(self.notes),
             "max_days": self.options.max_days,
             "disclosure": self.options.disclosure.value,
@@ -295,32 +326,32 @@ def github_items(
         if not title:
             continue
         if disclosure is Disclosure.RELEASES and kind != "release":
-            left["outside the disclosure level"] += 1
+            left[LeftOut.DISCLOSURE] += 1
             continue
         if kind == "issue" and (disclosure is not Disclosure.EVERYTHING or row.get("state") != "completed"):
-            left["issues"] += 1
+            left[LeftOut.ISSUE] += 1
             continue
         if kind == "release" and row.get("state") == "prerelease" and disclosure is not Disclosure.EVERYTHING:
-            left["pre-releases"] += 1
+            left[LeftOut.PRERELEASE] += 1
             continue
         if is_bot(row.get("author")):
-            left["bots"] += 1
+            left[LeftOut.BOT] += 1
             continue
         if _DEPENDENCY.match(title):
-            left["dependency bumps"] += 1
+            left[LeftOut.DEPENDENCY] += 1
             continue
         if kind in ("commit", "pull_request") and conventional_type(title) in NOISE_TYPES:
-            left["chores, CI and tests"] += 1
+            left[LeftOut.CHORE] += 1
             continue
         if kind == "commit":
             squashed = _SQUASHED_PR.search(title)
             if _MERGE_COMMIT.match(title) or (squashed and squashed.group(1) in merged_prs):
-                left["commits already in a pull request"] += 1
+                left[LeftOut.SQUASHED] += 1
                 continue
         if kind == "docs_change":
             path = str(row.get("ref") or "")
             if not _docs_visible(path, disclosure):
-                left["internal docs"] += 1
+                left[LeftOut.INTERNAL_DOCS] += 1
                 continue
             # The patch is the file's text; a plan needs to know it changed.
             detail = ""
@@ -328,7 +359,7 @@ def github_items(
             detail = _clip(row.get("body"))
         ref = _github_ref(kind, str(row.get("ref") or ""))
         if ref in already:
-            left["already planned"] += 1
+            left[LeftOut.ALREADY_PLANNED] += 1
             continue
         kept.append(FeedItem(
             ref=ref, kind=kind, title=_clip(title, 200), detail=detail,
@@ -457,7 +488,7 @@ def build_digest(
     # Newest first inside a kind.
     items.sort(key=lambda i: (order.get(i.kind, 9), _neg_date(i.at)))
     if len(items) > MAX_ITEMS:
-        digest.left_out["over the cap"] += len(items) - MAX_ITEMS
+        digest.left_out[LeftOut.OVER_CAP] += len(items) - MAX_ITEMS
         items = items[:MAX_ITEMS]
     digest.items = items
     return digest
@@ -478,7 +509,7 @@ def render_digest(digest: FeedDigest) -> str:
         when = f" {item.at}" if item.at else ""
         detail = f": {item.detail}" if item.detail else ""
         lines.append(f"- {item.ref} · {item.kind}{state}{when} · {item.title}{detail}")
-    left = "; ".join(f"{why}: {n}" for why, n in digest.left_out.most_common()) or "nothing"
+    left = "; ".join(f"{LEFT_OUT_WORDS.get(why, why)}: {n}" for why, n in digest.left_out.most_common()) or "nothing"
     notes = "".join(f"\nNote: {n}" for n in digest.notes)
     return (
         f"Window: {digest.window_from.isoformat()} to {digest.window_to.isoformat()}. "
@@ -537,6 +568,8 @@ __all__ = [
     "FeedItem",
     "FeedOptions",
     "FeedSource",
+    "LEFT_OUT_WORDS",
+    "LeftOut",
     "build_digest",
     "conventional_type",
     "duct_items",

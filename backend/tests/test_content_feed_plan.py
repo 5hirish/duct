@@ -188,7 +188,7 @@ def test_a_quiet_window_ends_the_run_with_no_model_call(monkeypatch, engine):
     quiet = [{"kind": "commit", "ref": "a" * 10, "title": "chore: tidy", "author": "maker", "at": ""}]
     events, captured = _run(monkeypatch, engine, quiet)
     payload = _read_step(events)
-    assert payload["worth_a_plan"] is False and payload["left_out"] == {"chores, CI and tests": 1}
+    assert payload["worth_a_plan"] is False and payload["left_out"] == {"chore": 1}
     assert captured == {}
     assert events[-1]["event"] == AgentEvent.PIPELINE_FINISHED and events[-1]["outcome"] == "nothing_new"
 
