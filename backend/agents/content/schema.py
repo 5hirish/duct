@@ -276,6 +276,9 @@ class ContentSession(BaseAgentSession):
     # submit_plan and revise_plan_days hold every cited ref to it. None for a
     # plan from goals, and on a resumed session, which then cites nothing new.
     feed: Any = None
+    # A run the scheduler started (service/schedules.py): nobody is watching,
+    # so the agent mounts no question tool and decides what a person would.
+    unattended: bool = False
     # Persisted-conversation linkage (session resume / chat history). Set by the
     # route layer when a session is created; the runner re-primes from the DB when
     # resume is True. recorder persists each turn (agents/content/persistence.py).

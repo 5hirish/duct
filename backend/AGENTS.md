@@ -732,6 +732,28 @@ Postgres `DATABASE_URL` names.
     `GrowthReport`; counts over the limits are clamped, anything else goes
     back to the model as problems, up to `REPORT_REPAIR_TURNS`. The route
     records the failure on its run entry so the tab can say what happened.
+- `service/schedules.py` + `routes/schedules.py` + `routes/schedule_jobs.py` —
+  scheduled runs (#562): one loop in `lifespan`, the same in the cloud and in
+  the desktop sidecar, over one table (`agent_schedules`). Five rules, each held
+  by `tests/test_schedules.py`: **a schedule runs only on the host that owns its
+  row** (`host`, cloud or local); **one process takes an occurrence**, by a
+  compare-and-set on `next_run_at` that holds on SQLite and Postgres alike;
+  **a run holds a lease it renews**, and a lapsed lease is recorded as
+  interrupted and retried once (a run's output is a proposal, so a retry is
+  safe); **misses coalesce**, because the next occurrence is counted from now,
+  and one older than a week is skipped; **retries are classified**: transient
+  (a model 429/5xx, the network, an interruption) once after 15 minutes,
+  deterministic (no saved key, the monthly cap, a creator who left) never, and
+  those set `needs_reason` for the page. What each run did is an
+  `activity_logs` row (category `schedule`) linked to the conversation it
+  left, never a history table. The loop imports no route: `server.py` hands it
+  `routes.schedule_jobs.JOBS`, whose plan job reuses the session route's
+  conversation and recorder and the content route's saved-key resolution. A
+  scheduled content run sets `ContentSession.unattended`: no question tool, no
+  approval-carded tool, and the feed turn tells the agent to pick the stories
+  itself. Its proposal waits on the conversation; `/content/sessions/new?
+  conversation=<id>` reopens it with Accept and Reject. `SCHEDULER_ENABLED`
+  turns the loop off on a web process once a worker service runs it instead.
 - `routes/project_members.py` — project members + email invitations (`docs/engineering/2026-08-16-project-collaboration-plan.md`)
 - `service/membership.py` — project access checks (owner vs collaborator) and invite token handling
 - `data/google_ads/` — `google-ads-report.json` (demo brief), `raw/demo_raw_payload.json`

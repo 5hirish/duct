@@ -1,6 +1,6 @@
 # Data model
 
-**Author:** Shirish Kadam, Claude · **Updated:** 2026-11-10
+**Author:** Shirish Kadam, Claude · **Updated:** 2026-11-11
 
 Every table the backend owns, what it records, and which one answers a given
 question. The models in [`backend/models/`](../../backend/models/) are the
@@ -71,6 +71,12 @@ this list: LangGraph creates and migrates its own tables outside Alembic
 | `project_memories` | see above. Scopes `user`, `project`, `artifact` in one table |
 | `model_usage` | one row per model call with tokens and cost, so a user can see their own bill |
 
+### Schedules
+
+| Table | Holds |
+|---|---|
+| `agent_schedules` | a run nobody starts by hand: the job and its settings, a preset cadence in a named time zone, enabled, the host that owns it (`cloud` / `local`), the monthly cap, and the loop's own claim, lease and retry state. What each run did is an `activity_logs` row (category `schedule`), linked to the conversation it left, never a second history |
+
 ### Execution
 
 | Table | Holds |
@@ -82,7 +88,7 @@ this list: LangGraph creates and migrates its own tables outside Alembic
 
 | Table | Holds |
 |---|---|
-| `content_plans` | a content plan and its strategy |
+| `content_plans` | a content plan and its strategy (`strategy.feed`: the window a plan from shipped work read, where the next one starts) |
 | `content_posts` | one post, whatever platform it is bound for: type (slideshow, video, image, text), its words (`caption`), its own follow-ups under it (`replies`: an X reply, a LinkedIn first comment), slides (none for a text post), a video post's chosen clip (`video`), status, performance counts (`perf`: keys per `service/content_metrics.py`; typed-in ones listed in `manual_keys`, which no sync overwrites), its last pre-publish review, and the TikTok it was cloned from (`clone_source`), and once sent, the scheduler holding it (`publisher`) with its ids there. What differs by platform is rules, not columns: `agents/content/channels.RULES` |
 | `content_assets` | generated images and video clips (every take), uploads and references |
 | `content_formats` | a project's library of post formats |

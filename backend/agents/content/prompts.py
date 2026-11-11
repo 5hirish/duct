@@ -1799,6 +1799,7 @@ def build_feed_plan_prompt(
     business: str = "",
     voice: str = "",
     current_days: list[dict] | None = None,
+    unattended: bool = False,
 ) -> str:
     """The opening turn of a plan from shipped work (#561): the feed Duct
     already read and filtered, a story question, then at most ``max_days``
@@ -1826,6 +1827,27 @@ def build_feed_plan_prompt(
    set to every ref it stands on, and the other days planned from the
    brand's pillars as an ordinary plan, with no sources. Do not call
    research_trends for this plan."""
+    if unattended:
+        choose = f"""\
+2. Nobody is watching this run: the schedule started it, and the person
+   will accept or reject the proposal later. Keep the {max_days} strongest
+   stories yourself, the ones a reader would most notice, and do not ask.
+3. Place them, on channels <account_performance> favours:
+{place}
+4. Say in two lines which stories you kept, which you left, and why."""
+    else:
+        choose = f"""\
+2. Ask which to tell with ONE AskUserQuestion, multiSelect true, one option
+   per story. The label is the story in two to six words; the description is
+   its angle in under twelve words, then its refs in brackets, e.g.
+   "Onboarding stopped dropping GA4 connections [gh:pr-412, cs:3f2a9c1d]".
+   Do not research and do not plan on this turn.
+
+When they answer:
+
+3. Place the stories they kept, on channels <account_performance> favours:
+{place}
+4. Say in two lines which days changed and what each now tells."""
     return f"""\
 {_brand_stanza(brand)}
 
@@ -1851,17 +1873,7 @@ Now:
    {brand.project_name} would notice or use. Never name a file path, branch,
    open issue, code or internal name that is not in a title above, and use
    a number only where a line above carries it.
-2. Ask which to tell with ONE AskUserQuestion, multiSelect true, one option
-   per story. The label is the story in two to six words; the description is
-   its angle in under twelve words, then its refs in brackets, e.g.
-   "Onboarding stopped dropping GA4 connections [gh:pr-412, cs:3f2a9c1d]".
-   Do not research and do not plan on this turn.
-
-When they answer:
-
-3. Place the stories they kept, on channels <account_performance> favours:
-{place}
-4. Say in two lines which days changed and what each now tells."""
+{choose}"""
 
 
 _SIGNAL_NAMES = {

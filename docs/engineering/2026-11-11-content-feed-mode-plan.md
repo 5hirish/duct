@@ -238,3 +238,27 @@ The scheduler's spec is in its own record.
 - Other tools in the category: [BuiltPublic](https://www.producthunt.com/products/builtpublic), [Trace](https://www.producthunt.com/p/trace-29/trace-99e13c22-ddf4-4215-a3c1-2e90d5675c22)
 - YouTube captions scope and quota: [captions.download](https://developers.google.com/youtube/v3/docs/captions/download); channel RSS (community-documented): [RSS by platform](https://finder.wprssaggregator.com/rss-feeds/platform/youtube)
 - Linear MCP: [Linear MCP server](https://www.developersdigest.tech/mcp-servers/linear); Notion MCP: [supported tools](https://developers.notion.com/docs/mcp-supported-tools)
+
+## Addendum, 2026-11-11: the first trial on this repository
+
+Three fortnights of this repository's real history, read through the GitHub
+connector, planned by DeepSeek V4 Pro through OpenRouter, with a stand-in
+person keeping the first two stories offered. The acceptance half of the
+done-means needs a real person and is still open.
+
+| Window | Read | Stories offered | Feed days | Cited | Private detail | Model calls | Cost |
+|---|---|---|---|---|---|---|---|
+| Oct 29 to Nov 11 | 40 kept, 347 left out | 5 | 2 | all | none | 3 | $0.10 |
+| same, run again | 40 kept, 347 left out | 5 (4 the same) | 2 | all | none | 6 | $0.09 |
+| Oct 15 to Oct 28 | 40 kept, 282 left out | 5 | 2 | all | none | 5 | $0.11 |
+| Oct 1 to Oct 14 | 0 kept: 25 bot, 8 merge commits | none | none | n/a | n/a | 0 | $0 |
+
+- **The gate earns its place.** The first fortnight of October on `main` was
+  only Dependabot. The run stopped at the read and spent nothing.
+- **The cap bites on a busy fortnight.** 142 events were cut at 40, mostly
+  commits, because releases and pull requests sort first. The stories still
+  came out whole; raising the cap is a cost decision, not a fix.
+- **Cost came in under the estimate**: $0.09 to $0.11 a run on a $0.66/$1.98
+  model, against $0.21 estimated for Gemini Flash. A scheduled run on the same
+  model cost $0.05.
+

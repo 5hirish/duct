@@ -107,6 +107,12 @@ class Configs(BaseSettings):
     # internal network. Empty turns the search off and the app hides it.
     mcp_registry_url: str = Field(default="https://registry.modelcontextprotocol.io")
 
+    # Whether this process runs the schedule loop (service/schedules.py). On
+    # by default, in the cloud and in the desktop sidecar alike. Turn it off
+    # on the web process once a separate worker service runs the same loop,
+    # so two loops never compete for the same claims for no reason.
+    scheduler_enabled: bool = Field(default=True)
+
     # Desktop (local) mode: the backend runs as a sidecar on the user's own
     # machine rather than on Railway. Flips the persistence defaults to a
     # per-user SQLite file and a writable data dir — see the model validator

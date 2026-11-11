@@ -897,6 +897,7 @@ class ContentRunner:
                 return build_feed_plan_prompt(
                     brand, feed=render_digest(digest), max_days=feed.max_days, performance=performance,
                     period=managed, business=business, voice=voice, current_days=bound_days,
+                    unattended=getattr(session, "unattended", False),
                 )
             if bound_days is not None or (review is not None and review.has_history):
                 # Something to review: the opening turn is the review and the
@@ -1409,6 +1410,9 @@ class ContentRunner:
             mode=session.mode,
             channel=channel,
             remember=not getattr(session, "memory_off", False),
+            # A scheduled run has nobody to ask: no question card, no
+            # approval-carded tool, and the opening turn says so.
+            interactive=not getattr(session, "unattended", False),
             system_prompt=system_prompt,
         )
         recorder = getattr(session, "recorder", None)

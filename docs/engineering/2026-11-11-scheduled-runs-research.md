@@ -197,3 +197,25 @@ shows its reason in History.
 - Huey storage backends: [Huey](https://openapps.pro/packages/huey); Chancy (Postgres only): [Django forum](https://forum.djangoproject.com/t/chancy-a-batteries-included-task-queue-built-on-postgres-with-easy-django-integration/41701)
 - croniter under Pallets Eco: [ecosyste.ms](https://awesome.ecosyste.ms/projects/github.com%2Fpallets-eco%2Fcroniter); cronsim: [ecosyste.ms](https://awesome.ecosyste.ms/projects/github.com%2Fcuu508%2Fcronsim)
 - launchd folds missed calendar intervals into one run after wake: [launchd-dev list](https://lists.macosforge.org/pipermail/launchd-dev/2009-June/000543.html)
+
+## Addendum, 2026-11-11: what shipped, and the live check
+
+Shipped as recommended: `agent_schedules`, the loop in `service/schedules.py`,
+the routes and the Scheduled page. Two departures from the plan above:
+
+- **No wake detection.** The plan called for spotting a wall-clock jump. It is
+  not needed: a tick claims everything whose time has passed, so the first tick
+  after a laptop wakes is the catch-up, and counting the next time from now is
+  what folds the misses into one run.
+- **The release trigger moved to #563**, with the rest of the feed-specific
+  scheduling. #562 is the clock alone.
+
+Checked live on Postgres 16 with the real job, a real model and real GitHub:
+
+| Claim | How | Result |
+|---|---|---|
+| One process takes an occurrence | two loop processes racing for one due schedule | one run, one conversation, the proposal held on it |
+| The next run keeps its time | after the run | Monday 09:00 Europe/Berlin, plus 21 s of jitter |
+| A killed run is retried once | SIGKILL 45 s into a run, a fresh loop started | recorded as interrupted when the lease lapsed, retried as attempt 2 of the same occurrence |
+| The desktop sidecar gets the table | `tests/test_desktop_migrations.py` on SQLite | created on adoption and upgrade |
+

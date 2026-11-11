@@ -344,11 +344,21 @@ def render_content_feed() -> str:
         brand, feed=render_digest(digest), max_days=2, performance=None,
         period=requested_period(date(2026, 10, 8), 7),
     )
-    return section(
-        f"Plan from shipped work: opening user turn (system prompt is mode=plan_month) · "
-        f"~{approx_tokens(turn):,} tokens",
-        fenced(turn),
+    unattended = build_feed_plan_prompt(
+        brand, feed=render_digest(digest), max_days=2, performance=None,
+        period=requested_period(date(2026, 10, 8), 7), unattended=True,
     )
+    return "\n".join([
+        section(
+            f"Plan from shipped work: opening user turn (system prompt is mode=plan_month) · "
+            f"~{approx_tokens(turn):,} tokens",
+            fenced(turn),
+        ),
+        section(
+            f"Plan from shipped work, scheduled (nobody to ask) · ~{approx_tokens(unattended):,} tokens",
+            fenced(unattended),
+        ),
+    ])
 
 
 def render_content_clone() -> str:
