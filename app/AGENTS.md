@@ -145,7 +145,14 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
     `lib/schedules.js`. No local mirror: only the server knows whether a run is
     going, and the page polls only while one is. A schedule is made from the
     plan board's From your work sheet (Repeat weekly: Monday 09:00 in the
-    reader's zone)
+    reader's zone); `/content?tab=plans&from=work` opens that sheet, and the
+    empty page's button lands there. The card leads with a calendar leaf for
+    the next run and a strip of the last eight runs as stones (the list
+    route's `recent`), each with a glyph beside its colour. This page and the
+    feed surfaces share `styles/feed.css`: a source is a stone in its kind's
+    mosaic colour (`FeedKind.jsx`), a read is a sieve of kept against
+    left-out stones, and the setup sheet's window is a ribbon of days with
+    blue as the stream under them, the mosaic rule that blue is water
   - `connections/` — the **Toolbox**: one searchable catalogue of native
     connectors and MCP servers
     (`components/connections/ConnectorBrowser.jsx` over

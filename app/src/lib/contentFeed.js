@@ -113,3 +113,62 @@ export function feedFromHistory(events) {
   const row = [...(events || [])].reverse().find((e) => e?.kind === "feed");
   return row?.data || null;
 }
+
+// The setup sheet's window drawing: how many day cells "since last time" is
+// drawn as, since it has no fixed length (the label says which it is).
+export const SINCE_LAST_CELLS = 7;
+
+/**
+ * The setup sheet's window as cells, for the drawing beside the answers:
+ * the days read (each a day of work), today, and the days ahead, with the
+ * ones a story may land on spread across them. Codes only; the sheet draws.
+ */
+export function feedRibbon({ lookBack, horizon, maxDays } = {}) {
+  const past = lookBack === SINCE_LAST || !lookBack ? SINCE_LAST_CELLS : Math.max(1, Number(lookBack));
+  const ahead = Math.max(1, Number(horizon) || 7);
+  const stories = Math.min(ahead, Math.max(0, Number(maxDays) || 0));
+  const lit = new Set(Array.from({ length: stories }, (_, i) => Math.floor(((i + 0.5) * ahead) / stories)));
+  return {
+    past: Array.from({ length: past }, (_, i) => ({ i, work: workAt(i, past) })),
+    ahead: Array.from({ length: ahead }, (_, i) => ({ i, story: lit.has(i) })),
+  };
+}
+
+// A fixed scatter of "days with work" on the read side: the same picture on
+// every render, about two days in five, weighted to the recent end.
+function workAt(i, n) {
+  const fromToday = n - 1 - i;
+  return (fromToday * 7 + 3) % 5 < 2 ? KIND_SCATTER[fromToday % KIND_SCATTER.length] : null;
+}
+// No release here: terracotta is the story days' colour on this drawing, and a
+// read day drawn in it would look like a day already planned.
+const KIND_SCATTER = ["pull_request", "commit", "change_set", "pull_request", "docs_change", "commit"];
+
+// More stones than this stop reading as items and start reading as texture.
+export const SIEVE_MAX = 60;
+
+/**
+ * Everything a read saw, one stone each: kept items in their kind, then the
+ * left-out ones by reason, biggest reason first. Past SIEVE_MAX the left-out
+ * stones are cut first (the kept ones are what the reader acts on), and
+ * `hidden` says how many were not drawn.
+ */
+export function sieveStones(summary) {
+  const s = summary || {};
+  const kept = (s.items || []).map((it, i) => ({ key: `k-${it.ref || i}`, kind: it.kind || "", kept: true }));
+  const room = Math.max(0, SIEVE_MAX - kept.length);
+  const left = [];
+  for (const { reason, count } of s.leftOut || []) {
+    for (let n = 0; n < count && left.length < room; n += 1) left.push({ key: `l-${reason}-${n}`, reason, kept: false });
+  }
+  const shownKept = kept.slice(0, SIEVE_MAX);
+  const total = (s.items || []).length + (s.leftOutTotal || 0);
+  return { stones: [...shownKept, ...left], hidden: Math.max(0, total - shownKept.length - left.length), total };
+}
+
+/** The kept items counted by kind, biggest first: the summary's one-line tally. */
+export function kindCounts(items) {
+  const counts = new Map();
+  for (const it of items || []) counts.set(it?.kind || "", (counts.get(it?.kind || "") || 0) + 1);
+  return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([kind, count]) => ({ kind, count }));
+}

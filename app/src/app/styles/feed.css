@@ -1,0 +1,237 @@
+/* ---------------------------------------------------------------------------
+ * Plans from shipped work (#561) and the runs nobody starts by hand (#562).
+ *
+ * One small drawing system, borrowed from the mosaic panels and kept in their
+ * rules so it reads as the same set: a piece of work is a stone, its kind is
+ * the stone's colour, and blue is water and nothing else (the stream from what
+ * was read to what gets planned). Colour is never the only channel: every
+ * stone that carries a meaning carries a glyph or sits beside a word.
+ *
+ * Nothing here loops. A selection or a hover changes opacity in 150ms, which
+ * reduced motion keeps, because it is a state, not a flourish.
+ * ------------------------------------------------------------------------- */
+
+/* The kind of a piece of work, as a stone. Ink is the kind's colour pulled
+   toward the foreground, so it holds contrast on its own tint in both themes. */
+.feed-kind {
+  --kind: var(--tessera-grey);
+  background: color-mix(in oklch, var(--kind) 24%, var(--card));
+  color: color-mix(in oklch, var(--kind) 45%, var(--foreground));
+}
+
+.feed-kind[data-kind="release"] { --kind: var(--tessera-terracotta); }
+.feed-kind[data-kind="pull_request"],
+.feed-kind[data-kind="issue"] { --kind: var(--tessera-ochre); }
+.feed-kind[data-kind="commit"] { --kind: var(--tessera-grey); }
+.feed-kind[data-kind="docs_change"],
+.feed-kind[data-kind="artifact"] { --kind: var(--tessera-cream); }
+/* Basalt itself is near-black: heavy as a stone among stones, so slate. */
+.feed-kind[data-kind="change_set"],
+.feed-kind[data-kind="memory"] { --kind: oklch(0.52 0.03 260); }
+
+/* Cream is near the card in light, so its stone takes an edge to stay a stone. */
+.feed-kind[data-kind="docs_change"],
+.feed-kind[data-kind="artifact"] {
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--tessera-grey) 45%, transparent);
+}
+
+/* ---- The sieve: everything read, kept stones lit, the rest left grey. ---- */
+
+.feed-sieve {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.feed-sieve-stone {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 3px;
+  transition: opacity 150ms ease-out;
+}
+
+/* A kept stone is the kind's whole colour, not its tint: it is the news. */
+.feed-sieve-stone.feed-kind {
+  background: var(--kind);
+}
+
+.feed-sieve[data-size="lg"] {
+  gap: 4px;
+}
+
+.feed-sieve[data-size="lg"] .feed-sieve-stone {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 4px;
+}
+
+.feed-sieve-stone[data-left] {
+  background: color-mix(in oklch, var(--foreground) 9%, transparent);
+  box-shadow: none;
+}
+
+/* Pointing at a reason lights its stones and dims the rest. */
+[data-sieve-lit] .feed-sieve-stone {
+  opacity: 0.25;
+}
+
+[data-sieve-lit] .feed-sieve-stone[data-lit] {
+  opacity: 1;
+  background: color-mix(in oklch, var(--foreground) 32%, transparent);
+}
+
+/* ---- The window: read this far back, plan this far ahead. ---- */
+
+.feed-ribbon {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, var(--past, 1fr)) auto minmax(0, var(--ahead, 1fr));
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.feed-ribbon-days {
+  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 3px;
+  align-items: center;
+}
+
+/* The stream under the days: water from the work read to the days planned. */
+.feed-ribbon-days::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 3px;
+  transform: translateY(-50%);
+  background: var(--tessera-glass);
+  border-radius: 1px;
+}
+
+.feed-ribbon-day {
+  position: relative;
+  height: 1rem;
+  border-radius: 3px;
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--tessera-grey) 50%, transparent);
+  transition: opacity 150ms ease-out, background-color 150ms ease-out;
+}
+
+.feed-ribbon-day.feed-kind {
+  background: var(--kind);
+  box-shadow: none;
+}
+
+.feed-ribbon-day[data-story] {
+  background: var(--primary);
+  box-shadow: none;
+}
+
+.feed-ribbon-today {
+  position: relative;
+  width: 2px;
+  height: 2rem;
+  border-radius: 1px;
+  background: var(--foreground);
+}
+
+/* ---- A schedule's next run, as a calendar leaf. ---- */
+
+.sched-leaf {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  width: 3.5rem;
+  flex-shrink: 0;
+  border-radius: 0.75rem;
+  background: var(--card);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.sched-leaf-band {
+  width: 100%;
+  padding: 0.125rem 0;
+  text-align: center;
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.sched-leaf[data-state="paused"] .sched-leaf-band {
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.sched-leaf[data-state="needs_you"] {
+  box-shadow: inset 0 0 0 2px var(--warning);
+}
+
+.sched-leaf[data-state="paused"] .sched-leaf-day {
+  color: var(--muted-foreground);
+}
+
+/* ---- The last runs, oldest first, and the one coming. ---- */
+
+.sched-run {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.375rem;
+  background: color-mix(in oklch, var(--foreground) 7%, transparent);
+  color: var(--muted-foreground);
+}
+
+.sched-run[data-outcome="proposed"] {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.sched-run[data-outcome="failed"] {
+  background: color-mix(in oklch, var(--destructive) 16%, transparent);
+  color: var(--destructive);
+}
+
+.sched-run[data-outcome="interrupted"],
+.sched-run[data-outcome="skipped"] {
+  background: color-mix(in oklch, var(--warning) 18%, transparent);
+  color: color-mix(in oklch, var(--warning) 55%, var(--foreground));
+}
+
+.sched-run[data-outcome="nothing_new"] {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--tessera-grey) 70%, transparent);
+}
+
+.sched-run[data-outcome="next"] {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--primary);
+  color: var(--brand);
+}
+
+.sched-run[data-outcome="empty"] {
+  background: color-mix(in oklch, var(--foreground) 4%, transparent);
+}
+
+/* The month's runs against its cap: one pip a run. */
+.sched-pip {
+  width: 0.375rem;
+  height: 0.875rem;
+  border-radius: 2px;
+  background: color-mix(in oklch, var(--foreground) 12%, transparent);
+}
+
+.sched-pip[data-used] {
+  background: var(--tessera-ochre);
+}
+
+/* Basalt sits on the dark card itself, so in dark its stones lift to slate. */
+.dark .feed-kind[data-kind="change_set"],
+.dark .feed-kind[data-kind="memory"] {
+  --kind: oklch(0.62 0.03 260);
+}

@@ -84,3 +84,25 @@ export function runCost(value) {
   if (n === 0) return "$0";
   return n < 0.01 ? "<$0.01" : `$${n.toFixed(2)}`;
 }
+
+// Stones in a card's run strip: the last runs, oldest first, then the next.
+export const RUN_STRIP_SLOTS = 8;
+
+/**
+ * A card's run strip as codes: the last runs oldest first (the route sends
+ * them newest first), padded with empty slots so every card's strip is the
+ * same length, then one "next" stone while the schedule is on.
+ */
+export function runStrip(recent, { enabled = true, slots = RUN_STRIP_SLOTS } = {}) {
+  const past = (Array.isArray(recent) ? recent : []).slice(0, slots).reverse()
+    .map((r, i) => ({ key: `r-${r.at || i}`, outcome: r.outcome || "", at: r.at || null, retry: Boolean(r.will_retry) }));
+  const pad = Array.from({ length: Math.max(0, slots - past.length) }, (_, i) => ({ key: `e-${i}`, outcome: "empty", at: null }));
+  return [...pad, ...past, ...(enabled ? [{ key: "next", outcome: "next", at: null }] : [])];
+}
+
+/** The month's runs against its cap, as pips: used ones first. */
+export function capPips(used, cap) {
+  const n = Math.max(0, Number(cap) || 0);
+  const u = Math.min(n, Math.max(0, Number(used) || 0));
+  return Array.from({ length: n }, (_, i) => i < u);
+}

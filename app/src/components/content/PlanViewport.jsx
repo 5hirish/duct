@@ -108,7 +108,7 @@ export default function PlanViewport({
     if (!feed) return progress;
     return (
       <div className="flex h-full flex-col">
-        <FeedSummary payload={feed} variant="strip" />
+        <FeedSummary payload={feed} />
         <div className="min-h-0 flex-1">{progress}</div>
       </div>
     );
@@ -138,7 +138,7 @@ export default function PlanViewport({
         </span>
       </div>
 
-      {feed && <FeedSummary payload={feed} variant="strip" />}
+      {feed && <FeedSummary payload={feed} />}
 
       {/* Keyed by the proposal, so a re-submitted plan opens a fresh bar
           (textarea closed, no stale error) and a decision resets its state. */}

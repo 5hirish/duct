@@ -33,3 +33,19 @@ describe("a run's figures", () => {
     expect(runCost(null)).toBe(null);
   });
 });
+
+describe("the card's run strip", () => {
+  it("is the last runs oldest first, padded to one length, then the next run", async () => {
+    const { runStrip, RUN_STRIP_SLOTS } = await import("../schedules.js");
+    const strip = runStrip([{ at: "2", outcome: "proposed" }, { at: "1", outcome: "failed" }]);
+    expect(strip).toHaveLength(RUN_STRIP_SLOTS + 1);
+    expect(strip.slice(-3).map((s) => s.outcome)).toEqual(["failed", "proposed", "next"]);
+    expect(runStrip([], { enabled: false }).every((s) => s.outcome === "empty")).toBe(true);
+  });
+
+  it("counts the month's runs against the cap", async () => {
+    const { capPips } = await import("../schedules.js");
+    expect(capPips(2, 4)).toEqual([true, true, false, false]);
+    expect(capPips(9, 3)).toEqual([true, true, true]);
+  });
+});

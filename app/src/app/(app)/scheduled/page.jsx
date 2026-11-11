@@ -21,6 +21,25 @@ import { getActiveProjectId } from "@/lib/projects";
 import { deleteSchedule, listSchedules, runScheduleNow, scheduleHistory, updateSchedule } from "@/lib/schedulesApi";
 import { pollWhileVisible } from "@/lib/visibility";
 
+// The plan board opens its From your work sheet on this, where Repeat weekly is.
+const FEED_SHEET_HREF = "/content?tab=plans&from=work";
+
+// What a schedule looks like after a month of Mondays, drawn by the real card
+// in the empty state's example frame. Dates are relative, so it never ages.
+const DAY_MS = 86_400_000;
+const EXAMPLE_NOW = Date.now();
+const ago = (days) => new Date(EXAMPLE_NOW - days * DAY_MS).toISOString();
+const EXAMPLE_SCHEDULE = {
+  id: "example", name: "", cadence: "weekly", weekday: 0, at_time: "09:00", timezone: "UTC",
+  enabled: true, host: "cloud", monthly_cap: 6, running: false, needs_reason: "", mine: false,
+  next_run_at: new Date(EXAMPLE_NOW + 3 * DAY_MS).toISOString(), runs_this_month: 2,
+  last: { at: ago(4), outcome: "proposed", cost_usd: 0.1, conversation_id: "example" },
+  recent: [
+    { at: ago(4), outcome: "proposed" }, { at: ago(11), outcome: "nothing_new" },
+    { at: ago(18), outcome: "proposed" }, { at: ago(25), outcome: "proposed" },
+  ],
+};
+
 // While a run is going the card changes on its own; a quiet page is not polled.
 const RUNNING_POLL_MS = 10_000;
 
@@ -105,16 +124,15 @@ export default function ScheduledPage() {
         <EmptyState
           icon={CalendarClock}
           title={t`Nothing scheduled yet`}
+          exampleLabel={t`Example`}
+          example={<ScheduleCard schedule={EXAMPLE_SCHEDULE} />}
           actions={
             <Button asChild size="sm">
-              <Link href="/content?tab=plans"><Trans>Open Content Studio</Trans></Link>
+              <Link href={FEED_SHEET_HREF}><Trans>Plan from your work weekly</Trans></Link>
             </Button>
           }
         >
-          <Trans>
-            Plan from your work every Monday: in Content Studio, choose From your work, then Repeat weekly. Each run
-            proposes a plan and waits for you.
-          </Trans>
+          <Trans>Every Monday, Duct reads what you shipped and has a plan waiting for you to accept.</Trans>
         </EmptyState>
       ) : (
         <div className="flex flex-col gap-3">

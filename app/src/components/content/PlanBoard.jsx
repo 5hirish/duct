@@ -215,6 +215,11 @@ export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab, fi
   // A plan from shipped work (#561) starts at its setup sheet.
   const [feedOpen, setFeedOpen] = useState(false);
   const openFeed = useCallback(() => setFeedOpen(true), []);
+  // The Scheduled page's empty state links here with ?from=work, so the sheet
+  // that holds Repeat weekly is one click away rather than three.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("from") === "work") setFeedOpen(true);
+  }, []);
   const feedDialog = feedOpen && (
     <FeedPlanDialog
       open

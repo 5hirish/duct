@@ -195,6 +195,10 @@ msgstr "{agent} 是智能体给自己起的名字。仅在你刚将 Duct 添加�
 msgid "{agent} wasn't connected"
 msgstr "{agent} 未连接"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "{back} days back"
+msgstr "过去 {back} 天"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{blogPosts, plural, one {# blog post} other {# blog posts}}"
 msgstr "{blogPosts, plural, other {# 博客帖子}}"
@@ -253,8 +257,8 @@ msgid "{count, plural, one {# post} other {# posts}}"
 msgstr "{count, plural, other {# 帖子}}"
 
 #: src/components/content/FeedSummary.jsx
-msgid "{count, plural, one {# source} other {# sources}}"
-msgstr "{count, plural, other {# 个来源}}"
+#~ msgid "{count, plural, one {# source} other {# sources}}"
+#~ msgstr "{count, plural, other {# 个来源}}"
 
 #: src/app/(app)/connections/page.jsx
 msgid "{count, plural, one {GitHub connected: # repository.} other {GitHub connected: # repositories.}}"
@@ -372,6 +376,10 @@ msgstr "{inviter} 邀请你加入 <0>{projectName}</0>"
 msgid "{issues, plural, one {# error} other {# errors}}"
 msgstr "{issues, plural, other {# 错误}}"
 
+#: src/components/content/FeedSummary.jsx
+msgid "{kept} of {total} kept"
+msgstr "{total} 项中保留 {kept} 项"
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "{label} API key"
 msgstr "{label} API 密钥"
@@ -426,8 +434,12 @@ msgid "{landingPages, plural, one {# page} other {# pages}}"
 msgstr "{landingPages, plural, other {# 个页面}}"
 
 #: src/components/content/FeedSummary.jsx
-msgid "{left, plural, one {# item left out} other {# items left out}}"
-msgstr "{left, plural, other {已排除 # 项}}"
+#~ msgid "{left, plural, one {# item left out} other {# items left out}}"
+#~ msgstr "{left, plural, other {已排除 # 项}}"
+
+#: src/components/content/FeedSummary.jsx
+msgid "{left, plural, one {# left out as noise} other {# left out as noise}}"
+msgstr "{left, plural, other {# 项作为噪音被略过}}"
 
 #: src/components/content/TextPostEditor.jsx
 msgid "{left} left"
@@ -614,6 +626,10 @@ msgstr "{ranTier} · {requestedTier} 受到速率限制"
 msgid "{read}, partly read"
 msgstr "{read}，部分已读"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "{readLabel} to read, {aheadLabel} to plan"
+msgstr "读取：{readLabel}，计划：{aheadLabel}"
+
 #: src/components/content/PlanDayOne.jsx
 msgid "{ready} of {total} ready"
 msgstr "{total} 个中，{ready} 个已就绪"
@@ -647,8 +663,8 @@ msgid "{robotsLines} lines"
 msgstr "{robotsLines} 行"
 
 #: src/components/schedules/ScheduleCard.jsx
-msgid "{runs} of {cap} runs this month"
-msgstr "本月已运行 {runs} / {cap} 次"
+#~ msgid "{runs} of {cap} runs this month"
+#~ msgstr "本月已运行 {runs} / {cap} 次"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "{scheduler} hasn’t reported a post for {names} and {more} more yet."
@@ -703,6 +719,10 @@ msgstr "{slideShare} 的帖子 · <0>{slideEng}</0> 互动"
 msgid "{sourceCount, plural, one {# source connected} other {# sources connected}}"
 msgstr "{sourceCount, plural, other {# 个连接的来源}}"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "{stories, plural, one {up to # story} other {up to # stories}}"
+msgstr "{stories, plural, other {最多 # 个故事}}"
+
 #: src/components/GoogleAdsReport.js
 msgid "{summary} Operator takeaway: {takeaway}"
 msgstr "{summary} 操作员总结：{takeaway}"
@@ -751,9 +771,17 @@ msgstr "{total, plural, other {已授予全部 # 项}}"
 msgid "{total, plural, one {Show all #} other {Show all #}}"
 msgstr "{total, plural, other {显示全部 #}}"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "{used} of {cap} runs this month"
+msgstr "本月已运行 {used}/{cap} 次"
+
 #: src/components/workspace/ContextRing.jsx
 msgid "{used} of {window} tokens"
 msgstr "{window} 个令牌中的 {used} 个"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "{used}/{cap} this month"
+msgstr "本月 {used}/{cap}"
 
 #: src/components/content/VendorKeyForm.jsx
 msgid "{vendor} API key"
@@ -855,6 +883,10 @@ msgstr "<0>{count}</0> 已连接"
 msgid "<0>{deletingName}</0> will be removed. Posts already drafted with it are unaffected, but the agent can no longer pull it. This can’t be undone."
 msgstr "<0>{deletingName}</0> 将被移除。已使用它起草的帖子不受影响，但智能体将无法再拉取它。此操作无法撤消。"
 
+#: src/components/content/FeedSummary.jsx
+msgid "<0>{kept}</0> of {total} kept"
+msgstr "{total} 项中保留 <0>{kept}</0> 项"
+
 #: src/components/content/DiscoverPage.jsx
 msgid "<0>{resultCount}</0> {resultCount, plural, one {post found} other {posts found}}"
 msgstr "<0>{resultCount}</0> {resultCount, plural, other {个帖子已找到}}"
@@ -924,6 +956,10 @@ msgstr "✦ 已推理"
 msgid "1 week"
 msgstr "1 周"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "1 week ahead"
+msgstr "未来 1 周"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "1–2 wks"
 msgstr "1–2 周"
@@ -936,6 +972,10 @@ msgstr "1–3 天"
 #: src/components/content/PlanPeriodPicker.jsx
 msgid "2 weeks"
 msgstr "2 周"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "2 weeks ahead"
+msgstr "未来 2 周"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "2–4 hrs"
@@ -2029,8 +2069,12 @@ msgid "Briefs"
 msgstr "简报"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Briefs it wrote, changes you approved and what they did."
-msgstr "它写过的简报、你批准的改动，以及这些改动的效果。"
+#~ msgid "Briefs it wrote, changes you approved and what they did."
+#~ msgstr "它写过的简报、你批准的改动，以及这些改动的效果。"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Briefs, approved changes and what they did"
+msgstr "简报、已批准的更改及其效果"
 
 #: src/components/connections/BringAnyTool.jsx
 msgid "Bring any tool"
@@ -2232,6 +2276,10 @@ msgstr "在你批准后，账户中发生了更改，因此未应用。请请求
 #: src/lib/navigation.js
 msgid "Changes"
 msgstr "更改"
+
+#: src/lib/contentFeedLabels.js
+#~ msgid "Changes applied"
+#~ msgstr ""
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Changes apply to future drafts that pull this format."
@@ -2478,6 +2526,10 @@ msgid "Commit edits"
 msgstr "提交编辑"
 
 #: src/lib/contentFeedLabels.js
+#~ msgid "Commits"
+#~ msgstr ""
+
+#: src/lib/contentFeedLabels.js
 msgid "Commits already in a pull request"
 msgstr "已包含在拉取请求中的提交"
 
@@ -2566,6 +2618,10 @@ msgstr "连接 {vendor}"
 msgid "Connect a model"
 msgstr "连接模型"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Connect a repository"
+msgstr "连接仓库"
+
 #: src/components/content/AnalyticsReport.jsx
 #: src/components/content/PlanDayOne.jsx
 msgid "Connect a scheduler"
@@ -2610,6 +2666,7 @@ msgid "Connect Apify and Duct searches TikTok for you, by hashtag or a region's 
 msgstr "连接 Apify 后，Duct 会为你搜索 TikTok，通过话题标签或区域热门动态，让你的计划从已受欢迎的帖子开始。"
 
 #: src/app/(app)/connections/page.jsx
+#: src/components/content/FeedSummary.jsx
 msgid "Connect GitHub"
 msgstr "连接 GitHub"
 
@@ -3374,6 +3431,10 @@ msgstr "已忽略"
 msgid "Display name"
 msgstr "显示名称"
 
+#: src/lib/contentFeedLabels.js
+#~ msgid "Docs"
+#~ msgstr ""
+
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Docs / Help"
 msgstr "文档 / 帮助"
@@ -3579,12 +3640,16 @@ msgid "Duct forgets your Apify token and stops searching through your account. R
 msgstr "Duct 忘记了你的 Apify 令牌，并停止通过你的账户搜索。你保存的引用保持不变。"
 
 #: src/components/content/FeedSummary.jsx
-msgid "Duct found nothing a reader would notice, so it made no model call and changed nothing."
-msgstr "Duct 没有找到读者会注意到的内容，因此没有调用模型，也没有做任何改动。"
+#~ msgid "Duct found nothing a reader would notice, so it made no model call and changed nothing."
+#~ msgstr "Duct 没有找到读者会注意到的内容，因此没有调用模型，也没有做任何改动。"
 
 #: src/components/insights/desk/DeskCards.jsx
 msgid "Duct found nothing worth your time. Enjoy the quiet."
 msgstr "Duct 没有发现任何值得你关注的内容。享受这份宁静。"
+
+#: src/components/content/FeedSummary.jsx
+msgid "Duct had no work to read. Is a repository connected for this project?"
+msgstr "Duct 没有可读取的工作。这个项目连接了仓库吗？"
 
 #: src/components/workspace/QuestionsCard.jsx
 msgid "Duct has a quick question"
@@ -3605,6 +3670,10 @@ msgstr "Duct 正在读取它。在它读取时提出你的第一个问题。"
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "Duct is waiting on your answer"
 msgstr "Duct 正在等待你的回答"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Duct keeps what a reader would notice and asks which stories to tell. Your plan changes only when you accept."
+msgstr "Duct 只保留读者会注意到的内容，并问你要讲哪些故事。你接受之前，计划不会改变。"
 
 #: src/components/insights/desk/DeskCards.jsx
 msgid "Duct last looked {lastChecked} and found nothing worth your time. Enjoy the quiet."
@@ -3627,8 +3696,16 @@ msgid "Duct proposes this plan."
 msgstr "Duct 提出了这个计划。"
 
 #: src/components/content/FeedSummary.jsx
-msgid "Duct read {span} and found nothing a reader would notice, so it made no model call and changed nothing."
-msgstr "Duct 读取了 {span}，没有找到读者会注意到的内容，因此没有调用模型，也没有做任何改动。"
+#~ msgid "Duct read {span} and found nothing a reader would notice, so it made no model call and changed nothing."
+#~ msgstr "Duct 读取了 {span}，没有找到读者会注意到的内容，因此没有调用模型，也没有做任何改动。"
+
+#: src/components/content/FeedSummary.jsx
+msgid "Duct read {total} things from {span}. None would make a reader stop, so it spent nothing and changed nothing."
+msgstr "Duct 读取了 {span} 的 {total} 项内容。没有一项能让读者停下来，所以没有花费，也没有做任何更改。"
+
+#: src/components/content/FeedSummary.jsx
+msgid "Duct read {total} things. None would make a reader stop, so it spent nothing and changed nothing."
+msgstr "Duct 读取了 {total} 项内容。没有一项能让读者停下来，所以没有花费，也没有做任何更改。"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Duct reads \"last week\" and \"yesterday\" in {chosenZone}."
@@ -3651,8 +3728,8 @@ msgid "Duct reads your sources again and tells you what changed since {since}."
 msgstr "Duct 再次读取你的来源，并告诉你自 {since} 以来发生了什么变化。"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Duct reads your work, leaves out the noise and shows you the stories it found. You pick which to tell, and nothing changes in your plan until you accept it."
-msgstr "Duct 会读取你的工作，过滤掉无关内容，并展示它找到的故事。由你决定讲哪些，在你接受之前，计划不会有任何改动。"
+#~ msgid "Duct reads your work, leaves out the noise and shows you the stories it found. You pick which to tell, and nothing changes in your plan until you accept it."
+#~ msgstr "Duct 会读取你的工作，过滤掉无关内容，并展示它找到的故事。由你决定讲哪些，在你接受之前，计划不会有任何改动。"
 
 #: src/app/(start)/start/page.jsx
 msgid "Duct runs on your own account, so an audit costs you cents — and Duct never sees your data twice."
@@ -3952,6 +4029,10 @@ msgstr "每小时"
 msgid "Every measurement, the method, notes for whoever builds the fix"
 msgstr "每次测量、方法、以及给修复者的备注"
 
+#: src/app/(app)/scheduled/page.jsx
+msgid "Every Monday, Duct reads what you shipped and has a plan waiting for you to accept."
+msgstr "每周一，Duct 会读取你发布的内容，并准备好一份等你接受的计划。"
+
 #: src/components/content/PlanDayOne.jsx
 msgid "Every post dated, with its pillar and what it is for. Open one and Duct drafts it with you."
 msgstr "每个帖子都标有日期、其核心主题和用途。打开一个，Duct 会与你一起起草它。"
@@ -3996,6 +4077,7 @@ msgstr "其他所有"
 msgid "Evidence: {evidence}"
 msgstr "证据：{evidence}"
 
+#: src/app/(app)/scheduled/page.jsx
 #: src/components/content/PlanDayOne.jsx
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Example"
@@ -4313,8 +4395,8 @@ msgid "From your work"
 msgstr "根据你的工作"
 
 #: src/components/content/FeedSummary.jsx
-msgid "From your work · {span}"
-msgstr "根据你的工作 · {span}"
+#~ msgid "From your work · {span}"
+#~ msgstr "根据你的工作 · {span}"
 
 #: src/components/content/PlanChanges.jsx
 msgid "Funnel stage"
@@ -5162,6 +5244,10 @@ msgstr "着陆页"
 msgid "Language"
 msgstr "语言"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Last {ran} runs"
+msgstr "最近 {ran} 次运行"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Last 30 days"
 msgstr "过去 30 天"
@@ -5539,6 +5625,10 @@ msgstr "管理项目"
 msgid "Manager account ID (MCC, optional)"
 msgstr "管理账户 ID (MCC，可选)"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Manual"
+msgstr "手动"
+
 #: src/components/content/PlanViewport.jsx
 msgid "Mapping topics across your dates…"
 msgstr "正在映射你的日期主题…"
@@ -5633,8 +5723,8 @@ msgid "Memory title"
 msgstr "记忆标题"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Merged pull requests, releases and changelog edits."
-msgstr "已合并的拉取请求、版本发布和更新日志的修改。"
+#~ msgid "Merged pull requests, releases and changelog edits."
+#~ msgstr "已合并的拉取请求、版本发布和更新日志的修改。"
 
 #: src/app/(app)/connections/page.jsx
 msgid "Merged pull requests, releases, closed issues and doc changes, by date."
@@ -5940,6 +6030,20 @@ msgstr "新增：{newFindings}"
 msgid "Next month"
 msgstr "下个月"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Next run"
+msgstr "下次运行"
+
+#. placeholder {0}: formatDate(next, { withYear: false, locale: i18n.locale })
+#. placeholder {1}: formatTime(next, { locale: i18n.locale })
+#: src/components/schedules/ScheduleCard.jsx
+#~ msgid "Next run {0}, {1}"
+#~ msgstr ""
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Next run {nextDate}, {nextTime}"
+msgstr "下次运行 {nextDate} {nextTime}"
+
 #: src/components/content/SlidesCarousel.jsx
 msgid "Next slide"
 msgstr "下一张幻灯片"
@@ -5950,8 +6054,8 @@ msgid "Next week"
 msgstr "下周"
 
 #: src/components/schedules/ScheduleCard.jsx
-msgid "Next: {nextDate}, {nextTime}"
-msgstr "下次：{nextDate} {nextTime}"
+#~ msgid "Next: {nextDate}, {nextTime}"
+#~ msgstr "下次：{nextDate} {nextTime}"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Nightly check"
@@ -6306,8 +6410,8 @@ msgid "Not connected"
 msgstr "未连接"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Not connected. Connect a repository in the <0>Toolbox</0>."
-msgstr "未连接。请在<0>工具箱</0>中连接一个仓库。"
+#~ msgid "Not connected. Connect a repository in the <0>Toolbox</0>."
+#~ msgstr "未连接。请在<0>工具箱</0>中连接一个仓库。"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "Not enough dated posts to chart a trend yet."
@@ -6429,8 +6533,12 @@ msgid "Nothing below this tier can run either — add a key to use {tierName}."
 msgstr "低于此层级的都无法运行——添加密钥以使用 {tierName}。"
 
 #: src/components/content/FeedSummary.jsx
-msgid "Nothing came back at all. If no repository is connected yet, <0>connect one in the Toolbox</0>."
-msgstr "什么也没有返回。如果还没有连接仓库，请<0>在工具箱中连接一个</0>。"
+msgid "Nothing came back"
+msgstr "没有返回任何内容"
+
+#: src/components/content/FeedSummary.jsx
+#~ msgid "Nothing came back at all. If no repository is connected yet, <0>connect one in the Toolbox</0>."
+#~ msgstr "什么也没有返回。如果还没有连接仓库，请<0>在工具箱中连接一个</0>。"
 
 #: src/components/settings/AgentConsent.jsx
 msgid "Nothing changed. You can close this tab."
@@ -6581,6 +6689,10 @@ msgstr "通知"
 msgid "now"
 msgstr "现在"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Now"
+msgstr "现在"
+
 #: src/lib/mcpServers.js
 msgid "Now asks for a sign-in"
 msgstr "现在需要登录"
@@ -6727,8 +6839,12 @@ msgid "Only a sample of your sitemap was scanned."
 msgstr "只扫描了你网站地图的一部分。"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Only days with no draft yet. The rest of your plan stays as it is."
-msgstr "仅限还没有草稿的日子。计划的其余部分保持不变。"
+msgid "Only days with no draft yet."
+msgstr "仅限还没有草稿的日子。"
+
+#: src/components/content/FeedPlanDialog.jsx
+#~ msgid "Only days with no draft yet. The rest of your plan stays as it is."
+#~ msgstr "仅限还没有草稿的日子。计划的其余部分保持不变。"
 
 #: src/app/(app)/connections/page.jsx
 msgid "Only if 'Require App Secret' is on"
@@ -6792,8 +6908,8 @@ msgid "Open chat"
 msgstr "打开聊天"
 
 #: src/app/(app)/scheduled/page.jsx
-msgid "Open Content Studio"
-msgstr "打开 Content Studio"
+#~ msgid "Open Content Studio"
+#~ msgstr "打开 Content Studio"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Open Discover"
@@ -7280,8 +7396,12 @@ msgid "Plan from your work"
 msgstr "根据你的工作来计划"
 
 #: src/app/(app)/scheduled/page.jsx
-msgid "Plan from your work every Monday: in Content Studio, choose From your work, then Repeat weekly. Each run proposes a plan and waits for you."
-msgstr "每周一根据你的工作来计划：在 Content Studio 中选择“根据你的工作”，然后选择“每周重复”。每次运行都会提出一个计划并等待你确认。"
+#~ msgid "Plan from your work every Monday: in Content Studio, choose From your work, then Repeat weekly. Each run proposes a plan and waits for you."
+#~ msgstr "每周一根据你的工作来计划：在 Content Studio 中选择“根据你的工作”，然后选择“每周重复”。每次运行都会提出一个计划并等待你确认。"
+
+#: src/app/(app)/scheduled/page.jsx
+msgid "Plan from your work weekly"
+msgstr "每周根据你的工作制定计划"
 
 #: src/components/content/PlanStrategy.jsx
 msgid "Plan strategy"
@@ -7636,6 +7756,10 @@ msgstr "正在发布此内容"
 msgid "Pull a model that calls tools, for example <0>ollama pull qwen3</0>."
 msgstr "拉取一个调用工具的模型，例如 <0>ollama pull qwen3</0>。"
 
+#: src/lib/contentFeedLabels.js
+#~ msgid "Pull requests"
+#~ msgstr ""
+
 #: src/components/workspace/AgentChat.jsx
 msgid "Putting it together"
 msgstr "整合中"
@@ -7945,12 +8069,20 @@ msgid "Rejecting…"
 msgstr "正在拒绝…"
 
 #: src/lib/contentFeedLabels.js
+#~ msgid "Releases"
+#~ msgstr ""
+
+#: src/lib/contentFeedLabels.js
 msgid "Releases and their notes."
 msgstr "版本发布及其说明。"
 
 #: src/lib/contentFeedLabels.js
 msgid "Releases only"
 msgstr "仅版本发布"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Releases, merged pull requests, changelog edits"
+msgstr "版本发布、已合并的拉取请求、更新日志修改"
 
 #: src/lib/contentFeedLabels.js
 msgid "Releases, merged pull requests, commits to your main branch, README and changelog edits."
@@ -8275,8 +8407,12 @@ msgid "Review changes"
 msgstr "审查变更"
 
 #: src/components/schedules/ScheduleCard.jsx
-msgid "Review the proposal"
-msgstr "查看方案"
+msgid "Review the plan"
+msgstr "查看计划"
+
+#: src/components/schedules/ScheduleCard.jsx
+#~ msgid "Review the proposal"
+#~ msgstr "查看方案"
 
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Review what changed"
@@ -8408,6 +8544,10 @@ msgstr "在你的终端中运行此命令。"
 #: src/components/schedules/ScheduleCard.jsx
 msgid "Running"
 msgstr "运行中"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Running now"
+msgstr "正在运行"
 
 #: src/lib/modelTiers.js
 msgid "Running on a key already on this computer, not one you added here."
@@ -10506,6 +10646,10 @@ msgstr "至"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "To date"
 msgstr "迄今为止"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Today"
+msgstr "今天"
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Token name"

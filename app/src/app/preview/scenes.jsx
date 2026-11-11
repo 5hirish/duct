@@ -43,6 +43,7 @@ import { StarAskNotice, StarAskView } from "@/components/StarAsk";
 import LoadError from "@/components/LoadError";
 import CloneFromUrlDialog from "@/components/content/CloneFromUrlDialog";
 import FeedPlanDialog from "@/components/content/FeedPlanDialog";
+import { DEFAULT_FEED } from "@/lib/contentFeed";
 import FeedSummary from "@/components/content/FeedSummary";
 import ScheduleCard from "@/components/schedules/ScheduleCard";
 import CloneSourceNote from "@/components/content/CloneSourceNote";
@@ -4254,6 +4255,14 @@ export const SCENES = [
     render: () => <FeedDialogScene />,
   },
   {
+    id: "feed-plan-dialog-long",
+    state: "30 days back, 2 weeks ahead, 4 days",
+    group: "FeedPlanDialog",
+    title: "The setup sheet at its widest window",
+    note: "The drawing at its densest: 30 day cells read, 14 planned, four lit. What to check: every cell keeps the same width on both sides of today, the Today label stays under its bar, and the cells never shrink below a visible stone at phone width.",
+    render: () => <FeedDialogScene initial={{ ...DEFAULT_FEED, lookBack: 30, horizon: 14, maxDays: 4, disclosure: "releases" }} />,
+  },
+  {
     id: "feed-plan-dialog-no-github",
     state: "no repository connected",
     group: "FeedPlanDialog",
@@ -4269,7 +4278,7 @@ export const SCENES = [
     note: "The strip above the plan pane while the stories are found and after: the window, the sources as chips that open the PR, release or brief, and one folded line for what was left out. What to check: the chips wrap rather than widen the pane; opening the line lists each reason with its count.",
     render: () => (
       <div className="w-full max-w-xl bg-background">
-        <FeedSummary payload={FEED_READ} variant="strip" />
+        <FeedSummary payload={FEED_READ} />
       </div>
     ),
   },
@@ -4652,12 +4661,13 @@ const PLAN_WITH_FEED_DAYS = {
   ),
 };
 
-function FeedDialogScene({ githubConnected = true }) {
+function FeedDialogScene({ githubConnected = true, initial }) {
   const [open, setOpen] = useState(true);
   return (
     <>
       <Button size="sm" variant="outline" onClick={() => setOpen(true)}>Open the setup sheet</Button>
-      <FeedPlanDialog open={open} onOpenChange={setOpen} onStart={() => setOpen(false)} githubConnected={githubConnected} />
+      <FeedPlanDialog open={open} onOpenChange={setOpen} onStart={() => setOpen(false)} onRepeatWeekly={() => setOpen(false)}
+        githubConnected={githubConnected} {...(initial ? { initial } : {})} />
     </>
   );
 }
@@ -4669,13 +4679,21 @@ const SCHEDULE_BASE = {
 };
 const SCHEDULES = [
   { ...SCHEDULE_BASE, id: "s1", name: "Weekly plan from your work", runs_this_month: 2,
-    last: { at: "2026-11-09T08:04:00Z", outcome: "proposed", cost_usd: 0.0995, conversation_id: "c1" } },
+    last: { at: "2026-11-09T08:04:00Z", outcome: "proposed", cost_usd: 0.0995, conversation_id: "c1" },
+    recent: [
+      { at: "2026-11-09T08:04:00Z", outcome: "proposed" }, { at: "2026-11-02T08:20:00Z", outcome: "interrupted", will_retry: true },
+      { at: "2026-10-26T08:03:00Z", outcome: "nothing_new" }, { at: "2026-10-19T08:06:00Z", outcome: "proposed" },
+      { at: "2026-10-12T08:02:00Z", outcome: "proposed" },
+    ] },
   { ...SCHEDULE_BASE, id: "s2", name: "Daily plan from your work", cadence: "daily", host: "local", running: true,
-    runs_this_month: 5, last: { at: "2026-11-10T08:02:00Z", outcome: "nothing_new", cost_usd: 0 } },
+    runs_this_month: 5, last: { at: "2026-11-10T08:02:00Z", outcome: "nothing_new", cost_usd: 0 },
+    recent: Array.from({ length: 8 }, (_, i) => ({ at: `2026-11-${String(10 - i).padStart(2, "0")}T08:02:00Z`, outcome: i % 3 ? "nothing_new" : "proposed" })) },
   { ...SCHEDULE_BASE, id: "s3", name: "Weekly plan, client repo", needs_reason: "no_model_key", runs_this_month: 0,
-    last: { at: "2026-11-09T08:01:00Z", outcome: "skipped", reason: "no_model_key" } },
+    last: { at: "2026-11-09T08:01:00Z", outcome: "skipped", reason: "no_model_key" },
+    recent: [{ at: "2026-11-09T08:01:00Z", outcome: "skipped" }, { at: "2026-11-09T07:46:00Z", outcome: "skipped" }] },
   { ...SCHEDULE_BASE, id: "s4", name: "Paused experiment", enabled: false, next_run_at: null, cadence: "weekdays",
-    runs_this_month: 1, mine: false, last: { at: "2026-11-03T08:05:00Z", outcome: "failed", reason: "rate_limited" } },
+    runs_this_month: 1, mine: false, last: { at: "2026-11-03T08:05:00Z", outcome: "failed", reason: "rate_limited" },
+    recent: [{ at: "2026-11-03T08:05:00Z", outcome: "failed" }, { at: "2026-11-02T08:05:00Z", outcome: "proposed" }] },
 ];
 const SCHEDULE_HISTORY = [
   { at: "2026-11-09T08:04:00Z", outcome: "proposed", cost_usd: 0.0995, conversation_id: "c1" },
