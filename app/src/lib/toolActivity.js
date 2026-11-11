@@ -58,6 +58,7 @@ export const ACTIVITY_TOOLS = Object.freeze({
   fetch_content_history: ActivityKind.CONTEXT,
   fetch_content_assets: ActivityKind.CONTEXT,
   fetch_discovered_references: ActivityKind.CONTEXT,
+  discover_tiktok: ActivityKind.CONTEXT,
   fetch_post: ActivityKind.CONTEXT,
   fetch_slide_context: ActivityKind.CONTEXT,
   submit_plan: ActivityKind.ACTION,
@@ -182,6 +183,17 @@ function rowCount(data) {
 }
 
 /** A listing's size: its own `count`, else the first list at the top level. */
+/** The content agents' TikTok search (agents/content/discover.py). */
+const TIKTOK_SEARCH_TOOL = "discover_tiktok";
+
+function hashtagTitle(tags) {
+  return (Array.isArray(tags) ? tags : [])
+    .map((t) => String(t || "").trim().replace(/^#+/, ""))
+    .filter(Boolean)
+    .map((t) => `#${t}`)
+    .join(" ");
+}
+
 function listLen(env) {
   if (!env) return null;
   if (typeof env.count === "number") return env.count;
@@ -233,11 +245,14 @@ function replayRow({ tool, id, args, env, raw, isError }) {
   }
   if (kind === ActivityKind.CONTEXT) {
     const count = ok ? listLen(env) : null;
+    // The TikTok search (backend `_tiktok_start`): titled by its hashtags, and
+    // a skip is the person's answer on the card, not an error to repeat.
+    const tiktok = tool === TIKTOK_SEARCH_TOOL;
     return {
       ...base,
-      title: args.post_id || args.slide_id || args.query || "",
+      title: tiktok ? hashtagTitle(args.hashtags) : args.post_id || args.slide_id || args.query || "",
       meta: count === null ? {} : { count },
-      error: ok ? "" : String(env?.message || ""),
+      error: ok || (tiktok && CONNECTED_QUIET.has(String(env?.status || ""))) ? "" : String(env?.message || ""),
     };
   }
   if (kind === ActivityKind.ARTIFACT) {

@@ -3681,6 +3681,10 @@ msgstr "每次变更都会被回滚，使用应用时记录的回滚句柄。"
 msgid "Each redirect hop bleeds crawl budget and PageRank."
 msgstr "每次重定向跳转都会消耗抓取预算和 PageRank。"
 
+#: src/components/insights/ToolApproval.jsx
+msgid "Each search uses this project’s {serverName} credits, so Duct asks first. Skip and the agent carries on from what you saved."
+msgstr "每次搜索都会消耗此项目的 {serverName} 额度，因此 Duct 会先询问。跳过则智能体将根据你保存的内容继续。"
+
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Each source Duct reads shows up here with the period it covers, and the provider’s own words when a pull fails."
 msgstr "Duct 读取的每个来源都会在此处显示，并附带其涵盖的时期，以及拉取失败时提供商自己的说明。"
@@ -8410,6 +8414,10 @@ msgstr "搜索查询、点击、展示次数和平均排名。"
 msgid "Search sources"
 msgstr "搜索来源"
 
+#: src/components/insights/ToolApproval.jsx
+msgid "Search TikTok with {serverName}?"
+msgstr "使用 {serverName} 搜索 TikTok？"
+
 #: src/components/content/DiscoverPage.jsx
 msgid "Search your niche"
 msgstr "搜索你的利基市场"
@@ -8421,6 +8429,10 @@ msgstr "已搜索记忆"
 #: src/components/workspace/ActivityRow.jsx
 msgid "Searched the web"
 msgstr "已搜索网页"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Searched TikTok"
+msgstr "已搜索 TikTok"
 
 #: src/components/content/DiscoverPage.jsx
 msgid "Searches run on your own Apify account, so the scraping is billed to you. The same search again within 30 minutes costs nothing."

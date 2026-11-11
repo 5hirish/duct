@@ -628,6 +628,8 @@ const TOOL_TRAFFIC = [
   returned("GetArtifact", "t9", { artifact_id: "a1", title: "Organic growth, week of 8 Sept", kind: "brief", version: 3 }),
   use("FetchPages", "t10", { urls: ["https://acme.io/", "https://acme.io/pricing", "https://acme.io/blog/launch"] }),
   returned("FetchPages", "t10", { pages: [{ url: "https://acme.io/" }, { url: "https://acme.io/pricing" }], errors: ["https://acme.io/blog/launch: 404"] }),
+  use("discover_tiktok", "t13", { reason: "Which hooks pull saves this week", hashtags: ["skincareroutine", "glassskin"] }),
+  returned("discover_tiktok", "t13", { status: "ok", count: 15, found: 30, searched: ["skincareroutine", "glassskin"], posts: new Array(15).fill({}) }),
   use("submit_assessment", "t12", { markers: [], notes: "" }),
   returned("submit_assessment", "t12", { status: "ok", post_id: "p1", topic: "Why your colours look off", overall: 56, band: "needs_work" }),
   use("publish_post", "t11", { post_id: "p1" }),
@@ -764,6 +766,25 @@ const TOOL_APPROVAL = {
   reason: "To file this week's brief in your Growth wiki, under Weekly briefs.",
   arguments: JSON.stringify(
     { parent: { page_id: "1a2b3c4d" }, pages: [{ properties: { title: "Organic growth, week of 13 Oct" }, content: "## What changed\n…" }] },
+    null,
+    2,
+  ),
+};
+
+// The content agents' TikTok search (agents/content/discover.py): the same
+// card, with the arguments Discover's policy built and its own words.
+const TIKTOK_APPROVAL = {
+  event: AgentEvent.TOOL_APPROVAL_REQUIRED,
+  interrupt_id: "preview-tiktok-approval",
+  server: "apify",
+  server_name: "Apify",
+  server_url: "https://apify.com",
+  tool: "discover_tiktok",
+  tool_title: "",
+  reason: "To see which skincare hooks are pulling saves this week before I re-think Thursday's post.",
+  why: "spends_credits",
+  arguments: JSON.stringify(
+    { hashtags: ["skincareroutine", "glassskin"], resultsPerPage: 30, shouldDownloadVideos: false, shouldDownloadCovers: false, shouldDownloadSubtitles: false },
     null,
     2,
   ),
@@ -2681,6 +2702,18 @@ export const SCENES = [
     ),
   },
   {
+    id: "tool-approval-tiktok",
+    state: "a TikTok search that spends Apify credits",
+    group: "ToolApproval",
+    title: "The content agent asks before searching TikTok",
+    note: "The same card a connected tool uses, worded for a search: whose credits it spends, the agent's reason, and the exact input Discover's policy built, folded. Skip and the agent carries on from the saved references.",
+    render: () => (
+      <div className="max-w-xl">
+        <PauseCard pause={TIKTOK_APPROVAL} onAnswer={() => {}} />
+      </div>
+    ),
+  },
+  {
     id: "questions-direction",
     state: "one question · four options with descriptions · a disabled copy",
     group: "QuestionsCard",
@@ -3089,7 +3122,7 @@ export const SCENES = [
   },
   {
     id: "activity-rows",
-    state: "the context notice · pulls · a search · a page · a sub-agent · memory · sources · a document · a site read · a publish",
+    state: "the context notice · pulls · a search · a page · a sub-agent · memory · sources · a document · a site read · a TikTok search · a publish",
     group: "AgentChat",
     title: "What the agent did, in the transcript",
     note: "One row per tool call, where it happened. A run used to show none of this — a pull became a line in another tab, a search and an image became nothing — so the reader got ninety seconds of \"Working…\" and then a brief citing a source they never saw it open. One line each until you click: twelve sources would otherwise push the prose off the screen. Every row here is built by lib/toolActivity from recorded tool traffic, the same path a reopened thread takes.",

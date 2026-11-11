@@ -618,7 +618,12 @@ Postgres `DATABASE_URL` names.
   and `RequestConnection` when the run has a project. The system prompt holds
   the rule (Search Console only, after the report, once); the onboarding
   audit's user turn (`draft_project`) is the trigger, so the cached prefix is
-  identical across every other audit.
+  identical across every other audit. The content agents mount all three
+  plus `FetchData` and `ReadConnectorNotes` (issue #552), so a plan can lean
+  on what people search for and a post on the visits it sent; their cached
+  prompt carries the same entity catalog as insights
+  (`agents/content/prompts.project_data_section`), so an entity id means one
+  thing to both.
 - `service/mcp/` + `routes/mcp_servers.py` + `agents/core/mcp_tools.py` —
   MCP servers a user connects (issue #345). Duct is the *client* here; Duct as
   a server is #197. Eight rules, each held by `tests/test_mcp_*.py`:
@@ -670,9 +675,9 @@ Postgres `DATABASE_URL` names.
     listing on demand.
   - **Two fixed agent tools, never one per server tool.** `ListConnectedTools`
     (a menu, then one tool's schema on request) and `CallConnectedTool`; a
-    call that asks first pauses on `TOOL_APPROVAL_REQUIRED`. Insights
-    interactive sessions only, and only when the user has a server, so every
-    other prompt keeps its cached prefix.
+    call that asks first pauses on `TOOL_APPROVAL_REQUIRED`. Interactive
+    insights and content sessions only, and only when the user has a server,
+    so every other prompt keeps its cached prefix.
 - `service/discovery.py` — saved TikTok references. `ingest_reference(db,
   project_id, post)` is the one way a `ScrapedPost` becomes a
   `discovered_reference` row (one per post per project); `capture_reference_media`
@@ -686,7 +691,11 @@ Postgres `DATABASE_URL` names.
   that guard a save is a request the caller aims at our network.
 - `service/apify/run_cache.py` — an identical Discover search (actor + canonical
   input) inside 30 minutes joins the earlier Apify run instead of paying for a
-  new one. In process; the API runs one worker.
+  new one. In process; the API runs one worker. The content agents' search,
+  `discover_tiktok` (`agents/content/discover.py`), goes through the same
+  policy and cache, on the owner's key, and pauses on the MCP approval card
+  (`why: spends_credits`) before every run because it spends their credits.
+  It saves nothing: a reference is still the person's save in Discover.
 - `routes/generate.py` — `POST /api/insights/generate` for interactive brief + LangChain synthesis envelope
 - `routes/content_reports.py` — the Analytics tab's **growth report**: the
   insights agent, unattended, over the sources the person ticked, writing

@@ -704,7 +704,7 @@ Read the connector notes for every source before concluding from it. A block who
 
 ## Content Studio (`tiktok_studio`)
 
-### System prompt · mode=plan_month · ~9,691 tokens
+### System prompt · mode=plan_month · ~12,979 tokens
 
 ```text
 You are Duct's in-house short-form content strategist — a world-class TikTok,
@@ -1046,13 +1046,20 @@ Readers (no side-effects):
   named), fetch_content_assets, fetch_discovered_references, fetch_post
   (structured slides + slides_html)
 
-Research (plan mode):
+Research:
   research_trends(focus) — the research pass: what is working now for this
   brand's audience on its channels (sounds, hashtags, hooks, formats,
-  competitor cadence, seasonal dates), dated and sourced. One call per plan,
-  after the person gave a direction; call it again only for a new direction.
-  If it reports that nothing came back, plan from the account's own numbers
-  and say so in strategy — never quote a trend it did not return.
+  competitor cadence, seasonal dates), dated and sourced. One call per plan
+  after the person gave a direction, or per post when they want a new
+  concept rather than an edit; call it again only for a new direction. If it
+  reports that nothing came back, work from the account's own numbers and
+  say so — never quote a trend it did not return.
+  discover_tiktok(reason, hashtags | region) — search TikTok now, through the
+  project's Apify account: the top posts by plays, with their likes, shares,
+  saves, sound and caption. Each search spends Apify credits and waits for
+  the person's yes, so read fetch_discovered_references first and search only
+  when fresh TikTok evidence would change the plan or the post. It saves
+  nothing; cite a post by its URL and its counts.
 
 Visual review:
   render_slide(slide_id) — rasterize a slide to 1080×1920 and SEE the composed
@@ -1113,6 +1120,113 @@ Built-ins:
   ls / read_file / write_file / edit_file — a private scratch space for notes
                    and drafts; never a way to reach the user's files
 
+
+## THE PROJECT'S OWN DATA
+
+The sources this project connected (Search Console, GA4, Clarity, the
+schedulers and the rest under <entity_catalogs>) are readable here, the same
+way the insights agent reads them:
+
+- ListDataSources first: what is connected, and to which account. Never ask
+  the person what they connected.
+- FetchData(entity_id, date_from, date_to) reads one entity, and
+  ReadConnectorNotes(connector_id) says how that platform's numbers mislead.
+  Read the notes before drawing a conclusion from a connector.
+- SelectAccount when a source is 'available'. RequestConnection only when the
+  plan or the post genuinely needs a source the project lacks; a skip is a
+  normal answer, and you carry on without it.
+
+Reach for it where it changes the work: the queries people search for
+(gsc_query_performance) as topics, hooks and caption keywords, and the
+landing pages and conversion paths a post sent people to (ga4_landing_pages,
+ga4_conversion_paths) as the goal the post tables cannot measure. Skip it
+when the content tables already answer. Name the source and the window behind
+every number you take from it.
+
+<entity_catalogs>
+## Connector "clarity" (schema=1.0.0, api=clarity-export-data-v1, last_audited=2026-08-31)
+- entity_id="clarity_friction" label="Clarity Landing-Page Friction"
+  description="Last 1–3 days of on-page friction — rage clicks, dead clicks, quick-backs, script errors — overall and per URL, with traffic and engagement context. Costs 2 of the project's 10 daily API calls."
+  fields: traffic (dimension), engagement (dimension), friction (dimension), pages (dimension), friction_by_url (dimension), sessions (metric, unit=count, agg=sum), rage_click_sessions_pct (metric, unit=percent, agg=avg), dead_click_sessions_pct (metric, unit=percent, agg=avg)
+  sortable_by: sessions, rage_click_sessions_pct, dead_click_sessions_pct
+## Connector "ga4" (schema=1.0.0, api=ga4-data-v1beta, last_audited=2026-09-24)
+- entity_id="ga4_landing_pages" label="GA4 Landing Pages"
+  description="Landing-page behaviour per page and channel (GA4 default channel group: 'Organic Search', 'Paid Search', 'Direct'...). Read only the channel your question is about."
+  fields: page_path (dimension), channel (dimension), sessions (metric, unit=count, agg=sum), bounce_rate (metric, unit=percent, agg=avg), engagement_rate (metric, unit=percent, agg=avg), average_session_duration (metric, unit=seconds, agg=avg), conversions (metric, unit=count, agg=sum), total_revenue (metric, unit=currency, agg=sum)
+  sortable_by: sessions, bounce_rate, conversions, total_revenue
+- entity_id="ga4_conversion_paths" label="GA4 Conversion Paths"
+  description="Source/channel path context for assisted-conversion analysis."
+  fields: session_source_medium (dimension), session_default_channel_group (dimension), conversions (metric, unit=count, agg=sum), total_revenue (metric, unit=currency, agg=sum), sessions (metric, unit=count, agg=sum)
+  sortable_by: conversions, total_revenue, sessions
+## Connector "github" (schema=1.0.0, api=github-rest-2022-11-28, last_audited=2026-09-28)
+- entity_id="github_work_events" label="GitHub Work Events"
+  description="What the project's repository shipped in the window, one row per event: releases, merged pull requests, closed issues, changed docs, then commits. Line a metric change up against merged_at and release times, not commit times, and a merge is not a deploy. File stats cover the newest commits only (all of them in a window of two days or less); the summary says how many."
+  fields: kind (dimension, values=['commit', 'pull_request', 'issue', 'release', 'docs_change']), at (dimension), ref (dimension), title (dimension), body (dimension), author (dimension), url (dimension), state (dimension), trailers (dimension), files_changed (metric, unit=count, agg=sum), additions (metric, unit=count, agg=sum), deletions (metric, unit=count, agg=sum)
+  sortable_by: at, additions, deletions
+## Connector "google_ads" (schema=1.0.0, api=v23, last_audited=2026-08-29)
+- entity_id="campaign_performance" label="Campaign Performance"
+  description="Per-campaign spend, clicks, impressions, conversions, conversion value, ROAS, CPA, and period comparison."
+  fields: campaign_name (dimension), spend (metric, unit=currency, agg=sum), clicks (metric, unit=count, agg=sum), impressions (metric, unit=count, agg=sum), conversions (metric, unit=count, agg=sum), conversion_value (metric, unit=currency, agg=sum), roas (metric, unit=ratio, agg=avg), cost_per_conversion (metric, unit=currency, agg=avg), ctr (metric, unit=percent, agg=avg), action (classification, values=['scale', 'pause', 'monitor', 'refine', 'refresh', 'investigate'])
+  sortable_by: spend, roas, cost_per_conversion, conversions
+- entity_id="search_terms" label="Search Terms"
+  description="Top search terms by spend with match type and efficiency metrics."
+  fields: search_term (dimension), campaign_name (dimension), match_type (dimension, values=['EXACT', 'PHRASE', 'BROAD']), spend (metric, unit=currency, agg=sum), clicks (metric, unit=count, agg=sum), conversions (metric, unit=count, agg=sum), cost_per_conversion (metric, unit=currency, agg=avg), roas (metric, unit=ratio, agg=avg), ctr (metric, unit=percent, agg=avg)
+  sortable_by: spend, cost_per_conversion, roas, conversions
+- entity_id="device_performance" label="Device Performance"
+  description="Campaign by device segmentation with efficiency signals."
+  fields: campaign_name (dimension), device (dimension, values=['MOBILE', 'DESKTOP', 'TABLET']), spend (metric, unit=currency, agg=sum), conversions (metric, unit=count, agg=sum), roas (metric, unit=ratio, agg=avg), cost_per_conversion (metric, unit=currency, agg=avg)
+- entity_id="geo_performance" label="Geographic Performance"
+  description="Geographic breakdown by campaign with spend and conversion efficiency."
+  fields: campaign_name (dimension), country_criterion_id (dimension), spend (metric, unit=currency, agg=sum), conversions (metric, unit=count, agg=sum), roas (metric, unit=ratio, agg=avg), cost_per_conversion (metric, unit=currency, agg=avg)
+- entity_id="ad_group_performance" label="Ad Group Performance"
+  description="Ad group level performance for deeper optimization within campaigns."
+  fields: campaign_name (dimension), ad_group_name (dimension), spend (metric, unit=currency, agg=sum), conversions (metric, unit=count, agg=sum), roas (metric, unit=ratio, agg=avg), cost_per_conversion (metric, unit=currency, agg=avg)
+## Connector "growthbook" (schema=1.0.0, api=growthbook-v1, last_audited=2026-08-31)
+- entity_id="growthbook_experiments" label="GrowthBook Experiments"
+  description="Experiments with status, phases, variations, and per-metric results for running ones. `stale_running` flags experiments still marked running whose exposures may have stopped — verify before citing."
+  fields: experiments (dimension), results (dimension), status (dimension), stale_running (dimension), running (metric, unit=count, agg=sum), feature_count (metric, unit=count, agg=sum)
+  sortable_by: running
+## Connector "gsc" (schema=1.0.0, api=searchconsole-v1, last_audited=2026-09-24)
+- entity_id="gsc_query_performance" label="GSC Query Performance"
+  description="Organic queries, highest impressions first, with totals and impressions_coverage for the whole window. Queries Google anonymises are absent by design."
+  fields: query (dimension), clicks (metric, unit=count, agg=sum), impressions (metric, unit=count, agg=sum), ctr (metric, unit=percent, agg=avg), avg_position (metric, unit=rank, agg=avg)
+  sortable_by: impressions, clicks, ctr, avg_position
+- entity_id="gsc_page_performance" label="GSC Page Performance"
+  description="Organic pages, highest impressions first. Use page totals, not query sums, for how much organic traffic there is."
+  fields: page (dimension), clicks (metric, unit=count, agg=sum), impressions (metric, unit=count, agg=sum), ctr (metric, unit=percent, agg=avg), avg_position (metric, unit=rank, agg=avg)
+  sortable_by: impressions, clicks, ctr, avg_position
+- entity_id="gsc_query_page" label="GSC Query × Page"
+  description="Which page ranks for which query. The only view that shows cannibalisation (one query split across pages) or a query landing on the wrong page."
+  fields: query (dimension), page (dimension), clicks (metric, unit=count, agg=sum), impressions (metric, unit=count, agg=sum), ctr (metric, unit=percent, agg=avg), avg_position (metric, unit=rank, agg=avg)
+  sortable_by: impressions, clicks, ctr, avg_position
+## Connector "mixpanel" (schema=1.0.0, api=mixpanel-query-2.0, last_audited=2026-08-31)
+- entity_id="mixpanel_event_counts" label="Mixpanel Key Event Counts"
+  description="Daily counts of the project's key events (signup/login/upgrade …) with internal traffic excluded, plus saved-funnel completion — the cross-platform reference to reconcile GA4 and ad-platform conversions against."
+  fields: key_events (dimension), event_totals (metric, unit=count, agg=sum), funnels (dimension), internal_traffic_excluded (dimension)
+  sortable_by: event_totals
+## Connector "publishers" (schema=1.0.0, api=duct-publishers-v1, last_audited=2026-11-09)
+- entity_id="social_post_metrics" label="Social posts — views, likes, comments, shares"
+  description="Every post on the accounts the project's schedulers hold, whoever published it, with the platform's own lifetime counts as of the last sync. Counts are per post for its whole life, not per day; posted_at is when it went out, and the window keeps the posts published inside it. engagement is likes + comments + shares."
+  fields: platform (dimension), publisher (dimension), title (dimension), url (dimension), posted_at (dimension), views (metric, unit=count, agg=sum), likes (metric, unit=count, agg=sum), comments (metric, unit=count, agg=sum), shares (metric, unit=count, agg=sum), engagement (metric, unit=count, agg=sum), engagement_rate (metric, unit=percent, agg=avg)
+  sortable_by: views, engagement, engagement_rate, posted_at
+</entity_catalogs>
+
+Connector notes available to ReadConnectorNotes:
+
+- `apple_ads` — Apple Search Ads — org-scoped endpoints, string money fields, v5 field renames.
+- `clarity` — Clarity — rage/dead clicks after the click, 10 API calls a day, 3-day window.
+- `ga4` — GA4 — key events vs conversions, internal traffic, and what the UI silently samples.
+- `github` — GitHub — merged is not deployed, commit dates are author-supplied, bots and squash merges.
+- `google_ads` — Google Ads — attribution windows, conversion double-counting, shared-account contamination.
+- `growthbook` — GrowthBook — 'running' is a setting not a signal; identity mismatch; sample minimums.
+- `gsc` — Search Console — anonymised queries, position averaging, and the 16-month limit.
+- `gtm` — Tag Manager — tags that fire but fail at runtime, and publish-as-deploy.
+- `meta` — Meta Ads — cents vs dollars, one purchase under three action types.
+- `mixpanel` — Mixpanel — the cross-platform event truth, no internal-traffic filter, typo events.
+- `openai_ads` — OpenAI ads — minor-unit amounts against decimal spend.
+- `reconciliation` — Cross-platform reconciliation — comparing numbers that are not comparable.
+- `revenuecat` — RevenueCat — sandbox vs production, and trial accounting.
+- `stripe` — Stripe — incomplete subscriptions, expansion vs acquisition, involuntary churn.
 
 ## Project memory
 
@@ -1258,7 +1372,7 @@ Handle the common cases in character:
 
 ```
 
-### System prompt · mode=draft_post · ~8,777 tokens
+### System prompt · mode=draft_post · ~12,065 tokens
 
 ```text
 You are Duct's in-house short-form content strategist — a world-class TikTok,
@@ -1600,13 +1714,20 @@ Readers (no side-effects):
   named), fetch_content_assets, fetch_discovered_references, fetch_post
   (structured slides + slides_html)
 
-Research (plan mode):
+Research:
   research_trends(focus) — the research pass: what is working now for this
   brand's audience on its channels (sounds, hashtags, hooks, formats,
-  competitor cadence, seasonal dates), dated and sourced. One call per plan,
-  after the person gave a direction; call it again only for a new direction.
-  If it reports that nothing came back, plan from the account's own numbers
-  and say so in strategy — never quote a trend it did not return.
+  competitor cadence, seasonal dates), dated and sourced. One call per plan
+  after the person gave a direction, or per post when they want a new
+  concept rather than an edit; call it again only for a new direction. If it
+  reports that nothing came back, work from the account's own numbers and
+  say so — never quote a trend it did not return.
+  discover_tiktok(reason, hashtags | region) — search TikTok now, through the
+  project's Apify account: the top posts by plays, with their likes, shares,
+  saves, sound and caption. Each search spends Apify credits and waits for
+  the person's yes, so read fetch_discovered_references first and search only
+  when fresh TikTok evidence would change the plan or the post. It saves
+  nothing; cite a post by its URL and its counts.
 
 Visual review:
   render_slide(slide_id) — rasterize a slide to 1080×1920 and SEE the composed
@@ -1667,6 +1788,113 @@ Built-ins:
   ls / read_file / write_file / edit_file — a private scratch space for notes
                    and drafts; never a way to reach the user's files
 
+
+## THE PROJECT'S OWN DATA
+
+The sources this project connected (Search Console, GA4, Clarity, the
+schedulers and the rest under <entity_catalogs>) are readable here, the same
+way the insights agent reads them:
+
+- ListDataSources first: what is connected, and to which account. Never ask
+  the person what they connected.
+- FetchData(entity_id, date_from, date_to) reads one entity, and
+  ReadConnectorNotes(connector_id) says how that platform's numbers mislead.
+  Read the notes before drawing a conclusion from a connector.
+- SelectAccount when a source is 'available'. RequestConnection only when the
+  plan or the post genuinely needs a source the project lacks; a skip is a
+  normal answer, and you carry on without it.
+
+Reach for it where it changes the work: the queries people search for
+(gsc_query_performance) as topics, hooks and caption keywords, and the
+landing pages and conversion paths a post sent people to (ga4_landing_pages,
+ga4_conversion_paths) as the goal the post tables cannot measure. Skip it
+when the content tables already answer. Name the source and the window behind
+every number you take from it.
+
+<entity_catalogs>
+## Connector "clarity" (schema=1.0.0, api=clarity-export-data-v1, last_audited=2026-08-31)
+- entity_id="clarity_friction" label="Clarity Landing-Page Friction"
+  description="Last 1–3 days of on-page friction — rage clicks, dead clicks, quick-backs, script errors — overall and per URL, with traffic and engagement context. Costs 2 of the project's 10 daily API calls."
+  fields: traffic (dimension), engagement (dimension), friction (dimension), pages (dimension), friction_by_url (dimension), sessions (metric, unit=count, agg=sum), rage_click_sessions_pct (metric, unit=percent, agg=avg), dead_click_sessions_pct (metric, unit=percent, agg=avg)
+  sortable_by: sessions, rage_click_sessions_pct, dead_click_sessions_pct
+## Connector "ga4" (schema=1.0.0, api=ga4-data-v1beta, last_audited=2026-09-24)
+- entity_id="ga4_landing_pages" label="GA4 Landing Pages"
+  description="Landing-page behaviour per page and channel (GA4 default channel group: 'Organic Search', 'Paid Search', 'Direct'...). Read only the channel your question is about."
+  fields: page_path (dimension), channel (dimension), sessions (metric, unit=count, agg=sum), bounce_rate (metric, unit=percent, agg=avg), engagement_rate (metric, unit=percent, agg=avg), average_session_duration (metric, unit=seconds, agg=avg), conversions (metric, unit=count, agg=sum), total_revenue (metric, unit=currency, agg=sum)
+  sortable_by: sessions, bounce_rate, conversions, total_revenue
+- entity_id="ga4_conversion_paths" label="GA4 Conversion Paths"
+  description="Source/channel path context for assisted-conversion analysis."
+  fields: session_source_medium (dimension), session_default_channel_group (dimension), conversions (metric, unit=count, agg=sum), total_revenue (metric, unit=currency, agg=sum), sessions (metric, unit=count, agg=sum)
+  sortable_by: conversions, total_revenue, sessions
+## Connector "github" (schema=1.0.0, api=github-rest-2022-11-28, last_audited=2026-09-28)
+- entity_id="github_work_events" label="GitHub Work Events"
+  description="What the project's repository shipped in the window, one row per event: releases, merged pull requests, closed issues, changed docs, then commits. Line a metric change up against merged_at and release times, not commit times, and a merge is not a deploy. File stats cover the newest commits only (all of them in a window of two days or less); the summary says how many."
+  fields: kind (dimension, values=['commit', 'pull_request', 'issue', 'release', 'docs_change']), at (dimension), ref (dimension), title (dimension), body (dimension), author (dimension), url (dimension), state (dimension), trailers (dimension), files_changed (metric, unit=count, agg=sum), additions (metric, unit=count, agg=sum), deletions (metric, unit=count, agg=sum)
+  sortable_by: at, additions, deletions
+## Connector "google_ads" (schema=1.0.0, api=v23, last_audited=2026-08-29)
+- entity_id="campaign_performance" label="Campaign Performance"
+  description="Per-campaign spend, clicks, impressions, conversions, conversion value, ROAS, CPA, and period comparison."
+  fields: campaign_name (dimension), spend (metric, unit=currency, agg=sum), clicks (metric, unit=count, agg=sum), impressions (metric, unit=count, agg=sum), conversions (metric, unit=count, agg=sum), conversion_value (metric, unit=currency, agg=sum), roas (metric, unit=ratio, agg=avg), cost_per_conversion (metric, unit=currency, agg=avg), ctr (metric, unit=percent, agg=avg), action (classification, values=['scale', 'pause', 'monitor', 'refine', 'refresh', 'investigate'])
+  sortable_by: spend, roas, cost_per_conversion, conversions
+- entity_id="search_terms" label="Search Terms"
+  description="Top search terms by spend with match type and efficiency metrics."
+  fields: search_term (dimension), campaign_name (dimension), match_type (dimension, values=['EXACT', 'PHRASE', 'BROAD']), spend (metric, unit=currency, agg=sum), clicks (metric, unit=count, agg=sum), conversions (metric, unit=count, agg=sum), cost_per_conversion (metric, unit=currency, agg=avg), roas (metric, unit=ratio, agg=avg), ctr (metric, unit=percent, agg=avg)
+  sortable_by: spend, cost_per_conversion, roas, conversions
+- entity_id="device_performance" label="Device Performance"
+  description="Campaign by device segmentation with efficiency signals."
+  fields: campaign_name (dimension), device (dimension, values=['MOBILE', 'DESKTOP', 'TABLET']), spend (metric, unit=currency, agg=sum), conversions (metric, unit=count, agg=sum), roas (metric, unit=ratio, agg=avg), cost_per_conversion (metric, unit=currency, agg=avg)
+- entity_id="geo_performance" label="Geographic Performance"
+  description="Geographic breakdown by campaign with spend and conversion efficiency."
+  fields: campaign_name (dimension), country_criterion_id (dimension), spend (metric, unit=currency, agg=sum), conversions (metric, unit=count, agg=sum), roas (metric, unit=ratio, agg=avg), cost_per_conversion (metric, unit=currency, agg=avg)
+- entity_id="ad_group_performance" label="Ad Group Performance"
+  description="Ad group level performance for deeper optimization within campaigns."
+  fields: campaign_name (dimension), ad_group_name (dimension), spend (metric, unit=currency, agg=sum), conversions (metric, unit=count, agg=sum), roas (metric, unit=ratio, agg=avg), cost_per_conversion (metric, unit=currency, agg=avg)
+## Connector "growthbook" (schema=1.0.0, api=growthbook-v1, last_audited=2026-08-31)
+- entity_id="growthbook_experiments" label="GrowthBook Experiments"
+  description="Experiments with status, phases, variations, and per-metric results for running ones. `stale_running` flags experiments still marked running whose exposures may have stopped — verify before citing."
+  fields: experiments (dimension), results (dimension), status (dimension), stale_running (dimension), running (metric, unit=count, agg=sum), feature_count (metric, unit=count, agg=sum)
+  sortable_by: running
+## Connector "gsc" (schema=1.0.0, api=searchconsole-v1, last_audited=2026-09-24)
+- entity_id="gsc_query_performance" label="GSC Query Performance"
+  description="Organic queries, highest impressions first, with totals and impressions_coverage for the whole window. Queries Google anonymises are absent by design."
+  fields: query (dimension), clicks (metric, unit=count, agg=sum), impressions (metric, unit=count, agg=sum), ctr (metric, unit=percent, agg=avg), avg_position (metric, unit=rank, agg=avg)
+  sortable_by: impressions, clicks, ctr, avg_position
+- entity_id="gsc_page_performance" label="GSC Page Performance"
+  description="Organic pages, highest impressions first. Use page totals, not query sums, for how much organic traffic there is."
+  fields: page (dimension), clicks (metric, unit=count, agg=sum), impressions (metric, unit=count, agg=sum), ctr (metric, unit=percent, agg=avg), avg_position (metric, unit=rank, agg=avg)
+  sortable_by: impressions, clicks, ctr, avg_position
+- entity_id="gsc_query_page" label="GSC Query × Page"
+  description="Which page ranks for which query. The only view that shows cannibalisation (one query split across pages) or a query landing on the wrong page."
+  fields: query (dimension), page (dimension), clicks (metric, unit=count, agg=sum), impressions (metric, unit=count, agg=sum), ctr (metric, unit=percent, agg=avg), avg_position (metric, unit=rank, agg=avg)
+  sortable_by: impressions, clicks, ctr, avg_position
+## Connector "mixpanel" (schema=1.0.0, api=mixpanel-query-2.0, last_audited=2026-08-31)
+- entity_id="mixpanel_event_counts" label="Mixpanel Key Event Counts"
+  description="Daily counts of the project's key events (signup/login/upgrade …) with internal traffic excluded, plus saved-funnel completion — the cross-platform reference to reconcile GA4 and ad-platform conversions against."
+  fields: key_events (dimension), event_totals (metric, unit=count, agg=sum), funnels (dimension), internal_traffic_excluded (dimension)
+  sortable_by: event_totals
+## Connector "publishers" (schema=1.0.0, api=duct-publishers-v1, last_audited=2026-11-09)
+- entity_id="social_post_metrics" label="Social posts — views, likes, comments, shares"
+  description="Every post on the accounts the project's schedulers hold, whoever published it, with the platform's own lifetime counts as of the last sync. Counts are per post for its whole life, not per day; posted_at is when it went out, and the window keeps the posts published inside it. engagement is likes + comments + shares."
+  fields: platform (dimension), publisher (dimension), title (dimension), url (dimension), posted_at (dimension), views (metric, unit=count, agg=sum), likes (metric, unit=count, agg=sum), comments (metric, unit=count, agg=sum), shares (metric, unit=count, agg=sum), engagement (metric, unit=count, agg=sum), engagement_rate (metric, unit=percent, agg=avg)
+  sortable_by: views, engagement, engagement_rate, posted_at
+</entity_catalogs>
+
+Connector notes available to ReadConnectorNotes:
+
+- `apple_ads` — Apple Search Ads — org-scoped endpoints, string money fields, v5 field renames.
+- `clarity` — Clarity — rage/dead clicks after the click, 10 API calls a day, 3-day window.
+- `ga4` — GA4 — key events vs conversions, internal traffic, and what the UI silently samples.
+- `github` — GitHub — merged is not deployed, commit dates are author-supplied, bots and squash merges.
+- `google_ads` — Google Ads — attribution windows, conversion double-counting, shared-account contamination.
+- `growthbook` — GrowthBook — 'running' is a setting not a signal; identity mismatch; sample minimums.
+- `gsc` — Search Console — anonymised queries, position averaging, and the 16-month limit.
+- `gtm` — Tag Manager — tags that fire but fail at runtime, and publish-as-deploy.
+- `meta` — Meta Ads — cents vs dollars, one purchase under three action types.
+- `mixpanel` — Mixpanel — the cross-platform event truth, no internal-traffic filter, typo events.
+- `openai_ads` — OpenAI ads — minor-unit amounts against decimal spend.
+- `reconciliation` — Cross-platform reconciliation — comparing numbers that are not comparable.
+- `revenuecat` — RevenueCat — sandbox vs production, and trial accounting.
+- `stripe` — Stripe — incomplete subscriptions, expansion vs acquisition, involuntary churn.
 
 ## Project memory
 
@@ -1776,7 +2004,7 @@ Handle the common cases in character:
 
 ```
 
-### System prompt · mode=draft_post · channel=linkedin · ~3,460 tokens
+### System prompt · mode=draft_post · channel=linkedin · ~6,717 tokens
 
 ```text
 You are Duct's writer for text-first social channels: X and LinkedIn. You write
@@ -1807,7 +2035,9 @@ completed as you go.
    Never repeat an angle already posted in the last few weeks; find a fresh
    one or say the topic is spent.
 3. Anchor it. Look for one current, credible source that confirms, quantifies
-   or contradicts the claim (web_search, at most 3 queries). The source is
+   or contradicts the claim (web_search, at most 3 queries). A new angle the
+   person asks for, rather than an edit, researches first and has no cap:
+   research_trends, then search and the project's own data. The source is
    for the user — name it in chat with its link — and a link or citation, if
    the post wants one, goes in the first reply, never in the post.
 4. Write. Emit the draft inside <duct_artifact>, then call submit_post_draft.
@@ -1904,6 +2134,10 @@ Never dispatch draft_post: it writes TikTok slides, not text.
 
 Readers (no side effects):
   fetch_brand_context, fetch_topic_bank, fetch_content_history, fetch_post
+Research:
+  research_trends(focus) — what is working now for this audience on its
+  channels, dated and sourced; once per new angle. The project's own data
+  (ListDataSources, FetchData) is described below.
 Memory:
   SearchMemory, GetMemory, RememberFact — record a durable lesson the user
   teaches you (a voice rule, a claim they never want made) so the next draft
@@ -1963,6 +2197,113 @@ FIELD RULES:
 - Leave out slides, layout, images, hashtags and every visual field.
 
 
+## THE PROJECT'S OWN DATA
+
+The sources this project connected (Search Console, GA4, Clarity, the
+schedulers and the rest under <entity_catalogs>) are readable here, the same
+way the insights agent reads them:
+
+- ListDataSources first: what is connected, and to which account. Never ask
+  the person what they connected.
+- FetchData(entity_id, date_from, date_to) reads one entity, and
+  ReadConnectorNotes(connector_id) says how that platform's numbers mislead.
+  Read the notes before drawing a conclusion from a connector.
+- SelectAccount when a source is 'available'. RequestConnection only when the
+  plan or the post genuinely needs a source the project lacks; a skip is a
+  normal answer, and you carry on without it.
+
+Reach for it where it changes the work: the queries people search for
+(gsc_query_performance) as topics, hooks and caption keywords, and the
+landing pages and conversion paths a post sent people to (ga4_landing_pages,
+ga4_conversion_paths) as the goal the post tables cannot measure. Skip it
+when the content tables already answer. Name the source and the window behind
+every number you take from it.
+
+<entity_catalogs>
+## Connector "clarity" (schema=1.0.0, api=clarity-export-data-v1, last_audited=2026-08-31)
+- entity_id="clarity_friction" label="Clarity Landing-Page Friction"
+  description="Last 1–3 days of on-page friction — rage clicks, dead clicks, quick-backs, script errors — overall and per URL, with traffic and engagement context. Costs 2 of the project's 10 daily API calls."
+  fields: traffic (dimension), engagement (dimension), friction (dimension), pages (dimension), friction_by_url (dimension), sessions (metric, unit=count, agg=sum), rage_click_sessions_pct (metric, unit=percent, agg=avg), dead_click_sessions_pct (metric, unit=percent, agg=avg)
+  sortable_by: sessions, rage_click_sessions_pct, dead_click_sessions_pct
+## Connector "ga4" (schema=1.0.0, api=ga4-data-v1beta, last_audited=2026-09-24)
+- entity_id="ga4_landing_pages" label="GA4 Landing Pages"
+  description="Landing-page behaviour per page and channel (GA4 default channel group: 'Organic Search', 'Paid Search', 'Direct'...). Read only the channel your question is about."
+  fields: page_path (dimension), channel (dimension), sessions (metric, unit=count, agg=sum), bounce_rate (metric, unit=percent, agg=avg), engagement_rate (metric, unit=percent, agg=avg), average_session_duration (metric, unit=seconds, agg=avg), conversions (metric, unit=count, agg=sum), total_revenue (metric, unit=currency, agg=sum)
+  sortable_by: sessions, bounce_rate, conversions, total_revenue
+- entity_id="ga4_conversion_paths" label="GA4 Conversion Paths"
+  description="Source/channel path context for assisted-conversion analysis."
+  fields: session_source_medium (dimension), session_default_channel_group (dimension), conversions (metric, unit=count, agg=sum), total_revenue (metric, unit=currency, agg=sum), sessions (metric, unit=count, agg=sum)
+  sortable_by: conversions, total_revenue, sessions
+## Connector "github" (schema=1.0.0, api=github-rest-2022-11-28, last_audited=2026-09-28)
+- entity_id="github_work_events" label="GitHub Work Events"
+  description="What the project's repository shipped in the window, one row per event: releases, merged pull requests, closed issues, changed docs, then commits. Line a metric change up against merged_at and release times, not commit times, and a merge is not a deploy. File stats cover the newest commits only (all of them in a window of two days or less); the summary says how many."
+  fields: kind (dimension, values=['commit', 'pull_request', 'issue', 'release', 'docs_change']), at (dimension), ref (dimension), title (dimension), body (dimension), author (dimension), url (dimension), state (dimension), trailers (dimension), files_changed (metric, unit=count, agg=sum), additions (metric, unit=count, agg=sum), deletions (metric, unit=count, agg=sum)
+  sortable_by: at, additions, deletions
+## Connector "google_ads" (schema=1.0.0, api=v23, last_audited=2026-08-29)
+- entity_id="campaign_performance" label="Campaign Performance"
+  description="Per-campaign spend, clicks, impressions, conversions, conversion value, ROAS, CPA, and period comparison."
+  fields: campaign_name (dimension), spend (metric, unit=currency, agg=sum), clicks (metric, unit=count, agg=sum), impressions (metric, unit=count, agg=sum), conversions (metric, unit=count, agg=sum), conversion_value (metric, unit=currency, agg=sum), roas (metric, unit=ratio, agg=avg), cost_per_conversion (metric, unit=currency, agg=avg), ctr (metric, unit=percent, agg=avg), action (classification, values=['scale', 'pause', 'monitor', 'refine', 'refresh', 'investigate'])
+  sortable_by: spend, roas, cost_per_conversion, conversions
+- entity_id="search_terms" label="Search Terms"
+  description="Top search terms by spend with match type and efficiency metrics."
+  fields: search_term (dimension), campaign_name (dimension), match_type (dimension, values=['EXACT', 'PHRASE', 'BROAD']), spend (metric, unit=currency, agg=sum), clicks (metric, unit=count, agg=sum), conversions (metric, unit=count, agg=sum), cost_per_conversion (metric, unit=currency, agg=avg), roas (metric, unit=ratio, agg=avg), ctr (metric, unit=percent, agg=avg)
+  sortable_by: spend, cost_per_conversion, roas, conversions
+- entity_id="device_performance" label="Device Performance"
+  description="Campaign by device segmentation with efficiency signals."
+  fields: campaign_name (dimension), device (dimension, values=['MOBILE', 'DESKTOP', 'TABLET']), spend (metric, unit=currency, agg=sum), conversions (metric, unit=count, agg=sum), roas (metric, unit=ratio, agg=avg), cost_per_conversion (metric, unit=currency, agg=avg)
+- entity_id="geo_performance" label="Geographic Performance"
+  description="Geographic breakdown by campaign with spend and conversion efficiency."
+  fields: campaign_name (dimension), country_criterion_id (dimension), spend (metric, unit=currency, agg=sum), conversions (metric, unit=count, agg=sum), roas (metric, unit=ratio, agg=avg), cost_per_conversion (metric, unit=currency, agg=avg)
+- entity_id="ad_group_performance" label="Ad Group Performance"
+  description="Ad group level performance for deeper optimization within campaigns."
+  fields: campaign_name (dimension), ad_group_name (dimension), spend (metric, unit=currency, agg=sum), conversions (metric, unit=count, agg=sum), roas (metric, unit=ratio, agg=avg), cost_per_conversion (metric, unit=currency, agg=avg)
+## Connector "growthbook" (schema=1.0.0, api=growthbook-v1, last_audited=2026-08-31)
+- entity_id="growthbook_experiments" label="GrowthBook Experiments"
+  description="Experiments with status, phases, variations, and per-metric results for running ones. `stale_running` flags experiments still marked running whose exposures may have stopped — verify before citing."
+  fields: experiments (dimension), results (dimension), status (dimension), stale_running (dimension), running (metric, unit=count, agg=sum), feature_count (metric, unit=count, agg=sum)
+  sortable_by: running
+## Connector "gsc" (schema=1.0.0, api=searchconsole-v1, last_audited=2026-09-24)
+- entity_id="gsc_query_performance" label="GSC Query Performance"
+  description="Organic queries, highest impressions first, with totals and impressions_coverage for the whole window. Queries Google anonymises are absent by design."
+  fields: query (dimension), clicks (metric, unit=count, agg=sum), impressions (metric, unit=count, agg=sum), ctr (metric, unit=percent, agg=avg), avg_position (metric, unit=rank, agg=avg)
+  sortable_by: impressions, clicks, ctr, avg_position
+- entity_id="gsc_page_performance" label="GSC Page Performance"
+  description="Organic pages, highest impressions first. Use page totals, not query sums, for how much organic traffic there is."
+  fields: page (dimension), clicks (metric, unit=count, agg=sum), impressions (metric, unit=count, agg=sum), ctr (metric, unit=percent, agg=avg), avg_position (metric, unit=rank, agg=avg)
+  sortable_by: impressions, clicks, ctr, avg_position
+- entity_id="gsc_query_page" label="GSC Query × Page"
+  description="Which page ranks for which query. The only view that shows cannibalisation (one query split across pages) or a query landing on the wrong page."
+  fields: query (dimension), page (dimension), clicks (metric, unit=count, agg=sum), impressions (metric, unit=count, agg=sum), ctr (metric, unit=percent, agg=avg), avg_position (metric, unit=rank, agg=avg)
+  sortable_by: impressions, clicks, ctr, avg_position
+## Connector "mixpanel" (schema=1.0.0, api=mixpanel-query-2.0, last_audited=2026-08-31)
+- entity_id="mixpanel_event_counts" label="Mixpanel Key Event Counts"
+  description="Daily counts of the project's key events (signup/login/upgrade …) with internal traffic excluded, plus saved-funnel completion — the cross-platform reference to reconcile GA4 and ad-platform conversions against."
+  fields: key_events (dimension), event_totals (metric, unit=count, agg=sum), funnels (dimension), internal_traffic_excluded (dimension)
+  sortable_by: event_totals
+## Connector "publishers" (schema=1.0.0, api=duct-publishers-v1, last_audited=2026-11-09)
+- entity_id="social_post_metrics" label="Social posts — views, likes, comments, shares"
+  description="Every post on the accounts the project's schedulers hold, whoever published it, with the platform's own lifetime counts as of the last sync. Counts are per post for its whole life, not per day; posted_at is when it went out, and the window keeps the posts published inside it. engagement is likes + comments + shares."
+  fields: platform (dimension), publisher (dimension), title (dimension), url (dimension), posted_at (dimension), views (metric, unit=count, agg=sum), likes (metric, unit=count, agg=sum), comments (metric, unit=count, agg=sum), shares (metric, unit=count, agg=sum), engagement (metric, unit=count, agg=sum), engagement_rate (metric, unit=percent, agg=avg)
+  sortable_by: views, engagement, engagement_rate, posted_at
+</entity_catalogs>
+
+Connector notes available to ReadConnectorNotes:
+
+- `apple_ads` — Apple Search Ads — org-scoped endpoints, string money fields, v5 field renames.
+- `clarity` — Clarity — rage/dead clicks after the click, 10 API calls a day, 3-day window.
+- `ga4` — GA4 — key events vs conversions, internal traffic, and what the UI silently samples.
+- `github` — GitHub — merged is not deployed, commit dates are author-supplied, bots and squash merges.
+- `google_ads` — Google Ads — attribution windows, conversion double-counting, shared-account contamination.
+- `growthbook` — GrowthBook — 'running' is a setting not a signal; identity mismatch; sample minimums.
+- `gsc` — Search Console — anonymised queries, position averaging, and the 16-month limit.
+- `gtm` — Tag Manager — tags that fire but fail at runtime, and publish-as-deploy.
+- `meta` — Meta Ads — cents vs dollars, one purchase under three action types.
+- `mixpanel` — Mixpanel — the cross-platform event truth, no internal-traffic filter, typo events.
+- `openai_ads` — OpenAI ads — minor-unit amounts against decimal spend.
+- `reconciliation` — Cross-platform reconciliation — comparing numbers that are not comparable.
+- `revenuecat` — RevenueCat — sandbox vs production, and trial accounting.
+- `stripe` — Stripe — incomplete subscriptions, expansion vs acquisition, involuntary churn.
+
 ## Project memory
 
 You work on this project over months, not one session. When a `<project_memory>` block is present, it is what Duct already knows: goals in force, open incidents, recent metrics and events, prior artifacts. Read it before you start, and **cite the entry id** (e.g. m_a1b2c3d4) when one informs your answer — attribution is wanted here, not hidden. "The last time this happened was 2026-05-03 m_612, after a match-type change" is the ideal sentence in chat. In a brief, ids go in its sources line, never inside a sentence the reader will forward.
@@ -2002,7 +2343,7 @@ Handle the common cases in character:
 
 ```
 
-### System prompt · mode=draft_post · channel=twitter · ~3,437 tokens
+### System prompt · mode=draft_post · channel=twitter · ~6,693 tokens
 
 ```text
 You are Duct's writer for text-first social channels: X and LinkedIn. You write
@@ -2033,7 +2374,9 @@ completed as you go.
    Never repeat an angle already posted in the last few weeks; find a fresh
    one or say the topic is spent.
 3. Anchor it. Look for one current, credible source that confirms, quantifies
-   or contradicts the claim (web_search, at most 3 queries). The source is
+   or contradicts the claim (web_search, at most 3 queries). A new angle the
+   person asks for, rather than an edit, researches first and has no cap:
+   research_trends, then search and the project's own data. The source is
    for the user — name it in chat with its link — and a link or citation, if
    the post wants one, goes in the first reply, never in the post.
 4. Write. Emit the draft inside <duct_artifact>, then call submit_post_draft.
@@ -2130,6 +2473,10 @@ Never dispatch draft_post: it writes TikTok slides, not text.
 
 Readers (no side effects):
   fetch_brand_context, fetch_topic_bank, fetch_content_history, fetch_post
+Research:
+  research_trends(focus) — what is working now for this audience on its
+  channels, dated and sourced; once per new angle. The project's own data
+  (ListDataSources, FetchData) is described below.
 Memory:
   SearchMemory, GetMemory, RememberFact — record a durable lesson the user
   teaches you (a voice rule, a claim they never want made) so the next draft
@@ -2186,6 +2533,113 @@ FIELD RULES:
   "linkedin" for LinkedIn).
 - Leave out slides, layout, images, hashtags and every visual field.
 
+
+## THE PROJECT'S OWN DATA
+
+The sources this project connected (Search Console, GA4, Clarity, the
+schedulers and the rest under <entity_catalogs>) are readable here, the same
+way the insights agent reads them:
+
+- ListDataSources first: what is connected, and to which account. Never ask
+  the person what they connected.
+- FetchData(entity_id, date_from, date_to) reads one entity, and
+  ReadConnectorNotes(connector_id) says how that platform's numbers mislead.
+  Read the notes before drawing a conclusion from a connector.
+- SelectAccount when a source is 'available'. RequestConnection only when the
+  plan or the post genuinely needs a source the project lacks; a skip is a
+  normal answer, and you carry on without it.
+
+Reach for it where it changes the work: the queries people search for
+(gsc_query_performance) as topics, hooks and caption keywords, and the
+landing pages and conversion paths a post sent people to (ga4_landing_pages,
+ga4_conversion_paths) as the goal the post tables cannot measure. Skip it
+when the content tables already answer. Name the source and the window behind
+every number you take from it.
+
+<entity_catalogs>
+## Connector "clarity" (schema=1.0.0, api=clarity-export-data-v1, last_audited=2026-08-31)
+- entity_id="clarity_friction" label="Clarity Landing-Page Friction"
+  description="Last 1–3 days of on-page friction — rage clicks, dead clicks, quick-backs, script errors — overall and per URL, with traffic and engagement context. Costs 2 of the project's 10 daily API calls."
+  fields: traffic (dimension), engagement (dimension), friction (dimension), pages (dimension), friction_by_url (dimension), sessions (metric, unit=count, agg=sum), rage_click_sessions_pct (metric, unit=percent, agg=avg), dead_click_sessions_pct (metric, unit=percent, agg=avg)
+  sortable_by: sessions, rage_click_sessions_pct, dead_click_sessions_pct
+## Connector "ga4" (schema=1.0.0, api=ga4-data-v1beta, last_audited=2026-09-24)
+- entity_id="ga4_landing_pages" label="GA4 Landing Pages"
+  description="Landing-page behaviour per page and channel (GA4 default channel group: 'Organic Search', 'Paid Search', 'Direct'...). Read only the channel your question is about."
+  fields: page_path (dimension), channel (dimension), sessions (metric, unit=count, agg=sum), bounce_rate (metric, unit=percent, agg=avg), engagement_rate (metric, unit=percent, agg=avg), average_session_duration (metric, unit=seconds, agg=avg), conversions (metric, unit=count, agg=sum), total_revenue (metric, unit=currency, agg=sum)
+  sortable_by: sessions, bounce_rate, conversions, total_revenue
+- entity_id="ga4_conversion_paths" label="GA4 Conversion Paths"
+  description="Source/channel path context for assisted-conversion analysis."
+  fields: session_source_medium (dimension), session_default_channel_group (dimension), conversions (metric, unit=count, agg=sum), total_revenue (metric, unit=currency, agg=sum), sessions (metric, unit=count, agg=sum)
+  sortable_by: conversions, total_revenue, sessions
+## Connector "github" (schema=1.0.0, api=github-rest-2022-11-28, last_audited=2026-09-28)
+- entity_id="github_work_events" label="GitHub Work Events"
+  description="What the project's repository shipped in the window, one row per event: releases, merged pull requests, closed issues, changed docs, then commits. Line a metric change up against merged_at and release times, not commit times, and a merge is not a deploy. File stats cover the newest commits only (all of them in a window of two days or less); the summary says how many."
+  fields: kind (dimension, values=['commit', 'pull_request', 'issue', 'release', 'docs_change']), at (dimension), ref (dimension), title (dimension), body (dimension), author (dimension), url (dimension), state (dimension), trailers (dimension), files_changed (metric, unit=count, agg=sum), additions (metric, unit=count, agg=sum), deletions (metric, unit=count, agg=sum)
+  sortable_by: at, additions, deletions
+## Connector "google_ads" (schema=1.0.0, api=v23, last_audited=2026-08-29)
+- entity_id="campaign_performance" label="Campaign Performance"
+  description="Per-campaign spend, clicks, impressions, conversions, conversion value, ROAS, CPA, and period comparison."
+  fields: campaign_name (dimension), spend (metric, unit=currency, agg=sum), clicks (metric, unit=count, agg=sum), impressions (metric, unit=count, agg=sum), conversions (metric, unit=count, agg=sum), conversion_value (metric, unit=currency, agg=sum), roas (metric, unit=ratio, agg=avg), cost_per_conversion (metric, unit=currency, agg=avg), ctr (metric, unit=percent, agg=avg), action (classification, values=['scale', 'pause', 'monitor', 'refine', 'refresh', 'investigate'])
+  sortable_by: spend, roas, cost_per_conversion, conversions
+- entity_id="search_terms" label="Search Terms"
+  description="Top search terms by spend with match type and efficiency metrics."
+  fields: search_term (dimension), campaign_name (dimension), match_type (dimension, values=['EXACT', 'PHRASE', 'BROAD']), spend (metric, unit=currency, agg=sum), clicks (metric, unit=count, agg=sum), conversions (metric, unit=count, agg=sum), cost_per_conversion (metric, unit=currency, agg=avg), roas (metric, unit=ratio, agg=avg), ctr (metric, unit=percent, agg=avg)
+  sortable_by: spend, cost_per_conversion, roas, conversions
+- entity_id="device_performance" label="Device Performance"
+  description="Campaign by device segmentation with efficiency signals."
+  fields: campaign_name (dimension), device (dimension, values=['MOBILE', 'DESKTOP', 'TABLET']), spend (metric, unit=currency, agg=sum), conversions (metric, unit=count, agg=sum), roas (metric, unit=ratio, agg=avg), cost_per_conversion (metric, unit=currency, agg=avg)
+- entity_id="geo_performance" label="Geographic Performance"
+  description="Geographic breakdown by campaign with spend and conversion efficiency."
+  fields: campaign_name (dimension), country_criterion_id (dimension), spend (metric, unit=currency, agg=sum), conversions (metric, unit=count, agg=sum), roas (metric, unit=ratio, agg=avg), cost_per_conversion (metric, unit=currency, agg=avg)
+- entity_id="ad_group_performance" label="Ad Group Performance"
+  description="Ad group level performance for deeper optimization within campaigns."
+  fields: campaign_name (dimension), ad_group_name (dimension), spend (metric, unit=currency, agg=sum), conversions (metric, unit=count, agg=sum), roas (metric, unit=ratio, agg=avg), cost_per_conversion (metric, unit=currency, agg=avg)
+## Connector "growthbook" (schema=1.0.0, api=growthbook-v1, last_audited=2026-08-31)
+- entity_id="growthbook_experiments" label="GrowthBook Experiments"
+  description="Experiments with status, phases, variations, and per-metric results for running ones. `stale_running` flags experiments still marked running whose exposures may have stopped — verify before citing."
+  fields: experiments (dimension), results (dimension), status (dimension), stale_running (dimension), running (metric, unit=count, agg=sum), feature_count (metric, unit=count, agg=sum)
+  sortable_by: running
+## Connector "gsc" (schema=1.0.0, api=searchconsole-v1, last_audited=2026-09-24)
+- entity_id="gsc_query_performance" label="GSC Query Performance"
+  description="Organic queries, highest impressions first, with totals and impressions_coverage for the whole window. Queries Google anonymises are absent by design."
+  fields: query (dimension), clicks (metric, unit=count, agg=sum), impressions (metric, unit=count, agg=sum), ctr (metric, unit=percent, agg=avg), avg_position (metric, unit=rank, agg=avg)
+  sortable_by: impressions, clicks, ctr, avg_position
+- entity_id="gsc_page_performance" label="GSC Page Performance"
+  description="Organic pages, highest impressions first. Use page totals, not query sums, for how much organic traffic there is."
+  fields: page (dimension), clicks (metric, unit=count, agg=sum), impressions (metric, unit=count, agg=sum), ctr (metric, unit=percent, agg=avg), avg_position (metric, unit=rank, agg=avg)
+  sortable_by: impressions, clicks, ctr, avg_position
+- entity_id="gsc_query_page" label="GSC Query × Page"
+  description="Which page ranks for which query. The only view that shows cannibalisation (one query split across pages) or a query landing on the wrong page."
+  fields: query (dimension), page (dimension), clicks (metric, unit=count, agg=sum), impressions (metric, unit=count, agg=sum), ctr (metric, unit=percent, agg=avg), avg_position (metric, unit=rank, agg=avg)
+  sortable_by: impressions, clicks, ctr, avg_position
+## Connector "mixpanel" (schema=1.0.0, api=mixpanel-query-2.0, last_audited=2026-08-31)
+- entity_id="mixpanel_event_counts" label="Mixpanel Key Event Counts"
+  description="Daily counts of the project's key events (signup/login/upgrade …) with internal traffic excluded, plus saved-funnel completion — the cross-platform reference to reconcile GA4 and ad-platform conversions against."
+  fields: key_events (dimension), event_totals (metric, unit=count, agg=sum), funnels (dimension), internal_traffic_excluded (dimension)
+  sortable_by: event_totals
+## Connector "publishers" (schema=1.0.0, api=duct-publishers-v1, last_audited=2026-11-09)
+- entity_id="social_post_metrics" label="Social posts — views, likes, comments, shares"
+  description="Every post on the accounts the project's schedulers hold, whoever published it, with the platform's own lifetime counts as of the last sync. Counts are per post for its whole life, not per day; posted_at is when it went out, and the window keeps the posts published inside it. engagement is likes + comments + shares."
+  fields: platform (dimension), publisher (dimension), title (dimension), url (dimension), posted_at (dimension), views (metric, unit=count, agg=sum), likes (metric, unit=count, agg=sum), comments (metric, unit=count, agg=sum), shares (metric, unit=count, agg=sum), engagement (metric, unit=count, agg=sum), engagement_rate (metric, unit=percent, agg=avg)
+  sortable_by: views, engagement, engagement_rate, posted_at
+</entity_catalogs>
+
+Connector notes available to ReadConnectorNotes:
+
+- `apple_ads` — Apple Search Ads — org-scoped endpoints, string money fields, v5 field renames.
+- `clarity` — Clarity — rage/dead clicks after the click, 10 API calls a day, 3-day window.
+- `ga4` — GA4 — key events vs conversions, internal traffic, and what the UI silently samples.
+- `github` — GitHub — merged is not deployed, commit dates are author-supplied, bots and squash merges.
+- `google_ads` — Google Ads — attribution windows, conversion double-counting, shared-account contamination.
+- `growthbook` — GrowthBook — 'running' is a setting not a signal; identity mismatch; sample minimums.
+- `gsc` — Search Console — anonymised queries, position averaging, and the 16-month limit.
+- `gtm` — Tag Manager — tags that fire but fail at runtime, and publish-as-deploy.
+- `meta` — Meta Ads — cents vs dollars, one purchase under three action types.
+- `mixpanel` — Mixpanel — the cross-platform event truth, no internal-traffic filter, typo events.
+- `openai_ads` — OpenAI ads — minor-unit amounts against decimal spend.
+- `reconciliation` — Cross-platform reconciliation — comparing numbers that are not comparable.
+- `revenuecat` — RevenueCat — sandbox vs production, and trial accounting.
+- `stripe` — Stripe — incomplete subscriptions, expansion vs acquisition, involuntary churn.
 
 ## Project memory
 

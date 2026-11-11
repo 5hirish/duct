@@ -4,7 +4,9 @@
 // the server does not mark the tool read-only or it is a server added by
 // address, whose "read-only" Duct does not take on trust. The run is parked
 // until someone says yes or no; `why` says which rule stopped it (backend
-// agents/core/mcp_tools.py).
+// agents/core/mcp_tools.py). The content agents' TikTok search parks on the
+// same card, because it spends the project's Apify credits
+// (agents/content/discover.py); its `why` gives it its own words.
 //
 // The card shows what the person needs to decide and nothing else: whose tool,
 // which tool, the agent's one-sentence reason, and exactly what would be sent.
@@ -25,6 +27,8 @@ const EMPTY_ARGUMENTS = new Set(["", "{}"]);
 // Backend WHY_ADDED_BY_ADDRESS and WHY_ALWAYS_ASKS (agents/core/mcp_tools.py).
 const WHY_ADDED_BY_ADDRESS = "added_by_address";
 const WHY_ALWAYS_ASKS = "always_asks";
+// Backend WHY_SPENDS_CREDITS (agents/content/discover.py).
+const WHY_SPENDS_CREDITS = "spends_credits";
 
 export default function ToolApproval({ request, onAnswer, disabled }) {
   const [open, setOpen] = useState(false);
@@ -32,6 +36,7 @@ export default function ToolApproval({ request, onAnswer, disabled }) {
   const toolName = request.tool_title || request.tool || "";
   const preview = String(request.arguments || "").trim();
   const hasArguments = !EMPTY_ARGUMENTS.has(preview);
+  const spends = request.why === WHY_SPENDS_CREDITS;
 
   return (
     <div className="my-3 space-y-3 rounded-xl border border-warning/30 bg-warning/5 p-4">
@@ -39,7 +44,7 @@ export default function ToolApproval({ request, onAnswer, disabled }) {
         <EntityAvatar url={serverSite(request.server_url)} name={serverName} />
         <div className="min-w-0 space-y-0.5">
           <p className="text-sm font-semibold break-words">
-            <Trans>Run {toolName} on {serverName}?</Trans>
+            {spends ? <Trans>Search TikTok with {serverName}?</Trans> : <Trans>Run {toolName} on {serverName}?</Trans>}
           </p>
           {/* The agent's own sentence, in the language it is writing to them
               in. Not translated: it was never ours. */}
@@ -75,7 +80,12 @@ export default function ToolApproval({ request, onAnswer, disabled }) {
         </Button>
       </div>
       <p className="pl-7.5 text-2xs text-pretty text-muted-foreground">
-        {request.why === WHY_ADDED_BY_ADDRESS ? (
+        {spends ? (
+          <Trans>
+            Each search uses this project&rsquo;s {serverName} credits, so Duct asks first. Skip and the agent
+            carries on from what you saved.
+          </Trans>
+        ) : request.why === WHY_ADDED_BY_ADDRESS ? (
           <Trans>
             You added {serverName} by address, so Duct asks before every call to it. Skip and the agent
             carries on without it.

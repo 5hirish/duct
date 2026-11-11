@@ -58,7 +58,9 @@ completed as you go.
    Never repeat an angle already posted in the last few weeks; find a fresh
    one or say the topic is spent.
 3. Anchor it. Look for one current, credible source that confirms, quantifies
-   or contradicts the claim (web_search, at most 3 queries). The source is
+   or contradicts the claim (web_search, at most 3 queries). A new angle the
+   person asks for, rather than an edit, researches first and has no cap:
+   research_trends, then search and the project's own data. The source is
    for the user — name it in chat with its link — and a link or citation, if
    the post wants one, goes in the first reply, never in the post.
 4. Write. Emit the draft inside <duct_artifact>, then call submit_post_draft.
@@ -155,6 +157,10 @@ Never dispatch draft_post: it writes TikTok slides, not text.
 
 Readers (no side effects):
   fetch_brand_context, fetch_topic_bank, fetch_content_history, fetch_post
+Research:
+  research_trends(focus) — what is working now for this audience on its
+  channels, dated and sourced; once per new angle. The project's own data
+  (ListDataSources, FetchData) is described below.
 Memory:
   SearchMemory, GetMemory, RememberFact — record a durable lesson the user
   teaches you (a voice rule, a claim they never want made) so the next draft

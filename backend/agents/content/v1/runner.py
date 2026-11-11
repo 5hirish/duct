@@ -97,6 +97,7 @@ from agents.content.schema import (
     RunMode,
     make_session,
 )
+from agents.content.discover import build_discover_tool_lc
 from agents.content.subagents import (
     DRAFT_POST_TOOLS,
     GENERAL_PURPOSE_TOOLS,
@@ -110,6 +111,7 @@ from agents.content.subagents import (
 from agents.content.tools import build_content_tools_lc
 from agents.core import session as _core_session
 from agents.core.activity import activity_hooks, announce_context
+from agents.core.connector_tools import build_connector_tools_lc
 from agents.core.deep_session import (
     subagent_middleware,
     DeepSession,
@@ -134,6 +136,7 @@ from agents.core.quota import credential_identity
 from agents.core.turn import TurnContext, build_turn, spec_for
 from agents.core.session import register_session
 from agents.core.web_tools import WEB_FETCH_TOOL, build_web_tools_lc
+from agents.insights.data_tools import build_data_tools_lc
 from agents.engines import Engine, resolve_fallback_models
 from agents.models import ModelName, Provider, run_model_fields
 from agents.registry import AgentType
@@ -199,13 +202,13 @@ ASK_USER_DESCRIPTION = (
 
 RESEARCH_TOOL = "research_trends"
 RESEARCH_TOOL_DESCRIPTION = (
-    "Run the research pass for this plan: what is working right now for the brand's "
-    "audience on the channels it posts on (sounds, hashtags and search terms, hooks, "
-    "formats and recent platform rule changes, named competitors' cadence and hooks, "
-    "seasonal dates inside the period), dated and sourced. `focus` is the direction "
-    "the person gave, in one sentence. One call per plan, after the direction; the "
-    "result is the <content_research> block to plan from, or a sentence saying "
-    "nothing came back, in which case plan from the account's own numbers and say so."
+    "Run the research pass: what is working right now for the brand's audience on the "
+    "channels it posts on (sounds, hashtags and search terms, hooks, formats and recent "
+    "platform rule changes, named competitors' cadence and hooks, seasonal dates inside "
+    "the period), dated and sourced. `focus` is the direction the person gave, in one "
+    "sentence. One call per plan, or per post when the person wants a new concept rather "
+    "than an edit; the result is the <content_research> block to work from, or a sentence "
+    "saying nothing came back, in which case work from the account's own numbers and say so."
 )
 
 # Cap on what a step chip shows of a stage's detail.
@@ -721,11 +724,28 @@ class ContentRunner:
             # when they connected none, so most sessions keep their prefix.
             # Content had none until 2026-11-08, so a connected SEO or
             # analytics tool was invisible to the agent planning the content.
-            tools += build_mcp_tools_lc(
-                getattr(session, "user_id", None), pause=interrupt_pause, log_prefix="content-v1"
+            user_id = getattr(session, "user_id", None)
+            tools += build_mcp_tools_lc(user_id, pause=interrupt_pause, log_prefix="content-v1")
+            # The project's own data, the reach the insights agent has: which
+            # sources are connected, a pull from one, and the notes on reading
+            # it. A plan built on what people search for, or a post judged on
+            # the visits it sent, needs the numbers the content tables do not
+            # hold. The same binders and the same credential path as insights.
+            tools += build_connector_tools_lc(
+                project_id,
+                user_id=user_id,
+                session=session,
+                session_id=session_id,
+                emit=emit,
+                log_prefix="content-v1",
+                pause=interrupt_pause,
             )
-            if mode == "plan_month":
-                tools.append(self._build_research_tool(session, emit, llm if injected_llm else None))
+            tools += build_data_tools_lc(project_id, user_id=user_id, log_prefix="content-v1")
+            # Both modes: a post the person wants re-thought needs the same
+            # research a plan gets, and until 2026-11-11 only the planner had it.
+            tools.append(self._build_research_tool(session, emit, llm if injected_llm else None))
+            if project_id is not None:
+                tools.append(build_discover_tool_lc(project_id, pause=interrupt_pause))
 
         # One same-provider step down keeps a run alive on the key the caller
         # supplied. Skipped with an injected model — that seam is for tests.
@@ -1174,7 +1194,7 @@ class ContentRunner:
             research = await self._enrich_step(brand, emit, llm, session, focus=focus)
             block = _research_stanza(research)
             return block or (
-                "No trend research came back this run. Plan from the account's own numbers and say so."
+                "No trend research came back this run. Work from the account's own numbers and say so."
             )
 
         return bind_tool_lc(
@@ -1187,8 +1207,8 @@ class ContentRunner:
         *,
         focus: str = "",
     ) -> Any:
-        """The research pass, as a visible step. Plan mode only; called by the
-        ``research_trends`` tool once the person has given a direction."""
+        """The research pass, as a visible step, called by the ``research_trends``
+        tool once the person has given a direction (a plan, or a post's new concept)."""
         from agents.content.enrichment import enrich_content_context
 
         period = ""
