@@ -529,6 +529,30 @@ def _call_finish(args: dict[str, Any], result: Any, is_error: bool) -> dict[str,
     return _connected_done(_call_start(args), result, is_error)
 
 
+def _tiktok_start(args: dict[str, Any]) -> dict[str, Any]:
+    """A TikTok search (agents/content/discover.py), by its hashtags; the
+    trending feed has none, and the app's verb says the rest."""
+    tags = args.get("hashtags") if isinstance(args.get("hashtags"), list) else []
+    title = " ".join(f"#{_text(t).lstrip('#')}" for t in tags if _text(t).lstrip("#"))
+    return {"kind": ActivityKind.CONTEXT, "title": title[:TITLE_CHARS]}
+
+
+def _tiktok_finish(args: dict[str, Any], result: Any, is_error: bool) -> dict[str, Any]:
+    env = _envelope(result)
+    status = _text(env.get("status"))
+    ok = not is_error and status == "ok"
+    posts = env.get("posts") if isinstance(env.get("posts"), list) else []
+    return {
+        **_tiktok_start(args),
+        "status": StepStatus.SUCCESS if ok else StepStatus.ERROR,
+        "meta": {"count": len(posts)} if ok else {},
+        # A skipped search is the person's answer on the card above, not a
+        # failure to explain again.
+        "error": "" if ok or status in _CONNECTED_QUIET else _text(env.get("message")),
+        "reason": "" if ok else status,
+    }
+
+
 def _context_fields(record: dict[str, Any], *_rest: Any) -> dict[str, Any]:
     """The run's own context notice, from the CONTEXT row's payload: which
     blocks were non-empty, so the person knows the turn was enriched with
@@ -585,6 +609,7 @@ ACTIVITY_TOOLS: dict[str, tuple[Callable[..., dict], Callable[..., dict]]] = {
     "fetch_content_history": (_read_start, _read_finish),
     "fetch_content_assets": (_read_start, _read_finish),
     "fetch_discovered_references": (_read_start, _read_finish),
+    "discover_tiktok": (_tiktok_start, _tiktok_finish),
     "fetch_post": (_read_start, _read_finish),
     "fetch_slide_context": (_read_start, _read_finish),
     # … and what it does on the person's behalf.

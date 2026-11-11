@@ -206,6 +206,18 @@ describe("the wider allowlist", () => {
     expect(rows[2]).toMatchObject({ kind: ActivityKind.ARTIFACT, status: StepStatus.ERROR, error: "No artifact 'gone' in this project." });
   });
 
+  it("names a TikTok search by its hashtags and keeps a skip quiet", () => {
+    const rows = activitiesFromEvents([
+      use("discover_tiktok", "d1", { reason: "r", hashtags: ["#glassskin", "skincareroutine"] }),
+      result("discover_tiktok", "d1", { status: "ok", count: 15, found: 30, searched: ["glassskin", "skincareroutine"], posts: [] }),
+      use("discover_tiktok", "d2", { reason: "r", hashtags: ["glassskin"] }),
+      result("discover_tiktok", "d2", { status: "skipped", message: "The person did not approve this search." }),
+    ]);
+    expect(rows[0]).toMatchObject({ kind: ActivityKind.CONTEXT, status: StepStatus.SUCCESS, title: "#glassskin #skincareroutine", meta: { count: 15 } });
+    // The person said no on the card; the row does not say it back to them.
+    expect(rows[1]).toMatchObject({ status: StepStatus.ERROR, error: "" });
+  });
+
   it("draws what the content agent did on the person's behalf", () => {
     const [row] = activitiesFromEvents([
       use("publish_post", "x1", { post_id: "p1" }),

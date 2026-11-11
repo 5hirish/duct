@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import json
 from datetime import timedelta
+from functools import lru_cache
 from typing import TYPE_CHECKING
 
 from utils.formatting import number, percent
@@ -832,13 +833,20 @@ Readers (no side-effects):
   named), fetch_content_assets, fetch_discovered_references, fetch_post
   (structured slides + slides_html)
 
-Research (plan mode):
+Research:
   research_trends(focus) — the research pass: what is working now for this
   brand's audience on its channels (sounds, hashtags, hooks, formats,
-  competitor cadence, seasonal dates), dated and sourced. One call per plan,
-  after the person gave a direction; call it again only for a new direction.
-  If it reports that nothing came back, plan from the account's own numbers
-  and say so in strategy — never quote a trend it did not return.
+  competitor cadence, seasonal dates), dated and sourced. One call per plan
+  after the person gave a direction, or per post when they want a new
+  concept rather than an edit; call it again only for a new direction. If it
+  reports that nothing came back, work from the account's own numbers and
+  say so — never quote a trend it did not return.
+  discover_tiktok(reason, hashtags | region) — search TikTok now, through the
+  project's Apify account: the top posts by plays, with their likes, shares,
+  saves, sound and caption. Each search spends Apify credits and waits for
+  the person's yes, so read fetch_discovered_references first and search only
+  when fresh TikTok evidence would change the plan or the post. It saves
+  nothing; cite a post by its URL and its counts.
 
 Visual review:
   render_slide(slide_id) — rasterize a slide to 1080×1920 and SEE the composed
@@ -1507,6 +1515,51 @@ NO_VISION_DIRECTIVE = (
 )
 
 
+_PROJECT_DATA_RULES = """\
+## THE PROJECT'S OWN DATA
+
+The sources this project connected (Search Console, GA4, Clarity, the
+schedulers and the rest under <entity_catalogs>) are readable here, the same
+way the insights agent reads them:
+
+- ListDataSources first: what is connected, and to which account. Never ask
+  the person what they connected.
+- FetchData(entity_id, date_from, date_to) reads one entity, and
+  ReadConnectorNotes(connector_id) says how that platform's numbers mislead.
+  Read the notes before drawing a conclusion from a connector.
+- SelectAccount when a source is 'available'. RequestConnection only when the
+  plan or the post genuinely needs a source the project lacks; a skip is a
+  normal answer, and you carry on without it.
+
+Reach for it where it changes the work: the queries people search for
+(gsc_query_performance) as topics, hooks and caption keywords, and the
+landing pages and conversion paths a post sent people to (ga4_landing_pages,
+ga4_conversion_paths) as the goal the post tables cannot measure. Skip it
+when the content tables already answer. Name the source and the window behind
+every number you take from it."""
+
+
+@lru_cache(maxsize=1)
+def project_data_section() -> str:
+    """The data rules, the entity catalog and the notes index, once.
+
+    The insights prompt carries the same catalog, so FetchData's entity ids
+    mean one thing to both agents. It is the same for every customer, so it
+    belongs in the cached prefix; which sources a project actually reaches is
+    per-request and comes from ListDataSources.
+    """
+    from agents.insights.catalog import get_catalogs_for_connectors
+    from agents.insights.catalog.prompt import entity_catalog_prompt_block
+    from agents.insights.data_tools import knowledge_index_block
+    from agents.insights.fetchers import fetch_specs
+
+    catalog = entity_catalog_prompt_block(
+        get_catalogs_for_connectors(sorted({s.connector_id for s in fetch_specs().values()}))
+    )
+    notes = "Connector notes available to ReadConnectorNotes:\n\n" + knowledge_index_block()
+    return "\n\n".join(part for part in (_PROJECT_DATA_RULES, catalog, notes) if part)
+
+
 def build_orchestrator_system_prompt(
     brand: ContentBrandContext,  # noqa: ARG001 — accepted for backwards-compat; brand goes in user msg
     mode: RunMode,
@@ -1529,13 +1582,13 @@ def build_orchestrator_system_prompt(
     # on the visual base, which knows a day can be bound for a text channel.
     if mode == "draft_post" and getattr(channel, "text_first", False):
         return with_confidentiality(
-            f"{text_system_prompt(channel.playbook)}\n\n{MEMORY_DISCIPLINE}"
+            f"{text_system_prompt(channel.playbook)}\n\n{project_data_section()}\n\n{MEMORY_DISCIPLINE}"
         )
     tail = f"{_channel_directive(channel, mode)}\n\n{_mode_tail(mode)}"
     if not vision:
         tail = f"{NO_VISION_DIRECTIVE}\n\n{tail}"
     return with_confidentiality(
-        f"{ORCHESTRATOR_BASE_PROMPT}\n\n{MEMORY_DISCIPLINE}\n\n{tail}"
+        f"{ORCHESTRATOR_BASE_PROMPT}\n\n{project_data_section()}\n\n{MEMORY_DISCIPLINE}\n\n{tail}"
     )
 
 
@@ -2075,8 +2128,11 @@ Now — WRITE PHASE (copy + image prompts only; NO images yet):
 1. Call write_todos with your drafting checklist so the user can watch the
    workflow (e.g. study references → research topic → write hook → lay out
    the mystery arc → per-slide copy → image prompts). Update it as you go.
-2. If you need a quick fact-check, web_search (≤3 queries) when you have it,
-   else WebFetch a source you already know.
+2. A quick fact-check is web_search (≤3 queries) when you have it, else
+   WebFetch a source you already know. A new concept (the person wants a
+   different post, not an edit) researches first and has no query cap:
+   research_trends, then search, discover_tiktok and the project's own data
+   as the concept needs.
 3. Pick the `layout`, then apply the quality, hook-emotion, mystery-
    architecture, and emotional-arc rules. Author one structured slide per
    slide_count — each with copy (caption_style + headline + optional subtext)

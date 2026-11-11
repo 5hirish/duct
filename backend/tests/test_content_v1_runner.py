@@ -92,6 +92,19 @@ def test_the_orchestrator_gets_every_content_tool_and_the_scaffolding(plan_sessi
     assert {"task", "write_todos", "AskUserQuestion", "WebFetch"} <= names
 
 
+@pytest.mark.parametrize("mode", ["plan_month", "draft_post"])
+def test_both_agents_research_search_tiktok_and_read_the_projects_data(mode, plan_session, draft_session, emitted):
+    """Until 2026-11-11 only the planner could research, neither agent could
+    search TikTok, and neither could read the project's connected sources."""
+    session = plan_session if mode == "plan_month" else draft_session
+    session.user_id = uuid.uuid4()
+
+    names = tool_names(_agent(session, emitted))
+
+    assert {"research_trends", "discover_tiktok"} <= names
+    assert {"ListDataSources", "SelectAccount", "RequestConnection", "FetchData", "ReadConnectorNotes"} <= names
+
+
 def test_filesystem_is_virtual_and_there_is_no_shell(plan_session, emitted):
     names = tool_names(_agent(plan_session, emitted))
 

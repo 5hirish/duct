@@ -4298,6 +4298,10 @@ msgstr "Each change is reverted using the rollback handle recorded when it was a
 msgid "Each redirect hop bleeds crawl budget and PageRank."
 msgstr "Each redirect hop bleeds crawl budget and PageRank."
 
+#: src/components/insights/ToolApproval.jsx
+msgid "Each search uses this project’s {serverName} credits, so Duct asks first. Skip and the agent carries on from what you saved."
+msgstr "Each search uses this project’s {serverName} credits, so Duct asks first. Skip and the agent carries on from what you saved."
+
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Each source Duct reads shows up here with the period it covers, and the provider’s own words when a pull fails."
 msgstr "Each source Duct reads shows up here with the period it covers, and the provider’s own words when a pull fails."
@@ -9627,6 +9631,10 @@ msgstr "Search queries, clicks, impressions and average position."
 msgid "Search sources"
 msgstr "Search sources"
 
+#: src/components/insights/ToolApproval.jsx
+msgid "Search TikTok with {serverName}?"
+msgstr "Search TikTok with {serverName}?"
+
 #: src/components/content/DiscoverPage.jsx
 msgid "Search your niche"
 msgstr "Search your niche"
@@ -9638,6 +9646,10 @@ msgstr "Searched memory"
 #: src/components/workspace/ActivityRow.jsx
 msgid "Searched the web"
 msgstr "Searched the web"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Searched TikTok"
+msgstr "Searched TikTok"
 
 #: src/components/content/DiscoverPage.jsx
 msgid "Searches run on your own Apify account, so the scraping is billed to you. The same search again within 30 minutes costs nothing."

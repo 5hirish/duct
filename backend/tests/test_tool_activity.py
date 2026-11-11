@@ -290,3 +290,22 @@ async def test_opening_a_saved_post_is_named_by_its_topic_and_not_a_failure():
     assert events[0]["title"] == ""  # the id names nothing to the person
     assert events[-1]["status"] == StepStatus.SUCCESS
     assert events[-1]["title"] == "Why 80% guess their face shape wrong"
+
+
+@pytest.mark.asyncio
+async def test_a_tiktok_search_is_named_by_its_hashtags_and_a_skip_stays_quiet():
+    args = {"reason": "r", "hashtags": ["#glassskin", "skincareroutine"]}
+    found = json.dumps({"status": "ok", "count": 2, "posts": [{}, {}]})
+    events, _ = await run_call("discover_tiktok", args, found)
+
+    assert events[-1]["kind"] == ActivityKind.CONTEXT
+    assert events[-1]["status"] == StepStatus.SUCCESS
+    assert events[-1]["title"] == "#glassskin #skincareroutine"
+    assert events[-1]["meta"] == {"count": 2}
+
+    # The person said no on the approval card; the row does not say it back.
+    skipped = json.dumps({"status": "skipped", "message": "The person did not approve this search."})
+    events, _ = await run_call("discover_tiktok", args, skipped)
+
+    assert events[-1]["error"] == ""
+    assert events[-1]["reason"] == "skipped"
