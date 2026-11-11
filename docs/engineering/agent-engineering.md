@@ -1,6 +1,6 @@
 # Building and changing agents
 
-**Author:** Shirish Kadam · **Updated:** 2026-11-08
+**Author:** Shirish Kadam · **Updated:** 2026-11-11
 
 Duct's agent rulebook on LangChain 1.x, LangGraph and `deepagents`: 34 rules,
 each naming its primitive and its enforcing test, plus 12 ranked open gaps.
@@ -118,7 +118,7 @@ Runners-up:
 - **A cache key for content.** Audit got one 2026-09-27.
 - **Tool spans at one choke point.** Five binders span today.
 - **Checkpoint deletion** when a project is deleted.
-- **The LangChain stack** out of the grouped Dependabot PR.
+- ~~**The LangChain stack** out of the grouped Dependabot PR.~~ Done 2026-11-11: Dependabot ignores its version updates; security advisories still open a PR.
 
 > **Remember:** a rule with no test is a note. A gap closes with its test.
 
@@ -201,7 +201,7 @@ are relative to `backend/`.
 
 | Rule | Enforced by |
 |---|---|
-| Bump the LangChain stack alone, never inside a grouped Dependabot PR; `poetry install --with dev` locally the same day, or local tests run other versions than CI. | `tests/test_deepagents_harness.py`, `tests/test_agent_assembly.py` |
+| Bump the LangChain stack by hand and alone; Dependabot proposes no version of it (`.github/dependabot.yml`), only security fixes. `poetry install --with dev` locally the same day, or local tests run other versions than CI. | `tests/test_deepagents_harness.py`, `tests/test_agent_assembly.py` |
 | A new model is a table migration: `PRICING`, `CONTEXT_WINDOW`, `MODEL_FALLBACK`, tiers, thinking, and a check of the LangChain profile and `deepagents` harness profiles for that id. | `tests/test_stream_translation.py` (`PRICING` and `CONTEXT_WINDOW` cover the same ids) |
 | Every harness component names the failure it compensates for, and is re-measured when the model changes. `planning=False` on insights is the worked example: two of five turns were checklist rewrites. | [`STYLE.md`](../../STYLE.md) (comments carry reasoning) |
 
