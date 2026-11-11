@@ -883,7 +883,11 @@ agents/
     │                     submit_plan and revise_plan_days refuse one the run was not
     │                     shown, or more feed days than the setup allowed, and a plan
     │                     from goals cites nothing. The window rides on strategy.feed,
-    │                     so the next run starts where this one ended: no watermark table
+    │                     so the next run starts where this one ended: no watermark table.
+    │                     feed_mcp.py adds Linear and Notion (#565) on the user's own
+    │                     trusted presets, read by code like GitHub (ln: and nt: refs):
+    │                     no stable tool contract exists, so it sends only the arguments
+    │                     a tool's schema declares and judges the window in code
     ├── plan_proposal.py — a plan is proposed, then accepted: what Accept writes, merged
     │                     against the plan as it stands at Accept. The proposal is held
     │                     on the conversation (meta.plan_proposal) so a deploy does not

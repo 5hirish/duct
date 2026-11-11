@@ -78,6 +78,10 @@ WEIGHTS: dict[str, int] = {
     "issue": 1,
     "artifact": 1,
     "memory": 0,
+    # Linear and Notion (#565): a finished issue is one merged change's worth;
+    # a page in the database someone keeps launch notes in is a story's.
+    "linear_issue": 1,
+    "notion_page": 2,
 }
 
 # Conventional-commit types that describe how the work was done, not what a
@@ -96,7 +100,7 @@ _CONVENTIONAL = re.compile(r"^(?P<type>[a-zA-Z]+)(?:\([^)]*\))?!?:\s")
 _DEPENDENCY = re.compile(r"^(?:build\(deps[^)]*\):\s*)?(?:bump|update|upgrade)\s+\S+.*\bfrom\s+\S+\s+to\s+\S+", re.IGNORECASE)
 _SQUASHED_PR = re.compile(r"\(#(\d+)\)\s*$")
 _MERGE_COMMIT = re.compile(r"^Merge (?:pull request|branch)\b", re.IGNORECASE)
-_REF = re.compile(r"^(?:gh|art|cs|mem):[A-Za-z0-9._#/-]+$")
+_REF = re.compile(r"^(?:gh|art|cs|mem|ln|nt):[A-Za-z0-9._#/-]+$")
 
 
 class Disclosure(StrEnum):
@@ -141,6 +145,9 @@ LEFT_OUT_WORDS: dict[str, str] = {
 class FeedSource(StrEnum):
     GITHUB = "github"
     DUCT = "duct"
+    # The user's own trusted read-only MCP connections (#565).
+    LINEAR = "linear"
+    NOTION = "notion"
 
 
 class FeedOptions(BaseModel):
@@ -153,6 +160,9 @@ class FeedOptions(BaseModel):
     look_back_days: int | None = Field(default=None, ge=1, le=MAX_LOOK_BACK_DAYS)
     max_days: int = Field(default=DEFAULT_MAX_FEED_DAYS, ge=1, le=MAX_FEED_DAYS)
     disclosure: Disclosure = Disclosure.SHIPPED
+    # The Notion database a Notion feed reads: its link, or a collection://
+    # data source id. One database, never the workspace (#565).
+    notion_database: str = Field(default="", max_length=500)
 
 
 class DaySource(BaseModel):
@@ -224,6 +234,7 @@ class FeedDigest:
             "window_from": self.window_from.isoformat(),
             "window_to": self.window_to.isoformat(),
             "sources": [s.value for s in self.options.sources],
+            **({"notion_database": self.options.notion_database} if self.options.notion_database else {}),
             "disclosure": self.options.disclosure.value,
             "max_days": self.options.max_days,
         }
@@ -470,6 +481,7 @@ def build_digest(
     github_note_text: str = "",
     duct: list[FeedItem] | None,
     already: set[str],
+    extra: Any = None,
 ) -> FeedDigest:
     """Filter, cap and score. Releases and Duct's applied changes go first,
     because when the cap bites those are the stories to keep."""
@@ -483,8 +495,12 @@ def build_digest(
         digest.notes.append(github_note_text)
     if duct is not None:
         items += duct
-    order = {"release": 0, "change_set": 1, "pull_request": 2, "artifact": 3, "commit": 4,
-             "docs_change": 5, "issue": 6, "memory": 7}
+    if extra is not None:  # feed_mcp.McpFeed: Linear and Notion
+        items += extra.items
+        digest.left_out.update(extra.left_out)
+        digest.notes += extra.notes
+    order = {"release": 0, "change_set": 1, "notion_page": 2, "pull_request": 3, "linear_issue": 3,
+             "artifact": 4, "commit": 5, "docs_change": 6, "issue": 7, "memory": 8}
     # Newest first inside a kind.
     items.sort(key=lambda i: (order.get(i.kind, 9), _neg_date(i.at)))
     if len(items) > MAX_ITEMS:

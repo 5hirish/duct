@@ -978,7 +978,18 @@ class ContentRunner:
                 return duct_items(db, project_id, window[0], window[1], already=already)
 
         duct = await asyncio.to_thread(_duct) if FeedSource.DUCT in options.sources else None
-        digest = build_digest(options, window, github_rows=rows, github_note_text=note, duct=duct, already=already)
+        extra = None
+        if user_id is not None and ({FeedSource.LINEAR, FeedSource.NOTION} & set(options.sources)):
+            from agents.content.feed_mcp import read_mcp_feeds
+
+            # Linear and Notion through the user's own trusted connections,
+            # read by code like GitHub so the gate still decides (#565).
+            extra = await read_mcp_feeds(
+                user_id, options.sources, window, disclosure=options.disclosure, already=already,
+                notion_database=options.notion_database, today=today,
+            )
+        digest = build_digest(options, window, github_rows=rows, github_note_text=note, duct=duct,
+                              already=already, extra=extra)
         await emit({
             "event": ContentEvent.STEP_FINISHED,
             "step_id": ContentStep.READ_WORK,
