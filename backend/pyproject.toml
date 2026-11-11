@@ -28,7 +28,7 @@ uvicorn = {version = "^0.54", extras = ["standard"]}
 # which is why every deploy died on "Form data requires python-multipart".
 # Not a caret: poetry reads ^0.0.31 as <0.0.32, so a floor is what we want here.
 # FastAPI's own is 0.0.18; Dependabot walks ours forward as releases land.
-python-multipart = ">=0.0.32"
+python-multipart = ">=0.0.33"
 # 32.0.0 (2026-09-09) dropped developer_token from the client's required
 # config keys, the same day Google sunset developer tokens. Access level now
 # follows the Cloud project that owns the OAuth client, so there is no token
@@ -47,11 +47,11 @@ langchain = "^1.4.7"
 # instead of `block-delta` snapshots; nothing in Duct reads either (lc.py's
 # split_chunk takes text and thinking blocks and ignores the rest, and
 # routes/chat.py reads chunk.content), which was checked when this moved.
-langchain-core = "^1.7.3"
-langchain-openai = "^1.7.3"
-langchain-google-genai = "^4.4.2"
-langchain-anthropic = "^1.7.7"
-langgraph = "^1.2.18"
+langchain-core = "^1.7.6"
+langchain-openai = "^1.7.4"
+langchain-google-genai = "^4.4.3"
+langchain-anthropic = "^1.7.10"
+langgraph = "^1.2.20"
 pyjwt = "^2.15"
 httpx = "^0.28"
 # The client for MCP servers a user connects (service/mcp/). The reference SDK
@@ -65,7 +65,7 @@ sqlmodel = "^0.0.48"
 alembic = "^1.20"
 psycopg = {version = "^3.3", extras = ["binary"]}
 # Server analytics, request context, and automatic exception capture for FastAPI.
-posthog = ">=7.80.3"
+posthog = ">=7.86.0"
 dlt = "^1.32.0"
 selectolax = ">=1.0.2"
 extruct = ">=0.16"
@@ -87,7 +87,7 @@ opentelemetry-api = "^1.44"
 opentelemetry-sdk = "^1.44"
 opentelemetry-exporter-otlp-proto-http = "^1.44"
 reportlab = ">=5.1.0"
-cloudflare = ">=5.9.0"
+cloudflare = ">=5.10.0"
 # Durable conversation state (agents/core/checkpoint.py). Both, not one: the
 # same app serves Postgres on Railway and SQLite in the desktop sidecar, and the
 # checkpointer follows DATABASE_URL rather than forcing a database of its own.
@@ -95,7 +95,7 @@ cloudflare = ">=5.9.0"
 # `langgraph-api` (the Platform server, Elastic-2.0), which Duct does not use:
 # the library runs in-process inside FastAPI, with our own SSE transport.
 langgraph-checkpoint-postgres = "^3.2.0"
-langgraph-checkpoint-sqlite = "^3.1.2"
+langgraph-checkpoint-sqlite = "^3.1.3"
 # OpenRouter's first-party LangChain integration — `init_chat_model(
 # model_provider="openrouter")` resolves to it. Duct never imports it directly;
 # LangChain does, which is why no agents/ file gains a framework import and the
