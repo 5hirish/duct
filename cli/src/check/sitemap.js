@@ -4,7 +4,10 @@
 export const SITEMAP_MAX_URLS = 50000;
 export const SITEMAP_MAX_BYTES = 50 * 1024 * 1024;
 
-const decode = (s) => s.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").trim();
+// One pass, so "&amp;lt;" becomes "&lt;" and not "<": decoding each entity
+// in turn would unescape twice.
+const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'" };
+const decode = (s) => s.replace(/&(amp|lt|gt|quot|apos);/g, (_, name) => ENTITIES[name]).trim();
 
 export function parseSitemap(xml) {
   const isIndex = /<sitemapindex[\s>]/i.test(xml);

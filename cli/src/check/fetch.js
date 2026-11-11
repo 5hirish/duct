@@ -21,37 +21,85 @@ export const LIMITS = {
 // A site can point this run anywhere: a redirect, a sitemap child, an
 // og:image or a script URL is the site's choice, not the user's. Followed
 // blindly, that reaches the machine the CLI runs on, its network and a
-// cloud metadata endpoint, and prints what came back. So any host other
-// than the one the user typed is refused when it resolves to a loopback,
-// private, link-local or unique-local address. A user who points the CLI
-// at their own local or private host has chosen that network, so then
-// nothing is refused.
-const PRIVATE_V4 = [
+// cloud metadata endpoint, and prints what came back. So every host is
+// refused when any address it resolves to is not public unicast, and a
+// host that cannot be resolved is refused too. The one exemption is the
+// user's own choice, made explicitly: they typed an IP literal or a
+// `localhost` name that is itself private, so that network is theirs.
+// What remains is DNS rebinding between this lookup and the fetch's own;
+// zero dependencies leaves no way to pin the address global fetch connects
+// to, and the output goes only to the person who ran the command.
+const BLOCKED_V4 = [
   ['0.0.0.0', 8], ['10.0.0.0', 8], ['100.64.0.0', 10], ['127.0.0.0', 8],
-  ['169.254.0.0', 16], ['172.16.0.0', 12], ['192.168.0.0', 16],
+  ['169.254.0.0', 16], ['172.16.0.0', 12], ['192.0.0.0', 24], ['192.0.2.0', 24],
+  ['192.168.0.0', 16], ['198.18.0.0', 15], ['198.51.100.0', 24], ['203.0.113.0', 24],
+  ['224.0.0.0', 4], ['240.0.0.0', 4],
 ];
-const v4 = (ip) => ip.split('.').reduce((n, part) => (n << 8) + Number(part), 0) >>> 0;
-const inV4 = (ip, [base, bits]) => bits === 0 || (v4(ip) >>> (32 - bits)) === (v4(base) >>> (32 - bits));
+const v4int = (ip) => ip.split('.').reduce((n, part) => n * 256 + Number(part), 0);
+const inV4 = (n, [base, bits]) => Math.floor(n / 2 ** (32 - bits)) === Math.floor(v4int(base) / 2 ** (32 - bits));
+const blockedV4 = (ip) => { const n = v4int(ip); return BLOCKED_V4.some((r) => inV4(n, r)); };
 
-export function isPrivateAddress(ip) {
-  const family = isIP(ip);
-  if (family === 4) return PRIVATE_V4.some((r) => inV4(ip, r));
-  if (family !== 6) return false;
-  const a = ip.toLowerCase();
-  const mapped = a.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
-  if (mapped) return isPrivateAddress(mapped[1]);
-  return a === '::' || a === '::1' || /^f[cd]/.test(a) || /^fe[89ab]/.test(a);
+/** An IPv6 address as 16 bytes, or null. Handles `::` and a dotted IPv4 tail. */
+function v6bytes(ip) {
+  let a = ip.toLowerCase().split('%')[0];
+  const tail = a.match(/(\d+\.\d+\.\d+\.\d+)$/);
+  if (tail) {
+    const q = tail[1].split('.').map(Number);
+    a = a.slice(0, -tail[1].length) + ((q[0] << 8) | q[1]).toString(16) + ':' + ((q[2] << 8) | q[3]).toString(16);
+  }
+  const halves = a.split('::');
+  if (halves.length > 2) return null;
+  const head = halves[0] ? halves[0].split(':') : [];
+  const rest = halves.length === 2 ? (halves[1] ? halves[1].split(':') : []) : [];
+  const fill = halves.length === 2 ? 8 - head.length - rest.length : 0;
+  const groups = [...head, ...Array(Math.max(fill, 0)).fill('0'), ...rest];
+  if (groups.length !== 8) return null;
+  const bytes = [];
+  for (const g of groups) {
+    const n = parseInt(g, 16);
+    if (!/^[0-9a-f]{1,4}$/.test(g) || Number.isNaN(n)) return null;
+    bytes.push(n >> 8, n & 0xff);
+  }
+  return bytes;
 }
 
-async function resolvesPrivate(hostname, resolve) {
-  const host = hostname.replace(/^\[|\]$/g, '');
-  if (host === 'localhost' || host.endsWith('.localhost')) return true;
+function blockedV6(ip) {
+  const b = v6bytes(ip);
+  if (!b) return true; // unparseable: refuse rather than guess
+  const zero = (from, to) => b.slice(from, to).every((x) => x === 0);
+  const v4 = (o) => b.slice(o, o + 4).join('.');
+  if (zero(0, 10) && b[10] === 0xff && b[11] === 0xff) return blockedV4(v4(12)); // ::ffff:a.b.c.d
+  if (zero(0, 12)) return true;                                                 // ::, ::1, ::a.b.c.d
+  if (b[0] === 0x00 && b[1] === 0x64 && b[2] === 0xff && b[3] === 0x9b && zero(4, 12)) return blockedV4(v4(12)); // 64:ff9b::/96 NAT64
+  if (b[0] === 0x20 && b[1] === 0x02) return blockedV4(v4(2));                   // 2002::/16 6to4
+  if ((b[0] & 0xfe) === 0xfc) return true;                                      // fc00::/7 unique local
+  if (b[0] === 0xfe && (b[1] & 0xc0) === 0x80) return true;                     // fe80::/10 link-local
+  if (b[0] === 0xfe && (b[1] & 0xc0) === 0xc0) return true;                     // fec0::/10 site-local
+  if (b[0] === 0xff) return true;                                               // ff00::/8 multicast
+  if (b[0] === 0x20 && b[1] === 0x01 && b[2] === 0x0d && b[3] === 0xb8) return true; // 2001:db8::/32 documentation
+  return false;
+}
+
+/** True when an address is not public unicast. */
+export function isPrivateAddress(ip) {
+  const family = isIP(ip);
+  if (family === 4) return blockedV4(ip);
+  if (family === 6) return blockedV6(ip);
+  return true;
+}
+
+const bare = (hostname) => hostname.replace(/^\[|\]$/g, '');
+const isLocalName = (host) => host === 'localhost' || host.endsWith('.localhost');
+
+async function hostIsPrivate(host, resolve) {
+  if (isLocalName(host)) return true;
   if (isIP(host)) return isPrivateAddress(host);
   try {
-    const addrs = await resolve(host, { all: true });
+    const addrs = await resolve(host, { all: true, verbatim: true });
+    if (!addrs?.length) return true;
     return addrs.some((a) => isPrivateAddress(a.address));
   } catch {
-    return false; // unresolvable: the fetch itself will fail and say so
+    return true; // cannot be checked, so it is not fetched
   }
 }
 
@@ -60,15 +108,18 @@ async function resolvesPrivate(hostname, resolve) {
  * injectable so tests never touch DNS.
  */
 export function createGuard(startUrl, { resolve = lookup } = {}) {
-  const trusted = new URL(startUrl).hostname;
-  let trustedPrivate;
+  const typed = bare(new URL(startUrl).hostname);
+  // Only an explicit choice exempts a network: an IP literal or a localhost
+  // name the user typed. A domain that merely resolves privately is not one.
+  const userChosePrivate = isLocalName(typed) || (isIP(typed) > 0 && isPrivateAddress(typed));
+  const cache = new Map();
   return async function allowed(url) {
     const u = new URL(url);
     if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
-    if (u.hostname === trusted) return true;
-    if (trustedPrivate === undefined) trustedPrivate = await resolvesPrivate(trusted, resolve);
-    if (trustedPrivate) return true;
-    return !(await resolvesPrivate(u.hostname, resolve));
+    if (userChosePrivate) return true;
+    const host = bare(u.hostname);
+    if (!cache.has(host)) cache.set(host, hostIsPrivate(host, resolve));
+    return !(await cache.get(host));
   };
 }
 
