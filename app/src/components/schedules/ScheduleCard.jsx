@@ -5,7 +5,7 @@ import Link from "next/link";
 import { msg } from "@lingui/core/macro";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
-  ArrowRight, Check, ChevronDown, Cloud, Laptop, Minus, Pause, Play, RotateCcw, SkipForward, Trash2, X, Zap,
+  ArrowRight, Check, ChevronDown, Cloud, Laptop, Minus, Pause, Play, RotateCcw, SkipForward, Tag, Trash2, X, Zap,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -58,6 +58,7 @@ const REASONS = {
   interrupted: msg`stopped by a restart`,
   error: msg`error`,
   unknown_job: msg`unknown job`,
+  no_repository: msg`no repository to watch`,
 };
 
 // What to do about a "Needs you", and where.
@@ -65,6 +66,7 @@ const FIXES = {
   no_model_key: { text: msg`Save a model key so a run can start without you.`, href: "/settings/models", action: msg`Models & providers` },
   monthly_cap: { text: msg`It will run again next month, or raise the limit.`, href: null, action: null },
   not_member: { text: msg`Runs act as their creator. Recreate it from your account.`, href: null, action: null },
+  no_repository: { text: msg`Connect a GitHub repository so there are releases to watch.`, href: "/connections?connector=github", action: msg`Toolbox` },
 };
 
 function useTrigger(s) {
@@ -78,6 +80,7 @@ function useTrigger(s) {
     case Cadence.DAILY: return t`Daily at ${time}, ${zone}`;
     case Cadence.WEEKDAYS: return t`Weekdays at ${time}, ${zone}`;
     case Cadence.WEEKLY: return t`Every ${day} at ${time}, ${zone}`;
+    case Cadence.ON_RELEASE: return t`When a release is published on GitHub`;
     default: return t`Only when you run it`;
   }
 }
@@ -227,9 +230,21 @@ export default function ScheduleCard({ schedule: s, onRunNow, onToggle, onDelete
  */
 function NextRunLeaf({ schedule: s, state }) {
   const { t, i18n } = useLingui();
-  const next = s.next_run_at ? new Date(s.next_run_at) : null;
   const paused = state === ScheduleState.PAUSED;
   const running = state === ScheduleState.RUNNING;
+  if (s.cadence === Cadence.ON_RELEASE && !running) {
+    // No date to show: it runs when a release lands, checked each hour.
+    return (
+      <div className="sched-leaf" data-state={state} role="img" aria-label={t`Runs on each GitHub release`}>
+        <span className="sched-leaf-band text-2xs font-semibold">{paused ? t`Paused` : t`Release`}</span>
+        <span className="sched-leaf-day flex h-8 items-center">
+          {paused ? <Pause className="size-4" aria-hidden /> : <Tag className="size-5 text-brand" aria-hidden />}
+        </span>
+        <span className="pb-1.5 text-2xs text-muted-foreground">{t`hourly`}</span>
+      </div>
+    );
+  }
+  const next = s.next_run_at ? new Date(s.next_run_at) : null;
   const band = running ? t`Now` : next ? next.toLocaleDateString(i18n.locale, { weekday: "short" }) : paused ? t`Paused` : t`Manual`;
   const nextDate = next ? formatDate(next, { withYear: false, locale: i18n.locale }) : "";
   const nextTime = next ? formatTime(next, { locale: i18n.locale }) : "";

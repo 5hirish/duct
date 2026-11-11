@@ -951,6 +951,10 @@ msgstr ""
 msgid "{waiting} need you"
 msgstr ""
 
+#: src/components/AppSidebar.jsx
+msgid "{waiting} waiting on you"
+msgstr ""
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "{warnCount, plural, one {# Warning} other {# Warnings}}"
 msgstr ""
@@ -3018,6 +3022,10 @@ msgstr ""
 msgid "Connect {vendor}"
 msgstr ""
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Connect a GitHub repository so there are releases to watch."
+msgstr ""
+
 #: src/app/(start)/start/page.jsx
 #: src/components/onboarding/ProviderRequiredCard.jsx
 msgid "Connect a model"
@@ -4652,6 +4660,10 @@ msgstr ""
 msgid "Every measurement, the method, notes for whoever builds the fix"
 msgstr ""
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Every Monday"
+msgstr ""
+
 #: src/app/(app)/scheduled/page.jsx
 msgid "Every Monday, Duct reads what you shipped and has a plan waiting for you to accept."
 msgstr ""
@@ -5558,6 +5570,10 @@ msgstr ""
 
 #: src/components/content/StyleGallery.jsx
 msgid "Hooks"
+msgstr ""
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "hourly"
 msgstr ""
 
 #: src/app/(app)/settings/profile/page.jsx
@@ -7194,6 +7210,10 @@ msgstr ""
 msgid "No report yet"
 msgstr ""
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "no repository to watch"
+msgstr ""
+
 #: src/components/content/DiscoverPage.jsx
 msgid "No results returned. Try different hashtags or a wider niche."
 msgstr ""
@@ -7746,6 +7766,10 @@ msgstr ""
 
 #: src/components/TelemetryCard.jsx
 msgid "On by default, so a crash tells us something without you having to report it."
+msgstr ""
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "On each GitHub release"
 msgstr ""
 
 #: src/components/memory/MemoryTimeline.jsx
@@ -9218,6 +9242,10 @@ msgstr ""
 msgid "Rejecting…"
 msgstr ""
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Release"
+msgstr ""
+
 #: src/lib/contentFeedLabels.js
 #~ msgid "Releases"
 #~ msgstr ""
@@ -9351,8 +9379,12 @@ msgid "Rendering diagram…"
 msgstr ""
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Repeat weekly"
+msgid "Repeat"
 msgstr ""
+
+#: src/components/content/FeedPlanDialog.jsx
+#~ msgid "Repeat weekly"
+#~ msgstr ""
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Repeated hashtags: {at}"
@@ -9792,6 +9824,10 @@ msgstr ""
 
 #: src/app/(app)/scheduled/page.jsx
 msgid "Runs it already made stay in the project's activity, and their conversations stay open to you."
+msgstr ""
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Runs on each GitHub release"
 msgstr ""
 
 #: src/components/onboarding/ProviderStep.jsx
@@ -12079,6 +12115,7 @@ msgid "took longer than 15 minutes"
 msgstr ""
 
 #: src/app/(app)/connections/page.jsx
+#: src/components/schedules/ScheduleCard.jsx
 #: src/lib/breadcrumbs.js
 #: src/lib/navigation.js
 msgid "Toolbox"
@@ -12884,6 +12921,10 @@ msgstr ""
 
 #: src/components/workspace/ComposerDials.jsx
 msgid "Whatever this model does anyway"
+msgstr ""
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "When a release is published on GitHub"
 msgstr ""
 
 #: src/components/content/PublishModal.jsx

@@ -225,10 +225,11 @@ export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab, fi
       open
       onOpenChange={setFeedOpen}
       onStart={(options) => { setFeedOpen(false); router.push(feedSessionHref(options, today)); }}
-      onRepeatWeekly={async (options) => {
-        // Saved as a Monday 09:00 schedule in the reader's zone (#562); the
-        // Scheduled page is where it is paused, run or deleted.
-        await createSchedule(feedScheduleBody(projectId, options));
+      onRepeat={async (options, cadence) => {
+        // Saved as a Monday 09:00 schedule in the reader's zone (#562), or one
+        // that runs on each GitHub release (#563); the Scheduled page is where
+        // it is paused, run or deleted.
+        await createSchedule(feedScheduleBody(projectId, options, { cadence }));
         setFeedOpen(false);
         router.push("/scheduled");
       }}

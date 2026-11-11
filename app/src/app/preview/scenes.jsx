@@ -4320,7 +4320,7 @@ export const SCENES = [
   },
   {
     id: "schedule-card-states",
-    state: "waiting on you, running, needs you, paused",
+    state: "waiting on you, running, needs you, on release, paused",
     group: "ScheduleCard",
     title: "Scheduled: one card per schedule",
     note: "The Scheduled page. What runs and when, the host it runs on, the state it is in, the last run with its cost and a way into the conversation it left, and the history behind a fold. What to check: the badge never wraps under the name; Needs you says what to do and links there; a paused card shows no next run.",
@@ -4666,7 +4666,7 @@ function FeedDialogScene({ githubConnected = true, initial }) {
   return (
     <>
       <Button size="sm" variant="outline" onClick={() => setOpen(true)}>Open the setup sheet</Button>
-      <FeedPlanDialog open={open} onOpenChange={setOpen} onStart={() => setOpen(false)} onRepeatWeekly={() => setOpen(false)}
+      <FeedPlanDialog open={open} onOpenChange={setOpen} onStart={() => setOpen(false)} onRepeat={() => setOpen(false)}
         githubConnected={githubConnected} {...(initial ? { initial } : {})} />
     </>
   );
@@ -4678,7 +4678,7 @@ const SCHEDULE_BASE = {
   needs_reason: "", mine: true, next_run_at: "2026-11-16T08:00:21Z",
 };
 const SCHEDULES = [
-  { ...SCHEDULE_BASE, id: "s1", name: "Weekly plan from your work", runs_this_month: 2,
+  { ...SCHEDULE_BASE, id: "s1", name: "Weekly plan from your work", runs_this_month: 2, waiting: true,
     last: { at: "2026-11-09T08:04:00Z", outcome: "proposed", cost_usd: 0.0995, conversation_id: "c1" },
     recent: [
       { at: "2026-11-09T08:04:00Z", outcome: "proposed" }, { at: "2026-11-02T08:20:00Z", outcome: "interrupted", will_retry: true },
@@ -4691,6 +4691,9 @@ const SCHEDULES = [
   { ...SCHEDULE_BASE, id: "s3", name: "Weekly plan, client repo", needs_reason: "no_model_key", runs_this_month: 0,
     last: { at: "2026-11-09T08:01:00Z", outcome: "skipped", reason: "no_model_key" },
     recent: [{ at: "2026-11-09T08:01:00Z", outcome: "skipped" }, { at: "2026-11-09T07:46:00Z", outcome: "skipped" }] },
+  { ...SCHEDULE_BASE, id: "s5", name: "Plan on each release", cadence: "on_release", runs_this_month: 1, waiting: false,
+    last: { at: "2026-11-06T14:12:00Z", outcome: "proposed", cost_usd: 0.11, conversation_id: "c5" },
+    recent: [{ at: "2026-11-06T14:12:00Z", outcome: "proposed" }, { at: "2026-10-22T10:05:00Z", outcome: "proposed" }] },
   { ...SCHEDULE_BASE, id: "s4", name: "Paused experiment", enabled: false, next_run_at: null, cadence: "weekdays",
     runs_this_month: 1, mine: false, last: { at: "2026-11-03T08:05:00Z", outcome: "failed", reason: "rate_limited" },
     recent: [{ at: "2026-11-03T08:05:00Z", outcome: "failed" }, { at: "2026-11-02T08:05:00Z", outcome: "proposed" }] },

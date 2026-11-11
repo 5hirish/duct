@@ -49,3 +49,19 @@ describe("the card's run strip", () => {
     expect(capPips(9, 3)).toEqual([true, true, true]);
   });
 });
+
+describe("on release, and what waits", () => {
+  it("saves an on-release schedule and counts only proposals still unanswered", async () => {
+    const { Cadence, feedScheduleBody, waitingCount, scheduleState, ScheduleState } = await import("../schedules.js");
+    expect(feedScheduleBody("p", { sources: ["github"] }, { cadence: Cadence.ON_RELEASE }).cadence).toBe("on_release");
+    expect(feedScheduleBody("p", {}, { cadence: "nonsense" }).cadence).toBe("weekly");
+    const rows = [
+      { enabled: true, waiting: true },
+      { enabled: true, waiting: false, last: { outcome: "proposed" } },
+      { enabled: false, waiting: true },
+    ];
+    expect(waitingCount(rows)).toBe(1);
+    expect(scheduleState(rows[1])).toBe(ScheduleState.ACTIVE);
+    expect(scheduleState({ enabled: true, last: { outcome: "proposed" } })).toBe(ScheduleState.WAITING_ON_YOU);
+  });
+});

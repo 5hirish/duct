@@ -951,6 +951,10 @@ msgstr "{waiting, plural, one {Eine Sache braucht dich.} other {# Sachen brauche
 msgid "{waiting} need you"
 msgstr "{waiting} brauchen dich"
 
+#: src/components/AppSidebar.jsx
+msgid "{waiting} waiting on you"
+msgstr "{waiting} warten auf dich"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "{warnCount, plural, one {# Warning} other {# Warnings}}"
 msgstr "{warnCount, plural, one {# Warnung} other {# Warnungen}}"
@@ -3024,6 +3028,10 @@ msgstr "{label} verbinden?"
 msgid "Connect {vendor}"
 msgstr "{vendor} verbinden"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Connect a GitHub repository so there are releases to watch."
+msgstr "Verbinde ein GitHub-Repository, damit es Releases zu beobachten gibt."
+
 #: src/app/(start)/start/page.jsx
 #: src/components/onboarding/ProviderRequiredCard.jsx
 msgid "Connect a model"
@@ -4658,6 +4666,10 @@ msgstr "Jede Stunde"
 msgid "Every measurement, the method, notes for whoever builds the fix"
 msgstr "Jede Messung, die Methode, Notizen für denjenigen, der die Korrektur erstellt"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Every Monday"
+msgstr "Jeden Montag"
+
 #: src/app/(app)/scheduled/page.jsx
 msgid "Every Monday, Duct reads what you shipped and has a plan waiting for you to accept."
 msgstr "Jeden Montag liest Duct, was du ausgeliefert hast, und legt dir einen Plan zur Freigabe bereit."
@@ -5565,6 +5577,10 @@ msgstr "Aufhänger"
 #: src/components/content/StyleGallery.jsx
 msgid "Hooks"
 msgstr "Hooks"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "hourly"
+msgstr "stündlich"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "House rules, the metric you actually care about, how you want to be argued with. This wins when it disagrees with the setting above."
@@ -7199,6 +7215,10 @@ msgstr "Kein Anbieter erfasst."
 msgid "No report yet"
 msgstr "Noch kein Bericht"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "no repository to watch"
+msgstr "kein Repository zum Beobachten"
+
 #: src/components/content/DiscoverPage.jsx
 msgid "No results returned. Try different hashtags or a wider niche."
 msgstr "Keine Ergebnisse zurückgegeben. Versuche andere Hashtags oder eine breitere Nische."
@@ -7752,6 +7772,10 @@ msgstr "An"
 #: src/components/TelemetryCard.jsx
 msgid "On by default, so a crash tells us something without you having to report it."
 msgstr "Standardmäßig an, damit uns ein Absturz etwas sagt, ohne dass du ihn melden musst."
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "On each GitHub release"
+msgstr "Bei jedem GitHub-Release"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "On every project"
@@ -9223,6 +9247,10 @@ msgstr "Abgelehnt"
 msgid "Rejecting…"
 msgstr "Wird abgelehnt…"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Release"
+msgstr "Release"
+
 #: src/lib/contentFeedLabels.js
 #~ msgid "Releases"
 #~ msgstr ""
@@ -9356,8 +9384,12 @@ msgid "Rendering diagram…"
 msgstr "Diagramm wird gerendert…"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Repeat weekly"
-msgstr "Wöchentlich wiederholen"
+msgid "Repeat"
+msgstr "Wiederholen"
+
+#: src/components/content/FeedPlanDialog.jsx
+#~ msgid "Repeat weekly"
+#~ msgstr "Wöchentlich wiederholen"
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Repeated hashtags: {at}"
@@ -9798,6 +9830,10 @@ msgstr "Führt GPT-Modelle mit einem Plan aus, den du bereits bezahlst. Das Anme
 #: src/app/(app)/scheduled/page.jsx
 msgid "Runs it already made stay in the project's activity, and their conversations stay open to you."
 msgstr "Bereits erfolgte Läufe bleiben in der Aktivität des Projekts, und ihre Unterhaltungen bleiben für dich offen."
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Runs on each GitHub release"
+msgstr "Läuft bei jedem GitHub-Release"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Runs on your ChatGPT Plus or Pro plan. Duct never sees your ChatGPT password or history."
@@ -12084,6 +12120,7 @@ msgid "took longer than 15 minutes"
 msgstr "hat länger als 15 Minuten gedauert"
 
 #: src/app/(app)/connections/page.jsx
+#: src/components/schedules/ScheduleCard.jsx
 #: src/lib/breadcrumbs.js
 #: src/lib/navigation.js
 msgid "Toolbox"
@@ -12890,6 +12927,10 @@ msgstr "Was funktioniert"
 #: src/components/workspace/ComposerDials.jsx
 msgid "Whatever this model does anyway"
 msgstr "Was dieses Modell sowieso tut"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "When a release is published on GitHub"
+msgstr "Wenn ein Release auf GitHub veröffentlicht wird"
 
 #: src/components/content/PublishModal.jsx
 msgid "When to post"

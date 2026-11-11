@@ -2,7 +2,7 @@
 
 import { useId, useRef, useState } from "react";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
-import { ArrowRight, CalendarClock, Check, Eye, PackageCheck, Tag } from "lucide-react";
+import { ArrowRight, CalendarClock, Check, ChevronDown, Eye, PackageCheck, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,6 +12,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { GitHubMark } from "@/components/connections/logos";
 import {
   DEFAULT_FEED,
@@ -23,6 +29,7 @@ import {
   SINCE_LAST,
   feedRibbon,
 } from "@/lib/contentFeed";
+import { Cadence } from "@/lib/schedules";
 import { DISCLOSURE_HINTS, DISCLOSURE_LABELS, SOURCE_LABELS } from "@/lib/contentFeedLabels";
 import { cn } from "@/lib/utils";
 
@@ -45,13 +52,14 @@ const DISCLOSURE_ICONS = {
  * questions, and it moves as they are answered, so a choice shows what it
  * does before anything runs. Rare surface, so it can afford the picture.
  *
- * Props: `open`, `onOpenChange`, `onStart(options)`, `onRepeatWeekly(options)`
- * (saves the same answers as a Monday schedule, #562; absent hides it),
+ * Props: `open`, `onOpenChange`, `onStart(options)`, `onRepeat(options, cadence)`
+ * (saves the same answers as a schedule: every Monday, or on each release,
+ * #562 and #563; absent hides it),
  * `githubConnected` (false offers the Toolbox instead of GitHub), `initial`
  * for a scene.
  */
 export default function FeedPlanDialog({
-  open, onOpenChange, onStart, onRepeatWeekly, githubConnected = true, initial = DEFAULT_FEED,
+  open, onOpenChange, onStart, onRepeat, githubConnected = true, initial = DEFAULT_FEED,
 }) {
   const { t, i18n } = useLingui();
   const [options, setOptions] = useState(() => ({
@@ -154,10 +162,25 @@ export default function FeedPlanDialog({
             <Button type="button" variant="ghost" onClick={() => onOpenChange?.(false)}>
               <Trans>Cancel</Trans>
             </Button>
-            {onRepeatWeekly && (
-              <Button type="button" variant="outline" disabled={nothingPicked} onClick={() => onRepeatWeekly(options)}>
-                <CalendarClock className="size-4" aria-hidden /> <Trans>Repeat weekly</Trans>
-              </Button>
+            {onRepeat && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button type="button" variant="outline" disabled={nothingPicked}>
+                    <CalendarClock className="size-4" aria-hidden /> <Trans>Repeat</Trans>
+                    <ChevronDown className="size-3.5 text-muted-foreground" aria-hidden />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onSelect={() => onRepeat(options, Cadence.WEEKLY)}>
+                    <CalendarClock className="size-4" aria-hidden /> <Trans>Every Monday</Trans>
+                  </DropdownMenuItem>
+                  {githubConnected && options.sources.includes(FeedSource.GITHUB) && (
+                    <DropdownMenuItem onSelect={() => onRepeat(options, Cadence.ON_RELEASE)}>
+                      <Tag className="size-4" aria-hidden /> <Trans>On each GitHub release</Trans>
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
             <Button ref={submitRef} type="submit" disabled={nothingPicked}>
               <Trans>Find stories</Trans> <ArrowRight className="size-4" aria-hidden />

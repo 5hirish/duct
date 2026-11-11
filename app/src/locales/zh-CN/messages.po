@@ -811,6 +811,10 @@ msgstr "{waiting, plural, other {# 件事需要你处理。}}"
 msgid "{waiting} need you"
 msgstr "{waiting} 个需要你处理"
 
+#: src/components/AppSidebar.jsx
+msgid "{waiting} waiting on you"
+msgstr "{waiting} 项等你处理"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "{warnCount, plural, one {# Warning} other {# Warnings}}"
 msgstr "{warnCount, plural, other {# 条警告}}"
@@ -2613,6 +2617,10 @@ msgstr "连接 {label}？"
 msgid "Connect {vendor}"
 msgstr "连接 {vendor}"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Connect a GitHub repository so there are releases to watch."
+msgstr "连接一个 GitHub 仓库，这样才有可监视的版本发布。"
+
 #: src/app/(start)/start/page.jsx
 #: src/components/onboarding/ProviderRequiredCard.jsx
 msgid "Connect a model"
@@ -4029,6 +4037,10 @@ msgstr "每小时"
 msgid "Every measurement, the method, notes for whoever builds the fix"
 msgstr "每次测量、方法、以及给修复者的备注"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Every Monday"
+msgstr "每周一"
+
 #: src/app/(app)/scheduled/page.jsx
 msgid "Every Monday, Duct reads what you shipped and has a plan waiting for you to accept."
 msgstr "每周一，Duct 会读取你发布的内容，并准备好一份等你接受的计划。"
@@ -4830,6 +4842,10 @@ msgstr "钩子"
 #: src/components/content/StyleGallery.jsx
 msgid "Hooks"
 msgstr "钩子"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "hourly"
+msgstr "每小时"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "House rules, the metric you actually care about, how you want to be argued with. This wins when it disagrees with the setting above."
@@ -6287,6 +6303,10 @@ msgstr "未记录提供商。"
 msgid "No report yet"
 msgstr "暂无报告"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "no repository to watch"
+msgstr "没有可监视的仓库"
+
 #: src/components/content/DiscoverPage.jsx
 msgid "No results returned. Try different hashtags or a wider niche."
 msgstr "未返回任何结果。请尝试不同的话题标签或更广泛的细分市场。"
@@ -6756,6 +6776,10 @@ msgstr "开"
 #: src/components/TelemetryCard.jsx
 msgid "On by default, so a crash tells us something without you having to report it."
 msgstr "默认开启，这样崩溃时我们就能收到通知，无需你手动报告。"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "On each GitHub release"
+msgstr "每次 GitHub 发布版本时"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "On every project"
@@ -8068,6 +8092,10 @@ msgstr "已拒绝"
 msgid "Rejecting…"
 msgstr "正在拒绝…"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Release"
+msgstr "发布"
+
 #: src/lib/contentFeedLabels.js
 #~ msgid "Releases"
 #~ msgstr ""
@@ -8188,8 +8216,12 @@ msgid "Rendering diagram…"
 msgstr "正在渲染图表…"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Repeat weekly"
-msgstr "每周重复"
+msgid "Repeat"
+msgstr "重复"
+
+#: src/components/content/FeedPlanDialog.jsx
+#~ msgid "Repeat weekly"
+#~ msgstr "每周重复"
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Repeated hashtags: {at}"
@@ -8602,6 +8634,10 @@ msgstr "在你已付费的计划上运行 GPT 模型。登录会打开你的浏�
 #: src/app/(app)/scheduled/page.jsx
 msgid "Runs it already made stay in the project's activity, and their conversations stay open to you."
 msgstr "它已完成的运行会保留在项目动态中，相关对话也仍对你开放。"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Runs on each GitHub release"
+msgstr "每次 GitHub 发布版本时运行"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Runs on your ChatGPT Plus or Pro plan. Duct never sees your ChatGPT password or history."
@@ -10668,6 +10704,7 @@ msgid "took longer than 15 minutes"
 msgstr "耗时超过 15 分钟"
 
 #: src/app/(app)/connections/page.jsx
+#: src/components/schedules/ScheduleCard.jsx
 #: src/lib/breadcrumbs.js
 #: src/lib/navigation.js
 msgid "Toolbox"
@@ -11382,6 +11419,10 @@ msgstr "正在运行"
 #: src/components/workspace/ComposerDials.jsx
 msgid "Whatever this model does anyway"
 msgstr "无论此模型做什么"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "When a release is published on GitHub"
+msgstr "在 GitHub 上发布版本时"
 
 #: src/components/content/PublishModal.jsx
 msgid "When to post"

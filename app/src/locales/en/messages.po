@@ -951,6 +951,10 @@ msgstr "{waiting, plural, one {One thing needs you.} other {# things need you.}}
 msgid "{waiting} need you"
 msgstr "{waiting} need you"
 
+#: src/components/AppSidebar.jsx
+msgid "{waiting} waiting on you"
+msgstr "{waiting} waiting on you"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "{warnCount, plural, one {# Warning} other {# Warnings}}"
 msgstr "{warnCount, plural, one {# Warning} other {# Warnings}}"
@@ -3024,6 +3028,10 @@ msgstr "Connect {label}?"
 msgid "Connect {vendor}"
 msgstr "Connect {vendor}"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Connect a GitHub repository so there are releases to watch."
+msgstr "Connect a GitHub repository so there are releases to watch."
+
 #: src/app/(start)/start/page.jsx
 #: src/components/onboarding/ProviderRequiredCard.jsx
 msgid "Connect a model"
@@ -4658,6 +4666,10 @@ msgstr "Every hour"
 msgid "Every measurement, the method, notes for whoever builds the fix"
 msgstr "Every measurement, the method, notes for whoever builds the fix"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Every Monday"
+msgstr "Every Monday"
+
 #: src/app/(app)/scheduled/page.jsx
 msgid "Every Monday, Duct reads what you shipped and has a plan waiting for you to accept."
 msgstr "Every Monday, Duct reads what you shipped and has a plan waiting for you to accept."
@@ -5565,6 +5577,10 @@ msgstr "Hook"
 #: src/components/content/StyleGallery.jsx
 msgid "Hooks"
 msgstr "Hooks"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "hourly"
+msgstr "hourly"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "House rules, the metric you actually care about, how you want to be argued with. This wins when it disagrees with the setting above."
@@ -7200,6 +7216,10 @@ msgstr "No provider recorded."
 msgid "No report yet"
 msgstr "No report yet"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "no repository to watch"
+msgstr "no repository to watch"
+
 #: src/components/content/DiscoverPage.jsx
 msgid "No results returned. Try different hashtags or a wider niche."
 msgstr "No results returned. Try different hashtags or a wider niche."
@@ -7753,6 +7773,10 @@ msgstr "On"
 #: src/components/TelemetryCard.jsx
 msgid "On by default, so a crash tells us something without you having to report it."
 msgstr "On by default, so a crash tells us something without you having to report it."
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "On each GitHub release"
+msgstr "On each GitHub release"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "On every project"
@@ -9224,6 +9248,10 @@ msgstr "Rejected"
 msgid "Rejecting…"
 msgstr "Rejecting…"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Release"
+msgstr "Release"
+
 #: src/lib/contentFeedLabels.js
 #~ msgid "Releases"
 #~ msgstr "Releases"
@@ -9357,8 +9385,12 @@ msgid "Rendering diagram…"
 msgstr "Rendering diagram…"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Repeat weekly"
-msgstr "Repeat weekly"
+msgid "Repeat"
+msgstr "Repeat"
+
+#: src/components/content/FeedPlanDialog.jsx
+#~ msgid "Repeat weekly"
+#~ msgstr "Repeat weekly"
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Repeated hashtags: {at}"
@@ -9799,6 +9831,10 @@ msgstr "Runs GPT models on a plan you already pay for. Signing in opens your bro
 #: src/app/(app)/scheduled/page.jsx
 msgid "Runs it already made stay in the project's activity, and their conversations stay open to you."
 msgstr "Runs it already made stay in the project's activity, and their conversations stay open to you."
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Runs on each GitHub release"
+msgstr "Runs on each GitHub release"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Runs on your ChatGPT Plus or Pro plan. Duct never sees your ChatGPT password or history."
@@ -12085,6 +12121,7 @@ msgid "took longer than 15 minutes"
 msgstr "took longer than 15 minutes"
 
 #: src/app/(app)/connections/page.jsx
+#: src/components/schedules/ScheduleCard.jsx
 #: src/lib/breadcrumbs.js
 #: src/lib/navigation.js
 msgid "Toolbox"
@@ -12891,6 +12928,10 @@ msgstr "What's working"
 #: src/components/workspace/ComposerDials.jsx
 msgid "Whatever this model does anyway"
 msgstr "Whatever this model does anyway"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "When a release is published on GitHub"
+msgstr "When a release is published on GitHub"
 
 #: src/components/content/PublishModal.jsx
 msgid "When to post"

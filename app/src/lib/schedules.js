@@ -9,6 +9,8 @@ export const Cadence = Object.freeze({
   DAILY: "daily",
   WEEKDAYS: "weekdays",
   WEEKLY: "weekly",
+  // Checked hourly, run only when a release is published (#563).
+  ON_RELEASE: "on_release",
   MANUAL: "manual",
 });
 
@@ -37,7 +39,11 @@ export function scheduleState(s) {
   if (s.running) return ScheduleState.RUNNING;
   if (s.needs_reason) return ScheduleState.NEEDS_YOU;
   if (!s.enabled) return ScheduleState.PAUSED;
-  if (s.last?.outcome === Outcome.PROPOSED) return ScheduleState.WAITING_ON_YOU;
+  // The server says whether the proposal is still unanswered; an older
+  // response without the field falls back to the last outcome.
+  if (typeof s.waiting === "boolean" ? s.waiting : s.last?.outcome === Outcome.PROPOSED) {
+    return ScheduleState.WAITING_ON_YOU;
+  }
   return ScheduleState.ACTIVE;
 }
 
@@ -50,13 +56,21 @@ export function localTimeZone() {
   }
 }
 
-/** A weekly plan from shipped work with the setup sheet's answers: Mondays at 09:00 local. */
-export function feedScheduleBody(projectId, options, { timeZone = localTimeZone() } = {}) {
+/** How many schedules have a proposal waiting: the sidebar's count. */
+export function waitingCount(rows) {
+  return (Array.isArray(rows) ? rows : []).filter((s) => s?.enabled && s?.waiting === true).length;
+}
+
+/**
+ * A plan from shipped work on the setup sheet's answers, repeating: Mondays
+ * at 09:00 local (the default), or whenever a release is published.
+ */
+export function feedScheduleBody(projectId, options, { timeZone = localTimeZone(), cadence = Cadence.WEEKLY } = {}) {
   const o = options || {};
   return {
     project_id: projectId,
     job: JobKind.CONTENT_PLAN_FROM_WORK,
-    cadence: Cadence.WEEKLY,
+    cadence: cadence === Cadence.ON_RELEASE ? Cadence.ON_RELEASE : Cadence.WEEKLY,
     weekday: 0,
     at_time: "09:00",
     timezone: timeZone,

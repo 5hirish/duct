@@ -86,6 +86,7 @@ import { CONNECTORS_CHANGED, countConnectedSources } from "@/lib/connectorsApi";
 import { NAV_SECTIONS } from "@/lib/navigation";
 import { runsUnder } from "@/lib/liveRuns";
 import { useLiveRuns } from "@/hooks/useLiveRuns";
+import { useScheduledWaiting } from "@/hooks/useScheduledWaiting";
 import { LanguageMenuItem } from "@/components/LanguageMenu";
 
 // ---------------------------------------------------------------------------
@@ -638,6 +639,7 @@ export default function AppSidebar() {
   const pathname = usePathname();
   const { t, i18n } = useLingui();
   const connectionCount = useConnectionCount();
+  const scheduledWaiting = useScheduledWaiting(pathname);
   // Runs this tab left mid-turn: the entry they belong to pulses until the
   // backend says the turn is over or the page picks the run back up.
   const liveRuns = useLiveRuns();
@@ -709,6 +711,9 @@ export default function AppSidebar() {
 
                     if (!item.available) return null;
                     const count = item.badge === "connections" ? connectionCount : 0;
+                    // A proposal waiting on the person is the one count here
+                    // that asks for something, so it carries the brand ink.
+                    const waiting = item.badge === "scheduled" ? scheduledWaiting : 0;
 
                     return (
                       <SidebarMenuItem key={item.key}>
@@ -722,6 +727,13 @@ export default function AppSidebar() {
                                 aria-label={t`Working…`}
                                 className="ml-auto size-2 shrink-0 animate-pulse rounded-full bg-primary group-data-[collapsible=icon]:hidden"
                               />
+                            ) : waiting > 0 ? (
+                              <span
+                                className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-2xs font-semibold tabular-nums text-primary-foreground group-data-[collapsible=icon]:hidden"
+                                aria-label={t`${waiting} waiting on you`}
+                              >
+                                {waiting}
+                              </span>
                             ) : count > 0 ? (
                               <span className="ml-auto text-xs tabular-nums text-muted-foreground group-data-[collapsible=icon]:hidden">
                                 {count}

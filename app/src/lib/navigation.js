@@ -69,6 +69,8 @@ export const NAV_SECTIONS = [
         href: "/scheduled",
         available: true,
         matchPrefix: "/scheduled",
+        // How many proposals wait on the person (#563).
+        badge: "scheduled",
       },
       {
         key: "connections",
