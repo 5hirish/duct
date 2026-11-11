@@ -6,7 +6,7 @@
 // images, up to 50 sitemap URLs and the homepage's links are probed on top and
 // do not count toward the page budget.
 
-import { createFetcher, text, isHtml, LIMITS } from './fetch.js';
+import { createFetcher, createGuard, text, isHtml, LIMITS } from './fetch.js';
 import { parseHtml, meta, linkRel, jsonLdSummary } from './html.js';
 import { parseRobots } from './robots.js';
 import { parseSitemap, spread } from './sitemap.js';
@@ -67,9 +67,12 @@ function record(url, res, page) {
   };
 }
 
-export async function runCheck(input, { pages = 10, fetch, log = () => {}, now = new Date() } = {}) {
+export async function runCheck(input, { pages = 10, fetch, resolve, log = () => {}, now = new Date() } = {}) {
   const start = normalizeUrl(input);
-  const f = createFetcher({ fetch });
+  // With an injected fetch (the tests) there is no network to protect, so the
+  // guard runs only when a resolver is given too.
+  const guard = !fetch || resolve ? createGuard(start, resolve ? { resolve } : {}) : null;
+  const f = createFetcher({ fetch, guard });
   log(`Reading ${start}`);
 
   const home = await f.get(start, { accept: 'text/html,application/xhtml+xml' });

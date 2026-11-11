@@ -5,13 +5,19 @@ import { AREAS } from './catalog.js';
 
 const paint = (on) => (code, s) => on ? `\x1b[${code}m${s}\x1b[0m` : s;
 
+// Every string below came from the site being checked. A control character in
+// a title or a URL would reach the terminal as an escape sequence, so they
+// are all replaced before printing; the colour codes above are added after.
+const CONTROL = /[\u0000-\u001f\u007f-\u009f]/g;
+export const clean = (v) => String(v ?? '').replace(CONTROL, ' ');
+
 export function formatSummary(result, { out, color = false } = {}) {
   const c = paint(color);
   const lines = [];
   const date = result.checkedAt.slice(0, 10);
   lines.push('');
-  lines.push(`${c('1', result.host)}  ${c('1', `${result.score}/100`)}  ${result.band}   ${result.pagesRead} pages, ${date}`);
-  if (result.action) lines.push(`The action: "${result.action.label}"${result.action.url ? ` -> ${result.action.url}` : ''}`);
+  lines.push(`${c('1', clean(result.host))}  ${c('1', `${result.score}/100`)}  ${result.band}   ${result.pagesRead} pages, ${date}`);
+  if (result.action) lines.push(`The action: "${clean(result.action.label)}"${result.action.url ? ` -> ${clean(result.action.url)}` : ''}`);
   lines.push('');
   lines.push(`${'Area'.padEnd(22)}${'Score'.padStart(6)}${'FAIL'.padStart(6)}${'WARN'.padStart(6)}`);
   for (const a of AREAS) {
@@ -24,16 +30,16 @@ export function formatSummary(result, { out, color = false } = {}) {
   if (!bad.length) lines.push('No FAIL or WARN among the checks this run could make.');
   for (const x of bad) {
     const tag = x.status === 'FAIL' ? c('31;1', 'FAIL') : c('33;1', 'WARN');
-    lines.push(`${tag} ${x.id.padEnd(4)} ${x.finding}`);
-    for (const e of (x.evidence ?? []).slice(0, 4)) lines.push(`          ${c('2', e)}`);
+    lines.push(`${tag} ${clean(x.id).padEnd(4)} ${clean(x.finding)}`);
+    for (const e of (x.evidence ?? []).slice(0, 4)) lines.push(`          ${c('2', clean(e))}`);
     if ((x.evidence ?? []).length > 4) lines.push(`          ${c('2', `and ${x.evidence.length - 4} more`)}`);
   }
   if (result.fixes?.length) {
     lines.push('');
     lines.push('Fix first:');
-    result.fixes.forEach((f, i) => lines.push(`  ${i + 1}. ${f.title} (${f.checkId}, impact ${f.impact}, effort ${f.effort})`));
+    result.fixes.forEach((f, i) => lines.push(`  ${i + 1}. ${clean(f.title)} (${clean(f.checkId)}, impact ${f.impact}, effort ${f.effort})`));
   }
-  const open = result.checks.filter((x) => x.status === 'UNVERIFIED').map((x) => x.id);
+  const open = result.checks.filter((x) => x.status === 'UNVERIFIED').map((x) => clean(x.id));
   if (open.length) {
     lines.push('');
     lines.push(`Not verified (cost nothing): ${open.join(' ')}`);

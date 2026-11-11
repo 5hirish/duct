@@ -4,6 +4,8 @@
 
 import { USER_AGENT } from '../version.js';
 import { gunzipSync } from 'node:zlib';
+import { lookup } from 'node:dns/promises';
+import { isIP } from 'node:net';
 
 export const LIMITS = {
   concurrency: 2,
@@ -16,7 +18,61 @@ export const LIMITS = {
   scriptBytes: 1024 * 1024,
 };
 
-export function createFetcher({ fetch: fetchImpl = globalThis.fetch, concurrency = LIMITS.concurrency, timeoutMs = LIMITS.timeoutMs } = {}) {
+// A site can point this run anywhere: a redirect, a sitemap child, an
+// og:image or a script URL is the site's choice, not the user's. Followed
+// blindly, that reaches the machine the CLI runs on, its network and a
+// cloud metadata endpoint, and prints what came back. So any host other
+// than the one the user typed is refused when it resolves to a loopback,
+// private, link-local or unique-local address. A user who points the CLI
+// at their own local or private host has chosen that network, so then
+// nothing is refused.
+const PRIVATE_V4 = [
+  ['0.0.0.0', 8], ['10.0.0.0', 8], ['100.64.0.0', 10], ['127.0.0.0', 8],
+  ['169.254.0.0', 16], ['172.16.0.0', 12], ['192.168.0.0', 16],
+];
+const v4 = (ip) => ip.split('.').reduce((n, part) => (n << 8) + Number(part), 0) >>> 0;
+const inV4 = (ip, [base, bits]) => bits === 0 || (v4(ip) >>> (32 - bits)) === (v4(base) >>> (32 - bits));
+
+export function isPrivateAddress(ip) {
+  const family = isIP(ip);
+  if (family === 4) return PRIVATE_V4.some((r) => inV4(ip, r));
+  if (family !== 6) return false;
+  const a = ip.toLowerCase();
+  const mapped = a.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
+  if (mapped) return isPrivateAddress(mapped[1]);
+  return a === '::' || a === '::1' || /^f[cd]/.test(a) || /^fe[89ab]/.test(a);
+}
+
+async function resolvesPrivate(hostname, resolve) {
+  const host = hostname.replace(/^\[|\]$/g, '');
+  if (host === 'localhost' || host.endsWith('.localhost')) return true;
+  if (isIP(host)) return isPrivateAddress(host);
+  try {
+    const addrs = await resolve(host, { all: true });
+    return addrs.some((a) => isPrivateAddress(a.address));
+  } catch {
+    return false; // unresolvable: the fetch itself will fail and say so
+  }
+}
+
+/**
+ * The guard for one run, anchored on the URL the user typed. `resolve` is
+ * injectable so tests never touch DNS.
+ */
+export function createGuard(startUrl, { resolve = lookup } = {}) {
+  const trusted = new URL(startUrl).hostname;
+  let trustedPrivate;
+  return async function allowed(url) {
+    const u = new URL(url);
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return false;
+    if (u.hostname === trusted) return true;
+    if (trustedPrivate === undefined) trustedPrivate = await resolvesPrivate(trusted, resolve);
+    if (trustedPrivate) return true;
+    return !(await resolvesPrivate(u.hostname, resolve));
+  };
+}
+
+export function createFetcher({ fetch: fetchImpl = globalThis.fetch, concurrency = LIMITS.concurrency, timeoutMs = LIMITS.timeoutMs, guard = null } = {}) {
   let active = 0;
   const queue = [];
   const slot = () => new Promise((resolve) => {
@@ -29,6 +85,7 @@ export function createFetcher({ fetch: fetchImpl = globalThis.fetch, concurrency
   let requests = 0;
 
   async function one(url, { method = 'GET', range, maxBytes = LIMITS.htmlBytes, accept } = {}) {
+    if (guard && !(await guard(url))) throw new Error('refused: points at a private or local address');
     await slot();
     requests++;
     try {
@@ -114,7 +171,10 @@ export function text(res) {
   let buf = res.body;
   // A .xml.gz sitemap, or a server that ignores Accept-Encoding on a raw file.
   if (buf[0] === 0x1f && buf[1] === 0x8b) {
-    try { buf = gunzipSync(buf); } catch { /* keep the bytes as they are */ }
+    // Capped like every other body: a few kilobytes of gzip can inflate to
+    // gigabytes. Past the cap it is treated as unreadable, which the sitemap
+    // check already reports.
+    try { buf = gunzipSync(buf, { maxOutputLength: LIMITS.sitemapBytes }); } catch { /* keep the bytes as they are */ }
   }
   return buf.toString('utf8');
 }
