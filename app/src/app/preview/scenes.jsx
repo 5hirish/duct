@@ -44,6 +44,7 @@ import LoadError from "@/components/LoadError";
 import CloneFromUrlDialog from "@/components/content/CloneFromUrlDialog";
 import FeedPlanDialog from "@/components/content/FeedPlanDialog";
 import FeedSummary from "@/components/content/FeedSummary";
+import ScheduleCard from "@/components/schedules/ScheduleCard";
 import CloneSourceNote from "@/components/content/CloneSourceNote";
 import { FormatCard, FormatDetailSheet, FormatEditorSheet } from "@/components/content/FormatLibrary";
 import { DeskConnectFirst } from "@/components/insights/desk/DeskCards";
@@ -4309,6 +4310,21 @@ export const SCENES = [
     ),
   },
   {
+    id: "schedule-card-states",
+    state: "waiting on you, running, needs you, paused",
+    group: "ScheduleCard",
+    title: "Scheduled: one card per schedule",
+    note: "The Scheduled page. What runs and when, the host it runs on, the state it is in, the last run with its cost and a way into the conversation it left, and the history behind a fold. What to check: the badge never wraps under the name; Needs you says what to do and links there; a paused card shows no next run.",
+    render: () => (
+      <div className="flex w-full max-w-2xl flex-col gap-3 bg-background p-4">
+        {SCHEDULES.map((s) => (
+          <ScheduleCard key={s.id} schedule={s} onRunNow={() => {}} onToggle={() => {}} onDelete={() => {}}
+            loadHistory={async () => SCHEDULE_HISTORY} />
+        ))}
+      </div>
+    ),
+  },
+  {
     id: "plan-list-month",
     state: "a fresh 30-day plan, every post pending",
     group: "PlanList",
@@ -4645,6 +4661,28 @@ function FeedDialogScene({ githubConnected = true }) {
     </>
   );
 }
+
+const SCHEDULE_BASE = {
+  project_id: "p", job: "content.plan_from_work", cadence: "weekly", weekday: 0, at_time: "09:00",
+  timezone: "Europe/Berlin", enabled: true, host: "cloud", monthly_cap: 6, config: {}, running: false,
+  needs_reason: "", mine: true, next_run_at: "2026-11-16T08:00:21Z",
+};
+const SCHEDULES = [
+  { ...SCHEDULE_BASE, id: "s1", name: "Weekly plan from your work", runs_this_month: 2,
+    last: { at: "2026-11-09T08:04:00Z", outcome: "proposed", cost_usd: 0.0995, conversation_id: "c1" } },
+  { ...SCHEDULE_BASE, id: "s2", name: "Daily plan from your work", cadence: "daily", host: "local", running: true,
+    runs_this_month: 5, last: { at: "2026-11-10T08:02:00Z", outcome: "nothing_new", cost_usd: 0 } },
+  { ...SCHEDULE_BASE, id: "s3", name: "Weekly plan, client repo", needs_reason: "no_model_key", runs_this_month: 0,
+    last: { at: "2026-11-09T08:01:00Z", outcome: "skipped", reason: "no_model_key" } },
+  { ...SCHEDULE_BASE, id: "s4", name: "Paused experiment", enabled: false, next_run_at: null, cadence: "weekdays",
+    runs_this_month: 1, mine: false, last: { at: "2026-11-03T08:05:00Z", outcome: "failed", reason: "rate_limited" } },
+];
+const SCHEDULE_HISTORY = [
+  { at: "2026-11-09T08:04:00Z", outcome: "proposed", cost_usd: 0.0995, conversation_id: "c1" },
+  { at: "2026-11-02T08:20:00Z", outcome: "interrupted", reason: "interrupted", will_retry: true },
+  { at: "2026-10-26T08:03:00Z", outcome: "nothing_new", cost_usd: 0 },
+  { at: "2026-10-19T08:06:00Z", outcome: "skipped", reason: "stale" },
+];
 
 function CloneDialogScene({ initialValue = "" }) {
   const [open, setOpen] = useState(true);

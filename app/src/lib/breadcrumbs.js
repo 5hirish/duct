@@ -21,6 +21,7 @@ const SEGMENT_LABELS = {
   execute: msg`Changes`,
   artifacts: msg`Documents`,
   connections: msg`Toolbox`,
+  scheduled: msg`Scheduled`,
   projects: msg`Projects`,
   project: msg`Project`,
   start: msg`Get started`,

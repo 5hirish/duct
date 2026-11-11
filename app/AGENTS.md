@@ -137,6 +137,15 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
     `lib/voiceRules.js`) save into `content_brand`; the rules are stored only
     once changed, so an untouched project keeps following Duct's defaults
   - `execute/` — change-set review queue: diffs, approve, apply, roll back
+  - `scheduled/` — runs nobody starts by hand (#562), for the active project:
+    `components/schedules/ScheduleCard.jsx` per schedule (what and when, the
+    host, the state, the last run with its cost and a link into the
+    conversation it left, Run now, Pause/Resume, Delete, and the history with
+    every skip's reason), over `lib/schedulesApi.js` and the codes in
+    `lib/schedules.js`. No local mirror: only the server knows whether a run is
+    going, and the page polls only while one is. A schedule is made from the
+    plan board's From your work sheet (Repeat weekly: Monday 09:00 in the
+    reader's zone)
   - `connections/` — the **Toolbox**: one searchable catalogue of native
     connectors and MCP servers
     (`components/connections/ConnectorBrowser.jsx` over

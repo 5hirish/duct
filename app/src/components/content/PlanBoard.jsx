@@ -27,6 +27,8 @@ import { planDisplayName } from "@/lib/planStrategy";
 import PlanDayOne from "@/components/content/PlanDayOne";
 import FeedPlanDialog from "@/components/content/FeedPlanDialog";
 import { feedSessionHref } from "@/lib/contentFeed";
+import { feedScheduleBody } from "@/lib/schedules";
+import { createSchedule } from "@/lib/schedulesApi";
 import {
   PlanState,
   dayKey,
@@ -218,6 +220,13 @@ export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab, fi
       open
       onOpenChange={setFeedOpen}
       onStart={(options) => { setFeedOpen(false); router.push(feedSessionHref(options, today)); }}
+      onRepeatWeekly={async (options) => {
+        // Saved as a Monday 09:00 schedule in the reader's zone (#562); the
+        // Scheduled page is where it is paused, run or deleted.
+        await createSchedule(feedScheduleBody(projectId, options));
+        setFeedOpen(false);
+        router.push("/scheduled");
+      }}
     />
   );
 

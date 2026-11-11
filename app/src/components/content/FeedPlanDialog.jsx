@@ -32,10 +32,14 @@ import { cn } from "@/lib/utils";
  * gets the sheet's answers in `lib/contentFeed.js`'s shape, and the caller
  * opens the session.
  *
- * Props: `open`, `onOpenChange`, `onStart(options)`, `githubConnected`
- * (false offers the Toolbox instead of GitHub), `initial` for a scene.
+ * Props: `open`, `onOpenChange`, `onStart(options)`, `onRepeatWeekly(options)`
+ * (saves the same answers as a Monday schedule, #562; absent hides it),
+ * `githubConnected` (false offers the Toolbox instead of GitHub), `initial`
+ * for a scene.
  */
-export default function FeedPlanDialog({ open, onOpenChange, onStart, githubConnected = true, initial = DEFAULT_FEED }) {
+export default function FeedPlanDialog({
+  open, onOpenChange, onStart, onRepeatWeekly, githubConnected = true, initial = DEFAULT_FEED,
+}) {
   const { t, i18n } = useLingui();
   const [options, setOptions] = useState(() => ({
     ...initial,
@@ -139,6 +143,11 @@ export default function FeedPlanDialog({ open, onOpenChange, onStart, githubConn
             <Button type="button" variant="ghost" onClick={() => onOpenChange?.(false)}>
               <Trans>Cancel</Trans>
             </Button>
+            {onRepeatWeekly && (
+              <Button type="button" variant="outline" disabled={nothingPicked} onClick={() => onRepeatWeekly(options)}>
+                <Trans>Repeat weekly</Trans>
+              </Button>
+            )}
             <Button type="submit" disabled={nothingPicked}>
               <Trans>Find stories</Trans>
             </Button>

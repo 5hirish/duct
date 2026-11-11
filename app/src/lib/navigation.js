@@ -1,5 +1,5 @@
 import { msg } from "@lingui/core/macro";
-import { FileText, History, House, PenLine, Plug, Search, ShieldCheck } from "lucide-react";
+import { CalendarClock, FileText, History, House, PenLine, Plug, Search, ShieldCheck } from "lucide-react";
 
 /**
  * Where you can go in the app — the single source of truth.
@@ -60,6 +60,15 @@ export const NAV_SECTIONS = [
         href: "/execute",
         available: true,
         matchPrefix: "/execute",
+      },
+      {
+        // Runs nobody starts by hand (#562): what fires when, and what each left.
+        key: "scheduled",
+        label: msg`Scheduled`,
+        icon: CalendarClock,
+        href: "/scheduled",
+        available: true,
+        matchPrefix: "/scheduled",
       },
       {
         key: "connections",

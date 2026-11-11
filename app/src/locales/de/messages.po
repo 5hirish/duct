@@ -308,6 +308,10 @@ msgstr "{count, plural, one {# Quelle} other {# Quellen}}"
 msgid "{count, plural, one {GitHub connected: # repository.} other {GitHub connected: # repositories.}}"
 msgstr "{count, plural, one {GitHub verbunden: # Repository.} other {GitHub verbunden: # Repositorys.}}"
 
+#: src/app/(app)/scheduled/page.jsx
+msgid "{count} scheduled"
+msgstr "{count} geplant"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{crawledPages, plural, one {# page} other {# pages}}"
 msgstr "{crawledPages, plural, one {# Seite} other {# Seiten}}"
@@ -762,6 +766,10 @@ msgstr "{resultCount, plural, one {# Befehl} other {# Befehle}}"
 msgid "{robotsLines} lines"
 msgstr "{robotsLines} Zeilen"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "{runs} of {cap} runs this month"
+msgstr "{runs} von {cap} Läufen in diesem Monat"
+
 #: src/components/content/AnalyticsView.jsx
 msgid "{scheduler} hasn’t reported a post for {names} and {more} more yet."
 msgstr "{scheduler} hat noch keinen Beitrag für {names} und {more} weitere gemeldet."
@@ -910,6 +918,10 @@ msgstr "{waiting, plural, one {# Änderungssatz wartet auf dich} other {# Änder
 #: src/components/insights/Desk.jsx
 msgid "{waiting, plural, one {One thing needs you.} other {# things need you.}}"
 msgstr "{waiting, plural, one {Eine Sache braucht dich.} other {# Sachen brauchen dich.}}"
+
+#: src/app/(app)/scheduled/page.jsx
+msgid "{waiting} need you"
+msgstr "{waiting} brauchen dich"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "{warnCount, plural, one {# Warning} other {# Warnings}}"
@@ -1239,6 +1251,10 @@ msgstr "Ein gespeicherter Schlüssel ist bereits in Gebrauch. Füge einen neuen 
 msgid "A saved post keeps its slides and numbers, so they're there when you plan."
 msgstr "Ein gespeicherter Beitrag behält seine Slides und Zahlen, damit sie beim Planen da sind."
 
+#: src/app/(app)/scheduled/page.jsx
+msgid "A schedule runs an agent at a set time and leaves its result for you to accept. It runs on the backend that made it: Duct cloud, or this computer while the app is open. A laptop that was asleep catches up once when it wakes."
+msgstr "Ein Zeitplan startet einen Agenten zu einer festen Zeit und legt dir das Ergebnis zum Annehmen vor. Er läuft auf dem Backend, das ihn angelegt hat: in der Duct-Cloud oder auf diesem Computer, solange die App geöffnet ist. Ein Laptop, der geschlafen hat, holt den Lauf einmal nach, sobald er aufwacht."
+
 #: src/components/settings/AgentConsent.jsx
 msgid "A sign-in request lasts ten minutes. Start again from your agent."
 msgstr "Eine Anmeldeanfrage ist zehn Minuten gültig. Starte erneut von deinem Agenten."
@@ -1370,6 +1386,7 @@ msgid "Actions"
 msgstr "Aktionen"
 
 #: src/app/(app)/projects/page.jsx
+#: src/components/schedules/ScheduleCard.jsx
 msgid "Active"
 msgstr "Aktiv"
 
@@ -1790,6 +1807,10 @@ msgstr "Analysen-Zeilen erreichen das Modell als rohes JSON. Ein großer Abruf w
 #: src/components/content/PlanBoard.jsx
 msgid "Another length"
 msgstr "Eine andere Länge"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "another run for this project was going"
+msgstr "ein anderer Lauf für dieses Projekt lief noch"
 
 #: src/app/(app)/projects/page.jsx
 msgid "another user"
@@ -3564,6 +3585,10 @@ msgstr "Integriertes Format anpassen"
 msgid "Customised built-in"
 msgstr "Angepasstes integriertes"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Daily at {time}, {zone}"
+msgstr "Täglich um {time}, {zone}"
+
 #: src/components/content/ReminderSetting.jsx
 msgid "Daily reminder"
 msgstr "Tägliche Erinnerung"
@@ -3654,6 +3679,7 @@ msgid "Define your North Star metric and current growth stage. Channel-specific 
 msgstr "Definiere deine North Star Metrik und aktuelle Wachstumsphase. Kanalspezifische KPIs bleiben in der Berichterstellung."
 
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
+#: src/app/(app)/scheduled/page.jsx
 #: src/components/content/FormatLibrary.jsx
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Delete"
@@ -3703,6 +3729,10 @@ msgstr "Projekt löschen"
 msgid "Delete project?"
 msgstr "Projekt löschen?"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Delete schedule"
+msgstr "Zeitplan löschen"
+
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Delete this artifact?"
 msgstr "Dieses Artefakt löschen?"
@@ -3710,6 +3740,10 @@ msgstr "Dieses Artefakt löschen?"
 #: src/components/content/FormatLibrary.jsx
 msgid "Delete this format?"
 msgstr "Dieses Format löschen?"
+
+#: src/app/(app)/scheduled/page.jsx
+msgid "Delete this schedule?"
+msgstr "Diesen Zeitplan löschen?"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Deleting…"
@@ -4064,6 +4098,10 @@ msgstr "Duct kann diesen Typ noch nicht lesen"
 #: src/app/(start)/start/page.jsx
 msgid "Duct checks a number before it trusts it."
 msgstr "Duct prüft eine Zahl, bevor es ihr vertraut."
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Duct cloud"
+msgstr "Duct-Cloud"
 
 #: src/app/(auth)/page.js
 msgid "Duct couldn’t open your browser to finish signing in. Check that you have a default browser set, then try again."
@@ -4483,6 +4521,10 @@ msgstr "Gib deine Website-Adresse ein."
 msgid "Enterprise"
 msgstr "Enterprise"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "error"
+msgstr "Fehler"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "Error"
 msgstr "Fehler"
@@ -4511,6 +4553,10 @@ msgstr "Titel-Tags und Meta-Beschreibungen werden ausgewertet…"
 msgid "Events, funnels and insights from your product analytics."
 msgstr "Ereignisse, Funnel und Erkenntnisse aus deinen Produktanalysen."
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Every {day} at {time}, {zone}"
+msgstr "Jeden {day} um {time}, {zone}"
+
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Every agent reads this, on every project. Only you can see it."
 msgstr "Jeder Agent liest dies, bei jedem Projekt. Nur du kannst es sehen."
@@ -4526,6 +4572,10 @@ msgstr "Jeder Kanal"
 #: src/app/(app)/activity/page.jsx
 msgid "Every entry names who did it, so the trail starts once there is an account to name."
 msgstr "Jeder Eintrag nennt den Urheber, der Verlauf beginnt also, sobald ein Konto benannt werden kann."
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Every hour"
+msgstr "Jede Stunde"
 
 #: src/lib/userProfile.js
 msgid "Every measurement, the method, notes for whoever builds the fix"
@@ -4670,6 +4720,7 @@ msgstr "fehlgeschlagen"
 #: src/app/(app)/execute/page.jsx
 #: src/components/execution/ChangeSetCard.jsx
 #: src/components/insights/desk/DeskLists.jsx
+#: src/components/schedules/ScheduleCard.jsx
 #: src/components/workspace/ActivityRow.jsx
 #: src/components/workspace/AgentChat.jsx
 #: src/lib/contentEnums.js
@@ -5413,6 +5464,10 @@ msgstr "Hohe Wirkung · Mehr Aufwand"
 msgid "High volume, low judgement"
 msgstr "Hohes Volumen, geringe Beurteilung"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "History"
+msgstr "Verlauf"
+
 #: src/app/(app)/insights/organic-growth/[slug]/page.jsx
 #: src/components/LocalInsightDetail.jsx
 #: src/lib/breadcrumbs.js
@@ -5652,6 +5707,10 @@ msgstr "Interne Doku"
 msgid "Internal-traffic patterns"
 msgstr "Interne Traffic-Muster"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Interrupted"
+msgstr "Unterbrochen"
+
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Interrupts rarely · same allowlist as Assisted"
 msgstr "Unterbricht selten · gleiche Zulassungsliste wie Assisted"
@@ -5748,6 +5807,10 @@ msgstr "Es hat den gespeicherten API-Schlüssel abgelehnt. Verbinde dich mit ein
 msgid "It will be able to"
 msgstr "Es kann"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "It will run again next month, or raise the limit."
+msgstr "Er läuft nächsten Monat wieder, oder du erhöhst das Limit."
+
 #: src/components/AppErrorPanel.jsx
 msgid "It’s logged on our side. Copy the details below if you report it."
 msgstr "Es wurde bei uns protokolliert. Kopiere die Details unten, wenn du es meldest."
@@ -5759,6 +5822,10 @@ msgstr "Es wurde bei uns protokolliert. Versuche es erneut und sende uns die Det
 #: src/lib/userProfile.js
 msgid "Italiano"
 msgstr "Italiano"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "its creator left the project"
+msgstr "die Person, die ihn angelegt hat, hat das Projekt verlassen"
 
 #: src/lib/mcpServers.js
 msgid "Its sign-in expired or was revoked, so Duct can't use it until you reconnect."
@@ -6488,6 +6555,10 @@ msgstr "Mittelstand"
 msgid "Missed"
 msgstr "Verpasst"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "missed by more than a week"
+msgstr "um mehr als eine Woche verpasst"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "missing"
 msgstr "fehlt"
@@ -6550,6 +6621,7 @@ msgstr "Modelle"
 
 #: src/app/(app)/settings/models/page.jsx
 #: src/components/AppSidebar.jsx
+#: src/components/schedules/ScheduleCard.jsx
 #: src/lib/breadcrumbs.js
 msgid "Models & providers"
 msgstr "Modelle & Anbieter"
@@ -6681,6 +6753,7 @@ msgstr "Überarbeitungsbedürftig"
 
 #: src/app/(app)/audit/seo/page.jsx
 #: src/components/insights/desk/DeskLists.jsx
+#: src/components/schedules/ScheduleCard.jsx
 msgid "Needs you"
 msgstr "Braucht dich"
 
@@ -6768,6 +6841,10 @@ msgstr "Nächste Folie"
 #: src/components/content/PlanList.jsx
 msgid "Next week"
 msgstr "Nächste Woche"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Next: {nextDate}, {nextTime}"
+msgstr "Nächster: {nextDate}, {nextTime}"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Nightly check"
@@ -7029,6 +7106,14 @@ msgstr "Keine Ergebnisse zurückgegeben. Versuche andere Hashtags oder eine brei
 #: src/components/content/PlanStrategy.jsx
 msgid "no results yet"
 msgstr "noch keine Ergebnisse"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "No runs yet."
+msgstr "Noch keine Läufe."
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "no saved model key"
+msgstr "kein gespeicherter Modellschlüssel"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "no schema"
@@ -7392,6 +7477,10 @@ msgstr "Nichts braucht dich gerade."
 msgid "Nothing new worth a post yet"
 msgstr "Noch nichts Neues, das einen Post wert ist"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Nothing new, no model call"
+msgstr "Nichts Neues, kein Modellaufruf"
+
 #: src/components/content/FormatLibrary.jsx
 msgid "Nothing picked = any media"
 msgstr "Nichts ausgewählt = alle Medien"
@@ -7431,6 +7520,10 @@ msgstr "Nichts wurde in diesem Zeitraum ausgeführt."
 #: src/components/insights/desk/DeskCards.jsx
 #~ msgid "Nothing running."
 #~ msgstr "Nichts läuft."
+
+#: src/app/(app)/scheduled/page.jsx
+msgid "Nothing scheduled yet"
+msgstr "Noch nichts geplant"
 
 #: src/lib/credentialStorage.js
 msgid "Nothing stored yet."
@@ -7686,6 +7779,10 @@ msgstr "nur auf {projectName}"
 msgid "Only the project owner can change autonomy."
 msgstr "Nur der Projektinhaber kann die Autonomie ändern."
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Only when you run it"
+msgstr "Nur, wenn du ihn startest"
+
 #: src/components/memory/MemoryPage.jsx
 msgid "Only you"
 msgstr "Nur du"
@@ -7703,6 +7800,7 @@ msgid "Op types to block, comma-separated (optional)"
 msgstr "Zu blockierende Operationstypen, kommagetrennt (optional)"
 
 #: src/components/insights/desk/DeskLists.jsx
+#: src/components/schedules/ScheduleCard.jsx
 msgid "Open"
 msgstr "Öffnen"
 
@@ -7737,6 +7835,10 @@ msgstr "Chat öffnen"
 #: src/components/workspace/AgentChat.jsx
 #~ msgid "Open connections →"
 #~ msgstr "Verbindungen öffnen →"
+
+#: src/app/(app)/scheduled/page.jsx
+msgid "Open Content Studio"
+msgstr "Content Studio öffnen"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Open Discover"
@@ -7795,6 +7897,10 @@ msgstr "Planungsboard öffnen"
 #: src/components/workspace/MemoryRows.jsx
 msgid "Open the project timeline"
 msgstr "Projekt-Timeline öffnen"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Open the run"
+msgstr "Lauf öffnen"
 
 #: src/hooks/useAgentNotifications.js
 msgid "Open the tab to see what happened and what to do."
@@ -8100,9 +8206,17 @@ msgstr "Deinen Schlüssel einfügen"
 msgid "pasted image"
 msgstr "eingefügtes Bild"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Pause"
+msgstr "Pausieren"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Pause remembering"
 msgstr "Gedächtnis pausieren"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Paused"
+msgstr "Pausiert"
 
 #: src/components/onboarding/DocumentPicker.jsx
 msgid "PDF, Word, PowerPoint, Markdown or text. Up to five."
@@ -8245,6 +8359,14 @@ msgstr "Aus dem planen, was du veröffentlicht hast"
 #: src/components/content/FeedSummary.jsx
 msgid "Plan from your goals"
 msgstr "Aus deinen Zielen planen"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Plan from your work"
+msgstr "Aus deiner Arbeit planen"
+
+#: src/app/(app)/scheduled/page.jsx
+msgid "Plan from your work every Monday: in Content Studio, choose From your work, then Repeat weekly. Each run proposes a plan and waits for you."
+msgstr "Jeden Montag aus deiner Arbeit planen: Wähle in Content Studio „Aus deiner Arbeit“ und dann „Wöchentlich wiederholen“. Jeder Lauf schlägt einen Plan vor und wartet auf dich."
 
 #: src/components/content/PlanStrategy.jsx
 msgid "Plan strategy"
@@ -8558,6 +8680,7 @@ msgstr "Vorschläge, Freigaben und Rücknahmen landen hier."
 #~ msgid "Proposals, approvals, rollbacks and artifact versions land here, each with who did it."
 #~ msgstr "Vorschläge, Freigaben, Rücknahmen und Artefaktversionen landen hier, jeweils mit dem Verantwortlichen."
 
+#: src/components/schedules/ScheduleCard.jsx
 #: src/components/workspace/ActivityRow.jsx
 msgid "Proposed a plan"
 msgstr "Einen Plan vorgeschlagen"
@@ -8665,6 +8788,10 @@ msgstr "Wutklicks, tote Klicks, schnelle Rücksprünge und Skriptfehler, pro Sei
 #: src/components/insights/desk/DeskActivity.jsx
 msgid "ran on its own"
 msgstr "lief von selbst"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Ran, proposed nothing"
+msgstr "Gelaufen, nichts vorgeschlagen"
 
 #: src/components/content/PostMetricsForm.jsx
 msgid "Reach"
@@ -9100,6 +9227,10 @@ msgstr "Eine Folie gerendert"
 msgid "Rendering diagram…"
 msgstr "Diagramm wird gerendert…"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Repeat weekly"
+msgstr "Wöchentlich wiederholen"
+
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Repeated hashtags: {at}"
 msgstr "Wiederholte Hashtags: {at}"
@@ -9263,10 +9394,18 @@ msgstr "Eingeschränkter API-Schlüssel"
 msgid "Result"
 msgstr "Ergebnis"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Resume"
+msgstr "Fortsetzen"
+
 #: src/components/ConnectionBanner.jsx
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "Retry"
 msgstr "Wiederholen"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "retrying in 15 minutes"
+msgstr "neuer Versuch in 15 Minuten"
 
 #: src/lib/mcpServers.js
 msgid "Returning errors"
@@ -9310,6 +9449,10 @@ msgstr "Vor Veröffentlichung überprüfen"
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "Review changes"
 msgstr "Änderungen prüfen"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Review the proposal"
+msgstr "Vorschlag prüfen"
 
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Review what changed"
@@ -9446,6 +9589,10 @@ msgstr "Ein SEO-Audit ausführen"
 msgid "Run audit"
 msgstr "Audit ausführen"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Run now"
+msgstr "Jetzt ausführen"
+
 #: src/app/(app)/audit/seo/page.jsx
 #~ msgid "Run SEO Audit →"
 #~ msgstr "SEO-Audit ausführen →"
@@ -9457,6 +9604,10 @@ msgstr "Führe diese in deinem Terminal aus. Der zweite öffnet deinen Browser."
 #: src/components/settings/AgentAccess.jsx
 msgid "Run this in your terminal."
 msgstr "Führe dies in deinem Terminal aus."
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Running"
+msgstr "Läuft"
 
 #: src/lib/modelTiers.js
 msgid "Running on a key already on this computer, not one you added here."
@@ -9482,6 +9633,10 @@ msgstr "Wird mit dem Schlüssel ausgeführt, den du eingefügt hast – nur für
 msgid "Running on your saved key, the one that also funds scheduled runs."
 msgstr "Wird mit deinem gespeicherten Schlüssel ausgeführt, der auch geplante Läufe finanziert."
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Runs act as their creator. Recreate it from your account."
+msgstr "Läufe handeln im Namen der Person, die sie angelegt hat. Lege ihn mit deinem Konto neu an."
+
 #: src/components/connections/McpConnectors.jsx
 msgid "Runs at {site}"
 msgstr "Läuft auf {site}"
@@ -9503,6 +9658,10 @@ msgstr "Läuft unter <0>{0}</0>, wobei der Publisher nicht gezeigt hat, dass er 
 #: src/components/connections/ProviderCard.jsx
 msgid "Runs GPT models on a plan you already pay for. Signing in opens your browser; Duct never sees your password or your chats."
 msgstr "Führt GPT-Modelle mit einem Plan aus, den du bereits bezahlst. Das Anmelden öffnet deinen Browser; Duct sieht niemals dein Passwort oder deine Chats."
+
+#: src/app/(app)/scheduled/page.jsx
+msgid "Runs it already made stay in the project's activity, and their conversations stay open to you."
+msgstr "Bereits erfolgte Läufe bleiben in der Aktivität des Projekts, und ihre Unterhaltungen bleiben für dich offen."
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Runs on your ChatGPT Plus or Pro plan. Duct never sees your ChatGPT password or history."
@@ -9535,6 +9694,10 @@ msgstr "Speichern"
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Save & Next"
 msgstr "Speichern & Weiter"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Save a model key so a run can start without you."
+msgstr "Speichere einen Modellschlüssel, damit ein Lauf ohne dich starten kann."
 
 #: src/components/content/PublishModal.jsx
 msgid "Save as draft"
@@ -9695,9 +9858,12 @@ msgstr "Beitrag planen"
 msgid "scheduled"
 msgstr "geplant"
 
+#: src/app/(app)/scheduled/page.jsx
+#: src/lib/breadcrumbs.js
 #: src/lib/contentEnums.js
 #: src/lib/contentSchedule.js
 #: src/lib/contentStatus.js
+#: src/lib/navigation.js
 msgid "Scheduled"
 msgstr "Geplant"
 
@@ -10471,6 +10637,10 @@ msgstr "Zum Hauptinhalt springen."
 msgid "skipped"
 msgstr "übersprungen"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Skipped"
+msgstr "Übersprungen"
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "Skipped {name}"
 msgstr "{name} übersprungen"
@@ -10753,6 +10923,10 @@ msgstr "Gestoppt"
 #: src/components/insights/desk/DeskCards.jsx
 #~ msgid "Stopped — pick up where it left off"
 #~ msgstr "Gestoppt – dort weitermachen, wo es aufgehört hat"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "stopped by a restart"
+msgstr "durch einen Neustart abgebrochen"
 
 #: src/lib/agentHistory.js
 msgid "Stopped here — the turn was interrupted."
@@ -11477,6 +11651,10 @@ msgstr "Dieses Artefakt hat keinen gespeicherten Inhalt zum Rendern."
 msgid "This audit link is no longer valid. Links expire after 24 hours. Please enter your website again to get a fresh audit."
 msgstr "Dieser Audit-Link ist nicht mehr gültig. Links verfallen nach 24 Stunden. Bitte gib deine Website erneut ein, um ein neues Audit zu erhalten."
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "This computer"
+msgstr "Dieser Computer"
+
 #: src/lib/modelTiers.js
 msgid "This computer's key"
 msgstr "Der Schlüssel dieses Computers"
@@ -11564,6 +11742,10 @@ msgstr "dieses Mitglied"
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "This model answered, but didn’t call the tool it was handed. Duct’s agents work by calling tools, so pick one that supports them. On vLLM, start the server with tool calling turned on."
 msgstr "Dieses Modell hat geantwortet, aber das übergebene Tool nicht aufgerufen. Die Agenten von Duct arbeiten mit Tool-Aufrufen, also wähle ein Modell, das sie unterstützt. Starte vLLM dafür mit aktiviertem Tool Calling."
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "this month's limit is reached"
+msgstr "das Limit dieses Monats ist erreicht"
 
 #: src/app/(app)/execute/page.jsx
 msgid "This mutates the live account. Applied changes record a rollback handle."
@@ -11757,6 +11939,10 @@ msgstr "Tokens"
 msgid "Tone"
 msgstr "Ton"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "took longer than 15 minutes"
+msgstr "hat länger als 15 Minuten gedauert"
+
 #: src/app/(app)/connections/page.jsx
 #: src/lib/breadcrumbs.js
 #: src/lib/navigation.js
@@ -11895,6 +12081,10 @@ msgstr "Rückgängig gemacht, außer {skipped}, das sich seitdem wieder geänder
 #: src/app/(auth)/desktop-auth/page.js
 msgid "Unknown connector"
 msgstr "Unbekannter Connector"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "unknown job"
+msgstr "unbekannter Auftrag"
 
 #: src/components/content/AccountsTab.jsx
 #~ msgid "Unlink all"
@@ -12259,6 +12449,10 @@ msgstr "Warte auf dich"
 msgid "Waiting for your browser…"
 msgstr "Warten auf deinen Browser…"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Waiting on you"
+msgstr "Wartet auf dich"
+
 #: src/components/insights/desk/DeskCards.jsx
 #~ msgid "Waiting on your answer"
 #~ msgstr "Warten auf deine Antwort"
@@ -12367,6 +12561,10 @@ msgstr "Woche"
 #: src/components/content/PlanList.jsx
 msgid "Week of {from}"
 msgstr "Woche vom {from}"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Weekdays at {time}, {zone}"
+msgstr "Werktags um {time}, {zone}"
 
 #: src/components/insights/desk/DeskCards.jsx
 msgid "Welcome back. Take a fresh look?"
@@ -13167,6 +13365,10 @@ msgstr "Dein Planer hat ihn zur geplanten Zeit nicht veröffentlicht."
 #: src/components/content/PostCard.jsx
 msgid "Your scheduler didn't publish it: {failureReason}"
 msgstr "Dein Planer hat ihn nicht veröffentlicht: {failureReason}"
+
+#: src/app/(app)/scheduled/page.jsx
+msgid "your schedules"
+msgstr "deine Zeitpläne"
 
 #: src/app/(auth)/page.js
 #~ msgid "Your session ended. Sign in again and we'll take you back to where you were."

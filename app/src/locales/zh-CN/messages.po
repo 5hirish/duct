@@ -260,6 +260,10 @@ msgstr "{count, plural, other {# 个来源}}"
 msgid "{count, plural, one {GitHub connected: # repository.} other {GitHub connected: # repositories.}}"
 msgstr "{count, plural, other {GitHub 已连接：# 个仓库。}}"
 
+#: src/app/(app)/scheduled/page.jsx
+msgid "{count} scheduled"
+msgstr "已计划 {count} 个"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{crawledPages, plural, one {# page} other {# pages}}"
 msgstr "{crawledPages, plural, other {# 页面}}"
@@ -642,6 +646,10 @@ msgstr "{resultCount, plural, other {# 条命令}}"
 msgid "{robotsLines} lines"
 msgstr "{robotsLines} 行"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "{runs} of {cap} runs this month"
+msgstr "本月已运行 {runs} / {cap} 次"
+
 #: src/components/content/AnalyticsView.jsx
 msgid "{scheduler} hasn’t reported a post for {names} and {more} more yet."
 msgstr "{scheduler} 尚未报告 {names} 和 {more} 个其他帖子的发布情况。"
@@ -770,6 +778,10 @@ msgstr "{waiting, plural, other {# 个变更集待你处理}}"
 #: src/components/insights/Desk.jsx
 msgid "{waiting, plural, one {One thing needs you.} other {# things need you.}}"
 msgstr "{waiting, plural, other {# 件事需要你处理。}}"
+
+#: src/app/(app)/scheduled/page.jsx
+msgid "{waiting} need you"
+msgstr "{waiting} 个需要你处理"
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "{warnCount, plural, one {# Warning} other {# Warnings}}"
@@ -1030,6 +1042,10 @@ msgstr "一个已保存的密钥已在使用中。粘贴一个新密钥来替换
 msgid "A saved post keeps its slides and numbers, so they're there when you plan."
 msgstr "保存的帖子会保留其幻灯片和数字，以便你在规划时使用。"
 
+#: src/app/(app)/scheduled/page.jsx
+msgid "A schedule runs an agent at a set time and leaves its result for you to accept. It runs on the backend that made it: Duct cloud, or this computer while the app is open. A laptop that was asleep catches up once when it wakes."
+msgstr "计划会在设定的时间运行一个智能体，并把结果留给你来接受。它在创建它的后端上运行：Duct 云端，或在应用打开时的这台电脑。休眠过的笔记本电脑会在唤醒时补跑一次。"
+
 #: src/components/settings/AgentConsent.jsx
 msgid "A sign-in request lasts ten minutes. Start again from your agent."
 msgstr "登录请求有效期为十分钟。请从你的智能体重新开始。"
@@ -1149,6 +1165,7 @@ msgid "Actions"
 msgstr "操作"
 
 #: src/app/(app)/projects/page.jsx
+#: src/components/schedules/ScheduleCard.jsx
 msgid "Active"
 msgstr "活跃"
 
@@ -1500,6 +1517,10 @@ msgstr "分析行以原始 JSON 的形式到达模型。大量拉取会被截断
 #: src/components/content/PlanBoard.jsx
 msgid "Another length"
 msgstr "另一个长度"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "another run for this project was going"
+msgstr "这个项目的另一次运行仍在进行"
 
 #: src/app/(app)/projects/page.jsx
 msgid "another user"
@@ -3059,6 +3080,10 @@ msgstr "自定义内置格式"
 msgid "Customised built-in"
 msgstr "已自定义内置"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Daily at {time}, {zone}"
+msgstr "每天 {time}，{zone}"
+
 #: src/components/content/ReminderSetting.jsx
 msgid "Daily reminder"
 msgstr "每日提醒"
@@ -3129,6 +3154,7 @@ msgid "Define your North Star metric and current growth stage. Channel-specific 
 msgstr "定义你的北极星指标和当前增长阶段。渠道专属 KPI 保留在报告生成中。"
 
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
+#: src/app/(app)/scheduled/page.jsx
 #: src/components/content/FormatLibrary.jsx
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Delete"
@@ -3174,6 +3200,10 @@ msgstr "删除项目"
 msgid "Delete project?"
 msgstr "删除项目？"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Delete schedule"
+msgstr "删除计划"
+
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Delete this artifact?"
 msgstr "删除此成果文档？"
@@ -3181,6 +3211,10 @@ msgstr "删除此成果文档？"
 #: src/components/content/FormatLibrary.jsx
 msgid "Delete this format?"
 msgstr "删除此格式？"
+
+#: src/app/(app)/scheduled/page.jsx
+msgid "Delete this schedule?"
+msgstr "删除这个计划？"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Deleting…"
@@ -3495,6 +3529,10 @@ msgstr "Duct 尚无法读取这种类型"
 #: src/app/(start)/start/page.jsx
 msgid "Duct checks a number before it trusts it."
 msgstr "Duct 在信任一个数字之前会进行检查。"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Duct cloud"
+msgstr "Duct 云端"
 
 #: src/app/(auth)/page.js
 msgid "Duct couldn’t open your browser to finish signing in. Check that you have a default browser set, then try again."
@@ -3858,6 +3896,10 @@ msgstr "输入你的网站地址。"
 msgid "Enterprise"
 msgstr "企业版"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "error"
+msgstr "错误"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "Error"
 msgstr "错误"
@@ -3886,6 +3928,10 @@ msgstr "正在评估标题标签和元描述…"
 msgid "Events, funnels and insights from your product analytics."
 msgstr "来自你的产品分析的事件、漏斗和洞察。"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Every {day} at {time}, {zone}"
+msgstr "每{day} {time}，{zone}"
+
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Every agent reads this, on every project. Only you can see it."
 msgstr "每个智能体在每个项目中都会读取此内容。只有你能看到它。"
@@ -3897,6 +3943,10 @@ msgstr "所有渠道"
 #: src/app/(app)/activity/page.jsx
 msgid "Every entry names who did it, so the trail starts once there is an account to name."
 msgstr "每个条目都标明了执行者，因此一旦有可命名的账户，就会开始追踪。"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Every hour"
+msgstr "每小时"
 
 #: src/lib/userProfile.js
 msgid "Every measurement, the method, notes for whoever builds the fix"
@@ -4020,6 +4070,7 @@ msgstr "失败"
 #: src/app/(app)/execute/page.jsx
 #: src/components/execution/ChangeSetCard.jsx
 #: src/components/insights/desk/DeskLists.jsx
+#: src/components/schedules/ScheduleCard.jsx
 #: src/components/workspace/ActivityRow.jsx
 #: src/components/workspace/AgentChat.jsx
 #: src/lib/contentEnums.js
@@ -4678,6 +4729,10 @@ msgstr "高影响 · 更多投入"
 msgid "High volume, low judgement"
 msgstr "高产出，低判断"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "History"
+msgstr "历史记录"
+
 #: src/app/(app)/insights/organic-growth/[slug]/page.jsx
 #: src/components/LocalInsightDetail.jsx
 #: src/lib/breadcrumbs.js
@@ -4885,6 +4940,10 @@ msgstr "内部文档"
 msgid "Internal-traffic patterns"
 msgstr "内部流量模式"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Interrupted"
+msgstr "已中断"
+
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Interrupts rarely · same allowlist as Assisted"
 msgstr "很少中断 · 与 Assisted 使用相同的允许列表"
@@ -4977,6 +5036,10 @@ msgstr "它拒绝了保存的 API 密钥。请使用新密钥重新连接以再�
 msgid "It will be able to"
 msgstr "它将能够"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "It will run again next month, or raise the limit."
+msgstr "下个月会再次运行，也可以提高上限。"
+
 #: src/components/AppErrorPanel.jsx
 msgid "It’s logged on our side. Copy the details below if you report it."
 msgstr "它已在我们的服务器端记录。如果你要报告此问题，请复制以下详细信息。"
@@ -4988,6 +5051,10 @@ msgstr "它已在我们的服务器端记录。请重试，如果问题持续发
 #: src/lib/userProfile.js
 msgid "Italiano"
 msgstr "意大利语"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "its creator left the project"
+msgstr "创建者已离开项目"
 
 #: src/lib/mcpServers.js
 msgid "Its sign-in expired or was revoked, so Duct can't use it until you reconnect."
@@ -5620,6 +5687,10 @@ msgstr "中端市场"
 msgid "Missed"
 msgstr "已错过"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "missed by more than a week"
+msgstr "错过已超过一周"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "missing"
 msgstr "缺失"
@@ -5674,6 +5745,7 @@ msgstr "模型"
 
 #: src/app/(app)/settings/models/page.jsx
 #: src/components/AppSidebar.jsx
+#: src/components/schedules/ScheduleCard.jsx
 #: src/lib/breadcrumbs.js
 msgid "Models & providers"
 msgstr "模型与提供商"
@@ -5788,6 +5860,7 @@ msgstr "需要处理"
 
 #: src/app/(app)/audit/seo/page.jsx
 #: src/components/insights/desk/DeskLists.jsx
+#: src/components/schedules/ScheduleCard.jsx
 msgid "Needs you"
 msgstr "需要你"
 
@@ -5875,6 +5948,10 @@ msgstr "下一张幻灯片"
 #: src/components/content/PlanList.jsx
 msgid "Next week"
 msgstr "下周"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Next: {nextDate}, {nextTime}"
+msgstr "下次：{nextDate} {nextTime}"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Nightly check"
@@ -6113,6 +6190,14 @@ msgstr "未返回任何结果。请尝试不同的话题标签或更广泛的细
 #: src/components/content/PlanStrategy.jsx
 msgid "no results yet"
 msgstr "暂无结果"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "No runs yet."
+msgstr "还没有运行记录。"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "no saved model key"
+msgstr "没有已保存的模型密钥"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "no schema"
@@ -6428,6 +6513,10 @@ msgstr "目前没有内容需要你处理。"
 msgid "Nothing new worth a post yet"
 msgstr "暂时没有值得发帖的新内容"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Nothing new, no model call"
+msgstr "没有新内容，未调用模型"
+
 #: src/components/content/FormatLibrary.jsx
 msgid "Nothing picked = any media"
 msgstr "未选择任何内容 = 任何媒体"
@@ -6451,6 +6540,10 @@ msgstr "过去 {windowDays} 天内未运行任何内容"
 #: src/components/models/UsagePanel.jsx
 msgid "Nothing ran in this window."
 msgstr "此窗口中未运行任何内容。"
+
+#: src/app/(app)/scheduled/page.jsx
+msgid "Nothing scheduled yet"
+msgstr "还没有任何计划"
 
 #: src/lib/credentialStorage.js
 msgid "Nothing stored yet."
@@ -6657,6 +6750,10 @@ msgstr "仅在 {projectName}"
 msgid "Only the project owner can change autonomy."
 msgstr "只有项目所有者才能更改自主权。"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Only when you run it"
+msgstr "仅在你手动运行时"
+
 #: src/components/memory/MemoryPage.jsx
 msgid "Only you"
 msgstr "仅你可见"
@@ -6670,6 +6767,7 @@ msgid "Op types to block, comma-separated (optional)"
 msgstr "要阻止的操作类型，逗号分隔（可选）"
 
 #: src/components/insights/desk/DeskLists.jsx
+#: src/components/schedules/ScheduleCard.jsx
 msgid "Open"
 msgstr "打开"
 
@@ -6692,6 +6790,10 @@ msgstr "打开账单"
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Open chat"
 msgstr "打开聊天"
+
+#: src/app/(app)/scheduled/page.jsx
+msgid "Open Content Studio"
+msgstr "打开 Content Studio"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Open Discover"
@@ -6742,6 +6844,10 @@ msgstr "打开计划看板"
 #: src/components/workspace/MemoryRows.jsx
 msgid "Open the project timeline"
 msgstr "打开项目时间线"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Open the run"
+msgstr "打开这次运行"
 
 #: src/hooks/useAgentNotifications.js
 msgid "Open the tab to see what happened and what to do."
@@ -7027,9 +7133,17 @@ msgstr "粘贴你的密钥"
 msgid "pasted image"
 msgstr "粘贴的图片"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Pause"
+msgstr "暂停"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Pause remembering"
 msgstr "暂停记忆"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Paused"
+msgstr "已暂停"
 
 #: src/components/onboarding/DocumentPicker.jsx
 msgid "PDF, Word, PowerPoint, Markdown or text. Up to five."
@@ -7160,6 +7274,14 @@ msgstr "根据你已发布的内容来计划"
 #: src/components/content/FeedSummary.jsx
 msgid "Plan from your goals"
 msgstr "根据你的目标来计划"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Plan from your work"
+msgstr "根据你的工作来计划"
+
+#: src/app/(app)/scheduled/page.jsx
+msgid "Plan from your work every Monday: in Content Studio, choose From your work, then Repeat weekly. Each run proposes a plan and waits for you."
+msgstr "每周一根据你的工作来计划：在 Content Studio 中选择“根据你的工作”，然后选择“每周重复”。每次运行都会提出一个计划并等待你确认。"
 
 #: src/components/content/PlanStrategy.jsx
 msgid "Plan strategy"
@@ -7437,6 +7559,7 @@ msgstr "项目"
 msgid "Proposals, approvals and rollbacks land here."
 msgstr "提案、批准和回滚会显示在此处。"
 
+#: src/components/schedules/ScheduleCard.jsx
 #: src/components/workspace/ActivityRow.jsx
 msgid "Proposed a plan"
 msgstr "提出了计划"
@@ -7540,6 +7663,10 @@ msgstr "每页的狂点、无效点击、快速返回和脚本错误。"
 #: src/components/insights/desk/DeskActivity.jsx
 msgid "ran on its own"
 msgstr "独立运行"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Ran, proposed nothing"
+msgstr "已运行，没有提出方案"
 
 #: src/components/content/PostMetricsForm.jsx
 msgid "Reach"
@@ -7928,6 +8055,10 @@ msgstr "渲染了幻灯片"
 msgid "Rendering diagram…"
 msgstr "正在渲染图表…"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Repeat weekly"
+msgstr "每周重复"
+
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Repeated hashtags: {at}"
 msgstr "重复的标签：{at}"
@@ -8091,10 +8222,18 @@ msgstr "受限 API 密钥"
 msgid "Result"
 msgstr "结果"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Resume"
+msgstr "继续"
+
 #: src/components/ConnectionBanner.jsx
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "Retry"
 msgstr "重试"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "retrying in 15 minutes"
+msgstr "15 分钟后重试"
 
 #: src/lib/mcpServers.js
 msgid "Returning errors"
@@ -8134,6 +8273,10 @@ msgstr "发布前审查"
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "Review changes"
 msgstr "审查变更"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Review the proposal"
+msgstr "查看方案"
 
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Review what changed"
@@ -8250,6 +8393,10 @@ msgstr "运行 SEO 审计"
 msgid "Run audit"
 msgstr "运行审计"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Run now"
+msgstr "立即运行"
+
 #: src/components/settings/AgentAccess.jsx
 msgid "Run these in your terminal. The second one opens your browser."
 msgstr "在你的终端中运行这些命令。第二个会打开你的浏览器。"
@@ -8257,6 +8404,10 @@ msgstr "在你的终端中运行这些命令。第二个会打开你的浏览器
 #: src/components/settings/AgentAccess.jsx
 msgid "Run this in your terminal."
 msgstr "在你的终端中运行此命令。"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Running"
+msgstr "运行中"
 
 #: src/lib/modelTiers.js
 msgid "Running on a key already on this computer, not one you added here."
@@ -8282,6 +8433,10 @@ msgstr "正在使用你粘贴的密钥运行——仅限此浏览器会话。"
 msgid "Running on your saved key, the one that also funds scheduled runs."
 msgstr "正在使用你保存的密钥运行，该密钥也用于资助计划运行。"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Runs act as their creator. Recreate it from your account."
+msgstr "运行以创建者的身份执行。请用你的账户重新创建。"
+
 #: src/components/connections/McpConnectors.jsx
 msgid "Runs at {site}"
 msgstr "在 {site} 运行"
@@ -8303,6 +8458,10 @@ msgstr "在 <0>{0}</0> 运行，其发布者尚未证明他们运行该地址。
 #: src/components/connections/ProviderCard.jsx
 msgid "Runs GPT models on a plan you already pay for. Signing in opens your browser; Duct never sees your password or your chats."
 msgstr "在你已付费的计划上运行 GPT 模型。登录会打开你的浏览器；Duct 绝不会看到你的密码或聊天记录。"
+
+#: src/app/(app)/scheduled/page.jsx
+msgid "Runs it already made stay in the project's activity, and their conversations stay open to you."
+msgstr "它已完成的运行会保留在项目动态中，相关对话也仍对你开放。"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Runs on your ChatGPT Plus or Pro plan. Duct never sees your ChatGPT password or history."
@@ -8335,6 +8494,10 @@ msgstr "保存"
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Save & Next"
 msgstr "保存并继续"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Save a model key so a run can start without you."
+msgstr "保存一个模型密钥，运行就能在你不在时开始。"
 
 #: src/components/content/PublishModal.jsx
 msgid "Save as draft"
@@ -8487,9 +8650,12 @@ msgstr "安排帖子"
 msgid "scheduled"
 msgstr "已安排"
 
+#: src/app/(app)/scheduled/page.jsx
+#: src/lib/breadcrumbs.js
 #: src/lib/contentEnums.js
 #: src/lib/contentSchedule.js
 #: src/lib/contentStatus.js
+#: src/lib/navigation.js
 msgid "Scheduled"
 msgstr "已安排"
 
@@ -9159,6 +9325,10 @@ msgstr "跳到主要内容"
 msgid "skipped"
 msgstr "已跳过"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Skipped"
+msgstr "已跳过"
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "Skipped {name}"
 msgstr "已跳过 {name}"
@@ -9413,6 +9583,10 @@ msgstr "已停止"
 #: src/components/insights/desk/DeskLists.jsx
 msgid "Stopped"
 msgstr "已停止"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "stopped by a restart"
+msgstr "因重启而停止"
 
 #: src/lib/agentHistory.js
 msgid "Stopped here — the turn was interrupted."
@@ -10073,6 +10247,10 @@ msgstr "此成果文档没有可渲染的存储内容。"
 msgid "This audit link is no longer valid. Links expire after 24 hours. Please enter your website again to get a fresh audit."
 msgstr "此审计链接已失效。链接在 24 小时后过期。请再次输入你的网站以获取新的审计。"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "This computer"
+msgstr "这台电脑"
+
 #: src/lib/modelTiers.js
 msgid "This computer's key"
 msgstr "这台电脑的密钥"
@@ -10156,6 +10334,10 @@ msgstr "此成员"
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "This model answered, but didn’t call the tool it was handed. Duct’s agents work by calling tools, so pick one that supports them. On vLLM, start the server with tool calling turned on."
 msgstr "此模型已回答，但未调用它所获得的工具。Duct 的智能体通过调用工具工作，因此请选择一个支持工具的模型。在 vLLM 上，请启动服务器并开启工具调用功能。"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "this month's limit is reached"
+msgstr "已达到本月上限"
 
 #: src/app/(app)/execute/page.jsx
 msgid "This mutates the live account. Applied changes record a rollback handle."
@@ -10337,6 +10519,10 @@ msgstr "令牌"
 msgid "Tone"
 msgstr "语气"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "took longer than 15 minutes"
+msgstr "耗时超过 15 分钟"
+
 #: src/app/(app)/connections/page.jsx
 #: src/lib/breadcrumbs.js
 #: src/lib/navigation.js
@@ -10455,6 +10641,10 @@ msgstr "已撤消，但 {skipped} 除外，因为它已再次更改"
 #: src/app/(auth)/desktop-auth/page.js
 msgid "Unknown connector"
 msgstr "未知连接器"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "unknown job"
+msgstr "未知任务"
 
 #: src/components/connections/ProjectAccountSelect.jsx
 msgid "Unnamed account"
@@ -10791,6 +10981,10 @@ msgstr "等待你"
 msgid "Waiting for your browser…"
 msgstr "等待你的浏览器…"
 
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Waiting on you"
+msgstr "等待你处理"
+
 #: src/components/audit/ExecutionOffer.jsx
 msgid "Want Duct to execute these fixes for you?"
 msgstr "想让 Duct 为你执行这些修复吗？"
@@ -10875,6 +11069,10 @@ msgstr "周"
 #: src/components/content/PlanList.jsx
 msgid "Week of {from}"
 msgstr "{from} 周"
+
+#: src/components/schedules/ScheduleCard.jsx
+msgid "Weekdays at {time}, {zone}"
+msgstr "工作日 {time}，{zone}"
 
 #: src/components/insights/desk/DeskCards.jsx
 msgid "Welcome back. Take a fresh look?"
@@ -11587,6 +11785,10 @@ msgstr "你的调度器未在预定时间发布它。"
 #: src/components/content/PostCard.jsx
 msgid "Your scheduler didn't publish it: {failureReason}"
 msgstr "你的调度器未发布它：{failureReason}"
+
+#: src/app/(app)/scheduled/page.jsx
+msgid "your schedules"
+msgstr "你的计划"
 
 #: src/app/(auth)/page.js
 msgid "Your session ended. Sign in again and we’ll take you back to where you were."

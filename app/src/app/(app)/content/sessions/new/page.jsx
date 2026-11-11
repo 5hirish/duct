@@ -26,6 +26,9 @@ import { planDisplayName } from "@/lib/planStrategy";
  *                             "Plan ahead", once someone picked how far).
  *   neither                 — the plan covering today, or a new one for the
  *                             month in progress when none does.
+ *   ?conversation=<id>      — reopen one conversation: how a scheduled run's
+ *                             proposal is reviewed (#562), its proposal shown
+ *                             again with Accept and Reject.
  *   ?source=work&…          — a plan from shipped work (#561) over that period,
  *                             with the setup sheet's answers (lib/contentFeed.js).
  *                             Always a new run: it never resumes the covering
@@ -58,6 +61,11 @@ export default function NewPlanSessionPage() {
     const start = params.get("start");
     const days = Number(params.get("days")) || null;
     const feed = feedFromParams(params);
+    const conversation = params.get("conversation");
+    if (conversation) {
+      setSetup({ projectId, plan: null, start: null, days: null, conversation });
+      return undefined;
+    }
     let cancelled = false;
     (async () => {
       const plans = await listPlans(projectId).catch(() => []);
@@ -87,8 +95,10 @@ export default function NewPlanSessionPage() {
     );
   }
 
-  const { projectId, plan, start, days, feed } = setup;
-  const context = feed
+  const { projectId, plan, start, days, feed, conversation } = setup;
+  const context = conversation
+    ? { projectId, conversationId: conversation, resume: true }
+    : feed
     ? { projectId, ...(start ? { startDate: start } : {}), ...(days ? { days } : {}), feed }
     : plan
     ? {
