@@ -26,6 +26,10 @@ export const ContentStep = Object.freeze({
   // A clone's two waits before its first turn (backend run_clone).
   READ_REFERENCE:     "read_reference",
   DIAGNOSE_REFERENCE: "diagnose_reference",
+
+  // A plan from shipped work: the repository and Duct's record, read and
+  // filtered before the model starts. Its payload is the read summary.
+  READ_WORK:          "read_work",
 });
 
 // Message descriptors, not strings: this table is module-level, so it is
@@ -43,4 +47,5 @@ export const STEP_LABELS = Object.freeze({
   [ContentStep.DISPATCH_SUBAGENT]: msg`Sub-agent`,
   [ContentStep.READ_REFERENCE]:     msg`Reading the TikTok`,
   [ContentStep.DIAGNOSE_REFERENCE]: msg`Working out why it worked`,
+  [ContentStep.READ_WORK]:          msg`Reading what you shipped`,
 });

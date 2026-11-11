@@ -112,7 +112,17 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
     that period, and neither manages the plan covering today (or makes one
     for the month in progress). The board's Revise plan is the first;
     New plan and Plan ahead ask how far ahead (`PlanPeriodPicker.jsx`: the
-    month, 1 or 2 weeks, 30 days) and are the second. The dates come from
+    month, 1 or 2 weeks, 30 days) and are the second. **From your work** is
+    the third way in (#561): `FeedPlanDialog.jsx` asks what to read, how far
+    back, how many days it may change and how much of a private repository it
+    may talk about, and opens `?source=work&…` (`lib/contentFeed.js` holds the
+    values only; its words are `contentFeedLabels.js`, because `contentApi.js`
+    imports the values under plain Node). That run is always fresh, never a
+    resume of the covering plan's conversation. Its read step's payload is
+    `FeedSummary.jsx`, above the plan or, when nothing was worth a post, the
+    whole pane; a reopened thread reads it back from the stored `feed` row. A
+    day it planned carries `sources`, drawn by `SourceChips.jsx` on the agenda
+    row, the Kanban card and the changed-day view. The dates come from
     `lib/contentSchedule.js`, which mirrors `agents/content/plan_period.py`
     and must keep agreeing with it. The hub's Posts tab opens on its Waiting
     chip while any draft is unanswered: that view is the drafts queue (#266,

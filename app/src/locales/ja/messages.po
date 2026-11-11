@@ -300,6 +300,10 @@ msgstr "{count, plural, other {# 修正}}"
 msgid "{count, plural, one {# post} other {# posts}}"
 msgstr "{count, plural, other {# 投稿}}"
 
+#: src/components/content/FeedSummary.jsx
+msgid "{count, plural, one {# source} other {# sources}}"
+msgstr "{count, plural, other {# 件のソース}}"
+
 #: src/app/(app)/connections/page.jsx
 msgid "{count, plural, one {GitHub connected: # repository.} other {GitHub connected: # repositories.}}"
 msgstr "{count, plural, one {GitHubに接続しました: リポジトリ # 件。} other {GitHubに接続しました: リポジトリ # 件。}}"
@@ -497,6 +501,10 @@ msgstr "{landingPages, plural, other {# ランディングページ}}"
 msgid "{landingPages, plural, one {# page} other {# pages}}"
 msgstr "{landingPages, plural, other {# ページ}}"
 
+#: src/components/content/FeedSummary.jsx
+msgid "{left, plural, one {# item left out} other {# items left out}}"
+msgstr "{left, plural, other {# 件を除外}}"
+
 #: src/components/content/TextPostEditor.jsx
 msgid "{left} left"
 msgstr "残り{left}文字"
@@ -536,6 +544,10 @@ msgstr "{foundAt} に {modelCount} 個のモデル"
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{n} chars"
 msgstr "{n} 文字"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "{n} days"
+msgstr "{n} 日"
 
 #: src/app/(app)/project/[projectId]/members/page.jsx
 #~ msgid "{name} · Members"
@@ -1071,6 +1083,7 @@ msgstr "✓ レポート準備完了 — 指摘事項について何でもお尋
 msgid "✦ Reasoned"
 msgstr "✦ 推論済み"
 
+#: src/components/content/FeedPlanDialog.jsx
 #: src/components/content/PlanPeriodPicker.jsx
 msgid "1 week"
 msgstr "1 週間"
@@ -1083,6 +1096,7 @@ msgstr "1～2週間"
 msgid "1–3 days"
 msgstr "1～3日"
 
+#: src/components/content/FeedPlanDialog.jsx
 #: src/components/content/PlanPeriodPicker.jsx
 msgid "2 weeks"
 msgstr "2 週間"
@@ -1704,6 +1718,10 @@ msgstr "<0>{agent}</0> があなたの Duct アカウントを使用すること
 msgid "Allow it in your browser"
 msgstr "ブラウザで許可する"
 
+#: src/lib/contentFeedLabels.js
+msgid "Already on a plan"
+msgstr "すでに計画に含まれている"
+
 #: src/lib/contentEnums.js
 msgid "Already said"
 msgstr "既に言及済み"
@@ -1711,6 +1729,10 @@ msgstr "既に言及済み"
 #: src/app/(auth)/page.js
 #~ msgid "Already using Duct?"
 #~ msgstr "すでにDuctをご利用ですか？"
+
+#: src/lib/contentFeedLabels.js
+msgid "Also closed issues and changes under docs/."
+msgstr "クローズされた Issue と docs/ 以下の変更も含めます。"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "alt ×{missingAlt}"
@@ -2309,6 +2331,10 @@ msgstr "ブログ / 記事"
 msgid "Bold"
 msgstr "太字"
 
+#: src/lib/contentFeedLabels.js
+msgid "Bots"
+msgstr "ボット"
+
 #: src/app/(app)/content/page.jsx
 #: src/components/workspace/ActivityRow.jsx
 msgid "brand"
@@ -2339,6 +2365,10 @@ msgstr "ブリーフ"
 #: src/app/(app)/artifacts/page.jsx
 msgid "Briefs"
 msgstr "ブリーフ"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Briefs it wrote, changes you approved and what they did."
+msgstr "作成したブリーフ、あなたが承認した変更、そしてその結果。"
 
 #: src/components/connections/BringAnyTool.jsx
 msgid "Bring any tool"
@@ -2479,6 +2509,7 @@ msgstr "キーを読み取れません"
 #: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/ProviderCard.jsx
 #: src/components/content/CloneFromUrlDialog.jsx
+#: src/components/content/FeedPlanDialog.jsx
 #: src/components/content/FormatLibrary.jsx
 #: src/components/content/PlanViewport.jsx
 #: src/components/content/PublishModal.jsx
@@ -2705,6 +2736,10 @@ msgstr "ティアで選ぶ"
 msgid "Choosing hashtags…"
 msgstr "ハッシュタグを選択中…"
 
+#: src/lib/contentFeedLabels.js
+msgid "Chores, CI and tests"
+msgstr "メンテナンス、CI、テスト"
+
 #: src/app/(app)/connections/page.jsx
 msgid "Clarity Data Export API docs"
 msgstr "ClarityデータエクスポートAPIドキュメント"
@@ -2815,6 +2850,10 @@ msgstr "投稿あたりのコメント、シェア、保存数。"
 #: src/components/content/PostViewport.jsx
 msgid "Commit edits"
 msgstr "編集をコミット"
+
+#: src/lib/contentFeedLabels.js
+msgid "Commits already in a pull request"
+msgstr "プルリクエストにすでに含まれているコミット"
 
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Common servers"
@@ -3570,6 +3609,10 @@ msgstr "日付はUTCで解決されます。「先週」があなたの週を意
 msgid "Day {dayNumber}"
 msgstr "日 {dayNumber}"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Days it may change"
+msgstr "変更してよい日数"
+
 #: src/lib/memoryApi.js
 msgid "Decisions"
 msgstr "決定事項"
@@ -3671,6 +3714,10 @@ msgstr "このフォーマットを削除しますか？"
 #: src/components/content/FormatLibrary.jsx
 msgid "Deleting…"
 msgstr "削除中…"
+
+#: src/lib/contentFeedLabels.js
+msgid "Dependency bumps"
+msgstr "依存関係の更新"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Describe your brand"
@@ -4066,6 +4113,10 @@ msgstr "Duct は API キーを削除し、{scheduler} アカウント経由で�
 msgid "Duct forgets your Apify token and stops searching through your account. References you saved stay saved."
 msgstr "DuctはApifyトークンを削除し、あなたのアカウント経由での検索を停止します。保存した参考投稿はそのまま残ります。"
 
+#: src/components/content/FeedSummary.jsx
+msgid "Duct found nothing a reader would notice, so it made no model call and changed nothing."
+msgstr "読者の目に留まりそうなものが見つからなかったため、Duct はモデルを呼び出さず、何も変更しませんでした。"
+
 #: src/components/insights/desk/DeskCards.jsx
 msgid "Duct found nothing worth your time. Enjoy the quiet."
 msgstr "Duct はあなたの時間を費やす価値のあるものを見つけませんでした。静かにお過ごしください。"
@@ -4126,6 +4177,10 @@ msgstr "Ductはこのプランを提案します。"
 #~ msgid "Duct publishes through these, with your own accounts, and reads each post's numbers back from them."
 #~ msgstr "Duct はこれらを通じてあなた自身のアカウントで投稿し、各投稿の数値をそこから読み取ります。"
 
+#: src/components/content/FeedSummary.jsx
+msgid "Duct read {span} and found nothing a reader would notice, so it made no model call and changed nothing."
+msgstr "Duct は {span} を読みましたが、読者の目に留まりそうなものが見つからなかったため、モデルを呼び出さず、何も変更しませんでした。"
+
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Duct reads \"last week\" and \"yesterday\" in {chosenZone}."
 msgstr "Ductは{chosenZone}で「先週」と「昨日」を読み取ります。"
@@ -4153,6 +4208,10 @@ msgstr "Duct は検索エンジンと同じように、約3分であなたのサ
 #: src/components/insights/desk/DeskCards.jsx
 msgid "Duct reads your sources again and tells you what changed since {since}."
 msgstr "Duct はソースを再度読み込み、{since} 以降の変更点をお知らせします。"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Duct reads your work, leaves out the noise and shows you the stories it found. You pick which to tell, and nothing changes in your plan until you accept it."
+msgstr "Duct があなたの作業を読み、ノイズを除いて、見つけたストーリーを表示します。どれを伝えるかはあなたが選び、承認するまで計画は何も変わりません。"
 
 #: src/app/(start)/start/page.jsx
 msgid "Duct runs on your own account, so an audit costs you cents — and Duct never sees your data twice."
@@ -4504,6 +4563,10 @@ msgstr "すべてのバージョンがこれに付随します。これは元に
 msgid "Everyone on {name} shares its reports, audits and content."
 msgstr "{name} のすべてのメンバーは、そのレポート、監査、コンテンツを共有します。"
 
+#: src/lib/contentFeedLabels.js
+msgid "Everything"
+msgstr "すべて"
+
 #: src/components/connections/ConnectorPermissions.jsx
 msgid "Everything above still works. To grant the rest, choose Reconnect and tick them on Google’s consent screen."
 msgstr "上記はすべて引き続き機能します。残りを許可するには、「再接続」を選択し、Googleの同意画面でそれらにチェックを入れてください。"
@@ -4668,6 +4731,10 @@ msgstr "レポートを最終処理中"
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Find models"
 msgstr "モデルを探す"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Find stories"
+msgstr "ストーリーを探す"
 
 #: src/components/content/DiscoverPage.jsx
 msgid "Find what's working on TikTok right now"
@@ -4835,6 +4902,10 @@ msgstr "から"
 msgid "From"
 msgstr "から"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "From a private repository, talk about"
+msgstr "非公開リポジトリについて触れてよい範囲"
+
 #: src/app/(app)/connections/page.jsx
 msgid "From Ads Manager → Settings → API keys"
 msgstr "Ads Manager → 設定 → APIキーから"
@@ -4855,6 +4926,10 @@ msgstr "プロジェクトのコンテキストから"
 msgid "From the MCP Registry"
 msgstr "MCP Registryから"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "From what you shipped"
+msgstr "リリースしたものから"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "From your files"
 msgstr "ファイルから"
@@ -4862,6 +4937,15 @@ msgstr "ファイルから"
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "From your site"
 msgstr "あなたのサイトから"
+
+#: src/components/content/FeedSummary.jsx
+#: src/components/content/PlanBoard.jsx
+msgid "From your work"
+msgstr "あなたの作業から"
+
+#: src/components/content/FeedSummary.jsx
+msgid "From your work · {span}"
+msgstr "あなたの作業から · {span}"
 
 #: src/components/content/PlanChanges.jsx
 msgid "Funnel stage"
@@ -4955,6 +5039,7 @@ msgid "Get your key from {vendor}"
 msgstr "{vendor} からキーを取得"
 
 #: src/components/connections/logos.jsx
+#: src/lib/contentFeedLabels.js
 msgid "GitHub"
 msgstr "GitHub"
 
@@ -5559,6 +5644,10 @@ msgstr "インストール中…"
 msgid "Interface language"
 msgstr "インターフェース言語"
 
+#: src/lib/contentFeedLabels.js
+msgid "Internal docs"
+msgstr "社内ドキュメント"
+
 #: src/app/(app)/connections/page.jsx
 msgid "Internal-traffic patterns"
 msgstr "内部トラフィックパターン"
@@ -5610,6 +5699,10 @@ msgstr "Ductは役に立っていますか？"
 #: src/components/audit/AuditReportV1.jsx
 msgid "Issue distribution across all findings"
 msgstr "すべての指摘事項における問題の分布"
+
+#: src/lib/contentFeedLabels.js
+msgid "Issues"
+msgstr "Issue"
 
 #: src/lib/mcpServers.js
 msgid "It answered with an error the last time Duct called it. The next chat tries again, or check it now."
@@ -5724,6 +5817,10 @@ msgstr "この投稿を保持 — ボードに追加します"
 #: src/components/AutoFallbackCard.jsx
 msgid "Keep working when you hit a limit"
 msgstr "制限に達しても作業を続行する"
+
+#: src/lib/contentFeedLabels.js
+msgid "Kept back by your setting"
+msgstr "設定により除外"
 
 #: src/lib/credentialStorage.js
 msgid "Kept only until you close the app, and reports that run without you cannot use it."
@@ -6121,6 +6218,14 @@ msgstr "プラットフォームの上限を超えています：{at}"
 msgid "Look at how this plan is doing so far and revise the days from today on. Keep the days I've already drafted."
 msgstr "これまでの計画の進捗を確認し、今日以降の日程を修正してください。すでに下書きした日程は維持してください。"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Look back"
+msgstr "さかのぼる期間"
+
+#: src/components/content/FeedSummary.jsx
+msgid "Look back 30 days"
+msgstr "30 日さかのぼる"
+
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "Look into it"
 msgstr "確認する"
@@ -6327,6 +6432,10 @@ msgstr "{name}のメモリ"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Memory title"
 msgstr "メモリタイトル"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Merged pull requests, releases and changelog edits."
+msgstr "マージされたプルリクエスト、リリース、変更履歴の更新。"
 
 #: src/app/(app)/connections/page.jsx
 msgid "Merged pull requests, releases, closed issues and doc changes, by date."
@@ -7048,6 +7157,10 @@ msgstr "未確認"
 msgid "Not connected"
 msgstr "未接続"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Not connected. Connect a repository in the <0>Toolbox</0>."
+msgstr "未接続です。<0>ツールボックス</0>でリポジトリを接続してください。"
+
 #: src/components/content/AnalyticsView.jsx
 msgid "Not enough dated posts to chart a trend yet."
 msgstr "トレンドをグラフ化するのに十分な日付付き投稿がまだありません。"
@@ -7179,6 +7292,10 @@ msgstr "禁止事項はありません。下書きは簡潔で良い文章に従
 msgid "Nothing below this tier can run either — add a key to use {tierName}."
 msgstr "このティアより下も実行できません — {tierName}を使用するにはキーを追加してください。"
 
+#: src/components/content/FeedSummary.jsx
+msgid "Nothing came back at all. If no repository is connected yet, <0>connect one in the Toolbox</0>."
+msgstr "何も返ってきませんでした。まだリポジトリを接続していない場合は、<0>ツールボックスで接続してください</0>。"
+
 #: src/components/settings/AgentConsent.jsx
 msgid "Nothing changed. You can close this tab."
 msgstr "変更はありませんでした。このタブを閉じることができます。"
@@ -7271,6 +7388,10 @@ msgstr "これらのフィルターに一致するものはありません。"
 #: src/components/insights/Desk.jsx
 msgid "Nothing needs you right now."
 msgstr "今、あなたが必要なものはありません。"
+
+#: src/components/content/FeedSummary.jsx
+msgid "Nothing new worth a post yet"
+msgstr "投稿にするほどの新しい内容はまだありません"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Nothing picked = any media"
@@ -7537,6 +7658,10 @@ msgstr "進行中"
 #: src/components/audit/AuditReportV1.jsx
 msgid "Only a sample of your sitemap was scanned."
 msgstr "サイトマップの一部のみがスキャンされました。"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Only days with no draft yet. The rest of your plan stays as it is."
+msgstr "下書きがまだない日だけです。計画のほかの部分はそのままです。"
 
 #: src/app/(app)/connections/page.jsx
 msgid "Only if 'Require App Secret' is on"
@@ -7860,6 +7985,10 @@ msgstr "{windowDays}日間で"
 msgid "Over 10 MB"
 msgstr "10 MBを超えています"
 
+#: src/lib/contentFeedLabels.js
+msgid "Over the limit"
+msgstr "上限超過"
+
 #: src/components/ProjectMembers.jsx
 msgid "Owner"
 msgstr "オーナー"
@@ -8020,6 +8149,10 @@ msgstr "一度に選べるのは 1 つのスケジューラーのアカウント
 msgid "Pick at least one account."
 msgstr "少なくとも1つのアカウントを選択してください。"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Pick at least one thing to read."
+msgstr "読み込む対象を少なくとも 1 つ選んでください。"
+
 #: src/components/connections/InstanceProviderCard.jsx
 msgid "Pick one of its models for a tier on the Tiers tab. Only models that can call tools are listed, because every Duct agent works by calling them."
 msgstr "「ティア」タブで、そのモデルのひとつをティアに選んでください。Ductのエージェントはすべてツールを呼び出して動作するため、ツールを呼び出せるモデルだけが表示されます。"
@@ -8097,6 +8230,7 @@ msgstr "プラン"
 msgid "Plan {shortId}"
 msgstr "プラン {shortId}"
 
+#: src/components/content/FeedPlanDialog.jsx
 #: src/components/content/PlanBoard.jsx
 msgid "Plan ahead"
 msgstr "事前計画"
@@ -8104,6 +8238,14 @@ msgstr "事前計画"
 #: src/components/content/PlanViewport.jsx
 msgid "Plan discarded. Tell Duct what to plan instead, or close this tab."
 msgstr "プランを破棄しました。代わりにDuctに何を計画するか伝えるか、このタブを閉じてください。"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Plan from what you shipped"
+msgstr "リリースしたものから計画する"
+
+#: src/components/content/FeedSummary.jsx
+msgid "Plan from your goals"
+msgstr "目標から計画する"
 
 #: src/components/content/PlanStrategy.jsx
 msgid "Plan strategy"
@@ -8233,6 +8375,10 @@ msgstr "プラクティショナー"
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Pre-publish review"
 msgstr "公開前レビュー"
+
+#: src/lib/contentFeedLabels.js
+msgid "Pre-releases"
+msgstr "プレリリース"
 
 #: src/components/commands/AppCommands.jsx
 msgid "Preferences"
@@ -8529,6 +8675,7 @@ msgstr "リーチ"
 msgid "read"
 msgstr "読み込み済み"
 
+#: src/components/content/FeedPlanDialog.jsx
 #: src/components/onboarding/DocumentPicker.jsx
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read"
@@ -8613,6 +8760,10 @@ msgstr "サイトの残りを読み込み中…"
 #: src/lib/contentEvents.js
 msgid "Reading the TikTok"
 msgstr "TikTokを読み込み中"
+
+#: src/lib/contentEvents.js
+msgid "Reading what you shipped"
+msgstr "リリースした内容を読み込み中"
 
 #: src/components/content/PostViewport.jsx
 msgid "Reading what you've already said…"
@@ -8825,6 +8976,18 @@ msgstr "却下済み"
 #: src/components/execution/ChangeSetCard.jsx
 msgid "Rejecting…"
 msgstr "却下中…"
+
+#: src/lib/contentFeedLabels.js
+msgid "Releases and their notes."
+msgstr "リリースとそのノート。"
+
+#: src/lib/contentFeedLabels.js
+msgid "Releases only"
+msgstr "リリースのみ"
+
+#: src/lib/contentFeedLabels.js
+msgid "Releases, merged pull requests, commits to your main branch, README and changelog edits."
+msgstr "リリース、マージされたプルリクエスト、メインブランチへのコミット、README と変更履歴の更新。"
 
 #: src/components/ReloadToast.jsx
 msgid "Reload"
@@ -10267,6 +10430,10 @@ msgstr "サインイン中..."
 msgid "Signups, logins and upgrades, one name across web and app."
 msgstr "登録、ログイン、アップグレード、ウェブとアプリで共通の名前。"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Since last time"
+msgstr "前回から"
+
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Site to audit"
 msgstr "監査対象サイト"
@@ -10432,6 +10599,10 @@ msgstr "ソース"
 #: src/components/GoogleAdsReport.js
 msgid "Source: {source}"
 msgstr "ソース: {source}"
+
+#: src/components/content/SourceChips.jsx
+msgid "Sources"
+msgstr "ソース"
 
 #: src/components/content/report/GrowthReportView.jsx
 msgid "Sources:"
@@ -12242,6 +12413,10 @@ msgstr "今後90日間で成功はどのようなものになりますか？"
 msgid "What does success look like?"
 msgstr "成功はどのようなものですか？"
 
+#: src/lib/contentFeedLabels.js
+msgid "What Duct did"
+msgstr "Duct が行ったこと"
+
 #: src/app/(app)/project/[projectId]/memory/page.jsx
 #~ msgid "What Duct knows about {projectName}. Agents read it before every run."
 #~ msgstr "Ductが{projectName}について記憶していること。エージェントはすべての実行前にこれを読み込みます。"
@@ -12305,6 +12480,10 @@ msgstr "このレシピが作成する投稿の種類。"
 #: src/components/workspace/ComposerDials.jsx
 #~ msgid "What shape the brief takes"
 #~ msgstr "ブリーフの形式"
+
+#: src/lib/contentFeedLabels.js
+msgid "What shipped"
+msgstr "リリースした内容"
 
 #: src/components/content/PlanViewport.jsx
 msgid "What should change?"

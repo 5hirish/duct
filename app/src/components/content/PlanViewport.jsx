@@ -8,12 +8,15 @@ import { ArrowRight, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import FeedSummary from "./FeedSummary";
 import PlanChanges from "./PlanChanges";
 import PlanList from "./PlanList";
 import PlanStrategy from "./PlanStrategy";
 import { draftDayHref } from "./PlanBoard";
 import PipelineProgress from "../PipelineProgress";
+import { AnalyticsEvent, trackEvent } from "../../lib/analytics";
 import { acceptPlan, rejectPlan } from "../../lib/contentApi";
+import { feedDayCount } from "../../lib/contentFeed";
 import { PlanStatus } from "../../lib/contentEnums";
 import { ContentStep } from "../../lib/contentEvents";
 import { nextOpenDay, planEndOf, planStartOf } from "../../lib/contentSchedule";
@@ -70,8 +73,13 @@ const REJECTED_CHANGE_MESSAGE = "I rejected these changes to the plan.";
  *   - building: the plan is still being built (no payload yet, run not failed)
  *   - onSendMessage?(text): a chat turn into the live session; absent on a read-only pane
  *   - sessionId?: the session the proposal was made in
+ *   - feed?: a plan from shipped work's read step payload (FeedSummary); with
+ *     nothing worth a post it is the whole pane, with onLookFurther and
+ *     onPlanFromGoals as its two ways on
  */
-export default function PlanViewport({ payload, steps = [], building = false, onSendMessage, sessionId }) {
+export default function PlanViewport({
+  payload, steps = [], building = false, onSendMessage, sessionId, feed = null, onLookFurther, onPlanFromGoals,
+}) {
   const { t, i18n } = useLingui();
   // Accept answers with the saved plan. It is shown at once rather than
   // waiting for the session's own PLAN_GENERATED echo, and dropped the
@@ -79,8 +87,12 @@ export default function PlanViewport({ payload, steps = [], building = false, on
   const [saved, setSaved] = useState(null);
   useEffect(() => { setSaved(null); }, [payload]);
 
+  if ((!payload || payload.type !== "plan") && feed && !feed.worth_a_plan) {
+    return <FeedSummary payload={feed} onLookFurther={onLookFurther} onPlanFromGoals={onPlanFromGoals} />;
+  }
+
   if (!payload || payload.type !== "plan") {
-    return (
+    const progress = (
       <PipelineProgress
         stages={PLAN_STAGES.map((s) => ({ ...s, label: i18n._(s.label) }))}
         steps={steps}
@@ -92,6 +104,13 @@ export default function PlanViewport({ payload, steps = [], building = false, on
         streamingSubtitle={t`Synthesizing your plan…`}
         idleSubtitle={t`Researching pillars and synthesizing the plan…`}
       />
+    );
+    if (!feed) return progress;
+    return (
+      <div className="flex h-full flex-col">
+        <FeedSummary payload={feed} variant="strip" />
+        <div className="min-h-0 flex-1">{progress}</div>
+      </div>
     );
   }
 
@@ -118,6 +137,8 @@ export default function PlanViewport({ payload, steps = [], building = false, on
           <Plural value={dayCount} one="# day" other="# days" />
         </span>
       </div>
+
+      {feed && <FeedSummary payload={feed} variant="strip" />}
 
       {/* Keyed by the proposal, so a re-submitted plan opens a fresh bar
           (textarea closed, no stale error) and a decision resets its state. */}
@@ -196,11 +217,24 @@ function PlanDecision({ plan, sessionId, onSendMessage, onAccepted }) {
   const busy = pending !== null;
   const changed = plan.only_days && Array.isArray(plan.changed_days) ? plan.changed_days.length : 0;
 
+  function track(decision) {
+    const days = Array.isArray(plan.days) ? plan.days : [];
+    const proposed = plan.only_days && Array.isArray(plan.changed_days)
+      ? plan.changed_days.map((i) => days[i]).filter(Boolean)
+      : days;
+    trackEvent(AnalyticsEvent.ContentPlanDecided, {
+      decision,
+      source: plan.strategy?.feed ? "work" : "goals",
+      feed_days: feedDayCount(proposed),
+    });
+  }
+
   async function accept() {
     setError("");
     setPending("accept");
     try {
       const out = await acceptPlan(sessionId, plan.proposal_id);
+      track("accepted");
       onAccepted(out);
     } catch {
       setError(t`Couldn't save the plan. Try again.`);
@@ -213,6 +247,7 @@ function PlanDecision({ plan, sessionId, onSendMessage, onAccepted }) {
     setPending("reject");
     try {
       await rejectPlan(sessionId, plan.proposal_id);
+      track("rejected");
       setRejected(true);
       onSendMessage?.(plan.only_days ? REJECTED_CHANGE_MESSAGE : REJECTED_MESSAGE);
     } catch {

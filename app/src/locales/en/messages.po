@@ -300,6 +300,10 @@ msgstr "{count, plural, one {# fix} other {# fixes}}"
 msgid "{count, plural, one {# post} other {# posts}}"
 msgstr "{count, plural, one {# post} other {# posts}}"
 
+#: src/components/content/FeedSummary.jsx
+msgid "{count, plural, one {# source} other {# sources}}"
+msgstr "{count, plural, one {# source} other {# sources}}"
+
 #: src/app/(app)/connections/page.jsx
 msgid "{count, plural, one {GitHub connected: # repository.} other {GitHub connected: # repositories.}}"
 msgstr "{count, plural, one {GitHub connected: # repository.} other {GitHub connected: # repositories.}}"
@@ -497,6 +501,10 @@ msgstr "{landingPages, plural, one {# landing page} other {# landing pages}}"
 msgid "{landingPages, plural, one {# page} other {# pages}}"
 msgstr "{landingPages, plural, one {# page} other {# pages}}"
 
+#: src/components/content/FeedSummary.jsx
+msgid "{left, plural, one {# item left out} other {# items left out}}"
+msgstr "{left, plural, one {# item left out} other {# items left out}}"
+
 #: src/components/content/TextPostEditor.jsx
 msgid "{left} left"
 msgstr "{left} left"
@@ -536,6 +544,10 @@ msgstr "{modelCount} models at {foundAt}"
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{n} chars"
 msgstr "{n} chars"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "{n} days"
+msgstr "{n} days"
 
 #: src/app/(app)/project/[projectId]/members/page.jsx
 #~ msgid "{name} · Members"
@@ -1071,6 +1083,7 @@ msgstr "✓ Report ready — ask me anything about the findings."
 msgid "✦ Reasoned"
 msgstr "✦ Reasoned"
 
+#: src/components/content/FeedPlanDialog.jsx
 #: src/components/content/PlanPeriodPicker.jsx
 msgid "1 week"
 msgstr "1 week"
@@ -1083,6 +1096,7 @@ msgstr "1–2 wks"
 msgid "1–3 days"
 msgstr "1–3 days"
 
+#: src/components/content/FeedPlanDialog.jsx
 #: src/components/content/PlanPeriodPicker.jsx
 msgid "2 weeks"
 msgstr "2 weeks"
@@ -1704,6 +1718,10 @@ msgstr "Allow <0>{agent}</0> to use your Duct account?"
 msgid "Allow it in your browser"
 msgstr "Allow it in your browser"
 
+#: src/lib/contentFeedLabels.js
+msgid "Already on a plan"
+msgstr "Already on a plan"
+
 #: src/lib/contentEnums.js
 msgid "Already said"
 msgstr "Already said"
@@ -1711,6 +1729,10 @@ msgstr "Already said"
 #: src/app/(auth)/page.js
 #~ msgid "Already using Duct?"
 #~ msgstr "Already using Duct?"
+
+#: src/lib/contentFeedLabels.js
+msgid "Also closed issues and changes under docs/."
+msgstr "Also closed issues and changes under docs/."
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "alt ×{missingAlt}"
@@ -2309,6 +2331,10 @@ msgstr "Blog / Articles"
 msgid "Bold"
 msgstr "Bold"
 
+#: src/lib/contentFeedLabels.js
+msgid "Bots"
+msgstr "Bots"
+
 #: src/app/(app)/content/page.jsx
 #: src/components/workspace/ActivityRow.jsx
 msgid "brand"
@@ -2339,6 +2365,10 @@ msgstr "Brief"
 #: src/app/(app)/artifacts/page.jsx
 msgid "Briefs"
 msgstr "Briefs"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Briefs it wrote, changes you approved and what they did."
+msgstr "Briefs it wrote, changes you approved and what they did."
 
 #: src/components/connections/BringAnyTool.jsx
 msgid "Bring any tool"
@@ -2479,6 +2509,7 @@ msgstr "Can't read your key"
 #: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/ProviderCard.jsx
 #: src/components/content/CloneFromUrlDialog.jsx
+#: src/components/content/FeedPlanDialog.jsx
 #: src/components/content/FormatLibrary.jsx
 #: src/components/content/PlanViewport.jsx
 #: src/components/content/PublishModal.jsx
@@ -2705,6 +2736,10 @@ msgstr "Choose them for tiers"
 msgid "Choosing hashtags…"
 msgstr "Choosing hashtags…"
 
+#: src/lib/contentFeedLabels.js
+msgid "Chores, CI and tests"
+msgstr "Chores, CI and tests"
+
 #: src/app/(app)/connections/page.jsx
 msgid "Clarity Data Export API docs"
 msgstr "Clarity Data Export API docs"
@@ -2815,6 +2850,10 @@ msgstr "Comments, shares and saves per post."
 #: src/components/content/PostViewport.jsx
 msgid "Commit edits"
 msgstr "Commit edits"
+
+#: src/lib/contentFeedLabels.js
+msgid "Commits already in a pull request"
+msgstr "Commits already in a pull request"
 
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Common servers"
@@ -3570,6 +3609,10 @@ msgstr "Dates resolve in UTC. Pick your zone so \"last week\" means your week."
 msgid "Day {dayNumber}"
 msgstr "Day {dayNumber}"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Days it may change"
+msgstr "Days it may change"
+
 #: src/lib/memoryApi.js
 msgid "Decisions"
 msgstr "Decisions"
@@ -3671,6 +3714,10 @@ msgstr "Delete this format?"
 #: src/components/content/FormatLibrary.jsx
 msgid "Deleting…"
 msgstr "Deleting…"
+
+#: src/lib/contentFeedLabels.js
+msgid "Dependency bumps"
+msgstr "Dependency bumps"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Describe your brand"
@@ -4066,6 +4113,10 @@ msgstr "Duct forgets your API key and stops publishing through your {scheduler} 
 msgid "Duct forgets your Apify token and stops searching through your account. References you saved stay saved."
 msgstr "Duct forgets your Apify token and stops searching through your account. References you saved stay saved."
 
+#: src/components/content/FeedSummary.jsx
+msgid "Duct found nothing a reader would notice, so it made no model call and changed nothing."
+msgstr "Duct found nothing a reader would notice, so it made no model call and changed nothing."
+
 #: src/components/insights/desk/DeskCards.jsx
 msgid "Duct found nothing worth your time. Enjoy the quiet."
 msgstr "Duct found nothing worth your time. Enjoy the quiet."
@@ -4126,6 +4177,10 @@ msgstr "Duct proposes this plan."
 #~ msgid "Duct publishes through these, with your own accounts, and reads each post's numbers back from them."
 #~ msgstr "Duct publishes through these, with your own accounts, and reads each post's numbers back from them."
 
+#: src/components/content/FeedSummary.jsx
+msgid "Duct read {span} and found nothing a reader would notice, so it made no model call and changed nothing."
+msgstr "Duct read {span} and found nothing a reader would notice, so it made no model call and changed nothing."
+
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Duct reads \"last week\" and \"yesterday\" in {chosenZone}."
 msgstr "Duct reads \"last week\" and \"yesterday\" in {chosenZone}."
@@ -4153,6 +4208,10 @@ msgstr "Duct reads your site the way a search engine does, in about three minute
 #: src/components/insights/desk/DeskCards.jsx
 msgid "Duct reads your sources again and tells you what changed since {since}."
 msgstr "Duct reads your sources again and tells you what changed since {since}."
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Duct reads your work, leaves out the noise and shows you the stories it found. You pick which to tell, and nothing changes in your plan until you accept it."
+msgstr "Duct reads your work, leaves out the noise and shows you the stories it found. You pick which to tell, and nothing changes in your plan until you accept it."
 
 #: src/app/(start)/start/page.jsx
 msgid "Duct runs on your own account, so an audit costs you cents — and Duct never sees your data twice."
@@ -4504,6 +4563,10 @@ msgstr "Every version of it goes with it. This cannot be undone."
 msgid "Everyone on {name} shares its reports, audits and content."
 msgstr "Everyone on {name} shares its reports, audits and content."
 
+#: src/lib/contentFeedLabels.js
+msgid "Everything"
+msgstr "Everything"
+
 #: src/components/connections/ConnectorPermissions.jsx
 msgid "Everything above still works. To grant the rest, choose Reconnect and tick them on Google’s consent screen."
 msgstr "Everything above still works. To grant the rest, choose Reconnect and tick them on Google’s consent screen."
@@ -4668,6 +4731,10 @@ msgstr "Finalizing report"
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Find models"
 msgstr "Find models"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Find stories"
+msgstr "Find stories"
 
 #: src/components/content/DiscoverPage.jsx
 msgid "Find what's working on TikTok right now"
@@ -4835,6 +4902,10 @@ msgstr "from"
 msgid "From"
 msgstr "From"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "From a private repository, talk about"
+msgstr "From a private repository, talk about"
+
 #: src/app/(app)/connections/page.jsx
 msgid "From Ads Manager → Settings → API keys"
 msgstr "From Ads Manager → Settings → API keys"
@@ -4855,6 +4926,10 @@ msgstr "From project context"
 msgid "From the MCP Registry"
 msgstr "From the MCP Registry"
 
+#: src/components/content/PlanDayOne.jsx
+msgid "From what you shipped"
+msgstr "From what you shipped"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "From your files"
 msgstr "From your files"
@@ -4862,6 +4937,15 @@ msgstr "From your files"
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "From your site"
 msgstr "From your site"
+
+#: src/components/content/FeedSummary.jsx
+#: src/components/content/PlanBoard.jsx
+msgid "From your work"
+msgstr "From your work"
+
+#: src/components/content/FeedSummary.jsx
+msgid "From your work · {span}"
+msgstr "From your work · {span}"
 
 #: src/components/content/PlanChanges.jsx
 msgid "Funnel stage"
@@ -4955,6 +5039,7 @@ msgid "Get your key from {vendor}"
 msgstr "Get your key from {vendor}"
 
 #: src/components/connections/logos.jsx
+#: src/lib/contentFeedLabels.js
 msgid "GitHub"
 msgstr "GitHub"
 
@@ -5559,6 +5644,10 @@ msgstr "Installing…"
 msgid "Interface language"
 msgstr "Interface language"
 
+#: src/lib/contentFeedLabels.js
+msgid "Internal docs"
+msgstr "Internal docs"
+
 #: src/app/(app)/connections/page.jsx
 msgid "Internal-traffic patterns"
 msgstr "Internal-traffic patterns"
@@ -5610,6 +5699,10 @@ msgstr "Is Duct earning its keep?"
 #: src/components/audit/AuditReportV1.jsx
 msgid "Issue distribution across all findings"
 msgstr "Issue distribution across all findings"
+
+#: src/lib/contentFeedLabels.js
+msgid "Issues"
+msgstr "Issues"
 
 #: src/lib/mcpServers.js
 msgid "It answered with an error the last time Duct called it. The next chat tries again, or check it now."
@@ -5724,6 +5817,10 @@ msgstr "Keep this post — adds it to your board"
 #: src/components/AutoFallbackCard.jsx
 msgid "Keep working when you hit a limit"
 msgstr "Keep working when you hit a limit"
+
+#: src/lib/contentFeedLabels.js
+msgid "Kept back by your setting"
+msgstr "Kept back by your setting"
 
 #: src/lib/credentialStorage.js
 msgid "Kept only until you close the app, and reports that run without you cannot use it."
@@ -6121,6 +6218,14 @@ msgstr "Longer than the platform allows: {at}"
 msgid "Look at how this plan is doing so far and revise the days from today on. Keep the days I've already drafted."
 msgstr "Look at how this plan is doing so far and revise the days from today on. Keep the days I've already drafted."
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Look back"
+msgstr "Look back"
+
+#: src/components/content/FeedSummary.jsx
+msgid "Look back 30 days"
+msgstr "Look back 30 days"
+
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "Look into it"
 msgstr "Look into it"
@@ -6327,6 +6432,10 @@ msgstr "Memory of {name}"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Memory title"
 msgstr "Memory title"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Merged pull requests, releases and changelog edits."
+msgstr "Merged pull requests, releases and changelog edits."
 
 #: src/app/(app)/connections/page.jsx
 msgid "Merged pull requests, releases, closed issues and doc changes, by date."
@@ -7048,6 +7157,10 @@ msgstr "Not confirmed yet"
 msgid "Not connected"
 msgstr "Not connected"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Not connected. Connect a repository in the <0>Toolbox</0>."
+msgstr "Not connected. Connect a repository in the <0>Toolbox</0>."
+
 #: src/components/content/AnalyticsView.jsx
 msgid "Not enough dated posts to chart a trend yet."
 msgstr "Not enough dated posts to chart a trend yet."
@@ -7179,6 +7292,10 @@ msgstr "Nothing banned. Drafts follow plain good writing."
 msgid "Nothing below this tier can run either — add a key to use {tierName}."
 msgstr "Nothing below this tier can run either — add a key to use {tierName}."
 
+#: src/components/content/FeedSummary.jsx
+msgid "Nothing came back at all. If no repository is connected yet, <0>connect one in the Toolbox</0>."
+msgstr "Nothing came back at all. If no repository is connected yet, <0>connect one in the Toolbox</0>."
+
 #: src/components/settings/AgentConsent.jsx
 msgid "Nothing changed. You can close this tab."
 msgstr "Nothing changed. You can close this tab."
@@ -7271,6 +7388,10 @@ msgstr "Nothing matches these filters."
 #: src/components/insights/Desk.jsx
 msgid "Nothing needs you right now."
 msgstr "Nothing needs you right now."
+
+#: src/components/content/FeedSummary.jsx
+msgid "Nothing new worth a post yet"
+msgstr "Nothing new worth a post yet"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Nothing picked = any media"
@@ -7537,6 +7658,10 @@ msgstr "Ongoing"
 #: src/components/audit/AuditReportV1.jsx
 msgid "Only a sample of your sitemap was scanned."
 msgstr "Only a sample of your sitemap was scanned."
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Only days with no draft yet. The rest of your plan stays as it is."
+msgstr "Only days with no draft yet. The rest of your plan stays as it is."
 
 #: src/app/(app)/connections/page.jsx
 msgid "Only if 'Require App Secret' is on"
@@ -7860,6 +7985,10 @@ msgstr "over {windowDays} days"
 msgid "Over 10 MB"
 msgstr "Over 10 MB"
 
+#: src/lib/contentFeedLabels.js
+msgid "Over the limit"
+msgstr "Over the limit"
+
 #: src/components/ProjectMembers.jsx
 msgid "Owner"
 msgstr "Owner"
@@ -8020,6 +8149,10 @@ msgstr "Pick accounts at one scheduler at a time."
 msgid "Pick at least one account."
 msgstr "Pick at least one account."
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Pick at least one thing to read."
+msgstr "Pick at least one thing to read."
+
 #: src/components/connections/InstanceProviderCard.jsx
 msgid "Pick one of its models for a tier on the Tiers tab. Only models that can call tools are listed, because every Duct agent works by calling them."
 msgstr "Pick one of its models for a tier on the Tiers tab. Only models that can call tools are listed, because every Duct agent works by calling them."
@@ -8097,6 +8230,7 @@ msgstr "Plan"
 msgid "Plan {shortId}"
 msgstr "Plan {shortId}"
 
+#: src/components/content/FeedPlanDialog.jsx
 #: src/components/content/PlanBoard.jsx
 msgid "Plan ahead"
 msgstr "Plan ahead"
@@ -8104,6 +8238,14 @@ msgstr "Plan ahead"
 #: src/components/content/PlanViewport.jsx
 msgid "Plan discarded. Tell Duct what to plan instead, or close this tab."
 msgstr "Plan discarded. Tell Duct what to plan instead, or close this tab."
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Plan from what you shipped"
+msgstr "Plan from what you shipped"
+
+#: src/components/content/FeedSummary.jsx
+msgid "Plan from your goals"
+msgstr "Plan from your goals"
 
 #: src/components/content/PlanStrategy.jsx
 msgid "Plan strategy"
@@ -8233,6 +8375,10 @@ msgstr "Practitioner"
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Pre-publish review"
 msgstr "Pre-publish review"
+
+#: src/lib/contentFeedLabels.js
+msgid "Pre-releases"
+msgstr "Pre-releases"
 
 #: src/components/commands/AppCommands.jsx
 msgid "Preferences"
@@ -8529,6 +8675,7 @@ msgstr "Reach"
 msgid "read"
 msgstr "read"
 
+#: src/components/content/FeedPlanDialog.jsx
 #: src/components/onboarding/DocumentPicker.jsx
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read"
@@ -8613,6 +8760,10 @@ msgstr "Reading the rest of the site…"
 #: src/lib/contentEvents.js
 msgid "Reading the TikTok"
 msgstr "Reading the TikTok"
+
+#: src/lib/contentEvents.js
+msgid "Reading what you shipped"
+msgstr "Reading what you shipped"
 
 #: src/components/content/PostViewport.jsx
 msgid "Reading what you've already said…"
@@ -8825,6 +8976,18 @@ msgstr "Rejected"
 #: src/components/execution/ChangeSetCard.jsx
 msgid "Rejecting…"
 msgstr "Rejecting…"
+
+#: src/lib/contentFeedLabels.js
+msgid "Releases and their notes."
+msgstr "Releases and their notes."
+
+#: src/lib/contentFeedLabels.js
+msgid "Releases only"
+msgstr "Releases only"
+
+#: src/lib/contentFeedLabels.js
+msgid "Releases, merged pull requests, commits to your main branch, README and changelog edits."
+msgstr "Releases, merged pull requests, commits to your main branch, README and changelog edits."
 
 #: src/components/ReloadToast.jsx
 msgid "Reload"
@@ -10267,6 +10430,10 @@ msgstr "Signing in..."
 msgid "Signups, logins and upgrades, one name across web and app."
 msgstr "Signups, logins and upgrades, one name across web and app."
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Since last time"
+msgstr "Since last time"
+
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Site to audit"
 msgstr "Site to audit"
@@ -10432,6 +10599,10 @@ msgstr "Source"
 #: src/components/GoogleAdsReport.js
 msgid "Source: {source}"
 msgstr "Source: {source}"
+
+#: src/components/content/SourceChips.jsx
+msgid "Sources"
+msgstr "Sources"
 
 #: src/components/content/report/GrowthReportView.jsx
 msgid "Sources:"
@@ -12242,6 +12413,10 @@ msgstr "What does success look like in the next 90 days?"
 msgid "What does success look like?"
 msgstr "What does success look like?"
 
+#: src/lib/contentFeedLabels.js
+msgid "What Duct did"
+msgstr "What Duct did"
+
 #: src/app/(app)/project/[projectId]/memory/page.jsx
 #~ msgid "What Duct knows about {projectName}. Agents read it before every run."
 #~ msgstr "What Duct knows about {projectName}. Agents read it before every run."
@@ -12305,6 +12480,10 @@ msgstr "What kind of post this recipe makes."
 #: src/components/workspace/ComposerDials.jsx
 #~ msgid "What shape the brief takes"
 #~ msgstr "What shape the brief takes"
+
+#: src/lib/contentFeedLabels.js
+msgid "What shipped"
+msgstr "What shipped"
 
 #: src/components/content/PlanViewport.jsx
 msgid "What should change?"

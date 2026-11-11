@@ -95,6 +95,13 @@ export const analytics = resolve();
  * sent.
  */
 export const AnalyticsEvent = {
+  // Content Studio plans (#561): `source` is "goals" or "work" (from shipped
+  // work). Decided carries `decision` (accepted | rejected) and `feed_days`,
+  // the days planned from shipped work, so the feed's acceptance rate is
+  // feed_days on accepted over feed_days on all decisions.
+  ContentPlanStarted: "content_plan_started",
+  ContentPlanDecided: "content_plan_decided",
+
   // Acquisition — the denominator for everything below.
   SignUp: "sign_up",
 

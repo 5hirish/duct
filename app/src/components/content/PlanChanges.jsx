@@ -8,6 +8,7 @@ import { POST_TYPE_LABELS } from "@/lib/contentEnums";
 import { planChanges } from "@/lib/contentSchedule";
 import { formatDate, titleCase } from "@/lib/format";
 import { plainWords } from "@/lib/planStrategy";
+import SourceChips from "./SourceChips";
 
 // What each field is called on a changed day. Topic has no label: it is the
 // day's headline, and its old wording sits under it.
@@ -74,6 +75,7 @@ function ChangedDay({ change }) {
         {after.post_type && <span>{value("post_type", after.post_type)}</span>}
       </p>
       <p className="text-sm font-medium [overflow-wrap:anywhere]">{after.topic}</p>
+      <SourceChips day={after} />
       {fields.includes("topic") && was && (
         <p className="text-xs text-muted-foreground [overflow-wrap:anywhere]">
           <Trans>Was: {was}</Trans>

@@ -20,7 +20,7 @@
 // so what someone is promised is drawn by the component they will get.
 
 import { useMemo, useState } from "react";
-import { CalendarPlus, Check } from "lucide-react";
+import { CalendarPlus, Check, GitBranch } from "lucide-react";
 import { msg } from "@lingui/core/macro";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
@@ -68,11 +68,12 @@ const SAMPLE_DAYS_AGO = 2;
  *   - vendors: { [VENDOR]: { connected, is_owner } | null } — the Apify key
  *     status; null leaves that connector's ask out
  *   - onStart({ start, days }): open a plan session for the period picked
+ *   - onPlanFromWork?(): open the setup sheet for a plan from shipped work
  *   - onOpenTab(tab): go to the Content Studio tab that fixes a source
  *   - onConnectVendor(vendor, apiKey): save a key; rejects with the vendor's
  *     reason, which the row shows under the field
  */
-export default function PlanDayOne({ brand, accounts, scheduler, vendors, onStart, onOpenTab, onConnectVendor }) {
+export default function PlanDayOne({ brand, accounts, scheduler, vendors, onStart, onOpenTab, onConnectVendor, onPlanFromWork }) {
   const { t, i18n } = useLingui();
   // The month in progress first, the run's own default; the rest are the
   // shorter horizons someone may plan instead.
@@ -115,6 +116,11 @@ export default function PlanDayOne({ brand, accounts, scheduler, vendors, onStar
             <Button size="lg" onClick={() => onStart({ start: period.start, days: period.days })}>
               <CalendarPlus aria-hidden /> <Trans>New plan</Trans>
             </Button>
+            {onPlanFromWork && (
+              <Button size="lg" variant="outline" onClick={onPlanFromWork}>
+                <GitBranch aria-hidden /> <Trans>From what you shipped</Trans>
+              </Button>
+            )}
             <span className="text-xs text-muted-foreground tabular-nums">
               <Trans>Covers {range}, one post a day. You can revise any day after.</Trans>
             </span>

@@ -17,6 +17,7 @@ import {
 } from "./api.js";
 import { throwForStatus } from "./authFetch.js";
 import { cached, invalidate } from "./contentCache.js";
+import { feedRequest } from "./contentFeed.js";
 
 /** Unified agent-type id for this workspace (see backend agents/registry.py). */
 const AGENT_TYPE = "tiktok_studio";
@@ -87,14 +88,14 @@ function resumeFields({ conversationId, resume, startFresh, artifactType, artifa
  * /api/agents/tiktok_studio/sessions. The hook owns opening the stream,
  * reconnecting and closing; this only knows the two modes' fields.
  *
- *   plan_month: { projectId, startDate?, days? }
+ *   plan_month: { projectId, startDate?, days?, feed? }
  *   draft_post: { projectId, planId?, dayIndex?, topic?, pillar?, channel? }
  * plus the resume fields (conversationId, resume, startFresh, artifactType,
  * artifactId) in either mode.
  */
 export function contentSessionBody(mode, context = {}) {
   const {
-    projectId, startDate, days, planId, dayIndex, topic, pillar, channel, cloneUrl,
+    projectId, startDate, days, planId, dayIndex, topic, pillar, channel, cloneUrl, feed,
     conversationId, resume, startFresh, artifactType, artifactId,
   } = context;
   const resumeBody = resumeFields({ conversationId, resume, startFresh, artifactType, artifactId });
@@ -104,6 +105,8 @@ export function contentSessionBody(mode, context = {}) {
       project_id: projectId,
       ...(startDate ? { start_date: startDate } : {}),
       ...(days ? { days } : {}),
+      // A plan from shipped work (#561): the setup sheet's answers.
+      ...(feed ? { feed: feedRequest(feed) } : {}),
       ...resumeBody,
     };
   }
