@@ -6,12 +6,12 @@
 
 <p align="center"><b>English</b> · <a href="README.zh-CN.md">简体中文</a></p>
 
-**See the whole picture. Fix it in the same moment.**
+**Open-source AI marketing agent: a growth analyst with every login.**
 
-Duct is an open-source AI marketing agent for product and growth teams. It connects
-Google Ads, GA4, Search Console, Mixpanel, Stripe and seven more, reads across
-all of them at once, remembers what it learns about your business, and, with
-your approval, changes things in those tools for you. The approve tool does
+Duct is for product and growth teams. It connects Google Ads, GA4, Search
+Console, Mixpanel, Stripe and seven more, reads across all of them at once the
+way an analyst holding every login would, remembers what it learns about your
+business, and, with your approval, changes things in those tools for you. The approve tool does
 not exist in the list the model can call; you press the button.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
@@ -79,6 +79,8 @@ nothing sent to us.
 ```bash
 npx skills add 5hirish/duct
 ```
+
+What it checks, and a real run on our own site: [getduct.ai/skills](https://getduct.ai/skills).
 
 ## 🔑 Use your ChatGPT subscription
 

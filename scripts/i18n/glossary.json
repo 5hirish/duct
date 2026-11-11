@@ -14,7 +14,9 @@
     "Instagram", "LinkedIn", "Facebook", "Pinterest", "Bluesky", "Slack", "Notion", "Linear",
     "Tauri", "FastAPI", "Next.js", "Cloudflare", "Railway", "Turnstile", "Sentry",
     "SaaS", "UTM", "CMGR", "ROI", "OAuth", "PDF", "Word", "PowerPoint", "Markdown", "MCP", "Model Context Protocol", "Streamable HTTP", "HTTPS",
-    "Claude Code", "Claude Desktop", "claude.ai", "Cursor", "VS Code", "OpenCode", "HTTP"
+    "Claude Code", "Claude Desktop", "claude.ai", "Cursor", "VS Code", "OpenCode", "HTTP",
+    "launch-check", "SKILL.md", "Agent Skills", "skills.sh", "GitHub Copilot", "Windsurf", "Zed",
+    "Perplexity", "Node.js", "FAIL", "WARN"
   ],
   "terms": {
     "brief": { "es": "informe", "pt-BR": "resumo", "de": "Briefing", "ja": "ブリーフ", "zh-CN": "简报", "note": "The weekly synthesis Duct writes. A noun." },

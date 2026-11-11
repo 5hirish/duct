@@ -29,7 +29,7 @@ const TITLE_STEPS = [46, 40];
 // slug → the card. `shot` is a file in site/assets/media; its top-left corner
 // is what shows, so pick shots whose first 620×480 carry the point.
 const PAGES = {
-  "index": { title: "See the whole picture. Fix it in the same moment.", sub: "The open-source AI marketing agent for product and growth teams.", shot: "insights-session.webp" },
+  "index": { title: "See the whole picture. Fix it in the same moment.", sub: "Open-source AI marketing agent: a growth analyst with every login.", shot: "insights-session.webp" },
   "compare": { title: "Claude Cowork, n8n or Duct?", sub: "Three good tools, three different jobs. Where each one is the right call." },
   "for-product-intelligence": { title: "See why the number moved. Fix it before the standup.", sub: "Your product analytics, read as one.", shot: "product-session.webp" },
   "for-organic-growth": { title: "See which content actually converts. Fix it in the same sitting.", sub: "GSC, GA4 and Clarity, read together.", shot: "content-session.webp" },
@@ -37,6 +37,7 @@ const PAGES = {
   "download": { title: "The whole picture, in one window.", sub: "Mac, Windows and Linux. Free, open source, your own keys.", shot: "insights-session.webp" },
   "seo-audit": { title: "See exactly what's hurting your rankings.", sub: "A free SEO audit from the open-source Duct agent. No account.", shot: "audit-report.webp" },
   "mcp": { title: "Bring your own MCP servers.", sub: "OpenSEO, Notion, Linear, PostHog or any public server, called by Duct's agent." },
+  "skills": { kicker: "Agent skills", title: "Is your site ready to launch? Ask your agent.", sub: "launch-check reads the page and the code, scores six areas and ranks three fixes." },
   "connect-agent": { title: "Use Duct from your agent.", sub: "Claude Code, Codex, Cursor and more: one address, one Allow in your browser." },
   "open-source": { title: "Open source, MIT, your own keys.", sub: "What runs where, how to self-host it, and a plain answer on what will cost money." },
   "about": { title: "Built because my tools wouldn't talk.", sub: "Why an agent that reads your whole business is open source." },

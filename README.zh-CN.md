@@ -8,9 +8,9 @@
 
 > 本文是机器翻译的初稿，尚待母语者校对。读到别扭的地方？欢迎直接提 PR，或在 [#537](https://github.com/5hirish/duct/issues/537) 里告诉我们：这是一个很好的第一个贡献。
 
-**看清全局，当场修好。**
+**开源 AI 营销智能体：一个能登录你所有工具的增长分析师。**
 
-Duct 是一个面向产品和增长团队的开源 AI 营销智能体。它连接 Google Ads、GA4、Search Console、Mixpanel、Stripe 以及另外七个工具，同时读取所有数据，记住它对你的业务了解到的一切，并在你批准后替你修改这些工具里的设置。模型能调用的工具列表里根本没有“批准”这一项：按下按钮的是你。
+Duct 为产品和增长团队而做。它连接 Google Ads、GA4、Search Console、Mixpanel、Stripe 以及另外七个工具，像一个握有所有账号的分析师那样同时读取所有数据，记住它对你的业务了解到的一切，并在你批准后替你修改这些工具里的设置。模型能调用的工具列表里根本没有“批准”这一项：按下按钮的是你。
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 [![Backend CI](https://img.shields.io/github/actions/workflow/status/5hirish/duct/backend.yml?branch=main&label=backend&style=flat-square)](.github/workflows/backend.yml)
