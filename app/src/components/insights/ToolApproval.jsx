@@ -10,6 +10,10 @@
 // post in front of people is the one thing the agent cannot take back
 // (agents/content/publishing.publish_card).
 //
+// A publish card shows every word that goes out, whole, and carries a
+// fingerprint of it; Approve sends the fingerprint back, so an edit made
+// after the card appeared is shown again instead of sent.
+//
 // The card shows what the person needs to decide and nothing else: whose tool,
 // which tool, the agent's one-sentence reason, and exactly what would be sent.
 // The arguments start folded, because most of the time the reason is enough,
@@ -86,7 +90,13 @@ export default function ToolApproval({ request, onAnswer, disabled }) {
       )}
 
       <div className="flex flex-wrap items-center gap-2 pl-7.5">
-        <Button size="sm" onClick={() => onAnswer({ approved: true })} disabled={disabled}>
+        {/* A card that carries a fingerprint (a publish) sends it back with the
+            yes: the backend sends only the version this card showed. */}
+        <Button
+          size="sm"
+          onClick={() => onAnswer(request.fingerprint ? { approved: true, fingerprint: request.fingerprint } : { approved: true })}
+          disabled={disabled}
+        >
           <Trans>Approve</Trans>
         </Button>
         <Button size="sm" variant="secondary" onClick={() => onAnswer({ approved: false })} disabled={disabled}>

@@ -2303,11 +2303,17 @@ def build_content_tools_lc(
                         "post_id": str(post.id),
                         "message": "Publishing needs the person's yes and nobody is here to give it. Leave the post as it is.",
                     })
-                answer = await pause(
-                    AgentEvent.TOOL_APPROVAL_REQUIRED,
-                    publish_card(post, spec, account_ids, due, tiktok_draft=bool(tiktok_draft), media=len(pick.files)),
-                    timeout=APPROVAL_TIMEOUT,
-                )
+                card = publish_card(post, spec, account_ids, due, tiktok_draft=bool(tiktok_draft), files=pick.files)
+                answer = await pause(AgentEvent.TOOL_APPROVAL_REQUIRED, card, timeout=APPROVAL_TIMEOUT)
+                if answer.get("approved") and answer.get("fingerprint") != card["fingerprint"]:
+                    # The yes was for the post as the card showed it. On a
+                    # resume this body re-reads the post, and anything that
+                    # moved since (or an app too old to send the print back)
+                    # goes to the person again rather than out unseen.
+                    return _err(
+                        "The post changed after the person saw the publish card, so nothing was "
+                        "sent. Call publish_post again so they approve this version."
+                    )
                 if not answer.get("approved"):
                     return _ok({
                         "status": "skipped",

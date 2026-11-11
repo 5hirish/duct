@@ -257,8 +257,49 @@ def test_the_agent_publishes_only_after_a_yes_on_a_card_saying_what_goes_out(
     assert card["why"] == WHY_PUBLISHES and card["tool"] == "publish_post"
     shown = json.loads(card["arguments"])
     assert shown["accounts"] == ["101"] and shown["when"] == "2026-11-02T09:00:00+01:00"
-    assert shown["caption"] == "Morning ritual" and shown["media_files"] == 2
+    assert shown["caption"] == "Morning ritual" and shown["media"] == ["slide-01.png", "slide-02.png"]
     assert queue.created()["scheduled_at"] == "2026-11-02T08:00:00Z"
+
+
+def test_the_card_shows_the_whole_caption_and_every_reply_that_goes_out(
+    engine, db, project, slideshow, queue, monkeypatch,
+):
+    slideshow.caption = "word " * 300
+    slideshow.replies = ["First reply, with the link", "Second reply"]
+    db.add(slideshow)
+    db.commit()
+    approver = Approver(approved=False)
+
+    _agent_publish(engine, project, slideshow, monkeypatch, pause=approver, social_account_ids=[101])
+
+    shown = json.loads(approver.asked[0][1]["arguments"])
+    assert shown["caption"] == "word " * 300
+    published = shown["replies"]
+    assert published == ["First reply, with the link", "Second reply"][: len(published)]
+    assert len(published) + shown["replies_you_post_by_hand"] == 2
+
+
+def test_a_yes_for_an_older_version_of_the_post_sends_nothing(
+    engine, db, project, slideshow, queue, monkeypatch,
+):
+    # A resumed thread re-reads the post: an edit made after the card appeared
+    # gives a different print than the one approved, and goes back to the person.
+    result = _agent_publish(engine, project, slideshow, monkeypatch,
+                            pause=Approver(fingerprint="the card before the edit"), social_account_ids=[101])
+
+    assert result["status"] == "error" and "changed" in result["message"]
+    assert queue.requests == [] and queue.uploads == []
+
+
+def test_the_print_moves_with_every_word_that_goes_out(slideshow):
+    from agents.content.publishing import publish_card
+    from service.publishers.registry import spec_for
+
+    spec = spec_for("post_bridge")
+    before = publish_card(slideshow, spec, ["101"], None, tiktok_draft=False, files=[])["fingerprint"]
+    slideshow.caption = "Morning ritual, now with a link"
+
+    assert publish_card(slideshow, spec, ["101"], None, tiktok_draft=False, files=[])["fingerprint"] != before
 
 
 def test_a_no_on_the_card_sends_nothing_and_leaves_the_post_a_draft(

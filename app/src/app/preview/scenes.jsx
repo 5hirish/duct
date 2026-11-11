@@ -787,6 +787,7 @@ const PUBLISH_APPROVAL = {
   tool_title: "",
   reason: "Why your colours look off under office lights",
   why: "publishes",
+  fingerprint: "preview",
   arguments: JSON.stringify(
     {
       post: "Why your colours look off under office lights",
@@ -794,8 +795,10 @@ const PUBLISH_APPROVAL = {
       accounts: ["101"],
       when: "2026-11-13T09:00:00+01:00",
       as_a_tiktok_draft: false,
-      media_files: 6,
       caption: "Your foundation isn't wrong, your lighting is. Three fixes before Monday's call.",
+      replies: [],
+      replies_you_post_by_hand: 0,
+      media: ["slide-01.png", "slide-02.png", "slide-03.png", "slide-04.png", "slide-05.png", "slide-06.png"],
     },
     null,
     2,

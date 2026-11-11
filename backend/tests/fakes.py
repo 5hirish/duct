@@ -873,12 +873,19 @@ class ZernioQueue:
 
 class Approver:
     """A person at an approval card (``PauseFn``): answers as told and keeps
-    what each card showed, so a test can assert on what was asked."""
+    what each card showed, so a test can assert on what was asked. Like the
+    app, a yes sends back the card's fingerprint when it has one;
+    ``fingerprint`` overrides it, as an approval of an older card would."""
 
-    def __init__(self, approved: bool = True):
+    def __init__(self, approved: bool = True, *, fingerprint: str | None = None):
         self.approved = approved
+        self.fingerprint = fingerprint
         self.asked: list[tuple[str, dict]] = []
 
     async def __call__(self, event: str, payload: dict, *, timeout: float | None = None) -> dict:
         self.asked.append((str(event), payload))
-        return {"approved": self.approved}
+        answer: dict = {"approved": self.approved}
+        sent = self.fingerprint if self.fingerprint is not None else payload.get("fingerprint")
+        if self.approved and sent is not None:
+            answer["fingerprint"] = sent
+        return answer

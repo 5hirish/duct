@@ -35,6 +35,7 @@ through ``service.storage``, which serves R2 and local disk alike.
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -552,28 +553,38 @@ async def pull_metrics(pub: Publisher, post) -> PostMetrics | None:
 # What the approval card is asking about. The card is the one a connected MCP
 # tool uses (app ToolApproval.jsx); this ``why`` gives it publishing's words.
 WHY_PUBLISHES = "publishes"
-# A caption longer than this is cut on the card, never in the post: the card
-# is for recognising the post, and the post itself is on the page beside it.
-CARD_CAPTION_CHARS = 400
 
 
 def publish_card(
-    post, spec, account_ids: list[str], due: datetime | None, *, tiktok_draft: bool, media: int
+    post, spec, account_ids: list[str], due: datetime | None, *, tiktok_draft: bool, files: list[MediaFile]
 ) -> dict:
-    """The approval card for one send: which post, through which scheduler,
-    to which accounts, and when. The post's words come from the saved row and
-    the accounts and time are the values ``send_post`` is about to use, after
-    the checks, so what the person approves is what goes out."""
-    caption = (post.caption or "").strip()
+    """The approval card for one send, and its fingerprint.
+
+    It shows every word the scheduler will receive, whole: the caption, each
+    reply it publishes (a thread's tail, a first comment), the accounts, the
+    time and the files, from the same pieces ``send_post`` sends. A cut
+    caption or a hidden reply would be text the person never approved.
+
+    ``fingerprint`` is a hash of all of it plus the files' storage paths. The
+    app sends it back with the yes, and the send goes ahead only if the post
+    still produces the same one: an edit made after the card appeared (by the
+    person, or another session on the post) is shown again, never sent unseen.
+    """
+    ch = resolve(primary_channel(post.platforms))
+    replies = _replies(post)
+    published = spec.replies_for(ch.id)
     shown = {
         "post": post.topic or "",
-        "channel": primary_channel(post.platforms),
+        "channel": ch.id,
         "accounts": list(account_ids),
         "when": due.isoformat() if due else "now",
         "as_a_tiktok_draft": tiktok_draft,
-        "media_files": media,
-        "caption": caption if len(caption) <= CARD_CAPTION_CHARS else caption[:CARD_CAPTION_CHARS] + "…",
+        "caption": post.caption or "",
+        "replies": list(replies[:published]),
+        "replies_you_post_by_hand": len(replies) - min(len(replies), published),
+        "media": [f.name for f in files],
     }
+    sealed = json.dumps({**shown, "media_paths": [f.url for f in files]}, sort_keys=True, ensure_ascii=False)
     return {
         "server": spec.id,
         "server_name": spec.label,
@@ -583,11 +594,11 @@ def publish_card(
         "reason": post.topic or "",
         "why": WHY_PUBLISHES,
         "arguments": json.dumps(shown, ensure_ascii=False, indent=2),
+        "fingerprint": hashlib.sha256(sealed.encode("utf-8")).hexdigest(),
     }
 
 
 __all__ = [
-    "CARD_CAPTION_CHARS",
     "PUBLISHED_VIA_DUCT",
     "SLIDE_RENDER",
     "MediaFile",
