@@ -30,7 +30,7 @@ from utils.dates import utcnow
 
 router = APIRouter(tags=["schedules"], dependencies=[Depends(get_current_user)])
 
-Cadence = Literal["hourly", "daily", "weekdays", "weekly", "manual"]
+Cadence = Literal["hourly", "daily", "weekdays", "weekly", "on_release", "manual"]
 HORIZONS = (7, 14)
 MAX_MONTHLY_CAP = 31
 
@@ -130,8 +130,22 @@ def _out(db: Session, row: AgentSchedule, user: User) -> dict[str, Any]:
         "runs_this_month": sched.spent_this_month(db, row.id, now),
         "last": recent[0] if recent else None,
         "recent": [{"at": r["at"], "outcome": r["outcome"], "will_retry": r["will_retry"]} for r in recent],
+        "waiting": _waiting(db, recent),
         "mine": row.user_id == user.id,
     }
+
+
+def _waiting(db: Session, recent: list[dict]) -> bool:
+    """Is the newest proposal this schedule made still unanswered? The held
+    proposal on its conversation says, and its id must match, so a plan the
+    person since accepted, rejected or saw replaced reads as answered."""
+    from agents.content.plan_proposal import held_proposal
+
+    last = next((r for r in recent if r["outcome"] == sched.Outcome.PROPOSED), None)
+    if last is None or not last.get("conversation_id"):
+        return False
+    held = held_proposal(db, UUID(last["conversation_id"]))
+    return held is not None and (not last.get("proposal_id") or held.proposal_id == last["proposal_id"])
 
 
 def _may_change(db: Session, row: AgentSchedule, user: User) -> None:
@@ -221,6 +235,9 @@ def run_now(schedule_id: UUID, user: User = Depends(get_current_user),
     row.next_run_at = utcnow()
     row.enabled = True
     row.needs_reason = ""
+    # On an event cadence, "now" means run, not check: the next claim skips
+    # the release check once.
+    row.forced = row.cadence in sched.EVENT_CADENCES
     db.add(row)
     db.commit()
     db.refresh(row)

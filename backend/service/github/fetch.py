@@ -315,6 +315,20 @@ def _read_credentials(creds: dict[str, str]) -> dict[str, str]:
     return {**creds, "token": gh_app.installation_token(installation_id, name)}
 
 
+def latest_release_tag(creds: dict[str, str]) -> str | None:
+    """The tag of the repository's newest published release, or None when it
+    has none. One request: the cheap check an on-release schedule makes each
+    hour (#563), never the whole read. Prereleases are passed over, as the
+    feed passes over them. Raises ApiError or ValueError when GitHub refuses."""
+    creds = _read_credentials(creds)
+    owner, name = gh.require_repo(creds)
+    releases = gh.api(f"repos/{owner}/{name}/releases", creds, {"per_page": 10})
+    for raw in releases if isinstance(releases, list) else []:
+        if not raw.get("draft") and not raw.get("prerelease") and raw.get("tag_name"):
+            return str(raw["tag_name"])
+    return None
+
+
 def fetch_github(creds: dict[str, str], date_from: str, date_to: str) -> dict[str, Any]:
     """The work events of one repository inside ``[date_from, date_to]``, inclusive."""
     creds = _read_credentials(creds)  # ValueError, with the fix, when GitHub refuses

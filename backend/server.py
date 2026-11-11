@@ -287,11 +287,11 @@ async def lifespan(app: FastAPI):
     # the desktop sidecar, claiming only this host's schedules. The jobs are
     # handed in so the loop imports no route.
     if _cfg.scheduler_enabled:
-        from routes.schedule_jobs import JOBS
+        from routes.schedule_jobs import JOBS, PROBES
         from service.schedules import host_for, run_scheduler
 
         pruners.append(asyncio.create_task(
-            run_scheduler(JOBS, host=host_for(_cfg.duct_local)), name="schedules",
+            run_scheduler(JOBS, host=host_for(_cfg.duct_local), probes=PROBES), name="schedules",
         ))
     posthog_log_logger.info(
         "backend_started",

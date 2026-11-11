@@ -75,7 +75,7 @@ this list: LangGraph creates and migrates its own tables outside Alembic
 
 | Table | Holds |
 |---|---|
-| `agent_schedules` | a run nobody starts by hand: the job and its settings, a preset cadence in a named time zone, enabled, the host that owns it (`cloud` / `local`), the monthly cap, and the loop's own claim, lease and retry state. What each run did is an `activity_logs` row (category `schedule`), linked to the conversation it left, never a second history |
+| `agent_schedules` | a run nobody starts by hand: the job and its settings, a preset cadence in a named time zone, enabled, the host that owns it (`cloud` / `local`), the monthly cap, the loop's own claim, lease and retry state, and for an on-release schedule (#563) the last release tag it saw (`cursor`) and a Run now that skips the check once (`forced`). What each run did is an `activity_logs` row (category `schedule`), linked to the conversation it left, never a second history |
 
 ### Execution
 

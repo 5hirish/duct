@@ -432,3 +432,151 @@ def test_the_catch_up_ping_lends_its_keys(monkeypatch):
     asyncio.run(memory_routes.catch_up_memory(user=user, user_keys={"openrouter": "sk-or-v1-abc"}))
     assert lent_keys.borrowed(user.id) == {"openrouter": "sk-or-v1-abc"}
     lent_keys.forget()
+
+
+# ---------------------------------------------------------------------------
+# On release (#563)
+# ---------------------------------------------------------------------------
+
+
+def _on_release(db, project, owner, **kw):
+    return _schedule(db, project, owner, cadence="on_release", **kw)
+
+
+def test_a_release_check_that_finds_nothing_leaves_no_row_and_spends_nothing(db, project, owner, monkeypatch):
+    monkeypatch.setattr(sched, "_db", lambda: _Borrowed(db))
+    row = _on_release(db, project, owner, cursor="v1.3.0")
+    (claim,) = sched.claim_due(db, NOW, sched.Host.CLOUD)
+    ran = []
+
+    async def job(c):
+        ran.append(c)
+        return sched.JobResult(sched.Outcome.PROPOSED)
+
+    async def quiet(c):
+        return sched.Probe(fire=False, cursor="v1.3.0")
+
+    assert asyncio.run(sched.run_claim(claim, {claim.job: job}, busy=set(), probes={claim.job: quiet})) is None
+    db.refresh(row)
+    assert ran == [] and _runs(db, row) == [] and row.running_since is None
+    assert row.next_run_at == sched.next_run_after(row, NOW)  # an hour on, not a retry
+
+    row.next_run_at = NOW - timedelta(minutes=1)
+    db.add(row)
+    db.commit()
+    (claim,) = sched.claim_due(db, NOW, sched.Host.CLOUD)
+
+    async def landed(c):
+        return sched.Probe(fire=True, cursor="v1.4.0")
+
+    result = asyncio.run(sched.run_claim(claim, {claim.job: job}, busy=set(), probes={claim.job: landed}))
+    db.refresh(row)
+    assert result.outcome == sched.Outcome.PROPOSED and len(ran) == 1
+    assert row.cursor == "v1.4.0" and [r["outcome"] for r in _runs(db, row)] == ["proposed"]
+
+
+def test_run_now_on_a_release_schedule_runs_without_the_check_once(db, project, owner, monkeypatch):
+    monkeypatch.setattr(sched, "_db", lambda: _Borrowed(db))
+    row = _on_release(db, project, owner, cursor="v1.3.0", forced=True)
+    (claim,) = sched.claim_due(db, NOW, sched.Host.CLOUD)
+    db.refresh(row)
+    assert claim.forced and row.forced is False
+
+    async def job(c):
+        return sched.JobResult(sched.Outcome.NOTHING_NEW)
+
+    async def never(c):
+        raise AssertionError("a forced run must not check")
+
+    asyncio.run(sched.run_claim(claim, {claim.job: job}, busy=set(), probes={claim.job: never}))
+    assert [r["outcome"] for r in _runs(db, row)] == ["nothing_new"]
+
+
+def test_a_quiet_hour_does_not_clear_what_the_last_real_run_needs(db, project, owner):
+    row = _on_release(db, project, owner, needs_reason=sched.Reason.NO_KEY)
+    (claim,) = sched.claim_due(db, NOW, sched.Host.CLOUD)
+    sched.settle_quiet(db, claim, sched.Probe(fire=False, cursor="v1"), now=NOW)
+    db.refresh(row)
+    assert row.needs_reason == sched.Reason.NO_KEY and row.cursor == "v1"
+
+
+def test_the_release_check_records_first_fires_on_a_new_tag_and_needs_a_repository(monkeypatch):
+    import routes.schedule_jobs as jobs
+
+    tags = {"tag": "v1.3.0"}
+    monkeypatch.setattr(jobs, "_latest_tag", lambda user_id, project_id: tags["tag"])
+
+    def check(cursor):
+        claim = sched.Claim(schedule_id=uuid4(), project_id=uuid4(), user_id=uuid4(), job=sched.JobKind.CONTENT_PLAN_FROM_WORK,
+                            config={}, occurrence=NOW, attempt=1, late=timedelta(0), cadence="on_release", cursor=cursor)
+        return asyncio.run(jobs.release_landed(claim))
+
+    assert check("") == sched.Probe(fire=False, cursor="v1.3.0")          # first look only records
+    assert check("v1.3.0").fire is False
+    tags["tag"] = "v1.4.0"
+    assert check("v1.3.0") == sched.Probe(fire=True, cursor="v1.4.0")
+    assert check(jobs.NO_RELEASE).fire is True                            # the first release ever
+    tags["tag"] = jobs.NO_RELEASE
+    assert check("").cursor == jobs.NO_RELEASE and check(jobs.NO_RELEASE).fire is False
+    tags["tag"] = None
+    assert check("v1").needs_reason == sched.Reason.NO_REPOSITORY
+
+
+def test_the_latest_release_passes_over_drafts_and_prereleases(monkeypatch):
+    import service.github.fetch as gh_fetch
+
+    monkeypatch.setattr(gh_fetch, "_read_credentials", lambda creds: creds)
+    monkeypatch.setattr(gh_fetch.gh, "api", lambda path, creds, params=None: [
+        {"tag_name": "v2.0.0-rc1", "prerelease": True},
+        {"tag_name": "v2.0.0", "draft": True},
+        {"tag_name": "v1.9.0"},
+    ])
+    assert gh_fetch.latest_release_tag({"token": "t", "repo": "acme/app"}) == "v1.9.0"
+    monkeypatch.setattr(gh_fetch.gh, "api", lambda path, creds, params=None: [])
+    assert gh_fetch.latest_release_tag({"token": "t", "repo": "acme/app"}) is None
+
+
+# ---------------------------------------------------------------------------
+# One open proposal per schedule, and whether one waits (#563)
+# ---------------------------------------------------------------------------
+
+
+def _held_conversation(db, project, proposal_id):
+    from datetime import date
+
+    from agents.content.plan_proposal import PlanProposal, hold_proposal
+    from models.content import AgentConversation
+
+    conv = AgentConversation(project_id=project.id, agent_type="tiktok_studio", mode="plan_month")
+    db.add(conv)
+    db.commit()
+    db.refresh(conv)
+    hold_proposal(db, conv.id, PlanProposal(
+        proposal_id=proposal_id, project_id=project.id, name="From your work", start_date=date(2026, 11, 16),
+        character={}, strategy={}, days=[], kept_days=[], replaces_plan_id=None,
+    ))
+    return conv
+
+
+def test_a_new_proposal_supersedes_the_unanswered_one_and_waiting_follows_it(db, project, owner, monkeypatch):
+    import db.session as db_session_mod
+    import routes.schedule_jobs as jobs
+    from agents.content.plan_proposal import held_proposal
+    from models.content import AgentEvent as EventRow
+
+    # The client first: it keys its session override on the real dependency.
+    client = _client(db, owner)
+    monkeypatch.setattr(db_session_mod, "get_session", lambda: iter([_Borrowed(db)]))
+    row = _schedule(db, project, owner)
+    old = _held_conversation(db, project, "p-old")
+    sched._record(db, row, sched.Outcome.PROPOSED, now=NOW, conversation_id=old.id, data={"proposal_id": "p-old"})
+    listed = client.get(f"/api/user/schedules?project_id={project.id}").json()
+    assert listed[0]["waiting"] is True
+
+    new = _held_conversation(db, project, "p-new")
+    jobs._supersede(row.id, new.id)
+    assert held_proposal(db, old.id) is None and held_proposal(db, new.id) is not None
+    (decision,) = db.exec(select(EventRow).where(EventRow.conversation_id == old.id)).all()
+    assert decision.kind == "plan_decision" and decision.data["decision"] == "superseded"
+    assert decision.data["superseded_by"] == str(new.id)
+    assert client.get(f"/api/user/schedules?project_id={project.id}").json()[0]["waiting"] is False

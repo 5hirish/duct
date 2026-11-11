@@ -41,7 +41,7 @@ class AgentSchedule(SQLModel, table=True):
     job: str = Field(sa_column=Column(String, nullable=False))
     name: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     config: dict = Field(default_factory=dict, sa_column=Column(json_column(), nullable=False, server_default="{}"))
-    # When: a preset (hourly, daily, weekdays, weekly, manual) at a wall-clock
+    # When: a preset (hourly, daily, weekdays, weekly, on_release, manual) at a wall-clock
     # time in a named zone, so daylight saving moves with the person.
     cadence: str = Field(sa_column=Column(String, nullable=False))
     at_time: str = Field(default="09:00", sa_column=Column(String, nullable=False, server_default="09:00"))
@@ -66,6 +66,14 @@ class AgentSchedule(SQLModel, table=True):
     # have its conversation closed as cancelled rather than left "Working".
     conversation_id: UUID | None = Field(default=None, sa_column=Column(sa.Uuid(), nullable=True))
     attempt: int = Field(default=0, sa_column=Column(Integer, nullable=False, server_default="0"))
+    # What an event trigger last saw (#563): the release tag an on-release
+    # schedule compares the repository's latest against. Empty until its first
+    # check, which only records the tag, so a new schedule never plans from a
+    # release that shipped before it existed.
+    cursor: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
+    # "Run now" on an event trigger: the next claim runs the job whether or not
+    # the event happened, once.
+    forced: bool = Field(default=False, sa_column=Column(sa.Boolean(), nullable=False, server_default=sa.false()))
     # What the page shows without reading history: the last run's outcome,
     # when it ended, and a reason a person must act on (needs_reason).
     last_run_at: datetime | None = Field(default=None, sa_column=Column(utc_datetime(), nullable=True))

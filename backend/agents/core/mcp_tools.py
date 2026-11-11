@@ -185,15 +185,21 @@ class ConnectedTools:
     every call.
     """
 
-    def __init__(self, user_id: UUID, *, pause: PauseFn | None = None) -> None:
+    def __init__(self, user_id: UUID, *, pause: PauseFn | None = None, trusted_only: bool = False) -> None:
         self._user_id = user_id
         self._pause = pause
+        # A run nobody watches (#563) sees only what needs nobody's yes: the
+        # servers whose read-only hint Duct believes, and only their read-only
+        # tools. Everything else is not offered at all, rather than offered
+        # and refused, so the model does not plan around a call it cannot make.
+        self._trusted_only = trusted_only
         self._servers: list[ServerAccess] | None = None
         self._tools: dict[str, list[ToolInfo] | McpCallError] = {}
 
     async def servers(self) -> list[ServerAccess]:
         if self._servers is None:
-            self._servers = await asyncio.to_thread(_servers_sync, self._user_id)
+            found = await asyncio.to_thread(_servers_sync, self._user_id)
+            self._servers = [s for s in found if s.vetted] if self._trusted_only else found
         return self._servers
 
     async def _server(self, key: str) -> ServerAccess | None:
@@ -203,7 +209,10 @@ class ConnectedTools:
     async def _tools_of(self, server: ServerAccess) -> list[ToolInfo] | McpCallError:
         if server.key not in self._tools:
             try:
-                self._tools[server.key] = await mcp_client.list_tools(server, _sink(server))
+                listed = await mcp_client.list_tools(server, _sink(server))
+                if self._trusted_only:
+                    listed = [t for t in listed if not _asks_first(server, t)]
+                self._tools[server.key] = listed
             except McpCallError as exc:
                 self._tools[server.key] = exc
         return self._tools[server.key]
@@ -368,6 +377,14 @@ def _servers_sync(user_id: UUID) -> list[ServerAccess]:
         return servers_for_user(db, user_id)
 
 
+def _has_trusted_server(user_id: UUID) -> bool:
+    try:
+        return any(s.vetted for s in _servers_sync(user_id))
+    except Exception:  # noqa: BLE001 — none is the safe answer for a run that must start
+        logger.warning("mcp_tools: could not read connected servers", exc_info=True)
+        return False
+
+
 def _store_sync(row_id: UUID, credentials: dict) -> None:
     from db.session import get_session as db_session
     from service.mcp.store import store_credentials
@@ -409,10 +426,14 @@ def build_mcp_tools_lc(
     *,
     pause: PauseFn | None = None,
     log_prefix: str = "agent",
+    trusted_only: bool = False,
 ) -> list:
     """ListConnectedTools / CallConnectedTool over ``user_id``'s servers, or
     nothing when they have connected none (or nobody is signed in): tools
     that could only say "none" are definitions every call pays for.
+
+    ``trusted_only`` is for a run nobody watches: only a trusted preset's
+    read-only tools are offered, and with no trusted server there are none.
 
     ``user_id`` is the session's creator, the only person who can drive it."""
     from langchain_core.tools import StructuredTool
@@ -420,7 +441,9 @@ def build_mcp_tools_lc(
 
     if user_id is None or not user_has_servers(user_id):
         return []
-    toolbox = ConnectedTools(user_id, pause=pause)
+    if trusted_only and not _has_trusted_server(user_id):
+        return []
+    toolbox = ConnectedTools(user_id, pause=None if trusted_only else pause, trusted_only=trusted_only)
 
     async def _safely(work) -> dict:
         """Never raise into the agent loop: a raised exception ends the run, a

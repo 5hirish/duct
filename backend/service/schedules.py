@@ -75,7 +75,15 @@ class Cadence(StrEnum):
     DAILY = "daily"
     WEEKDAYS = "weekdays"
     WEEKLY = "weekly"
+    # Checked hourly, run only when the event happened: a cheap probe decides
+    # (PROBES in routes/schedule_jobs.py), and a check that finds nothing
+    # leaves no history row and spends nothing from the cap (#563).
+    ON_RELEASE = "on_release"
     MANUAL = "manual"
+
+
+# The cadences that wake to look, not to run.
+EVENT_CADENCES = frozenset({Cadence.ON_RELEASE})
 
 
 class Host(StrEnum):
@@ -112,12 +120,13 @@ class Reason(StrEnum):
     INTERRUPTED = "interrupted"        # killed by a deploy or a quit app
     ERROR = "error"
     UNKNOWN_JOB = "unknown_job"
+    NO_REPOSITORY = "no_repository"    # an on-release schedule with no repository to watch
 
 
 # Outcomes that spent a model call, which is what the monthly cap counts.
 SPENT = frozenset({Outcome.PROPOSED, Outcome.NO_PROPOSAL, Outcome.FAILED})
 # Reasons only the person can clear: the schedule says "Needs you" until then.
-NEEDS_YOU = frozenset({Reason.NOT_MEMBER, Reason.NO_KEY, Reason.CAP})
+NEEDS_YOU = frozenset({Reason.NOT_MEMBER, Reason.NO_KEY, Reason.CAP, Reason.NO_REPOSITORY})
 
 
 # ---------------------------------------------------------------------------
@@ -148,7 +157,7 @@ def next_occurrence(cadence: str, at_time: str, weekday: int, tz: str, after: da
         return None
     after = after.astimezone(timezone.utc)
     at = parse_hhmm(at_time)
-    if cadence == Cadence.HOURLY:
+    if cadence in (Cadence.HOURLY, Cadence.ON_RELEASE):
         candidate = after.replace(minute=at.minute, second=0, microsecond=0)
         return candidate if candidate > after else candidate + timedelta(hours=1)
     zone = zone_of(tz)
@@ -195,6 +204,9 @@ class Claim:
     occurrence: datetime
     attempt: int
     late: timedelta
+    cadence: str = ""
+    cursor: str = ""
+    forced: bool = False
 
 
 def _aware(value: datetime | None) -> datetime | None:
@@ -253,18 +265,21 @@ def claim_due(db: Any, now: datetime, host: str) -> list[Claim]:
         retrying = row.attempt > 0 and row.occurrence is not None
         occurrence = _aware(row.occurrence) if retrying else _aware(seen)
         attempt = row.attempt + 1 if retrying else 1
+        # Read before the update: it synchronises the session's copy of the row.
+        forced = bool(row.forced)
         result = db.execute(
             sa.update(AgentSchedule)
             .where(AgentSchedule.id == row.id, AgentSchedule.next_run_at == seen,
                    AgentSchedule.running_since.is_(None))
             .values(next_run_at=next_run_after(row, now), lease_until=now + LEASE, running_since=now,
-                    occurrence=occurrence, attempt=attempt, updated_at=now)
+                    occurrence=occurrence, attempt=attempt, forced=False, updated_at=now)
         )
         if result.rowcount == 1:
             claims.append(Claim(
                 schedule_id=row.id, project_id=row.project_id, user_id=row.user_id, job=row.job,
                 config=dict(row.config or {}), occurrence=occurrence, attempt=attempt,
                 late=max(now - occurrence, timedelta(0)),
+                cadence=row.cadence, cursor=row.cursor or "", forced=forced,
             ))
     db.commit()
     return claims
@@ -355,6 +370,50 @@ def finish(db: Any, claim: Claim, result: JobResult, *, now: datetime, started: 
     return row
 
 
+@dataclass(frozen=True)
+class Probe:
+    """What an event trigger's check found: whether to run, the cursor to keep,
+    and a reason only the person can clear (no repository to watch)."""
+
+    fire: bool
+    cursor: str = ""
+    needs_reason: str = ""
+
+
+ProbeFn = Callable[[Claim], Awaitable[Probe]]
+
+
+def settle_quiet(db: Any, claim: Claim, probe: Probe, *, now: datetime) -> AgentSchedule | None:
+    """An hourly check that found nothing to run: release the claim and keep
+    the cursor, writing no history row. Twenty-four "nothing happened" rows a
+    day would bury the runs that did something."""
+    row = db.get(AgentSchedule, claim.schedule_id)
+    if row is None:
+        return None
+    row.running_since = row.lease_until = row.conversation_id = None
+    row.attempt, row.occurrence = 0, None
+    row.cursor = probe.cursor if probe.cursor else row.cursor
+    # The check speaks only for its own reason: a quiet hour must not clear a
+    # "no saved key" the last real run left for the person.
+    if probe.needs_reason or row.needs_reason == Reason.NO_REPOSITORY:
+        row.needs_reason = probe.needs_reason
+    row.updated_at = now
+    db.add(row)
+    db.commit()
+    return row
+
+
+def keep_cursor(db: Any, schedule_id: UUID, cursor: str) -> None:
+    """Record the event a firing check saw before the run starts, so a crash
+    mid-run retries this release (the retry skips the check) instead of
+    finding it again as new on the next hour."""
+    row = db.get(AgentSchedule, schedule_id)
+    if row is not None and cursor:
+        row.cursor = cursor
+        db.add(row)
+        db.commit()
+
+
 def _iso(value: datetime | None) -> str | None:
     return _aware(value).isoformat() if value else None
 
@@ -401,6 +460,7 @@ def history(db: Any, schedule_id: UUID, limit: int = HISTORY_LIMIT) -> list[dict
         "late_seconds": (r.data or {}).get("late_seconds"),
         "will_retry": bool((r.data or {}).get("will_retry")),
         "feed_days": (r.data or {}).get("feed_days"),
+        "proposal_id": (r.data or {}).get("proposal_id"),
     } for r in rows]
 
 
@@ -448,11 +508,21 @@ def _tick_sync(now: datetime, host: str) -> list[Claim]:
         return claim_due(db, now, host)
 
 
-async def run_claim(claim: Claim, jobs: dict[str, JobFn], *, busy: set[UUID]) -> JobResult:
-    """One claimed occurrence, end to end: precheck, the job under its lease
-    and timeout, the outcome recorded. Never raises."""
+async def run_claim(claim: Claim, jobs: dict[str, JobFn], *, busy: set[UUID],
+                    probes: dict[str, ProbeFn] | None = None) -> JobResult | None:
+    """One claimed occurrence, end to end: for an event trigger the check
+    first, then precheck, the job under its lease and timeout, the outcome
+    recorded. A check that finds nothing returns None and records nothing.
+    Never raises."""
     started = utcnow()
     result: JobResult | None = None
+    if claim.cadence in EVENT_CADENCES and claim.attempt == 1 and not claim.forced:
+        probe = await _probe(claim, probes or {})
+        if not probe.fire:
+            with _db() as db:
+                settle_quiet(db, claim, probe, now=utcnow())
+            return None
+        await asyncio.to_thread(_keep_cursor_sync, claim.schedule_id, probe.cursor)
     try:
         with _db() as db:
             result = precheck(db, claim, started)
@@ -480,6 +550,24 @@ async def run_claim(claim: Claim, jobs: dict[str, JobFn], *, busy: set[UUID]) ->
     return result
 
 
+async def _probe(claim: Claim, probes: dict[str, ProbeFn]) -> Probe:
+    """The event trigger's check. One that fails says nothing happened: the
+    next hour looks again, and a run is never started on a guess."""
+    probe = probes.get(claim.job)
+    if probe is None:
+        return Probe(fire=False)
+    try:
+        return await probe(claim)
+    except Exception:  # noqa: BLE001 — a failed check is a quiet hour, never a dead loop
+        logger.warning("schedules: check for %s failed", claim.schedule_id, exc_info=True)
+        return Probe(fire=False)
+
+
+def _keep_cursor_sync(schedule_id: UUID, cursor: str) -> None:
+    with _db() as db:
+        keep_cursor(db, schedule_id, cursor)
+
+
 async def _renew(schedule_id: UUID) -> None:
     while True:
         await asyncio.sleep(RENEW_EVERY)
@@ -491,16 +579,18 @@ def _renew_sync(schedule_id: UUID) -> None:
         renew_lease(db, schedule_id, utcnow())
 
 
-async def run_scheduler(jobs: dict[str, JobFn], *, host: str, tick: float = TICK_SECONDS) -> None:
+async def run_scheduler(jobs: dict[str, JobFn], *, host: str, tick: float = TICK_SECONDS,
+                        probes: dict[str, ProbeFn] | None = None) -> None:
     """Tick forever: claim what is due on this host, run it, record it. Two
-    runs at once at most, one per project."""
+    runs at once at most, one per project. ``probes`` are the event
+    triggers' checks, by job."""
     running: set[asyncio.Task] = set()
     busy: set[UUID] = set()
     gate = asyncio.Semaphore(MAX_RUNNING)
 
     async def _bounded(claim: Claim) -> None:
         async with gate:
-            await run_claim(claim, jobs, busy=busy)
+            await run_claim(claim, jobs, busy=busy, probes=probes)
 
     while True:
         try:
@@ -524,10 +614,12 @@ def host_for(duct_local: bool) -> str:
 __all__ = [
     "Cadence",
     "Claim",
+    "EVENT_CADENCES",
     "Host",
     "JobKind",
     "JobResult",
     "Outcome",
+    "Probe",
     "Reason",
     "claim_due",
     "finish",

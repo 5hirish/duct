@@ -308,3 +308,28 @@ def test_the_listing_is_a_card_of_its_own_kind():
     done = finish({}, json.dumps({"servers": []}), False)
     assert start({})["meta"] == {"listing": True}
     assert done["status"] == "success"
+
+
+async def test_an_unwatched_run_sees_only_trusted_read_only_tools(monkeypatch, servers):
+    """#563: a scheduled run keeps a trusted preset's reads and nothing that
+    would need a yes; a server added by address is not offered at all."""
+    servers.append(ServerAccess(row_id=None, key="vendor", url=OTHER_URL, name="Vendor", credentials=no_credentials()))
+    server = _server()
+    async with server.running(monkeypatch):
+        box = mcp_tools.ConnectedTools(uuid.uuid4(), trusted_only=True)
+        menu = await box.list()
+        refused = await box.call("openseo", "create_page", '{"title": "x"}')
+
+    (entry,) = menu["servers"]
+    assert entry["server"] == "openseo"
+    assert {t["name"] for t in entry["tools"]} == {"keyword_volume", "big_export"}
+    assert refused["status"] == "unknown_tool"
+    assert server.calls == []
+
+
+def test_no_trusted_server_means_no_tools_for_an_unwatched_run(monkeypatch):
+    access = [ServerAccess(row_id=None, key="vendor", url=OTHER_URL, name="Vendor", credentials=no_credentials())]
+    monkeypatch.setattr(mcp_tools, "_servers_sync", lambda user_id: list(access))
+    monkeypatch.setattr(mcp_tools, "user_has_servers", lambda user_id: True)
+    assert mcp_tools.build_mcp_tools_lc(uuid.uuid4(), trusted_only=True) == []
+    assert len(mcp_tools.build_mcp_tools_lc(uuid.uuid4())) == 2

@@ -750,6 +750,14 @@ class ContentRunner:
             tools.append(self._build_research_tool(session, emit, llm if injected_llm else None))
             if project_id is not None:
                 tools.append(build_discover_tool_lc(project_id, pause=interrupt_pause))
+        elif session is not None and getattr(session, "unattended", False):
+            # A scheduled run (#563) keeps what needs nobody's yes: a trusted
+            # preset's read-only MCP tools (a Linear or Notion read can feed a
+            # plan from shipped work). Every other server, and every tool that
+            # would show an approval card, stays off.
+            tools += build_mcp_tools_lc(
+                getattr(session, "user_id", None), log_prefix="content-v1", trusted_only=True,
+            )
 
         # One same-provider step down keeps a run alive on the key the caller
         # supplied. Skipped with an injected model — that seam is for tests.

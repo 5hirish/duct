@@ -48,6 +48,9 @@ from agents.content.plan_period import PlanPeriod, default_period, keep_drafted_
 PROPOSED = "proposed"
 ACCEPTED = "accepted"
 REJECTED = "rejected"
+# A scheduled run's unanswered proposal, replaced by the schedule's next one
+# (#563): one open proposal per schedule, so the person answers the newest.
+SUPERSEDED = "superseded"
 
 # Where a conversation holds the proposal waiting on the person
 # (``AgentConversation.meta``, the catch-all that needs no migration).

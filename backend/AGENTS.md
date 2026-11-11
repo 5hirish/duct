@@ -758,7 +758,18 @@ Postgres `DATABASE_URL` names.
   own schedules only), and a missing key retries once before it says "Needs
   you", because a laptop's loop can wake before the app lends. A run killed
   mid-way has its conversation closed as cancelled, from the id the schedule
-  noted when the run began. `SCHEDULER_ENABLED`
+  noted when the run began. **An event cadence checks, then runs** (#563):
+  `on_release` wakes hourly and asks a probe (`PROBES` in
+  `routes/schedule_jobs.py`, one GitHub request for the newest release)
+  whether its event happened. A check that finds nothing writes no history
+  row and spends nothing from the cap; its first check only records the tag
+  in `cursor`, so a new schedule never plans from an old release, and Run now
+  sets `forced` to skip the check once. A scheduled run keeps **one open
+  proposal**: when it proposes, the run before it, if still unanswered, is
+  released with a `superseded` plan decision on its thread, and the list
+  route's `waiting` says whether the newest proposal is still held. It mounts
+  a trusted preset's read-only MCP tools and nothing else
+  (`build_mcp_tools_lc(trusted_only=True)`). `SCHEDULER_ENABLED`
   turns the loop off on a web process once a worker service runs it instead.
 - `routes/project_members.py` — project members + email invitations (`docs/engineering/2026-08-16-project-collaboration-plan.md`)
 - `service/membership.py` — project access checks (owner vs collaborator) and invite token handling
