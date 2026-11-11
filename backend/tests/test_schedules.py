@@ -301,6 +301,7 @@ def test_a_member_creates_runs_pauses_and_reads_a_schedule(db, project, owner, m
     assert body["host"] == "cloud" and body["next_run_at"] and body["mine"]
     sid = body["id"]
     assert [s["id"] for s in api.get(f"/api/user/schedules?project_id={project.id}").json()] == [sid]
+    assert api.get(f"/api/user/schedules?project_id={project.id}").json()[0]["recent"] == []
     assert api.post(f"/api/user/schedules/{sid}/run").json()["next_run_at"] is not None
     paused = api.patch(f"/api/user/schedules/{sid}", json={"enabled": False}).json()
     assert paused["enabled"] is False and paused["next_run_at"] is None

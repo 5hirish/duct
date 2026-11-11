@@ -97,13 +97,18 @@ class SchedulePatch(BaseModel):
     _zone = field_validator("timezone")(lambda cls, v: v if v is None else ScheduleIn._zone(v))  # type: ignore[arg-type]
 
 
+RECENT_RUNS = 8
+
+
 def _iso(value: datetime | None) -> str | None:
     return sched._aware(value).isoformat() if value else None
 
 
 def _out(db: Session, row: AgentSchedule, user: User) -> dict[str, Any]:
     now = utcnow()
-    recent = sched.history(db, row.id, limit=1)
+    # The last few runs ride on the list, so the card can draw its run strip
+    # without a history request per schedule; the full history stays a fold.
+    recent = sched.history(db, row.id, limit=RECENT_RUNS)
     return {
         "id": str(row.id),
         "project_id": str(row.project_id),
@@ -124,6 +129,7 @@ def _out(db: Session, row: AgentSchedule, user: User) -> dict[str, Any]:
         "running": row.running_since is not None,
         "runs_this_month": sched.spent_this_month(db, row.id, now),
         "last": recent[0] if recent else None,
+        "recent": [{"at": r["at"], "outcome": r["outcome"], "will_retry": r["will_retry"]} for r in recent],
         "mine": row.user_id == user.id,
     }
 
