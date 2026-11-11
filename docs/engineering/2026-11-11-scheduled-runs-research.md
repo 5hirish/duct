@@ -63,6 +63,53 @@ The one new table, `agent_schedules`, holds project, agent and mode, config
 `on_release`), enabled, `next_run_at`, the feed watermark, the monthly cap and
 who created it.
 
+## What the loop builds, and what it leaves to task queues
+
+Task-queue features, measured against a few long runs a week per project,
+each producing a proposal a person accepts.
+
+| Feature | Build? | What Duct does instead, or how |
+|---|---|---|
+| Process, thread or greenlet pools | **no** | asyncio tasks in one process, since a run waits on model calls. A semaphore allows one run per project and two overall. Sync tools already go through `run_in_threadpool`. The later cloud worker is a whole process, not a pool |
+| Run at a given time, or after a delay | **yes** | it is `next_run_at`. A delay is `now + delay`; "Run once at" and a retry's backoff are the same field |
+| Recurring, like crontab | **yes, as presets** | hourly, daily, weekdays, weekly, at a wall-clock time in a named time zone, so DST moves with the user. Custom cron later through `cronsim` |
+| Automatic retry | **yes, narrow** | classify before retrying. Transient (model 429 or 5xx, network, interrupted by a deploy) retries once at +15 minutes. Deterministic (credential expired, monthly cap, gate found nothing new) never retries, and shows *Needs you* or the reason |
+| Prioritisation | **no** | there is no queue to order. *Run now* skips the ticker and starts at once, which is the only priority anyone needs |
+| Result storage | **yes, as records we already keep** | the result is the conversation and its proposal. The outcome, reason, cost and duration go on an `activity_logs` row. No result backend, no pickled return values |
+| Expiration | **yes, two kinds** | a missed run older than 7 days is discarded (the catch-up rule). And one open proposal per schedule: a new run supersedes an unanswered one instead of stacking a second |
+| Locking | **yes** | the compare-and-set claim, the renewed lease, and the per-project semaphore |
+| Rate limits | **yes, as budgets** | a monthly run cap per project and a cost ceiling per run. Provider 429s are already handled by the quota-aware tier ladder, and GitHub's limits by its client |
+| Timeouts | **yes** | a wall-clock limit per run (15 minutes to start with). On expiry the run is cancelled and recorded as *failed: timeout* |
+| Pipelines and chains | **no** | the feed run is a fixed sequence (collect, filter, gate, model) inside one function. What follows a proposal is started by a person's Accept, not by a chain |
+| Groups and chords | **no** | fan-out already lives inside the agent (the pillar sub-agents), and collecting several feeds is one `asyncio.gather` |
+
+Seven things no task queue gives, which the loop needs anyway:
+
+1. **A gate before the run.** A cheap check in code ("anything new since the
+   watermark?") decides whether a model call happens at all.
+2. **Event triggers.** "On release" is a check function run at the tick. The
+   trigger kinds are a registry, so "on milestone" is one more entry.
+3. **Catch-up on wake, detected from the clock.** The sidecar cannot see the
+   laptop sleep, but a wall-clock jump much larger than the tick says it slept.
+   Startup and that jump both run the catch-up rule.
+4. **Jitter.** A fixed offset of 0 to 10 minutes derived from the schedule's
+   id, so hosted users' 09:00 runs do not all hit the model APIs together.
+   Claude Code Desktop staggers its tasks the same way.
+5. **An idempotency key.** Each occurrence is `(schedule id, scheduled-for
+   time)`. The claim already lets one process take it, and the key is written
+   on the run's conversation, which a retry checks first. So a retry can never
+   leave two proposals for one occurrence.
+6. **Permission checked at fire time.** A run acts as the schedule's creator,
+   and only while that person is still a project member. A creator who has
+   been removed disables the schedule. This is the membership rule from the
+   root `AGENTS.md`, applied to a run nobody watches.
+7. **A credential precheck.** A bound connector that needs reauthorising sets
+   *Needs you* before any model call, rather than failing partway through.
+
+Cancelling a running run, and pausing or resuming a schedule, come from the
+Scheduled page. Each run is one span in the existing OpenTelemetry traces, so
+Jaeger shows a slow or failed scheduled run like any other.
+
 ## Execution is the same code in the cloud and on a laptop
 
 | | Cloud (Railway) | Local (desktop sidecar) |

@@ -141,16 +141,25 @@ check is a free GitHub call each hour. A daily run is opt-in.
 **D5. The feed may change at most N days per horizon.** The default is 2 of 7
 pending, undrafted days. The existing merge protects past and drafted days.
 
-**D6. RSS is built in: no connector and no MCP.** An RSS or Atom feed needs
-no credentials, so a credential row has nothing to hold. `project_connectors`
-also allows one row per type, and a project wants several feeds. An MCP server
-would add a third-party host and a model tool call for what is one HTTP GET
-and a parse, and the gate step needs it in plain code. So feeds are a list of
-URLs in the project's content settings, fetched through `service/url_safety.py`
-(a user-typed URL is an SSRF risk) and parsed with `feedparser`. That one
-dependency covers RSS 0.9x to 2.0, Atom and their malformed variants. It also
-reads Duct's own `site/changelog/feed.xml`, any blog or Substack, YouTube
-uploads (`videos.xml?channel_id=`) and public GitHub releases.
+**D6. RSS is a connector card in the Toolbox, not an MCP server.** It is a
+manual connector `rss` on the Mixpanel template, so it gets the Toolbox card,
+project binding and agent access through FetchData for free, for Insights as
+well as Content Studio. One credential row holds a **list** of feed URLs,
+typed one per line into the multiline field `ManualConnectorCard` already
+supports. That sidesteps the one-binding-per-type rule on
+`project_connectors`, since one binding carries every feed. The row is
+encrypted like any other, which suits feeds whose URL is the secret (paid
+Substack, private podcast feeds). `list_accounts` returns the feeds, each
+verified on save by fetching it once. An MCP server would add a third-party
+host and a model tool call for what is one HTTP GET and a parse, while the
+gate step needs it in plain code.
+
+Fetching goes through `service/url_safety.py`, because a typed URL is an
+SSRF risk. Parsing uses `feedparser`, one dependency that covers RSS 0.9x to
+2.0, Atom and their malformed variants. A catalog entity `rss_items` gives the
+agents title, link, published date and summary. The card reads Duct's own
+`site/changelog/feed.xml`, any blog or Substack, YouTube uploads
+(`videos.xml?channel_id=`) and public GitHub releases.
 
 ## Feeds, in the order they ship
 
@@ -159,7 +168,7 @@ uploads (`videos.xml?channel_id=`) and public GitHub releases.
 | 1 | GitHub | built | merged PRs, releases, changelog and docs changes |
 | 1 | Duct's own record | reflection branch | "the agent proposed it, I approved it, here is what happened": no competitor has this |
 | 3 | Metric milestones | connectors exist (GA4, Stripe, RevenueCat, Mixpanel, GitHub stars) | round numbers and best weeks, detected in code. Revenue stays off until the user opts in |
-| 3 | RSS/Atom | new, built in (D6) | many URLs per project |
+| 3 | RSS/Atom | new manual connector card (D6) | many URLs in one card, readable by every agent |
 | 3 | Linear | MCP preset, read-only endpoint `/mcp/readonly` | shipped issues and project updates. Needs a paid Linear plan |
 | 3 | Notion | MCP preset | changelog and launch pages. Searching beyond the workspace needs Notion AI |
 
@@ -192,7 +201,7 @@ shown on the schedule.
 |---|---|---|---|
 | 1. From your work, manual | split button and setup sheet, collect-filter-gate, story cards, `sources` on a plan day, chips on day and editor, the reflection branch's loader | none: a day lives in the `content_plans.days` JSON, and the setup is saved on the plan's strategy | 3 weekly runs on this repo, ≥ 50% accepted, every feed day cites a ref |
 | 2. Scheduled runs | the scheduler, the Scheduled page, unattended feed plans, the release trigger, notices (see the scheduler record) | one table, one migration | 4 unattended weeks with acceptance at least Phase 1's |
-| 3. More feeds | RSS/Atom, metric milestones, Linear and Notion through read-only MCP | `feedparser`, a feed-URL list in content settings | a second feed in use on a project other than Duct |
+| 3. More feeds | RSS/Atom, metric milestones, Linear and Notion through read-only MCP | `feedparser`, the `rss` connector and its catalog entity | a second feed in use on a project other than Duct |
 
 ## Issues to file, as one batch
 
