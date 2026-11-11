@@ -57,7 +57,7 @@ import { saveText } from "@/lib/download";
 import { ArtifactGallery } from "@/components/artifacts/ArtifactCards";
 import { ChartJsonView } from "@/components/artifacts/ArtifactRenderer";
 import { DESK_SCENARIOS, deskScenario } from "@/lib/__fixtures__/deskScenarios.mjs";
-import { KANBAN_SCENARIO_IDS, PLAN_PICKER_SCENARIOS, PLAN_SCENARIOS, planPickerScenario, planScenario } from "@/lib/__fixtures__/planScenarios.mjs";
+import { KANBAN_SCENARIO_IDS, PLAN_PICKER_SCENARIOS, PLAN_SCENARIOS, planChangeScenario, planPickerScenario, planScenario } from "@/lib/__fixtures__/planScenarios.mjs";
 import { PlanBoardView, PlanView } from "@/components/content/PlanBoard";
 import { startOfDay } from "@/lib/contentSchedule";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
@@ -1158,9 +1158,12 @@ function PlanScenario({ id, view = PlanView.LIST, channel = null }) {
  * The same plan data the board scenes use, with the proposal fields the
  * backend adds on top.
  */
-function PlanViewportScene({ scenario, status, replaces = false }) {
+function PlanViewportScene({ scenario, status, replaces = false, change = null }) {
   const today = useMemo(() => startOfDay(new Date()), []);
-  const { plan } = useMemo(() => planScenario(scenario, today), [scenario, today]);
+  const { plan } = useMemo(
+    () => (change ? { plan: planChangeScenario(change, today) } : planScenario(scenario, today)),
+    [scenario, change, today]
+  );
   const proposed = status === "proposed";
   const payload = {
     type: "plan",
@@ -4257,6 +4260,30 @@ export const SCENES = [
     title: "A first proposal",
     note: "No live plan for the period, so the line is the short one: Accept saves it. Click Modify: the note opens under the bar with its label, Cancel and Send; Send is off until something is typed.",
     render: () => <PlanViewportScene scenario="fresh" status="proposed" />,
+  },
+  {
+    id: "plan-viewport-day-change",
+    state: "proposed · one day changed",
+    group: "PlanViewport",
+    title: "A change to one day",
+    note: "What revise_plan_days puts in the pane when the person asks for one day: that day alone, the new topic over the old one, the type that moved as before → after, and a line saying the other days stay. Accept writes this day and nothing else.",
+    render: () => <PlanViewportScene status="proposed" replaces change="one" />,
+  },
+  {
+    id: "plan-viewport-week-change",
+    state: "proposed · four days of a week changed",
+    group: "PlanViewport",
+    title: "A change to a week",
+    note: "Four days at once: a hook moved, a channel moved, a series and objective set on a day whose topic stayed (no Was line), and a topic long enough to wrap. Field names are translated; values the agent wrote (hooks) lose their underscores.",
+    render: () => <PlanViewportScene status="proposed" replaces change="week" />,
+  },
+  {
+    id: "plan-viewport-day-change-rejected",
+    state: "a change to one day, rejected",
+    group: "PlanViewport",
+    title: "A day change, discarded",
+    note: "After Reject on a change to some days: the note says the plan stays as it was (a whole plan's says it was discarded), and the day turned down stays listed. Reject also tells the agent the changes were turned down, so it asks what to change instead.",
+    render: () => <PlanViewportScene status="rejected" replaces change="one" />,
   },
   {
     id: "plan-viewport-accepted",

@@ -207,6 +207,14 @@ msgstr "{blogPosts, plural, other {# 帖子}}"
 msgid "{changeCount, plural, one {# change} other {# changes}}"
 msgstr "{changeCount, plural, other {# 变更}}"
 
+#: src/components/content/PlanViewport.jsx
+msgid "{changed, plural, one {Accept changes only this day; the rest of your plan stays as it is.} other {Accept changes only these days; the rest of your plan stays as it is.}}"
+msgstr "{changed, plural, one {仅接受这一天的变更；你的计划其余部分保持不变。} other {仅接受这几天的变更；你的计划其余部分保持不变。}}"
+
+#: src/components/content/PlanViewport.jsx
+msgid "{changed, plural, one {Duct proposes a change to # day.} other {Duct proposes changes to # days.}}"
+msgstr "{changed, plural, one {Duct 建议变更 # 天。} other {Duct 建议变更 # 天。}}"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{competitorCount, plural, one {# competitor} other {# competitors}}"
 msgstr "{competitorCount, plural, other {# 竞争对手}}"
@@ -609,6 +617,10 @@ msgstr "{recalls, plural, other {用于 # 个回答}}"
 #: src/components/ProjectMembers.jsx
 msgid "{removed} no longer has access."
 msgstr "{removed} 不再拥有访问权限。"
+
+#: src/components/content/PlanChanges.jsx
+msgid "{rest, plural, one {The other # day stays as it is.} other {The other # days stay as they are.}}"
+msgstr "{rest, plural, one {其余 # 天保持不变。} other {其余 # 天保持不变。}}"
 
 #: src/components/commands/CommandPalette.jsx
 msgid "{resultCount, plural, one {# command} other {# commands}}"
@@ -2151,6 +2163,10 @@ msgstr "更改"
 msgid "Change {n}"
 msgstr "更改 {n}"
 
+#: src/components/content/PlanViewport.jsx
+msgid "Change discarded. Your plan stays as it was; tell Duct what to change instead."
+msgstr "已放弃变更。你的计划保持原样；告诉 Duct 改为修改什么。"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "change set {id}"
 msgstr "变更集 {id}"
@@ -2169,12 +2185,17 @@ msgstr "更改"
 msgid "Changes apply to future drafts that pull this format."
 msgstr "更改将应用于未来使用此格式的草稿。"
 
+#: src/components/content/PlanChanges.jsx
+msgid "changes to"
+msgstr "变为"
+
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Changes v{baseVersion} → v{targetVersion}"
 msgstr "更改 v{baseVersion} → v{targetVersion}"
 
 #: src/app/(app)/content/page.jsx
 #: src/components/content/PlanBoard.jsx
+#: src/components/content/PlanChanges.jsx
 msgid "Channel"
 msgstr "渠道"
 
@@ -3733,6 +3754,10 @@ msgstr "要邀请的电子邮件地址"
 msgid "Email delivery isn’t configured on this environment, so invitations are logged server-side instead of sent. Set <0>EMAIL_PROVIDER</0> and its settings to deliver them."
 msgstr "此环境中未配置电子邮件发送，因此邀请将记录在服务器端而不是发送。设置 <0>EMAIL_PROVIDER</0> 及其设置以发送它们。"
 
+#: src/components/content/PlanChanges.jsx
+msgid "Emotion"
+msgstr "情感"
+
 #: src/components/artifacts/ArtifactRenderer.jsx
 msgid "Empty dataset."
 msgstr "空数据集。"
@@ -3878,6 +3903,10 @@ msgstr "高管（首席营销官、副总裁、总监）"
 #: src/components/audit/ExecutionOffer.jsx
 msgid "Expand into new markets"
 msgstr "拓展新市场"
+
+#: src/components/content/PlanChanges.jsx
+msgid "Experiment"
+msgstr "实验"
 
 #: src/components/ProjectMembers.jsx
 msgid "Expired"
@@ -4070,6 +4099,7 @@ msgstr "忘记“{title}”？"
 msgid "Forgotten."
 msgstr "已忘记。"
 
+#: src/components/content/PlanChanges.jsx
 #: src/components/content/SynthesisPanel.jsx
 msgid "Format"
 msgstr "格式"
@@ -4142,6 +4172,10 @@ msgstr "从你的文件"
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "From your site"
 msgstr "从你的网站"
+
+#: src/components/content/PlanChanges.jsx
+msgid "Funnel stage"
+msgstr "漏斗阶段"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Gemini · a free tier covers a first audit"
@@ -4550,6 +4584,7 @@ msgstr "高产出，低判断"
 msgid "Home"
 msgstr "主页"
 
+#: src/components/content/PlanChanges.jsx
 #: src/lib/contentReview.js
 msgid "Hook"
 msgstr "钩子"
@@ -6008,6 +6043,7 @@ msgid "Non-profit"
 msgstr "非营利组织"
 
 #: src/components/audit/AuditStepProgress.jsx
+#: src/components/content/PlanChanges.jsx
 msgid "none"
 msgstr "无"
 
@@ -6338,6 +6374,10 @@ msgstr "数字来源"
 #: src/components/content/AnalyticsView.jsx
 msgid "Numbers land here after the first post goes out, and on Refresh once it has synced."
 msgstr "数据会显示在这里，在第一篇帖子发布后，并在同步后点击刷新。"
+
+#: src/components/content/PlanChanges.jsx
+msgid "Objective"
+msgstr "目标"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Off"
@@ -6919,6 +6959,7 @@ msgid "Picking the hook…"
 msgstr "正在选择钩子…"
 
 #: src/components/content/BrandContextForm.jsx
+#: src/components/content/PlanChanges.jsx
 msgid "Pillar"
 msgstr "支柱"
 
@@ -7245,6 +7286,10 @@ msgstr "提议者"
 #: src/app/(app)/execute/page.jsx
 msgid "Proposed by you"
 msgstr "你提议的"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Proposed changes to the plan"
+msgstr "对计划的变更建议"
 
 #: src/app/(app)/execute/page.jsx
 msgid "Proposed target + payload"
@@ -8544,6 +8589,10 @@ msgstr "SEO 报告"
 #: src/components/content/PlanViewport.jsx
 msgid "Sequencing the posting cadence…"
 msgstr "正在安排帖子发布节奏…"
+
+#: src/components/content/PlanChanges.jsx
+msgid "Series"
+msgstr "系列"
 
 #: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
@@ -10163,6 +10212,10 @@ msgstr "再试一次也无济于事。请改用 GitHub 卡片中的细粒度令�
 msgid "Turn on notifications"
 msgstr "开启通知"
 
+#: src/components/content/PlanChanges.jsx
+msgid "Type"
+msgstr "类型"
+
 #: src/components/workspace/QuestionsCard.jsx
 msgid "Type your answer…"
 msgstr "输入你的答案…"
@@ -10562,6 +10615,10 @@ msgstr "曾是“{replacedTitle}”"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "was “{replacedTitle}” until {replacedUntil}"
 msgstr "曾是“{replacedTitle}”，直到 {replacedUntil}"
+
+#: src/components/content/PlanChanges.jsx
+msgid "Was: {was}"
+msgstr "原为：{was}"
 
 #: src/components/content/report/GrowthReportView.jsx
 #: src/components/GoogleAdsReport.js

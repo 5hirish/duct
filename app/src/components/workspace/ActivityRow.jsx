@@ -87,6 +87,7 @@ const TOOL_WORDS = {
   fetch_post: msg`Opened the post`,
   fetch_slide_context: msg`Read the slide`,
   submit_plan: msg`Proposed a plan`,
+  revise_plan_days: msg`Proposed changes to the plan`,
   submit_post_draft: msg`Saved the draft`,
   edit_slide: msg`Edited a slide`,
   submit_assessment: msg`Reviewed the post`,

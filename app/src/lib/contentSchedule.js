@@ -314,6 +314,42 @@ export function nextOpenDay(plan, today = startOfDay(new Date())) {
   );
 }
 
+/**
+ * The fields a change to some days can move, in the order a reader scans a
+ * day: what it is about first, then where and how it posts, then its bets.
+ */
+export const CHANGE_FIELDS = Object.freeze([
+  "topic", "post_type", "platforms", "pillar", "hook_type", "hook_emotion",
+  "funnel_stage", "objective", "series", "experiment", "format_slug",
+]);
+
+const sameValue = (a, b) => JSON.stringify(a ?? "") === JSON.stringify(b ?? "");
+
+/**
+ * A proposal that changes some days of a plan (`only_days`), day by day:
+ * `{ index, date, before, after, fields }`, where `fields` are the
+ * CHANGE_FIELDS that moved. The backend sends the changed indexes and what
+ * each day said before (`changed_days`, `previous_days`), so the pane shows
+ * the change rather than thirty days to compare by eye.
+ */
+export function planChanges(plan) {
+  const indexes = Array.isArray(plan?.changed_days) ? plan.changed_days : [];
+  const previous = Array.isArray(plan?.previous_days) ? plan.previous_days : [];
+  const days = Array.isArray(plan?.days) ? plan.days : [];
+  const start = planStartOf(plan);
+  return indexes.map((index, k) => {
+    const before = previous[k] || {};
+    const after = days[index] || {};
+    return {
+      index,
+      date: start ? addDays(start, index) : null,
+      before,
+      after,
+      fields: CHANGE_FIELDS.filter((f) => !sameValue(before[f], after[f])),
+    };
+  });
+}
+
 /** The next steps a plan session offers over its composer. */
 export const PlanAction = Object.freeze({ REVISE: "revise", CATCH_UP: "catch_up" });
 

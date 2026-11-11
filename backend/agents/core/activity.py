@@ -589,6 +589,7 @@ ACTIVITY_TOOLS: dict[str, tuple[Callable[..., dict], Callable[..., dict]]] = {
     "fetch_slide_context": (_read_start, _read_finish),
     # … and what it does on the person's behalf.
     "submit_plan": (_action_start, _action_finish),
+    "revise_plan_days": (_action_start, _action_finish),
     "submit_post_draft": (_action_start, _action_finish),
     "edit_slide": (_action_start, _action_finish),
     "submit_assessment": (_action_start, _action_finish),

@@ -8,6 +8,7 @@ import { ArrowRight, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import PlanChanges from "./PlanChanges";
 import PlanList from "./PlanList";
 import PlanStrategy from "./PlanStrategy";
 import { draftDayHref } from "./PlanBoard";
@@ -45,6 +46,7 @@ const PLAN_LINES = [
 // swapped the plan in this pane for a post it cannot show. The next message
 // the person sends tells the agent instead (routes/agents.py, plan_decisions).
 const REJECTED_MESSAGE = "I rejected this plan.";
+const REJECTED_CHANGE_MESSAGE = "I rejected these changes to the plan.";
 
 /**
  * Right-pane viewport for plan_month sessions.
@@ -58,6 +60,9 @@ const REJECTED_MESSAGE = "I rejected this plan.";
  * is saved only when the person accepts it here; the decision bar under the
  * header is that choice. An event with no status predates proposals and is
  * a saved plan, so it draws no bar and no chip.
+ *
+ * A proposal that changes some days (`only_days`, from revise_plan_days) is
+ * drawn as those days alone, before and after: Accept writes nothing else.
  *
  * Props:
  *   - payload: { type: "plan", id, name, days[], character, strategy, status?, proposal_id?, replaces_plan_id?, ... }
@@ -124,10 +129,16 @@ export default function PlanViewport({ payload, steps = [], building = false, on
         onAccepted={(out) => setSaved({ type: "plan", ...out, status: PlanStatus.ACCEPTED })}
       />
 
-      <PlanStrategy strategy={plan.strategy} days={plan.days} />
-      {/* No day action on purpose: drafting from a day is the plan board's job, and
-          a route out of the session would end the planning turn. */}
-      <PlanList plan={plan} />
+      {plan.only_days && plan.status !== PlanStatus.ACCEPTED ? (
+        <PlanChanges plan={plan} />
+      ) : (
+        <>
+          <PlanStrategy strategy={plan.strategy} days={plan.days} />
+          {/* No day action on purpose: drafting from a day is the plan board's job, and
+              a route out of the session would end the planning turn. */}
+          <PlanList plan={plan} />
+        </>
+      )}
     </div>
   );
 }
@@ -158,7 +169,9 @@ function PlanDecision({ plan, sessionId, onSendMessage, onAccepted }) {
   if (rejected || plan.status === PlanStatus.REJECTED) {
     return (
       <p role="status" className="shrink-0 border-b border-border/60 px-4 py-2.5 text-sm text-muted-foreground">
-        <Trans>Plan discarded. Tell Duct what to plan instead, or close this tab.</Trans>
+        {plan.only_days
+          ? <Trans>Change discarded. Your plan stays as it was; tell Duct what to change instead.</Trans>
+          : <Trans>Plan discarded. Tell Duct what to plan instead, or close this tab.</Trans>}
       </p>
     );
   }
@@ -181,6 +194,7 @@ function PlanDecision({ plan, sessionId, onSendMessage, onAccepted }) {
   if (plan.status !== PlanStatus.PROPOSED) return null;
 
   const busy = pending !== null;
+  const changed = plan.only_days && Array.isArray(plan.changed_days) ? plan.changed_days.length : 0;
 
   async function accept() {
     setError("");
@@ -200,7 +214,7 @@ function PlanDecision({ plan, sessionId, onSendMessage, onAccepted }) {
     try {
       await rejectPlan(sessionId, plan.proposal_id);
       setRejected(true);
-      onSendMessage?.(REJECTED_MESSAGE);
+      onSendMessage?.(plan.only_days ? REJECTED_CHANGE_MESSAGE : REJECTED_MESSAGE);
     } catch {
       setError(t`Couldn't discard the plan. Try again.`);
       setPending(null);
@@ -220,12 +234,29 @@ function PlanDecision({ plan, sessionId, onSendMessage, onAccepted }) {
     <div className="shrink-0 border-b border-primary/20 bg-primary/5 px-4 py-3">
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
         <p className="min-w-0 text-sm">
-          <span className="font-medium"><Trans>Duct proposes this plan.</Trans></span>{" "}
-          <span className="text-muted-foreground">
-            {plan.replaces_plan_id
-              ? <Trans>Accept replaces your plan from today on; posts already drafted stay.</Trans>
-              : <Trans>Accept saves this as your plan.</Trans>}
-          </span>
+          {changed > 0 ? (
+            <>
+              <span className="font-medium">
+                <Plural value={changed} one="Duct proposes a change to # day." other="Duct proposes changes to # days." />
+              </span>{" "}
+              <span className="text-muted-foreground">
+                <Plural
+                  value={changed}
+                  one="Accept changes only this day; the rest of your plan stays as it is."
+                  other="Accept changes only these days; the rest of your plan stays as it is."
+                />
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="font-medium"><Trans>Duct proposes this plan.</Trans></span>{" "}
+              <span className="text-muted-foreground">
+                {plan.replaces_plan_id
+                  ? <Trans>Accept replaces your plan from today on; posts already drafted stay.</Trans>
+                  : <Trans>Accept saves this as your plan.</Trans>}
+              </span>
+            </>
+          )}
         </p>
         <div className="flex shrink-0 items-center gap-2">
           <Button type="button" onClick={accept} disabled={busy}>

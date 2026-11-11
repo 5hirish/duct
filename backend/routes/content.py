@@ -1109,7 +1109,10 @@ async def accept_plan(
     _record_plan_decision(db, session, proposal, ACCEPTED, plan_id=row.id)
     _link_conversation_artifact(body.session_id, "plan")
     payload = proposal.payload(ACCEPTED)
-    payload["id"] = str(row.id)
+    # The days as written, which Accept merged against the plan as it stood:
+    # a change to some days carries only those, and a day drafted while the
+    # proposal waited kept its draft.
+    payload.update(id=str(row.id), days=list(row.days or []))
     await _emit(session.event_queue, {
         "event": ContentEvent.PLAN_GENERATED,
         "session_id": body.session_id,
@@ -1136,7 +1139,9 @@ async def reject_plan(
         "event": ContentEvent.PLAN_GENERATED,
         "session_id": body.session_id,
         "plan_id": None,
-        "payload": {**proposal.payload(REJECTED), "days": []},
+        # A whole plan turned down leaves nothing to show; a change to some
+        # days keeps its days, so the pane can show what was turned down.
+        "payload": {**proposal.payload(REJECTED), "days": proposal.days if proposal.only_days else []},
     })
     return {"ok": True}
 

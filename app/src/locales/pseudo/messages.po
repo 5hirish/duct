@@ -243,6 +243,14 @@ msgstr ""
 msgid "{changeCount, plural, one {# change} other {# changes}}"
 msgstr ""
 
+#: src/components/content/PlanViewport.jsx
+msgid "{changed, plural, one {Accept changes only this day; the rest of your plan stays as it is.} other {Accept changes only these days; the rest of your plan stays as it is.}}"
+msgstr ""
+
+#: src/components/content/PlanViewport.jsx
+msgid "{changed, plural, one {Duct proposes a change to # day.} other {Duct proposes changes to # days.}}"
+msgstr ""
+
 #: src/components/content/FormatLibrary.jsx
 #~ msgid "{charCount, plural, one {# char} other {# chars}}"
 #~ msgstr ""
@@ -729,6 +737,10 @@ msgstr ""
 #: src/components/insights/desk/DeskCards.jsx
 #~ msgid "{rest, plural, one {# more not shown} other {# more not shown}}"
 #~ msgstr ""
+
+#: src/components/content/PlanChanges.jsx
+msgid "{rest, plural, one {The other # day stays as it is.} other {The other # days stay as they are.}}"
+msgstr ""
 
 #: src/components/commands/CommandPalette.jsx
 msgid "{resultCount, plural, one {# command} other {# commands}}"
@@ -2520,6 +2532,10 @@ msgstr ""
 #~ msgid "Change address or key"
 #~ msgstr ""
 
+#: src/components/content/PlanViewport.jsx
+msgid "Change discarded. Your plan stays as it was; tell Duct what to change instead."
+msgstr ""
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "change set {id}"
 msgstr ""
@@ -2538,12 +2554,17 @@ msgstr ""
 msgid "Changes apply to future drafts that pull this format."
 msgstr ""
 
+#: src/components/content/PlanChanges.jsx
+msgid "changes to"
+msgstr ""
+
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Changes v{baseVersion} → v{targetVersion}"
 msgstr ""
 
 #: src/app/(app)/content/page.jsx
 #: src/components/content/PlanBoard.jsx
+#: src/components/content/PlanChanges.jsx
 msgid "Channel"
 msgstr ""
 
@@ -4348,6 +4369,10 @@ msgstr ""
 #~ msgid "Email delivery isn’t configured on this environment, so invitations are logged server-side instead of sent. Set <0>RESEND_API_KEY</0> to deliver them."
 #~ msgstr ""
 
+#: src/components/content/PlanChanges.jsx
+msgid "Emotion"
+msgstr ""
+
 #: src/components/artifacts/ArtifactRenderer.jsx
 msgid "Empty dataset."
 msgstr ""
@@ -4521,6 +4546,10 @@ msgstr ""
 
 #: src/components/audit/ExecutionOffer.jsx
 msgid "Expand into new markets"
+msgstr ""
+
+#: src/components/content/PlanChanges.jsx
+msgid "Experiment"
 msgstr ""
 
 #: src/components/ProjectMembers.jsx
@@ -4730,6 +4759,7 @@ msgstr ""
 msgid "Forgotten."
 msgstr ""
 
+#: src/components/content/PlanChanges.jsx
 #: src/components/content/SynthesisPanel.jsx
 msgid "Format"
 msgstr ""
@@ -4817,6 +4847,10 @@ msgstr ""
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "From your site"
+msgstr ""
+
+#: src/components/content/PlanChanges.jsx
+msgid "Funnel stage"
 msgstr ""
 
 #: src/components/onboarding/ProviderStep.jsx
@@ -5279,6 +5313,7 @@ msgstr ""
 msgid "Home"
 msgstr ""
 
+#: src/components/content/PlanChanges.jsx
 #: src/lib/contentReview.js
 msgid "Hook"
 msgstr ""
@@ -6935,6 +6970,7 @@ msgid "Non-profit"
 msgstr ""
 
 #: src/components/audit/AuditStepProgress.jsx
+#: src/components/content/PlanChanges.jsx
 msgid "none"
 msgstr ""
 
@@ -7332,6 +7368,10 @@ msgstr ""
 
 #: src/components/content/AnalyticsView.jsx
 msgid "Numbers land here after the first post goes out, and on Refresh once it has synced."
+msgstr ""
+
+#: src/components/content/PlanChanges.jsx
+msgid "Objective"
 msgstr ""
 
 #: src/components/content/AccountsTab.jsx
@@ -7995,6 +8035,7 @@ msgid "Picking the hook…"
 msgstr ""
 
 #: src/components/content/BrandContextForm.jsx
+#: src/components/content/PlanChanges.jsx
 msgid "Pillar"
 msgstr ""
 
@@ -8360,6 +8401,10 @@ msgstr ""
 
 #: src/app/(app)/execute/page.jsx
 msgid "Proposed by you"
+msgstr ""
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Proposed changes to the plan"
 msgstr ""
 
 #: src/app/(app)/execute/page.jsx
@@ -9774,6 +9819,10 @@ msgstr ""
 
 #: src/components/content/PlanViewport.jsx
 msgid "Sequencing the posting cadence…"
+msgstr ""
+
+#: src/components/content/PlanChanges.jsx
+msgid "Series"
 msgstr ""
 
 #: src/components/connections/EndpointProviderCard.jsx
@@ -11590,6 +11639,10 @@ msgstr ""
 msgid "Turn on notifications"
 msgstr ""
 
+#: src/components/content/PlanChanges.jsx
+msgid "Type"
+msgstr ""
+
 #: src/components/onboarding/FrontDoor.jsx
 #~ msgid "Type your address — that’s the whole setup. Duct reads your site the way a search engine does, then tells you what to fix first."
 #~ msgstr ""
@@ -12028,6 +12081,10 @@ msgstr ""
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "was “{replacedTitle}” until {replacedUntil}"
+msgstr ""
+
+#: src/components/content/PlanChanges.jsx
+msgid "Was: {was}"
 msgstr ""
 
 #: src/components/content/report/GrowthReportView.jsx

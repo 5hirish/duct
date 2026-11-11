@@ -301,6 +301,137 @@ def test_a_day_on_a_channel_the_brand_does_not_post_on_is_refused(engine):
     assert session.proposal is None
 
 
+# ---------------------------------------------------------------------------
+# revise_plan_days: a change to some days is that change alone
+# ---------------------------------------------------------------------------
+
+
+def _revise(session, changes: list[dict]) -> dict:
+    from agents.content.tools import build_content_tools_lc
+
+    async def emit(_body: dict) -> None:
+        return None
+
+    tool = {t.name: t for t in build_content_tools_lc(session.project_id, emit, session)}["revise_plan_days"]
+    return json.loads(asyncio.run(tool.ainvoke({"changes": changes})))
+
+
+def _saved_plan(engine, start: date, days: list[dict]):
+    from sqlmodel import Session
+
+    from agents.content.schema import make_session
+    from models.content import ContentPlan
+
+    project = uuid4()
+    with Session(engine) as db:
+        row = ContentPlan(project_id=project, name="October", start_date=start, days=days,
+                          strategy={"exploit": "video"})
+        db.add(row)
+        db.commit()
+        db.refresh(row)
+        plan_id = row.id
+    session = make_session("s", project, "plan_month")
+    session.plan_id, session.period_start, session.period_days = plan_id, start, len(days)
+    return session, plan_id
+
+
+def test_a_change_to_one_day_is_proposed_and_accepted_alone(engine):
+    """"Make the 3rd an image post" is that day and those fields. The rest of
+    the plan is never re-sent, so it cannot drift, and Accept writes the one
+    day onto the plan as it stands then, leaving an edit made meanwhile."""
+    from sqlmodel import Session
+
+    from agents.content.plan_proposal import PlanProposal
+    from models.content import ContentPlan
+
+    start = date(2031, 10, 1)
+    session, plan_id = _saved_plan(engine, start, _days(4, "old"))
+    result = _revise(session, [{"date": "2031-10-03", "topic": "Capsule in 5 pieces", "post_type": "image"}])
+
+    assert (result["status"], result["changed"]) == ("proposed", ["2031-10-03"])
+    proposal = session.proposal
+    assert proposal.only_days and proposal.changed_days == [2]
+    assert proposal.days[2] == {**_days(4, "old")[2], "topic": "Capsule in 5 pieces", "post_type": "image"}
+    assert proposal.previous_days == [_days(4, "old")[2]]
+    assert [d["topic"] for d in proposal.days] == ["old0", "old1", "Capsule in 5 pieces", "old3"]
+    assert PlanProposal.from_json(proposal.to_json()) == proposal, "held on the conversation as it is"
+
+    with Session(engine) as db:     # the plan moves while the proposal waits
+        row = db.get(ContentPlan, plan_id)
+        row.days = [{**row.days[0], "topic": "edited meanwhile"}, *row.days[1:]]
+        db.add(row)
+        db.commit()
+    stored = _accept(engine, session)
+    assert [d["topic"] for d in stored.days] == ["edited meanwhile", "old1", "Capsule in 5 pieces", "old3"]
+    assert (stored.name, stored.strategy) == ("October", {"exploit": "video"})
+
+
+def test_a_drafted_past_or_outside_day_is_refused_by_name(engine, monkeypatch):
+    """A refused day is said, never dropped at Accept, and a refused call
+    proposes nothing: a change half made is one the person thinks they made."""
+    from datetime import datetime, timezone
+
+    from agents.content import tools as content_tools
+
+    start = date(2026, 10, 1)
+    days = _days(3)
+    days[1]["post_id"] = str(uuid4())
+    session, _ = _saved_plan(engine, start, days)
+    monkeypatch.setattr(content_tools, "utcnow", lambda: datetime(2026, 10, 2, 12, tzinfo=timezone.utc))
+
+    result = _revise(session, [
+        {"date": "2026-10-01", "topic": "x"},
+        {"date": "2026-10-02", "topic": "y"},
+        {"date": "2026-10-03", "topic": "z"},
+        {"date": "2026-11-09", "topic": "w"},
+    ])
+    assert result["status"] == "error"
+    assert "2026-10-01 is in the past" in result["message"]
+    assert "2026-10-02 has a drafted post" in result["message"] and "change the post itself" in result["message"]
+    assert "2026-11-09 is outside this plan (2026-10-01 to 2026-10-03)" in result["message"]
+    assert session.proposal is None
+
+    assert _revise(session, [{"date": "2026-10-03", "topic": "z"}])["status"] == "proposed"
+
+
+def test_a_change_to_a_waiting_proposal_keeps_it_whole(engine):
+    """Asked to change a day of a plan still waiting on Accept, the agent
+    changes that proposal: it stays a whole plan, under a new id so a card
+    left on screen accepts nothing."""
+    from agents.content.schema import make_session
+
+    session = make_session("s", uuid4(), "plan_month")
+    session.period_start, session.period_days = date(2031, 10, 7), 3
+    _submit(session, _days(3, "new"))
+    first = session.proposal
+
+    assert _revise(session, [{"date": "2031-10-08", "topic": "changed"}])["status"] == "proposed"
+    assert session.proposal.proposal_id != first.proposal_id and not session.proposal.only_days
+    assert [d["topic"] for d in session.proposal.days] == ["new0", "changed", "new2"]
+    stored = _accept(engine, session)
+    assert [d["topic"] for d in stored.days] == ["new0", "changed", "new2"]
+
+
+def test_a_change_is_refused_only_when_it_crowds_a_hook(engine):
+    """A plan made before the cap may lean on one hook already. A change that
+    leaves that alone goes through; one that adds a day to it does not."""
+    days = [{**d, "hook_type": "transformation_reveal" if i < 3 else f"hook{i}"} for i, d in enumerate(_days(8))]
+    session, _ = _saved_plan(engine, date(2031, 10, 1), days)
+
+    assert _revise(session, [{"date": "2031-10-06", "topic": "a new angle"}])["status"] == "proposed"
+    session.proposal = None
+    crowded = _revise(session, [{"date": "2031-10-07", "hook_type": "transformation_reveal"}])
+    assert crowded["status"] == "error" and "transformation_reveal is on 4 of tiktok's 8 days" in crowded["message"]
+
+
+def test_there_is_nothing_to_change_before_there_is_a_plan(engine):
+    from agents.content.schema import make_session
+
+    session = make_session("s", uuid4(), "plan_month")
+    result = _revise(session, [{"date": "2031-10-01", "topic": "x"}])
+    assert result["status"] == "error" and "submit_plan" in result["message"]
+
+
 def test_merge_proposal_is_an_index_cutoff_on_the_calendar():
     """No database: the merge is data. Positions are dates, so 'before today'
     is an index, and a drafted day wins wherever it sits."""

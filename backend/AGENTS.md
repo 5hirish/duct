@@ -827,7 +827,12 @@ agents/
     │                     lose it; a resumed session shows it again (replay), and the
     │                     accept and reject routes release it and append a
     │                     plan_decision event, which memory consolidation reads so a
-    │                     plan only proposed is never remembered as made
+    │                     plan only proposed is never remembered as made. A change to
+    │                     some days (revise_plan_days: dates and only the fields that
+    │                     change) is a proposal too, of those days alone (only_days):
+    │                     Accept writes them onto the plan as it stands and nothing
+    │                     else. A drafted or past day is refused by name, never
+    │                     dropped at Accept
     └── tools.py, subagents/, prompts.py, schema.py, artifacts.py, enrichment.py
 ```
 

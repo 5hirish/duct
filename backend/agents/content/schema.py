@@ -477,6 +477,7 @@ class ContentTool(StrEnum):
     SEARCH_MEMORY               = "SearchMemory"
     GET_MEMORY                  = "GetMemory"
     SUBMIT_PLAN                 = "submit_plan"
+    REVISE_PLAN_DAYS            = "revise_plan_days"
     SUBMIT_POST_DRAFT           = "submit_post_draft"
     EDIT_SLIDE                  = "edit_slide"
     FETCH_BRAND_CONTEXT         = "fetch_brand_context"
@@ -787,6 +788,41 @@ class PlanDraft(BaseModel):
         if unplanned:
             raise ValueError(f"every day needs a non-empty topic and pillar; days at index {unplanned} do not")
         return days
+
+
+# The field below is called ``date``, which inside its own class body is the
+# field and not the type, so its annotation names the type by another name.
+PlanDate = date
+
+
+class PlanDayChange(BaseModel):
+    """One day of a plan changed: its date and only the fields that change.
+
+    What revise_plan_days takes. A field left out, or sent as null, keeps the
+    day's value, so "make the 14th a carousel" is a date and a post_type. The
+    whole plan re-sent for a one-day change is how days nobody mentioned got
+    reworded on the way through.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    date: PlanDate = Field(description="The day's date, inside the plan's period.")
+    topic: str | None = None
+    pillar: str | None = None
+    post_type: Literal[POST_TYPES] | None = None
+    format_slug: str | None = None
+    platforms: list[Platform] | None = None
+    hook_type: str | None = None
+    funnel_stage: str | None = None
+    objective: str | None = None
+    hook_emotion: str | None = None
+    series: str | None = None
+    experiment: str | None = None
+
+    def fields(self) -> dict[str, Any]:
+        """What this change sets, as stored: the fields sent, without the date."""
+        sent = self.model_dump(mode="json", exclude_unset=True, exclude={"date"})
+        return {k: v for k, v in sent.items() if v is not None}
 
 
 # ---------------------------------------------------------------------------

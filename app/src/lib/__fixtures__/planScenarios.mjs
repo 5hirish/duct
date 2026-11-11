@@ -229,6 +229,33 @@ export function planPickerScenario(id, today) {
   return s.build(today);
 }
 
+/**
+ * A proposal that changes some days of the "fresh" plan, as revise_plan_days
+ * sends it: the plan with those days changed, their indexes, and what each
+ * said before. "one" is one day's topic and type; "week" is four days with
+ * a hook moved, a channel moved, a series set and one topic long enough to
+ * wrap.
+ */
+export function planChangeScenario(which, today) {
+  const { plan } = planScenario("fresh", today);
+  const edits = which === "week"
+    ? {
+        3: { topic: "Staging a rental in one afternoon, room by room", hook_type: "question_open_loop" },
+        4: { topic: LONG_TOPIC, platforms: ["instagram"], post_type: "slideshow" },
+        5: { series: "S2: Rentals that rent, 1/3", objective: "saves" },
+        6: { topic: "What the photographer sees that the agent misses", hook_type: "contrarian_take", hook_emotion: "surprise" },
+      }
+    : { 2: { topic: "Five pieces that stage any living room", post_type: "image" } };
+  const indexes = Object.keys(edits).map(Number);
+  return {
+    ...plan,
+    days: plan.days.map((d, i) => (edits[i] ? { ...d, ...edits[i] } : d)),
+    only_days: true,
+    changed_days: indexes,
+    previous_days: indexes.map((i) => plan.days[i]),
+  };
+}
+
 export function planScenario(id, today) {
   const s = PLAN_SCENARIOS.find((x) => x.id === id);
   if (!s) throw new Error(`no plan scenario "${id}"`);
