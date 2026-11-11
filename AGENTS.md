@@ -84,6 +84,7 @@ the area you are editing; site conventions do not apply to `backend/`.
 | `desktop/` | Tauri v2 shell; OS-keychain BYO provider keys | [`desktop/AGENTS.md`](desktop/AGENTS.md) |
 | `site/` | Static HTML/CSS/JS, no build step | [`site/AGENTS.md`](site/AGENTS.md) |
 | `skills/` | User-facing Agent Skills (`npx skills add 5hirish/duct`) | above, "How the instruction files work" |
+| `cli/` | `getduct` npm CLI: the launch check's live checks and score card (Node 20+, no dependencies) | [`cli/AGENTS.md`](cli/AGENTS.md) |
 | `docs/` | Engineering plans and reference material | [`docs/README.md`](docs/README.md) |
 | `scripts/` | Deploy/env plumbing and repo hygiene | below |
 | `design/` | Storyboards (Claude Design) and the Remotion film | [`design/motion/README.md`](design/motion/README.md) |

@@ -1,0 +1,48 @@
+{
+  "name": "getduct",
+  "version": "0.1.0",
+  "description": "Check a site before you launch it: search, social card, answer engines, analytics. Scores it out of 100 and draws a card to post. No account, no dependencies.",
+  "type": "module",
+  "bin": {
+    "getduct": "bin/getduct.js"
+  },
+  "exports": {
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "schema/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "keywords": [
+    "launch",
+    "seo",
+    "open-graph",
+    "social-card",
+    "llms-txt",
+    "analytics",
+    "audit",
+    "cli",
+    "agent-skills",
+    "duct"
+  ],
+  "homepage": "https://github.com/5hirish/duct/tree/main/cli#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/5hirish/duct.git",
+    "directory": "cli"
+  },
+  "bugs": {
+    "url": "https://github.com/5hirish/duct/issues"
+  },
+  "author": "Shirish Kadam",
+  "license": "MIT"
+}

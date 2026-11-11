@@ -1,0 +1,8 @@
+# Tinyqueue
+
+> A durable job queue that lives inside your SQLite file. One binary, no Redis.
+
+## Docs
+- [Install](https://tinyqueue.dev/docs/): download the binary and run it next to your app
+- [Pricing](https://tinyqueue.dev/pricing): free for one project, paid for teams
+- [Blog](https://tinyqueue.dev/blog/): notes on running small queues in production

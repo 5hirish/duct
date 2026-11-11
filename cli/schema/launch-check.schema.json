@@ -1,0 +1,291 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/5hirish/duct/blob/main/cli/schema/launch-check.schema.json",
+  "title": "Duct launch check result",
+  "description": "Written by `getduct check`, completed by the launch-check skill (claims, repository findings, the ranked three fixes), read by `getduct card`. score, band and areas are derived from checks; getduct card recomputes them.",
+  "type": "object",
+  "required": [
+    "schema",
+    "url",
+    "checkedAt",
+    "checks"
+  ],
+  "properties": {
+    "schema": {
+      "const": "getduct/launch-check@1"
+    },
+    "tool": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    },
+    "url": {
+      "type": "string",
+      "pattern": "^https?://",
+      "maxLength": 2048
+    },
+    "host": {
+      "type": "string",
+      "maxLength": 253
+    },
+    "checkedAt": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}",
+      "description": "ISO date or date-time of the run"
+    },
+    "pagesRead": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000
+    },
+    "repo": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 200
+    },
+    "action": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "label": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tracked": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 200,
+          "description": "event name, or null when not tracked"
+        }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "maxItems": 100,
+      "description": "One entry per check id, worst status across pages",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "M1",
+              "M2",
+              "M3",
+              "M4",
+              "M5",
+              "M6",
+              "M7",
+              "M8",
+              "K1",
+              "K2",
+              "K3",
+              "K4",
+              "S1",
+              "S2",
+              "S3",
+              "S4",
+              "S5",
+              "S6",
+              "S7",
+              "S8",
+              "S9",
+              "S10",
+              "C1",
+              "C2",
+              "C3",
+              "C4",
+              "C5",
+              "C6",
+              "A1",
+              "A2",
+              "A3",
+              "A4",
+              "A5",
+              "F1",
+              "F2",
+              "F3",
+              "F4",
+              "F5"
+            ]
+          },
+          "status": {
+            "enum": [
+              "PASS",
+              "WARN",
+              "FAIL",
+              "UNVERIFIED"
+            ]
+          },
+          "finding": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "evidence": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "type": "string",
+              "maxLength": 500
+            }
+          },
+          "foundBy": {
+            "enum": [
+              "live site",
+              "repository",
+              "both"
+            ]
+          },
+          "fix": {
+            "type": "string",
+            "maxLength": 120,
+            "description": "imperative fix title, when not PASS"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 500
+          }
+        }
+      }
+    },
+    "score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "band": {
+      "enum": [
+        "Ready",
+        "Ready after fixes",
+        "Needs work",
+        "Not ready"
+      ]
+    },
+    "areas": {
+      "type": "object"
+    },
+    "fixes": {
+      "type": "array",
+      "maxItems": 3,
+      "description": "The ranked three, best first; fewer is a good result",
+      "items": {
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 120
+          },
+          "checkId": {
+            "enum": [
+              "M1",
+              "M2",
+              "M3",
+              "M4",
+              "M5",
+              "M6",
+              "M7",
+              "M8",
+              "K1",
+              "K2",
+              "K3",
+              "K4",
+              "S1",
+              "S2",
+              "S3",
+              "S4",
+              "S5",
+              "S6",
+              "S7",
+              "S8",
+              "S9",
+              "S10",
+              "C1",
+              "C2",
+              "C3",
+              "C4",
+              "C5",
+              "C6",
+              "A1",
+              "A2",
+              "A3",
+              "A4",
+              "A5",
+              "F1",
+              "F2",
+              "F3",
+              "F4",
+              "F5"
+            ]
+          },
+          "impact": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3
+          },
+          "effort": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3
+          },
+          "foundBy": {
+            "enum": [
+              "live site",
+              "repository",
+              "both"
+            ]
+          },
+          "evidence": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "fix": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        }
+      }
+    },
+    "rankedBy": {
+      "enum": [
+        "getduct",
+        "agent"
+      ]
+    },
+    "observations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "maxLength": 500
+      }
+    },
+    "pages": {
+      "type": "array",
+      "maxItems": 100
+    }
+  }
+}
