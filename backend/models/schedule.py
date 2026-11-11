@@ -62,6 +62,9 @@ class AgentSchedule(SQLModel, table=True):
     # The occurrence being run or retried, and how many tries it has had: a
     # transient failure retries once, and the key a retry checks first.
     occurrence: datetime | None = Field(default=None, sa_column=Column(utc_datetime(), nullable=True))
+    # The conversation the running run opened, so a run killed mid-way can
+    # have its conversation closed as cancelled rather than left "Working".
+    conversation_id: UUID | None = Field(default=None, sa_column=Column(sa.Uuid(), nullable=True))
     attempt: int = Field(default=0, sa_column=Column(Integer, nullable=False, server_default="0"))
     # What the page shows without reading history: the last run's outcome,
     # when it ended, and a reason a person must act on (needs_reason).

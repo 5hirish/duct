@@ -215,9 +215,11 @@ def recover_interrupted(db: Any, now: datetime, host: str) -> int:
     ).all()
     for row in rows:
         retry = row.attempt < MAX_ATTEMPTS and row.enabled
+        _close_conversation(db, row.conversation_id)
         _record(db, row, Outcome.INTERRUPTED, now=now, reason=Reason.INTERRUPTED,
+                conversation_id=row.conversation_id,
                 data={"occurrence": _iso(row.occurrence), "attempt": row.attempt, "will_retry": retry})
-        row.running_since = row.lease_until = None
+        row.running_since = row.lease_until = row.conversation_id = None
         row.last_outcome, row.last_run_at = Outcome.INTERRUPTED, now
         if retry:
             row.next_run_at = now
@@ -268,6 +270,34 @@ def claim_due(db: Any, now: datetime, host: str) -> list[Claim]:
     return claims
 
 
+def _close_conversation(db: Any, conversation_id: UUID | None) -> None:
+    """A killed run's conversation was left "running": nothing in the dead
+    process could write its end. Close it as cancelled, with the same
+    failure row a stopped run gets, so its thread does not read "Working"."""
+    if conversation_id is None:
+        return
+    try:
+        from agents.content.persistence import CANCELLED_FAILURE, append_event, set_run_status
+        from agents.core.events import EventKind, RunStatus
+
+        set_run_status(db, conversation_id, RunStatus.CANCELLED, CANCELLED_FAILURE)
+        append_event(db, conversation_id, EventKind.FAILURE, CANCELLED_FAILURE)
+    except Exception:  # noqa: BLE001 — the orphan sweep at the next start is the backstop
+        logger.warning("schedules: could not close conversation %s", conversation_id, exc_info=True)
+
+
+def note_conversation(db: Any, schedule_id: UUID, conversation_id: UUID | None) -> None:
+    """Record the conversation a running run opened (``_close_conversation``)."""
+    if conversation_id is None:
+        return
+    db.execute(
+        sa.update(AgentSchedule)
+        .where(AgentSchedule.id == schedule_id, AgentSchedule.running_since.is_not(None))
+        .values(conversation_id=conversation_id)
+    )
+    db.commit()
+
+
 def renew_lease(db: Any, schedule_id: UUID, now: datetime) -> None:
     db.execute(
         sa.update(AgentSchedule)
@@ -297,9 +327,13 @@ def finish(db: Any, claim: Claim, result: JobResult, *, now: datetime, started: 
     row = db.get(AgentSchedule, claim.schedule_id)
     if row is None:
         return None
-    retry = (result.outcome in (Outcome.FAILED, Outcome.INTERRUPTED) and result.retryable
-             and claim.attempt < MAX_ATTEMPTS and row.enabled)
-    _record(db, row, result.outcome, now=now, reason=result.reason, conversation_id=result.conversation_id, data={
+    # A missing key retries once too: on a laptop the scheduler can wake
+    # before the app has lent its keys (service/lent_keys.py).
+    retryable_outcome = result.outcome in (Outcome.FAILED, Outcome.INTERRUPTED) or (
+        result.outcome == Outcome.SKIPPED and result.reason == Reason.NO_KEY)
+    retry = retryable_outcome and result.retryable and claim.attempt < MAX_ATTEMPTS and row.enabled
+    conversation_id = result.conversation_id or row.conversation_id
+    _record(db, row, result.outcome, now=now, reason=result.reason, conversation_id=conversation_id, data={
         "occurrence": _iso(claim.occurrence),
         "attempt": claim.attempt,
         "late_seconds": int(claim.late.total_seconds()),
@@ -308,9 +342,9 @@ def finish(db: Any, claim: Claim, result: JobResult, *, now: datetime, started: 
         "will_retry": retry,
         **result.detail,
     })
-    row.running_since = row.lease_until = None
+    row.running_since = row.lease_until = row.conversation_id = None
     row.last_run_at, row.last_outcome = now, result.outcome
-    row.needs_reason = result.reason if result.reason in NEEDS_YOU else ""
+    row.needs_reason = result.reason if result.reason in NEEDS_YOU and not retry else ""
     if retry:
         row.next_run_at = now + RETRY_AFTER
     else:
@@ -502,6 +536,7 @@ __all__ = [
     "jitter",
     "next_occurrence",
     "next_run_after",
+    "note_conversation",
     "poke",
     "precheck",
     "recover_interrupted",

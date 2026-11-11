@@ -336,3 +336,98 @@ def test_a_stranger_gets_404_and_a_collaborator_may_pause_but_not_edit(db, proje
     assert mate.patch(f"/api/user/schedules/{row.id}", json={"enabled": False}).status_code == 200
     assert mate.patch(f"/api/user/schedules/{row.id}", json={"cadence": "daily"}).status_code == 403
     assert mate.delete(f"/api/user/schedules/{row.id}").status_code == 403
+
+
+# ---------------------------------------------------------------------------
+# The gaps: a killed run's conversation, and keys an open app lends
+# ---------------------------------------------------------------------------
+
+
+def test_a_killed_run_s_conversation_is_closed_as_cancelled(db, project, owner):
+    from models.content import AgentConversation, AgentEvent as EventRow
+
+    row = _schedule(db, project, owner)
+    conv = AgentConversation(project_id=project.id, agent_type="tiktok_studio", mode="plan_month",
+                             run_status="running")
+    db.add(conv)
+    db.commit()
+    db.refresh(conv)
+    sched.claim_due(db, NOW, sched.Host.CLOUD)
+    sched.note_conversation(db, row.id, conv.id)
+    sched.recover_interrupted(db, NOW + sched.LEASE * 2, sched.Host.CLOUD)
+    db.refresh(conv)
+    db.refresh(row)
+    assert conv.run_status == "cancelled" and row.conversation_id is None
+    kinds = [e.kind for e in db.exec(select(EventRow).where(EventRow.conversation_id == conv.id)).all()]
+    assert kinds == ["failure"]
+    assert _runs(db, row)[-1]["outcome"] == "interrupted"
+
+
+def test_a_missing_key_retries_once_before_it_needs_the_person(db, project, owner):
+    row = _schedule(db, project, owner)
+    (claim,) = sched.claim_due(db, NOW, sched.Host.CLOUD)
+    no_key = sched.JobResult(sched.Outcome.SKIPPED, sched.Reason.NO_KEY, retryable=True)
+    sched.finish(db, claim, no_key, now=NOW, started=NOW)
+    db.refresh(row)
+    assert row.needs_reason == "" and row.next_run_at == NOW + sched.RETRY_AFTER
+    (retry,) = sched.claim_due(db, NOW + sched.RETRY_AFTER, sched.Host.CLOUD)
+    sched.finish(db, retry, no_key, now=NOW, started=NOW)
+    db.refresh(row)
+    assert row.needs_reason == sched.Reason.NO_KEY and row.next_run_at > NOW + sched.RETRY_AFTER
+
+
+def test_lent_keys_last_a_while_and_only_for_their_lender():
+    from service import lent_keys
+
+    lent_keys.forget()
+    alice, bob = uuid4(), uuid4()
+    assert lent_keys.lend(alice, {"openrouter": "sk-or-v1-abc"}, now=NOW)
+    assert lent_keys.borrowed(alice, now=NOW + timedelta(minutes=30)) == {"openrouter": "sk-or-v1-abc"}
+    assert lent_keys.borrowed(bob, now=NOW) is None
+    assert lent_keys.borrowed(alice, now=NOW + lent_keys.LEND_FOR + timedelta(seconds=1)) is None
+    assert not lent_keys.lend(alice, {}, now=NOW)
+    lent_keys.forget()
+
+
+def test_the_plan_job_spends_the_keys_its_creator_lent(monkeypatch):
+    import routes.agents as agents_routes
+    import routes.content as content_routes
+    import routes.schedule_jobs as jobs
+    from agents.content.schema import make_session
+    from service import lent_keys
+
+    creator = uuid4()
+    lent_keys.forget()
+    lent_keys.lend(creator, {"openrouter": "sk-or-v1-abc"})
+    monkeypatch.setattr(agents_routes, "_create_session_for",
+                        lambda agent, sid, body: make_session(sid, uuid4(), "plan_month"))
+    seen = {}
+
+    class Runner:
+        async def run_plan(self, *a, **kw):
+            return None
+
+    def runner_for(sid, keys):
+        seen["keys"] = keys
+        return Runner()
+
+    monkeypatch.setattr(content_routes, "_runner_for", runner_for)
+    claim = sched.Claim(schedule_id=uuid4(), project_id=uuid4(), user_id=creator,
+                        job=sched.JobKind.CONTENT_PLAN_FROM_WORK, config={}, occurrence=NOW, attempt=1,
+                        late=timedelta(0))
+    asyncio.run(jobs.content_plan_from_work(claim))
+    assert seen["keys"] == {"openrouter": "sk-or-v1-abc"}
+    lent_keys.forget()
+
+
+def test_the_catch_up_ping_lends_its_keys(monkeypatch):
+    import routes.memory as memory_routes
+    import service.memory_consolidation as consolidation
+    from service import lent_keys
+
+    lent_keys.forget()
+    user = User(email="lender@example.com")
+    monkeypatch.setattr(consolidation, "schedule_catch_up", lambda uid, keys: 0)
+    asyncio.run(memory_routes.catch_up_memory(user=user, user_keys={"openrouter": "sk-or-v1-abc"}))
+    assert lent_keys.borrowed(user.id) == {"openrouter": "sk-or-v1-abc"}
+    lent_keys.forget()

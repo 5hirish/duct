@@ -752,7 +752,13 @@ Postgres `DATABASE_URL` names.
   scheduled content run sets `ContentSession.unattended`: no question tool, no
   approval-carded tool, and the feed turn tells the agent to pick the stories
   itself. Its proposal waits on the conversation; `/content/sessions/new?
-  conversation=<id>` reopens it with Accept and Reject. `SCHEDULER_ENABLED`
+  conversation=<id>` reopens it with Accept and Reject. A run spends its
+  creator's saved keys, else the keys their open app lent on its half-hourly
+  memory catch-up (`service/lent_keys.py`: in memory, 45 minutes, the lender's
+  own schedules only), and a missing key retries once before it says "Needs
+  you", because a laptop's loop can wake before the app lends. A run killed
+  mid-way has its conversation closed as cancelled, from the id the schedule
+  noted when the run began. `SCHEDULER_ENABLED`
   turns the loop off on a web process once a worker service runs it instead.
 - `routes/project_members.py` — project members + email invitations (`docs/engineering/2026-08-16-project-collaboration-plan.md`)
 - `service/membership.py` — project access checks (owner vs collaborator) and invite token handling

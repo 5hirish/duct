@@ -44,6 +44,7 @@ def upgrade() -> None:
     sa.Column('running_since', models.columns._UTCDateTime(timezone=True), nullable=True),
     sa.Column('occurrence', models.columns._UTCDateTime(timezone=True), nullable=True),
     sa.Column('attempt', sa.Integer(), server_default='0', nullable=False),
+    sa.Column('conversation_id', sa.Uuid(), nullable=True),
     sa.Column('last_run_at', models.columns._UTCDateTime(timezone=True), nullable=True),
     sa.Column('last_outcome', sa.String(), server_default='', nullable=False),
     sa.Column('needs_reason', sa.String(), server_default='', nullable=False),

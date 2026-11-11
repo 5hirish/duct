@@ -13,11 +13,13 @@ proposal, the same buttons, nothing written until they say so.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from uuid import uuid4
 
 from agents.engines import ProviderKeyRequired
-from service.schedules import Claim, JobKind, JobResult, Outcome, Reason
+from service.lent_keys import borrowed
+from service.schedules import Claim, JobKind, JobResult, Outcome, Reason, note_conversation
 from utils.dates import utcnow
 
 logger = logging.getLogger(__name__)
@@ -56,11 +58,13 @@ async def content_plan_from_work(claim: Claim) -> JobResult:
     recorder = getattr(session, "recorder", None)
     emit = recorder.wrap_emit(collect) if recorder is not None else collect
     conversation_id = getattr(session, "conversation_id", None)
+    await asyncio.to_thread(_note, claim.schedule_id, conversation_id)
     try:
         try:
-            runner = _runner_for(session_id, None)
+            # Saved keys first; else the keys this person's open app lent.
+            runner = _runner_for(session_id, borrowed(claim.user_id))
         except ProviderKeyRequired:
-            return JobResult(Outcome.SKIPPED, Reason.NO_KEY, conversation_id=conversation_id)
+            return JobResult(Outcome.SKIPPED, Reason.NO_KEY, conversation_id=conversation_id, retryable=True)
         await runner.run_plan(
             session_id, claim.project_id, emit,
             period=requested_period(utcnow().date(), horizon), feed=feed,
@@ -82,6 +86,15 @@ async def content_plan_from_work(claim: Claim) -> JobResult:
     feed_days = sum(1 for d in (proposal.days or []) if (d or {}).get("sources"))
     return JobResult(Outcome.PROPOSED, conversation_id=conversation_id, cost_usd=cost,
                      detail={"feed_days": feed_days, "proposal_id": proposal.proposal_id})
+
+
+def _note(schedule_id, conversation_id) -> None:
+    if conversation_id is None:
+        return
+    from db.session import get_session as db_session
+
+    with next(db_session()) as db:
+        note_conversation(db, schedule_id, conversation_id)
 
 
 JOBS = {
