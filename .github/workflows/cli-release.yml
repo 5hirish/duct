@@ -1,0 +1,67 @@
+name: CLI Release
+
+# Publishes the getduct npm package when a `cli-vX.Y.Z` tag is pushed.
+#
+# No NPM_TOKEN exists, by design: npm trusted publishing exchanges this job's
+# OIDC token (id-token: write) for a one-time publish credential, scoped to
+# this repository and this workflow file, and attaches provenance that ties
+# the tarball to the commit it was built from. A token in a secret could be
+# leaked and replayed; this cannot. It needs npm 11.5.1 or later, which the
+# job installs explicitly rather than trusting whatever the runner's Node ships.
+#
+# The very first version was published by hand, because npm can only trust a
+# workflow for a package that already exists. Release after that:
+#   bump cli/package.json, add the CHANGELOG line, merge, then
+#   git tag cli-v0.1.1 && git push origin cli-v0.1.1
+
+on:
+  push:
+    tags:
+      - 'cli-v*'
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: cli-release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish getduct to npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: cli
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: npm with trusted publishing
+        run: npm install -g npm@^11.5.1 && npm --version
+
+      # A tag that disagrees with package.json would publish a version nobody
+      # tagged; refuse it before anything leaves the runner.
+      - name: Tag matches package.json
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="$(node -p 'require("./package.json").version')"
+          if [ "$TAG" != "cli-v$version" ]; then
+            echo "::error::tag $TAG does not match cli/package.json version $version (expected cli-v$version)"
+            exit 1
+          fi
+
+      - name: Tests
+        run: npm test
+
+      - name: Publish
+        run: npm publish --provenance --access public

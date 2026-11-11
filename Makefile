@@ -3,7 +3,7 @@
 # The point of this file is that `make check` and the pull-request workflows run
 # the same commands. If they drift, CI is right and this is wrong — fix it here.
 #
-#   make check        everything CI runs on a PR (backend, app, site, desktop, security)
+#   make check        everything CI runs on a PR (backend, app, site, desktop, cli, security)
 #   make check-<area> just that area, while you are working in it
 #   make setup        install dependencies for every area
 #
@@ -12,7 +12,7 @@
 
 .DEFAULT_GOAL := help
 .PHONY: help setup setup-backend setup-app setup-site setup-desktop \
-        check check-backend check-app check-site check-desktop check-security check-docs \
+        check check-backend check-app check-site check-desktop check-security check-docs check-cli \
         i18n fmt test dump-prompts agent-eval serve-backend serve-app serve-app-api serve-site serve-desktop serve-desktop-local serve-desktop-api clean clean-deep clean-prune
 
 # ---------------------------------------------------------------------------
@@ -45,7 +45,7 @@ setup-desktop: ## Install desktop dependencies (npm + Cargo)
 # Checks — these mirror .github/workflows/*.yml
 # ---------------------------------------------------------------------------
 
-check: check-backend check-app check-site check-desktop check-security check-docs ## Run every check CI runs
+check: check-backend check-app check-site check-desktop check-security check-docs check-cli ## Run every check CI runs
 	@echo "\n✅ all checks passed"
 
 check-backend: ## Ruff + pytest + rendered prompts (mirrors backend.yml and prompts.yml)
@@ -99,6 +99,9 @@ check-desktop: ## Check the Tauri contract, compile the shell, run its unit test
 check-security: ## Secret scan + deep audit (mirrors security-audit.yml)
 	python3 scripts/security/leak_scan.py --all
 	python3 scripts/security/audit.py --mode deep
+
+check-cli: ## getduct CLI tests, offline against fixtures (mirrors cli.yml)
+	cd cli && npm test
 
 check-docs: ## Every doc is a dated record or a reference with a current Updated: line (mirrors docs.yml)
 	python3 scripts/check_docs.py

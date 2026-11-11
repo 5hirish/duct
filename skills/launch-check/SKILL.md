@@ -24,8 +24,10 @@ step 2.
 2. **Never open secret files**: `.env*` (except `.env.example` and the like),
    `*.pem`, `*.key`, `credentials*.json`, anything under `secrets/`. A variable
    *name* in code or an example file is evidence; its value is not yours to read.
-3. **No account, no API, no telemetry.** Use only your own web and shell tools.
-   Do not sign up, submit forms, or log in anywhere.
+3. **No account, no API, no telemetry.** Use only your own web and shell tools
+   and the `getduct` CLI from npm, which needs no account and sends nothing
+   anywhere but the site it reads. Do not sign up, submit forms, or log in
+   anywhere.
 4. **Evidence or it did not happen.** Every FAIL and WARN names a URL or a
    `path:line`, and the value you saw. What you could not see is UNVERIFIED,
    never FAIL.
@@ -51,8 +53,27 @@ will be mostly UNVERIFIED, then continue.
 
 ## Step 2: read the live site
 
-Prefer the shell over a web-fetch tool: many fetch tools return a Markdown
-rendering with the `<head>` stripped, and the head is half of this check.
+**With Node 20 or later, let the CLI do it.** It runs every live check in the
+checklist with its thresholds, the same way every time, in a few seconds:
+
+```bash
+npx -y getduct@latest check "$URL" --json > "$TMPDIR/live.json"
+```
+
+The JSON (its shape: `npx -y getduct@latest schema`) holds one entry per check
+id with a status and evidence, the pages it read in `pages` (title,
+description, canonical, H1, og and twitter tags, analytics, headline and call
+to action), and `observations` for "Everything else". Read it instead of
+fetching those pages again. Its UNVERIFIED entries are the ones left for you:
+the repository checks, the claims, and A4, A5, F1 and F4, which carry the text
+to judge as evidence. You may regrade a live check with what the repository
+shows (M1 is FAIL when no tag loads; WARN when the action is off the site with
+a public counter): set the new status and say why in `note`.
+
+**Without Node, or when the command fails** (no network to npm, an old Node),
+do it by hand as below; the checklist is the same either way. Prefer the shell
+over a web-fetch tool: many fetch tools return a Markdown rendering with the
+`<head>` stripped, and the head is half of this check.
 
 ```bash
 curl -sSL -A "launch-check" -D headers.txt -o page.html "$URL"
@@ -146,6 +167,8 @@ list the pages.
 - Each area starts at 100: **-25 per FAIL, -10 per WARN**, floor 0.
   UNVERIFIED costs nothing.
 - Overall = sum of (area score x weight) / 100, rounded.
+- `getduct card` (step 6) recomputes this from the checks and says so when
+  your number differs; trust its number and correct the file.
 - Bands: **85-100 Ready** · **70-84 Ready after fixes** · **55-69 Needs work**
   · **below 55 Not ready**.
 
@@ -175,12 +198,35 @@ C2 in the checklist once before writing. Do not invent one: three `live site`
 fixes is a true result. Each fix gets the exact change: a diff for a repo
 file, or the setting and the value for anything outside it.
 
-## Step 6: write `duct-launch-check.md`
+## Step 6: write the report, the result and the card
 
-Write it at the repository root (or the current directory), in this shape.
-Write it even when the working tree holds other uncommitted changes: it is one
-new file, and you never stage or commit it. Only when the user asked for no
-files, print it in chat instead.
+Three files at the repository root (or the current directory): the report
+`duct-launch-check.md`, the result `duct-launch-check.json`, and the score
+card `duct-launch-check.png` to post. Write them even when the working tree
+holds other uncommitted changes: they are new files, and you never stage or
+commit them. Only when the user asked for no files, print the report in chat
+instead and skip the other two.
+
+**The result** is the CLI's JSON from step 2 with your work added, or one you
+write from scratch in the same shape when you did step 2 by hand
+(`schema: "getduct/launch-check@1"`, `url`, `checkedAt`, `checks`). Add or
+replace one entry per check you settled (claims, repository checks, your
+judgement of A4, A5, F1 and F4, any regrade), each with its status,
+`evidence`, `foundBy` and `fix` title; set `repo`, `action.tracked`, the three
+`fixes` (title, `checkId`, impact, effort, `foundBy`) and
+`"rankedBy": "agent"`. One entry per id: the worst status wins. Then draw the
+card:
+
+```bash
+npx -y getduct@latest card duct-launch-check.json
+```
+
+It validates the file, recomputes the score from the checks, and writes the
+PNG (`--svg` for a vector copy, `--theme dark` for the dark card). If it
+reports an invalid file, fix what it names and run it again. Without Node,
+skip the card: the report is the result.
+
+**The report**, in this shape:
 
 ```markdown
 # Launch check: <host>
@@ -217,15 +263,16 @@ The action: <one action>, <tracked as `event_name` | not tracked | unverified>
 Checked with Duct's launch-check skill: https://github.com/5hirish/duct?utm_source=duct-skill
 ```
 
-**The post** is one line the user could put on X or LinkedIn: the site, the
-score, the fix that mattered most, in their voice, no hashtags, no hype, ending
-with the repository link above. Example: `Ran a launch check on tinyqueue.dev
+**The post** is one line the user could put on X or LinkedIn, with the card
+attached: the site, the score, the fix that mattered most, in their voice, no
+hashtags, no hype, ending with the repository link above. Example: `Ran a launch check on tinyqueue.dev
 before posting: 64/100. My download button sent no event and the social card
 was a 404. Both fixed in ten minutes.`
 
 ## Step 7: offer the fixes
 
-In chat, give the score, the three fixes and the file's path. Then, one repo
+In chat, give the score, the three fixes and the paths of the report and the
+card. Then, one repo
 fix at a time: show the unified diff, ask `Apply fix 1? (yes / no / skip all)`,
 apply only on yes, and say how to verify it (the URL to reload, the event to
 look for in the analytics live view). Fixes outside the repository (a DNS

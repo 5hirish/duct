@@ -34,6 +34,13 @@ published without one. The same script, with no arguments, holds
   `duct-launch-check.md`, applying a diff only on a yes. No account, no call to
   Duct. The twelve contributor skills are marked internal, so the install
   offers only this one (#536).
+- **`npx getduct`, the launch check's engine and its score card.**
+  `npx getduct check yoursite.com` runs the 22 live checks of the launch
+  checklist with fixed thresholds in about ten seconds, with no account and no
+  dependencies, so the same site scores the same every time. `npx getduct
+  card` draws a 1200x630 card to post: the score, the three fixes, the date.
+  The skill now calls both, and does the live checks by hand where Node is
+  missing (#536).
 - **Duct speaks Simplified Chinese.** The interface, the site under `/zh-cn/`
   and a Chinese README, machine-translated against the glossary, which now
   pins every product term for `zh-CN` and renders "agent" as 智能体 rather than
