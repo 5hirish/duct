@@ -24,8 +24,9 @@ from sqlmodel import Session
 import agents.content.tools as content_tools
 import routes.content as content_routes
 import service.auth as auth_service
-from agents.content.publishing import SLIDE_RENDER
+from agents.content.publishing import SLIDE_RENDER, WHY_PUBLISHES
 from agents.content.schema import ContentStatus, make_session
+from agents.core.events import AgentEvent
 from db.session import get_session as get_session_dep
 from models.auth import User
 from models.content import ContentAsset, ContentPost, ContentSocialLink
@@ -33,7 +34,7 @@ from models.membership import ProjectMember
 from models.project import Project
 from service.membership import ROLE_OWNER
 from tests.conftest import make_sqlite_engine
-from tests.fakes import PostBridgeQueue, connect_scheduler
+from tests.fakes import Approver, PostBridgeQueue, connect_scheduler
 
 CDN = "https://media.duct.test/projects/p1"
 
@@ -150,7 +151,11 @@ def _publish(db, owner, post, **body):
                                 json={"social_account_ids": [101], **body})
 
 
-def _agent_publish(engine, project, post, monkeypatch, **args) -> dict:
+_APPROVE = object()
+
+
+def _agent_publish(engine, project, post, monkeypatch, *, pause=_APPROVE, **args) -> dict:
+    """The agent's publish, with a person who says yes unless told otherwise."""
     monkeypatch.setattr(content_tools, "_open_db", lambda: Session(engine))
     session = make_session("publish-1", project.id, "draft_post")
     session.post_id = post.id
@@ -158,7 +163,8 @@ def _agent_publish(engine, project, post, monkeypatch, **args) -> dict:
     async def emit(_event):
         return None
 
-    tools = {t.name: t for t in content_tools.build_content_tools_lc(project.id, emit, session)}
+    approver = Approver() if pause is _APPROVE else pause
+    tools = {t.name: t for t in content_tools.build_content_tools_lc(project.id, emit, session, pause=approver)}
     return json.loads(asyncio.run(tools["publish_post"].ainvoke({"post_id": str(post.id), **args})))
 
 
@@ -228,6 +234,106 @@ def test_a_picture_storage_cannot_read_stops_the_publish_before_anything_uploads
 
 
 # --- the account -----------------------------------------------------------------
+
+
+# --- the person approves every send --------------------------------------------
+#
+# The agent reads web pages, search results and strangers' captions. A
+# sentence in any of them could otherwise publish a post early, so every send
+# waits for a yes on a card that says what goes out, where and when.
+
+
+def test_the_agent_publishes_only_after_a_yes_on_a_card_saying_what_goes_out(
+    engine, db, project, slideshow, queue, monkeypatch,
+):
+    approver = Approver()
+
+    result = _agent_publish(engine, project, slideshow, monkeypatch, pause=approver,
+                            social_account_ids=[101], scheduled_at="2026-11-02T09:00:00+01:00")
+
+    assert result.get("status") != "error", result
+    [(event, card)] = approver.asked
+    assert event == AgentEvent.TOOL_APPROVAL_REQUIRED
+    assert card["why"] == WHY_PUBLISHES and card["tool"] == "publish_post"
+    shown = json.loads(card["arguments"])
+    assert shown["accounts"] == ["101"] and shown["when"] == "2026-11-02T09:00:00+01:00"
+    assert shown["caption"] == "Morning ritual" and shown["media"] == ["slide-01.png", "slide-02.png"]
+    assert queue.created()["scheduled_at"] == "2026-11-02T08:00:00Z"
+
+
+def test_the_card_shows_the_whole_caption_and_every_reply_that_goes_out(
+    engine, db, project, slideshow, queue, monkeypatch,
+):
+    slideshow.caption = "word " * 300
+    slideshow.replies = ["First reply, with the link", "Second reply"]
+    db.add(slideshow)
+    db.commit()
+    approver = Approver(approved=False)
+
+    _agent_publish(engine, project, slideshow, monkeypatch, pause=approver, social_account_ids=[101])
+
+    shown = json.loads(approver.asked[0][1]["arguments"])
+    assert shown["caption"] == "word " * 300
+    published = shown["replies"]
+    assert published == ["First reply, with the link", "Second reply"][: len(published)]
+    assert len(published) + shown["replies_you_post_by_hand"] == 2
+
+
+def test_a_yes_for_an_older_version_of_the_post_sends_nothing(
+    engine, db, project, slideshow, queue, monkeypatch,
+):
+    # A resumed thread re-reads the post: an edit made after the card appeared
+    # gives a different print than the one approved, and goes back to the person.
+    result = _agent_publish(engine, project, slideshow, monkeypatch,
+                            pause=Approver(fingerprint="the card before the edit"), social_account_ids=[101])
+
+    assert result["status"] == "error" and "changed" in result["message"]
+    assert queue.requests == [] and queue.uploads == []
+
+
+def test_the_print_moves_with_every_word_that_goes_out(slideshow):
+    from agents.content.publishing import publish_card
+    from service.publishers.registry import spec_for
+
+    spec = spec_for("post_bridge")
+    before = publish_card(slideshow, spec, ["101"], None, tiktok_draft=False, files=[])["fingerprint"]
+    slideshow.caption = "Morning ritual, now with a link"
+
+    assert publish_card(slideshow, spec, ["101"], None, tiktok_draft=False, files=[])["fingerprint"] != before
+
+
+def test_a_no_on_the_card_sends_nothing_and_leaves_the_post_a_draft(
+    engine, db, project, slideshow, queue, monkeypatch,
+):
+    result = _agent_publish(engine, project, slideshow, monkeypatch, pause=Approver(approved=False),
+                            social_account_ids=[101])
+
+    assert result["status"] == "skipped"
+    assert queue.requests == [] and queue.uploads == []
+    db.refresh(slideshow)
+    assert slideshow.status == "draft"
+
+
+def test_with_nobody_to_ask_nothing_is_sent(engine, db, project, slideshow, queue, monkeypatch):
+    result = _agent_publish(engine, project, slideshow, monkeypatch, pause=None, social_account_ids=[101])
+
+    assert result["status"] == "needs_approval"
+    assert queue.requests == []
+
+
+def test_a_post_that_cannot_go_out_is_never_put_to_the_person(engine, db, project, queue, monkeypatch):
+    unrendered = ContentPost(project_id=project.id, post_dir_slug="2026-10-31-009", post_type="slideshow",
+                             caption="No renders", platforms=["tiktok"], status="draft",
+                             slides=[{"slide_id": "s1", "kind": "collage"}])
+    db.add(unrendered)
+    db.commit()
+    db.refresh(unrendered)
+    approver = Approver()
+
+    result = _agent_publish(engine, project, unrendered, monkeypatch, pause=approver, social_account_ids=[101])
+
+    assert result["status"] == "error"
+    assert approver.asked == []
 
 
 def test_the_agent_posts_from_the_account_the_project_linked_for_the_platform(

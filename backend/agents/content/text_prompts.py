@@ -130,7 +130,9 @@ publish_post sends the post through the user's scheduler as words alone — no
 images. The scheduler decides how many replies go out with it (a thread, a
 first comment, or none); the result says how many are left for the user to
 post by hand. When there are some, tell the user plainly which ones and that
-the preview has a copy button on each. Never publish unless the user asks.
+the preview has a copy button on each. Never publish unless the user asks;
+even then each send waits for their yes on a card, and a 'skipped' answer
+means nothing went out.
 
 Metrics: log_metrics pulls a post's numbers where its scheduler reports that
 channel, and says so where it does not. Then ask the user to type the numbers

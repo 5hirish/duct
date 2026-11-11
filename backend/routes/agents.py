@@ -603,7 +603,9 @@ class AgentMessage(BaseModel):
     #   questions_required          -> {"<question>": "<answer>", ...}
     #   connection_required         -> {"connected": true} | {"skipped": true}
     #   account_selection_required  -> {"account_id": "...", "account_name": "..."}
-    #   tool_approval_required      -> {"approved": true} | {"approved": false}
+    #   tool_approval_required      -> {"approved": true} | {"approved": false},
+    #                                  plus the card's "fingerprint" when it had one
+    #                                  (a publish: agents/content/publishing.publish_card)
     # Values are Any rather than str because three of those carry booleans.
     answers: dict[str, Any] | None = None
     # Which pause this answers, when the run is parked on a checkpointed

@@ -465,12 +465,18 @@ def _action_start(args: dict[str, Any]) -> dict[str, Any]:
 
 def _action_finish(args: dict[str, Any], result: Any, is_error: bool) -> dict[str, Any]:
     env = _envelope(result)
-    ok = _ok(env, is_error)
     meta = {k: _text(env.get(k)) for k in ("post_id", "slide_id", "status", "scheduled_at") if env.get(k)}
+    title = _text(env.get("topic") or env.get("headline")) or _action_start(args)["title"]
+    status = _text(env.get("status"))
+    if status in _DECISIONS:
+        # A publish the person said no to on the card: their answer, not a
+        # failure, and not "Published the post" either.
+        return {"kind": ActivityKind.ACTION, "status": StepStatus.ERROR, "title": title, "meta": meta, "error": "", "reason": status}
+    ok = _ok(env, is_error)
     return {
         "kind": ActivityKind.ACTION,
         "status": StepStatus.SUCCESS if ok else StepStatus.ERROR,
-        "title": _text(env.get("topic") or env.get("headline")) or _action_start(args)["title"],
+        "title": title,
         "meta": meta,
         "error": "" if ok else _text(env.get("message") or env.get("error")),
     }
@@ -480,9 +486,10 @@ def _action_finish(args: dict[str, Any], result: Any, is_error: bool) -> dict[st
 # is an instruction to the model, not news for the person; a protocol or tool error
 # carries the server's own words, and a card never holds bytes a third party
 # wrote. The reason alone tells the app which sentence to show.
-_CONNECTED_QUIET = frozenset(
-    {"skipped", "needs_approval", "arguments_too_long", "protocol_error", "tool_error"}
-)
+# The person's answers on an approval card (and the run that had nobody to
+# ask). The app mirrors them as CONNECTED_DECISIONS and never paints them red.
+_DECISIONS = frozenset({"skipped", "needs_approval", "arguments_too_long"})
+_CONNECTED_QUIET = _DECISIONS | {"protocol_error", "tool_error"}
 
 
 def _connected(args: dict[str, Any], *, listing: bool) -> dict[str, Any]:

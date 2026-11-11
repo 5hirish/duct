@@ -44,6 +44,7 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from langchain_core.tools import StructuredTool
+from langgraph.errors import GraphBubbleUp
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from agents.content.results import (
@@ -70,7 +71,9 @@ from agents.models import (
     video_model_for,
 )
 from agents.core.events import AgentEvent
+from agents.core.mcp_tools import APPROVAL_TIMEOUT
 from agents.core.memory_tools import build_memory_tools_lc
+from agents.core.session import PauseFn
 from agents.content.assessment import assess, reassess_post
 from agents.content.channels import (
     Platform,
@@ -110,6 +113,7 @@ from agents.content.publishing import (
     pick_media,
     project_publishing,
     publish_blockers,
+    publish_card,
     publish_failure,
     pull_metrics,
     push_edit,
@@ -694,6 +698,7 @@ def build_content_tools_lc(
     *,
     vision: bool = True,
     remember: bool = True,
+    pause: PauseFn | None = None,
 ) -> list[StructuredTool]:
     """Build the content tools scoped to this session, for ``create_deep_agent``.
 
@@ -710,6 +715,10 @@ def build_content_tools_lc(
     ``remember=False`` is a session the user asked not to be remembered: it
     gets no memory tools at all, so the agent cannot write what it cannot
     reach.
+
+    ``pause`` is how ``publish_post`` asks the person before anything goes
+    out. Without one there is nobody to ask, and publishing answers
+    ``needs_approval`` instead of sending.
     """
     # Typed input models for the image tools — the tool's argument schema and
     # the field constraints the model sees in one place (enums from StrEnum so
@@ -2280,6 +2289,41 @@ def build_content_tools_lc(
                 # carries them.
                 if not pick.files and not is_text_only(post):
                     return _err("No slide images to publish — render or generate images first.")
+
+                # The person says yes to every send, on a card that shows what
+                # goes out, where and when. The agent reads pages, search
+                # results and strangers' captions; a sentence in any of them
+                # could otherwise publish a post early. Asked after the checks
+                # (a post that cannot go out is never put to the person) and
+                # before any media is read: a resumed thread re-runs this body
+                # from the top, so everything above is a read.
+                if pause is None:
+                    return _ok({
+                        "status": "needs_approval",
+                        "post_id": str(post.id),
+                        "message": "Publishing needs the person's yes and nobody is here to give it. Leave the post as it is.",
+                    })
+                card = publish_card(post, spec, account_ids, due, tiktok_draft=bool(tiktok_draft), files=pick.files)
+                answer = await pause(AgentEvent.TOOL_APPROVAL_REQUIRED, card, timeout=APPROVAL_TIMEOUT)
+                if answer.get("approved") and answer.get("fingerprint") != card["fingerprint"]:
+                    # The yes was for the post as the card showed it. On a
+                    # resume this body re-reads the post, and anything that
+                    # moved since (or an app too old to send the print back)
+                    # goes to the person again rather than out unseen.
+                    return _err(
+                        "The post changed after the person saw the publish card, so nothing was "
+                        "sent. Call publish_post again so they approve this version."
+                    )
+                if not answer.get("approved"):
+                    return _ok({
+                        "status": "skipped",
+                        "post_id": str(post.id),
+                        "topic": post.topic,
+                        "message": (
+                            "The person did not approve publishing, so nothing was sent and the post is "
+                            "unchanged. Do not publish it again unless they ask."
+                        ),
+                    })
                 try:
                     media = await load_media(pick.files)
                 except MediaUnreadable:
@@ -2324,6 +2368,10 @@ def build_content_tools_lc(
                     "replies_to_post_by_hand": unpublished_replies(post, spec),
                     "uncomposed_slides":     pick.uncomposed,   # published as raw photos (no caption)
                 })
+        except GraphBubbleUp:
+            # The approval card parks the thread by raising; that is the loop
+            # working, not a failed publish.
+            raise
         except Exception as exc:
             logger.exception("publish_post failed")
             return _err(f"publish_post failed: {exc}")
@@ -2853,7 +2901,10 @@ def build_content_tools_lc(
             "thread, a first comment), and the result counts the replies left "
             "for the user to post by "
             "hand. A post the platform would refuse (over its limit, words "
-            "alone where it needs media) is refused here with the reason.",
+            "alone where it needs media) is refused here with the reason. Every "
+            "send waits for the person's yes on a card showing what goes out, "
+            "where and when; call it only when they asked to publish, and a "
+            "'skipped' answer means leave the post as it is.",
             PublishPostArgs,
         ),
         _bind(

@@ -35,7 +35,7 @@ from models.membership import ProjectMember
 from models.project import Project
 from service.membership import ROLE_OWNER
 from service.post_bridge import PostBridgeClient
-from tests.fakes import connect_scheduler, post_bridge_on
+from tests.fakes import Approver, connect_scheduler, post_bridge_on
 from tests.conftest import make_sqlite_engine
 
 WHEN = datetime(2026, 10, 1, 9, 30, tzinfo=timezone.utc)
@@ -141,7 +141,7 @@ def _tools(session, engine, monkeypatch, emitted: list | None = None) -> dict:
         if emitted is not None:
             emitted.append(event)
 
-    return {t.name: t for t in content_tools.build_content_tools_lc(session.project_id, _emit, session)}
+    return {t.name: t for t in content_tools.build_content_tools_lc(session.project_id, _emit, session, pause=Approver())}
 
 
 def _draft(project, **extra) -> dict:

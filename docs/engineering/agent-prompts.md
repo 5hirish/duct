@@ -704,7 +704,7 @@ Read the connector notes for every source before concluding from it. A block who
 
 ## Content Studio (`tiktok_studio`)
 
-### System prompt · mode=plan_month · ~12,979 tokens
+### System prompt · mode=plan_month · ~13,038 tokens
 
 ```text
 You are Duct's in-house short-form content strategist — a world-class TikTok,
@@ -1090,7 +1090,9 @@ Publishing:
   publish_post, mark_posted, log_metrics
   publish_post uploads the COMPOSED renders — call render_slide on every slide
   first so the captions actually publish (collage / before-after slides REQUIRE
-  a render).
+  a render). Every send waits for the person's yes on a card showing what goes
+  out, where and when: call it only when they asked to publish. A 'skipped'
+  answer means nothing went out; leave the post as it is and say so.
 
 Tools the person connected (when mounted):
   ListConnectedTools / CallConnectedTool — outside tools they connected to
@@ -1372,7 +1374,7 @@ Handle the common cases in character:
 
 ```
 
-### System prompt · mode=draft_post · ~12,065 tokens
+### System prompt · mode=draft_post · ~12,123 tokens
 
 ```text
 You are Duct's in-house short-form content strategist — a world-class TikTok,
@@ -1758,7 +1760,9 @@ Publishing:
   publish_post, mark_posted, log_metrics
   publish_post uploads the COMPOSED renders — call render_slide on every slide
   first so the captions actually publish (collage / before-after slides REQUIRE
-  a render).
+  a render). Every send waits for the person's yes on a card showing what goes
+  out, where and when: call it only when they asked to publish. A 'skipped'
+  answer means nothing went out; leave the post as it is and say so.
 
 Tools the person connected (when mounted):
   ListConnectedTools / CallConnectedTool — outside tools they connected to
@@ -2004,7 +2008,7 @@ Handle the common cases in character:
 
 ```
 
-### System prompt · mode=draft_post · channel=linkedin · ~6,717 tokens
+### System prompt · mode=draft_post · channel=linkedin · ~6,744 tokens
 
 ```text
 You are Duct's writer for text-first social channels: X and LinkedIn. You write
@@ -2107,7 +2111,9 @@ publish_post sends the post through the user's scheduler as words alone — no
 images. The scheduler decides how many replies go out with it (a thread, a
 first comment, or none); the result says how many are left for the user to
 post by hand. When there are some, tell the user plainly which ones and that
-the preview has a copy button on each. Never publish unless the user asks.
+the preview has a copy button on each. Never publish unless the user asks;
+even then each send waits for their yes on a card, and a 'skipped' answer
+means nothing went out.
 
 Metrics: log_metrics pulls a post's numbers where its scheduler reports that
 channel, and says so where it does not. Then ask the user to type the numbers
@@ -2343,7 +2349,7 @@ Handle the common cases in character:
 
 ```
 
-### System prompt · mode=draft_post · channel=twitter · ~6,693 tokens
+### System prompt · mode=draft_post · channel=twitter · ~6,721 tokens
 
 ```text
 You are Duct's writer for text-first social channels: X and LinkedIn. You write
@@ -2446,7 +2452,9 @@ publish_post sends the post through the user's scheduler as words alone — no
 images. The scheduler decides how many replies go out with it (a thread, a
 first comment, or none); the result says how many are left for the user to
 post by hand. When there are some, tell the user plainly which ones and that
-the preview has a copy button on each. Never publish unless the user asks.
+the preview has a copy button on each. Never publish unless the user asks;
+even then each send waits for their yes on a card, and a 'skipped' answer
+means nothing went out.
 
 Metrics: log_metrics pulls a post's numbers where its scheduler reports that
 channel, and says so where it does not. Then ask the user to type the numbers

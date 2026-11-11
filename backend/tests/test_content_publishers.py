@@ -36,7 +36,7 @@ from service.publishers import MediaRef, Outgoing, Target
 from service.publishers.registry import NO_SCHEDULER
 from service.zernio.publisher import ZERNIO
 from tests.conftest import make_sqlite_engine
-from tests.fakes import ZernioQueue, connect_scheduler, post_bridge_on
+from tests.fakes import Approver, ZernioQueue, connect_scheduler, post_bridge_on
 
 WHEN = datetime(2026, 11, 3, 9, 30, tzinfo=timezone.utc)
 
@@ -110,7 +110,7 @@ def _tools(project, engine, monkeypatch, channel="twitter"):
     monkeypatch.setattr(content_tools, "_open_db", lambda: Session(engine))
     session = make_session("pub-1", project.id, "draft_post")
     session.channel = channel
-    tools = content_tools.build_content_tools_lc(project.id, lambda e: asyncio.sleep(0), session)
+    tools = content_tools.build_content_tools_lc(project.id, lambda e: asyncio.sleep(0), session, pause=Approver())
     return {t.name: t for t in tools}
 
 

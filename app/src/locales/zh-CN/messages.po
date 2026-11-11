@@ -3192,6 +3192,10 @@ msgstr "图表渲染失败 ({error})——源码如下。"
 msgid "Did something"
 msgstr "执行了操作"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Didn't publish the post"
+msgstr "未发布帖子"
+
 #: src/components/onboarding/DocumentPicker.jsx
 msgid "Didn't upload. Remove it and add it again"
 msgstr "未上传。请移除并重新添加。"
@@ -4524,6 +4528,14 @@ msgstr "为此浏览器会话保留"
 #: src/components/connections/ProviderCard.jsx
 msgid "held in this machine’s keychain"
 msgstr "保存在此机器的钥匙串中"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Held the post for your approval"
+msgstr "已保留帖子等待你的批准"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Held the TikTok search for your approval"
+msgstr "已保留 TikTok 搜索等待你的批准"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Helps Duct fit its answers to your job"
@@ -7319,6 +7331,10 @@ msgstr "发布"
 msgid "Publish post"
 msgstr "发布帖子"
 
+#: src/components/insights/ToolApproval.jsx
+msgid "Publish this post through {serverName}?"
+msgstr "通过 {serverName} 发布此帖子？"
+
 #: src/lib/contentSchedule.js
 msgid "Published"
 msgstr "已发布"
@@ -7338,6 +7354,10 @@ msgstr "作为帖子的第一个回复发布。"
 #: src/lib/agentSession.js
 msgid "Publishing isn't connected. Ask your admin to set it up."
 msgstr "发布功能未连接。请让你的管理员进行设置。"
+
+#: src/components/insights/ToolApproval.jsx
+msgid "Publishing puts this post in front of people, so Duct asks every time. Skip and nothing is sent; the post stays as it is."
+msgstr "发布会将此帖子公开展示，因此 Duct 每次都会询问。跳过则不会发送任何内容，帖子将保持原样。"
 
 #: src/components/content/PostVideo.jsx
 msgid "Publishing this take"
@@ -8975,6 +8995,10 @@ msgstr "已跳过"
 #: src/components/workspace/ActivityRow.jsx
 msgid "Skipped {name}"
 msgstr "已跳过 {name}"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Skipped the TikTok search"
+msgstr "已跳过 TikTok 搜索"
 
 #: src/components/insights/ConnectionRequest.jsx
 msgid "Skipping is fine — Duct will say what it couldn’t check."
@@ -10736,6 +10760,10 @@ msgstr "Duct 为 {label} 撰写的内容"
 #: src/app/(app)/connections/page.jsx
 msgid "What each campaign costs and what it brings back."
 msgstr "各个广告系列的成本和回报。"
+
+#: src/components/insights/ToolApproval.jsx
+msgid "What goes out, and when"
+msgstr "发布内容与时间"
 
 #: src/app/(start)/start/page.jsx
 msgid "What happens next"

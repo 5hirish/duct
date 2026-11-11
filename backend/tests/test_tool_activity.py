@@ -309,3 +309,17 @@ async def test_a_tiktok_search_is_named_by_its_hashtags_and_a_skip_stays_quiet()
 
     assert events[-1]["error"] == ""
     assert events[-1]["reason"] == "skipped"
+
+
+@pytest.mark.asyncio
+async def test_a_publish_the_person_said_no_to_is_their_answer_not_published():
+    # A "skipped" status is neither ok nor a failure to _ok, so the harness's
+    # flag decided it and the row said "Published the post" for a post that
+    # never went out.
+    body = json.dumps({"status": "skipped", "post_id": "p1", "topic": "Morning ritual", "message": "for the model"})
+    events, _ = await run_call("publish_post", {"post_id": "p1"}, body)
+
+    assert events[-1]["kind"] == ActivityKind.ACTION
+    assert events[-1]["reason"] == "skipped"
+    assert events[-1]["error"] == ""
+    assert events[-1]["title"] == "Morning ritual"
