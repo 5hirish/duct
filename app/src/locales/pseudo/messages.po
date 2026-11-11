@@ -4292,6 +4292,10 @@ msgstr ""
 msgid "Each redirect hop bleeds crawl budget and PageRank."
 msgstr ""
 
+#: src/components/insights/ToolApproval.jsx
+msgid "Each search uses this project’s {serverName} credits, so Duct asks first. Skip and the agent carries on from what you saved."
+msgstr ""
+
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Each source Duct reads shows up here with the period it covers, and the provider’s own words when a pull fails."
 msgstr ""
@@ -9621,6 +9625,10 @@ msgstr ""
 msgid "Search sources"
 msgstr ""
 
+#: src/components/insights/ToolApproval.jsx
+msgid "Search TikTok with {serverName}?"
+msgstr ""
+
 #: src/components/content/DiscoverPage.jsx
 msgid "Search your niche"
 msgstr ""
@@ -9631,6 +9639,10 @@ msgstr ""
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Searched the web"
+msgstr ""
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Searched TikTok"
 msgstr ""
 
 #: src/components/content/DiscoverPage.jsx

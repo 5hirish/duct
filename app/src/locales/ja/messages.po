@@ -4298,6 +4298,10 @@ msgstr "各変更は、適用時に記録されたロールバックハンドル
 msgid "Each redirect hop bleeds crawl budget and PageRank."
 msgstr "各リダイレクトホップはクロールバジェットとPageRankを消費します。"
 
+#: src/components/insights/ToolApproval.jsx
+msgid "Each search uses this project’s {serverName} credits, so Duct asks first. Skip and the agent carries on from what you saved."
+msgstr "検索ごとにこのプロジェクトの{serverName}クレジットを使用するため、Ductが事前に確認します。スキップすると、エージェントは保存された内容から続行します。"
+
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Each source Duct reads shows up here with the period it covers, and the provider’s own words when a pull fails."
 msgstr "Ductが読み取る各ソースは、対象期間とともにここに表示され、プルが失敗した場合はプロバイダー自身の言葉も表示されます。"
@@ -9627,6 +9631,10 @@ msgstr "クエリ、クリック数、表示回数、平均掲載順位を検索
 msgid "Search sources"
 msgstr "ソースを検索"
 
+#: src/components/insights/ToolApproval.jsx
+msgid "Search TikTok with {serverName}?"
+msgstr "{serverName}でTikTokを検索しますか？"
+
 #: src/components/content/DiscoverPage.jsx
 msgid "Search your niche"
 msgstr "ニッチを検索"
@@ -9638,6 +9646,10 @@ msgstr "メモリを検索しました"
 #: src/components/workspace/ActivityRow.jsx
 msgid "Searched the web"
 msgstr "ウェブを検索"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Searched TikTok"
+msgstr "TikTokを検索しました"
 
 #: src/components/content/DiscoverPage.jsx
 msgid "Searches run on your own Apify account, so the scraping is billed to you. The same search again within 30 minutes costs nothing."
