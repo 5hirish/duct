@@ -28,6 +28,7 @@ import PlanDayOne from "@/components/content/PlanDayOne";
 import FeedPlanDialog from "@/components/content/FeedPlanDialog";
 import { feedSessionHref } from "@/lib/contentFeed";
 import { feedScheduleBody } from "@/lib/schedules";
+import { listMcpServers } from "@/lib/connectorsApi";
 import { createSchedule } from "@/lib/schedulesApi";
 import {
   PlanState,
@@ -214,7 +215,18 @@ export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab, fi
   const startPlan = useCallback((period) => router.push(planSessionHref(period)), [router]);
   // A plan from shipped work (#561) starts at its setup sheet.
   const [feedOpen, setFeedOpen] = useState(false);
+  const [mcpPresets, setMcpPresets] = useState([]);
   const openFeed = useCallback(() => setFeedOpen(true), []);
+  // Linear and Notion are offered as feeds only when connected (#565); asked
+  // when the sheet opens, since that is the only place the answer is shown.
+  useEffect(() => {
+    if (!feedOpen) return undefined;
+    let alive = true;
+    listMcpServers()
+      .then((rows) => { if (alive) setMcpPresets(rows.map((r) => r.preset).filter(Boolean)); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [feedOpen]);
   // The Scheduled page's empty state links here with ?from=work, so the sheet
   // that holds Repeat weekly is one click away rather than three.
   useEffect(() => {
@@ -223,6 +235,7 @@ export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab, fi
   const feedDialog = feedOpen && (
     <FeedPlanDialog
       open
+      connected={mcpPresets}
       onOpenChange={setFeedOpen}
       onStart={(options) => { setFeedOpen(false); router.push(feedSessionHref(options, today)); }}
       onRepeat={async (options, cadence) => {

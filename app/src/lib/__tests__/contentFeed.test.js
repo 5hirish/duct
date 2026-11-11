@@ -18,7 +18,7 @@ describe("the feed session URL", () => {
     const options = { sources: ["github"], lookBack: 30, horizon: 14, maxDays: 3, disclosure: "releases" };
     const href = feedSessionHref(options, TODAY);
     expect(href.startsWith("/content/sessions/new?source=work&start=2026-11-11&days=14")).toBe(true);
-    expect(feedFromParams(new URL(href, "http://x").searchParams)).toEqual(options);
+    expect(feedFromParams(new URL(href, "http://x").searchParams)).toEqual({ ...options, notionDatabase: "" });
   });
 
   it("is not a feed without source=work, and bad values fall back", () => {
@@ -92,5 +92,23 @@ describe("the setup sheet's drawing and the sieve", () => {
     expect(s.stones.slice(0, 2).every((st) => st.kept)).toBe(true);
     expect(s.hidden).toBe(102 - SIEVE_MAX);
     expect(s.total).toBe(102);
+  });
+});
+
+describe("Linear and Notion as sources", () => {
+  it("offers them only when connected and needs a Notion database before it starts", async () => {
+    const { offeredSources, feedBlocker, feedRequest, feedSessionHref, feedFromParams, DEFAULT_FEED } = await import("../contentFeed.js");
+    expect(offeredSources([])).toEqual(["github", "duct"]);
+    expect(offeredSources(["notion", "railway", "linear"])).toEqual(["github", "duct", "linear", "notion"]);
+    expect(feedBlocker({ sources: [] })).toBe("no_source");
+    expect(feedBlocker({ sources: ["notion"] })).toBe("no_notion_database");
+    expect(feedBlocker({ sources: ["notion"], notionDatabase: "https://www.notion.so/x" })).toBe(null);
+    const options = { ...DEFAULT_FEED, sources: ["linear", "notion"], notionDatabase: "https://www.notion.so/x" };
+    expect(feedRequest(options).notion_database).toBe("https://www.notion.so/x");
+    expect(feedRequest({ ...options, sources: ["linear"] }).notion_database).toBeUndefined();
+    const href = feedSessionHref(options, new Date(2026, 10, 11));
+    const back = feedFromParams(new URL(`https://x${href}`).searchParams);
+    expect(back.sources).toEqual(["linear", "notion"]);
+    expect(back.notionDatabase).toBe("https://www.notion.so/x");
   });
 });

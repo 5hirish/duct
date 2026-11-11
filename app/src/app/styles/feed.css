@@ -21,18 +21,39 @@
 
 .feed-kind[data-kind="release"] { --kind: var(--tessera-terracotta); }
 .feed-kind[data-kind="pull_request"],
-.feed-kind[data-kind="issue"] { --kind: var(--tessera-ochre); }
+.feed-kind[data-kind="issue"],
+.feed-kind[data-kind="linear_issue"] { --kind: var(--tessera-ochre); }
 .feed-kind[data-kind="commit"] { --kind: var(--tessera-grey); }
 .feed-kind[data-kind="docs_change"],
-.feed-kind[data-kind="artifact"] { --kind: var(--tessera-cream); }
+.feed-kind[data-kind="artifact"],
+.feed-kind[data-kind="notion_page"] { --kind: var(--tessera-cream); }
 /* Basalt itself is near-black: heavy as a stone among stones, so slate. */
 .feed-kind[data-kind="change_set"],
 .feed-kind[data-kind="memory"] { --kind: oklch(0.52 0.03 260); }
 
 /* Cream is near the card in light, so its stone takes an edge to stay a stone. */
 .feed-kind[data-kind="docs_change"],
-.feed-kind[data-kind="artifact"] {
+.feed-kind[data-kind="artifact"],
+.feed-kind[data-kind="notion_page"] {
   box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--tessera-grey) 45%, transparent);
+}
+
+/* A vendor's mark on a pale stone: several marks are near-black, and the
+   stone keeps each legible in dark without a second file (BringAnyTool's rule). */
+.feed-brand-stone {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  background: color-mix(in oklch, var(--tessera-cream) 60%, white);
+}
+
+.feed-brand-stone img {
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 /* ---- The sieve: everything read, kept stones lit, the rest left grey. ---- */

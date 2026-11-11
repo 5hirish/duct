@@ -1006,6 +1006,10 @@ msgstr "90 天"
 msgid "A change that matches a guardrail arrives blocked and can never apply on its own. Agents see the rules and propose around them. A rule with no matcher is guidance only."
 msgstr "与护栏匹配的变更会被阻止，无法自行应用。智能体了解这些规则并会围绕它们提出建议。没有匹配器的规则仅作为指导。"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "A changelog or launch notes database. Duct reads its rows once a run, nothing else in the workspace."
+msgstr "一个更新日志或发布说明数据库。Duct 每次运行只读取它的行一次，不读取工作区中的其他内容。"
+
 #: src/lib/agentSession.js
 msgid "A connected account doesn't have access to that data. Check its permissions in the Toolbox."
 msgstr "一个已连接的账户无权访问该数据。请在工具箱中检查其权限。"
@@ -3174,6 +3178,10 @@ msgstr "数据驻留"
 msgid "Date"
 msgstr "日期"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Dated pages in one database you pick"
+msgstr "你选择的一个数据库中带日期的页面"
+
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Dates resolve in UTC. Pick your zone so \"last week\" means your week."
 msgstr "日期以 UTC 解析。选择你的时区，这样“上周”就代表你的上周。"
@@ -5090,6 +5098,10 @@ msgstr "所有发现的问题分布"
 msgid "Issues"
 msgstr "Issue"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Issues completed in the window"
+msgstr "该时间段内完成的 Issue"
+
 #: src/lib/mcpServers.js
 msgid "It answered with an error the last time Duct called it. The next chat tries again, or check it now."
 msgstr "Duct 上次调用时它返回了错误。下次聊天会重试，或者你现在检查一下。"
@@ -5359,6 +5371,10 @@ msgstr "轻量——便宜的那个"
 #: src/components/content/PostMetricsForm.jsx
 msgid "Likes"
 msgstr "点赞"
+
+#: src/lib/contentFeedLabels.js
+msgid "Linear"
+msgstr "Linear"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Link"
@@ -6705,6 +6721,14 @@ msgstr "暂无内容。告诉 Duct 你喜欢什么样的答案，例如“先给
 msgid "Notifications"
 msgstr "通知"
 
+#: src/lib/contentFeedLabels.js
+msgid "Notion"
+msgstr "Notion"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Notion database link"
+msgstr "Notion 数据库链接"
+
 #: src/components/PipelineProgress.jsx
 msgid "now"
 msgstr "现在"
@@ -7256,6 +7280,10 @@ msgstr "粘贴任何远程 MCP 服务器的地址。"
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "Paste the link to one TikTok post."
 msgstr "粘贴一个 TikTok 帖子的链接。"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Paste the Notion database to read, or untick Notion."
+msgstr "粘贴要读取的 Notion 数据库，或取消勾选 Notion。"
 
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Paste the server's address to connect it."

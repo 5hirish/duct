@@ -1195,6 +1195,10 @@ msgstr "90日間"
 msgid "A change that matches a guardrail arrives blocked and can never apply on its own. Agents see the rules and propose around them. A rule with no matcher is guidance only."
 msgstr "ガードレールに一致する変更はブロックされ、単独で適用されることはありません。エージェントはルールを認識し、それに沿って提案します。マッチング条件のないルールはガイダンスのみです。"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "A changelog or launch notes database. Duct reads its rows once a run, nothing else in the workspace."
+msgstr "変更履歴やリリースノートのデータベース。Duct は実行ごとにその行を一度読むだけで、ワークスペースのほかの部分は読みません。"
+
 #: src/components/content/ContentWorkspace.jsx
 #~ msgid "A clearer brief produces sharper content. Skip if you'd rather Duct decide."
 #~ msgstr "より明確なブリーフは、よりシャープなコンテンツを生み出します。Ductに任せる場合はスキップしてください。"
@@ -3683,6 +3687,10 @@ msgstr "データレジデンシー"
 msgid "Date"
 msgstr "日付"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Dated pages in one database you pick"
+msgstr "選んだデータベース内の日付付きページ"
+
 #: src/components/memory/MemoryTimeline.jsx
 #~ msgid "Dates"
 #~ msgstr "日付"
@@ -5861,6 +5869,10 @@ msgstr "すべての指摘事項における問題の分布"
 msgid "Issues"
 msgstr "Issue"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Issues completed in the window"
+msgstr "期間内に完了した Issue"
+
 #: src/lib/mcpServers.js
 msgid "It answered with an error the last time Duct called it. The next chat tries again, or check it now."
 msgstr "Ductが前回呼び出した際、エラーが返されました。次回のチャットで再試行するか、今すぐ確認してください。"
@@ -6154,6 +6166,10 @@ msgstr "ライト — 安価なプラン"
 #: src/components/content/PostMetricsForm.jsx
 msgid "Likes"
 msgstr "いいね"
+
+#: src/lib/contentFeedLabels.js
+msgid "Linear"
+msgstr "Linear"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Link"
@@ -7698,6 +7714,14 @@ msgstr "まだ何もありません。Ductに回答の好み（例：「まず�
 msgid "Notifications"
 msgstr "通知"
 
+#: src/lib/contentFeedLabels.js
+msgid "Notion"
+msgstr "Notion"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Notion database link"
+msgstr "Notion データベースのリンク"
+
 #: src/components/PipelineProgress.jsx
 msgid "now"
 msgstr "今"
@@ -8326,6 +8350,10 @@ msgstr "リモートMCPサーバーのアドレスを貼り付けます。"
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "Paste the link to one TikTok post."
 msgstr "TikTokの投稿リンクを貼り付けてください。"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Paste the Notion database to read, or untick Notion."
+msgstr "読み取る Notion データベースを貼り付けるか、Notion のチェックを外してください。"
 
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Paste the server's address to connect it."

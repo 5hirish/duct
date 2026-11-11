@@ -11,7 +11,10 @@
 
 import { dayKey } from "./format.js";
 
-export const FeedSource = Object.freeze({ GITHUB: "github", DUCT: "duct" });
+// Linear and Notion are the user's own trusted MCP connections (#565),
+// offered only when connected; their preset ids are these same values.
+export const FeedSource = Object.freeze({ GITHUB: "github", DUCT: "duct", LINEAR: "linear", NOTION: "notion" });
+export const MCP_FEED_SOURCES = Object.freeze([FeedSource.LINEAR, FeedSource.NOTION]);
 
 export const Disclosure = Object.freeze({
   RELEASES: "releases",
@@ -32,6 +35,7 @@ export const DEFAULT_FEED = Object.freeze({
   horizon: 7,
   maxDays: 2,
   disclosure: Disclosure.SHIPPED,
+  notionDatabase: "",
 });
 
 const clamp = (value, options, fallback) => (options.includes(value) ? value : fallback);
@@ -48,6 +52,7 @@ export function feedFromParams(params) {
     horizon: clamp(Number(params.get("days")) || DEFAULT_FEED.horizon, HORIZON_OPTIONS, DEFAULT_FEED.horizon),
     maxDays: clamp(Number(params.get("max")) || DEFAULT_FEED.maxDays, MAX_DAYS_OPTIONS, DEFAULT_FEED.maxDays),
     disclosure: clamp(params.get("disclosure"), Object.values(Disclosure), DEFAULT_FEED.disclosure),
+    notionDatabase: (params.get("notion") || "").slice(0, 500),
   };
 }
 
@@ -63,6 +68,7 @@ export function feedSessionHref(options, today = new Date()) {
     sources: o.sources.join(","),
   });
   if (o.lookBack) params.set("look", String(o.lookBack));
+  if (o.sources.includes(FeedSource.NOTION) && o.notionDatabase) params.set("notion", o.notionDatabase);
   return `/content/sessions/new?${params}`;
 }
 
@@ -74,7 +80,26 @@ export function feedRequest(options) {
     max_days: o.maxDays,
     disclosure: o.disclosure,
     ...(o.lookBack ? { look_back_days: o.lookBack } : {}),
+    ...(o.sources.includes(FeedSource.NOTION) && o.notionDatabase ? { notion_database: o.notionDatabase } : {}),
   };
+}
+
+/**
+ * The sources the sheet may offer: GitHub and Duct always, Linear and Notion
+ * when the person has them connected (`connected` is their server rows'
+ * preset ids).
+ */
+export function offeredSources(connected) {
+  const have = new Set(Array.isArray(connected) ? connected : []);
+  return [FeedSource.GITHUB, FeedSource.DUCT, ...MCP_FEED_SOURCES.filter((s) => have.has(s))];
+}
+
+/** Why the sheet cannot start yet, as a code, or null. */
+export function feedBlocker(options) {
+  const o = { ...DEFAULT_FEED, ...options };
+  if (!o.sources.length) return "no_source";
+  if (o.sources.includes(FeedSource.NOTION) && !String(o.notionDatabase || "").trim()) return "no_notion_database";
+  return null;
 }
 
 /**

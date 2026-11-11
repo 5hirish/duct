@@ -1,6 +1,8 @@
 "use client";
 
-import { BookOpen, Brain, CircleDot, FileText, GitCommitHorizontal, GitPullRequest, ShieldCheck, Tag } from "lucide-react";
+import {
+  BookOpen, Brain, CircleCheckBig, CircleDot, FileText, GitCommitHorizontal, GitPullRequest, NotebookText, ShieldCheck, Tag,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // One glyph per kind of source, so a stone reads without its colour: a
@@ -14,6 +16,8 @@ export const KIND_ICONS = {
   change_set: ShieldCheck,
   artifact: FileText,
   memory: Brain,
+  linear_issue: CircleCheckBig,
+  notion_page: NotebookText,
 };
 
 const SIZES = {

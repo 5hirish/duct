@@ -115,7 +115,10 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
     month, 1 or 2 weeks, 30 days) and are the second. **From your work** is
     the third way in (#561): `FeedPlanDialog.jsx` asks what to read, how far
     back, how many days it may change and how much of a private repository it
-    may talk about, and opens `?source=work&…` (`lib/contentFeed.js` holds the
+    may talk about, and opens `?source=work&…`. Linear and Notion appear as
+    sources only when connected (`offeredSources`, from the MCP server rows'
+    `preset`), and Notion needs the one database to read (`feedBlocker`)
+    (`lib/contentFeed.js` holds the
     values only; its words are `contentFeedLabels.js`, because `contentApi.js`
     imports the values under plain Node). That run is always fresh, never a
     resume of the covering plan's conversation. Its read step's payload is

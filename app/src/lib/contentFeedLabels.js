@@ -10,6 +10,8 @@ import { Disclosure, FeedSource } from "./contentFeed.js";
 export const SOURCE_LABELS = {
   [FeedSource.GITHUB]: msg`GitHub`,
   [FeedSource.DUCT]: msg`What Duct did`,
+  [FeedSource.LINEAR]: msg`Linear`,
+  [FeedSource.NOTION]: msg`Notion`,
 };
 
 export const DISCLOSURE_LABELS = {

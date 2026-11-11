@@ -1195,6 +1195,10 @@ msgstr "90 Tage"
 msgid "A change that matches a guardrail arrives blocked and can never apply on its own. Agents see the rules and propose around them. A rule with no matcher is guidance only."
 msgstr "Eine Änderung, die einer Leitplanke entspricht, wird blockiert und kann niemals von selbst angewendet werden. Agenten sehen die Regeln und schlagen Änderungen vor, die diese berücksichtigen. Eine Regel ohne Übereinstimmung ist nur eine Richtlinie."
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "A changelog or launch notes database. Duct reads its rows once a run, nothing else in the workspace."
+msgstr "Eine Changelog- oder Launch-Notes-Datenbank. Duct liest ihre Zeilen einmal pro Lauf und sonst nichts im Workspace."
+
 #: src/components/content/ContentWorkspace.jsx
 #~ msgid "A clearer brief produces sharper content. Skip if you'd rather Duct decide."
 #~ msgstr "Ein klareres Briefing führt zu präziseren Inhalten. Überspringe, wenn Duct entscheiden soll."
@@ -3683,6 +3687,10 @@ msgstr "Datenresidenz"
 msgid "Date"
 msgstr "Datum"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Dated pages in one database you pick"
+msgstr "Datierte Seiten in einer Datenbank deiner Wahl"
+
 #: src/components/memory/MemoryTimeline.jsx
 #~ msgid "Dates"
 #~ msgstr "Daten"
@@ -5861,6 +5869,10 @@ msgstr "Problemverteilung über alle Befunde"
 msgid "Issues"
 msgstr "Issues"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Issues completed in the window"
+msgstr "Im Zeitraum abgeschlossene Issues"
+
 #: src/lib/mcpServers.js
 msgid "It answered with an error the last time Duct called it. The next chat tries again, or check it now."
 msgstr "Es hat beim letzten Aufruf durch Duct mit einem Fehler geantwortet. Der nächste Chat versucht es erneut, oder prüfe es jetzt."
@@ -6154,6 +6166,10 @@ msgstr "Leicht — die günstige"
 #: src/components/content/PostMetricsForm.jsx
 msgid "Likes"
 msgstr "Likes"
+
+#: src/lib/contentFeedLabels.js
+msgid "Linear"
+msgstr "Linear"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Link"
@@ -7697,6 +7713,14 @@ msgstr "Noch nichts. Sag Duct, wie du Antworten magst, z.B. „gib mir zuerst di
 msgid "Notifications"
 msgstr "Benachrichtigungen"
 
+#: src/lib/contentFeedLabels.js
+msgid "Notion"
+msgstr "Notion"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Notion database link"
+msgstr "Link zur Notion-Datenbank"
+
 #: src/components/PipelineProgress.jsx
 msgid "now"
 msgstr "jetzt"
@@ -8325,6 +8349,10 @@ msgstr "Füge die Adresse eines beliebigen entfernten MCP-Servers ein."
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "Paste the link to one TikTok post."
 msgstr "Füge den Link zu einem TikTok-Beitrag ein."
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Paste the Notion database to read, or untick Notion."
+msgstr "Füge die Notion-Datenbank ein, die gelesen werden soll, oder wähle Notion ab."
 
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Paste the server's address to connect it."

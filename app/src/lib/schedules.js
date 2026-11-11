@@ -80,6 +80,7 @@ export function feedScheduleBody(projectId, options, { timeZone = localTimeZone(
         max_days: o.maxDays,
         disclosure: o.disclosure,
         ...(o.lookBack ? { look_back_days: o.lookBack } : {}),
+        ...(o.notionDatabase && (o.sources || []).includes("notion") ? { notion_database: o.notionDatabase } : {}),
       },
       horizon: o.horizon || 7,
     },

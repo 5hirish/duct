@@ -1189,6 +1189,10 @@ msgstr ""
 msgid "A change that matches a guardrail arrives blocked and can never apply on its own. Agents see the rules and propose around them. A rule with no matcher is guidance only."
 msgstr ""
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "A changelog or launch notes database. Duct reads its rows once a run, nothing else in the workspace."
+msgstr ""
+
 #: src/components/content/ContentWorkspace.jsx
 #~ msgid "A clearer brief produces sharper content. Skip if you'd rather Duct decide."
 #~ msgstr ""
@@ -3677,6 +3681,10 @@ msgstr ""
 msgid "Date"
 msgstr ""
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Dated pages in one database you pick"
+msgstr ""
+
 #: src/components/memory/MemoryTimeline.jsx
 #~ msgid "Dates"
 #~ msgstr ""
@@ -5855,6 +5863,10 @@ msgstr ""
 msgid "Issues"
 msgstr ""
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Issues completed in the window"
+msgstr ""
+
 #: src/lib/mcpServers.js
 msgid "It answered with an error the last time Duct called it. The next chat tries again, or check it now."
 msgstr ""
@@ -6147,6 +6159,10 @@ msgstr ""
 #: src/components/content/AnalyticsView.jsx
 #: src/components/content/PostMetricsForm.jsx
 msgid "Likes"
+msgstr ""
+
+#: src/lib/contentFeedLabels.js
+msgid "Linear"
 msgstr ""
 
 #: src/components/content/AccountsTab.jsx
@@ -7692,6 +7708,14 @@ msgstr ""
 msgid "Notifications"
 msgstr ""
 
+#: src/lib/contentFeedLabels.js
+msgid "Notion"
+msgstr ""
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Notion database link"
+msgstr ""
+
 #: src/components/PipelineProgress.jsx
 msgid "now"
 msgstr ""
@@ -8319,6 +8343,10 @@ msgstr ""
 
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "Paste the link to one TikTok post."
+msgstr ""
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Paste the Notion database to read, or untick Notion."
 msgstr ""
 
 #: src/components/connections/McpConnectDialog.jsx

@@ -4263,6 +4263,15 @@ export const SCENES = [
     render: () => <FeedDialogScene initial={{ ...DEFAULT_FEED, lookBack: 30, horizon: 14, maxDays: 4, disclosure: "releases" }} />,
   },
   {
+    id: "feed-plan-dialog-linear-notion",
+    state: "Linear and Notion connected, Notion ticked without a database",
+    group: "FeedPlanDialog",
+    title: "The setup sheet with Linear and Notion",
+    note: "Linear and Notion appear as sources only when the person has them connected. Ticking Notion asks for the one database to read, and Find stories waits until there is one. What to check: four tiles sit two by two from @md; the database field and its error sit under the tiles, not between them.",
+    render: () => <FeedDialogScene connected={["linear", "notion"]}
+      initial={{ ...DEFAULT_FEED, sources: ["github", "linear", "notion"] }} />,
+  },
+  {
     id: "feed-plan-dialog-no-github",
     state: "no repository connected",
     group: "FeedPlanDialog",
@@ -4661,13 +4670,13 @@ const PLAN_WITH_FEED_DAYS = {
   ),
 };
 
-function FeedDialogScene({ githubConnected = true, initial }) {
+function FeedDialogScene({ githubConnected = true, initial, connected }) {
   const [open, setOpen] = useState(true);
   return (
     <>
       <Button size="sm" variant="outline" onClick={() => setOpen(true)}>Open the setup sheet</Button>
       <FeedPlanDialog open={open} onOpenChange={setOpen} onStart={() => setOpen(false)} onRepeat={() => setOpen(false)}
-        githubConnected={githubConnected} {...(initial ? { initial } : {})} />
+        githubConnected={githubConnected} connected={connected} {...(initial ? { initial } : {})} />
     </>
   );
 }

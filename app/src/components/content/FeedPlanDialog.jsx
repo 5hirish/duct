@@ -4,6 +4,7 @@ import { useId, useRef, useState } from "react";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { ArrowRight, CalendarClock, Check, ChevronDown, Eye, PackageCheck, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -27,11 +28,16 @@ import {
   LOOK_BACK_OPTIONS,
   MAX_DAYS_OPTIONS,
   SINCE_LAST,
+  feedBlocker,
   feedRibbon,
+  offeredSources,
 } from "@/lib/contentFeed";
 import { Cadence } from "@/lib/schedules";
 import { DISCLOSURE_HINTS, DISCLOSURE_LABELS, SOURCE_LABELS } from "@/lib/contentFeedLabels";
 import { cn } from "@/lib/utils";
+
+// A link's shape, not copy: the same in every language.
+const NOTION_LINK_EXAMPLE = "https://www.notion.so/…";
 
 const DISCLOSURE_ICONS = {
   [Disclosure.RELEASES]: Tag,
@@ -55,11 +61,12 @@ const DISCLOSURE_ICONS = {
  * Props: `open`, `onOpenChange`, `onStart(options)`, `onRepeat(options, cadence)`
  * (saves the same answers as a schedule: every Monday, or on each release,
  * #562 and #563; absent hides it),
- * `githubConnected` (false offers the Toolbox instead of GitHub), `initial`
- * for a scene.
+ * `githubConnected` (false offers the Toolbox instead of GitHub), `connected`
+ * (the preset ids of the person's MCP servers: Linear and Notion appear as
+ * sources only when connected, #565), `initial` for a scene.
  */
 export default function FeedPlanDialog({
-  open, onOpenChange, onStart, onRepeat, githubConnected = true, initial = DEFAULT_FEED,
+  open, onOpenChange, onStart, onRepeat, githubConnected = true, connected = [], initial = DEFAULT_FEED,
 }) {
   const { t, i18n } = useLingui();
   const [options, setOptions] = useState(() => ({
@@ -72,7 +79,9 @@ export default function FeedPlanDialog({
       ...o,
       sources: o.sources.includes(source) ? o.sources.filter((s) => s !== source) : [...o.sources, source],
     }));
-  const nothingPicked = options.sources.length === 0;
+  const offered = offeredSources(connected);
+  const blocker = feedBlocker(options);
+  const nothingPicked = blocker !== null;
   // The sheet opens on its answer, Find stories, not on the first tile: a
   // focus ring around GitHub on arrival read as an error, and Enter on open
   // should do the thing the defaults are for.
@@ -124,9 +133,49 @@ export default function FeedPlanDialog({
                 name={i18n._(SOURCE_LABELS[FeedSource.DUCT])}
                 line={t`Briefs, approved changes and what they did`}
               />
+              {offered.includes(FeedSource.LINEAR) && (
+                <SourceTile
+                  checked={options.sources.includes(FeedSource.LINEAR)}
+                  onToggle={() => toggleSource(FeedSource.LINEAR)}
+                  mark={<BrandStone src="/icons/linear.svg" />}
+                  name={i18n._(SOURCE_LABELS[FeedSource.LINEAR])}
+                  line={t`Issues completed in the window`}
+                />
+              )}
+              {offered.includes(FeedSource.NOTION) && (
+                <SourceTile
+                  checked={options.sources.includes(FeedSource.NOTION)}
+                  onToggle={() => toggleSource(FeedSource.NOTION)}
+                  mark={<BrandStone src="/icons/notion.svg" />}
+                  name={i18n._(SOURCE_LABELS[FeedSource.NOTION])}
+                  line={t`Dated pages in one database you pick`}
+                />
+              )}
             </div>
-            {nothingPicked && (
+            {options.sources.includes(FeedSource.NOTION) && (
+              <div className="flex flex-col gap-1.5 pt-1">
+                <label htmlFor="feed-notion-database" className="text-xs font-medium">
+                  <Trans>Notion database link</Trans>
+                </label>
+                <Input
+                  id="feed-notion-database"
+                  type="url"
+                  inputMode="url"
+                  placeholder={NOTION_LINK_EXAMPLE}
+                  value={options.notionDatabase || ""}
+                  onChange={(e) => set("notionDatabase")(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  <Trans>A changelog or launch notes database. Duct reads its rows once a run, nothing else in the workspace.</Trans>
+                </p>
+              </div>
+            )}
+            {blocker === "no_source" && (
               <p className="text-xs text-destructive" role="alert"><Trans>Pick at least one thing to read.</Trans></p>
+            )}
+            {blocker === "no_notion_database" && (
+              // Guidance, not an error: it shows the moment Notion is ticked, before anything was typed.
+              <p className="text-xs text-muted-foreground"><Trans>Paste the Notion database to read, or untick Notion.</Trans></p>
             )}
           </fieldset>
 
@@ -246,6 +295,15 @@ function FeedWindow({ options }) {
       </div>
 
     </div>
+  );
+}
+
+/** A vendor's own mark on a pale stone, legible in both themes (as BringAnyTool's). */
+function BrandStone({ src }) {
+  return (
+    <span className="feed-brand-stone" aria-hidden>
+      <img src={src} alt="" />
+    </span>
   );
 }
 

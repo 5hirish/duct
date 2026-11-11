@@ -1195,6 +1195,10 @@ msgstr "90 days"
 msgid "A change that matches a guardrail arrives blocked and can never apply on its own. Agents see the rules and propose around them. A rule with no matcher is guidance only."
 msgstr "A change that matches a guardrail arrives blocked and can never apply on its own. Agents see the rules and propose around them. A rule with no matcher is guidance only."
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "A changelog or launch notes database. Duct reads its rows once a run, nothing else in the workspace."
+msgstr "A changelog or launch notes database. Duct reads its rows once a run, nothing else in the workspace."
+
 #: src/components/content/ContentWorkspace.jsx
 #~ msgid "A clearer brief produces sharper content. Skip if you'd rather Duct decide."
 #~ msgstr "A clearer brief produces sharper content. Skip if you'd rather Duct decide."
@@ -3683,6 +3687,10 @@ msgstr "Data residency"
 msgid "Date"
 msgstr "Date"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Dated pages in one database you pick"
+msgstr "Dated pages in one database you pick"
+
 #: src/components/memory/MemoryTimeline.jsx
 #~ msgid "Dates"
 #~ msgstr "Dates"
@@ -5861,6 +5869,10 @@ msgstr "Issue distribution across all findings"
 msgid "Issues"
 msgstr "Issues"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Issues completed in the window"
+msgstr "Issues completed in the window"
+
 #: src/lib/mcpServers.js
 msgid "It answered with an error the last time Duct called it. The next chat tries again, or check it now."
 msgstr "It answered with an error the last time Duct called it. The next chat tries again, or check it now."
@@ -6154,6 +6166,10 @@ msgstr "Light — the cheap one"
 #: src/components/content/PostMetricsForm.jsx
 msgid "Likes"
 msgstr "Likes"
+
+#: src/lib/contentFeedLabels.js
+msgid "Linear"
+msgstr "Linear"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Link"
@@ -7698,6 +7714,14 @@ msgstr "Nothing yet. Tell Duct how you like answers, like \"give me the number f
 msgid "Notifications"
 msgstr "Notifications"
 
+#: src/lib/contentFeedLabels.js
+msgid "Notion"
+msgstr "Notion"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Notion database link"
+msgstr "Notion database link"
+
 #: src/components/PipelineProgress.jsx
 msgid "now"
 msgstr "now"
@@ -8326,6 +8350,10 @@ msgstr "Paste the address of any remote MCP server."
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "Paste the link to one TikTok post."
 msgstr "Paste the link to one TikTok post."
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Paste the Notion database to read, or untick Notion."
+msgstr "Paste the Notion database to read, or untick Notion."
 
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Paste the server's address to connect it."
