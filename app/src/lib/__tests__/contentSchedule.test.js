@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_PLAN_DAYS, PlanLength, monthPeriod, nextPlanStart, planPeriodOptions, planStartOf, AgendaGroup, PlanState, agendaGroups, isMissed, planItems, orderPlans, planProgress, planState, PlanAction, planActions, planOutlook, nextOpenDay } from "../contentSchedule";
+import { MAX_PLAN_DAYS, PlanLength, monthPeriod, nextPlanStart, planPeriodOptions, planStartOf, AgendaGroup, PlanState, agendaGroups, isMissed, planItems, orderPlans, planProgress, planState, PlanAction, planActions, planOutlook, nextOpenDay, planChanges } from "../contentSchedule";
 import { planScenario, randomPlan } from "../__fixtures__/planScenarios.mjs";
 
 // The same rules as backend/tests/test_content_plan_period.py: the buttons
@@ -147,5 +147,27 @@ describe("planActions", () => {
 
   it("offers only a revision for a plan that has not started", () => {
     expect(planActions(plan("2026-12-01", ["pending", "pending"]), today)).toEqual([{ id: PlanAction.REVISE }]);
+  });
+});
+
+describe("planChanges", () => {
+  it("reads a change to some days as each day before and after, with the fields that moved", () => {
+    const plan = {
+      start_date: "2026-11-01",
+      days: [{ topic: "a" }, { topic: "b" }, { topic: "Capsule in 5 pieces", post_type: "image", platforms: ["tiktok"] }],
+      only_days: true,
+      changed_days: [2],
+      previous_days: [{ topic: "c", post_type: "slideshow", platforms: ["tiktok"] }],
+    };
+    const [change] = planChanges(plan);
+    expect(change.index).toBe(2);
+    expect(change.date).toEqual(new Date(2026, 10, 3));
+    expect(change.before.topic).toBe("c");
+    expect(change.fields).toEqual(["topic", "post_type"]);
+  });
+
+  it("is empty for a whole plan", () => {
+    expect(planChanges({ start_date: "2026-11-01", days: [{ topic: "a" }] })).toEqual([]);
+    expect(planChanges(null)).toEqual([]);
   });
 });

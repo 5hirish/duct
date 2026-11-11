@@ -106,7 +106,8 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
     a menu of every plan as a rich row (state, dates, progress, channels),
     current first, then upcoming, then ended (`orderPlans`). A plan session's
     pane shows the plan being made with no day actions; drafting from a day
-    is the board's. A plan session is the plan manager for
+    is the board's. A proposal that changes some days (`only_days`) shows
+    those days alone, before and after (`PlanChanges.jsx`, `planChanges`). A plan session is the plan manager for
     one period: `?plan=<id>` revises that plan, `?start=<day>&days=<n>` plans
     that period, and neither manages the plan covering today (or makes one
     for the month in progress). The board's Revise plan is the first;

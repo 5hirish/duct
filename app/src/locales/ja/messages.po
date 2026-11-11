@@ -243,6 +243,14 @@ msgstr "{blogPosts, plural, other {# 投稿}}"
 msgid "{changeCount, plural, one {# change} other {# changes}}"
 msgstr "{changeCount, plural, other {# 変更}}"
 
+#: src/components/content/PlanViewport.jsx
+msgid "{changed, plural, one {Accept changes only this day; the rest of your plan stays as it is.} other {Accept changes only these days; the rest of your plan stays as it is.}}"
+msgstr "{changed, plural, other {この日のみ変更を承認します。プランの残りはそのまま維持されます。}}"
+
+#: src/components/content/PlanViewport.jsx
+msgid "{changed, plural, one {Duct proposes a change to # day.} other {Duct proposes changes to # days.}}"
+msgstr "{changed, plural, other {Ductは#日に変更を提案しています。}}"
+
 #: src/components/content/FormatLibrary.jsx
 #~ msgid "{charCount, plural, one {# char} other {# chars}}"
 #~ msgstr "{charCount, plural, other {# 文字}}"
@@ -729,6 +737,10 @@ msgstr "{removed} はアクセス権がなくなりました。"
 #: src/components/insights/desk/DeskCards.jsx
 #~ msgid "{rest, plural, one {# more not shown} other {# more not shown}}"
 #~ msgstr "{rest, plural, other {# その他は非表示}}"
+
+#: src/components/content/PlanChanges.jsx
+msgid "{rest, plural, one {The other # day stays as it is.} other {The other # days stay as they are.}}"
+msgstr "{rest, plural, other {他の#日はそのまま維持されます。}}"
 
 #: src/components/commands/CommandPalette.jsx
 msgid "{resultCount, plural, one {# command} other {# commands}}"
@@ -2526,6 +2538,10 @@ msgstr "変更 {n}"
 #~ msgid "Change address or key"
 #~ msgstr "アドレスまたはキーを変更"
 
+#: src/components/content/PlanViewport.jsx
+msgid "Change discarded. Your plan stays as it was; tell Duct what to change instead."
+msgstr "変更を破棄しました。プランは元のままです。代わりにDuctに変更内容を指示してください。"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "change set {id}"
 msgstr "変更セット {id}"
@@ -2544,12 +2560,17 @@ msgstr "変更"
 msgid "Changes apply to future drafts that pull this format."
 msgstr "変更は、このフォーマットを使用する今後の下書きに適用されます。"
 
+#: src/components/content/PlanChanges.jsx
+msgid "changes to"
+msgstr "変更点"
+
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Changes v{baseVersion} → v{targetVersion}"
 msgstr "変更 v{baseVersion} → v{targetVersion}"
 
 #: src/app/(app)/content/page.jsx
 #: src/components/content/PlanBoard.jsx
+#: src/components/content/PlanChanges.jsx
 msgid "Channel"
 msgstr "チャネル"
 
@@ -4354,6 +4375,10 @@ msgstr "この環境ではメール配信が設定されていないため、招
 #~ msgid "Email delivery isn’t configured on this environment, so invitations are logged server-side instead of sent. Set <0>RESEND_API_KEY</0> to deliver them."
 #~ msgstr "この環境ではメール配信が設定されていないため、招待は送信されずにサーバー側に記録されます。配信するには<0>RESEND_API_KEY</0>を設定してください。"
 
+#: src/components/content/PlanChanges.jsx
+msgid "Emotion"
+msgstr "感情"
+
 #: src/components/artifacts/ArtifactRenderer.jsx
 msgid "Empty dataset."
 msgstr "空のデータセット。"
@@ -4528,6 +4553,10 @@ msgstr "エグゼクティブ（CMO、VP、ディレクター）"
 #: src/components/audit/ExecutionOffer.jsx
 msgid "Expand into new markets"
 msgstr "新規市場への拡大"
+
+#: src/components/content/PlanChanges.jsx
+msgid "Experiment"
+msgstr "実験"
 
 #: src/components/ProjectMembers.jsx
 msgid "Expired"
@@ -4736,6 +4765,7 @@ msgstr "「{title}」を忘れますか？"
 msgid "Forgotten."
 msgstr "忘れました。"
 
+#: src/components/content/PlanChanges.jsx
 #: src/components/content/SynthesisPanel.jsx
 msgid "Format"
 msgstr "形式"
@@ -4824,6 +4854,10 @@ msgstr "ファイルから"
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "From your site"
 msgstr "あなたのサイトから"
+
+#: src/components/content/PlanChanges.jsx
+msgid "Funnel stage"
+msgstr "ファネルステージ"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Gemini · a free tier covers a first audit"
@@ -5285,6 +5319,7 @@ msgstr "大量、低判断"
 msgid "Home"
 msgstr "ホーム"
 
+#: src/components/content/PlanChanges.jsx
 #: src/lib/contentReview.js
 msgid "Hook"
 msgstr "フック"
@@ -6941,6 +6976,7 @@ msgid "Non-profit"
 msgstr "非営利団体"
 
 #: src/components/audit/AuditStepProgress.jsx
+#: src/components/content/PlanChanges.jsx
 msgid "none"
 msgstr "なし"
 
@@ -7339,6 +7375,10 @@ msgstr "数値の取得元"
 #: src/components/content/AnalyticsView.jsx
 msgid "Numbers land here after the first post goes out, and on Refresh once it has synced."
 msgstr "最初の投稿が公開され、同期後に更新すると、ここに数値が表示されます。"
+
+#: src/components/content/PlanChanges.jsx
+msgid "Objective"
+msgstr "目標"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Off"
@@ -8001,6 +8041,7 @@ msgid "Picking the hook…"
 msgstr "フックを選択中..."
 
 #: src/components/content/BrandContextForm.jsx
+#: src/components/content/PlanChanges.jsx
 msgid "Pillar"
 msgstr "ピラー"
 
@@ -8367,6 +8408,10 @@ msgstr "提案者"
 #: src/app/(app)/execute/page.jsx
 msgid "Proposed by you"
 msgstr "あなたが提案しました"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Proposed changes to the plan"
+msgstr "プランへの変更案"
 
 #: src/app/(app)/execute/page.jsx
 msgid "Proposed target + payload"
@@ -9781,6 +9826,10 @@ msgstr "SEOレポート"
 #: src/components/content/PlanViewport.jsx
 msgid "Sequencing the posting cadence…"
 msgstr "投稿の順序付け中…"
+
+#: src/components/content/PlanChanges.jsx
+msgid "Series"
+msgstr "シリーズ"
 
 #: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
@@ -11596,6 +11645,10 @@ msgstr "もう一度試しても解決しません。代わりにGitHubカード
 msgid "Turn on notifications"
 msgstr "通知をオンにする"
 
+#: src/components/content/PlanChanges.jsx
+msgid "Type"
+msgstr "タイプ"
+
 #: src/components/onboarding/FrontDoor.jsx
 #~ msgid "Type your address — that’s the whole setup. Duct reads your site the way a search engine does, then tells you what to fix first."
 #~ msgstr "アドレスを入力してください — これで設定は完了です。Ductは検索エンジンと同じようにサイトを読み取り、最初に修正すべき点を伝えます。"
@@ -12035,6 +12088,10 @@ msgstr "「{replacedTitle}」でした"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "was “{replacedTitle}” until {replacedUntil}"
 msgstr "{replacedUntil}まで「{replacedTitle}」でした"
+
+#: src/components/content/PlanChanges.jsx
+msgid "Was: {was}"
+msgstr "以前: {was}"
 
 #: src/components/content/report/GrowthReportView.jsx
 #: src/components/GoogleAdsReport.js

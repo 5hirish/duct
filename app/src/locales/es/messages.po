@@ -243,6 +243,14 @@ msgstr "{blogPosts, plural, one {# publicación} other {# publicaciones}}"
 msgid "{changeCount, plural, one {# change} other {# changes}}"
 msgstr "{changeCount, plural, one {# cambio} other {# cambios}}"
 
+#: src/components/content/PlanViewport.jsx
+msgid "{changed, plural, one {Accept changes only this day; the rest of your plan stays as it is.} other {Accept changes only these days; the rest of your plan stays as it is.}}"
+msgstr "{changed, plural, one {Aceptar cambios solo este día; el resto de tu plan se mantiene como está.} other {Aceptar cambios solo estos días; el resto de tu plan se mantiene como está.}}"
+
+#: src/components/content/PlanViewport.jsx
+msgid "{changed, plural, one {Duct proposes a change to # day.} other {Duct proposes changes to # days.}}"
+msgstr "{changed, plural, one {Duct propone un cambio para # día.} other {Duct propone cambios para # días.}}"
+
 #: src/components/content/FormatLibrary.jsx
 #~ msgid "{charCount, plural, one {# char} other {# chars}}"
 #~ msgstr "{charCount, plural, one {# carácter} other {# caracteres}}"
@@ -729,6 +737,10 @@ msgstr "{removed} ya no tiene acceso."
 #: src/components/insights/desk/DeskCards.jsx
 #~ msgid "{rest, plural, one {# more not shown} other {# more not shown}}"
 #~ msgstr "{rest, plural, one {# más no mostrado} other {# más no mostrados}}"
+
+#: src/components/content/PlanChanges.jsx
+msgid "{rest, plural, one {The other # day stays as it is.} other {The other # days stay as they are.}}"
+msgstr "{rest, plural, one {El otro # día se mantiene como está.} other {Los otros # días se mantienen como están.}}"
 
 #: src/components/commands/CommandPalette.jsx
 msgid "{resultCount, plural, one {# command} other {# commands}}"
@@ -2526,6 +2538,10 @@ msgstr "Cambio {n}"
 #~ msgid "Change address or key"
 #~ msgstr "Cambiar dirección o clave"
 
+#: src/components/content/PlanViewport.jsx
+msgid "Change discarded. Your plan stays as it was; tell Duct what to change instead."
+msgstr "Cambio descartado. Tu plan se mantiene como estaba; dile a Duct qué cambiar en su lugar."
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "change set {id}"
 msgstr "conjunto de cambios {id}"
@@ -2544,12 +2560,17 @@ msgstr "Cambios"
 msgid "Changes apply to future drafts that pull this format."
 msgstr "Los cambios se aplican a futuros borradores que utilicen este formato."
 
+#: src/components/content/PlanChanges.jsx
+msgid "changes to"
+msgstr "cambios en"
+
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Changes v{baseVersion} → v{targetVersion}"
 msgstr "Cambios v{baseVersion} → v{targetVersion}"
 
 #: src/app/(app)/content/page.jsx
 #: src/components/content/PlanBoard.jsx
+#: src/components/content/PlanChanges.jsx
 msgid "Channel"
 msgstr "Canal"
 
@@ -4354,6 +4375,10 @@ msgstr "La entrega de correo electrónico no está configurada en este entorno, 
 #~ msgid "Email delivery isn’t configured on this environment, so invitations are logged server-side instead of sent. Set <0>RESEND_API_KEY</0> to deliver them."
 #~ msgstr "La entrega de correo electrónico no está configurada en este entorno, por lo que las invitaciones se registran en el servidor en lugar de enviarse. Configura <0>RESEND_API_KEY</0> para entregarlas."
 
+#: src/components/content/PlanChanges.jsx
+msgid "Emotion"
+msgstr "Emoción"
+
 #: src/components/artifacts/ArtifactRenderer.jsx
 msgid "Empty dataset."
 msgstr "Conjunto de datos vacío."
@@ -4528,6 +4553,10 @@ msgstr "Ejecutivo (CMO, VP, Director)"
 #: src/components/audit/ExecutionOffer.jsx
 msgid "Expand into new markets"
 msgstr "Expandirse a nuevos mercados"
+
+#: src/components/content/PlanChanges.jsx
+msgid "Experiment"
+msgstr "Experimento"
 
 #: src/components/ProjectMembers.jsx
 msgid "Expired"
@@ -4736,6 +4765,7 @@ msgstr "¿Olvidar “{title}”?"
 msgid "Forgotten."
 msgstr "Olvidado."
 
+#: src/components/content/PlanChanges.jsx
 #: src/components/content/SynthesisPanel.jsx
 msgid "Format"
 msgstr "Formato"
@@ -4824,6 +4854,10 @@ msgstr "Desde tus archivos"
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "From your site"
 msgstr "Desde tu sitio"
+
+#: src/components/content/PlanChanges.jsx
+msgid "Funnel stage"
+msgstr "Etapa del embudo"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Gemini · a free tier covers a first audit"
@@ -5285,6 +5319,7 @@ msgstr "Alto volumen, bajo criterio"
 msgid "Home"
 msgstr "Inicio"
 
+#: src/components/content/PlanChanges.jsx
 #: src/lib/contentReview.js
 msgid "Hook"
 msgstr "Gancho"
@@ -6940,6 +6975,7 @@ msgid "Non-profit"
 msgstr "Sin fines de lucro"
 
 #: src/components/audit/AuditStepProgress.jsx
+#: src/components/content/PlanChanges.jsx
 msgid "none"
 msgstr "ninguno"
 
@@ -7338,6 +7374,10 @@ msgstr "Cifras de"
 #: src/components/content/AnalyticsView.jsx
 msgid "Numbers land here after the first post goes out, and on Refresh once it has synced."
 msgstr "Los números aparecen aquí después de la primera publicación y al actualizar una vez que se haya sincronizado."
+
+#: src/components/content/PlanChanges.jsx
+msgid "Objective"
+msgstr "Objetivo"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Off"
@@ -8000,6 +8040,7 @@ msgid "Picking the hook…"
 msgstr "Eligiendo el gancho…"
 
 #: src/components/content/BrandContextForm.jsx
+#: src/components/content/PlanChanges.jsx
 msgid "Pillar"
 msgstr "Pilar"
 
@@ -8366,6 +8407,10 @@ msgstr "Propuesto por"
 #: src/app/(app)/execute/page.jsx
 msgid "Proposed by you"
 msgstr "Propuesto por ti"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Proposed changes to the plan"
+msgstr "Cambios propuestos al plan"
 
 #: src/app/(app)/execute/page.jsx
 msgid "Proposed target + payload"
@@ -9780,6 +9825,10 @@ msgstr "Informe SEO"
 #: src/components/content/PlanViewport.jsx
 msgid "Sequencing the posting cadence…"
 msgstr "Secuenciando la cadencia de publicaciones…"
+
+#: src/components/content/PlanChanges.jsx
+msgid "Series"
+msgstr "Serie"
 
 #: src/components/connections/EndpointProviderCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
@@ -11595,6 +11644,10 @@ msgstr "Volver a intentarlo no servirá. Conecta GitHub con un token fine-graine
 msgid "Turn on notifications"
 msgstr "Activar notificaciones"
 
+#: src/components/content/PlanChanges.jsx
+msgid "Type"
+msgstr "Tipo"
+
 #: src/components/onboarding/FrontDoor.jsx
 #~ msgid "Type your address — that’s the whole setup. Duct reads your site the way a search engine does, then tells you what to fix first."
 #~ msgstr "Escribe tu dirección; esa es toda la configuración. Duct lee tu sitio como lo hace un motor de búsqueda y luego te dice qué arreglar primero."
@@ -12034,6 +12087,10 @@ msgstr "era “{replacedTitle}”"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "was “{replacedTitle}” until {replacedUntil}"
 msgstr "era “{replacedTitle}” hasta {replacedUntil}"
+
+#: src/components/content/PlanChanges.jsx
+msgid "Was: {was}"
+msgstr "Era: {was}"
 
 #: src/components/content/report/GrowthReportView.jsx
 #: src/components/GoogleAdsReport.js

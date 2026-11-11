@@ -102,7 +102,7 @@ def test_filesystem_is_virtual_and_there_is_no_shell(plan_session, emitted):
 def test_sub_agents_never_get_the_writer_tools():
     """Enforced by which tools are on their lists, not by the prompt — the
     harness's general-purpose default (every tool of the parent) included."""
-    writers = {ContentTool.SUBMIT_PLAN, ContentTool.SUBMIT_POST_DRAFT, ContentTool.EDIT_SLIDE,
+    writers = {ContentTool.SUBMIT_PLAN, ContentTool.REVISE_PLAN_DAYS, ContentTool.SUBMIT_POST_DRAFT, ContentTool.EDIT_SLIDE,
                ContentTool.GENERATE_IMAGE, ContentTool.EDIT_IMAGE, ContentTool.PUBLISH_POST,
                ContentTool.MARK_POSTED, ContentTool.RENDER_SLIDE, ContentTool.SUBMIT_ASSESSMENT}
 

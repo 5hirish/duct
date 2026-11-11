@@ -61,6 +61,7 @@ export const ACTIVITY_TOOLS = Object.freeze({
   fetch_post: ActivityKind.CONTEXT,
   fetch_slide_context: ActivityKind.CONTEXT,
   submit_plan: ActivityKind.ACTION,
+  revise_plan_days: ActivityKind.ACTION,
   submit_post_draft: ActivityKind.ACTION,
   edit_slide: ActivityKind.ACTION,
   submit_assessment: ActivityKind.ACTION,

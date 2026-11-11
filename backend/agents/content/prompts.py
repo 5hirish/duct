@@ -27,6 +27,7 @@ builders so sub-agents stay lean.
 from __future__ import annotations
 
 import json
+from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from utils.formatting import number, percent
@@ -566,8 +567,9 @@ the strip is for the person, not for you.
      and call submit_plan with the same payload.
    - submit_plan is a PROPOSAL. The viewport shows it with Accept, Modify and
      Reject; nothing is saved until the person accepts. After Accept, carry
-     on (offer to draft day 1). After Modify, change what they asked and
-     re-submit the whole plan. After Reject, ask in one line what they would
+     on (offer to draft day 1). After Modify, change what they asked: for
+     some days (one post, a week), revise_plan_days with only those days; for
+     the plan reworked as a whole, submit_plan again. After Reject, ask in one line what they would
      rather plan, or whether they would rather close the session; do not
      re-propose the same plan.
 3. Draft mode (draft_post) — WRITE PHASE.
@@ -845,7 +847,10 @@ Visual review:
   edit before you call it done.
 
 Writers (each emits an SSE event on success):
-  submit_plan, submit_post_draft, edit_slide
+  submit_plan, revise_plan_days, submit_post_draft, edit_slide
+  revise_plan_days(changes) — change some days of the plan (a day, a week)
+  without re-sending it: each day's date and only the fields that change. Every
+  other field and day stays as it is. No <duct_artifact> for it.
   edit_slide(slide_id, patch) — surgically change ONE slide (caption, style,
   kind, image_prompt, items) without re-sending the whole post. Use it for
   single-slide tweaks; use submit_post_draft to add / remove / reorder slides.
@@ -1148,6 +1153,25 @@ def _period_line(period: "PlanPeriod | None", project_name: str) -> str:
     )
 
 
+def _current_plan_lines(days: list, period: "PlanPeriod | None") -> str:
+    """The plan as the agent reads it back: one line a day, by its date when
+    the period is known, because revise_plan_days takes dates and an index
+    is one subtraction away from the wrong day."""
+    lines = []
+    for i, d in enumerate(days or []):
+        d = d if isinstance(d, dict) else {}
+        when = (period.start + timedelta(days=i)).isoformat() if period else f"{i}."
+        platforms = d.get("platforms") or []
+        where = f" · {platforms[0]}" if platforms else ""
+        hook = f" (hook: {d['hook_type']})" if d.get("hook_type") else ""
+        drafted = " [drafted: keep]" if d.get("post_id") else ""
+        lines.append(
+            f"  {when}{where} · {d.get('post_type', 'slideshow')} · {d.get('pillar', '')} · "
+            f"{d.get('topic', '')}{hook}{drafted}"
+        )
+    return "\n".join(lines) or "  (empty)"
+
+
 def build_plan_revise_prompt(
     brand: ContentBrandContext,
     days: list[dict],
@@ -1157,18 +1181,11 @@ def build_plan_revise_prompt(
     conversation behind it to resume: the plan manager, asked to change a plan
     rather than to write one. No research pass and no plan this turn; the
     person says what to change first."""
-    lines = []
-    for i, d in enumerate(days):
-        d = d if isinstance(d, dict) else {}
-        drafted = " [drafted: keep]" if d.get("post_id") else ""
-        lines.append(
-            f"  {i}. {d.get('post_type', 'slideshow')} · {d.get('pillar', '')} · {d.get('topic', '')}{drafted}"
-        )
     span = (
         f"{period.start.isoformat()} to {period.end.isoformat()} ({period.days} days)"
         if period else f"{len(days)} days"
     )
-    plan_lines = "\n".join(lines) or "  (empty)"
+    plan_lines = _current_plan_lines(days, period)
     return f"""\
 {_brand_stanza(brand)}
 
@@ -1183,13 +1200,16 @@ Now:
 
 1. In two sentences, say what the plan covers, then ask what they want to
    change. Do not rewrite it yet and do not call submit_plan this turn.
-2. When they answer, change what they asked for and keep the rest. Days
-   marked [drafted: keep] already have a post and stay exactly as they are.
-3. Emit the whole plan, all {len(days)} days in date order, inside
+2. When they answer with days to change (one post, a week, "fewer videos
+   from the 20th"), call revise_plan_days with only those days: each one's
+   date and only the fields that change. Everything else stays as it is.
+   Days marked [drafted: keep] already have a post and cannot change; a
+   change to one belongs in the post, so say so.
+3. If they ask to rework the plan as a whole or start over, emit the whole
+   plan, all {len(days)} days in date order, inside
    <duct_artifact>{{ "type": "plan", ... }}</duct_artifact>, then call
    submit_plan with the same payload. It updates this plan; it never makes
-   a second one.
-4. If they ask to start over, rewrite every day that is not drafted.
+   a second one. Rewrite every day that is not drafted.
 """
 
 
@@ -1417,8 +1437,9 @@ def _mode_tail(mode: RunMode) -> str:
             "period the opening message names (an ordered list of posts, one per "
             f"date, no day numbers, at most {MAX_PLAN_DAYS}) as a PlanDraft wrapped in "
             "<duct_artifact>, proposed with submit_plan once after emitting the tag "
-            "and accepted by the person in the viewport. A revision later in the "
-            "chat sends the whole plan again and replaces the proposal. An opening "
+            "and accepted by the person in the viewport. A change to some days later "
+            "in the chat (one post, a week) is revise_plan_days with only those days; "
+            "a plan reworked as a whole is submit_plan again, replacing the proposal. An opening "
             "message that carries a <plan_review> block is the review turn: opinion "
             "and a direction question first, no plan until they answer.\n\n"
             + _EXPLORE_EXPLOIT_BRIEF
@@ -1673,12 +1694,7 @@ def build_plan_review_prompt(
     )
     current = ""
     if current_days:
-        lines = []
-        for i, d in enumerate(current_days):
-            d = d if isinstance(d, dict) else {}
-            drafted = " [drafted: keep]" if d.get("post_id") else ""
-            lines.append(f"  {i}. {d.get('post_type', 'slideshow')} · {d.get('pillar', '')} · {d.get('topic', '')}{drafted}")
-        current = f"<current_plan period=\"{span}\">\n" + "\n".join(lines) + "\n</current_plan>\n"
+        current = f"<current_plan period=\"{span}\">\n{_current_plan_lines(current_days, period)}\n</current_plan>\n"
     optional = "\n\n".join(block for block in (business, voice, review, current) if block)
     return f"""\
 {_brand_stanza(brand)}

@@ -139,7 +139,7 @@ def test_no_sub_agent_of_either_runner_carries_a_writer():
         "UpdateArtifact", "RewriteArtifact", "AskUserQuestion", "RequestConnection", "SelectAccount",
     }
     content_writers = {
-        ContentTool.SUBMIT_PLAN.value, ContentTool.SUBMIT_POST_DRAFT.value, ContentTool.EDIT_SLIDE.value,
+        ContentTool.SUBMIT_PLAN.value, ContentTool.REVISE_PLAN_DAYS.value, ContentTool.SUBMIT_POST_DRAFT.value, ContentTool.EDIT_SLIDE.value,
         ContentTool.GENERATE_IMAGE.value, ContentTool.EDIT_IMAGE.value, ContentTool.PUBLISH_POST.value,
         ContentTool.MARK_POSTED.value, ContentTool.RENDER_SLIDE.value, ContentTool.SUBMIT_ASSESSMENT.value,
     }

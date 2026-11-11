@@ -1,7 +1,7 @@
 """The Content Studio agent's tools, bound for the LangChain (V1) harness.
 
 Four groups:
-  - Writers: submit_plan, submit_post_draft, edit_slide — validate Pydantic,
+  - Writers: submit_plan, revise_plan_days, submit_post_draft, edit_slide — validate Pydantic,
     upsert DB rows, emit SSE events (PLAN_GENERATED / POST_DRAFT_UPDATED).
   - Readers: fetch_brand_context, fetch_topic_bank, fetch_format_library,
     fetch_avatar_library, fetch_content_history, fetch_content_assets,
@@ -81,9 +81,19 @@ from agents.content.channels import (
 )
 from agents.content.channel_mix import mix_snapshot, overreaching_hooks
 from agents.content.channel_config import linked_pairs, load_channel_config
-from agents.content.plan_period import PlanPeriod, link_post_to_day, plan_end
+from agents.content.plan_period import MAX_PLAN_DAYS, PlanPeriod, link_post_to_day, plan_end
 from agents.content.persistence import link_artifact
-from agents.content.plan_proposal import PROPOSED, build_proposal, hold_proposal
+from agents.content.plan_proposal import (
+    DRAFTED,
+    OUTSIDE,
+    PAST,
+    PROPOSED,
+    build_proposal,
+    change_days,
+    hold_proposal,
+    propose_day_changes,
+    revise_held_proposal,
+)
 from agents.content.publishing import (
     SLIDE_RENDER,
     MediaUnreadable,
@@ -116,6 +126,7 @@ from agents.content.schema import (
     ContentStatus,
     ContentTool,
     MarkerScore,
+    PlanDayChange,
     PlanDraft,
     PostDraft,
     ReviewMarker,
@@ -838,6 +849,13 @@ def build_content_tools_lc(
     class SubmitPlanArgs(BaseModel):
         plan: PlanDraft = Field(description="The plan — the same object emitted in <duct_artifact>.")
 
+    class RevisePlanDaysArgs(BaseModel):
+        changes: list[PlanDayChange] = Field(
+            min_length=1,
+            max_length=MAX_PLAN_DAYS,
+            description="One entry per day to change: its date and only the fields that change.",
+        )
+
     class SubmitPostDraftArgs(BaseModel):
         post: PostDraft = Field(description="The post — the same object emitted in <duct_artifact>.")
 
@@ -941,6 +959,43 @@ def build_content_tools_lc(
 
     # ----------------------- Writers -----------------------
 
+    def _overreach_error(overreach) -> str:
+        return _err(" ".join(
+            f"{o.hook} is on {o.days} of {o.channel}'s {o.channel_days} days, and {o.channel}'s history "
+            f"backs it with {o.record}: a hint, not proof. Give it at most {o.cap} of those days."
+            for o in overreach
+        ) + " Spread the rest over other hooks; a hook earns more days once its posts earn the goal.")
+
+    def _stray_channels(days: list[dict]) -> str | None:
+        """The refusal for a day bound for a channel the brand does not post on."""
+        active = set(session.active_channels or ())
+        if not active:
+            return None
+        strays = sorted({str(p) for d in days for p in (d.get("platforms") or []) if str(p) not in active})
+        if not strays:
+            return None
+        return _err(
+            f"This brand posts on {', '.join(sorted(active))}. Days name {', '.join(strays)}, "
+            "which it does not post on: keep every day's platforms within the brand's channels."
+        )
+
+    async def _propose(proposal, live_id) -> None:
+        """Put ``proposal`` in front of the person: on the session, held on the
+        conversation (a deploy before they decide used to lose it), and in the
+        viewport."""
+        session.proposal = proposal
+        try:
+            with _open_db() as db:
+                hold_proposal(db, getattr(session, "conversation_id", None), proposal)
+        except Exception:
+            logger.warning("content: proposal for session %s not held", session.session_id, exc_info=True)
+        await emit({
+            "event": ContentEvent.PLAN_GENERATED,
+            "session_id": session.session_id,
+            "plan_id": str(live_id) if live_id else None,
+            "payload": proposal.payload(PROPOSED),
+        })
+
     async def submit_plan(plan: PlanDraft | dict) -> str:
         try:
             payload = plan if isinstance(plan, dict) else plan.model_dump(mode="json")
@@ -971,27 +1026,16 @@ def build_content_tools_lc(
                     row = None
                 live_days = list(row.days or []) if row is not None else None
                 live_id = row.id if row is not None else None
-            active = set(session.active_channels or ())
-            if active:
-                strays = sorted({
-                    str(p) for d in draft.days for p in (d.platforms or []) if str(p) not in active
-                })
-                if strays:
-                    return _err(
-                        f"This brand posts on {', '.join(sorted(active))}. Days name {', '.join(strays)}, "
-                        "which it does not post on: keep every day's platforms within the brand's channels."
-                    )
             new_days = [d.model_dump(mode="json") for d in draft.days]
+            stray = _stray_channels(new_days)
+            if stray:
+                return stray
             # A hook only one post tried is a hint, and a plan built on it is
             # a guess repeated: held in code, because the brief said so and a
             # plan still put 9 of 23 days on one (channel_mix.HINT_SHARE).
             overreach = overreaching_hooks(session.channel_mix, new_days)
             if overreach:
-                return _err(" ".join(
-                    f"{o.hook} is on {o.days} of {o.channel}'s {o.channel_days} days, and {o.channel}'s history "
-                    f"backs it with {o.record}: a hint, not proof. Give it at most {o.cap} of those days."
-                    for o in overreach
-                ) + " Spread the rest over other hooks; a hook earns more days once its posts earn the goal.")
+                return _overreach_error(overreach)
             strategy = draft.strategy.model_dump(mode="json")
             if session.channel_mix is not None:
                 strategy["mix"] = mix_snapshot(session.channel_mix)
@@ -1010,24 +1054,11 @@ def build_content_tools_lc(
                 ),
                 today=utcnow().date(),
             )
-            session.proposal = proposal
-            # Held on the conversation as well: the session lives in this
-            # process, and a deploy before the person decides used to lose it.
-            try:
-                with _open_db() as db:
-                    hold_proposal(db, getattr(session, "conversation_id", None), proposal)
-            except Exception:
-                logger.warning("content: proposal for session %s not held", session.session_id, exc_info=True)
             logger.info(
                 "content: plan proposed for session %s (%d days, %d kept, replaces %s)",
                 session.session_id, len(proposal.days), len(proposal.kept_days), proposal.replaces_plan_id,
             )
-            await emit({
-                "event": ContentEvent.PLAN_GENERATED,
-                "session_id": session.session_id,
-                "plan_id": str(live_id) if live_id else None,
-                "payload": proposal.payload(PROPOSED),
-            })
+            await _propose(proposal, live_id)
             return _ok_model(SubmitPlanResult(
                 status=PROPOSED,
                 plan_id="",
@@ -1038,6 +1069,101 @@ def build_content_tools_lc(
         except Exception as exc:
             logger.exception("submit_plan failed")
             return _err(f"submit_plan failed: {exc}")
+
+    # Why a day keeps what it has, in words the agent relays.
+    _REFUSED = {
+        DRAFTED: "has a drafted post, and the plan keeps a drafted day as it is: change the post itself, "
+                 "from its card on the board",
+        PAST: "is in the past, and the plan keeps what happened",
+        OUTSIDE: "is outside this plan",
+    }
+
+    async def revise_plan_days(changes: list[PlanDayChange | dict]) -> str:
+        try:
+            try:
+                parsed = [c if isinstance(c, PlanDayChange) else PlanDayChange.model_validate(c) for c in changes]
+            except ValidationError as exc:
+                return _err(f"PlanDayChange validation failed: {exc}")
+            today = utcnow().date()
+            # A proposal still waiting is what the person is looking at, so a
+            # change applies to it; otherwise to the plan this session manages.
+            held = session.proposal if getattr(session, "proposal", None) is not None else None
+            if held is not None and held.project_id != project_id:
+                held = None
+            saved = None
+            if held is None:
+                with _open_db() as db:
+                    row = db.get(ContentPlan, session.plan_id) if session.plan_id else None
+                    if row is not None and row.project_id == project_id:
+                        saved = {
+                            "plan_id": row.id, "name": row.name, "character": row.character,
+                            "strategy": row.strategy, "days": list(row.days or []),
+                            "start": row.start_date or session.period_start,
+                        }
+                if saved is None:
+                    return _err(
+                        "There is no plan to change yet. Write the whole plan with submit_plan; "
+                        "revise_plan_days changes days of a plan that exists."
+                    )
+            base_days = list(held.days) if held is not None else saved["days"]
+            start = held.start_date if held is not None else saved["start"]
+            if start is None:
+                return _err("This plan has no start date, so its days have no dates to change by.")
+            days, changed, refused = change_days(
+                base_days, [(c.date, c.fields()) for c in parsed], start=start, today=today,
+            )
+            if refused:
+                end = start + timedelta(days=max(len(base_days) - 1, 0))
+                said = "; ".join(
+                    f"{r.on.isoformat()} was sent twice" if r.reason not in _REFUSED
+                    else f"{r.on.isoformat()} {_REFUSED[r.reason]}"
+                    + (f" ({start.isoformat()} to {end.isoformat()})" if r.reason == OUTSIDE else "")
+                    for r in refused
+                )
+                return _err(f"Nothing was proposed: {said}. Send the change again without those days.")
+            if not changed:
+                return _err("Those days already read that way, so there is nothing to propose.")
+            unplanned = [days[i] for i in changed if not str(days[i].get("topic") or "").strip()
+                         or not str(days[i].get("pillar") or "").strip()]
+            if unplanned:
+                return _err("Every day needs a topic and a pillar; a change cannot clear either.")
+            stray = _stray_channels([days[i] for i in changed])
+            if stray:
+                return stray
+            # Only a change that crowds a hook further is refused: a plan made
+            # before the cap may lean on one already, and a one-day edit that
+            # leaves that alone is not the edit to stop.
+            before = {(o.channel, o.hook): o.days for o in overreaching_hooks(session.channel_mix, base_days)}
+            worse = [
+                o for o in overreaching_hooks(session.channel_mix, days)
+                if o.days > before.get((o.channel, o.hook), 0)
+            ]
+            if worse:
+                return _overreach_error(worse)
+            if held is not None:
+                proposal = revise_held_proposal(held, days, changed, today=today)
+                live_id = held.replaces_plan_id
+            else:
+                proposal = propose_day_changes(
+                    project_id=project_id, plan_id=saved["plan_id"], name=saved["name"], start=start,
+                    character=saved["character"], strategy=saved["strategy"], live_days=base_days,
+                    days=days, changed=changed, today=today,
+                )
+                live_id = saved["plan_id"]
+            logger.info(
+                "content: %d day(s) proposed for session %s (of %s)",
+                len(changed), session.session_id, "a proposal" if held is not None else f"plan {live_id}",
+            )
+            await _propose(proposal, live_id)
+            return _ok({
+                "status": PROPOSED,
+                "changed": [(start + timedelta(days=i)).isoformat() for i in changed],
+                "message": "The change is in the viewport with Accept and Reject; nothing is saved until "
+                           "the person accepts. Say in a line what changed and why.",
+            })
+        except Exception as exc:
+            logger.exception("revise_plan_days failed")
+            return _err(f"revise_plan_days failed: {exc}")
 
     async def _push_queued_edit(db: Session, post: ContentPost) -> str | None:
         """A rewrite of a post a scheduler is holding reaches the scheduler
@@ -2540,8 +2666,19 @@ def build_content_tools_lc(
             "already has a plan, Accept keeps the days before today and the days with a "
             "drafted post (the result lists them as kept_days) and replaces the rest. A "
             "later call in the same session replaces the proposal. Call this AFTER emitting "
-            "<duct_artifact>{\"type\":\"plan\",...}</duct_artifact>, with the whole plan.",
+            "<duct_artifact>{\"type\":\"plan\",...}</duct_artifact>, with the whole plan. To change "
+            "some days of a plan, call revise_plan_days instead.",
             SubmitPlanArgs,
+        ),
+        _bind(
+            revise_plan_days, ContentTool.REVISE_PLAN_DAYS,
+            "Change some days of the plan: one day, a week, any days the person names. Send each "
+            "day's date and ONLY the fields that change; every other field and every other day stays "
+            "exactly as it is. No <duct_artifact> and no whole plan. It changes the proposal waiting "
+            "in the viewport if there is one, otherwise the saved plan, and like submit_plan it only "
+            "proposes: the person sees those days before and after, and Accept writes them alone. A "
+            "day with a drafted post or a day in the past cannot change and is refused by name.",
+            RevisePlanDaysArgs,
         ),
         _bind(
             submit_post_draft, ContentTool.SUBMIT_POST_DRAFT,
