@@ -56,7 +56,7 @@ msgid ""
 msgstr ""
 "Ein Plan auf einem Board, ein Beitrag pro Karte, Folien und Bilder für jeden generiert, ein Klick zum Veröffentlichen in neun Netzwerken. Ergebnisse kommen auf die Karte zurück, damit der nächste Plan vom letzten lernt."
 
-#: about.html compare.html connect-agent.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
+#: about.html compare.html connect-agent.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html skills.html terms.html
 msgid "About"
 msgstr "Über uns"
 
@@ -113,7 +113,7 @@ msgstr ""
 "Designentscheidungen werden offen diskutiert. GitHub ist der beste Ort, um mich zu finden."
 
 #. link title
-#: about.html compare.html connect-agent.html doctrine.html index.html mcp.html open-source.html
+#: about.html compare.html connect-agent.html doctrine.html index.html mcp.html open-source.html skills.html
 msgid "Duct Blog"
 msgstr "Duct Blog"
 
@@ -170,7 +170,7 @@ msgstr ""
 msgid "FONS. The spring, before anything has run. The app’s front door."
 msgstr "FONS. Die Quelle, bevor etwas gelaufen ist. Die Eingangstür der App."
 
-#: about.html compare.html connect-agent.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/nav-simple.html privacy.html seo-audit.html terms.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+#: about.html compare.html connect-agent.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/nav-simple.html privacy.html seo-audit.html skills.html terms.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Home"
 msgstr "Startseite"
 
@@ -252,7 +252,7 @@ msgstr ""
 msgid "Principles, not <0>platitudes</0>"
 msgstr "Prinzipien, nicht <0>Plattitüden</0>"
 
-#: about.html compare.html connect-agent.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
+#: about.html compare.html connect-agent.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html skills.html terms.html
 msgid "Privacy Policy"
 msgstr "Datenschutzrichtlinie"
 
@@ -305,7 +305,7 @@ msgstr "Auf GitHub einen Stern geben →"
 msgid "Substance over ceremony"
 msgstr "Substanz statt Zeremonie"
 
-#: about.html compare.html connect-agent.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
+#: about.html compare.html connect-agent.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html skills.html terms.html
 msgid "Terms of Service"
 msgstr "Nutzungsbedingungen"
 
@@ -767,7 +767,7 @@ msgstr "Kriterium"
 msgid "Docs, email and the web"
 msgstr "Dokumente, E-Mail und das Web"
 
-#: compare.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/cta-blog.html partials/cta-for-pages.html partials/cta-home.html partials/cta-tools.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+#: compare.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/cta-blog.html partials/cta-for-pages.html partials/cta-home.html partials/cta-tools.html skills.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Download Duct ↓"
 msgstr "Duct herunterladen ↓"
 
@@ -817,7 +817,7 @@ msgstr ""
 msgid "Explain why a number moved"
 msgstr "Erkläre, warum sich eine Zahl verändert hat"
 
-#: compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html seo-audit.html tools/cac-ltv-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/mrr-growth-calculator.html tools/saas-metrics-calculator.html tools/weekly-brief-template.html
+#: compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html seo-audit.html skills.html tools/cac-ltv-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/mrr-growth-calculator.html tools/saas-metrics-calculator.html tools/weekly-brief-template.html
 msgid "FAQ"
 msgstr "FAQ"
 
@@ -979,7 +979,7 @@ msgstr "Sieh, wo Duct gewinnt"
 msgid "Self-host, no licence fee"
 msgstr "Selbst hosten, keine Lizenzgebühr"
 
-#: compare.html connect-agent.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html seo-audit.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+#: compare.html connect-agent.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html seo-audit.html skills.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Skip to content"
 msgstr "Zum Inhalt springen"
 
@@ -1222,11 +1222,11 @@ msgstr "Codex"
 msgid "Connect tools."
 msgstr "Tools verbinden."
 
-#: connect-agent.html
+#: connect-agent.html skills.html
 msgid "Copied"
 msgstr "Kopiert"
 
-#: connect-agent.html
+#: connect-agent.html skills.html
 msgid "Copy"
 msgstr "Kopieren"
 
@@ -3244,10 +3244,6 @@ msgid "Does it change my accounts without asking?"
 msgstr "Ändert es meine Konten, ohne zu fragen?"
 
 #: index.html
-msgid "Download for macOS ↓"
-msgstr "Für macOS herunterladen ↓"
-
-#: index.html
 msgid "Duct AI"
 msgstr "Duct AI"
 
@@ -3263,24 +3259,17 @@ msgid ""
 msgstr ""
 "Duct AI ist ein Open-Source-KI-Marketing-Agent. Er verbindet deine Produkt-, Marketing- und Umsatz-Tools, beantwortet toolübergreifend Fragen, schlägt Änderungen vor und wendet sie an, wenn du sie freigibst. Er läuft als Desktop-App auf macOS, Windows und Linux."
 
-#. meta description
-#: index.html
-msgid ""
-"Duct AI is the open-source AI marketing agent: it reads Google Ads, GA4, Stripe and ten more tools together, proposes the fix and applies it when you approve."
-msgstr ""
-"Duct AI ist der Open-Source-KI-Marketing-Agent: Er liest Google Ads, GA4, Stripe und zehn weitere Tools zusammen, schlägt die Lösung vor und wendet sie an, wenn du sie freigibst."
-
 #. meta og:title
 #. meta twitter:title
 #: index.html
-msgid "Duct AI — Open-source AI marketing agent for growth teams"
-msgstr "Duct AI — Open-Source-KI-Marketing-Agent für Wachstumsteams"
+msgid "Duct AI — Open-source AI marketing agent, a growth analyst"
+msgstr "Duct AI — Open-Source-AI-Marketing-Agent, ein Growth-Analyst"
 
 #: index.html
 msgid ""
-"Duct is the open-source AI marketing agent that reads every tool you run together, finds what needs to change, and changes it when you press Apply. No hunting through tools for the answer, no deciding on half of it."
+"Duct is the open-source AI marketing agent: a growth analyst with every login. It reads every tool you run together, finds what needs to change, and changes it when you press Apply."
 msgstr ""
-"Duct ist der Open-Source-KI-Marketing-Agent, der alle deine Tools zusammen liest, findet, was sich ändern muss, und es ändert, wenn du auf Anwenden drückst. Kein Suchen in einzelnen Tools, keine Entscheidung auf halber Datenlage."
+"Duct ist der Open-Source-AI-Marketing-Agent: ein Growth-Analyst mit jedem Login. Er liest alle Tools, die du nutzt, zusammen aus, findet, was geändert werden muss, und ändert es, wenn du auf Anwenden klickst."
 
 #: index.html
 msgid "E-commerce & DTC"
@@ -3403,6 +3392,13 @@ msgstr "Ein Montag in 30 Sekunden"
 #: index.html
 msgid "Open-source AI marketing agent for product and growth teams."
 msgstr "Open-Source-KI-Marketing-Agent für Produkt- und Wachstumsteams."
+
+#. meta description
+#: index.html
+msgid ""
+"Open-source AI marketing agent: a growth analyst with every login. Duct reads Google Ads, GA4, Stripe and nine more tools together and fixes what you approve."
+msgstr ""
+"Open-Source-AI-Marketing-Agent: ein Growth-Analyst mit jedem Login. Duct liest Google Ads, GA4, Stripe und neun weitere Tools zusammen aus und behebt, was du freigibst."
 
 #: index.html
 msgid "PMs & growth teams"
@@ -7989,6 +7985,10 @@ msgstr ""
 msgid "Stop calculating. <0>Start asking.</0>"
 msgstr "Hör auf zu rechnen. <0>Fang an zu fragen.</0>"
 
+#: partials/footer-expanded.html skills.html
+msgid "Agent skills"
+msgstr "Agent Skills"
+
 #: partials/footer-expanded.html
 msgid ""
 "An open-source project by Alleviate Lab. An AI agent that reads across your growth stack, acts with your approval, and remembers. MIT licensed."
@@ -9605,6 +9605,488 @@ msgstr "du@firma.com"
 #: seo-audit.html
 msgid "your-site.com"
 msgstr "deine-seite.com"
+
+#: skills.html
+msgid "<0>55–69</0> Needs work"
+msgstr "<0>55–69</0> Braucht Überarbeitung"
+
+#: skills.html
+msgid "<0>70–84</0> Ready after fixes"
+msgstr "<0>70–84</0> Bereit nach Korrekturen"
+
+#: skills.html
+msgid "<0>85–100</0> Ready"
+msgstr "<0>85–100</0> Bereit"
+
+#: skills.html
+msgid ""
+"<0>96/100, Ready</0> · 10 pages read · repo: 5hirish/duct<1/>The action: download the desktop app, tracked as <2>download_started</2>"
+msgstr ""
+"<0>96/100, Bereit</0> · 10 Seiten gelesen · Repo: 5hirish/duct<1/>Die Aktion: Desktop-App herunterladen, getrackt als <2>download_started</2>"
+
+#: skills.html
+msgid "<0></0> Agent skills · MIT · No account"
+msgstr "<0></0> Agent Skills · MIT · Kein Account"
+
+#: skills.html
+msgid "<0>Below 55</0> Not ready"
+msgstr "<0>Unter 55</0> Nicht bereit"
+
+#: skills.html
+msgid ""
+"<0>npx skills update</0> brings it to the latest version, and <1>npx skills remove launch-check</1> takes it out. The install goes into the project you run it in; add <2>-g</2> to make it available in every project. The CLI needs Node.js 22.20 or later."
+msgstr ""
+"<0>npx skills update</0> bringt es auf die neueste Version, und <1>npx skills remove launch-check</1> entfernt es. Die Installation erfolgt in dem Projekt, in dem du es ausführst; füge <2>-g</2> hinzu, um es in jedem Projekt verfügbar zu machen. Das CLI benötigt Node.js 22.20 oder neuer."
+
+#: skills.html
+msgid ""
+"A launch nobody can measure teaches you nothing, so measurement weighs most. A claim the code contradicts is the top comment on launch day, so claims come next."
+msgstr ""
+"Ein Launch, den niemand messen kann, bringt dir keine Erkenntnisse – daher wiegt die Messung am schwersten. Eine Behauptung, die dem Code widerspricht, ist am Launch-Tag der Top-Kommentar – daher kommen Behauptungen als Nächstes."
+
+#: skills.html
+msgid "A real run"
+msgstr "Ein echter Lauf"
+
+#: skills.html
+msgid ""
+"An SEO audit reads the HTML. launch-check also reads the code behind it and checks what the page promises against what the product does. Search is one area of six. For a full crawl with keyword clusters and competitors, run <0>Duct's free SEO audit</0>."
+msgstr ""
+"Ein SEO-Audit liest das HTML. launch-check liest auch den Code dahinter und prüft, was die Seite verspricht, im Vergleich zu dem, was das Produkt tut. Suche ist einer von sechs Bereichen. Für einen vollständigen Crawl mit Keyword-Clustern und Mitbewerbern nutze <0>Ducts kostenloses SEO-Audit</0>."
+
+#: skills.html
+msgid ""
+"An SEO audit reads the HTML. launch-check also reads the code behind it and checks what the page promises against what the product does. Search is one area of six. For a full crawl with keyword clusters and competitors, run Duct's free SEO audit."
+msgstr ""
+"Ein SEO-Audit liest das HTML. launch-check liest auch den Code dahinter und prüft, was die Seite verspricht, im Vergleich zu dem, was das Produkt tut. Suche ist einer von sechs Bereichen. Für einen vollständigen Crawl mit Keyword-Clustern und Mitbewerbern nutze Ducts kostenloses SEO-Audit."
+
+#: skills.html
+msgid "Answer engines"
+msgstr "Antwort-Engines"
+
+#: skills.html
+msgid ""
+"Any agent the open skills CLI installs into: Claude Code, Codex, Cursor, OpenCode, Gemini CLI, GitHub Copilot, Windsurf and Zed among them. The skill is one SKILL.md folder in the Agent Skills format, so an agent that reads that format can use it without the installer."
+msgstr ""
+"Jeder Agent, in den das offene Skills-CLI installiert: darunter Claude Code, Codex, Cursor, OpenCode, Gemini CLI, GitHub Copilot, Windsurf und Zed. Der Skill ist ein einzelner SKILL.md-Ordner im Format für Agent Skills, sodass ein Agent, der dieses Format liest, ihn ohne Installer nutzen kann."
+
+#: skills.html
+msgid "Apply fix 1? (yes / no / skip all)"
+msgstr "Korrektur 1 anwenden? (ja / nein / alle überspringen)"
+
+#: skills.html
+msgid "Before you <0>install it.</0>"
+msgstr "Bevor du <0>es installierst.</0>"
+
+#: skills.html
+msgid "Can ChatGPT, Perplexity and Claude read and cite it?"
+msgstr "Können ChatGPT, Perplexity und Claude es lesen und zitieren?"
+
+#: skills.html
+msgid "Can search engines index and describe every key page?"
+msgstr "Können Suchmaschinen jede wichtige Seite indexieren und beschreiben?"
+
+#: skills.html
+msgid "Claims"
+msgstr "Behauptungen"
+
+#. meta og:title
+#. meta twitter:title
+#: skills.html
+msgid "Claude Code marketing skills: launch-check, by Duct"
+msgstr "Claude Code Marketing-Skills: launch-check, von Duct"
+
+#: skills.html
+msgid "Connect Duct to the same agent"
+msgstr "Duct mit demselben Agenten verbinden"
+
+#. button aria-label
+#: skills.html
+msgid "Copy the install command"
+msgstr "Installationsbefehl kopieren"
+
+#: skills.html
+msgid "Count the downloads consent never sees."
+msgstr "Zähle die Downloads, die die Einwilligung nie sieht."
+
+#: skills.html
+msgid "Do I need a repository open?"
+msgstr "Muss ein Repository geöffnet sein?"
+
+#: skills.html
+msgid "Does a shared link show a title, a description and an image?"
+msgstr "Zeigt ein geteilter Link Titel, Beschreibung und Bild an?"
+
+#: skills.html
+msgid "Does it send my site or my code to Duct?"
+msgstr "Sendet es meine Website oder meinen Code an Duct?"
+
+#: skills.html
+msgid "Does the first screen say who it is for and what to do?"
+msgstr "Sagt der erste Screen, für wen es ist und was zu tun ist?"
+
+#: skills.html
+msgid "Does the installer track anything?"
+msgstr "Trackt der Installer irgendetwas?"
+
+#: skills.html
+msgid "Does the product do what the page and the release notes say?"
+msgstr "Tut das Produkt, was die Seite und die Release Notes versprechen?"
+
+#: skills.html
+msgid ""
+"Duct's MCP server lets the agent you just used list and read your Duct projects, and set one up from this repository. One address, one Allow in your browser. It can never approve a change."
+msgstr ""
+"Mit dem MCP-Server von Duct kann der Agent, den du gerade genutzt hast, deine Duct-Projekte auflisten und lesen sowie ein Projekt aus diesem Repository einrichten. Eine Adresse, einmal Erlauben im Browser. Er kann niemals eine Änderung freigeben."
+
+#: skills.html
+msgid ""
+"Each area starts at 100. A FAIL costs 25 points and a WARN 10. Something it could not check costs nothing and is listed as unverified, so a missing repository lowers the confidence, not the score."
+msgstr ""
+"Jeder Bereich beginnt bei 100. Ein FAIL kostet 25 Punkte und ein WARN 10. Etwas, das nicht geprüft werden konnte, kostet nichts und wird als ungeprüft aufgeführt – ein fehlendes Repository senkt also das Vertrauen, nicht die Punktzahl."
+
+#: skills.html
+msgid ""
+"Every finding names the URL or the file and line it came from. What it could not see is marked unverified, never failed."
+msgstr ""
+"Jeder Befund nennt die URL oder die Datei und Zeile, aus der er stammt. Was nicht eingesehen werden konnte, wird als ungeprüft markiert, niemals als fehlgeschlagen."
+
+#: skills.html
+msgid "First impression"
+msgstr "Erster Eindruck"
+
+#: skills.html
+msgid ""
+"Fix: no code. Read the release's download count from GitHub on launch day as the floor, and compare it with <0>download_started</0>."
+msgstr ""
+"Fix: kein Code. Lies die Download-Zahlen des Releases am Launch-Tag von GitHub als Untergrenze ab und vergleiche sie mit <0>download_started</0>."
+
+#: skills.html
+msgid "How do I update or remove it?"
+msgstr "Wie aktualisiere oder entferne ich es?"
+
+#: skills.html
+msgid "How is it different from an SEO audit?"
+msgstr "Wie unterscheidet es sich von einem SEO-Audit?"
+
+#: skills.html
+msgid "Impact 2 · Effort 1 · Found by: both · <0>site/index.html:308</0>"
+msgstr "Auswirkung 2 · Aufwand 1 · Gefunden von: beiden · <0>site/index.html:308</0>"
+
+#: skills.html
+msgid "Impact 2 · Effort 1 · Found by: repository · <0>site/assets/duct.js:364</0>"
+msgstr ""
+"Auswirkung 2 · Aufwand 1 · Gefunden durch: Repository · <0>site/assets/duct.js:364</0>"
+
+#: skills.html
+msgid ""
+"In the EEA, UK and Switzerland, analytics load only after Accept, and <0>download_started</0> waits in a queue that is never sent for a visitor who ignores the banner. Launch-day downloads from Europe will read low."
+msgstr ""
+"Im EWR, in Großbritannien und der Schweiz laden Analytics erst nach Accept, und <0>download_started</0> wartet in einer Warteschlange, die bei Besuchern, die das Banner ignorieren, nie gesendet wird. Downloads aus Europa am Launch-Tag fallen dadurch zu niedrig aus."
+
+#: skills.html
+msgid "Install"
+msgstr "Installieren"
+
+#. meta twitter:description
+#: skills.html
+msgid ""
+"Is your site ready to launch? Ask your agent. It checks what the page promises against what the code does. No account, MIT."
+msgstr ""
+"Ist deine Website bereit für den Launch? Frag deinen Agenten. Er gleicht ab, was die Seite verspricht und was der Code tut. Kein Account, MIT."
+
+#: skills.html
+msgid "It reads the page. <0>Then it reads the code.</0>"
+msgstr "Er liest die Seite. <0>Dann liest er den Code.</0>"
+
+#: skills.html
+msgid ""
+"It writes one file, its report. Every fix is a diff it shows first and applies only when you say yes. It never commits, pushes or deploys."
+msgstr ""
+"Er schreibt eine Datei: seinen Bericht. Jeder Fix ist ein Diff, das er zuerst zeigt und nur anwendet, wenn du Ja sagst. Er committet, pusht oder deployt nie."
+
+#: skills.html
+msgid "Launch check: getduct.ai"
+msgstr "Launch-Check: getduct.ai"
+
+#: skills.html
+msgid "Marketing skills for your coding agent.<0/><1>It already has the repo.</1>"
+msgstr ""
+"Marketing-Skills für deinen Coding-Agenten.<0/><1>Er hat das Repo bereits.</1>"
+
+#: skills.html
+msgid "Measurement"
+msgstr "Messung"
+
+#: skills.html
+msgid "Needs work"
+msgstr "Handlungsbedarf"
+
+#: skills.html
+msgid "No account"
+msgstr "Kein Account"
+
+#: skills.html
+msgid "No account. No upload. <0>No change without a yes.</0>"
+msgstr "Kein Account. Kein Upload. <0>Keine Änderung ohne ein Ja.</0>"
+
+#: skills.html
+msgid "No change without a yes"
+msgstr "Keine Änderung ohne ein Ja"
+
+#: skills.html
+msgid ""
+"No sign-up, no API key, no Duct login. It uses your agent's own web and shell tools, and never signs up, logs in or submits a form anywhere."
+msgstr ""
+"Keine Registrierung, kein API-Key, kein Duct-Login. Er nutzt die eigenen Web- und Shell-Tools deines Agenten und registriert sich nie, loggt sich nirgendwo ein und sendet keine Formulare ab."
+
+#: skills.html
+msgid ""
+"No, but it is better with one. Without the code it checks the live pages only, and most of the measurement area comes back unverified rather than failed. The findings a page audit cannot give, like a download that sends no event, come from the repository."
+msgstr ""
+"Nein, aber mit Code ist es besser. Ohne den Code prüft er nur die Live-Seiten, und der Großteil des Messbereichs gilt als ungeprüft statt als fehlgeschlagen. Die Befunde, die ein Seiten-Audit nicht liefern kann – wie ein Download, der kein Event auslöst –, stammen aus dem Repository."
+
+#: skills.html
+msgid ""
+"No. The skill is a set of instructions your agent follows with its own web and shell tools. There is no Duct server in the loop, no account and no API key. What your agent reads goes only where your agent's requests always go: to the model you already use."
+msgstr ""
+"Nein. Der Skill ist eine Reihe von Anweisungen, die dein Agent mit seinen eigenen Web- und Shell-Tools befolgt. Es gibt keinen Duct-Server im Ablauf, keinen Account und keinen API-Key. Was dein Agent liest, landet nur dort, wo die Anfragen deines Agenten immer hingehen: beim Modell, das du bereits nutzt."
+
+#: skills.html
+msgid ""
+"Not without a yes. The one file it writes on its own is its report, <0>duct-launch-check.md</0>. Each fix comes as a diff and a question, one at a time. It never commits, pushes or deploys, and it never opens <1>.env</1> or key files."
+msgstr ""
+"Nicht ohne ein Ja. Die einzige Datei, die er selbstständig schreibt, ist sein Bericht: <0>duct-launch-check.md</0>. Jeder Fix kommt einzeln als Diff und Frage. Er committet, pusht oder deployt nie und öffnet weder <1>.env</1> noch Schlüsseldateien."
+
+#: skills.html
+msgid ""
+"Not without a yes. The one file it writes on its own is its report, duct-launch-check.md. Each fix comes as a diff and a question, one at a time. It never commits, pushes or deploys, and it never opens .env or key files."
+msgstr ""
+"Nicht ohne ein Ja. Die einzige Datei, die er selbstständig schreibt, ist sein Bericht: duct-launch-check.md. Jeder Fix kommt einzeln als Diff und Frage. Er committet, pusht oder deployt nie und öffnet weder .env noch Schlüsseldateien."
+
+#: skills.html
+msgid "Nothing sent to Duct"
+msgstr "Nichts an Duct gesendet"
+
+#. meta og:description
+#: skills.html
+msgid ""
+"One command gives your coding agent a launch check: it reads the page and the code, scores six areas and fixes only on a yes."
+msgstr ""
+"Ein Befehl gibt deinem Coding-Agenten einen Launch-Check: Er liest die Seite und den Code, bewertet sechs Bereiche und fixt nur bei einem Ja."
+
+#: skills.html
+msgid "Only two findings cleared the bar. The rest is polish."
+msgstr "Nur zwei Befunde haben die Hürde genommen. Der Rest ist Feinschliff."
+
+#. meta description
+#: skills.html
+msgid ""
+"Open-source marketing skills for Claude Code, Codex and Cursor. launch-check reads your live site and your repo, scores the launch and ranks three fixes."
+msgstr ""
+"Open-Source-Marketing-Skills für Claude Code, Codex und Cursor. launch-check liest deine Live-Website und dein Repo, bewertet den Launch und priorisiert drei Fixes."
+
+#: skills.html
+msgid ""
+"Open-source skills for Claude Code, Codex, Cursor and any agent that reads SKILL.md. The first, launch-check, reads your live site and the code behind it, scores the launch out of 100 and ranks three fixes."
+msgstr ""
+"Open-Source-Skills für Claude Code, Codex, Cursor und jeden Agenten, der SKILL.md liest. Der erste, launch-check, liest deine Live-Website und den Code dahinter, bewertet den Launch mit bis zu 100 Punkten und priorisiert drei Fixes."
+
+#: skills.html
+msgid "Post this"
+msgstr "Diesen Beitrag posten"
+
+#: skills.html
+msgid ""
+"Ran a launch check on getduct.ai with my coding agent: 96/100. It found that downloads from Europe would undercount behind the cookie banner, which no page audit could have told me."
+msgstr ""
+"Habe mit meinem Coding-Agenten einen Launch-Check auf getduct.ai gemacht: 96/100. Er hat herausgefunden, dass Downloads aus Europa hinter dem Cookie-Banner zu niedrig gezählt würden – was mir kein Seiten-Audit hätte sagen können."
+
+#: skills.html
+msgid "Ranks three fixes, applies one on a yes"
+msgstr "Priorisiert drei Fixes, wendet einen bei einem Ja an"
+
+#: skills.html
+msgid "Reads the site and the repo"
+msgstr "Liest die Website und das Repo"
+
+#: skills.html
+msgid "Run it on yours"
+msgstr "Auf deiner ausführen"
+
+#. article aria-label
+#: skills.html
+msgid "Sample report: launch check of getduct.ai"
+msgstr "Beispielbericht: Launch-Check von getduct.ai"
+
+#: skills.html
+msgid "Scores six areas out of 100"
+msgstr "Bewertet sechs Bereiche mit bis zu 100 Punkten"
+
+#: skills.html
+msgid "Search"
+msgstr "Suche"
+
+#: skills.html
+msgid "See what the launch did"
+msgstr "Sehen, was der Launch bewirkt hat"
+
+#: skills.html
+msgid "Six areas, <0>weighted by what a launch loses.</0>"
+msgstr ""
+"Sechs Bereiche, <0>gewichtet nach dem, was bei einem Launch verloren geht.</0>"
+
+#: skills.html
+msgid "Social card"
+msgstr "Social-Card"
+
+#: skills.html
+msgid "Stop telling every visitor the download is for macOS."
+msgstr "Hör auf, jedem Besucher zu sagen, dass der Download für macOS ist."
+
+#: skills.html
+msgid "The check is one moment. <0>Duct reads the weeks after.</0>"
+msgstr "Der Check ist eine Momentaufnahme. <0>Duct liest die Wochen danach.</0>"
+
+#: skills.html
+msgid ""
+"The desktop app reads GA4, Search Console, your ads and Stripe together, answers why signups moved, and proposes the change, applied when you press Apply."
+msgstr ""
+"Die Desktop-App liest GA4, Search Console, deine Ads und Stripe gemeinsam aus, liefert Gründe für veränderte Anmeldezahlen und schlägt Änderungen vor, die angewendet werden, wenn du auf „Anwenden“ klickst."
+
+#: skills.html
+msgid "The first skill: launch-check"
+msgstr "Der erste Skill: launch-check"
+
+#: skills.html
+msgid ""
+"The home page button says “Download for macOS” to Windows, Linux and phone visitors alike, because the per-platform label runs only on <0>/download</0>."
+msgstr ""
+"Der Button auf der Startseite zeigt Besuchern mit Windows, Linux und Smartphones gleichermaßen „Download for macOS“ an, weil das plattformspezifische Label nur auf <0>/download</0> aktiv ist."
+
+#: skills.html
+msgid ""
+"The ones people ask for. Tell us the marketing job you would hand your agent in <0>GitHub Discussions</0>."
+msgstr ""
+"Diejenigen, nach denen gefragt wird. Sag uns in den <0>GitHub Discussions</0>, welche Marketing-Aufgabe du deinem Agenten übertragen würdest."
+
+#: skills.html
+msgid ""
+"The ones people ask for. Tell us the marketing job you would hand your agent in GitHub Discussions."
+msgstr ""
+"Die, nach denen gefragt wird. Sag uns in den GitHub Discussions, welche Marketingaufgabe du deinem Agenten übergeben würdest."
+
+#: skills.html
+msgid ""
+"The skill is free and MIT licensed. It runs on your agent's own model, so a check costs what your agent spends reading ten pages and part of a repository. It stops at ten pages and aims to finish in ten minutes."
+msgstr ""
+"Der Skill ist kostenlos und unter MIT lizenziert. Er läuft auf dem Modell deines Agenten, ein Check kostet also so viel, wie dein Agent braucht, um zehn Seiten und einen Teil eines Repositorys zu lesen. Er stoppt bei zehn Seiten und zielt darauf ab, in zehn Minuten fertig zu sein."
+
+#: skills.html
+msgid ""
+"The skill is instructions, not a service. Your site and your code are read by your agent and go nowhere else. It never opens <0>.env</0> or key files."
+msgstr ""
+"Der Skill besteht aus Anweisungen, ist kein Dienst. Deine Website und dein Code werden von deinem Agenten gelesen und nirgendwo sonsthin übertragen. Er öffnet niemals <0>.env</0> oder Schlüsseldateien."
+
+#: skills.html
+msgid ""
+"The skills CLI, which is open source and not ours, counts installs anonymously for the skills.sh leaderboard. Set <0>DISABLE_TELEMETRY=1</0> or <1>DO_NOT_TRACK=1</1> before you run it to turn that off. The skill itself sends nothing anywhere."
+msgstr ""
+"Die Skills-CLI, die Open Source ist und nicht von uns stammt, zählt Installationen anonym für die skills.sh-Bestenliste. Setze vor dem Ausführen <0>DISABLE_TELEMETRY=1</0> oder <1>DO_NOT_TRACK=1</1>, um das zu deaktivieren. Der Skill selbst sendet nichts irgendwohin."
+
+#: skills.html
+msgid ""
+"The skills CLI, which is open source and not ours, counts installs anonymously for the skills.sh leaderboard. Set DISABLE_TELEMETRY=1 or DO_NOT_TRACK=1 before you run it to turn that off. The skill itself sends nothing anywhere."
+msgstr ""
+"Die Skills-CLI, die Open Source ist und nicht von uns stammt, zählt Installationen anonym für die skills.sh-Bestenliste. Setze vor dem Ausführen DISABLE_TELEMETRY=1 oder DO_NOT_TRACK=1, um das zu deaktivieren. Der Skill selbst sendet nichts irgendwohin."
+
+#: skills.html
+msgid ""
+"The three that matter most for launch day, each as a diff. It asks before every one and never commits, pushes or deploys."
+msgstr ""
+"Die drei wichtigsten für den Launch-Tag, jeweils als Diff. Er fragt vor jedem nach und committet, pusht oder deployt nie."
+
+#: skills.html
+msgid ""
+"Then ask your agent “Is my site ready to launch?”, or type <0>/launch-check</0> in Claude Code."
+msgstr ""
+"Frag dann deinen Agenten „Ist meine Website bereit für den Launch?“ oder tippe <0>/launch-check</0> in Claude Code ein."
+
+#: skills.html
+msgid "Three fixes"
+msgstr "Drei Fixes"
+
+#: skills.html
+msgid ""
+"Up to ten live pages, the sitemap and every card image, then the code behind them: the analytics tag, the signup or download event, where the head comes from, and the claims the page makes."
+msgstr ""
+"Bis zu zehn Live-Seiten, die Sitemap und jedes Card-Bild, dann der Code dahinter: das Analytics-Tag, das Registrierungs- oder Download-Event, woher der Head stammt und die Aussagen, die die Seite trifft."
+
+#: skills.html
+msgid "Use Duct from your agent →"
+msgstr "Duct über deinen Agenten nutzen →"
+
+#: skills.html
+msgid "We ran it on getduct.ai. <0>96 out of 100.</0>"
+msgstr "Wir haben es auf getduct.ai ausgeführt. <0>96 von 100.</0>"
+
+#: skills.html
+msgid "What does it cost, and how long does it take?"
+msgstr "Was kostet es und wie lange dauert es?"
+
+#: skills.html
+msgid "What it checks"
+msgstr "Was er prüft"
+
+#: skills.html
+msgid "What it never does"
+msgstr "Was er nie tut"
+
+#: skills.html
+msgid "Where Duct comes in"
+msgstr "Wo Duct ins Spiel kommt"
+
+#: skills.html
+msgid "Which agents does it work with?"
+msgstr "Mit welchen Agenten funktioniert es?"
+
+#: skills.html
+msgid "Which skills come next?"
+msgstr "Welche Skills kommen als Nächstes?"
+
+#: skills.html
+msgid "Will it change my code?"
+msgstr "Wird er meinen Code ändern?"
+
+#: skills.html
+msgid "Will the launch be recorded, down to the one action?"
+msgstr "Wird der Launch erfasst, bis hin zur einzelnen Aktion?"
+
+#: skills.html
+msgid "duct-launch-check.md"
+msgstr "duct-launch-check.md"
+
+#: skills.html
+msgid ""
+"getduct.ai and its repository, on November 10, 2026. Only two findings cleared the bar for a fix, and the first one exists only in the code: downloads from Europe would read low, with nothing on the page to show it."
+msgstr ""
+"getduct.ai und sein Repository am 10. November 2026. Nur zwei Befunde erfüllten die Kriterien für einen Fix, und der erste existiert nur im Code: Downloads aus Europa würden zu niedrig erfasst werden, ohne dass auf der Seite etwas darauf hindeutet."
+
+#: skills.html
+msgid ""
+"launch-check tells you whether the launch will be counted. Duct, the open-source AI marketing agent this shelf comes from, tells you what the count means."
+msgstr ""
+"launch-check verrät dir, ob der Launch gezählt wird. Duct, der Open-Source-KI-Marketing-Agent, aus dessen Regal das stammt, verrät dir, was die Zahl bedeutet."
+
+#: skills.html
+msgid ""
+"npx skills update brings it to the latest version, and npx skills remove launch-check takes it out. The install goes into the project you run it in; add -g to make it available in every project. The CLI needs Node.js 22.20 or later."
+msgstr ""
+"npx skills update aktualisiert auf die neueste Version und npx skills remove launch-check entfernt ihn. Die Installation erfolgt im Projekt, in dem du es ausführst; füge -g hinzu, um ihn in jedem Projekt verfügbar zu machen. Die CLI erfordert Node.js 22.20 oder neuer."
+
+#: skills.html
+msgid "yes"
+msgstr "ja"
 
 #: terms.html
 msgid "1. What These Terms Cover"
@@ -12686,6 +13168,25 @@ msgstr "← Zurück"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← Neu beginnen"
+
+#~ msgid "Download for macOS ↓"
+#~ msgstr "Für macOS herunterladen ↓"
+
+#. meta description
+#~ msgid ""
+#~ "Duct AI is the open-source AI marketing agent: it reads Google Ads, GA4, Stripe and ten more tools together, proposes the fix and applies it when you approve."
+#~ msgstr ""
+#~ "Duct AI ist der Open-Source-KI-Marketing-Agent: Er liest Google Ads, GA4, Stripe und zehn weitere Tools zusammen, schlägt die Lösung vor und wendet sie an, wenn du sie freigibst."
+
+#. meta og:title
+#. meta twitter:title
+#~ msgid "Duct AI — Open-source AI marketing agent for growth teams"
+#~ msgstr "Duct AI — Open-Source-KI-Marketing-Agent für Wachstumsteams"
+
+#~ msgid ""
+#~ "Duct is the open-source AI marketing agent that reads every tool you run together, finds what needs to change, and changes it when you press Apply. No hunting through tools for the answer, no deciding on half of it."
+#~ msgstr ""
+#~ "Duct ist der Open-Source-KI-Marketing-Agent, der alle deine Tools zusammen liest, findet, was sich ändern muss, und es ändert, wenn du auf Anwenden drückst. Kein Suchen in einzelnen Tools, keine Entscheidung auf halber Datenlage."
 
 #~ msgctxt "js"
 #~ msgid ""

@@ -71,7 +71,9 @@ LOCALE_NAMES = {
 
 DEFAULT_MODELS = {
     "anthropic": "claude-sonnet-5-5",
-    "gemini": "gemini-2.5-flash",
+    # 2.5 Flash returns 404 to new keys; 3.5 Flash is the one that filled
+    # every language, Japanese included, on 2026-11-11.
+    "gemini": "gemini-3.5-flash",
 }
 
 BATCH = 40

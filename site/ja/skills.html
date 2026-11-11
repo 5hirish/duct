@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Claude Codeマーケティングスキル：launch-check（Duct提供）</title>
+<link rel="canonical" href="https://getduct.ai/ja/skills"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/skills"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/skills"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/skills"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/skills"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/skills"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/skills"/>
+<link rel="alternate" hreflang="zh-CN" href="https://getduct.ai/zh-cn/skills"/>
+<meta property="og:locale" content="ja_JP"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="zh_CN"/>
+<!-- hreflang:end -->
+<meta name="description" content="Claude Code、Codex、Cursor向けのオープンソースマーケティングスキル。launch-checkは公開サイトとリポジトリを読み込み、ローンチをスコア化して3つの修正に順位を付けます。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/ja/skills"/>
+<meta property="og:title" content="Claude Codeマーケティングスキル：launch-check（Duct提供）"/>
+<meta property="og:description" content="1つのコマンドでコーディングエージェントにローンチチェックを実行させることができます。ページとコードを読み込み、6つの領域をスコア化し、許可を得た場合のみ修正を行います。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/skills.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Claude Codeマーケティングスキル：launch-check（Duct提供）"/>
+<meta name="twitter:description" content="サイトのローンチ準備はできていますか？エージェントに尋ねてみましょう。ページが謳っている内容とコードの動作を照合します。アカウント不要、MIT。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/skills.jpg"/>
+<link rel="alternate" type="application/rss+xml" title="Ductブログ" href="/blog/feed.xml"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"クッキーについて、正直に","We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold.":"PostHogを使用して、どのページでサインアップが発生し、Ductがどこでユーザーの妨げになっているかを確認します。これには、入力されたすべての情報が非表示にされた訪問のリプレイも含まれます。拒否するとPostHogはオフになり、Ductはまったく同じように機能します。Google Analyticsも訪問数をカウントし、どちらを選択しても独自のクッキーを設定します。データを販売することはありません。","Privacy Policy":"プライバシーポリシー","Decline":"拒否する","Accept":"同意する","{n} stars on GitHub":"GitHubで{n}個のスター","UTM Builder":"UTMビルダー","SaaS Metrics Benchmark Calculator":"SaaSメトリクスベンチマーク計算ツール","Weekly Marketing Brief Generator":"週次マーケティングブリーフ生成ツール","CAC / LTV Calculator":"CAC / LTV計算ツール","MRR Growth Rate Calculator":"MRR成長率計算ツール","Engagement Rate Calculator":"エンゲージメント率計算ツール","CTR Calculator":"CTR計算ツール","CPM Calculator":"CPM計算ツール","CPC Calculator":"CPC計算ツール","CPA Calculator":"CPA計算ツール","Marketing ROI Calculator":"マーケティングROI計算ツール","ROAS Calculator":"ROAS計算ツール","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Menu":"メニュー","Free Tools":"無料ツール","Solutions":"ソリューション","Download Duct ↓":"Ductをダウンロード ↓","Language":"言語","Enlarged screenshot":"拡大されたスクリーンショット","Close":"閉じる","Fit to screen":"画面に合わせる","Zoom in":"ズームイン","Enlarge":"拡大","Universal · Apple silicon and Intel":"ユニバーサル · AppleシリコンおよびIntel","Windows 10 and later":"Windows 10以降","Runs on any distribution":"あらゆるディストリビューションで動作します","Debian and Ubuntu":"DebianとUbuntu","Download ↓":"ダウンロード ↓","Download for {label} ↓":"{label}版をダウンロード ↓","Example numbers. Change any field and calculate again for yours.":"数値例です。任意のフィールドを変更して、ご自身の数値で再計算してください。"};</script>
+<script src="/assets/config.js" defer></script>
+<!-- The FAQPage is the page's own <details>, word for word: the i18n generator translates these
+     strings through the same catalogue entries as the visible text. -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"ja","name":"Claude Codeマーケティングスキル：launch-check（Duct提供）","url":"https://getduct.ai/ja/skills","description":"Claude Code、Codex、Cursor向けのオープンソースマーケティングスキル。launch-checkは公開サイトとリポジトリを読み込み、ローンチをスコア化して3つの修正に順位を付けます。","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ja","mainEntity":[{"@type":"Question","name":"対応しているエージェントは？","acceptedAnswer":{"@type":"Answer","text":"オープンskills CLIがインストール可能なすべてのエージェント（Claude Code、Codex、Cursor、OpenCode、Gemini CLI、GitHub Copilot、Windsurf、Zedなど）。このスキルはAgent Skillsフォーマットの1つのSKILL.mdフォルダであるため、そのフォーマットを読み取れるエージェントであればインストーラーなしで使用できます。"}},{"@type":"Question","name":"サイトやコードがDuctに送信されますか？","acceptedAnswer":{"@type":"Answer","text":"いいえ。このスキルは、エージェントが自身のWebおよびシェルツールを使用して従う一連の指示です。経路にDuctのサーバーは存在せず、アカウントもAPIキーもありません。エージェントが読み込んだデータは、エージェントの要求が常に送信される場所、つまり既に使用しているモデルにのみ送信されます。"}},{"@type":"Question","name":"コードは変更されますか？","acceptedAnswer":{"@type":"Answer","text":"許可なしでは行いません。単独で書き出すファイルはレポートであるduct-launch-check.mdのみです。各修正は差分と確認として1つずつ提示されます。コミット、プッシュ、デプロイは一切行わず、.envやキーファイルを開くこともありません。"}},{"@type":"Question","name":"リポジトリを開いておく必要がありますか？","acceptedAnswer":{"@type":"Answer","text":"いいえ、ただしリポジトリがある方が優れています。コードなしでは公開ページのみをチェックし、計測領域の大部分は失敗ではなく未検証として返されます。イベントを送信しないダウンロードのように、ページの監査では提示できない指摘事項は、リポジトリから得られます。"}},{"@type":"Question","name":"SEO監査とはどのように異なりますか？","acceptedAnswer":{"@type":"Answer","text":"SEO監査はHTMLを読み取ります。launch-checkはその背景にあるコードも読み取り、ページが約束している内容とプロダクトの実際の機能を照合します。検索は6つの領域の1つです。キーワードクラスタや競合他社を含む完全なクロールを行うには、Ductの無料SEO監査を実行してください。"}},{"@type":"Question","name":"費用と所要時間は？","acceptedAnswer":{"@type":"Answer","text":"このスキルは無料で、MITライセンスです。お使いのエージェント自身のモデルで実行されるため、チェックにかかるコストはエージェントが10ページとリポジトリの一部を読み取る費用のみです。10ページで停止し、10分以内での完了を目指します。"}},{"@type":"Question","name":"インストーラーは何らかのデータをトラッキングしますか？","acceptedAnswer":{"@type":"Answer","text":"オープンソースであり当社の管轄外であるskills CLIは、skills.shリーダーボード向けにインストール数を匿名でカウントします。無効化するには、実行前にDISABLE_TELEMETRY=1またはDO_NOT_TRACK=1を設定してください。スキル自体は一切データを送信しません。"}},{"@type":"Question","name":"更新または削除を行うにはどうすればよいですか？","acceptedAnswer":{"@type":"Answer","text":"npx skills updateで最新バージョンに更新され、npx skills remove launch-checkで削除されます。インストールは実行したプロジェクト内に行われます。すべてのプロジェクトで使用可能にするには-gを追加してください。CLIにはNode.js 22.20以降が必要です。"}},{"@type":"Question","name":"次に追加されるスキルは？","acceptedAnswer":{"@type":"Answer","text":"要望の多いものです。エージェントに任せたいマーケティング業務をGitHub Discussionsで教えてください。"}}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"ja","itemListElement":[{"@type":"ListItem","position":1,"name":"ホーム","item":"https://getduct.ai/ja/"},{"@type":"ListItem","position":2,"name":"Agent Skills","item":"https://getduct.ai/ja/skills"}]}
+</script>
+<style>
+/* ── SKILLS-ONLY STYLES ── */
+.sk-hero { padding-bottom: 72px; }
+.sk-hero h1 { font-size: clamp(34px, 4.4vw, 62px); max-width: 1160px; }
+.sk-hero .hero-sub { max-width: 600px; margin-bottom: 32px; }
+.sk-after { margin-top: 18px; font-size: 14px; line-height: 1.6; color: var(--navy-3); max-width: 60ch; animation: fadeUp .5s .32s ease both; }
+.sk-link { color: var(--navy); font-weight: 500; text-decoration: underline; text-decoration-color: var(--orange); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+.sk-sec code, .sk-after code, .faq-a code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9em; padding: 1px 6px; background: var(--off); border: 1px solid var(--border); border-radius: 6px; overflow-wrap: anywhere; }
+
+/* The install command: the one thing the page is for, so it sits where the eye lands.
+   The command is in a <pre>, which the i18n generator never translates. */
+.cmd { width: 100%; max-width: 520px; text-align: left; animation: fadeUp .5s .24s ease both; }
+.cmd-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); margin: 0 0 8px 4px; }
+.code { display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 20px; background: var(--white); border: 1.5px solid var(--border); border-radius: var(--r-lg); box-shadow: 0 18px 48px rgba(13,15,26,.08); }
+.code pre { flex: 1; min-width: 0; margin: 0; padding: 5px 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 17px; line-height: 1.5; color: var(--navy); white-space: pre-wrap; overflow-wrap: anywhere; }
+.code pre::before { content: '$ '; color: var(--navy-3); }
+.copy { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 8px 18px; border-radius: var(--pill); border: none; background: var(--navy); color: #fff; font-family: var(--sans); font-size: 14px; font-weight: 500; line-height: 1; cursor: pointer; transition: background .2s; }
+.copy:hover { background: var(--navy-2); }
+.copy:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+.copy .ic { font-size: 14px; }
+.copy.is-done { background: #1a7f37; }
+
+/* How it works: the shared navy band, each step ending on a small picture of that moment */
+.how .step { display: flex; flex-direction: column; }
+.how .step-title { font-weight: 400; }
+.how .step-body { font-size: 15px; font-weight: 400; color: rgba(255,255,255,.72); }
+.step-mini { margin-top: auto; padding-top: 26px; }
+.mini-cmd { margin: 0; padding: 12px 14px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.7; color: rgba(255,255,255,.85); white-space: pre-wrap; overflow-wrap: anywhere; }
+.mini-cmd .dim { color: rgba(255,255,255,.5); }
+.mini-score { display: flex; align-items: baseline; gap: 10px; padding: 14px 18px; background: var(--white); border-radius: var(--r); box-shadow: 0 18px 40px rgba(0,0,0,.28); }
+.mini-score strong { font-family: var(--serif); font-size: 40px; font-weight: 400; line-height: 1; color: var(--navy); }
+.mini-score span { font-size: 14px; color: var(--navy-3); }
+.mini-score em { margin-left: auto; font-style: normal; font-size: 13px; font-weight: 600; color: #9a5b00; }
+.mini-chat { display: grid; gap: 10px; }
+.mini-q { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11.5px; line-height: 1.6; color: rgba(255,255,255,.85); }
+.mini-yes { justify-self: end; padding: 7px 16px; background: var(--white); color: var(--navy); border-radius: 14px 14px 4px 14px; font-size: 14px; }
+
+/* Section shells, as on /connect-agent */
+.sk-sec { padding: 96px 52px; }
+.sk-sec.is-off { background: var(--off); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.sk-inner { max-width: 1160px; margin: 0 auto; }
+.sk-head { max-width: 780px; }
+.sk-head h2 { margin-bottom: 14px; }
+.sk-head .sub { max-width: 60ch; }
+.split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: start; }
+.split h2 { font-size: clamp(30px, 3.2vw, 42px); }
+
+/* What it checks: one row per area, the bar is the weight */
+.areas { list-style: none; border-top: 1px solid var(--border); }
+/* The bars share one column and one left edge, so the weights compare at a glance */
+.area { display: grid; grid-template-columns: 56px minmax(0, 1fr) 120px; column-gap: 20px; align-items: center; padding: 18px 0; border-bottom: 1px solid var(--border); }
+.area-w { grid-row: span 2; font-family: var(--serif); font-size: 34px; line-height: 1; color: var(--navy); }
+.area-name { grid-column: 2; font-size: 16px; font-weight: 600; color: var(--navy); }
+.area-bar { grid-column: 3; grid-row: 1 / span 2; height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+.area-bar i { display: block; height: 100%; background: var(--orange); border-radius: 3px; }
+.area-q { grid-column: 2; margin-top: 4px; font-size: 15px; line-height: 1.6; color: var(--navy-3); max-width: 56ch; }
+.rules { margin-top: 28px; font-size: 15px; line-height: 1.7; color: var(--navy-2); max-width: 52ch; }
+.bands { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; list-style: none; }
+.bands li { padding: 6px 12px; border-radius: var(--pill); border: 1px solid var(--border); background: var(--white); font-size: 13px; color: var(--navy-2); }
+.bands b { font-weight: 600; color: var(--navy); }
+
+/* The real run: the report as a document, the page's one heavy element */
+.report { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: 0 24px 64px rgba(13,15,26,.08); overflow: hidden; }
+.report-bar { display: flex; align-items: center; gap: 7px; padding: 10px 16px; background: var(--off); border-bottom: 1px solid var(--border); }
+.report-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+.report-file { margin-left: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: var(--navy-3); }
+.report-body { padding: 28px 32px 32px; }
+.report h3 { font-family: var(--serif); font-size: 26px; font-weight: 400; line-height: 1.2; color: var(--navy); }
+.report-score { margin-top: 10px; font-size: 15px; line-height: 1.6; color: var(--navy-2); }
+.report-score strong { color: var(--navy); }
+.report h4 { margin-top: 26px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); }
+.report-note { margin-top: 8px; font-size: 14px; line-height: 1.6; color: var(--navy-3); }
+.fixes { list-style: none; counter-reset: fix; margin-top: 14px; display: grid; gap: 22px; }
+.fixes > li { counter-increment: fix; position: relative; padding-left: 42px; }
+.fixes > li::before { content: counter(fix); position: absolute; left: 0; top: 0; width: 27px; height: 27px; border-radius: 50%; background: var(--navy); color: #fff; font-size: 12px; font-weight: 600; line-height: 27px; text-align: center; }
+.fix-title { font-size: 16px; font-weight: 600; line-height: 1.45; color: var(--navy); }
+.fix-why { margin-top: 4px; font-size: 15px; line-height: 1.65; color: var(--navy-2); max-width: 62ch; }
+.fix-meta { margin-top: 8px; font-size: 13px; line-height: 1.6; color: var(--navy-3); }
+.diff { margin: 12px 0 0; padding: 12px 14px; background: var(--navy); border-radius: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.7; color: rgba(255,255,255,.7); white-space: pre-wrap; overflow-wrap: anywhere; }
+.diff .del { color: #ffb4ab; }
+.diff .add { color: #a6ecc2; }
+.diff .ask { color: #fff; }
+.post-this { margin-top: 12px; padding: 14px 18px; border-left: 3px solid var(--orange); background: var(--off); border-radius: 0 var(--r) var(--r) 0; font-size: 15px; line-height: 1.65; color: var(--navy); }
+.again { margin-top: 32px; max-width: 520px; }
+.again .cmd-label { margin-left: 4px; }
+.again .code { box-shadow: none; }
+/* The second command sits in a narrow column, so its button is the icon alone and the
+   command keeps one line */
+.again .code pre { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.again .copy { padding: 8px 12px; }
+.again .copy span { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+
+/* What it never does: three cards on a hairline grid */
+.nevers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin-top: 44px; background: var(--border); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+.never { padding: 30px 28px 32px; background: var(--white); }
+.never .ic { display: block; font-size: 24px; color: var(--orange); margin-bottom: 16px; }
+.never h3 { font-family: var(--serif); font-size: 22px; font-weight: 400; line-height: 1.25; color: var(--navy); margin-bottom: 10px; }
+.never p { font-size: 15px; line-height: 1.7; color: var(--navy-3); max-width: 44ch; }
+
+/* Where Duct comes in: two cards */
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 44px; }
+.card { display: flex; flex-direction: column; align-items: flex-start; padding: 28px; background: var(--white); border: 1.5px solid var(--border); border-radius: var(--r-lg); }
+.card > .ic { font-size: 24px; color: var(--orange); margin-bottom: 16px; }
+.card h3 { font-family: var(--serif); font-size: 22px; font-weight: 400; line-height: 1.25; letter-spacing: -.2px; color: var(--navy); margin-bottom: 10px; }
+.card p { font-size: 15px; line-height: 1.7; color: var(--navy-3); max-width: 54ch; }
+.card .sk-link, .card .btn { margin-top: 20px; }
+.card .sk-link { display: inline-block; padding: 4px 0; }
+
+.sk-sec .faq-list { max-width: 820px; margin-top: 40px; }
+.sk-sec .faq-a { max-width: 66ch; }
+
+/* Phones: the command keeps its line, the copy button drops its word */
+@media (max-width: 600px) {
+  .code { padding: 8px 8px 8px 16px; }
+  .code pre { font-size: 15px; }
+  .copy { padding: 8px 12px; }
+  .copy span { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+  .report-body { padding: 22px 18px 24px; }
+  .fixes > li { padding-left: 38px; }
+  .diff { font-size: 12px; }
+}
+@media (max-width: 860px) {
+  .sk-hero { padding-bottom: 56px; }
+  .sk-sec { padding: 64px 24px; }
+  .split, .pair, .nevers { grid-template-columns: 1fr; }
+  .split { gap: 32px; }
+  .area { grid-template-columns: 44px minmax(0, 1fr) 64px; column-gap: 16px; }
+  .area-w { font-size: 28px; }
+  .never, .card { padding: 22px; }
+}
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">コンテンツへスキップ</a>
+
+<!-- EXPERIMENT: the shelf for Duct's own Agent Skills, starting with launch-check. Hypothesis:
+     developers and marketers who already run a coding agent (Claude Code, Codex, Cursor) install a
+     skill from this page when the install is one command and the page shows a real run, and the
+     ones who install meet Duct where they already work. Measured by copy-command clicks
+     (ductTrack skill_install_copied, by block) and by skills.sh installs of 5hirish/duct. Owns
+     the query "claude code marketing skills" (90/mo, KD 3) by answering it, not by repeating it. -->
+
+<!-- NAV (shared: site/partials/nav-simple.html) -->
+<div data-duct-partial="/ja/partials/nav-simple.html"></div>
+
+<main id="main-content">
+
+<!-- HERO: the command is the answer, so it sits where the eye lands -->
+<section class="hero sk-hero">
+<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Agent Skills · MIT · アカウント不要</div>
+<h1>コーディングエージェント用のマーケティングスキル。<br/><em>リポジトリはすでに所有しています。</em></h1>
+<p class="hero-sub">Claude Code、Codex、Cursor、およびSKILL.mdを読み込むあらゆるエージェント向けのオープンソーススキル。最初のスキルであるlaunch-checkは、公開サイトとその背景にあるコードを読み込み、ローンチを100点満点でスコア化し、3つの修正に順位を付けます。</p>
+<div class="cmd">
+<span class="cmd-label">インストール</span>
+<div class="code"><pre>npx skills add 5hirish/duct</pre><button type="button" class="copy" data-copy="hero" aria-label="インストールコマンドをコピー"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>コピー</span></button></div>
+</div>
+<p class="sk-after">その後、エージェントに「サイトのローンチ準備はできている？」と尋ねるか、Claude Codeで<code>/launch-check</code>と入力してください。</p>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="launch-check">
+<div class="how-inner">
+<p class="tag">最初のスキル: launch-check</p>
+<h2>ページを読み込みます。<em>次にコードを読み込みます。</em></h2>
+<div class="channel on-dark" aria-hidden="true"></div>
+<div class="steps">
+<div class="step reveal">
+<span class="step-num">01</span>
+<h3 class="step-title">サイトとリポジトリを読み込みます</h3>
+<p class="step-body">最大10件の公開ページ、サイトマップ、すべてのカード画像、そしてその背後にあるコード（アナリティクスタグ、登録やダウンロードのイベント、headの生成元、ページ内の主張）をチェックします。</p>
+<div class="step-mini" aria-hidden="true"><pre class="mini-cmd">$ curl -sSL yoursite.com
+<span class="dim">  10 pages · sitemap · llms.txt</span>
+$ grep -rn "capture(" src/
+<span class="dim">  no event on the signup form</span></pre></div>
+</div>
+<div class="step reveal" style="transition-delay:.1s">
+<span class="step-num">02</span>
+<h3 class="step-title">6つの領域を100点満点でスコア化</h3>
+<p class="step-body">各指摘事項には、検出元のURLまたはファイル名と行番号が記載されます。確認できなかった項目は「未検証」とマークされ、失敗として処理されることはありません。</p>
+<div class="step-mini" aria-hidden="true">
+<div class="mini-score"><strong>64</strong><span>/100</span><em>要改善</em></div>
+</div>
+</div>
+<div class="step reveal" style="transition-delay:.2s">
+<span class="step-num">03</span>
+<h3 class="step-title">3つの修正に順位を付け、許可を得て1つを適用します</h3>
+<p class="step-body">ローンチ日に最も重要な3つの修正をdiff形式で提示します。必ず事前に確認を求め、コミット、プッシュ、デプロイを行うことはありません。</p>
+<div class="step-mini" aria-hidden="true">
+<div class="mini-chat">
+<p class="mini-q">修正1を適用しますか？ (はい / いいえ / すべてスキップ)</p>
+<p class="mini-yes">はい</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- WHAT IT CHECKS -->
+<section class="sk-sec" id="what-it-checks">
+<div class="sk-inner split">
+<div class="sk-head reveal">
+<p class="tag">チェック対象</p>
+<h2>6つの領域、<em>ローンチ時の損失に応じて重み付け。</em></h2>
+<p class="sub">誰にも計測できないローンチからは何も学べないため、計測が最も重要視されます。コードと矛盾する主張はローンチ日に真っ先に指摘されるため、次に主張が重視されます。</p>
+<p class="rules">各領域は100点から始まります。FAILは-25点、WARNは-10点です。チェックできなかった項目は減点されず「未検証」として表示されるため、リポジトリが存在しない場合はスコアではなく信頼度が下がります。</p>
+<ul class="bands">
+<li><b>85–100</b> 準備完了</li>
+<li><b>70–84</b> 修正後に準備完了</li>
+<li><b>55–69</b> 要改善</li>
+<li><b>55未満</b> 準備未完了</li>
+</ul>
+</div>
+<ol class="areas reveal" style="transition-delay:.08s">
+<li class="area"><span class="area-w">25</span><span class="area-name">計測</span><span class="area-bar" aria-hidden="true"><i style="width:100%"></i></span><p class="area-q">ローンチの単一アクションまで記録されますか？</p></li>
+<li class="area"><span class="area-w">20</span><span class="area-name">主張</span><span class="area-bar" aria-hidden="true"><i style="width:80%"></i></span><p class="area-q">プロダクトはページやリリースノートに書かれている通りの動作をしますか？</p></li>
+<li class="area"><span class="area-w">20</span><span class="area-name">検索</span><span class="area-bar" aria-hidden="true"><i style="width:80%"></i></span><p class="area-q">検索エンジンはすべての主要ページをインデックス登録し、説明できますか？</p></li>
+<li class="area"><span class="area-w">15</span><span class="area-name">ソーシャルカード</span><span class="area-bar" aria-hidden="true"><i style="width:60%"></i></span><p class="area-q">共有リンクにタイトル、説明文、画像が表示されますか？</p></li>
+<li class="area"><span class="area-w">10</span><span class="area-name">回答エンジン</span><span class="area-bar" aria-hidden="true"><i style="width:40%"></i></span><p class="area-q">ChatGPT、Perplexity、Claudeがそれを読み取って引用できますか？</p></li>
+<li class="area"><span class="area-w">10</span><span class="area-name">ファーストインプレッション</span><span class="area-bar" aria-hidden="true"><i style="width:40%"></i></span><p class="area-q">最初の画面に対象者と行うべき操作が表示されていますか？</p></li>
+</ol>
+</div>
+</section>
+
+<!-- A REAL RUN: Duct's own site, so no third party is named -->
+<section class="sk-sec is-off" id="sample">
+<div class="sk-inner split">
+<div class="sk-head reveal">
+<p class="tag">実際の実行</p>
+<h2>getduct.aiで実行しました。<em>100点中96点。</em></h2>
+<p class="sub">2026年11月10日時点のgetduct.aiとそのリポジトリ。修正基準を満たした指摘事項は2件のみで、1件目はコード内にのみ存在していました。ヨーロッパからのダウンロード数が過小集計される可能性があり、ページ上にはそれが表示されていませんでした。</p>
+<div class="again">
+<span class="cmd-label">お使いの環境で実行</span>
+<div class="code"><pre>npx skills add 5hirish/duct</pre><button type="button" class="copy" data-copy="sample" aria-label="インストールコマンドをコピー"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>コピー</span></button></div>
+</div>
+</div>
+<article class="report reveal" style="transition-delay:.08s" aria-label="サンプルレポート: getduct.aiのローンチチェック">
+<div class="report-bar"><span class="report-dot" aria-hidden="true"></span><span class="report-dot" aria-hidden="true"></span><span class="report-dot" aria-hidden="true"></span><span class="report-file">duct-launch-check.md</span></div>
+<div class="report-body">
+<h3>ローンチチェック: getduct.ai</h3>
+<p class="report-score"><strong>96/100、準備完了</strong> · 10ページ読み込み済み · repo: 5hirish/duct<br/>アクション：デスクトップアプリのダウンロード（<code>download_started</code>として記録）</p>
+<h4>3つの修正点</h4>
+<p class="report-note">基準をクリアした指摘事項は2点のみです。残りはブラッシュアップです。</p>
+<ol class="fixes">
+<li>
+<p class="fix-title">同意ツールでは把握できないダウンロード数をカウントします。</p>
+<p class="fix-why">EEA、英国、スイスでは、アナリティクスはAcceptの後にのみ読み込まれ、バナーを無視した訪問者の<code>download_started</code>は送信されないキューで待機します。ヨーロッパからのローンチ当日のダウンロード数は少なく記録されます。</p>
+<p class="fix-meta">インパクト 2 · 工数 1 · 発見場所: リポジトリ · <code>site/assets/duct.js:364</code></p>
+<p class="fix-why">修正：コードなし。ローンチ当日にGitHubのリリースダウンロード数を下限として読み取り、<code>download_started</code>と比較します。</p>
+</li>
+<li>
+<p class="fix-title">すべての訪問者にダウンロードがmacOS向けであると伝えるのをやめましょう。</p>
+<p class="fix-why">プラットフォーム別のラベル表示は<code>/download</code>でのみ動作するため、ホームページのボタンはWindows、Linux、スマートフォンの訪問者にも一律で「macOS版をダウンロード」と表示されます。</p>
+<p class="fix-meta">影響度 2 · 工数 1 · 検出元：両方 · <code>site/index.html:308</code></p>
+<pre class="diff"><span class="del">- Download for macOS ↓</span>
+<span class="add">+ Download Duct ↓</span>
+<span class="ask">Apply fix 2? (yes / no / skip all)</span></pre>
+</li>
+</ol>
+<h4>これを投稿</h4>
+<p class="post-this">コーディングエージェントでgetduct.aiのローンチチェックを実行しました: 96/100。クッキーバナーの裏でヨーロッパからのダウンロード数が過少計測されることが判明しました。これはページの監査では分からなかったことです。</p>
+</div>
+</article>
+</div>
+</section>
+
+<!-- WHAT IT NEVER DOES -->
+<section class="sk-sec" id="never">
+<div class="sk-inner">
+<div class="sk-head reveal">
+<p class="tag">絶対に行わないこと</p>
+<h2>アカウント不要。アップロード不要。<em>許可なしの変更なし。</em></h2>
+</div>
+<div class="nevers reveal">
+<div class="never">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg>
+<h3>アカウント不要</h3>
+<p>サインアップ不要、APIキー不要、Ductへのログイン不要。エージェント自身のWebおよびシェルツールを使用し、どこにおいてもサインアップ、ログイン、フォーム送信を行いません。</p>
+</div>
+<div class="never">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>
+<h3>Ductへの送信なし</h3>
+<p>このスキルは指示であり、サービスではありません。サイトとコードはお使いのエージェントによって読み取られ、外部に送信されることはありません。<code>.env</code>やキーファイルを開くこともありません。</p>
+</div>
+<div class="never">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#git-branch"/></svg>
+<h3>許可なしの変更なし</h3>
+<p>1つのファイル（レポート）のみを書き出します。すべての修正は事前に差分として表示され、許可した場合にのみ適用されます。コミット、プッシュ、デプロイは一切行いません。</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- WHERE DUCT COMES IN -->
+<section class="sk-sec is-off" id="duct">
+<div class="sk-inner">
+<div class="sk-head reveal">
+<p class="tag">Ductの役割</p>
+<h2>チェックは一瞬です。<em>Ductはその後の数週間を読み込みます。</em></h2>
+<p class="sub">launch-checkは、ローンチが正しく計測されるかどうかを伝えます。この機能のベースであるオープンソースのAIマーケティングエージェント、Ductは、その数値が何を意味するのかを伝えます。</p>
+</div>
+<div class="pair">
+<div class="card reveal">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg>
+<h3>Ductを同じエージェントに接続する</h3>
+<p>DuctのMCPサーバーを使用すると、使用したばかりのエージェントがDuctプロジェクトの一覧表示や読み取りを行い、このリポジトリからセットアップできるようになります。アドレス1つとブラウザでの「許可」1回で設定完了します。変更を承認することは一切できません。</p>
+<a class="sk-link" href="/ja/connect-agent">エージェントからDuctを使用 →</a>
+</div>
+<div class="card reveal" style="transition-delay:.08s">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-line"/></svg>
+<h3>ローンチの結果を確認</h3>
+<p>デスクトップアプリはGA4、Search Console、広告、Stripeを統合して読み込み、登録数の変動理由に回答し、変更を提案します。「適用する」を押すと適用されます。</p>
+<a class="btn btn-orange" href="/ja/download" data-duct-download>Ductをダウンロード ↓</a>
+</div>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="sk-sec" id="faq">
+<div class="sk-inner">
+<div class="sk-head reveal">
+<p class="tag">FAQ</p>
+<h2><em>インストールする</em>前に。</h2>
+</div>
+<div class="faq-list reveal">
+<details class="faq-item">
+<summary class="faq-q">対応しているエージェントは？</summary>
+<p class="faq-a">オープンskills CLIがインストール可能なすべてのエージェント（Claude Code、Codex、Cursor、OpenCode、Gemini CLI、GitHub Copilot、Windsurf、Zedなど）。このスキルはAgent Skillsフォーマットの1つのSKILL.mdフォルダであるため、そのフォーマットを読み取れるエージェントであればインストーラーなしで使用できます。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">サイトやコードがDuctに送信されますか？</summary>
+<p class="faq-a">いいえ。このスキルは、エージェントが自身のWebおよびシェルツールを使用して従う一連の指示です。経路にDuctのサーバーは存在せず、アカウントもAPIキーもありません。エージェントが読み込んだデータは、エージェントの要求が常に送信される場所、つまり既に使用しているモデルにのみ送信されます。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">コードは変更されますか？</summary>
+<p class="faq-a">許可なしでは行いません。単独で書き出すファイルはレポートである<code>duct-launch-check.md</code>のみです。各修正は差分と確認として1つずつ提示されます。コミット、プッシュ、デプロイは一切行わず、<code>.env</code>やキーファイルを開くこともありません。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">リポジトリを開いておく必要がありますか？</summary>
+<p class="faq-a">いいえ、ただしリポジトリがある方が優れています。コードなしでは公開ページのみをチェックし、計測領域の大部分は失敗ではなく未検証として返されます。イベントを送信しないダウンロードのように、ページの監査では提示できない指摘事項は、リポジトリから得られます。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">SEO監査とはどのように異なりますか？</summary>
+<p class="faq-a">SEO監査はHTMLを読み取ります。launch-checkはその背景にあるコードも読み取り、ページが約束している内容とプロダクトの実際の機能を照合します。検索は6つの領域の1つです。キーワードクラスタや競合他社を含む完全なクロールを行うには、<a class="sk-link" href="/ja/seo-audit">Ductの無料SEO監査</a>を実行してください。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">費用と所要時間は？</summary>
+<p class="faq-a">このスキルは無料で、MITライセンスです。お使いのエージェント自身のモデルで実行されるため、チェックにかかるコストはエージェントが10ページとリポジトリの一部を読み取る費用のみです。10ページで停止し、10分以内での完了を目指します。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">インストーラーは何らかのデータをトラッキングしますか？</summary>
+<p class="faq-a">オープンソースであり当社の管轄外であるskills CLIは、skills.shリーダーボード向けにインストール数を匿名でカウントします。無効化するには、実行前に<code>DISABLE_TELEMETRY=1</code>または<code>DO_NOT_TRACK=1</code>を設定してください。スキル自体は一切データを送信しません。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">更新または削除を行うにはどうすればよいですか？</summary>
+<p class="faq-a"><code>npx skills update</code>を実行すると最新バージョンに更新され、<code>npx skills remove launch-check</code>で削除されます。インストールは実行したプロジェクト内に行われます。すべてのプロジェクトで利用可能にするには<code>-g</code>を追加してください。CLIにはNode.js 22.20以降が必要です。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">次に追加されるスキルは？</summary>
+<p class="faq-a">リクエストの多いものです。<a class="sk-link" href="https://github.com/5hirish/duct/discussions" rel="noopener">GitHub Discussions</a>で、エージェントに任せたいマーケティングタスクを教えてください。</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- The copy buttons' confirmation. Written here rather than in the script so the i18n generator
+     translates it: it never reads an inline <script>. -->
+<p class="sr-only" role="status" aria-live="polite" data-copy-status></p>
+<p hidden data-copy-done>コピーしました</p>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/ja/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/ja/partials/footer-expanded.html"><div class="legal-fallback"><a href="/ja/">Duct</a><a href="/ja/about">について</a><a href="/ja/privacy">プライバシーポリシー</a><a href="/ja/terms">利用規約</a></div></div>
+
+<script>
+// Copy buttons: the text is the <pre> beside the button. The second inline copy of
+// /connect-agent's script; a third page that needs one moves it into duct.js instead.
+(function () {
+  var doneEl = document.querySelector('[data-copy-done]');
+  var doneText = doneEl ? doneEl.textContent : 'Copied';
+  var status = document.querySelector('[data-copy-status]');
+
+  function copyText(text, ok, fail) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(ok, fail);
+      return;
+    }
+    var area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    var copied = false;
+    try { copied = document.execCommand('copy'); } catch (e) { copied = false; }
+    document.body.removeChild(area);
+    if (copied) ok(); else fail();
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-copy]'), function (button) {
+    var pre = button.parentNode.querySelector('pre');
+    var label = button.querySelector('span');
+    var icon = button.querySelector('use');
+    var sprite = icon.getAttribute('href').split('#')[0];
+    var idle = label.textContent;
+    var timer = null;
+
+    button.addEventListener('click', function () {
+      // Tracked on the click, not on success: a refused clipboard still means someone meant to
+      // install, and the fallback below selects the command for them.
+      if (window.ductTrack) window.ductTrack('skill_install_copied', { skill: 'launch-check', block: button.getAttribute('data-copy') });
+      copyText(pre.textContent, function () {
+        label.textContent = doneText;
+        icon.setAttribute('href', sprite + '#check');
+        button.classList.add('is-done');
+        if (status) status.textContent = doneText;
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+          label.textContent = idle;
+          icon.setAttribute('href', sprite + '#copy');
+          button.classList.remove('is-done');
+          if (status) status.textContent = '';
+        }, 2000);
+      }, function () {
+        var range = document.createRange();
+        range.selectNodeContents(pre);
+        var selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+      });
+    });
+  });
+})();
+</script>
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

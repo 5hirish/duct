@@ -53,7 +53,7 @@ msgid ""
 "A plan on a board, a post per card, slides and images generated for each, one click to publish to nine networks. Results come back onto the card, so the next plan learns from the last one."
 msgstr "看板上的一个计划，每张卡片一个帖子，为每个帖子生成幻灯片和图片，一键发布到九个网络。结果会回到卡片上，以便下一个计划从上一个中学习。"
 
-#: about.html compare.html connect-agent.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
+#: about.html compare.html connect-agent.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html skills.html terms.html
 msgid "About"
 msgstr "关于"
 
@@ -107,7 +107,7 @@ msgid ""
 msgstr "设计决策公开讨论。GitHub 是找到我的最佳地点。"
 
 #. link title
-#: about.html compare.html connect-agent.html doctrine.html index.html mcp.html open-source.html
+#: about.html compare.html connect-agent.html doctrine.html index.html mcp.html open-source.html skills.html
 msgid "Duct Blog"
 msgstr "Duct 博客"
 
@@ -161,7 +161,7 @@ msgstr ""
 msgid "FONS. The spring, before anything has run. The app’s front door."
 msgstr "FONS。泉水，在任何运行之前。应用的入口。"
 
-#: about.html compare.html connect-agent.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/nav-simple.html privacy.html seo-audit.html terms.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+#: about.html compare.html connect-agent.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/nav-simple.html privacy.html seo-audit.html skills.html terms.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Home"
 msgstr "主页"
 
@@ -237,7 +237,7 @@ msgstr "粘贴一个 URL。Duct 会抓取网站，读取技术和内容信号，
 msgid "Principles, not <0>platitudes</0>"
 msgstr "原则，而非<0>陈词滥调</0>"
 
-#: about.html compare.html connect-agent.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
+#: about.html compare.html connect-agent.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html skills.html terms.html
 msgid "Privacy Policy"
 msgstr "隐私政策"
 
@@ -290,7 +290,7 @@ msgstr "在 GitHub 上标星 →"
 msgid "Substance over ceremony"
 msgstr "实质重于形式"
 
-#: about.html compare.html connect-agent.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
+#: about.html compare.html connect-agent.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html skills.html terms.html
 msgid "Terms of Service"
 msgstr "服务条款"
 
@@ -738,7 +738,7 @@ msgstr "标准"
 msgid "Docs, email and the web"
 msgstr "文档、电子邮件和网络"
 
-#: compare.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/cta-blog.html partials/cta-for-pages.html partials/cta-home.html partials/cta-tools.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+#: compare.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/cta-blog.html partials/cta-for-pages.html partials/cta-home.html partials/cta-tools.html skills.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Download Duct ↓"
 msgstr "下载 Duct ↓"
 
@@ -786,7 +786,7 @@ msgstr "Claude 的其他功能：文档、研究、代码以及可填写表单�
 msgid "Explain why a number moved"
 msgstr "解释数字变化的原因"
 
-#: compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html seo-audit.html tools/cac-ltv-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/mrr-growth-calculator.html tools/saas-metrics-calculator.html tools/weekly-brief-template.html
+#: compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html seo-audit.html skills.html tools/cac-ltv-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/mrr-growth-calculator.html tools/saas-metrics-calculator.html tools/weekly-brief-template.html
 msgid "FAQ"
 msgstr "常见问题"
 
@@ -940,7 +940,7 @@ msgstr "查看 Duct 的优势"
 msgid "Self-host, no licence fee"
 msgstr "自托管，无许可费"
 
-#: compare.html connect-agent.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html seo-audit.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+#: compare.html connect-agent.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html seo-audit.html skills.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Skip to content"
 msgstr "跳到内容"
 
@@ -1173,11 +1173,11 @@ msgstr "Codex"
 msgid "Connect tools."
 msgstr "连接工具。"
 
-#: connect-agent.html
+#: connect-agent.html skills.html
 msgid "Copied"
 msgstr "已复制"
 
-#: connect-agent.html
+#: connect-agent.html skills.html
 msgid "Copy"
 msgstr "复制"
 
@@ -3077,10 +3077,6 @@ msgid "Does it change my accounts without asking?"
 msgstr "它会未经允许更改我的账户吗？"
 
 #: index.html
-msgid "Download for macOS ↓"
-msgstr "下载 macOS 版 ↓"
-
-#: index.html
 msgid "Duct AI"
 msgstr "Duct AI"
 
@@ -3096,22 +3092,16 @@ msgid ""
 msgstr ""
 "Duct AI 是一个开源 AI 营销智能体。它连接你的产品、营销和收入工具，跨工具回答问题，提出变更建议并在你批准后应用。它作为桌面应用在 macOS、Windows 和 Linux 上运行。"
 
-#. meta description
-#: index.html
-msgid ""
-"Duct AI is the open-source AI marketing agent: it reads Google Ads, GA4, Stripe and ten more tools together, proposes the fix and applies it when you approve."
-msgstr "Duct AI 是开源 AI 营销智能体：它同时读取 Google Ads、GA4、Stripe 和十多个其他工具的数据，提出修复方案并在你批准后应用。"
-
 #. meta og:title
 #. meta twitter:title
 #: index.html
-msgid "Duct AI — Open-source AI marketing agent for growth teams"
-msgstr "Duct AI——面向增长团队的开源 AI 营销智能体"
+msgid "Duct AI — Open-source AI marketing agent, a growth analyst"
+msgstr "Duct AI — 开源 AI 营销智能体，增长分析师"
 
 #: index.html
 msgid ""
-"Duct is the open-source AI marketing agent that reads every tool you run together, finds what needs to change, and changes it when you press Apply. No hunting through tools for the answer, no deciding on half of it."
-msgstr "Duct 是开源 AI 营销智能体，它读取你运行的所有工具，找出需要更改的地方，并在你按下“应用”后进行更改。无需在工具中寻找答案，也无需只做一半决定。"
+"Duct is the open-source AI marketing agent: a growth analyst with every login. It reads every tool you run together, finds what needs to change, and changes it when you press Apply."
+msgstr "Duct 是开源 AI 营销智能体：拥有全部登录权限的增长分析师。它会协同读取你运行的各类工具，找出需要调整之处，并在你点击“应用”时完成修改。"
 
 #: index.html
 msgid "E-commerce & DTC"
@@ -3229,6 +3219,13 @@ msgstr "一个周一，30 秒内"
 #: index.html
 msgid "Open-source AI marketing agent for product and growth teams."
 msgstr "适用于产品和增长团队的开源 AI 营销智能体。"
+
+#. meta description
+#: index.html
+msgid ""
+"Open-source AI marketing agent: a growth analyst with every login. Duct reads Google Ads, GA4, Stripe and nine more tools together and fixes what you approve."
+msgstr ""
+"开源 AI 营销智能体：拥有全部登录权限的增长分析师。Duct 协同读取 Google Ads、GA4、Stripe 等 12 款工具，并修复你批准的内容。"
 
 #: index.html
 msgid "PMs & growth teams"
@@ -7526,6 +7523,10 @@ msgstr "安装应用，连接你的工具，然后询问数字为何变动。"
 msgid "Stop calculating. <0>Start asking.</0>"
 msgstr "停止计算。<0>开始提问。</0>"
 
+#: partials/footer-expanded.html skills.html
+msgid "Agent skills"
+msgstr "智能体技能"
+
 #: partials/footer-expanded.html
 msgid ""
 "An open-source project by Alleviate Lab. An AI agent that reads across your growth stack, acts with your approval, and remembers. MIT licensed."
@@ -9064,6 +9065,471 @@ msgstr "you@company.com"
 #: seo-audit.html
 msgid "your-site.com"
 msgstr "your-site.com"
+
+#: skills.html
+msgid "<0>55–69</0> Needs work"
+msgstr "<0>55–69</0> 待改进"
+
+#: skills.html
+msgid "<0>70–84</0> Ready after fixes"
+msgstr "<0>70–84</0> 修复后就绪"
+
+#: skills.html
+msgid "<0>85–100</0> Ready"
+msgstr "<0>85–100</0> 就绪"
+
+#: skills.html
+msgid ""
+"<0>96/100, Ready</0> · 10 pages read · repo: 5hirish/duct<1/>The action: download the desktop app, tracked as <2>download_started</2>"
+msgstr ""
+"<0>96/100，就绪</0> · 已读取 10 个页面 · 仓库：5hirish/duct<1/>转化行为：下载桌面应用，追踪为 <2>download_started</2>"
+
+#: skills.html
+msgid "<0></0> Agent skills · MIT · No account"
+msgstr "<0></0> Agent Skills · MIT · 无需账号"
+
+#: skills.html
+msgid "<0>Below 55</0> Not ready"
+msgstr "<0>低于 55</0> 未就绪"
+
+#: skills.html
+msgid ""
+"<0>npx skills update</0> brings it to the latest version, and <1>npx skills remove launch-check</1> takes it out. The install goes into the project you run it in; add <2>-g</2> to make it available in every project. The CLI needs Node.js 22.20 or later."
+msgstr ""
+"<0>npx skills update</0> 可更新至最新版本，<1>npx skills remove launch-check</1> 可将其移除。技能会安装到当前运行命令的项目中；添加 <2>-g</2> 可在所有项目中可用。CLI 需要 Node.js 22.20 或更高版本。"
+
+#: skills.html
+msgid ""
+"A launch nobody can measure teaches you nothing, so measurement weighs most. A claim the code contradicts is the top comment on launch day, so claims come next."
+msgstr "无法衡量的发布毫无参考价值，因此测量权重最高。发布当天被置顶评论的往往是与代码相悖的说辞，因此陈述紧随其后。"
+
+#: skills.html
+msgid "A real run"
+msgstr "一次真实运行"
+
+#: skills.html
+msgid ""
+"An SEO audit reads the HTML. launch-check also reads the code behind it and checks what the page promises against what the product does. Search is one area of six. For a full crawl with keyword clusters and competitors, run <0>Duct's free SEO audit</0>."
+msgstr ""
+"SEO 审计只读取 HTML。launch-check 还会读取背后的代码，并对照产品实际功能核对页面承诺。搜索只是六个维度之一。如需包含关键词聚类和竞品分析的完整抓取，请运行 <0>Duct 的免费 SEO 审计</0>。"
+
+#: skills.html
+msgid ""
+"An SEO audit reads the HTML. launch-check also reads the code behind it and checks what the page promises against what the product does. Search is one area of six. For a full crawl with keyword clusters and competitors, run Duct's free SEO audit."
+msgstr ""
+"SEO 审计只读取 HTML。launch-check 还会读取背后的代码，并对照产品实际功能核对页面承诺。搜索只是六个维度之一。如需包含关键词聚类和竞品分析的完整抓取，请运行 Duct 的免费 SEO 审计。"
+
+#: skills.html
+msgid "Answer engines"
+msgstr "答案引擎"
+
+#: skills.html
+msgid ""
+"Any agent the open skills CLI installs into: Claude Code, Codex, Cursor, OpenCode, Gemini CLI, GitHub Copilot, Windsurf and Zed among them. The skill is one SKILL.md folder in the Agent Skills format, so an agent that reads that format can use it without the installer."
+msgstr ""
+"支持开源 skills CLI 可安装的任何智能体：包括 Claude Code、Codex、Cursor、OpenCode、Gemini CLI、GitHub Copilot、Windsurf 和 Zed。该技能是符合 Agent Skills 格式的单个 SKILL.md 文件夹，因此支持该格式的智能体无需安装器即可直接使用。"
+
+#: skills.html
+msgid "Apply fix 1? (yes / no / skip all)"
+msgstr "应用修复 1？(yes / no / skip all)"
+
+#: skills.html
+msgid "Before you <0>install it.</0>"
+msgstr "在你<0>安装之前</0>。"
+
+#: skills.html
+msgid "Can ChatGPT, Perplexity and Claude read and cite it?"
+msgstr "ChatGPT、Perplexity 和 Claude 能否读取并引用它？"
+
+#: skills.html
+msgid "Can search engines index and describe every key page?"
+msgstr "搜索引擎能否索引并描述每个核心页面？"
+
+#: skills.html
+msgid "Claims"
+msgstr "陈述"
+
+#. meta og:title
+#. meta twitter:title
+#: skills.html
+msgid "Claude Code marketing skills: launch-check, by Duct"
+msgstr "Claude Code 营销技能：launch-check，由 Duct 出品"
+
+#: skills.html
+msgid "Connect Duct to the same agent"
+msgstr "将 Duct 连接到同一个智能体"
+
+#. button aria-label
+#: skills.html
+msgid "Copy the install command"
+msgstr "复制安装命令"
+
+#: skills.html
+msgid "Count the downloads consent never sees."
+msgstr "统计未获用户同意因而遗漏的下载量。"
+
+#: skills.html
+msgid "Do I need a repository open?"
+msgstr "我需要打开代码仓库吗？"
+
+#: skills.html
+msgid "Does a shared link show a title, a description and an image?"
+msgstr "分享的链接是否显示标题、描述和图片？"
+
+#: skills.html
+msgid "Does it send my site or my code to Duct?"
+msgstr "它会把我的网站或代码发送给 Duct 吗？"
+
+#: skills.html
+msgid "Does the first screen say who it is for and what to do?"
+msgstr "首屏是否说明了目标受众和使用指引？"
+
+#: skills.html
+msgid "Does the installer track anything?"
+msgstr "安装器会追踪任何数据吗？"
+
+#: skills.html
+msgid "Does the product do what the page and the release notes say?"
+msgstr "产品功能是否与页面及发布说明一致？"
+
+#: skills.html
+msgid ""
+"Duct's MCP server lets the agent you just used list and read your Duct projects, and set one up from this repository. One address, one Allow in your browser. It can never approve a change."
+msgstr ""
+"Duct 的 MCP 服务器允许你刚才使用的智能体列出并读取你的 Duct 项目，并根据此代码仓库完成配置。一个地址，在浏览器中允许一次即可。它绝不能批准变更。"
+
+#: skills.html
+msgid ""
+"Each area starts at 100. A FAIL costs 25 points and a WARN 10. Something it could not check costs nothing and is listed as unverified, so a missing repository lowers the confidence, not the score."
+msgstr ""
+"每个维度初始均为 100 分。FAIL 扣 25 分，WARN 扣 10 分。无法检查的项目不扣分并标为未验证，因此缺少仓库只会降低置信度，不会拉低分数。"
+
+#: skills.html
+msgid ""
+"Every finding names the URL or the file and line it came from. What it could not see is marked unverified, never failed."
+msgstr "每条发现都会标明来源 URL 或文件及行号。无法查看的内容会标记为未验证，绝不会算作失败。"
+
+#: skills.html
+msgid "First impression"
+msgstr "第一印象"
+
+#: skills.html
+msgid ""
+"Fix: no code. Read the release's download count from GitHub on launch day as the floor, and compare it with <0>download_started</0>."
+msgstr ""
+"修复方式：无需代码。在发布当天读取 GitHub 上的 Release 下载量作为基准底数，并与 <0>download_started</0> 进行比对。"
+
+#: skills.html
+msgid "How do I update or remove it?"
+msgstr "如何更新或移除它？"
+
+#: skills.html
+msgid "How is it different from an SEO audit?"
+msgstr "它与 SEO 审计有何不同？"
+
+#: skills.html
+msgid "Impact 2 · Effort 1 · Found by: both · <0>site/index.html:308</0>"
+msgstr "影响 2 · 难度 1 · 发现来源：二者兼有 · <0>site/index.html:308</0>"
+
+#: skills.html
+msgid "Impact 2 · Effort 1 · Found by: repository · <0>site/assets/duct.js:364</0>"
+msgstr "影响 2 · 难度 1 · 发现来源：代码仓库 · <0>site/assets/duct.js:364</0>"
+
+#: skills.html
+msgid ""
+"In the EEA, UK and Switzerland, analytics load only after Accept, and <0>download_started</0> waits in a queue that is never sent for a visitor who ignores the banner. Launch-day downloads from Europe will read low."
+msgstr ""
+"在欧洲经济区、英国和瑞士，分析脚本仅在点击接受后加载，而对于忽略横幅的访客，<0>download_started</0> 会在队列中等待且永远不会发送。发布当天来自欧洲的下载量统计将会偏低。"
+
+#: skills.html
+msgid "Install"
+msgstr "安装"
+
+#. meta twitter:description
+#: skills.html
+msgid ""
+"Is your site ready to launch? Ask your agent. It checks what the page promises against what the code does. No account, MIT."
+msgstr "你的网站准备好发布了吗？问问你的智能体。它会将页面承诺的内容与代码实际执行的操作进行比对。无需账号，MIT 许可。"
+
+#: skills.html
+msgid "It reads the page. <0>Then it reads the code.</0>"
+msgstr "它读取页面。<0>然后读取代码。</0>"
+
+#: skills.html
+msgid ""
+"It writes one file, its report. Every fix is a diff it shows first and applies only when you say yes. It never commits, pushes or deploys."
+msgstr "它只写入一个文件，即它的报告。每项修复都先展示 Diff，只有经你确认后才会应用。它绝不会提交、推送或部署。"
+
+#: skills.html
+msgid "Launch check: getduct.ai"
+msgstr "发布检查：getduct.ai"
+
+#: skills.html
+msgid "Marketing skills for your coding agent.<0/><1>It already has the repo.</1>"
+msgstr "专为你代码智能体打造的营销技能。<0/><1>它已经拥有代码仓库。</1>"
+
+#: skills.html
+msgid "Measurement"
+msgstr "衡量指标"
+
+#: skills.html
+msgid "Needs work"
+msgstr "待改进"
+
+#: skills.html
+msgid "No account"
+msgstr "无需账号"
+
+#: skills.html
+msgid "No account. No upload. <0>No change without a yes.</0>"
+msgstr "无需账号。无需上传。<0>未经确认不作更改。</0>"
+
+#: skills.html
+msgid "No change without a yes"
+msgstr "未经确认不作更改"
+
+#: skills.html
+msgid ""
+"No sign-up, no API key, no Duct login. It uses your agent's own web and shell tools, and never signs up, logs in or submits a form anywhere."
+msgstr "无需注册，无需 API 密钥，无需登录 Duct。它直接使用智能体自带的网络和 Shell 工具，绝不会在任何地方注册、登录或提交表单。"
+
+#: skills.html
+msgid ""
+"No, but it is better with one. Without the code it checks the live pages only, and most of the measurement area comes back unverified rather than failed. The findings a page audit cannot give, like a download that sends no event, come from the repository."
+msgstr ""
+"不需要，但有代码仓库效果更好。没有代码时，它仅检查上线页面，大多数衡量领域会返回未验证而非失败。页面审计无法发现的问题（例如下载未发送事件）均来自于代码仓库。"
+
+#: skills.html
+msgid ""
+"No. The skill is a set of instructions your agent follows with its own web and shell tools. There is no Duct server in the loop, no account and no API key. What your agent reads goes only where your agent's requests always go: to the model you already use."
+msgstr ""
+"不会。此技能是一组由你的智能体使用其自带网络和 Shell 工具执行的指令。流程中没有 Duct 服务器，无需账号，也没有 API 密钥。你的智能体读取的内容只会发送到它一贯请求的目标：你已经在使用的模型。"
+
+#: skills.html
+msgid ""
+"Not without a yes. The one file it writes on its own is its report, <0>duct-launch-check.md</0>. Each fix comes as a diff and a question, one at a time. It never commits, pushes or deploys, and it never opens <1>.env</1> or key files."
+msgstr ""
+"未经确认不会更改。它自行写入的唯一文件是它的报告 <0>duct-launch-check.md</0>。每项修复都会依次以 Diff 和询问的形式呈现。它绝不会提交、推送或部署，也绝不会打开 <1>.env</1> 或密钥文件。"
+
+#: skills.html
+msgid ""
+"Not without a yes. The one file it writes on its own is its report, duct-launch-check.md. Each fix comes as a diff and a question, one at a time. It never commits, pushes or deploys, and it never opens .env or key files."
+msgstr ""
+"未经确认不会更改。它自行写入的唯一文件是它的报告 duct-launch-check.md。每项修复都会依次以 Diff 和询问的形式呈现。它绝不会提交、推送或部署，也绝不会打开 .env 或密钥文件。"
+
+#: skills.html
+msgid "Nothing sent to Duct"
+msgstr "不会向 Duct 发送任何内容"
+
+#. meta og:description
+#: skills.html
+msgid ""
+"One command gives your coding agent a launch check: it reads the page and the code, scores six areas and fixes only on a yes."
+msgstr "一条命令即可让你的代码智能体运行发布检查：读取页面和代码，评估六大维度，仅在确认后执行修复。"
+
+#: skills.html
+msgid "Only two findings cleared the bar. The rest is polish."
+msgstr "仅有两项发现达到处理标准。其余皆为细节打磨。"
+
+#. meta description
+#: skills.html
+msgid ""
+"Open-source marketing skills for Claude Code, Codex and Cursor. launch-check reads your live site and your repo, scores the launch and ranks three fixes."
+msgstr ""
+"适用于 Claude Code、Codex 和 Cursor 的开源营销技能。launch-check 读取你的上线网站与代码仓库，为发布评分并对三项修复进行优先级排序。"
+
+#: skills.html
+msgid ""
+"Open-source skills for Claude Code, Codex, Cursor and any agent that reads SKILL.md. The first, launch-check, reads your live site and the code behind it, scores the launch out of 100 and ranks three fixes."
+msgstr ""
+"适用于 Claude Code、Codex、Cursor 以及任何支持 SKILL.md 智能体的开源技能。首个技能 launch-check 读取你的上线网站及其背后的代码，以 100 分制对发布打分，并对三项修复进行排序。"
+
+#: skills.html
+msgid "Post this"
+msgstr "发布此帖"
+
+#: skills.html
+msgid ""
+"Ran a launch check on getduct.ai with my coding agent: 96/100. It found that downloads from Europe would undercount behind the cookie banner, which no page audit could have told me."
+msgstr ""
+"用我的代码智能体对 getduct.ai 运行了发布检查：96/100。它发现受 Cookie 横幅阻挡，来自欧洲的下载量会被少计，这是任何页面审计都无法告诉我的。"
+
+#: skills.html
+msgid "Ranks three fixes, applies one on a yes"
+msgstr "对三项修复排序，经确认后应用一项"
+
+#: skills.html
+msgid "Reads the site and the repo"
+msgstr "读取网站与代码仓库"
+
+#: skills.html
+msgid "Run it on yours"
+msgstr "在你的网站上运行"
+
+#. article aria-label
+#: skills.html
+msgid "Sample report: launch check of getduct.ai"
+msgstr "示例报告：getduct.ai 的发布检查"
+
+#: skills.html
+msgid "Scores six areas out of 100"
+msgstr "从 100 分对六个领域打分"
+
+#: skills.html
+msgid "Search"
+msgstr "搜索"
+
+#: skills.html
+msgid "See what the launch did"
+msgstr "查看发布带来的影响"
+
+#: skills.html
+msgid "Six areas, <0>weighted by what a launch loses.</0>"
+msgstr "六个领域，<0>按发布可能造成的损失加权。</0>"
+
+#: skills.html
+msgid "Social card"
+msgstr "社交分享卡片"
+
+#: skills.html
+msgid "Stop telling every visitor the download is for macOS."
+msgstr "别再向所有访客都显示下载 macOS 版。"
+
+#: skills.html
+msgid "The check is one moment. <0>Duct reads the weeks after.</0>"
+msgstr "检查只是一瞬间。<0>Duct 持续解读上线后的数周数据。</0>"
+
+#: skills.html
+msgid ""
+"The desktop app reads GA4, Search Console, your ads and Stripe together, answers why signups moved, and proposes the change, applied when you press Apply."
+msgstr "桌面应用整合读取 GA4、Search Console、你的广告和 Stripe，解答注册量变化的原因，并提出变更建议，在你点击应用后生效。"
+
+#: skills.html
+msgid "The first skill: launch-check"
+msgstr "首个技能：launch-check"
+
+#: skills.html
+msgid ""
+"The home page button says “Download for macOS” to Windows, Linux and phone visitors alike, because the per-platform label runs only on <0>/download</0>."
+msgstr ""
+"主页按钮对 Windows、Linux 和手机访客均显示“下载 macOS 版”，因为按平台显示标签的逻辑仅在 <0>/download</0> 上运行。"
+
+#: skills.html
+msgid ""
+"The ones people ask for. Tell us the marketing job you would hand your agent in <0>GitHub Discussions</0>."
+msgstr "大家最需要的技能。在 <0>GitHub Discussions</0> 中告诉我们你想交给智能体处理的营销任务。"
+
+#: skills.html
+msgid ""
+"The ones people ask for. Tell us the marketing job you would hand your agent in GitHub Discussions."
+msgstr "大家需要的那些。在 GitHub Discussions 中告诉我们你想交给智能体的营销任务。"
+
+#: skills.html
+msgid ""
+"The skill is free and MIT licensed. It runs on your agent's own model, so a check costs what your agent spends reading ten pages and part of a repository. It stops at ten pages and aims to finish in ten minutes."
+msgstr ""
+"该技能免费且采用 MIT 许可证。它在你智能体自身的模型上运行，因此一次检查的成本仅取决于你的智能体阅读 10 个页面和部分代码仓库所消耗的费用。它最多检查 10 个页面，目标是在 10 分钟内完成。"
+
+#: skills.html
+msgid ""
+"The skill is instructions, not a service. Your site and your code are read by your agent and go nowhere else. It never opens <0>.env</0> or key files."
+msgstr "该技能是指令集，而非服务。你的网站和代码仅由你的智能体读取，绝不会传到别处。它绝不会打开 <0>.env</0> 或密钥文件。"
+
+#: skills.html
+msgid ""
+"The skills CLI, which is open source and not ours, counts installs anonymously for the skills.sh leaderboard. Set <0>DISABLE_TELEMETRY=1</0> or <1>DO_NOT_TRACK=1</1> before you run it to turn that off. The skill itself sends nothing anywhere."
+msgstr ""
+"skills CLI 是开源的且不归我们所有，它会为 skills.sh 排行榜匿名统计安装量。在运行前设置 <0>DISABLE_TELEMETRY=1</0> 或 <1>DO_NOT_TRACK=1</1> 即可将其关闭。技能本身不会向任何地方发送数据。"
+
+#: skills.html
+msgid ""
+"The skills CLI, which is open source and not ours, counts installs anonymously for the skills.sh leaderboard. Set DISABLE_TELEMETRY=1 or DO_NOT_TRACK=1 before you run it to turn that off. The skill itself sends nothing anywhere."
+msgstr ""
+"skills CLI 是开源的且不归我们所有，它会为 skills.sh 排行榜匿名统计安装量。在运行前设置 DISABLE_TELEMETRY=1 或 DO_NOT_TRACK=1 即可将其关闭。技能本身不会向任何地方发送数据。"
+
+#: skills.html
+msgid ""
+"The three that matter most for launch day, each as a diff. It asks before every one and never commits, pushes or deploys."
+msgstr "发布日最关键的三项，均以 diff 形式呈现。每项操作前都会询问，且绝不自动提交、推送或部署。"
+
+#: skills.html
+msgid ""
+"Then ask your agent “Is my site ready to launch?”, or type <0>/launch-check</0> in Claude Code."
+msgstr "然后向你的智能体提问“我的网站准备好上线了吗？”，或在 Claude Code 中输入 <0>/launch-check</0>。"
+
+#: skills.html
+msgid "Three fixes"
+msgstr "三项修复"
+
+#: skills.html
+msgid ""
+"Up to ten live pages, the sitemap and every card image, then the code behind them: the analytics tag, the signup or download event, where the head comes from, and the claims the page makes."
+msgstr "最多 10 个线上页面、站点地图以及每张卡片图片，接着是它们背后的代码：分析代码标签、注册或下载事件、head 来源，以及页面陈述的内容。"
+
+#: skills.html
+msgid "Use Duct from your agent →"
+msgstr "从你的智能体中使用 Duct →"
+
+#: skills.html
+msgid "We ran it on getduct.ai. <0>96 out of 100.</0>"
+msgstr "我们在 getduct.ai 上运行了它。<0>96 / 100 分。</0>"
+
+#: skills.html
+msgid "What does it cost, and how long does it take?"
+msgstr "费用是多少，耗时多久？"
+
+#: skills.html
+msgid "What it checks"
+msgstr "检查内容"
+
+#: skills.html
+msgid "What it never does"
+msgstr "绝不会执行的操作"
+
+#: skills.html
+msgid "Where Duct comes in"
+msgstr "Duct 的作用"
+
+#: skills.html
+msgid "Which agents does it work with?"
+msgstr "支持哪些智能体？"
+
+#: skills.html
+msgid "Which skills come next?"
+msgstr "接下来会推出哪些技能？"
+
+#: skills.html
+msgid "Will it change my code?"
+msgstr "它会修改我的代码吗？"
+
+#: skills.html
+msgid "Will the launch be recorded, down to the one action?"
+msgstr "发布过程会被记录下来吗，精确到具体操作？"
+
+#: skills.html
+msgid "duct-launch-check.md"
+msgstr "duct-launch-check.md"
+
+#: skills.html
+msgid ""
+"getduct.ai and its repository, on November 10, 2026. Only two findings cleared the bar for a fix, and the first one exists only in the code: downloads from Europe would read low, with nothing on the page to show it."
+msgstr ""
+"2026 年 11 月 10 日的 getduct.ai 及其代码仓库。只有两项发现达到了修复门槛，且第一项仅存在于代码中：来自欧洲的下载量读数偏低，而页面上没有任何迹象表明这一点。"
+
+#: skills.html
+msgid ""
+"launch-check tells you whether the launch will be counted. Duct, the open-source AI marketing agent this shelf comes from, tells you what the count means."
+msgstr "launch-check 会告诉你发布是否被统计。Duct（此技能架所属的开源 AI 营销智能体）则会告诉你这些统计数字意味着什么。"
+
+#: skills.html
+msgid ""
+"npx skills update brings it to the latest version, and npx skills remove launch-check takes it out. The install goes into the project you run it in; add -g to make it available in every project. The CLI needs Node.js 22.20 or later."
+msgstr ""
+"运行 npx skills update 可更新至最新版本，运行 npx skills remove launch-check 可将其移除。安装会作用于你当前运行它的项目；添加 -g 可使其在所有项目中可用。该 CLI 需要 Node.js 22.20 或更高版本。"
+
+#: skills.html
+msgid "yes"
+msgstr "是"
 
 #: terms.html
 msgid "1. What These Terms Cover"
@@ -11906,3 +12372,20 @@ msgstr "← 返回"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← 重新开始"
+
+#~ msgid "Download for macOS ↓"
+#~ msgstr "下载 macOS 版 ↓"
+
+#. meta description
+#~ msgid ""
+#~ "Duct AI is the open-source AI marketing agent: it reads Google Ads, GA4, Stripe and ten more tools together, proposes the fix and applies it when you approve."
+#~ msgstr "Duct AI 是开源 AI 营销智能体：它同时读取 Google Ads、GA4、Stripe 和十多个其他工具的数据，提出修复方案并在你批准后应用。"
+
+#. meta og:title
+#. meta twitter:title
+#~ msgid "Duct AI — Open-source AI marketing agent for growth teams"
+#~ msgstr "Duct AI——面向增长团队的开源 AI 营销智能体"
+
+#~ msgid ""
+#~ "Duct is the open-source AI marketing agent that reads every tool you run together, finds what needs to change, and changes it when you press Apply. No hunting through tools for the answer, no deciding on half of it."
+#~ msgstr "Duct 是开源 AI 营销智能体，它读取你运行的所有工具，找出需要更改的地方，并在你按下“应用”后进行更改。无需在工具中寻找答案，也无需只做一半决定。"
