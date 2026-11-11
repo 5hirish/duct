@@ -63,12 +63,12 @@
     "node": ">=22.12.0"
   },
   "devDependencies": {
-    "@lingui/cli": "^6.11.0",
+    "@lingui/cli": "^6.12.0",
     "@lingui/format-po": "^6.7.0",
     "@lingui/swc-plugin": "6.7.1",
-    "@opennextjs/cloudflare": "^1.20.14",
-    "@posthog/nextjs-config": "~1.12.0",
-    "@tailwindcss/postcss": "^4.3.3",
+    "@opennextjs/cloudflare": "^1.20.16",
+    "@posthog/nextjs-config": "~1.12.1",
+    "@tailwindcss/postcss": "^4.3.5",
     "@tailwindcss/typography": "^0.5.20",
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
@@ -77,7 +77,7 @@
     "postcss": "^8.5.32",
     "tailwindcss": "^4.2.2",
     "typescript": "^7.0.2",
-    "vitest": "^5.0.5",
+    "vitest": "^5.1.0",
     "wrangler": "^4.158.0"
   },
   "overrides": {
