@@ -71,12 +71,14 @@ from agents.content.channel_mix import ChannelMix, goal_from, load_channel_mix
 from agents.content.plan_period import MAX_PLAN_DAYS, PlanPeriod, default_period, plan_end
 from agents.content.voice_rules import voice_rules_of, writing_samples_of
 from agents.core.events import run_context
+from agents.content.feed import render_digest
 from agents.content.plan_review import load_plan_review, render_plan_review
 from agents.content.voice_rules import render_voice_stanza
 from agents.content.prompts import (
     _research_stanza,
     build_clone_user_prompt,
     build_orchestrator_system_prompt,
+    build_feed_plan_prompt,
     build_plan_review_prompt,
     build_plan_user_prompt,
     build_post_revise_prompt,
@@ -845,10 +847,16 @@ class ContentRunner:
         emit: EmitFn,
         *,
         period: PlanPeriod | None = None,
+        feed: Any = None,
         chat_idle_timeout: float = CHAT_IDLE_TIMEOUT,
         llm: Any = None,
     ) -> None:
         """Run a plan_month session end-to-end: load, enrich, plan, then chat.
+
+        With ``feed`` (feed.FeedOptions) the plan is from shipped work
+        (#561): the repository and Duct's record are read and filtered
+        before the model starts, and a window with nothing worth a post ends
+        the run there, with no model call.
 
         A session bound to an existing plan (opened from "Revise plan") is the
         plan manager for that plan: it keeps the plan's dates, and on a fresh
@@ -881,6 +889,15 @@ class ContentRunner:
                 None, "plan review",
             )
             review_block = render_plan_review(review)
+            if feed is not None:
+                digest = await self._read_work_step(session, feed, emit, today=today)
+                session.feed = digest
+                if not digest.worth_a_plan:
+                    return None
+                return build_feed_plan_prompt(
+                    brand, feed=render_digest(digest), max_days=feed.max_days, performance=performance,
+                    period=managed, business=business, voice=voice, current_days=bound_days,
+                )
             if bound_days is not None or (review is not None and review.has_history):
                 # Something to review: the opening turn is the review and the
                 # direction question. The plan comes after the answer, and the
@@ -902,6 +919,65 @@ class ContentRunner:
             llm=llm,
             chat_idle_timeout=chat_idle_timeout,
         )
+
+    @staticmethod
+    async def _read_work_step(session: ContentSession, options: Any, emit: EmitFn, *, today: date) -> Any:
+        """What shipped, read and filtered as a visible step. Its payload is
+        the card the app draws: the chips, what was left out, and whether it
+        is worth a plan. Both reads are sync (a connector call, a DB query)
+        and run off the loop so the stream stays live."""
+        from sqlmodel import Session, select
+
+        from agents.content.feed import (
+            GITHUB_ENTITY, FeedSource, build_digest, duct_items, feed_window, github_note, planned_refs,
+        )
+        from agents.insights.fetchers import fetch_entity
+        from db.session import get_engine
+        from models.content import ContentPlan
+
+        label = STEP_LABELS[ContentStep.READ_WORK]
+        await emit({
+            "event": ContentEvent.STEP_STARTED,
+            "step_id": ContentStep.READ_WORK,
+            "label": label,
+            "status": StepStatus.RUNNING,
+        })
+        project_id = session.project_id
+        user_id = getattr(session, "user_id", None)
+
+        def _plans() -> list:
+            with Session(get_engine()) as db:
+                return list(db.execute(
+                    select(ContentPlan).where(ContentPlan.project_id == project_id)
+                ).scalars().all())
+
+        plans = await asyncio.to_thread(_plans)
+        window = feed_window(options, plans, today=today)
+        already = planned_refs(plans)
+        rows, note = None, ""
+        if FeedSource.GITHUB in options.sources:
+            # A connector read is on someone's credentials; a run with no
+            # user (a legacy stream route) reads Duct's record alone.
+            fetched = await asyncio.to_thread(
+                fetch_entity, GITHUB_ENTITY, user_id=user_id, project_id=project_id,
+                date_from=window[0].isoformat(), date_to=window[1].isoformat(),
+            ) if user_id is not None else {"status": "not_connected", "message": "No signed-in user."}
+            rows, note = github_note(fetched)
+
+        def _duct() -> list:
+            with Session(get_engine()) as db:
+                return duct_items(db, project_id, window[0], window[1], already=already)
+
+        duct = await asyncio.to_thread(_duct) if FeedSource.DUCT in options.sources else None
+        digest = build_digest(options, window, github_rows=rows, github_note_text=note, duct=duct, already=already)
+        await emit({
+            "event": ContentEvent.STEP_FINISHED,
+            "step_id": ContentStep.READ_WORK,
+            "label": label,
+            "status": StepStatus.SUCCESS,
+            "payload": digest.payload(),
+        })
+        return digest
 
     async def run_draft(
         self,
@@ -1108,7 +1184,7 @@ class ContentRunner:
         session: ContentSession,
         emit: EmitFn,
         *,
-        opening: Callable[[ContentBrandContext], Awaitable[str]],
+        opening: Callable[[ContentBrandContext], Awaitable[str | None]],
         memory_query: str,
         channel: Any = None,
         started: dict | None = None,
@@ -1135,6 +1211,17 @@ class ContentRunner:
             })
             brand = await self._load_project_step(session.project_id, emit)
             opening_prompt = await opening(brand)
+            if opening_prompt is None:
+                # The opening decided there is nothing for a model to do (a
+                # plan from shipped work with nothing new): the run ends here,
+                # and the step it just finished says why.
+                await emit({
+                    "event": ContentEvent.PIPELINE_FINISHED,
+                    "status": StepStatus.SUCCESS,
+                    "session_id": session.session_id,
+                    "outcome": "nothing_new",
+                })
+                return
             # Who is being written for, and in which language. In the opening
             # turn rather than the system prompt: the orchestrator prompt is
             # shared across this account's sessions and per-user text in it

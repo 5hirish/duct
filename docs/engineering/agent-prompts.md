@@ -2851,3 +2851,73 @@ Now — WRITE PHASE (copy + image prompts only; NO images yet):
    once they are happy.
 
 ```
+
+### Plan from shipped work: opening user turn (system prompt is mode=plan_month) · ~741 tokens
+
+```text
+## BRAND CONTEXT (project_id=00000000-0000-0000-0000-000000000000)
+
+- Name:         Northwind Tools
+- URL:          (none)
+- Tagline:      (none)
+- Description:  (none)
+- Audience:     Solo electricians and plumbers
+- Voice:        (unknown — ask the user)
+- Tone:         (unspecified)
+- Value prop:   (unknown — ask the user)
+- Content goal: (unknown — ask the user)
+- Always say:   (none specified)
+- Never say:    (none specified)
+- Visual style: (unspecified), primary —, secondary —
+- Posts on:     (unknown — TikTok unless the user says otherwise)
+
+Features:
+  (none)
+
+Pillars:
+  (no pillars yet — ask the user)
+
+
+
+
+<account_performance>
+  The posting history could not be read this run. Plan as if nothing is
+  proven, and say so in strategy.
+</account_performance>
+
+<shipped_work>
+Window: 2026-09-24 to 2026-10-07. Left out by Duct before you: chores, CI and tests: 1; bots: 1.
+- gh:r-v1.4.0 · release [release] 2026-10-06 · v1.4.0: invoices in two clicks
+- gh:pr-412 · pull_request [merged] 2026-10-05 · feat(invoices): send from the job card
+</shipped_work>
+
+You manage Northwind Tools's content plan for 2026-10-08 to 2026-10-14 (7 days). The person asked
+for a plan FROM WHAT THEY SHIPPED. Duct has read the repository and its own
+record of the project and already left out the noise; <shipped_work> is
+what is left, one line each, its ref first.
+
+Now:
+
+1. Group <shipped_work> into one to five stories, each worth one post: a
+   release, a feature built across several items, a change Duct applied and
+   what it did. A story stands on at least one ref. A brief or a memory
+   supports a story and is never one on its own. Prefer what a reader of
+   Northwind Tools would notice or use. Never name a file path, branch,
+   open issue, code or internal name that is not in a title above, and use
+   a number only where a line above carries it.
+2. Ask which to tell with ONE AskUserQuestion, multiSelect true, one option
+   per story. The label is the story in two to six words; the description is
+   its angle in under twelve words, then its refs in brackets, e.g.
+   "Onboarding stopped dropping GA4 connections [gh:pr-412, cs:3f2a9c1d]".
+   Do not research and do not plan on this turn.
+
+When they answer:
+
+3. Place the stories they kept, on channels <account_performance> favours:
+   There is no plan for this period yet. Use submit_plan for the whole
+   period: the kept stories on at most 2 days, each with `sources`
+   set to every ref it stands on, and the other days planned from the
+   brand's pillars as an ordinary plan, with no sources. Do not call
+   research_trends for this plan.
+4. Say in two lines which days changed and what each now tells.
+```

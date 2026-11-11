@@ -28,7 +28,7 @@ from sqlalchemy import update
 from sqlmodel import Session, select
 
 from agents.core.errors import DESCRIPTIONS, ErrorCode
-from agents.core.events import AgentEvent, EventKind, RunStatus
+from agents.core.events import AgentEvent, AgentStep, EventKind, RunStatus
 from agents.models import ModelName, Provider
 from db.session import get_session as db_session
 from models.content import AgentConversation, AgentEvent as AgentEventRow, ContentPlan, ContentPost
@@ -575,6 +575,9 @@ class ConversationRecorder:
             await self._append(EventKind.MEMORY_RECALLED, {"memories": list(body["memories"])})
         elif event == AgentEvent.MEMORY_WRITTEN and body.get("memory"):
             await self._append(EventKind.MEMORY_WRITTEN, {"memory": body["memory"]})
+        elif (event == AgentEvent.STEP_FINISHED and body.get("step_id") == AgentStep.READ_WORK
+              and isinstance(body.get("payload"), dict)):
+            await self._append(EventKind.FEED, body["payload"])
         await self._track(event, body)
 
     # -- run status ---------------------------------------------------------

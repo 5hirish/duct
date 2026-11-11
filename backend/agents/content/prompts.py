@@ -1789,6 +1789,81 @@ When they answer, that is the planning turn:
 {_plan_steps(brand, has_direction=True)}"""
 
 
+def build_feed_plan_prompt(
+    brand: ContentBrandContext,
+    *,
+    feed: str,
+    max_days: int,
+    performance: "ChannelMix | None",
+    period: "PlanPeriod | None",
+    business: str = "",
+    voice: str = "",
+    current_days: list[dict] | None = None,
+) -> str:
+    """The opening turn of a plan from shipped work (#561): the feed Duct
+    already read and filtered, a story question, then at most ``max_days``
+    days placed on the plan. ``current_days`` is the plan covering the
+    period, when there is one; the feed then changes some of its days and
+    leaves the rest alone."""
+    span = (
+        f"{period.start.isoformat()} to {period.end.isoformat()} ({period.days} days)"
+        if period else "the coming days"
+    )
+    current = ""
+    if current_days:
+        current = f"<current_plan period=\"{span}\">\n{_current_plan_lines(current_days, period)}\n</current_plan>\n"
+    optional = "\n\n".join(block for block in (business, voice, current) if block)
+    if current_days:
+        place = f"""\
+   Use revise_plan_days on at most {max_days} days of <current_plan> that
+   are pending and not drafted. On each, set topic, pillar, post_type,
+   platforms, hook_type, funnel_stage and objective to fit the story, and
+   set `sources` to every ref it stands on. Leave every other day alone."""
+    else:
+        place = f"""\
+   There is no plan for this period yet. Use submit_plan for the whole
+   period: the kept stories on at most {max_days} days, each with `sources`
+   set to every ref it stands on, and the other days planned from the
+   brand's pillars as an ordinary plan, with no sources. Do not call
+   research_trends for this plan."""
+    return f"""\
+{_brand_stanza(brand)}
+
+{optional}
+
+{_channel_mix_stanza(performance)}
+
+<shipped_work>
+{feed}
+</shipped_work>
+
+You manage {brand.project_name}'s content plan for {span}. The person asked
+for a plan FROM WHAT THEY SHIPPED. Duct has read the repository and its own
+record of the project and already left out the noise; <shipped_work> is
+what is left, one line each, its ref first.
+
+Now:
+
+1. Group <shipped_work> into one to five stories, each worth one post: a
+   release, a feature built across several items, a change Duct applied and
+   what it did. A story stands on at least one ref. A brief or a memory
+   supports a story and is never one on its own. Prefer what a reader of
+   {brand.project_name} would notice or use. Never name a file path, branch,
+   open issue, code or internal name that is not in a title above, and use
+   a number only where a line above carries it.
+2. Ask which to tell with ONE AskUserQuestion, multiSelect true, one option
+   per story. The label is the story in two to six words; the description is
+   its angle in under twelve words, then its refs in brackets, e.g.
+   "Onboarding stopped dropping GA4 connections [gh:pr-412, cs:3f2a9c1d]".
+   Do not research and do not plan on this turn.
+
+When they answer:
+
+3. Place the stories they kept, on channels <account_performance> favours:
+{place}
+4. Say in two lines which days changed and what each now tells."""
+
+
 _SIGNAL_NAMES = {
     "completion_rate": "completion", "saves": "saves", "shares": "shares", "views": "views",
     "intent": "saves + shares", "engagement": "comments + shares + saves", "reached": "reach",

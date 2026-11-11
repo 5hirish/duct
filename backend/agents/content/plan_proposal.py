@@ -240,6 +240,10 @@ def _write_changed_days(db: Any, row: Any, proposal: PlanProposal, *, now: Any):
         if i < len(days) and i < len(proposal.days) and lock_reason(days[i], day_date(start, i), now.date()) is None:
             days[i] = proposal.days[i]
     row.days = days
+    # A change from shipped work moves the feed's window on, so the next feed
+    # run starts after it; nothing else about the strategy changes.
+    if (proposal.strategy or {}).get("feed"):
+        row.strategy = {**(row.strategy or {}), "feed": proposal.strategy["feed"]}
     row.updated_at = now
     db.add(row)
     db.commit()

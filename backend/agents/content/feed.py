@@ -478,7 +478,7 @@ def render_digest(digest: FeedDigest) -> str:
         when = f" {item.at}" if item.at else ""
         detail = f": {item.detail}" if item.detail else ""
         lines.append(f"- {item.ref} · {item.kind}{state}{when} · {item.title}{detail}")
-    left = ", ".join(f"{n} {why}" for why, n in digest.left_out.most_common()) or "nothing"
+    left = "; ".join(f"{why}: {n}" for why, n in digest.left_out.most_common()) or "nothing"
     notes = "".join(f"\nNote: {n}" for n in digest.notes)
     return (
         f"Window: {digest.window_from.isoformat()} to {digest.window_to.isoformat()}. "

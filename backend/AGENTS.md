@@ -834,6 +834,17 @@ agents/
     │                     the board says what each channel leans on without a sentence.
     │                     submit_plan refuses a hook its channel has not proven on more
     │                     than a quarter of that channel's days (overreaching_hooks)
+    ├── feed.py         — planning from shipped work (#561): the repository through the
+    │                     GitHub connector and Duct's own record (briefs, applied change
+    │                     sets, shared memory), filtered in code (bots, dependency bumps,
+    │                     chores, squash commits, the disclosure level; a docs patch never
+    │                     reaches the prompt) and gated, so a quiet window costs no model
+    │                     call. The read step's payload is the app's card and an
+    │                     EventKind.FEED row. A feed day cites refs in Day.sources;
+    │                     submit_plan and revise_plan_days refuse one the run was not
+    │                     shown, or more feed days than the setup allowed, and a plan
+    │                     from goals cites nothing. The window rides on strategy.feed,
+    │                     so the next run starts where this one ended: no watermark table
     ├── plan_proposal.py — a plan is proposed, then accepted: what Accept writes, merged
     │                     against the plan as it stands at Accept. The proposal is held
     │                     on the conversation (meta.plan_proposal) so a deploy does not
