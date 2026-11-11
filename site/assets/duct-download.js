@@ -66,6 +66,11 @@ var ductT = window.ductT || function (s) { var m = window.DUCT_I18N; return (m &
     // which would hand a Windows user a .dmg.
     var p = (navigator.userAgentData && navigator.userAgentData.platform) || '';
     var ua = p + ' ' + (navigator.platform || '') + ' ' + (navigator.userAgent || '');
+    // Phones and tablets first: an iPhone's user agent says "like Mac OS X",
+    // and iPadOS Safari reports a Mac outright, so without this both were
+    // offered the .dmg. There is no mobile build; they get the plain link.
+    if (/iPhone|iPad|iPod|Android/i.test(ua)) return null;
+    if (/Mac/i.test(ua) && navigator.maxTouchPoints > 1) return null;
     if (/Win/i.test(ua)) return 'windows';
     if (/Mac|Darwin/i.test(ua)) return 'macos';
     if (/Linux|X11/i.test(ua)) return 'linux-appimage';
@@ -115,7 +120,7 @@ var ductT = window.ductT || function (s) { var m = window.DUCT_I18N; return (m &
     // Only on the download page. Everywhere else a Download button is a link
     // to that page: a visitor who has not seen what the app is should land on
     // the page that shows it, not on a 90 MB installer from a nav button.
-    if (!/^\/download(\.html)?$/.test(location.pathname)) return;
+    if (!/^\/download(\.html)?$/.test(location.pathname)) return nameThePlatform();
     var nodes = document.querySelectorAll('[data-duct-download]');
     if (!nodes.length) return;
 
@@ -132,6 +137,21 @@ var ductT = window.ductT || function (s) { var m = window.DUCT_I18N; return (m &
       el.textContent = el.hasAttribute('data-duct-download-short')
         ? ductT('Download ↓')
         : ductT('Download for {label} ↓').replace('{label}', label);
+    }
+  }
+
+  /* Off the download page, a CTA that opts in with `data-duct-download-name`
+   * says the visitor's own platform ("Download for Windows ↓") and still links
+   * to /download. The markup says "Download Duct ↓", which is what a phone, a
+   * platform we do not build for, or no JavaScript sees. The home hero once
+   * hard-coded "Download for macOS ↓" for everyone. */
+  var NAMES = { macos: 'macOS', windows: 'Windows', 'linux-appimage': 'Linux' };
+  function nameThePlatform() {
+    var name = NAMES[detect()];
+    if (!name) return;
+    var nodes = document.querySelectorAll('[data-duct-download-name]');
+    for (var i = 0; i < nodes.length; i++) {
+      nodes[i].textContent = ductT('Download for {label} ↓').replace('{label}', name);
     }
   }
 

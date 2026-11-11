@@ -738,7 +738,7 @@ msgstr "标准"
 msgid "Docs, email and the web"
 msgstr "文档、电子邮件和网络"
 
-#: compare.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/cta-blog.html partials/cta-for-pages.html partials/cta-home.html partials/cta-tools.html skills.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+#: compare.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/cta-blog.html partials/cta-for-pages.html partials/cta-home.html partials/cta-tools.html skills.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Download Duct ↓"
 msgstr "下载 Duct ↓"
 
@@ -3075,10 +3075,6 @@ msgstr "客户成功"
 #: index.html
 msgid "Does it change my accounts without asking?"
 msgstr "它会未经允许更改我的账户吗？"
-
-#: index.html
-msgid "Download for macOS ↓"
-msgstr "下载 macOS 版 ↓"
 
 #: index.html
 msgid "Duct AI"
@@ -12376,6 +12372,9 @@ msgstr "← 返回"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← 重新开始"
+
+#~ msgid "Download for macOS ↓"
+#~ msgstr "下载 macOS 版 ↓"
 
 #. meta description
 #~ msgid ""
