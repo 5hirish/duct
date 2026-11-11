@@ -3737,6 +3737,10 @@ msgstr "Etwas getan"
 #~ msgid "Did the revenue actually arrive?"
 #~ msgstr "Ist der Umsatz tatsächlich angekommen?"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Didn't publish the post"
+msgstr "Hat den Beitrag nicht veröffentlicht"
+
 #: src/components/onboarding/DocumentPicker.jsx
 msgid "Didn't upload. Remove it and add it again"
 msgstr "Nicht hochgeladen. Entferne es und füge es erneut hinzu"
@@ -5251,6 +5255,14 @@ msgstr "für diese Browsersitzung gespeichert"
 #: src/components/connections/ProviderCard.jsx
 msgid "held in this machine’s keychain"
 msgstr "im Schlüsselbund dieses Geräts gespeichert"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Held the post for your approval"
+msgstr "Hat den Beitrag für deine Freigabe zurückgehalten"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Held the TikTok search for your approval"
+msgstr "Hat die TikTok-Suche für deine Freigabe zurückgehalten"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Helps Duct fit its answers to your job"
@@ -8440,6 +8452,10 @@ msgstr "Veröffentlichen"
 msgid "Publish post"
 msgstr "Beitrag veröffentlichen"
 
+#: src/components/insights/ToolApproval.jsx
+msgid "Publish this post through {serverName}?"
+msgstr "Diesen Beitrag über {serverName} veröffentlichen?"
+
 #: src/lib/contentSchedule.js
 msgid "Published"
 msgstr "Veröffentlicht"
@@ -8463,6 +8479,10 @@ msgstr "Veröffentlichung ist nicht verbunden. Bitte deinen Admin, sie einzurich
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "Publishing isn't set up yet"
 #~ msgstr "Veröffentlichen ist noch nicht eingerichtet"
+
+#: src/components/insights/ToolApproval.jsx
+msgid "Publishing puts this post in front of people, so Duct asks every time. Skip and nothing is sent; the post stays as it is."
+msgstr "Durch das Veröffentlichen wird dieser Beitrag für andere sichtbar, deshalb fragt Duct jedes Mal nach. Überspringe dies und es wird nichts gesendet; der Beitrag bleibt, wie er ist."
 
 #: src/components/content/PostVideo.jsx
 msgid "Publishing this take"
@@ -10287,6 +10307,10 @@ msgstr "übersprungen"
 #: src/components/workspace/ActivityRow.jsx
 msgid "Skipped {name}"
 msgstr "{name} übersprungen"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Skipped the TikTok search"
+msgstr "Hat die TikTok-Suche übersprungen"
 
 #: src/components/insights/ConnectionRequest.jsx
 msgid "Skipping is fine — Duct will say what it couldn’t check."
@@ -12240,6 +12264,10 @@ msgstr "Was Duct für {label} schreibt"
 #: src/app/(app)/connections/page.jsx
 msgid "What each campaign costs and what it brings back."
 msgstr "Was jede Kampagne kostet und was sie einbringt."
+
+#: src/components/insights/ToolApproval.jsx
+msgid "What goes out, and when"
+msgstr "Was rausgeht und wann"
 
 #: src/app/(start)/start/page.jsx
 msgid "What happens next"

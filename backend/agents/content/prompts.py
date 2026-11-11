@@ -877,7 +877,9 @@ Publishing:
   publish_post, mark_posted, log_metrics
   publish_post uploads the COMPOSED renders — call render_slide on every slide
   first so the captions actually publish (collage / before-after slides REQUIRE
-  a render).
+  a render). Every send waits for the person's yes on a card showing what goes
+  out, where and when: call it only when they asked to publish. A 'skipped'
+  answer means nothing went out; leave the post as it is and say so.
 
 Tools the person connected (when mounted):
   ListConnectedTools / CallConnectedTool — outside tools they connected to

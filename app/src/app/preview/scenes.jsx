@@ -630,6 +630,10 @@ const TOOL_TRAFFIC = [
   returned("FetchPages", "t10", { pages: [{ url: "https://acme.io/" }, { url: "https://acme.io/pricing" }], errors: ["https://acme.io/blog/launch: 404"] }),
   use("discover_tiktok", "t13", { reason: "Which hooks pull saves this week", hashtags: ["skincareroutine", "glassskin"] }),
   returned("discover_tiktok", "t13", { status: "ok", count: 15, found: 30, searched: ["skincareroutine", "glassskin"], posts: new Array(15).fill({}) }),
+  use("discover_tiktok", "t14", { reason: "Trending sounds this week", hashtags: [] }),
+  returned("discover_tiktok", "t14", { status: "skipped", message: "for the model" }),
+  use("publish_post", "t15", { post_id: "p2" }),
+  returned("publish_post", "t15", { status: "skipped", post_id: "p2", topic: "Three fixes before Monday's call", message: "for the model" }),
   use("submit_assessment", "t12", { markers: [], notes: "" }),
   returned("submit_assessment", "t12", { status: "ok", post_id: "p1", topic: "Why your colours look off", overall: 56, band: "needs_work" }),
   use("publish_post", "t11", { post_id: "p1" }),
@@ -766,6 +770,33 @@ const TOOL_APPROVAL = {
   reason: "To file this week's brief in your Growth wiki, under Weekly briefs.",
   arguments: JSON.stringify(
     { parent: { page_id: "1a2b3c4d" }, pages: [{ properties: { title: "Organic growth, week of 13 Oct" }, content: "## What changed\n…" }] },
+    null,
+    2,
+  ),
+};
+
+// The agent's publish (agents/content/publishing.publish_card): the same
+// card, read from the post and the scheduler rather than the model's words.
+const PUBLISH_APPROVAL = {
+  event: AgentEvent.TOOL_APPROVAL_REQUIRED,
+  interrupt_id: "preview-publish-approval",
+  server: "zernio",
+  server_name: "Zernio",
+  server_url: "https://zernio.com",
+  tool: "publish_post",
+  tool_title: "",
+  reason: "Why your colours look off under office lights",
+  why: "publishes",
+  arguments: JSON.stringify(
+    {
+      post: "Why your colours look off under office lights",
+      channel: "tiktok",
+      accounts: ["101"],
+      when: "2026-11-13T09:00:00+01:00",
+      as_a_tiktok_draft: false,
+      media_files: 6,
+      caption: "Your foundation isn't wrong, your lighting is. Three fixes before Monday's call.",
+    },
     null,
     2,
   ),
@@ -2702,6 +2733,18 @@ export const SCENES = [
     ),
   },
   {
+    id: "tool-approval-publish",
+    state: "the agent asks before a post goes out",
+    group: "ToolApproval",
+    title: "Every publish waits for a yes",
+    note: "The card a connected tool uses, worded for a publish: the post's own topic under the heading and what goes out, where and when, open from the start because those are the decision. Skip and nothing is sent.",
+    render: () => (
+      <div className="max-w-xl">
+        <PauseCard pause={PUBLISH_APPROVAL} onAnswer={() => {}} />
+      </div>
+    ),
+  },
+  {
     id: "tool-approval-tiktok",
     state: "a TikTok search that spends Apify credits",
     group: "ToolApproval",
@@ -3122,7 +3165,7 @@ export const SCENES = [
   },
   {
     id: "activity-rows",
-    state: "the context notice · pulls · a search · a page · a sub-agent · memory · sources · a document · a site read · a TikTok search · a publish",
+    state: "the context notice · pulls · a search · a page · a sub-agent · memory · sources · a document · a site read · a TikTok search, and one skipped · a publish declined · a publish",
     group: "AgentChat",
     title: "What the agent did, in the transcript",
     note: "One row per tool call, where it happened. A run used to show none of this — a pull became a line in another tab, a search and an image became nothing — so the reader got ninety seconds of \"Working…\" and then a brief citing a source they never saw it open. One line each until you click: twelve sources would otherwise push the prose off the screen. Every row here is built by lib/toolActivity from recorded tool traffic, the same path a reopened thread takes.",

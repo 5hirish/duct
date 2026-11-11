@@ -23,7 +23,7 @@ import routes.content as content_routes
 import service.auth as auth_service
 from service.post_bridge.publisher import POSTBRIDGE
 from service.publishers import MediaRef, RemotePost, RemoteStatus
-from tests.fakes import connect_scheduler
+from tests.fakes import Approver, connect_scheduler
 import service.videos as videos
 from agents import engines
 from agents.content.events import ContentEvent
@@ -399,7 +399,7 @@ def test_the_agents_publish_sends_the_cut_too(
 ):
     session = _session(project, post)
     _generate(session, engine, monkeypatch)
-    tools = {t.name: t for t in content_tools.build_content_tools_lc(project.id, lambda e: asyncio.sleep(0), session)}
+    tools = {t.name: t for t in content_tools.build_content_tools_lc(project.id, lambda e: asyncio.sleep(0), session, pause=Approver())}
     result = json.loads(asyncio.run(tools["publish_post"].ainvoke({
         "post_id": str(post.id), "social_account_ids": [7],
     })))

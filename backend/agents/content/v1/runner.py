@@ -670,7 +670,9 @@ class ContentRunner:
         subagents: list[dict] = []
         if session is not None and project_id is not None and emit is not None:
             content_tools = build_content_tools_lc(
-                project_id, emit, session, vision=self.vision, remember=remember
+                project_id, emit, session, vision=self.vision, remember=remember,
+                # Publishing asks first; only a run with someone to ask can send.
+                pause=interrupt_pause if interactive else None,
             )
             tools += content_tools
             by_name = {t.name: t for t in content_tools}

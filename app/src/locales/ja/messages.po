@@ -3737,6 +3737,10 @@ msgstr "何かを行いました"
 #~ msgid "Did the revenue actually arrive?"
 #~ msgstr "収益は実際に発生しましたか？"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Didn't publish the post"
+msgstr "投稿を公開しませんでした"
+
 #: src/components/onboarding/DocumentPicker.jsx
 msgid "Didn't upload. Remove it and add it again"
 msgstr "アップロードできませんでした。削除してもう一度追加してください"
@@ -5251,6 +5255,14 @@ msgstr "このブラウザセッション中に保持されます"
 #: src/components/connections/ProviderCard.jsx
 msgid "held in this machine’s keychain"
 msgstr "このマシンのキーチェーンに保持されます"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Held the post for your approval"
+msgstr "承認のため投稿を保留しました"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Held the TikTok search for your approval"
+msgstr "承認のためTikTok検索を保留しました"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Helps Duct fit its answers to your job"
@@ -8441,6 +8453,10 @@ msgstr "公開"
 msgid "Publish post"
 msgstr "投稿を公開"
 
+#: src/components/insights/ToolApproval.jsx
+msgid "Publish this post through {serverName}?"
+msgstr "{serverName} 経由でこの投稿を公開しますか？"
+
 #: src/lib/contentSchedule.js
 msgid "Published"
 msgstr "公開済み"
@@ -8464,6 +8480,10 @@ msgstr "公開機能は接続されていません。管理者に設定を依頼
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "Publishing isn't set up yet"
 #~ msgstr "公開はまだ設定されていません"
+
+#: src/components/insights/ToolApproval.jsx
+msgid "Publishing puts this post in front of people, so Duct asks every time. Skip and nothing is sent; the post stays as it is."
+msgstr "公開するとこの投稿が他のユーザーに表示されるため、Duct は毎回確認します。スキップすると何も送信されず、投稿はそのまま残ります。"
 
 #: src/components/content/PostVideo.jsx
 msgid "Publishing this take"
@@ -10288,6 +10308,10 @@ msgstr "スキップ済み"
 #: src/components/workspace/ActivityRow.jsx
 msgid "Skipped {name}"
 msgstr "{name}をスキップしました"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Skipped the TikTok search"
+msgstr "TikTok検索をスキップしました"
 
 #: src/components/insights/ConnectionRequest.jsx
 msgid "Skipping is fine — Duct will say what it couldn’t check."
@@ -12241,6 +12265,10 @@ msgstr "Ductが{label}のために作成するもの"
 #: src/app/(app)/connections/page.jsx
 msgid "What each campaign costs and what it brings back."
 msgstr "各キャンペーンの費用とその効果。"
+
+#: src/components/insights/ToolApproval.jsx
+msgid "What goes out, and when"
+msgstr "何をいつ公開するか"
 
 #: src/app/(start)/start/page.jsx
 msgid "What happens next"

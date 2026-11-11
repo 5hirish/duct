@@ -4,9 +4,11 @@
 // the server does not mark the tool read-only or it is a server added by
 // address, whose "read-only" Duct does not take on trust. The run is parked
 // until someone says yes or no; `why` says which rule stopped it (backend
-// agents/core/mcp_tools.py). The content agents' TikTok search parks on the
-// same card, because it spends the project's Apify credits
-// (agents/content/discover.py); its `why` gives it its own words.
+// agents/core/mcp_tools.py). Two content tools park on the same card, each
+// with its own words: the TikTok search, because it spends the project's
+// Apify credits (agents/content/discover.py), and every publish, because a
+// post in front of people is the one thing the agent cannot take back
+// (agents/content/publishing.publish_card).
 //
 // The card shows what the person needs to decide and nothing else: whose tool,
 // which tool, the agent's one-sentence reason, and exactly what would be sent.
@@ -29,14 +31,19 @@ const WHY_ADDED_BY_ADDRESS = "added_by_address";
 const WHY_ALWAYS_ASKS = "always_asks";
 // Backend WHY_SPENDS_CREDITS (agents/content/discover.py).
 const WHY_SPENDS_CREDITS = "spends_credits";
+// Backend WHY_PUBLISHES (agents/content/publishing.py).
+const WHY_PUBLISHES = "publishes";
 
 export default function ToolApproval({ request, onAnswer, disabled }) {
-  const [open, setOpen] = useState(false);
+  // A publish opens with what goes out showing: where and when are the
+  // decision, not a detail behind a click.
+  const [open, setOpen] = useState(request.why === WHY_PUBLISHES);
   const serverName = request.server_name || request.server || "";
   const toolName = request.tool_title || request.tool || "";
   const preview = String(request.arguments || "").trim();
   const hasArguments = !EMPTY_ARGUMENTS.has(preview);
   const spends = request.why === WHY_SPENDS_CREDITS;
+  const publishes = request.why === WHY_PUBLISHES;
 
   return (
     <div className="my-3 space-y-3 rounded-xl border border-warning/30 bg-warning/5 p-4">
@@ -44,10 +51,17 @@ export default function ToolApproval({ request, onAnswer, disabled }) {
         <EntityAvatar url={serverSite(request.server_url)} name={serverName} />
         <div className="min-w-0 space-y-0.5">
           <p className="text-sm font-semibold break-words">
-            {spends ? <Trans>Search TikTok with {serverName}?</Trans> : <Trans>Run {toolName} on {serverName}?</Trans>}
+            {publishes ? (
+              <Trans>Publish this post through {serverName}?</Trans>
+            ) : spends ? (
+              <Trans>Search TikTok with {serverName}?</Trans>
+            ) : (
+              <Trans>Run {toolName} on {serverName}?</Trans>
+            )}
           </p>
           {/* The agent's own sentence, in the language it is writing to them
-              in. Not translated: it was never ours. */}
+              in, or for a publish the post's own topic. Not translated: it
+              was never ours. */}
           {request.reason && <p className="text-xs text-muted-foreground">{request.reason}</p>}
         </div>
       </div>
@@ -61,7 +75,7 @@ export default function ToolApproval({ request, onAnswer, disabled }) {
             className="inline-flex min-h-6 items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
           >
             <ChevronRight className={`size-3 transition-transform ${open ? "rotate-90" : ""}`} aria-hidden="true" />
-            <Trans>What it will send</Trans>
+            {publishes ? <Trans>What goes out, and when</Trans> : <Trans>What it will send</Trans>}
           </button>
           {open && (
             <pre className="mt-1.5 max-h-56 overflow-auto rounded-md border border-border bg-card p-2.5 font-mono text-2xs leading-relaxed whitespace-pre-wrap break-words">
@@ -80,7 +94,12 @@ export default function ToolApproval({ request, onAnswer, disabled }) {
         </Button>
       </div>
       <p className="pl-7.5 text-2xs text-pretty text-muted-foreground">
-        {spends ? (
+        {publishes ? (
+          <Trans>
+            Publishing puts this post in front of people, so Duct asks every time. Skip and nothing is sent; the
+            post stays as it is.
+          </Trans>
+        ) : spends ? (
           <Trans>
             Each search uses this project&rsquo;s {serverName} credits, so Duct asks first. Skip and the agent
             carries on from what you saved.

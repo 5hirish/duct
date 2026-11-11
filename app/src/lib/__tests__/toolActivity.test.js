@@ -215,7 +215,19 @@ describe("the wider allowlist", () => {
     ]);
     expect(rows[0]).toMatchObject({ kind: ActivityKind.CONTEXT, status: StepStatus.SUCCESS, title: "#glassskin #skincareroutine", meta: { count: 15 } });
     // The person said no on the card; the row does not say it back to them.
-    expect(rows[1]).toMatchObject({ status: StepStatus.ERROR, error: "" });
+    expect(rows[1]).toMatchObject({ status: StepStatus.ERROR, reason: "skipped", error: "" });
+  });
+
+  it("never says a post was published when the person said no on the card", () => {
+    const [declined, published] = activitiesFromEvents([
+      use("publish_post", "x2", { post_id: "p2" }),
+      result("publish_post", "x2", { status: "skipped", post_id: "p2", topic: "Morning ritual", message: "for the model" }),
+      use("publish_post", "x3", { post_id: "p3" }),
+      result("publish_post", "x3", { status: "scheduled", post_id: "p3", scheduled_at: "2026-11-13T08:00:00Z" }),
+    ]);
+    expect(declined).toMatchObject({ kind: ActivityKind.ACTION, reason: "skipped", error: "", title: "Morning ritual" });
+    // A post's own state is not a verdict: a scheduled post reopened green.
+    expect(published).toMatchObject({ status: StepStatus.SUCCESS, reason: "" });
   });
 
   it("draws what the content agent did on the person's behalf", () => {

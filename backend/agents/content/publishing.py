@@ -35,6 +35,7 @@ through ``service.storage``, which serves R2 and local disk alike.
 from __future__ import annotations
 
 import asyncio
+import json
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import PurePosixPath
@@ -548,7 +549,45 @@ async def pull_metrics(pub: Publisher, post) -> PostMetrics | None:
     return got
 
 
+# What the approval card is asking about. The card is the one a connected MCP
+# tool uses (app ToolApproval.jsx); this ``why`` gives it publishing's words.
+WHY_PUBLISHES = "publishes"
+# A caption longer than this is cut on the card, never in the post: the card
+# is for recognising the post, and the post itself is on the page beside it.
+CARD_CAPTION_CHARS = 400
+
+
+def publish_card(
+    post, spec, account_ids: list[str], due: datetime | None, *, tiktok_draft: bool, media: int
+) -> dict:
+    """The approval card for one send: which post, through which scheduler,
+    to which accounts, and when. The post's words come from the saved row and
+    the accounts and time are the values ``send_post`` is about to use, after
+    the checks, so what the person approves is what goes out."""
+    caption = (post.caption or "").strip()
+    shown = {
+        "post": post.topic or "",
+        "channel": primary_channel(post.platforms),
+        "accounts": list(account_ids),
+        "when": due.isoformat() if due else "now",
+        "as_a_tiktok_draft": tiktok_draft,
+        "media_files": media,
+        "caption": caption if len(caption) <= CARD_CAPTION_CHARS else caption[:CARD_CAPTION_CHARS] + "…",
+    }
+    return {
+        "server": spec.id,
+        "server_name": spec.label,
+        "server_url": spec.dashboard_url,
+        "tool": "publish_post",
+        "tool_title": "",
+        "reason": post.topic or "",
+        "why": WHY_PUBLISHES,
+        "arguments": json.dumps(shown, ensure_ascii=False, indent=2),
+    }
+
+
 __all__ = [
+    "CARD_CAPTION_CHARS",
     "PUBLISHED_VIA_DUCT",
     "SLIDE_RENDER",
     "MediaFile",
@@ -571,6 +610,7 @@ __all__ = [
     "pick_media",
     "project_publishing",
     "publish_blockers",
+    "publish_card",
     "publish_failure",
     "pull_metrics",
     "push_edit",
@@ -579,5 +619,6 @@ __all__ = [
     "settle",
     "unpublished_replies",
     "went_out",
+    "WHY_PUBLISHES",
     "words_changed",
 ]

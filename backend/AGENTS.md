@@ -777,7 +777,11 @@ agents/
     │                     through so the queue never publishes stale words or a deleted
     │                     post; once its time has passed, settle, which the post
     │                     listing runs (throttled per project) so it reads posted or
-    │                     failed, the reason on an activity_logs row
+    │                     failed, the reason on an activity_logs row. The agent's
+    │                     publish_post sends nothing without the person's yes on the
+    │                     approval card (publish_card, why: publishes): it reads pages
+    │                     and strangers' captions, and a post in front of people is the
+    │                     one thing it cannot take back. The Publish button is that yes
     ├── text_prompts.py — X and LinkedIn draft on their own base prompt; nothing in the
     │                     visual playbook applies to a post that is words
     ├── voice_rules.py  — the project's own voice (#271): writing samples, banned words

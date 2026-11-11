@@ -3731,6 +3731,10 @@ msgstr ""
 #~ msgid "Did the revenue actually arrive?"
 #~ msgstr ""
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Didn't publish the post"
+msgstr ""
+
 #: src/components/onboarding/DocumentPicker.jsx
 msgid "Didn't upload. Remove it and add it again"
 msgstr ""
@@ -5244,6 +5248,14 @@ msgstr ""
 
 #: src/components/connections/ProviderCard.jsx
 msgid "held in this machine’s keychain"
+msgstr ""
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Held the post for your approval"
+msgstr ""
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Held the TikTok search for your approval"
 msgstr ""
 
 #: src/app/(app)/settings/profile/page.jsx
@@ -8435,6 +8447,10 @@ msgstr ""
 msgid "Publish post"
 msgstr ""
 
+#: src/components/insights/ToolApproval.jsx
+msgid "Publish this post through {serverName}?"
+msgstr ""
+
 #: src/lib/contentSchedule.js
 msgid "Published"
 msgstr ""
@@ -8458,6 +8474,10 @@ msgstr ""
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "Publishing isn't set up yet"
 #~ msgstr ""
+
+#: src/components/insights/ToolApproval.jsx
+msgid "Publishing puts this post in front of people, so Duct asks every time. Skip and nothing is sent; the post stays as it is."
+msgstr ""
 
 #: src/components/content/PostVideo.jsx
 msgid "Publishing this take"
@@ -10281,6 +10301,10 @@ msgstr ""
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Skipped {name}"
+msgstr ""
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Skipped the TikTok search"
 msgstr ""
 
 #: src/components/insights/ConnectionRequest.jsx
@@ -12234,6 +12258,10 @@ msgstr ""
 
 #: src/app/(app)/connections/page.jsx
 msgid "What each campaign costs and what it brings back."
+msgstr ""
+
+#: src/components/insights/ToolApproval.jsx
+msgid "What goes out, and when"
 msgstr ""
 
 #: src/app/(start)/start/page.jsx

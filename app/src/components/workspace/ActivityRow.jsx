@@ -97,6 +97,17 @@ const TOOL_WORDS = {
   log_metrics: msg`Logged metrics`,
 };
 
+// What a row says when the person answered no on the approval card, or the
+// run had nobody to ask. The verb in TOOL_WORDS would claim the thing happened.
+const DECLINED_WORDS = {
+  discover_tiktok: msg`Skipped the TikTok search`,
+  publish_post: msg`Didn't publish the post`,
+};
+const HELD_WORDS = {
+  discover_tiktok: msg`Held the TikTok search for your approval`,
+  publish_post: msg`Held the post for your approval`,
+};
+
 // The sub-agents a runner can dispatch, by the name the model calls them
 // (content: agents/content/subagents; insights: agents/insights/subagents),
 // as what they do while running and what they did once back. The name is a
@@ -148,9 +159,18 @@ function toolWords(name) {
   return String(name || "").replace(/[_-]+/g, " ").trim();
 }
 
-/** A skip, or a run with nobody to ask: an answer, not a failure. */
+/** The row's words when the person declined it or it waits for them, else "". */
+function declinedWords(activity, i18n) {
+  const table = activity.reason === "skipped" ? DECLINED_WORDS : activity.reason === "needs_approval" ? HELD_WORDS : null;
+  const words = table?.[activity.tool];
+  return words ? i18n._(words) : "";
+}
+
+/** A skip, or a run with nobody to ask: an answer, not a failure. Whichever
+ *  kind the row is (a connected tool's call, a TikTok search, a publish), it
+ *  is never painted red. */
 function isDecision(activity) {
-  return activity.kind === ActivityKind.CONNECTED_TOOL && CONNECTED_DECISIONS.has(activity.reason);
+  return CONNECTED_DECISIONS.has(activity.reason);
 }
 
 /**
@@ -225,6 +245,8 @@ function useSummary(activity, named) {
         aside: typeof meta.count === "number" ? t`${meta.count} matches` : "",
       };
     case ActivityKind.CONTEXT: {
+      const declined = declinedWords(activity, i18n);
+      if (declined) return { lead: declined, detail: activity.title, aside: "" };
       const word = TOOL_WORDS[activity.tool] ? i18n._(TOOL_WORDS[activity.tool]) : t`Read project context`;
       const detail = Array.isArray(meta.blocks) ? blockWords(meta.blocks, i18n) : activity.title;
       return { lead: word, detail, aside: typeof meta.count === "number" ? String(meta.count) : "" };
@@ -233,6 +255,8 @@ function useSummary(activity, named) {
       if (meta.listing) return { lead: t`Listed this thread's documents`, detail: "", aside: typeof meta.count === "number" ? String(meta.count) : "" };
       return { lead: t`Opened`, detail: activity.title, aside: meta.version ? `v${meta.version}` : "" };
     case ActivityKind.ACTION: {
+      const declined = declinedWords(activity, i18n);
+      if (declined) return { lead: declined, detail: activity.title, aside: "" };
       const word = TOOL_WORDS[activity.tool] ? i18n._(TOOL_WORDS[activity.tool]) : t`Did something`;
       // When it goes out is the one fact a publish has that the verb does not.
       return { lead: word, detail: activity.title, aside: meta.scheduled_at ? formatDate(meta.scheduled_at, { locale: i18n.locale }) : "" };

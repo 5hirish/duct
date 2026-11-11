@@ -869,3 +869,16 @@ class ZernioQueue:
     def created(self) -> dict:
         (body,) = [b for m, p, b in self.requests if m == "POST" and p == "/posts"]
         return body
+
+
+class Approver:
+    """A person at an approval card (``PauseFn``): answers as told and keeps
+    what each card showed, so a test can assert on what was asked."""
+
+    def __init__(self, approved: bool = True):
+        self.approved = approved
+        self.asked: list[tuple[str, dict]] = []
+
+    async def __call__(self, event: str, payload: dict, *, timeout: float | None = None) -> dict:
+        self.asked.append((str(event), payload))
+        return {"approved": self.approved}
