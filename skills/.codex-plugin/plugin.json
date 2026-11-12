@@ -1,0 +1,38 @@
+{
+  "name": "duct",
+  "version": "0.1.0",
+  "description": "Find out before you launch why Google won't index your site, why a shared link previews blank, why ChatGPT can't read it and whether your signups are tracked. Checks the live pages and the code behind them, scores the launch out of 100 and gives three ranked fixes.",
+  "author": {
+    "name": "Shirish Kadam",
+    "url": "https://getduct.ai"
+  },
+  "homepage": "https://getduct.ai/skills",
+  "repository": "https://github.com/5hirish/duct",
+  "license": "MIT",
+  "keywords": ["launch", "seo", "open-graph", "analytics", "llms-txt", "marketing"],
+  "skills": ["./launch-check"],
+  "interface": {
+    "displayName": "Duct launch check",
+    "shortDescription": "Is your site ready to launch?",
+    "longDescription": "Ask \"is my site ready to launch?\" and Codex reads your live pages and the repository behind them. It finds why Google won't index a page, why a shared link previews blank, why ChatGPT and Perplexity can't read the site, and whether the signup button sends an event. It also checks what the page promises against what the code does. You get a score out of 100, three fixes ranked by impact and effort, each as a diff applied only when you say yes, and a 1200x630 card to post. No account, no key; nothing is sent anywhere except the site being checked.",
+    "developerName": "Duct",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Check a live site before launch",
+      "Check page claims against the code",
+      "Draw a score card to post"
+    ],
+    "websiteURL": "https://getduct.ai/skills",
+    "supportURL": "https://github.com/5hirish/duct/issues",
+    "privacyPolicyURL": "https://getduct.ai/privacy",
+    "termsOfServiceURL": "https://getduct.ai/terms",
+    "defaultPrompt": [
+      "Is my site ready to launch?",
+      "Check my site before I post it on Product Hunt",
+      "Will my signups be tracked?"
+    ],
+    "brandColor": "#ff5c00",
+    "composerIcon": "./assets/icon.svg",
+    "logo": "./assets/icon.svg"
+  }
+}

@@ -42,6 +42,21 @@ default install. A new contributor skill without that line is offered to
 every user who installs Duct's skills; a skill in `skills/` with it is offered
 to nobody.
 
+`skills/` is also a plugin for Claude Code and Codex, so the same folder ships
+three ways: `npx skills add 5hirish/duct`, `/plugin marketplace add
+5hirish/duct` (Claude Code) and `codex plugin marketplace add 5hirish/duct`.
+`skills/.claude-plugin/plugin.json` finds skills with `"skills": "./"`;
+`skills/.codex-plugin/plugin.json` lists each skill folder
+(`["./launch-check"]`), because Codex 0.167 loads nothing from `"./"` (tried),
+so a new user-facing skill is added to that array or Codex never sees it. The two
+catalogues are `.claude-plugin/marketplace.json` and
+`.agents/plugins/marketplace.json` at the root. `skills/README.md` is the
+plugin's listing page and must say everything the plugin runs, fetches and
+sends, because the Claude directory's scan rejects a plugin whose README
+leaves something out. Check with `claude plugin validate ./skills` and
+`claude plugin validate .`; the skill pins `getduct@<version>`, and
+`cli/test/catalog.test.js` keeps that pin equal to the CLI's version.
+
 MCP servers get no such shared file, because none can exist: VS Code names the
 key `servers` rather than `mcpServers`, Codex is TOML, Zed calls them
 `context_servers` and puts them among its other settings, and Cursor expands

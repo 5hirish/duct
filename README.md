@@ -76,9 +76,11 @@ against what the code does, scores the launch out of 100 and gives you three
 ranked fixes, each as a diff it applies only when you say yes. No Duct account,
 nothing sent to us.
 
-```bash
-npx skills add 5hirish/duct
-```
+| Agent | Install |
+|---|---|
+| Claude Code | `/plugin marketplace add 5hirish/duct`, then `/plugin install duct@duct` |
+| Codex | `codex plugin marketplace add 5hirish/duct`, then install Duct from `/plugins` |
+| Cursor, Copilot, OpenCode and the rest | `npx skills add 5hirish/duct` |
 
 What it checks, and a real run on our own site: [getduct.ai/skills](https://getduct.ai/skills).
 

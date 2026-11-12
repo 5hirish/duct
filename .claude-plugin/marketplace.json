@@ -1,0 +1,16 @@
+{
+  "name": "duct",
+  "owner": {
+    "name": "Shirish Kadam",
+    "url": "https://getduct.ai"
+  },
+  "description": "Duct's skills for coding agents.",
+  "plugins": [
+    {
+      "name": "duct",
+      "source": "./skills",
+      "description": "Is your site ready to launch? Live checks plus your code, a score out of 100 and three ranked fixes.",
+      "category": "marketing"
+    }
+  ]
+}
