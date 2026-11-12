@@ -3630,7 +3630,7 @@ msgid ""
 "Read-only: Duct has no Apple Search Ads change operation, and give the API user a read-only role so the key could not change a campaign either."
 msgstr "只读：Duct 没有 Apple Search Ads 更改操作，并且为 API 用户提供只读角色，因此密钥也无法更改广告系列。"
 
-#: integrations/apple-search-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/revenuecat.html integrations/stripe.html
+#: integrations/apple-search-ads.html integrations/ga4.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/revenuecat.html integrations/stripe.html
 msgid "Reads three datasets"
 msgstr "读取三个数据集"
 
@@ -3984,6 +3984,10 @@ msgid ""
 msgstr "<0>将 sign_up 注册为关键事件</0><1>影响 1 个属性。可回滚。</1>"
 
 #: integrations/ga4.html
+msgid "<0>iso week</0><1>active users</1>"
+msgstr "<0>ISO 周</0><1>活跃用户</1>"
+
+#: integrations/ga4.html
 msgid ""
 "<0>page</0><1>channel</1><2>sessions</2><3>bounce rate</3><4>engagement rate</4><5>average session duration</5><6>conversions</6><7>revenue</7>"
 msgstr ""
@@ -4115,6 +4119,10 @@ msgid ""
 msgstr "GA4 与 Search Console、广告和 Stripe 数据一同读取：找出原因，而非另一个仪表盘。"
 
 #: integrations/ga4.html
+msgid "GA4 weekly active users"
+msgstr "GA4 每周活跃用户"
+
+#: integrations/ga4.html
 msgid "GA4, <0>answered</0>"
 msgstr "GA4，<0>已解答</0>"
 
@@ -4171,10 +4179,6 @@ msgstr "选择此项目读取的 GA4 媒体资源。"
 #: integrations/ga4.html
 msgid "Read the GA4 notes Duct's agent works from <0/>"
 msgstr "阅读 Duct 智能体使用的 GA4 备注 <0/>"
-
-#: integrations/ga4.html
-msgid "Reads two datasets"
-msgstr "读取两个数据集"
 
 #: integrations/ga4.html
 msgid "Register GA4 key event"
@@ -5334,6 +5338,12 @@ msgid ""
 msgstr "<0>HubSpot</0><1>CRM 生命周期阶段、销售渠道和已完成收入。</1><2><3>即将推出</3></2>"
 
 #: integrations/index.html
+msgid ""
+"<0>RSS and Atom feeds</0><1>What you published: a blog, a Substack, a changelog page, YouTube uploads.</1><2><3>Feed addresses</3><4>Read-only</4></2>"
+msgstr ""
+"<0>RSS 和 Atom 订阅源</0><1>你发布的内容：博客、Substack、更新日志页面、YouTube 上传。</1><2><3>订阅源地址</3><4>只读</4></2>"
+
+#: integrations/index.html
 msgid "Ads"
 msgstr "广告"
 
@@ -5383,18 +5393,28 @@ msgstr "Duct 集成"
 #. meta og:title
 #. meta twitter:title
 #: integrations/index.html
-msgid "Duct integrations: thirteen tools, read as one"
-msgstr "Duct 集成：十三种工具，统一读取"
+msgid "Duct integrations: fourteen tools, read as one"
+msgstr "Duct 集成：十四种工具，统一读取"
+
+#. meta twitter:description
+#: integrations/index.html
+msgid ""
+"Fourteen connectors, read-only by default. Every change waits for your Apply."
+msgstr "十四种连接器，默认只读。每次更改都等待你的应用。"
+
+#: integrations/index.html
+msgid "Fourteen tools. <0>Read as one.</0>"
+msgstr "十四种工具。<0>统一读取。</0>"
 
 #: integrations/index.html
 msgid ""
-"Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, GitHub, Stripe and RevenueCat. The four Google tools connect when you sign in with Google; the rest take a key you paste once. HubSpot is next."
+"Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, GitHub, RSS and Atom feeds, Stripe and RevenueCat. The four Google tools connect when you sign in with Google; the rest take a key you paste once. HubSpot is next."
 msgstr ""
-"Google Ads、Meta Ads、Apple Search Ads、ChatGPT Ads、Google Analytics 4、Google Search Console、Google Tag Manager、Mixpanel、Microsoft Clarity、GrowthBook、GitHub、Stripe 和 RevenueCat。当你使用 Google 登录时，这四种 Google 工具会连接；其余的只需粘贴一次密钥即可。HubSpot 即将推出。"
+"Google Ads、Meta Ads、Apple Search Ads、ChatGPT Ads、Google Analytics 4、Google Search Console、Google Tag Manager、Mixpanel、Microsoft Clarity、GrowthBook、GitHub、RSS 和 Atom 订阅源、Stripe 和 RevenueCat。当你使用 Google 登录时，这四种 Google 工具会连接；其余的只需粘贴一次密钥即可。HubSpot 即将推出。"
 
 #: integrations/index.html
-msgid "Integrations: Google Ads, GA4, Stripe and 10 more | Duct"
-msgstr "集成：Google Ads、GA4、Stripe 和其他 10 个 | Duct"
+msgid "Integrations: Google Ads, GA4, Stripe and 11 more | Duct"
+msgstr "集成：Google Ads、GA4、Stripe 和其他 11 个 | Duct"
 
 #: integrations/index.html
 msgid "Missing <0>yours?</0>"
@@ -5426,30 +5446,24 @@ msgid "Product and experiments"
 msgstr "产品和实验"
 
 #: integrations/index.html
+msgid "RSS and Atom feeds"
+msgstr "RSS 和 Atom 订阅源"
+
+#: integrations/index.html
 msgid "Revenue"
 msgstr "收入"
 
 #. meta description
 #: integrations/index.html
 msgid ""
-"The 13 tools Duct reads, from Google Ads and Meta to GA4, Mixpanel and Stripe, what each one can change, and how you connect it. Read-only by default."
+"The 14 tools Duct reads, from Google Ads and Meta to GA4, Mixpanel and Stripe, what each one can change, and how you connect it. Read-only by default."
 msgstr ""
-"Duct 读取的 13 种工具，从 Google Ads 和 Meta 到 GA4、Mixpanel 和 Stripe，每种工具可以更改什么，以及如何连接。默认只读。"
+"Duct 读取的 14 种工具，从 Google Ads 和 Meta 到 GA4、Mixpanel 和 Stripe，每种工具可以更改什么，以及如何连接。默认只读。"
 
 #: integrations/index.html
 msgid ""
 "The tools Duct reads and the changes it can make in them, generated from its source code."
 msgstr "Duct 读取的工具以及它可以在其中进行的更改，这些都从其源代码生成。"
-
-#. meta twitter:description
-#: integrations/index.html
-msgid ""
-"Thirteen connectors, read-only by default. Every change waits for your Apply."
-msgstr "十三种连接器，默认只读。每次更改都等待你的应用。"
-
-#: integrations/index.html
-msgid "Thirteen tools. <0>Read as one.</0>"
-msgstr "十三种工具。<0>统一读取。</0>"
 
 #: integrations/index.html
 msgid "Where are my connector credentials stored?"
@@ -12372,6 +12386,36 @@ msgstr "← 返回"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← 重新开始"
+
+#~ msgid "Reads two datasets"
+#~ msgstr "读取两个数据集"
+
+#. meta og:title
+#. meta twitter:title
+#~ msgid "Duct integrations: thirteen tools, read as one"
+#~ msgstr "Duct 集成：十三种工具，统一读取"
+
+#~ msgid ""
+#~ "Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, GitHub, Stripe and RevenueCat. The four Google tools connect when you sign in with Google; the rest take a key you paste once. HubSpot is next."
+#~ msgstr ""
+#~ "Google Ads、Meta Ads、Apple Search Ads、ChatGPT Ads、Google Analytics 4、Google Search Console、Google Tag Manager、Mixpanel、Microsoft Clarity、GrowthBook、GitHub、Stripe 和 RevenueCat。当你使用 Google 登录时，这四种 Google 工具会连接；其余的只需粘贴一次密钥即可。HubSpot 即将推出。"
+
+#~ msgid "Integrations: Google Ads, GA4, Stripe and 10 more | Duct"
+#~ msgstr "集成：Google Ads、GA4、Stripe 和其他 10 个 | Duct"
+
+#. meta description
+#~ msgid ""
+#~ "The 13 tools Duct reads, from Google Ads and Meta to GA4, Mixpanel and Stripe, what each one can change, and how you connect it. Read-only by default."
+#~ msgstr ""
+#~ "Duct 读取的 13 种工具，从 Google Ads 和 Meta 到 GA4、Mixpanel 和 Stripe，每种工具可以更改什么，以及如何连接。默认只读。"
+
+#. meta twitter:description
+#~ msgid ""
+#~ "Thirteen connectors, read-only by default. Every change waits for your Apply."
+#~ msgstr "十三种连接器，默认只读。每次更改都等待你的应用。"
+
+#~ msgid "Thirteen tools. <0>Read as one.</0>"
+#~ msgstr "十三种工具。<0>统一读取。</0>"
 
 #~ msgid "Download for macOS ↓"
 #~ msgstr "下载 macOS 版 ↓"

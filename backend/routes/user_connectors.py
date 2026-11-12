@@ -63,6 +63,8 @@ ALLOWED_CONNECTOR_TYPES = {
     # What shipped, and when (issue #268). Opens project binding too:
     # routes/project_connectors.py checks this same set.
     GITHUB_CONNECTOR_ID,
+    # Feed URLs, one row and one binding for every feed a project reads (#564).
+    "rss",
 }
 
 

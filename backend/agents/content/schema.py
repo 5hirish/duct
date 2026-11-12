@@ -23,6 +23,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from agents.core.session import BaseAgentSession
 
 from agents.content.channels import Platform
+from agents.content.feed import DaySource, FeedOptions
 from agents.content.plan_period import MAX_PLAN_DAYS
 from agents.content.voice_rules import VoiceRules
 from agents.models import AspectRatio, ImageModel, Provider
@@ -81,6 +82,13 @@ class Day(BaseModel):
     hook_emotion: str = Field("", description="The emotion the hook opens on, e.g. curiosity, frustration, relief.")
     series: str = Field("", description="The micro-series this day belongs to, e.g. 'S2: Capsule reset, 3/4'; empty for a standalone post.")
     experiment: str = Field("", description="Set when this day is one of the plan's named test slots, e.g. 'image format test'.")
+    # What a day planned from shipped work stands on (agents/content/feed.py):
+    # the refs the feed listed, each filled with its title and link before the
+    # proposal goes out. Empty for a day planned from goals.
+    sources: list[DaySource] = Field(
+        default_factory=list,
+        description="Plans from shipped work only: the feed refs this day's story stands on. Empty otherwise.",
+    )
 
 
 # The post types a plan allocates across, read off Day so there is one list.
@@ -191,6 +199,9 @@ class PlanRequest(BaseModel):
     # (plan_period.default_period).
     start_date: date | None = None
     days: int | None = Field(default=None, ge=1, le=MAX_PLAN_DAYS)
+    # Set: plan from shipped work (#561), with what the setup sheet chose.
+    # Absent: plan from goals, as before.
+    feed: FeedOptions | None = None
 
 
 class DraftPostRequest(BaseModel):
@@ -261,6 +272,13 @@ class ContentSession(BaseAgentSession):
     # set it (a test calling the tool directly) and nothing is enforced.
     period_start: date | None = None
     period_days: int = 0
+    # A plan from shipped work: what the feed run read (feed.FeedDigest), so
+    # submit_plan and revise_plan_days hold every cited ref to it. None for a
+    # plan from goals, and on a resumed session, which then cites nothing new.
+    feed: Any = None
+    # A run the scheduler started (service/schedules.py): nobody is watching,
+    # so the agent mounts no question tool and decides what a person would.
+    unattended: bool = False
     # Persisted-conversation linkage (session resume / chat history). Set by the
     # route layer when a session is created; the runner re-primes from the DB when
     # resume is True. recorder persists each turn (agents/content/persistence.py).
@@ -818,6 +836,7 @@ class PlanDayChange(BaseModel):
     hook_emotion: str | None = None
     series: str | None = None
     experiment: str | None = None
+    sources: list[DaySource] | None = None
 
     def fields(self) -> dict[str, Any]:
         """What this change sets, as stored: the fields sent, without the date."""

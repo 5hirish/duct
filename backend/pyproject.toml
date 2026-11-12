@@ -124,6 +124,7 @@ langchain-ollama = "^1.1.0"
 # because they are zip files of XML. Duct extracts text rather than handing
 # the model a PDF block because DeepSeek, among others, reads no PDF at all.
 pypdf = "^7.0.0"
+feedparser = "^6.0.14"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9"

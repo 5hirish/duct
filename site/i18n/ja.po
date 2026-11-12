@@ -3697,7 +3697,7 @@ msgid ""
 msgstr ""
 "読み取り専用: DuctにはApple Search Adsの変更操作がなく、APIユーザーに読み取り専用ロールを付与することで、キーがキャンペーンを変更することもできません。"
 
-#: integrations/apple-search-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/revenuecat.html integrations/stripe.html
+#: integrations/apple-search-ads.html integrations/ga4.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/revenuecat.html integrations/stripe.html
 msgid "Reads three datasets"
 msgstr "3つのデータセットを読み取ります"
 
@@ -4060,6 +4060,10 @@ msgid ""
 msgstr "<0>sign_upをキーイベントとして登録する</0><1>1つのプロパティに影響します。ロールバック可能です。</1>"
 
 #: integrations/ga4.html
+msgid "<0>iso week</0><1>active users</1>"
+msgstr "<0>ISO週</0><1>アクティブユーザー</1>"
+
+#: integrations/ga4.html
 msgid ""
 "<0>page</0><1>channel</1><2>sessions</2><3>bounce rate</3><4>engagement rate</4><5>average session duration</5><6>conversions</6><7>revenue</7>"
 msgstr ""
@@ -4196,6 +4200,10 @@ msgid ""
 msgstr "GA4をSearch Console、広告、Stripeと並行して読み取り：原因を特定し、単なる別のダッシュボードではありません。"
 
 #: integrations/ga4.html
+msgid "GA4 weekly active users"
+msgstr "GA4の週間アクティブユーザー"
+
+#: integrations/ga4.html
 msgid "GA4, <0>answered</0>"
 msgstr "GA4、<0>回答済み</0>"
 
@@ -4253,10 +4261,6 @@ msgstr "このプロジェクトが読み取るGA4プロパティを選択しま
 #: integrations/ga4.html
 msgid "Read the GA4 notes Duct's agent works from <0/>"
 msgstr "Ductのエージェントが作業するGA4メモを読む <0/>"
-
-#: integrations/ga4.html
-msgid "Reads two datasets"
-msgstr "2つのデータセットを読み取ります"
 
 #: integrations/ga4.html
 msgid "Register GA4 key event"
@@ -5448,6 +5452,12 @@ msgid ""
 msgstr "<0>HubSpot</0><1>CRMライフサイクルステージ、パイプライン、クローズド収益。</1><2><3>近日公開</3></2>"
 
 #: integrations/index.html
+msgid ""
+"<0>RSS and Atom feeds</0><1>What you published: a blog, a Substack, a changelog page, YouTube uploads.</1><2><3>Feed addresses</3><4>Read-only</4></2>"
+msgstr ""
+"<0>RSS・Atomフィード</0><1>あなたが公開したもの: ブログ、Substack、変更履歴ページ、YouTubeのアップロード。</1><2><3>フィードのアドレス</3><4>読み取り専用</4></2>"
+
+#: integrations/index.html
 msgid "Ads"
 msgstr "広告"
 
@@ -5497,18 +5507,28 @@ msgstr "Duct連携"
 #. meta og:title
 #. meta twitter:title
 #: integrations/index.html
-msgid "Duct integrations: thirteen tools, read as one"
-msgstr "Duct連携: 13のツールを1つとして読み取る"
+msgid "Duct integrations: fourteen tools, read as one"
+msgstr "Duct連携: 14のツールを1つとして読み取る"
+
+#. meta twitter:description
+#: integrations/index.html
+msgid ""
+"Fourteen connectors, read-only by default. Every change waits for your Apply."
+msgstr "14のコネクタ。デフォルトでは読み取り専用です。すべての変更がお客様の適用を待機します。"
+
+#: integrations/index.html
+msgid "Fourteen tools. <0>Read as one.</0>"
+msgstr "14のツール。<0>1つとして読み取ります。</0>"
 
 #: integrations/index.html
 msgid ""
-"Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, GitHub, Stripe and RevenueCat. The four Google tools connect when you sign in with Google; the rest take a key you paste once. HubSpot is next."
+"Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, GitHub, RSS and Atom feeds, Stripe and RevenueCat. The four Google tools connect when you sign in with Google; the rest take a key you paste once. HubSpot is next."
 msgstr ""
-"Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, GitHub, Stripe, RevenueCat。4つのGoogleツールはGoogleでサインインすると接続され、残りは一度キーを貼り付けるだけです。次はHubSpotです。"
+"Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, GitHub, RSS・Atomフィード, Stripe, RevenueCat。4つのGoogleツールはGoogleでサインインすると接続され、残りは一度キーを貼り付けるだけです。次はHubSpotです。"
 
 #: integrations/index.html
-msgid "Integrations: Google Ads, GA4, Stripe and 10 more | Duct"
-msgstr "連携: Google Ads, GA4, Stripeとその他10つ | Duct"
+msgid "Integrations: Google Ads, GA4, Stripe and 11 more | Duct"
+msgstr "連携: Google Ads, GA4, Stripeとその他11つ | Duct"
 
 #: integrations/index.html
 msgid "Missing <0>yours?</0>"
@@ -5543,30 +5563,24 @@ msgid "Product and experiments"
 msgstr "プロダクトと実験"
 
 #: integrations/index.html
+msgid "RSS and Atom feeds"
+msgstr "RSS・Atomフィード"
+
+#: integrations/index.html
 msgid "Revenue"
 msgstr "収益"
 
 #. meta description
 #: integrations/index.html
 msgid ""
-"The 13 tools Duct reads, from Google Ads and Meta to GA4, Mixpanel and Stripe, what each one can change, and how you connect it. Read-only by default."
+"The 14 tools Duct reads, from Google Ads and Meta to GA4, Mixpanel and Stripe, what each one can change, and how you connect it. Read-only by default."
 msgstr ""
-"Google AdsやMetaからGA4、Mixpanel、Stripeまで、Ductが読み取る13のツール、それぞれの変更可能な内容、および接続方法。デフォルトでは読み取り専用です。"
+"Google AdsやMetaからGA4、Mixpanel、Stripeまで、Ductが読み取る14のツール、それぞれの変更可能な内容、および接続方法。デフォルトでは読み取り専用です。"
 
 #: integrations/index.html
 msgid ""
 "The tools Duct reads and the changes it can make in them, generated from its source code."
 msgstr "Ductが読み取るツールと、それらに対して行える変更。ソースコードから生成されます。"
-
-#. meta twitter:description
-#: integrations/index.html
-msgid ""
-"Thirteen connectors, read-only by default. Every change waits for your Apply."
-msgstr "13のコネクタ。デフォルトでは読み取り専用です。すべての変更がお客様の適用を待機します。"
-
-#: integrations/index.html
-msgid "Thirteen tools. <0>Read as one.</0>"
-msgstr "13のツール。<0>1つとして読み取ります。</0>"
 
 #: integrations/index.html
 msgid "Where are my connector credentials stored?"
@@ -12653,6 +12667,36 @@ msgstr "← 戻る"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← 最初からやり直す"
+
+#~ msgid "Reads two datasets"
+#~ msgstr "2つのデータセットを読み取ります"
+
+#. meta og:title
+#. meta twitter:title
+#~ msgid "Duct integrations: thirteen tools, read as one"
+#~ msgstr "Duct連携: 13のツールを1つとして読み取る"
+
+#~ msgid ""
+#~ "Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, GitHub, Stripe and RevenueCat. The four Google tools connect when you sign in with Google; the rest take a key you paste once. HubSpot is next."
+#~ msgstr ""
+#~ "Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, GitHub, Stripe, RevenueCat。4つのGoogleツールはGoogleでサインインすると接続され、残りは一度キーを貼り付けるだけです。次はHubSpotです。"
+
+#~ msgid "Integrations: Google Ads, GA4, Stripe and 10 more | Duct"
+#~ msgstr "連携: Google Ads, GA4, Stripeとその他10つ | Duct"
+
+#. meta description
+#~ msgid ""
+#~ "The 13 tools Duct reads, from Google Ads and Meta to GA4, Mixpanel and Stripe, what each one can change, and how you connect it. Read-only by default."
+#~ msgstr ""
+#~ "Google AdsやMetaからGA4、Mixpanel、Stripeまで、Ductが読み取る13のツール、それぞれの変更可能な内容、および接続方法。デフォルトでは読み取り専用です。"
+
+#. meta twitter:description
+#~ msgid ""
+#~ "Thirteen connectors, read-only by default. Every change waits for your Apply."
+#~ msgstr "13のコネクタ。デフォルトでは読み取り専用です。すべての変更がお客様の適用を待機します。"
+
+#~ msgid "Thirteen tools. <0>Read as one.</0>"
+#~ msgstr "13のツール。<0>1つとして読み取ります。</0>"
 
 #~ msgid "Download for macOS ↓"
 #~ msgstr "macOS版をダウンロード ↓"

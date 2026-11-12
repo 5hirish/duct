@@ -48,6 +48,9 @@ from agents.content.plan_period import PlanPeriod, default_period, keep_drafted_
 PROPOSED = "proposed"
 ACCEPTED = "accepted"
 REJECTED = "rejected"
+# A scheduled run's unanswered proposal, replaced by the schedule's next one
+# (#563): one open proposal per schedule, so the person answers the newest.
+SUPERSEDED = "superseded"
 
 # Where a conversation holds the proposal waiting on the person
 # (``AgentConversation.meta``, the catch-all that needs no migration).
@@ -240,6 +243,10 @@ def _write_changed_days(db: Any, row: Any, proposal: PlanProposal, *, now: Any):
         if i < len(days) and i < len(proposal.days) and lock_reason(days[i], day_date(start, i), now.date()) is None:
             days[i] = proposal.days[i]
     row.days = days
+    # A change from shipped work moves the feed's window on, so the next feed
+    # run starts after it; nothing else about the strategy changes.
+    if (proposal.strategy or {}).get("feed"):
+        row.strategy = {**(row.strategy or {}), "feed": proposal.strategy["feed"]}
     row.updated_at = now
     db.add(row)
     db.commit()

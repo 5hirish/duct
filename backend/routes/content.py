@@ -457,10 +457,11 @@ async def _run_plan_worker(
     emit_fn: Any,
     user_keys: dict | None = None,
     period: PlanPeriod | None = None,
+    feed: Any = None,
 ) -> None:
     try:
         runner = _runner_for(session_id, user_keys)
-        await runner.run_plan(session_id, project_id, emit_fn, period=period)
+        await runner.run_plan(session_id, project_id, emit_fn, period=period, feed=feed)
         _link_conversation_artifact(session_id, "plan")
     except Exception as exc:
         # A code before a message: the client picks the copy from the code

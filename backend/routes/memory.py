@@ -600,8 +600,12 @@ async def catch_up_memory(
     Scoped to projects the caller owns, since the owner pays for background
     work. Returns at once; the pass runs behind the response.
     """
+    from service.lent_keys import lend
     from service.memory_consolidation import schedule_catch_up
 
+    # The same keys cover this person's own scheduled runs for a while
+    # (service/lent_keys.py): the desktop app has no other way to lend them.
+    lend(user.id, user_keys)
     return {"scheduled": schedule_catch_up(user.id, user_keys)}
 
 

@@ -64,6 +64,7 @@ KNOWLEDGE_INDEX: dict[str, str] = {
     "clarity": "Clarity — rage/dead clicks after the click, 10 API calls a day, 3-day window.",
     "growthbook": "GrowthBook — 'running' is a setting not a signal; identity mismatch; sample minimums.",
     GITHUB_CONNECTOR_ID: "GitHub — merged is not deployed, commit dates are author-supplied, bots and squash merges.",
+    "rss": "RSS and Atom feeds — published is not edited, summaries are the feed's, a feed shows its newest items only.",
     "reconciliation": "Cross-platform reconciliation — comparing numbers that are not comparable.",
 }
 

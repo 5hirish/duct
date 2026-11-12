@@ -16,7 +16,8 @@ import {
   mediaUrl,
   postSlideRender,
 } from "../../lib/contentApi";
-import { ContentEvent, STEP_LABELS } from "../../lib/contentEvents";
+import { ContentEvent, ContentStep, STEP_LABELS } from "../../lib/contentEvents";
+import { feedFromHistory } from "../../lib/contentFeed";
 import { captureSlideDocToPng } from "../../lib/slideCapture";
 
 /**
@@ -30,7 +31,7 @@ import { captureSlideDocToPng } from "../../lib/slideCapture";
  * Props:
  *   - mode: 'plan_month' | 'draft_post'
  *   - context: { projectId } | { projectId, planId, dayIndex, topic, pillar, postId, cloneUrl }
- *   - renderViewport: ({ payload, mode, sessionId, phase, steps, building, onSendMessage }) => ReactNode
+ *   - renderViewport: ({ payload, mode, sessionId, phase, steps, building, feed, onSendMessage }) => ReactNode
  *     Called every render with the latest plan/post payload from the agent.
  *     onSendMessage(text) sends a chat turn into the live session (used by the
  *     viewport for "approve & generate images" / per-slide regenerate).
@@ -42,6 +43,9 @@ export default function ContentWorkspace({ mode, context, renderViewport, render
   const { t, i18n } = useLingui();
   const [payload, setPayload] = useState(null);
   const [channelNote, setChannelNote] = useState(null);
+  // What a plan from shipped work read, from the transcript on a reopened
+  // thread; a live run has it on its read step instead.
+  const [storedFeed, setStoredFeed] = useState(null);
 
   const artifactType = mode === "plan_month" ? "plan" : "post";
   const artifactId = mode === "plan_month" ? context.planId : context.postId;
@@ -54,7 +58,9 @@ export default function ContentWorkspace({ mode, context, renderViewport, render
   // one's. A clone has no artifact yet, so its link scopes it: cloning a
   // second post in the same tab must start a second run, not reattach to
   // the first. A new plan is scoped by its period for the same reason.
-  const periodKey = context.startDate && `from:${context.startDate}+${context.days || ""}`;
+  // A plan from shipped work is its own run, never a reattach to a plan
+  // from goals over the same dates.
+  const periodKey = context.startDate && `${context.feed ? "work:" : ""}from:${context.startDate}+${context.days || ""}`;
   const handleKey = `${CONTENT_AGENT_TYPE}:${mode}:${artifactId || context.cloneUrl || periodKey || context.projectId || ""}`;
   const agent = useAgentSession({
     agentType: CONTENT_AGENT_TYPE,
@@ -62,7 +68,9 @@ export default function ContentWorkspace({ mode, context, renderViewport, render
     body,
     handleKey,
     onEvent: handleEvent,
+    onHydrate: (events) => setStoredFeed(feedFromHistory(events)),
   });
+  const feed = agent.steps.find((s) => s.step_id === ContentStep.READ_WORK)?.payload || storedFeed;
 
   function handleEvent(event, { appendMessage, sessionId }) {
     switch (event.event) {
@@ -167,7 +175,7 @@ export default function ContentWorkspace({ mode, context, renderViewport, render
   const hasPayload = Boolean(payload);
   // The right viewport is mid-build whenever there's no payload yet and the run
   // hasn't failed — including while a question is pending.
-  const viewportBuilding = !hasPayload && agent.phase !== Phase.FAILED;
+  const viewportBuilding = !hasPayload && agent.phase !== Phase.FAILED && !(feed && !feed.worth_a_plan);
   const paneLabel = mode === "plan_month" ? t`Content plan` : t`Post draft`;
   // STEP_LABELS is a module-level table of descriptors; resolve here so the
   // shared StepProgress receives plain strings whatever it does with them.
@@ -192,6 +200,7 @@ export default function ContentWorkspace({ mode, context, renderViewport, render
             phase: agent.phase,
             steps: agent.steps,
             building: viewportBuilding,
+            feed,
             onSendMessage: agent.send,
           })
         ) : (

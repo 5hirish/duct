@@ -186,3 +186,29 @@ def test_property_listing_reads_account_summaries_from_the_admin_api(monkeypatch
     assert [(r["account_id"], r["account_name"], r["parent_account_name"]) for r in rows] == [
         ("1", "App", "Acme"), ("2", "Website", "Acme"),
     ]
+
+
+def test_weekly_users_asks_for_iso_weeks_oldest_first(monkeypatch):
+    """#564: the series a best-week milestone reads. Users are not additive,
+    so the catalog gives the metric no `agg` and nothing sums it."""
+    import google.analytics.data_v1beta as data_api
+
+    class _Weeks(_FakeClient):
+        def run_report(self, req):
+            type(self).requests.append(req)
+            return _Response([_Row(["202644"], [1200]), _Row(["202645"], [1530])])
+
+    monkeypatch.setattr(data_api, "BetaAnalyticsDataClient", _Weeks)
+    monkeypatch.setattr(ga4, "_build_credentials", lambda **_: object())
+    _Weeks.requests = []
+    result = ga4.fetch_ga4_weekly_users("360006549", "2025-11-11", "2026-11-11",
+                                        refresh_token="r", client_id="c", client_secret="s")
+    req = _Weeks.requests[0]
+    assert [d.name for d in req.dimensions] == ["isoYearIsoWeek"]
+    assert [m.name for m in req.metrics] == ["activeUsers"]
+    assert req.order_bys[0].dimension.dimension_name == "isoYearIsoWeek"
+    assert result["rows"] == [{"iso_week": "202644", "active_users": 1200}, {"iso_week": "202645", "active_users": 1530}]
+
+    from agents.insights.catalog.ga4 import ENTITY_CATALOG
+    weekly = next(e for e in ENTITY_CATALOG["entities"] if e["entity_id"] == "ga4_weekly_users")
+    assert "agg" not in weekly["fields"]["active_users"]

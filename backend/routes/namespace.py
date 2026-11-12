@@ -12,7 +12,7 @@ from routes import (
     project_connectors,
     project_members, projects,
     providers,
-    reports, signin, usage, user_connectors, user_contexts, user_projects,
+    reports, schedules, signin, usage, user_connectors, user_contexts, user_projects,
 )
 from service.auth import get_current_user, validate_api_key
 
@@ -132,6 +132,8 @@ router.include_router(project_members.router, prefix="/api/user/projects")
 router.include_router(project_connectors.router, prefix="/api/user/projects")
 router.include_router(user_connectors.router, prefix="/api/user/connectors")
 router.include_router(mcp_tokens.router, prefix="/api/user/mcp-tokens")
+# Scheduled runs: a project member's, and each fires on the backend that owns it.
+router.include_router(schedules.router, prefix="/api/user/schedules", dependencies=APP_AND_USER)
 # Duct's MCP server, for agents outside Duct. Its own credential: an MCP
 # token, never X-API-Key or a sign-in JWT (routes/mcp_server.py).
 router.include_router(mcp_server.router)

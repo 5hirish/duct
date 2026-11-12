@@ -313,7 +313,7 @@ Fact: trial-to-paid sits at 11% and has not moved in three months.
 
 ## Growth Insights (`insights`)
 
-### System prompt · ~6,989 tokens
+### System prompt · ~7,324 tokens
 
 Cache-stable: identical for every account, so it is the shared prefix.
 
@@ -379,6 +379,10 @@ Read each entity's description before you use it. If its scope is narrower than 
   description="Landing-page behaviour per page and channel (GA4 default channel group: 'Organic Search', 'Paid Search', 'Direct'...). Read only the channel your question is about."
   fields: page_path (dimension), channel (dimension), sessions (metric, unit=count, agg=sum), bounce_rate (metric, unit=percent, agg=avg), engagement_rate (metric, unit=percent, agg=avg), average_session_duration (metric, unit=seconds, agg=avg), conversions (metric, unit=count, agg=sum), total_revenue (metric, unit=currency, agg=sum)
   sortable_by: sessions, bounce_rate, conversions, total_revenue
+- entity_id="ga4_weekly_users" label="GA4 Weekly Active Users"
+  description="Active users per ISO week (isoYearIsoWeek, e.g. 202645), oldest first. Users are not additive: never sum weeks into a total, and compare a week with weeks, not with a day or a month. The newest week is partial unless the window ends on a Sunday."
+  fields: iso_week (dimension), active_users (metric, unit=count)
+  sortable_by: iso_week, active_users
 - entity_id="ga4_conversion_paths" label="GA4 Conversion Paths"
   description="Source/channel path context for assisted-conversion analysis."
   fields: session_source_medium (dimension), session_default_channel_group (dimension), conversions (metric, unit=count, agg=sum), total_revenue (metric, unit=currency, agg=sum), sessions (metric, unit=count, agg=sum)
@@ -434,6 +438,11 @@ Read each entity's description before you use it. If its scope is narrower than 
   description="Every post on the accounts the project's schedulers hold, whoever published it, with the platform's own lifetime counts as of the last sync. Counts are per post for its whole life, not per day; posted_at is when it went out, and the window keeps the posts published inside it. engagement is likes + comments + shares."
   fields: platform (dimension), publisher (dimension), title (dimension), url (dimension), posted_at (dimension), views (metric, unit=count, agg=sum), likes (metric, unit=count, agg=sum), comments (metric, unit=count, agg=sum), shares (metric, unit=count, agg=sum), engagement (metric, unit=count, agg=sum), engagement_rate (metric, unit=percent, agg=avg)
   sortable_by: views, engagement, engagement_rate, posted_at
+## Connector "rss" (schema=1.0.0, api=rss-2.0-atom-1.0, last_audited=2026-11-12)
+- entity_id="rss_items" label="Feed Items"
+  description="Entries published in the window across every feed the project reads, newest first: a blog, a Substack, a changelog page, YouTube uploads, a repository's releases.atom. A feed lists only its newest entries, so an older window can come back short; the summary counts are per window, not the feed's history. The summary is the feed's own, clipped, never the article."
+  fields: feed (dimension), feed_url (dimension), title (dimension), link (dimension), published (dimension), summary (dimension)
+  sortable_by: published
 </entity_catalogs>
 
 ## Connector notes available to ReadConnectorNotes
@@ -451,6 +460,7 @@ Read each entity's description before you use it. If its scope is narrower than 
 - `openai_ads` — OpenAI ads — minor-unit amounts against decimal spend.
 - `reconciliation` — Cross-platform reconciliation — comparing numbers that are not comparable.
 - `revenuecat` — RevenueCat — sandbox vs production, and trial accounting.
+- `rss` — RSS and Atom feeds — published is not edited, summaries are the feed's, a feed shows its newest items only.
 - `stripe` — Stripe — incomplete subscriptions, expansion vs acquisition, involuntary churn.
 
 ## Delegate the checking
@@ -704,7 +714,7 @@ Read the connector notes for every source before concluding from it. A block who
 
 ## Content Studio (`tiktok_studio`)
 
-### System prompt · mode=plan_month · ~13,038 tokens
+### System prompt · mode=plan_month · ~13,373 tokens
 
 ```text
 You are Duct's in-house short-form content strategist — a world-class TikTok,
@@ -1156,6 +1166,10 @@ every number you take from it.
   description="Landing-page behaviour per page and channel (GA4 default channel group: 'Organic Search', 'Paid Search', 'Direct'...). Read only the channel your question is about."
   fields: page_path (dimension), channel (dimension), sessions (metric, unit=count, agg=sum), bounce_rate (metric, unit=percent, agg=avg), engagement_rate (metric, unit=percent, agg=avg), average_session_duration (metric, unit=seconds, agg=avg), conversions (metric, unit=count, agg=sum), total_revenue (metric, unit=currency, agg=sum)
   sortable_by: sessions, bounce_rate, conversions, total_revenue
+- entity_id="ga4_weekly_users" label="GA4 Weekly Active Users"
+  description="Active users per ISO week (isoYearIsoWeek, e.g. 202645), oldest first. Users are not additive: never sum weeks into a total, and compare a week with weeks, not with a day or a month. The newest week is partial unless the window ends on a Sunday."
+  fields: iso_week (dimension), active_users (metric, unit=count)
+  sortable_by: iso_week, active_users
 - entity_id="ga4_conversion_paths" label="GA4 Conversion Paths"
   description="Source/channel path context for assisted-conversion analysis."
   fields: session_source_medium (dimension), session_default_channel_group (dimension), conversions (metric, unit=count, agg=sum), total_revenue (metric, unit=currency, agg=sum), sessions (metric, unit=count, agg=sum)
@@ -1211,6 +1225,11 @@ every number you take from it.
   description="Every post on the accounts the project's schedulers hold, whoever published it, with the platform's own lifetime counts as of the last sync. Counts are per post for its whole life, not per day; posted_at is when it went out, and the window keeps the posts published inside it. engagement is likes + comments + shares."
   fields: platform (dimension), publisher (dimension), title (dimension), url (dimension), posted_at (dimension), views (metric, unit=count, agg=sum), likes (metric, unit=count, agg=sum), comments (metric, unit=count, agg=sum), shares (metric, unit=count, agg=sum), engagement (metric, unit=count, agg=sum), engagement_rate (metric, unit=percent, agg=avg)
   sortable_by: views, engagement, engagement_rate, posted_at
+## Connector "rss" (schema=1.0.0, api=rss-2.0-atom-1.0, last_audited=2026-11-12)
+- entity_id="rss_items" label="Feed Items"
+  description="Entries published in the window across every feed the project reads, newest first: a blog, a Substack, a changelog page, YouTube uploads, a repository's releases.atom. A feed lists only its newest entries, so an older window can come back short; the summary counts are per window, not the feed's history. The summary is the feed's own, clipped, never the article."
+  fields: feed (dimension), feed_url (dimension), title (dimension), link (dimension), published (dimension), summary (dimension)
+  sortable_by: published
 </entity_catalogs>
 
 Connector notes available to ReadConnectorNotes:
@@ -1228,6 +1247,7 @@ Connector notes available to ReadConnectorNotes:
 - `openai_ads` — OpenAI ads — minor-unit amounts against decimal spend.
 - `reconciliation` — Cross-platform reconciliation — comparing numbers that are not comparable.
 - `revenuecat` — RevenueCat — sandbox vs production, and trial accounting.
+- `rss` — RSS and Atom feeds — published is not edited, summaries are the feed's, a feed shows its newest items only.
 - `stripe` — Stripe — incomplete subscriptions, expansion vs acquisition, involuntary churn.
 
 ## Project memory
@@ -1374,7 +1394,7 @@ Handle the common cases in character:
 
 ```
 
-### System prompt · mode=draft_post · ~12,123 tokens
+### System prompt · mode=draft_post · ~12,458 tokens
 
 ```text
 You are Duct's in-house short-form content strategist — a world-class TikTok,
@@ -1826,6 +1846,10 @@ every number you take from it.
   description="Landing-page behaviour per page and channel (GA4 default channel group: 'Organic Search', 'Paid Search', 'Direct'...). Read only the channel your question is about."
   fields: page_path (dimension), channel (dimension), sessions (metric, unit=count, agg=sum), bounce_rate (metric, unit=percent, agg=avg), engagement_rate (metric, unit=percent, agg=avg), average_session_duration (metric, unit=seconds, agg=avg), conversions (metric, unit=count, agg=sum), total_revenue (metric, unit=currency, agg=sum)
   sortable_by: sessions, bounce_rate, conversions, total_revenue
+- entity_id="ga4_weekly_users" label="GA4 Weekly Active Users"
+  description="Active users per ISO week (isoYearIsoWeek, e.g. 202645), oldest first. Users are not additive: never sum weeks into a total, and compare a week with weeks, not with a day or a month. The newest week is partial unless the window ends on a Sunday."
+  fields: iso_week (dimension), active_users (metric, unit=count)
+  sortable_by: iso_week, active_users
 - entity_id="ga4_conversion_paths" label="GA4 Conversion Paths"
   description="Source/channel path context for assisted-conversion analysis."
   fields: session_source_medium (dimension), session_default_channel_group (dimension), conversions (metric, unit=count, agg=sum), total_revenue (metric, unit=currency, agg=sum), sessions (metric, unit=count, agg=sum)
@@ -1881,6 +1905,11 @@ every number you take from it.
   description="Every post on the accounts the project's schedulers hold, whoever published it, with the platform's own lifetime counts as of the last sync. Counts are per post for its whole life, not per day; posted_at is when it went out, and the window keeps the posts published inside it. engagement is likes + comments + shares."
   fields: platform (dimension), publisher (dimension), title (dimension), url (dimension), posted_at (dimension), views (metric, unit=count, agg=sum), likes (metric, unit=count, agg=sum), comments (metric, unit=count, agg=sum), shares (metric, unit=count, agg=sum), engagement (metric, unit=count, agg=sum), engagement_rate (metric, unit=percent, agg=avg)
   sortable_by: views, engagement, engagement_rate, posted_at
+## Connector "rss" (schema=1.0.0, api=rss-2.0-atom-1.0, last_audited=2026-11-12)
+- entity_id="rss_items" label="Feed Items"
+  description="Entries published in the window across every feed the project reads, newest first: a blog, a Substack, a changelog page, YouTube uploads, a repository's releases.atom. A feed lists only its newest entries, so an older window can come back short; the summary counts are per window, not the feed's history. The summary is the feed's own, clipped, never the article."
+  fields: feed (dimension), feed_url (dimension), title (dimension), link (dimension), published (dimension), summary (dimension)
+  sortable_by: published
 </entity_catalogs>
 
 Connector notes available to ReadConnectorNotes:
@@ -1898,6 +1927,7 @@ Connector notes available to ReadConnectorNotes:
 - `openai_ads` — OpenAI ads — minor-unit amounts against decimal spend.
 - `reconciliation` — Cross-platform reconciliation — comparing numbers that are not comparable.
 - `revenuecat` — RevenueCat — sandbox vs production, and trial accounting.
+- `rss` — RSS and Atom feeds — published is not edited, summaries are the feed's, a feed shows its newest items only.
 - `stripe` — Stripe — incomplete subscriptions, expansion vs acquisition, involuntary churn.
 
 ## Project memory
@@ -2008,7 +2038,7 @@ Handle the common cases in character:
 
 ```
 
-### System prompt · mode=draft_post · channel=linkedin · ~6,744 tokens
+### System prompt · mode=draft_post · channel=linkedin · ~7,079 tokens
 
 ```text
 You are Duct's writer for text-first social channels: X and LinkedIn. You write
@@ -2236,6 +2266,10 @@ every number you take from it.
   description="Landing-page behaviour per page and channel (GA4 default channel group: 'Organic Search', 'Paid Search', 'Direct'...). Read only the channel your question is about."
   fields: page_path (dimension), channel (dimension), sessions (metric, unit=count, agg=sum), bounce_rate (metric, unit=percent, agg=avg), engagement_rate (metric, unit=percent, agg=avg), average_session_duration (metric, unit=seconds, agg=avg), conversions (metric, unit=count, agg=sum), total_revenue (metric, unit=currency, agg=sum)
   sortable_by: sessions, bounce_rate, conversions, total_revenue
+- entity_id="ga4_weekly_users" label="GA4 Weekly Active Users"
+  description="Active users per ISO week (isoYearIsoWeek, e.g. 202645), oldest first. Users are not additive: never sum weeks into a total, and compare a week with weeks, not with a day or a month. The newest week is partial unless the window ends on a Sunday."
+  fields: iso_week (dimension), active_users (metric, unit=count)
+  sortable_by: iso_week, active_users
 - entity_id="ga4_conversion_paths" label="GA4 Conversion Paths"
   description="Source/channel path context for assisted-conversion analysis."
   fields: session_source_medium (dimension), session_default_channel_group (dimension), conversions (metric, unit=count, agg=sum), total_revenue (metric, unit=currency, agg=sum), sessions (metric, unit=count, agg=sum)
@@ -2291,6 +2325,11 @@ every number you take from it.
   description="Every post on the accounts the project's schedulers hold, whoever published it, with the platform's own lifetime counts as of the last sync. Counts are per post for its whole life, not per day; posted_at is when it went out, and the window keeps the posts published inside it. engagement is likes + comments + shares."
   fields: platform (dimension), publisher (dimension), title (dimension), url (dimension), posted_at (dimension), views (metric, unit=count, agg=sum), likes (metric, unit=count, agg=sum), comments (metric, unit=count, agg=sum), shares (metric, unit=count, agg=sum), engagement (metric, unit=count, agg=sum), engagement_rate (metric, unit=percent, agg=avg)
   sortable_by: views, engagement, engagement_rate, posted_at
+## Connector "rss" (schema=1.0.0, api=rss-2.0-atom-1.0, last_audited=2026-11-12)
+- entity_id="rss_items" label="Feed Items"
+  description="Entries published in the window across every feed the project reads, newest first: a blog, a Substack, a changelog page, YouTube uploads, a repository's releases.atom. A feed lists only its newest entries, so an older window can come back short; the summary counts are per window, not the feed's history. The summary is the feed's own, clipped, never the article."
+  fields: feed (dimension), feed_url (dimension), title (dimension), link (dimension), published (dimension), summary (dimension)
+  sortable_by: published
 </entity_catalogs>
 
 Connector notes available to ReadConnectorNotes:
@@ -2308,6 +2347,7 @@ Connector notes available to ReadConnectorNotes:
 - `openai_ads` — OpenAI ads — minor-unit amounts against decimal spend.
 - `reconciliation` — Cross-platform reconciliation — comparing numbers that are not comparable.
 - `revenuecat` — RevenueCat — sandbox vs production, and trial accounting.
+- `rss` — RSS and Atom feeds — published is not edited, summaries are the feed's, a feed shows its newest items only.
 - `stripe` — Stripe — incomplete subscriptions, expansion vs acquisition, involuntary churn.
 
 ## Project memory
@@ -2349,7 +2389,7 @@ Handle the common cases in character:
 
 ```
 
-### System prompt · mode=draft_post · channel=twitter · ~6,721 tokens
+### System prompt · mode=draft_post · channel=twitter · ~7,056 tokens
 
 ```text
 You are Duct's writer for text-first social channels: X and LinkedIn. You write
@@ -2575,6 +2615,10 @@ every number you take from it.
   description="Landing-page behaviour per page and channel (GA4 default channel group: 'Organic Search', 'Paid Search', 'Direct'...). Read only the channel your question is about."
   fields: page_path (dimension), channel (dimension), sessions (metric, unit=count, agg=sum), bounce_rate (metric, unit=percent, agg=avg), engagement_rate (metric, unit=percent, agg=avg), average_session_duration (metric, unit=seconds, agg=avg), conversions (metric, unit=count, agg=sum), total_revenue (metric, unit=currency, agg=sum)
   sortable_by: sessions, bounce_rate, conversions, total_revenue
+- entity_id="ga4_weekly_users" label="GA4 Weekly Active Users"
+  description="Active users per ISO week (isoYearIsoWeek, e.g. 202645), oldest first. Users are not additive: never sum weeks into a total, and compare a week with weeks, not with a day or a month. The newest week is partial unless the window ends on a Sunday."
+  fields: iso_week (dimension), active_users (metric, unit=count)
+  sortable_by: iso_week, active_users
 - entity_id="ga4_conversion_paths" label="GA4 Conversion Paths"
   description="Source/channel path context for assisted-conversion analysis."
   fields: session_source_medium (dimension), session_default_channel_group (dimension), conversions (metric, unit=count, agg=sum), total_revenue (metric, unit=currency, agg=sum), sessions (metric, unit=count, agg=sum)
@@ -2630,6 +2674,11 @@ every number you take from it.
   description="Every post on the accounts the project's schedulers hold, whoever published it, with the platform's own lifetime counts as of the last sync. Counts are per post for its whole life, not per day; posted_at is when it went out, and the window keeps the posts published inside it. engagement is likes + comments + shares."
   fields: platform (dimension), publisher (dimension), title (dimension), url (dimension), posted_at (dimension), views (metric, unit=count, agg=sum), likes (metric, unit=count, agg=sum), comments (metric, unit=count, agg=sum), shares (metric, unit=count, agg=sum), engagement (metric, unit=count, agg=sum), engagement_rate (metric, unit=percent, agg=avg)
   sortable_by: views, engagement, engagement_rate, posted_at
+## Connector "rss" (schema=1.0.0, api=rss-2.0-atom-1.0, last_audited=2026-11-12)
+- entity_id="rss_items" label="Feed Items"
+  description="Entries published in the window across every feed the project reads, newest first: a blog, a Substack, a changelog page, YouTube uploads, a repository's releases.atom. A feed lists only its newest entries, so an older window can come back short; the summary counts are per window, not the feed's history. The summary is the feed's own, clipped, never the article."
+  fields: feed (dimension), feed_url (dimension), title (dimension), link (dimension), published (dimension), summary (dimension)
+  sortable_by: published
 </entity_catalogs>
 
 Connector notes available to ReadConnectorNotes:
@@ -2647,6 +2696,7 @@ Connector notes available to ReadConnectorNotes:
 - `openai_ads` — OpenAI ads — minor-unit amounts against decimal spend.
 - `reconciliation` — Cross-platform reconciliation — comparing numbers that are not comparable.
 - `revenuecat` — RevenueCat — sandbox vs production, and trial accounting.
+- `rss` — RSS and Atom feeds — published is not edited, summaries are the feed's, a feed shows its newest items only.
 - `stripe` — Stripe — incomplete subscriptions, expansion vs acquisition, involuntary churn.
 
 ## Project memory
@@ -2850,4 +2900,139 @@ Now — WRITE PHASE (copy + image prompts only; NO images yet):
    kept and why. Then ask the user to review the copy; you generate the images
    once they are happy.
 
+```
+
+### Plan from shipped work: opening user turn (system prompt is mode=plan_month) · ~741 tokens
+
+```text
+## BRAND CONTEXT (project_id=00000000-0000-0000-0000-000000000000)
+
+- Name:         Northwind Tools
+- URL:          (none)
+- Tagline:      (none)
+- Description:  (none)
+- Audience:     Solo electricians and plumbers
+- Voice:        (unknown — ask the user)
+- Tone:         (unspecified)
+- Value prop:   (unknown — ask the user)
+- Content goal: (unknown — ask the user)
+- Always say:   (none specified)
+- Never say:    (none specified)
+- Visual style: (unspecified), primary —, secondary —
+- Posts on:     (unknown — TikTok unless the user says otherwise)
+
+Features:
+  (none)
+
+Pillars:
+  (no pillars yet — ask the user)
+
+
+
+
+<account_performance>
+  The posting history could not be read this run. Plan as if nothing is
+  proven, and say so in strategy.
+</account_performance>
+
+<shipped_work>
+Window: 2026-09-24 to 2026-10-07. Left out by Duct before you: chores, CI and tests: 1; bots: 1.
+- gh:r-v1.4.0 · release [release] 2026-10-06 · v1.4.0: invoices in two clicks
+- gh:pr-412 · pull_request [merged] 2026-10-05 · feat(invoices): send from the job card
+</shipped_work>
+
+You manage Northwind Tools's content plan for 2026-10-08 to 2026-10-14 (7 days). The person asked
+for a plan FROM WHAT THEY SHIPPED. Duct has read the repository and its own
+record of the project and already left out the noise; <shipped_work> is
+what is left, one line each, its ref first.
+
+Now:
+
+1. Group <shipped_work> into one to five stories, each worth one post: a
+   release, a feature built across several items, a change Duct applied and
+   what it did. A story stands on at least one ref. A brief or a memory
+   supports a story and is never one on its own. Prefer what a reader of
+   Northwind Tools would notice or use. Never name a file path, branch,
+   open issue, code or internal name that is not in a title above, and use
+   a number only where a line above carries it.
+2. Ask which to tell with ONE AskUserQuestion, multiSelect true, one option
+   per story. The label is the story in two to six words; the description is
+   its angle in under twelve words, then its refs in brackets, e.g.
+   "Onboarding stopped dropping GA4 connections [gh:pr-412, cs:3f2a9c1d]".
+   Do not research and do not plan on this turn.
+
+When they answer:
+
+3. Place the stories they kept, on channels <account_performance> favours:
+   There is no plan for this period yet. Use submit_plan for the whole
+   period: the kept stories on at most 2 days, each with `sources`
+   set to every ref it stands on, and the other days planned from the
+   brand's pillars as an ordinary plan, with no sources. Do not call
+   research_trends for this plan.
+4. Say in two lines which days changed and what each now tells.
+```
+
+### Plan from shipped work, scheduled (nobody to ask) · ~695 tokens
+
+```text
+## BRAND CONTEXT (project_id=00000000-0000-0000-0000-000000000000)
+
+- Name:         Northwind Tools
+- URL:          (none)
+- Tagline:      (none)
+- Description:  (none)
+- Audience:     Solo electricians and plumbers
+- Voice:        (unknown — ask the user)
+- Tone:         (unspecified)
+- Value prop:   (unknown — ask the user)
+- Content goal: (unknown — ask the user)
+- Always say:   (none specified)
+- Never say:    (none specified)
+- Visual style: (unspecified), primary —, secondary —
+- Posts on:     (unknown — TikTok unless the user says otherwise)
+
+Features:
+  (none)
+
+Pillars:
+  (no pillars yet — ask the user)
+
+
+
+
+<account_performance>
+  The posting history could not be read this run. Plan as if nothing is
+  proven, and say so in strategy.
+</account_performance>
+
+<shipped_work>
+Window: 2026-09-24 to 2026-10-07. Left out by Duct before you: chores, CI and tests: 1; bots: 1.
+- gh:r-v1.4.0 · release [release] 2026-10-06 · v1.4.0: invoices in two clicks
+- gh:pr-412 · pull_request [merged] 2026-10-05 · feat(invoices): send from the job card
+</shipped_work>
+
+You manage Northwind Tools's content plan for 2026-10-08 to 2026-10-14 (7 days). The person asked
+for a plan FROM WHAT THEY SHIPPED. Duct has read the repository and its own
+record of the project and already left out the noise; <shipped_work> is
+what is left, one line each, its ref first.
+
+Now:
+
+1. Group <shipped_work> into one to five stories, each worth one post: a
+   release, a feature built across several items, a change Duct applied and
+   what it did. A story stands on at least one ref. A brief or a memory
+   supports a story and is never one on its own. Prefer what a reader of
+   Northwind Tools would notice or use. Never name a file path, branch,
+   open issue, code or internal name that is not in a title above, and use
+   a number only where a line above carries it.
+2. Nobody is watching this run: the schedule started it, and the person
+   will accept or reject the proposal later. Keep the 2 strongest
+   stories yourself, the ones a reader would most notice, and do not ask.
+3. Place them, on channels <account_performance> favours:
+   There is no plan for this period yet. Use submit_plan for the whole
+   period: the kept stories on at most 2 days, each with `sources`
+   set to every ref it stands on, and the other days planned from the
+   brand's pillars as an ordinary plan, with no sources. Do not call
+   research_trends for this plan.
+4. Say in two lines which stories you kept, which you left, and why.
 ```

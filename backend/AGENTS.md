@@ -678,6 +678,15 @@ Postgres `DATABASE_URL` names.
     call that asks first pauses on `TOOL_APPROVAL_REQUIRED`. Interactive
     insights and content sessions only, and only when the user has a server,
     so every other prompt keeps its cached prefix.
+- `service/rss/fetch.py` — RSS and Atom feeds as a manual connector (#564):
+  one credential row holds every feed URL a project reads (one per line, at
+  most ten) and one binding carries them all, so the one-binding-per-type
+  rule never bites. Every URL is user input aimed at the network: public
+  https only, each request and redirect through `compatible._PinnedTransport`
+  (resolved once, judged, connected to the address that passed), a size cap,
+  and a feed content type or a body that plainly is one. `feedparser` is
+  handed bytes Duct fetched, never a URL. Saving reads each feed once
+  (`list_accounts`), so a page pasted instead of its feed is refused on the card.
 - `service/discovery.py` — saved TikTok references. `ingest_reference(db,
   project_id, post)` is the one way a `ScrapedPost` becomes a
   `discovered_reference` row (one per post per project); `capture_reference_media`
@@ -732,6 +741,45 @@ Postgres `DATABASE_URL` names.
     `GrowthReport`; counts over the limits are clamped, anything else goes
     back to the model as problems, up to `REPORT_REPAIR_TURNS`. The route
     records the failure on its run entry so the tab can say what happened.
+- `service/schedules.py` + `routes/schedules.py` + `routes/schedule_jobs.py` —
+  scheduled runs (#562): one loop in `lifespan`, the same in the cloud and in
+  the desktop sidecar, over one table (`agent_schedules`). Five rules, each held
+  by `tests/test_schedules.py`: **a schedule runs only on the host that owns its
+  row** (`host`, cloud or local); **one process takes an occurrence**, by a
+  compare-and-set on `next_run_at` that holds on SQLite and Postgres alike;
+  **a run holds a lease it renews**, and a lapsed lease is recorded as
+  interrupted and retried once (a run's output is a proposal, so a retry is
+  safe); **misses coalesce**, because the next occurrence is counted from now,
+  and one older than a week is skipped; **retries are classified**: transient
+  (a model 429/5xx, the network, an interruption) once after 15 minutes,
+  deterministic (no saved key, the monthly cap, a creator who left) never, and
+  those set `needs_reason` for the page. What each run did is an
+  `activity_logs` row (category `schedule`) linked to the conversation it
+  left, never a history table. The loop imports no route: `server.py` hands it
+  `routes.schedule_jobs.JOBS`, whose plan job reuses the session route's
+  conversation and recorder and the content route's saved-key resolution. A
+  scheduled content run sets `ContentSession.unattended`: no question tool, no
+  approval-carded tool, and the feed turn tells the agent to pick the stories
+  itself. Its proposal waits on the conversation; `/content/sessions/new?
+  conversation=<id>` reopens it with Accept and Reject. A run spends its
+  creator's saved keys, else the keys their open app lent on its half-hourly
+  memory catch-up (`service/lent_keys.py`: in memory, 45 minutes, the lender's
+  own schedules only), and a missing key retries once before it says "Needs
+  you", because a laptop's loop can wake before the app lends. A run killed
+  mid-way has its conversation closed as cancelled, from the id the schedule
+  noted when the run began. **An event cadence checks, then runs** (#563):
+  `on_release` wakes hourly and asks a probe (`PROBES` in
+  `routes/schedule_jobs.py`, one GitHub request for the newest release)
+  whether its event happened. A check that finds nothing writes no history
+  row and spends nothing from the cap; its first check only records the tag
+  in `cursor`, so a new schedule never plans from an old release, and Run now
+  sets `forced` to skip the check once. A scheduled run keeps **one open
+  proposal**: when it proposes, the run before it, if still unanswered, is
+  released with a `superseded` plan decision on its thread, and the list
+  route's `waiting` says whether the newest proposal is still held. It mounts
+  a trusted preset's read-only MCP tools and nothing else
+  (`build_mcp_tools_lc(trusted_only=True)`). `SCHEDULER_ENABLED`
+  turns the loop off on a web process once a worker service runs it instead.
 - `routes/project_members.py` — project members + email invitations (`docs/engineering/2026-08-16-project-collaboration-plan.md`)
 - `service/membership.py` — project access checks (owner vs collaborator) and invite token handling
 - `data/google_ads/` — `google-ads-report.json` (demo brief), `raw/demo_raw_payload.json`
@@ -834,6 +882,26 @@ agents/
     │                     the board says what each channel leans on without a sentence.
     │                     submit_plan refuses a hook its channel has not proven on more
     │                     than a quarter of that channel's days (overreaching_hooks)
+    ├── feed.py         — planning from shipped work (#561): the repository through the
+    │                     GitHub connector and Duct's own record (briefs, applied change
+    │                     sets, shared memory), filtered in code (bots, dependency bumps,
+    │                     chores, squash commits, the disclosure level; a docs patch never
+    │                     reaches the prompt) and gated, so a quiet window costs no model
+    │                     call. The read step's payload is the app's card and an
+    │                     EventKind.FEED row. A feed day cites refs in Day.sources;
+    │                     submit_plan and revise_plan_days refuse one the run was not
+    │                     shown, or more feed days than the setup allowed, and a plan
+    │                     from goals cites nothing. The window rides on strategy.feed,
+    │                     so the next run starts where this one ended: no watermark table.
+    │                     feed_mcp.py adds Linear and Notion (#565) on the user's own
+    │                     trusted presets, read by code like GitHub (ln: and nt: refs):
+    │                     no stable tool contract exists, so it sends only the arguments
+    │                     a tool's schema declares and judges the window in code.
+    │                     feed_more.py adds the project's own feeds (RSS, rs: refs, through
+    │                     FetchData's rss_items) and milestones.py the moments no commit
+    │                     records (#564): a round GitHub star count crossed in the window,
+    │                     from the newest stargazers' dates with no stored state, and GA4's
+    │                     best complete week; both claim only what the data proves
     ├── plan_proposal.py — a plan is proposed, then accepted: what Accept writes, merged
     │                     against the plan as it stands at Accept. The proposal is held
     │                     on the conversation (meta.plan_proposal) so a deploy does not

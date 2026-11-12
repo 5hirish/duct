@@ -98,6 +98,7 @@ export const NATIVE_CATEGORY = {
   stripe: Category.REVENUE,
   revenuecat: Category.REVENUE,
   github: Category.DEVELOPER,
+  rss: Category.PRODUCT,
 };
 
 /**

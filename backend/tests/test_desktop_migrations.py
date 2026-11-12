@@ -105,6 +105,7 @@ def test_legacy_create_all_install_is_adopted_and_upgraded(clean_env, tmp_path):
         conn.execute(sa.text("ALTER TABLE content_posts DROP COLUMN video"))
         conn.execute(sa.text("ALTER TABLE projects DROP COLUMN provenance"))
         conn.execute(sa.text("DROP TABLE mcp_tokens"))
+        conn.execute(sa.text("DROP TABLE agent_schedules"))
         # An indexed column cannot be dropped on SQLite; the index goes first.
         conn.execute(sa.text("DROP INDEX uq_execution_change_sets_tool_call"))
         conn.execute(sa.text("ALTER TABLE execution_change_sets DROP COLUMN tool_call_id"))
@@ -134,6 +135,7 @@ def test_legacy_create_all_install_is_adopted_and_upgraded(clean_env, tmp_path):
     assert "model_usage" in set(inspect(engine).get_table_names())
     assert "user_model_settings" in set(inspect(engine).get_table_names())
     assert "user_profile" in set(inspect(engine).get_table_names())
+    assert "agent_schedules" in set(inspect(engine).get_table_names())
     assert "memory_paused" in _columns(engine, "projects")
     assert "memory_paused" in _columns(engine, "users")
     assert "pinned" in _columns(engine, "artifacts")

@@ -39,6 +39,7 @@ FETCHER_SOURCES = {
     "clarity": ["service/clarity/fetch.py"],
     "growthbook": ["service/growthbook/fetch.py"],
     "github": ["service/github/fetch.py"],
+    "rss": ["service/rss/fetch.py"],
 }
 
 CONNECTORS = sorted(FETCHER_SOURCES)

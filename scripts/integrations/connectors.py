@@ -666,6 +666,14 @@ CONNECTORS = [
         "auth": "GitHub App", "pack": "backend/agents/knowledge/github.md",
         "api": "GitHub REST API ({api_version})",
     },
+    {
+        # No page yet: listed on the hub until its copy is written (#564).
+        "id": "rss", "slug": "rss", "name": "RSS and Atom feeds", "group": "product",
+        "logo": "rss.svg", "meta": "backend/service/rss/fetch.py", "label": "RSS and Atom feeds",
+        "card": "What you published: a blog, a Substack, a changelog page, YouTube uploads.",
+        "auth": "Feed addresses", "pack": "backend/agents/knowledge/rss.md",
+        "api": "RSS 2.0 and Atom 1.0",
+    },
     # ── Revenue ────────────────────────────────────────────────────────────
     {
         "id": "stripe", "slug": "stripe", "name": "Stripe", "group": "revenue",

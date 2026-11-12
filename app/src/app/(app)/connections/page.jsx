@@ -448,6 +448,7 @@ export default function ConnectionsPage() {
     clarity: { title: t`Microsoft Clarity`, description: t`Rage clicks, dead clicks, quick-backs and script errors, per page.` },
     growthbook: { title: "GrowthBook", description: t`Which tests are live, whether they still bucket, per-metric results.` },
     github: { title: "GitHub", description: t`Merged pull requests, releases, closed issues and doc changes, by date.` },
+    rss: { title: t`RSS and Atom feeds`, description: t`What you published: a blog, a Substack, a changelog page, YouTube uploads.` },
   };
 
   const CONNECTORS = {
@@ -774,6 +775,28 @@ export default function ConnectionsPage() {
           onSaved={refreshServerRows}
           onRemoveRow={removeServerRowById}
           {...mappingProps("growthbook")}
+        />
+    ),
+    rss: (extra) => (
+        <ManualConnectorCard
+          {...extra}
+          type="rss"
+          {...copy.rss}
+          logo={LOGOS.rss}
+          fields={[
+            {
+              key: "feeds",
+              label: t`Feed addresses`,
+              placeholder: "https://yourblog.com/feed.xml",
+              multiline: true,
+              hint: t`One per line, up to ten: a blog, a Substack (/feed), a YouTube channel (videos.xml), a repository's releases.atom. Duct reads each once to check it.`,
+            },
+          ]}
+          signedIn={signedIn}
+          serverRowList={serverRowsAll.rss || []}
+          onSaved={refreshServerRows}
+          onRemoveRow={removeServerRowById}
+          {...mappingProps("rss")}
         />
     ),
     github: (extra) => (

@@ -11,6 +11,8 @@ import { parseDate, planCovering } from "@/lib/contentSchedule";
 import { PlanStatus } from "@/lib/contentEnums";
 import { getActiveProjectId } from "@/lib/projects";
 import { useLeaveOnProjectSwitch } from "@/hooks/useActiveProjectId";
+import { AnalyticsEvent, trackEvent } from "@/lib/analytics";
+import { feedFromParams, feedSessionHref } from "@/lib/contentFeed";
 import { useTrailTitle } from "@/lib/pageTitle";
 import { planDisplayName } from "@/lib/planStrategy";
 
@@ -24,6 +26,13 @@ import { planDisplayName } from "@/lib/planStrategy";
  *                             "Plan ahead", once someone picked how far).
  *   neither                 — the plan covering today, or a new one for the
  *                             month in progress when none does.
+ *   ?conversation=<id>      — reopen one conversation: how a scheduled run's
+ *                             proposal is reviewed (#562), its proposal shown
+ *                             again with Accept and Reject.
+ *   ?source=work&…          — a plan from shipped work (#561) over that period,
+ *                             with the setup sheet's answers (lib/contentFeed.js).
+ *                             Always a new run: it never resumes the covering
+ *                             plan's conversation, which was about goals.
  *
  * Which plan a session manages is resolved here before the session opens,
  * the same way the backend resolves it (runner._resolve_plan_period), so the
@@ -51,6 +60,12 @@ export default function NewPlanSessionPage() {
     const wanted = params.get("plan");
     const start = params.get("start");
     const days = Number(params.get("days")) || null;
+    const feed = feedFromParams(params);
+    const conversation = params.get("conversation");
+    if (conversation) {
+      setSetup({ projectId, plan: null, start: null, days: null, conversation });
+      return undefined;
+    }
     let cancelled = false;
     (async () => {
       const plans = await listPlans(projectId).catch(() => []);
@@ -59,7 +74,15 @@ export default function NewPlanSessionPage() {
       // The full plan carries its conversation id; the listing does not.
       const plan = meta ? await getPlan(meta.id).catch(() => meta) : null;
       if (cancelled) return;
+      if (feed) {
+        // The pane shows the plan the feed will change; the run itself is
+        // fresh, over the period the sheet picked.
+        setSetup({ projectId, plan, start, days, feed });
+        trackEvent(AnalyticsEvent.ContentPlanStarted, { source: "work" });
+        return;
+      }
       setSetup({ projectId, plan, start: plan ? null : start, days: plan ? null : days });
+      if (!plan?.active_conversation_id) trackEvent(AnalyticsEvent.ContentPlanStarted, { source: "goals" });
     })();
     return () => { cancelled = true; };
   }, [router]);
@@ -72,8 +95,12 @@ export default function NewPlanSessionPage() {
     );
   }
 
-  const { projectId, plan, start, days } = setup;
-  const context = plan
+  const { projectId, plan, start, days, feed, conversation } = setup;
+  const context = conversation
+    ? { projectId, conversationId: conversation, resume: true }
+    : feed
+    ? { projectId, ...(start ? { startDate: start } : {}), ...(days ? { days } : {}), feed }
+    : plan
     ? {
         projectId,
         planId: plan.id,
@@ -90,13 +117,20 @@ export default function NewPlanSessionPage() {
       <ContentWorkspace
         mode="plan_month"
         context={context}
-        renderViewport={({ payload, steps, building, onSendMessage, sessionId }) => (
+        renderViewport={({ payload, steps, building, onSendMessage, sessionId, feed: read }) => (
           <PlanViewport
-            payload={payload || (plan ? { type: "plan", ...plan } : null)}
+            // A plan from shipped work shows its read first: the plan it may
+            // change appears with the proposal, not before the stories.
+            payload={payload || (plan && !feed ? { type: "plan", ...plan } : null)}
             steps={steps}
             building={building}
             onSendMessage={onSendMessage}
             sessionId={sessionId}
+            feed={read}
+            // Full navigations: this page resolves its setup once, on mount,
+            // so a push to the same route would keep the feed run on screen.
+            onLookFurther={feed ? () => { window.location.assign(feedSessionHref({ ...feed, lookBack: 30 })); } : undefined}
+            onPlanFromGoals={feed ? () => { window.location.assign("/content/sessions/new"); } : undefined}
           />
         )}
         renderFooter={({ payload, idle, onSendMessage }) => (

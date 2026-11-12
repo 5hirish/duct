@@ -11,6 +11,7 @@ import { PlatformGlyph, platformMeta } from "@/components/content/platformGlyphs
 import { ClipStill } from "@/components/content/PostVideo";
 import { Badge } from "@/components/ui/badge";
 import { titleCase } from "@/lib/format";
+import SourceChips from "./SourceChips";
 
 // Shared with PlanStrategy, so a post type has one icon wherever it appears.
 export const TYPE_ICON = { slideshow: Images, video: Video, image: ImageIcon, text: Type };
@@ -157,6 +158,8 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
               </>
             )}
           </p>
+          {/* A day planned from shipped work says what it stands on. */}
+          <SourceChips day={day} size="xs" max={2} className="mt-1" />
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
@@ -298,6 +301,7 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
                 <span className="ml-auto flex items-center gap-1">{platformBadges}</span>
               )}
             </div>
+            {variant === "full" && <SourceChips day={day} size="xs" max={1} />}
           </div>
         </div>
       </article>

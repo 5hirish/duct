@@ -112,7 +112,20 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
     that period, and neither manages the plan covering today (or makes one
     for the month in progress). The board's Revise plan is the first;
     New plan and Plan ahead ask how far ahead (`PlanPeriodPicker.jsx`: the
-    month, 1 or 2 weeks, 30 days) and are the second. The dates come from
+    month, 1 or 2 weeks, 30 days) and are the second. **From your work** is
+    the third way in (#561): `FeedPlanDialog.jsx` asks what to read, how far
+    back, how many days it may change and how much of a private repository it
+    may talk about, and opens `?source=work&…`. Linear and Notion appear as
+    sources only when connected (`offeredSources`, from the MCP server rows'
+    `preset`), and Notion needs the one database to read (`feedBlocker`)
+    (`lib/contentFeed.js` holds the
+    values only; its words are `contentFeedLabels.js`, because `contentApi.js`
+    imports the values under plain Node). That run is always fresh, never a
+    resume of the covering plan's conversation. Its read step's payload is
+    `FeedSummary.jsx`, above the plan or, when nothing was worth a post, the
+    whole pane; a reopened thread reads it back from the stored `feed` row. A
+    day it planned carries `sources`, drawn by `SourceChips.jsx` on the agenda
+    row, the Kanban card and the changed-day view. The dates come from
     `lib/contentSchedule.js`, which mirrors `agents/content/plan_period.py`
     and must keep agreeing with it. The hub's Posts tab opens on its Waiting
     chip while any draft is unanswered: that view is the drafts queue (#266,
@@ -127,6 +140,26 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
     `lib/voiceRules.js`) save into `content_brand`; the rules are stored only
     once changed, so an untouched project keeps following Duct's defaults
   - `execute/` — change-set review queue: diffs, approve, apply, roll back
+  - `scheduled/` — runs nobody starts by hand (#562), for the active project:
+    `components/schedules/ScheduleCard.jsx` per schedule (what and when, the
+    host, the state, the last run with its cost and a link into the
+    conversation it left, Run now, Pause/Resume, Delete, and the history with
+    every skip's reason), over `lib/schedulesApi.js` and the codes in
+    `lib/schedules.js`. No local mirror: only the server knows whether a run is
+    going, and the page polls only while one is. A schedule is made from the
+    plan board's From your work sheet (Repeat: every Monday at 09:00 in the
+    reader's zone, or on each GitHub release, #563); `/content?tab=plans&from=work` opens that sheet, and the
+    empty page's button lands there. The card leads with a calendar leaf for
+    the next run and a strip of the last eight runs as stones (the list
+    route's `recent`), each with a glyph beside its colour; an on-release
+    schedule's leaf is a release tag, checked hourly. A proposal still
+    unanswered is the server's `waiting`, and it is the sidebar's one count
+    in brand ink (`hooks/useScheduledWaiting.js`, asked on focus, a project
+    switch and a route change, never polled). This page and the
+    feed surfaces share `styles/feed.css`: a source is a stone in its kind's
+    mosaic colour (`FeedKind.jsx`), a read is a sieve of kept against
+    left-out stones, and the setup sheet's window is a ribbon of days with
+    blue as the stream under them, the mosaic rule that blue is water
   - `connections/` — the **Toolbox**: one searchable catalogue of native
     connectors and MCP servers
     (`components/connections/ConnectorBrowser.jsx` over
@@ -139,6 +172,9 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
     A search runs out in that order, then to adding by address. While browsing
     the whole list, `BringAnyTool` is that way in, beside the starters: the same
     offer as the last tile in the list went unseen.
+    RSS and Atom feeds are a native card (#564): one multiline field of feed
+    URLs, saved as one row, read by the From your work sheet's "Your feeds"
+    source and by FetchData (`rss_items`).
     A connected server that needs attention says why on its tile, from the
     `problem` the server recorded (`lib/mcpServers.js`, `PROBLEM_SHORT`).
     It was called Connections until November 2026; the route kept the old

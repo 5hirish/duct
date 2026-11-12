@@ -283,6 +283,16 @@ async def lifespan(app: FastAPI):
         # cleanly — a deploy, a crash, a quit desktop app. Close only flushes early.
         asyncio.create_task(sweep_idle_conversations(), name="memory-sweep"),
     ]
+    # Scheduled runs (service/schedules.py): the same loop in the cloud and in
+    # the desktop sidecar, claiming only this host's schedules. The jobs are
+    # handed in so the loop imports no route.
+    if _cfg.scheduler_enabled:
+        from routes.schedule_jobs import JOBS, PROBES
+        from service.schedules import host_for, run_scheduler
+
+        pruners.append(asyncio.create_task(
+            run_scheduler(JOBS, host=host_for(_cfg.duct_local), probes=PROBES), name="schedules",
+        ))
     posthog_log_logger.info(
         "backend_started",
         extra={"event": "backend_started", "environment": _cfg.app_env},

@@ -307,7 +307,58 @@ def render_content() -> str:
             fenced(system),
         ))
     out.append(render_content_clone())
+    out.append(render_content_feed())
     return "\n".join(out)
+
+
+def render_content_feed() -> str:
+    """A plan from shipped work (#561) runs on plan_month's system prompt;
+    what differs is the opening turn, built on a feed Duct already filtered.
+    Synthetic events, so the render is deterministic."""
+    from datetime import date
+
+    from agents.content.feed import FeedOptions, build_digest, render_digest
+    from agents.content.plan_period import requested_period
+    from agents.content.prompts import build_feed_plan_prompt
+    from agents.content.schema import ContentBrandContext
+
+    rows = [
+        {"kind": "release", "ref": "v1.4.0", "title": "v1.4.0: invoices in two clicks", "state": "release",
+         "author": "maker", "url": "https://github.com/acme/app/releases/tag/v1.4.0", "at": "2026-10-06T09:00:00Z"},
+        {"kind": "pull_request", "ref": "#412", "title": "feat(invoices): send from the job card",
+         "state": "merged", "author": "maker", "url": "https://github.com/acme/app/pull/412",
+         "at": "2026-10-05T15:00:00Z"},
+        {"kind": "pull_request", "ref": "#413", "title": "chore(ci): cache dependencies", "state": "merged",
+         "author": "maker", "url": "https://github.com/acme/app/pull/413", "at": "2026-10-05T12:00:00Z"},
+        {"kind": "commit", "ref": "9f1c2d3e4", "title": "Bump httpx from 0.27 to 0.28",
+         "author": "dependabot[bot]", "url": "", "at": "2026-10-04T08:00:00Z"},
+    ]
+    window = (date(2026, 9, 24), date(2026, 10, 7))
+    digest = build_digest(FeedOptions(), window, github_rows=rows, duct=[], already=set())
+    brand = ContentBrandContext(
+        project_id="00000000-0000-0000-0000-000000000000",
+        project_name=FIXTURE_BUSINESS["business_name"],
+        audience=FIXTURE_BUSINESS["audience_segment"],
+    )
+    turn = build_feed_plan_prompt(
+        brand, feed=render_digest(digest), max_days=2, performance=None,
+        period=requested_period(date(2026, 10, 8), 7),
+    )
+    unattended = build_feed_plan_prompt(
+        brand, feed=render_digest(digest), max_days=2, performance=None,
+        period=requested_period(date(2026, 10, 8), 7), unattended=True,
+    )
+    return "\n".join([
+        section(
+            f"Plan from shipped work: opening user turn (system prompt is mode=plan_month) · "
+            f"~{approx_tokens(turn):,} tokens",
+            fenced(turn),
+        ),
+        section(
+            f"Plan from shipped work, scheduled (nobody to ask) · ~{approx_tokens(unattended):,} tokens",
+            fenced(unattended),
+        ),
+    ])
 
 
 def render_content_clone() -> str:

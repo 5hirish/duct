@@ -19,6 +19,7 @@ from models.lead_magnet import LeadMagnet  # noqa: F401
 from models.membership import ProjectInvitation, ProjectMember  # noqa: F401
 from models.memory import ProjectMemory  # noqa: F401
 from models.project import Project  # noqa: F401
+from models.schedule import AgentSchedule  # noqa: F401
 from models.settings import UserModelSettings, UserProfile  # noqa: F401
 from models.usage import ModelUsage  # noqa: F401
 

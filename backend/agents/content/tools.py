@@ -83,6 +83,7 @@ from agents.content.channels import (
     resolve as resolve_channel,
 )
 from agents.content.channel_mix import mix_snapshot, overreaching_hooks
+from agents.content.feed import resolve_sources, source_problems
 from agents.content.channel_config import linked_pairs, load_channel_config
 from agents.content.plan_period import MAX_PLAN_DAYS, PlanPeriod, link_post_to_day, plan_end
 from agents.content.persistence import link_artifact
@@ -129,6 +130,7 @@ from agents.content.schema import (
     ContentSession,
     ContentStatus,
     ContentTool,
+    Day,
     MarkerScore,
     PlanDayChange,
     PlanDraft,
@@ -988,6 +990,23 @@ def build_content_tools_lc(
             "which it does not post on: keep every day's platforms within the brand's channels."
         )
 
+    def _feed_sources(days: list) -> str | None:
+        """Hold a plan's cited sources to the feed this run read. Only a plan
+        from shipped work cites one: on any other run a source the model
+        wrote is dropped, because nothing it could cite was shown to it. A
+        refusal names every problem, so one retry can fix them all."""
+        digest = getattr(session, "feed", None)
+        if digest is None:
+            for day in days:
+                day.sources = [] if isinstance(day, Day) else None
+            return None
+        known = digest.refs()
+        problems = source_problems(days, known, max_days=digest.options.max_days)
+        if problems:
+            return _err("Nothing was proposed: " + " ".join(problems))
+        resolve_sources(days, known)
+        return None
+
     async def _propose(proposal, live_id) -> None:
         """Put ``proposal`` in front of the person: on the session, held on the
         conversation (a deploy before they decide used to lose it), and in the
@@ -1017,6 +1036,9 @@ def build_content_tools_lc(
                     f"project_id mismatch: payload has {draft.project_id}, "
                     f"session is scoped to {project_id}."
                 )
+            refused = _feed_sources(draft.days)
+            if refused:
+                return refused
             # The plan manages a period: one post per date in it, no more, no
             # fewer. A run sets the period before its opening turn.
             if session.period_days and len(draft.days) != session.period_days:
@@ -1048,6 +1070,8 @@ def build_content_tools_lc(
             strategy = draft.strategy.model_dump(mode="json")
             if session.channel_mix is not None:
                 strategy["mix"] = mix_snapshot(session.channel_mix)
+            if getattr(session, "feed", None) is not None:
+                strategy["feed"] = session.feed.strategy()
             proposal = build_proposal(
                 project_id=project_id,
                 draft_name=draft.name,
@@ -1093,6 +1117,9 @@ def build_content_tools_lc(
                 parsed = [c if isinstance(c, PlanDayChange) else PlanDayChange.model_validate(c) for c in changes]
             except ValidationError as exc:
                 return _err(f"PlanDayChange validation failed: {exc}")
+            refused_sources = _feed_sources(parsed)
+            if refused_sources:
+                return refused_sources
             today = utcnow().date()
             # A proposal still waiting is what the person is looking at, so a
             # change applies to it; otherwise to the plan this session manages.
@@ -1159,6 +1186,8 @@ def build_content_tools_lc(
                     days=days, changed=changed, today=today,
                 )
                 live_id = saved["plan_id"]
+            if getattr(session, "feed", None) is not None:
+                proposal.strategy = {**(proposal.strategy or {}), "feed": session.feed.strategy()}
             logger.info(
                 "content: %d day(s) proposed for session %s (of %s)",
                 len(changed), session.session_id, "a proposal" if held is not None else f"plan {live_id}",

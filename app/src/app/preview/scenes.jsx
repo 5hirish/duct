@@ -42,6 +42,10 @@ import { CookieConsent } from "@/components/CookieConsent";
 import { StarAskNotice, StarAskView } from "@/components/StarAsk";
 import LoadError from "@/components/LoadError";
 import CloneFromUrlDialog from "@/components/content/CloneFromUrlDialog";
+import FeedPlanDialog from "@/components/content/FeedPlanDialog";
+import { DEFAULT_FEED } from "@/lib/contentFeed";
+import FeedSummary from "@/components/content/FeedSummary";
+import ScheduleCard from "@/components/schedules/ScheduleCard";
 import CloneSourceNote from "@/components/content/CloneSourceNote";
 import { FormatCard, FormatDetailSheet, FormatEditorSheet } from "@/components/content/FormatLibrary";
 import { DeskConnectFirst } from "@/components/insights/desk/DeskCards";
@@ -4243,6 +4247,102 @@ export const SCENES = [
     render: () => <PlanPeriodScene />,
   },
   {
+    id: "feed-plan-dialog",
+    state: "GitHub connected, the defaults",
+    group: "FeedPlanDialog",
+    title: "Plan from what you shipped: the setup sheet",
+    note: "Opened from the plan board's \"From your work\" button. What Duct reads, how far back, how far ahead, how many days it may change and how much of a private repository it may talk about. What to check: every answer row stays on one line in a phone-width dialog; the hint under the disclosure row changes with the pick; unticking both sources disables Find stories and says why.",
+    render: () => <FeedDialogScene />,
+  },
+  {
+    id: "feed-plan-dialog-long",
+    state: "30 days back, 2 weeks ahead, 4 days",
+    group: "FeedPlanDialog",
+    title: "The setup sheet at its widest window",
+    note: "The drawing at its densest: 30 day cells read, 14 planned, four lit. What to check: every cell keeps the same width on both sides of today, the Today label stays under its bar, and the cells never shrink below a visible stone at phone width.",
+    render: () => <FeedDialogScene initial={{ ...DEFAULT_FEED, lookBack: 30, horizon: 14, maxDays: 4, disclosure: "releases" }} />,
+  },
+  {
+    id: "feed-plan-dialog-linear-notion",
+    state: "Linear and Notion connected, Notion ticked without a database",
+    group: "FeedPlanDialog",
+    title: "The setup sheet with Linear and Notion",
+    note: "Linear and Notion appear as sources only when the person has them connected. Ticking Notion asks for the one database to read, and Find stories waits until there is one. What to check: four tiles sit two by two from @md; the database field and its error sit under the tiles, not between them.",
+    render: () => <FeedDialogScene connected={["linear", "notion"]}
+      initial={{ ...DEFAULT_FEED, sources: ["github", "linear", "notion"] }} />,
+  },
+  {
+    id: "feed-plan-dialog-no-github",
+    state: "no repository connected",
+    group: "FeedPlanDialog",
+    title: "The setup sheet without GitHub",
+    note: "GitHub is unticked and disabled, with the way to the Toolbox under it; Duct's own record stays ticked, so the sheet still starts.",
+    render: () => <FeedDialogScene githubConnected={false} />,
+  },
+  {
+    id: "feed-summary-strip",
+    state: "five sources, 23 left out",
+    group: "FeedSummary",
+    title: "What a plan from shipped work read",
+    note: "The strip above the plan pane while the stories are found and after: the window, the sources as chips that open the PR, release or brief, and one folded line for what was left out. What to check: the chips wrap rather than widen the pane; opening the line lists each reason with its count.",
+    render: () => (
+      <div className="w-full max-w-xl bg-background">
+        <FeedSummary payload={FEED_READ} />
+      </div>
+    ),
+  },
+  {
+    id: "feed-summary-nothing-new",
+    state: "a quiet fortnight: chores and bumps only",
+    group: "FeedSummary",
+    title: "Nothing new worth a post",
+    note: "The whole pane when the read found nothing a reader would notice: the run ended with no model call, and the card says so, with the two ways on.",
+    render: () => (
+      <div style={{ height: 420, display: "flex" }} className="bg-background">
+        <FeedSummary payload={FEED_QUIET} onLookFurther={() => {}} onPlanFromGoals={() => {}} />
+      </div>
+    ),
+  },
+  {
+    id: "feed-summary-empty",
+    state: "nothing came back at all",
+    group: "FeedSummary",
+    title: "An empty read",
+    note: "No items and nothing left out usually means no repository is bound; the card points at the Toolbox.",
+    render: () => (
+      <div style={{ height: 420, display: "flex" }} className="bg-background">
+        <FeedSummary payload={{ ...FEED_QUIET, items: [], left_out: {} }} onPlanFromGoals={() => {}} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-list-feed-days",
+    state: "two days planned from shipped work",
+    group: "PlanList",
+    title: "Feed days in the agenda",
+    note: "A day from shipped work carries its sources under its title, at most two chips and +N. The other days are unchanged.",
+    render: () => (
+      <div style={{ height: 520, display: "flex" }} className="bg-background">
+        <PlanList plan={PLAN_WITH_FEED_DAYS} onReviseDay={() => {}} />
+      </div>
+    ),
+  },
+  {
+    id: "schedule-card-states",
+    state: "waiting on you, running, needs you, on release, paused",
+    group: "ScheduleCard",
+    title: "Scheduled: one card per schedule",
+    note: "The Scheduled page. What runs and when, the host it runs on, the state it is in, the last run with its cost and a way into the conversation it left, and the history behind a fold. What to check: the badge never wraps under the name; Needs you says what to do and links there; a paused card shows no next run.",
+    render: () => (
+      <div className="flex w-full max-w-2xl flex-col gap-3 bg-background p-4">
+        {SCHEDULES.map((s) => (
+          <ScheduleCard key={s.id} schedule={s} onRunNow={() => {}} onToggle={() => {}} onDelete={() => {}}
+            loadHistory={async () => SCHEDULE_HISTORY} />
+        ))}
+      </div>
+    ),
+  },
+  {
     id: "plan-list-month",
     state: "a fresh 30-day plan, every post pending",
     group: "PlanList",
@@ -4543,6 +4643,77 @@ const CLONE_SOURCE = {
 };
 
 /** The clone dialog, open on arrival; the button brings it back after Escape. */
+const FEED_ITEMS = [
+  { ref: "gh:r-v1.4.0", kind: "release", title: "v1.4.0: invoices in two clicks", url: "https://github.com/acme/app/releases/tag/v1.4.0" },
+  { ref: "cs:3f2a9c1d", kind: "change_set", title: "Shift budget to brand search (google_ads, applied)", url: "" },
+  { ref: "gh:pr-412", kind: "pull_request", title: "feat(invoices): send from the job card", url: "https://github.com/acme/app/pull/412" },
+  { ref: "art:weekly-brief", kind: "artifact", title: "Organic signups up 18% after the invoice launch", url: "/artifacts/1" },
+  { ref: "gh:c-bbb2222", kind: "commit", title: "fix: drafts keep their hook on resume", url: "" },
+];
+const FEED_READ = {
+  window: { from: "2026-10-29", to: "2026-11-11" },
+  worth_a_plan: true, score: 9, gate: 3, items: FEED_ITEMS,
+  left_out: { chore: 12, dependency: 6, squashed: 4, bot: 1 }, notes: [], max_days: 2, disclosure: "shipped",
+};
+const FEED_QUIET = {
+  window: { from: "2026-10-29", to: "2026-11-11" },
+  worth_a_plan: false, score: 1, gate: 3,
+  items: [{ ref: "gh:c-aaa1111", kind: "commit", title: "fix: typo in the footer", url: "" }],
+  left_out: { chore: 7, dependency: 3 }, notes: [], max_days: 2, disclosure: "shipped",
+};
+const PLAN_WITH_FEED_DAYS = {
+  ...PLAN_MONTH,
+  days: PLAN_MONTH.days.slice(0, 7).map((d, i) =>
+    i === 1 ? { ...d, topic: "Invoices in two clicks, from the job card", sources: FEED_ITEMS.slice(0, 3) }
+      : i === 4 ? { ...d, topic: "What the invoice launch did to signups", sources: [FEED_ITEMS[3]] }
+        : d,
+  ),
+};
+
+function FeedDialogScene({ githubConnected = true, initial, connected }) {
+  const [open, setOpen] = useState(true);
+  return (
+    <>
+      <Button size="sm" variant="outline" onClick={() => setOpen(true)}>Open the setup sheet</Button>
+      <FeedPlanDialog open={open} onOpenChange={setOpen} onStart={() => setOpen(false)} onRepeat={() => setOpen(false)}
+        githubConnected={githubConnected} connected={connected} {...(initial ? { initial } : {})} />
+    </>
+  );
+}
+
+const SCHEDULE_BASE = {
+  project_id: "p", job: "content.plan_from_work", cadence: "weekly", weekday: 0, at_time: "09:00",
+  timezone: "Europe/Berlin", enabled: true, host: "cloud", monthly_cap: 6, config: {}, running: false,
+  needs_reason: "", mine: true, next_run_at: "2026-11-16T08:00:21Z",
+};
+const SCHEDULES = [
+  { ...SCHEDULE_BASE, id: "s1", name: "Weekly plan from your work", runs_this_month: 2, waiting: true,
+    last: { at: "2026-11-09T08:04:00Z", outcome: "proposed", cost_usd: 0.0995, conversation_id: "c1" },
+    recent: [
+      { at: "2026-11-09T08:04:00Z", outcome: "proposed" }, { at: "2026-11-02T08:20:00Z", outcome: "interrupted", will_retry: true },
+      { at: "2026-10-26T08:03:00Z", outcome: "nothing_new" }, { at: "2026-10-19T08:06:00Z", outcome: "proposed" },
+      { at: "2026-10-12T08:02:00Z", outcome: "proposed" },
+    ] },
+  { ...SCHEDULE_BASE, id: "s2", name: "Daily plan from your work", cadence: "daily", host: "local", running: true,
+    runs_this_month: 5, last: { at: "2026-11-10T08:02:00Z", outcome: "nothing_new", cost_usd: 0 },
+    recent: Array.from({ length: 8 }, (_, i) => ({ at: `2026-11-${String(10 - i).padStart(2, "0")}T08:02:00Z`, outcome: i % 3 ? "nothing_new" : "proposed" })) },
+  { ...SCHEDULE_BASE, id: "s3", name: "Weekly plan, client repo", needs_reason: "no_model_key", runs_this_month: 0,
+    last: { at: "2026-11-09T08:01:00Z", outcome: "skipped", reason: "no_model_key" },
+    recent: [{ at: "2026-11-09T08:01:00Z", outcome: "skipped" }, { at: "2026-11-09T07:46:00Z", outcome: "skipped" }] },
+  { ...SCHEDULE_BASE, id: "s5", name: "Plan on each release", cadence: "on_release", runs_this_month: 1, waiting: false,
+    last: { at: "2026-11-06T14:12:00Z", outcome: "proposed", cost_usd: 0.11, conversation_id: "c5" },
+    recent: [{ at: "2026-11-06T14:12:00Z", outcome: "proposed" }, { at: "2026-10-22T10:05:00Z", outcome: "proposed" }] },
+  { ...SCHEDULE_BASE, id: "s4", name: "Paused experiment", enabled: false, next_run_at: null, cadence: "weekdays",
+    runs_this_month: 1, mine: false, last: { at: "2026-11-03T08:05:00Z", outcome: "failed", reason: "rate_limited" },
+    recent: [{ at: "2026-11-03T08:05:00Z", outcome: "failed" }, { at: "2026-11-02T08:05:00Z", outcome: "proposed" }] },
+];
+const SCHEDULE_HISTORY = [
+  { at: "2026-11-09T08:04:00Z", outcome: "proposed", cost_usd: 0.0995, conversation_id: "c1" },
+  { at: "2026-11-02T08:20:00Z", outcome: "interrupted", reason: "interrupted", will_retry: true },
+  { at: "2026-10-26T08:03:00Z", outcome: "nothing_new", cost_usd: 0 },
+  { at: "2026-10-19T08:06:00Z", outcome: "skipped", reason: "stale" },
+];
+
 function CloneDialogScene({ initialValue = "" }) {
   const [open, setOpen] = useState(true);
   return (

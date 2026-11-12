@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LayoutGrid, CalendarDays, CalendarCheck, CalendarPlus, List, PencilLine, Plus } from "lucide-react";
+import { LayoutGrid, CalendarDays, CalendarCheck, CalendarPlus, GitBranch, List, PencilLine, Plus } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   VENDOR,
@@ -25,6 +25,11 @@ import PlanProgress from "@/components/content/PlanProgress";
 import PlanPicker from "@/components/content/PlanPicker";
 import { planDisplayName } from "@/lib/planStrategy";
 import PlanDayOne from "@/components/content/PlanDayOne";
+import FeedPlanDialog from "@/components/content/FeedPlanDialog";
+import { feedSessionHref } from "@/lib/contentFeed";
+import { feedScheduleBody } from "@/lib/schedules";
+import { listMcpServers } from "@/lib/connectorsApi";
+import { createSchedule } from "@/lib/schedulesApi";
 import {
   PlanState,
   dayKey,
@@ -208,6 +213,41 @@ export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab, fi
 
   const today = startOfToday();
   const startPlan = useCallback((period) => router.push(planSessionHref(period)), [router]);
+  // A plan from shipped work (#561) starts at its setup sheet.
+  const [feedOpen, setFeedOpen] = useState(false);
+  const [mcpPresets, setMcpPresets] = useState([]);
+  const openFeed = useCallback(() => setFeedOpen(true), []);
+  // Linear and Notion are offered as feeds only when connected (#565); asked
+  // when the sheet opens, since that is the only place the answer is shown.
+  useEffect(() => {
+    if (!feedOpen) return undefined;
+    let alive = true;
+    listMcpServers()
+      .then((rows) => { if (alive) setMcpPresets(rows.map((r) => r.preset).filter(Boolean)); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [feedOpen]);
+  // The Scheduled page's empty state links here with ?from=work, so the sheet
+  // that holds Repeat weekly is one click away rather than three.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("from") === "work") setFeedOpen(true);
+  }, []);
+  const feedDialog = feedOpen && (
+    <FeedPlanDialog
+      open
+      connected={mcpPresets}
+      onOpenChange={setFeedOpen}
+      onStart={(options) => { setFeedOpen(false); router.push(feedSessionHref(options, today)); }}
+      onRepeat={async (options, cadence) => {
+        // Saved as a Monday 09:00 schedule in the reader's zone (#562), or one
+        // that runs on each GitHub release (#563); the Scheduled page is where
+        // it is paused, run or deleted.
+        await createSchedule(feedScheduleBody(projectId, options, { cadence }));
+        setFeedOpen(false);
+        router.push("/scheduled");
+      }}
+    />
+  );
 
   // A key pasted into the first-run checklist. The save answers with the new
   // status, so the row turns over without a second read; a refusal throws
@@ -237,6 +277,8 @@ export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab, fi
   }
   if (plans.length === 0) {
     return (
+      <>
+      {feedDialog}
       <PlanDayOne
         brand={sources.brand}
         accounts={sources.accounts}
@@ -244,12 +286,16 @@ export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab, fi
         vendors={sources.vendors}
         onConnectVendor={connectVendor}
         onStart={startPlan}
+        onPlanFromWork={openFeed}
         onOpenTab={onOpenTab || ((tab) => router.push(`/content?tab=${tab}`))}
       />
+      </>
     );
   }
 
   return (
+    <>
+    {feedDialog}
     <PlanBoardView
       plans={plans}
       activeId={activeId}
@@ -264,8 +310,10 @@ export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab, fi
       onStartPlan={startPlan}
       onRevisePlan={() => router.push(planSessionHref({ planId: activeId }))}
       onReviseDay={reviseDay}
+      onPlanFromWork={openFeed}
       fill={fill}
     />
+    </>
   );
 }
 
@@ -292,6 +340,7 @@ export function PlanBoardView({
   onStartPlan,
   onRevisePlan,
   onReviseDay,
+  onPlanFromWork,
   fill = false,
   defaultChannel = null,
   pickerOpen = false,
@@ -359,6 +408,11 @@ export function PlanBoardView({
               <PlanPeriodMenu options={aheadOptions} onPick={onStartPlan} icon={CalendarPlus} variant="outline">
                 <Trans>Plan ahead</Trans>
               </PlanPeriodMenu>
+              {onPlanFromWork && (
+                <Button size="sm" variant="outline" className="h-8" onClick={onPlanFromWork}>
+                  <GitBranch className="size-3.5" aria-hidden /> <Trans>From your work</Trans>
+                </Button>
+              )}
               <Button size="sm" className="h-8" onClick={onRevisePlan}>
                 <PencilLine className="size-3.5" aria-hidden /> <Trans>Revise plan</Trans>
               </Button>

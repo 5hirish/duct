@@ -142,6 +142,7 @@ _ADAPTER_MODULES: tuple[str, ...] = (
     "service.clarity.fetch",
     "service.growthbook.fetch",
     "service.github.fetch",
+    "service.rss.fetch",
 )
 
 _loaded = False

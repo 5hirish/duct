@@ -13,6 +13,7 @@ from agents.insights.catalog.growthbook import ENTITY_CATALOG as GROWTHBOOK_CATA
 from agents.insights.catalog.gsc import ENTITY_CATALOG as GSC_CATALOG
 from agents.insights.catalog.mixpanel import ENTITY_CATALOG as MIXPANEL_CATALOG
 from agents.insights.catalog.publishers import PUBLISHERS_SOURCE, ENTITY_CATALOG as PUBLISHERS_CATALOG
+from agents.insights.catalog.rss import ENTITY_CATALOG as RSS_CATALOG
 from service.github import GITHUB_CONNECTOR_ID
 
 _CATALOGS: dict[str, dict[str, Any]] = {
@@ -23,6 +24,7 @@ _CATALOGS: dict[str, dict[str, Any]] = {
     "clarity": CLARITY_CATALOG,
     "growthbook": GROWTHBOOK_CATALOG,
     GITHUB_CONNECTOR_ID: GITHUB_CATALOG,
+    "rss": RSS_CATALOG,
     PUBLISHERS_SOURCE: PUBLISHERS_CATALOG,
 }
 

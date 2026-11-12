@@ -1517,7 +1517,9 @@ async def _start_tiktok_studio(
             req = PlanRequest.model_validate(config)
         except Exception as exc:
             raise HTTPException(422, f"Invalid plan_month config: {exc}") from exc
-        coro = _run_plan_worker(session_id, req.project_id, emit_fn, user_keys, period=_requested_period(req))
+        coro = _run_plan_worker(
+            session_id, req.project_id, emit_fn, user_keys, period=_requested_period(req), feed=req.feed,
+        )
     else:
         raise HTTPException(422, f"mode must be 'plan_month' or 'draft_post', got {mode!r}")
 

@@ -243,6 +243,9 @@ def _event_line(row: AgentEventRow) -> str:
         args = _clip(data.get("input"), TOOL_INPUT_CHARS)
         return f"[{row.seq}] agent called {name}" + (f" with {args}" if args else "")
     if row.kind == EventKind.PLAN_DECISION:
+        if data.get("decision") == "superseded":
+            # Nobody decided: the schedule's next run replaced it unanswered.
+            return f"[{row.seq}] a newer scheduled run replaced the unanswered proposed plan \"{data.get('name', '')}\""
         return f"[{row.seq}] person {data.get('decision', 'decided on')} the proposed plan \"{data.get('name', '')}\""
     if row.kind == EventKind.TOOL_RESULT and data.get("name") not in _TOOLS_WITHOUT_FACTS:
         verdict = "failed" if data.get("is_error") else "returned"

@@ -35,6 +35,8 @@ _TOKEN_URI = "https://oauth2.googleapis.com/token"
 KEY_EVENTS_METRIC = "keyEvents"
 
 LANDING_PAGE_ROWS = 250
+# A year of weeks: enough history for "best week yet" to mean something.
+WEEKLY_USER_ROWS = 60
 
 # What GA4 says it left out of a report, or estimated. It withholds low-count
 # rows under its privacy thresholds, samples a large query, rolls
@@ -247,6 +249,56 @@ def fetch_ga4_landing_pages(
         # GA4 reports the full row count even when ``limit`` cuts the list.
         "truncated": int(getattr(resp, "row_count", 0) or 0) > len(rows),
         # Before the rows, so a payload cut for size keeps it.
+        **({"data_quality": notes} if notes else {}),
+        "rows": rows,
+    }
+
+
+def fetch_ga4_weekly_users(
+    property_id: str,
+    date_from: str,
+    date_to: str,
+    *,
+    refresh_token: str,
+    client_id: str,
+    client_secret: str,
+) -> dict[str, Any]:
+    """Active users per ISO week, oldest first: the series a "best week yet"
+    milestone is read from (#564). Users are not additive across weeks, so the
+    catalog gives the metric no ``agg`` and nothing sums it."""
+    from google.analytics.data_v1beta import BetaAnalyticsDataClient
+    from google.analytics.data_v1beta.types import (
+        DateRange,
+        Dimension,
+        Metric,
+        OrderBy,
+        RunReportRequest,
+    )
+
+    credentials = _build_credentials(
+        refresh_token=refresh_token,
+        client_id=client_id,
+        client_secret=client_secret,
+    )
+    client = BetaAnalyticsDataClient(credentials=credentials)
+    req = RunReportRequest(
+        property=f"properties/{property_id.strip()}",
+        date_ranges=[DateRange(start_date=date_from, end_date=date_to)],
+        dimensions=[Dimension(name="isoYearIsoWeek")],
+        metrics=[Metric(name="activeUsers")],
+        order_bys=[OrderBy(dimension=OrderBy.DimensionOrderBy(dimension_name="isoYearIsoWeek"))],
+        limit=WEEKLY_USER_ROWS,
+    )
+    resp = client.run_report(req)
+    rows = [
+        {"iso_week": row.dimension_values[0].value, "active_users": int(float(row.metric_values[0].value or 0))}
+        for row in resp.rows
+    ]
+    notes = _data_quality(getattr(resp, "metadata", None))
+    return {
+        "report_type": "ga4_weekly_users",
+        "date_range": f"{date_from} to {date_to}",
+        "row_count": len(rows),
         **({"data_quality": notes} if notes else {}),
         "rows": rows,
     }
