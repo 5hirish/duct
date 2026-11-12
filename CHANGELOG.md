@@ -34,6 +34,11 @@ published without one. The same script, with no arguments, holds
   `duct-launch-check.md`, applying a diff only on a yes. No account, no call to
   Duct. The twelve contributor skills are marked internal, so the install
   offers only this one (#536).
+- **The launch check as a Claude Code and Codex plugin.** `/plugin marketplace
+  add 5hirish/duct` in Claude Code, or `codex plugin marketplace add
+  5hirish/duct` in Codex, installs the same skill from Duct's own catalogue,
+  ready for the Claude directory. The skill now runs a pinned `getduct@0.1.1`
+  instead of `@latest`, so what a directory reviewed is what runs.
 - **`npx getduct`, the launch check's engine and its score card.**
   `npx getduct check yoursite.com` runs the 22 live checks of the launch
   checklist with fixed thresholds in about ten seconds, with no account and no

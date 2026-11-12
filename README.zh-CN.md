@@ -48,6 +48,18 @@ Duct 为产品和增长团队而做。它连接 Google Ads、GA4、Search Consol
 
 **🚧 接下来：** 销售与营收运营（从 CRM、通话和产品使用数据中发现管线风险和转化信号）、电商与 DTC（跨 Meta Ads、Stripe 和 RevenueCat 找出 LTV 与 ROAS 之间的盲区），以及客户成功（从 NPS、使用情况和支持信号中找出有流失风险的账户）。进展请关注 [Issues](https://github.com/5hirish/duct/issues) 和 [getduct.ai](https://getduct.ai/zh-cn/)。
 
+## 🧩 给你的编码智能体
+
+问 Claude Code、Codex 或 Cursor 一句“我的网站可以上线了吗？”，它会读取你的线上页面和背后的代码仓库，对照页面上的承诺检查代码是否真的做到，给上线准备度打一个满分 100 的分数，并给出三条排好序的修复，每一条都是一个 diff，你说“好”才会应用。不需要 Duct 账户，不会向我们发送任何东西。
+
+| 智能体 | 安装 |
+|---|---|
+| Claude Code | `/plugin marketplace add 5hirish/duct`，然后 `/plugin install duct@duct` |
+| Codex | `codex plugin marketplace add 5hirish/duct`，然后在 `/plugins` 里安装 Duct |
+| Cursor、Copilot、OpenCode 等 | `npx skills add 5hirish/duct` |
+
+它检查什么，以及在我们自己网站上的一次真实运行：[getduct.ai/skills](https://getduct.ai/zh-cn/skills)。
+
 ## 🔑 使用你的 ChatGPT 订阅
 
 在桌面应用里用你自己的 ChatGPT 订阅登录，Duct 就在它上面运行。不需要 API 密钥，也没有第二份账单。或者带上 Anthropic、OpenAI、Gemini、xAI 或 OpenRouter 上任何模型的密钥，并分配三个档位：Heavy、Standard 和 Light，这样深度分析和简单摘要就不会付同样的价钱。遇到速率限制时，Duct 会降一档继续运行，而不是直接停下。

@@ -1,0 +1,14 @@
+{
+  "name": "duct",
+  "version": "0.1.0",
+  "description": "Find out before you launch why Google won't index your site, why a shared link previews blank, why ChatGPT can't read it and whether your signups are tracked. Checks the live pages and the code behind them, scores the launch out of 100 and gives three ranked fixes.",
+  "author": {
+    "name": "Shirish Kadam",
+    "url": "https://getduct.ai"
+  },
+  "homepage": "https://getduct.ai/skills",
+  "repository": "https://github.com/5hirish/duct",
+  "license": "MIT",
+  "keywords": ["launch", "seo", "open-graph", "analytics", "llms-txt", "marketing"],
+  "skills": "./"
+}
