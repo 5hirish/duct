@@ -46,7 +46,8 @@ FEED_TYPES = frozenset({
     "application/rss+xml", "application/atom+xml", "application/rdf+xml",
     "application/xml", "text/xml", "application/x-rss+xml",
 })
-_LOOKS_LIKE_FEED = re.compile(rb"^\s*(?:<\?xml[^>]*>\s*)?(?:<!--.*?-->\s*)*<(?:rss|feed|rdf:RDF)\b", re.S)
+_FEED_ROOTS = (b"<rss", b"<feed", b"<rdf:RDF")
+SNIFF_BYTES = 2048
 _TAGS = re.compile(r"<[^>]+>")
 _SPACE = re.compile(r"\s+")
 
@@ -106,9 +107,23 @@ def fetch_bytes(url: str) -> bytes:
     except Exception as exc:  # noqa: BLE001 — a refused address, a timeout, TLS: the card says which feed
         raise RuntimeError(f"{url} could not be read ({type(exc).__name__}).") from exc
     data = bytes(body)
-    if kind not in FEED_TYPES and not _LOOKS_LIKE_FEED.match(data[:2048]):
+    if kind not in FEED_TYPES and not looks_like_feed(data):
         raise RuntimeError(f"{url} is a web page, not a feed. Use the page's RSS or Atom link.")
     return data
+
+
+def looks_like_feed(head: bytes) -> bool:
+    """Whether a body opens on a feed's root element, past an XML declaration,
+    a doctype or comments. A scan, not a regex: a pattern over repeated
+    comments backtracks exponentially on a crafted body (CodeQL, #566)."""
+    rest = head[:SNIFF_BYTES].lstrip()
+    while rest.startswith((b"<?", b"<!--", b"<!")):
+        closer = b"?>" if rest.startswith(b"<?") else b"-->" if rest.startswith(b"<!--") else b">"
+        end = rest.find(closer)
+        if end < 0:
+            return False
+        rest = rest[end + len(closer):].lstrip()
+    return rest.startswith(_FEED_ROOTS)
 
 
 def _clip(text: Any, limit: int = MAX_SUMMARY_CHARS) -> str:

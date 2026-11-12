@@ -134,3 +134,16 @@ def test_a_milestone_alone_clears_the_gate():
     options = FeedOptions(sources=[FeedSource.MILESTONES])
     digest = build_digest(options, WINDOW, github_rows=None, duct=None, already=set(), extra=[McpFeed(items=[star])])
     assert digest.worth_a_plan and "ms:stars-1000" in digest.refs()
+
+
+def test_a_feed_is_recognised_by_a_scan_that_cannot_backtrack():
+    import time
+
+    assert rss.looks_like_feed(b'  <?xml version="1.0"?>\n<!-- generator -->\n<rss version="2.0">')
+    assert rss.looks_like_feed(b"<!DOCTYPE x><feed xmlns='http://www.w3.org/2005/Atom'>")
+    assert not rss.looks_like_feed(b"<html><body>")
+    assert not rss.looks_like_feed(b"<!-- never closed")
+    crafted = b"<!--" + b"--><!--" * 5000
+    started = time.perf_counter()
+    assert not rss.looks_like_feed(crafted)
+    assert time.perf_counter() - started < 0.1
