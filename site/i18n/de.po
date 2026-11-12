@@ -3822,7 +3822,7 @@ msgid ""
 msgstr ""
 "Schreibgeschützt: Duct hat keinen Apple Search Ads Änderungsvorgang und gib dem API-Nutzer eine schreibgeschützte Rolle, damit der Schlüssel keine Kampagne ändern kann."
 
-#: integrations/apple-search-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/revenuecat.html integrations/stripe.html
+#: integrations/apple-search-ads.html integrations/ga4.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/revenuecat.html integrations/stripe.html
 msgid "Reads three datasets"
 msgstr "Liest drei Datensätze"
 
@@ -4197,6 +4197,10 @@ msgstr ""
 "<0>sign_up als Schlüsselereignis registrieren</0><1>Betrifft 1 Property. Zurücknahme bereit.</1>"
 
 #: integrations/ga4.html
+msgid "<0>iso week</0><1>active users</1>"
+msgstr "<0>ISO-Woche</0><1>aktive Nutzer</1>"
+
+#: integrations/ga4.html
 msgid ""
 "<0>page</0><1>channel</1><2>sessions</2><3>bounce rate</3><4>engagement rate</4><5>average session duration</5><6>conversions</6><7>revenue</7>"
 msgstr ""
@@ -4337,6 +4341,10 @@ msgstr ""
 "GA4 gelesen neben Search Console, Anzeigen und Stripe: die Ursache, nicht ein weiteres Dashboard."
 
 #: integrations/ga4.html
+msgid "GA4 weekly active users"
+msgstr "Wöchentlich aktive Nutzer in GA4"
+
+#: integrations/ga4.html
 msgid "GA4, <0>answered</0>"
 msgstr "GA4, <0>beantwortet</0>"
 
@@ -4395,10 +4403,6 @@ msgstr "Wähle die GA4 Property, die dieses Projekt liest."
 #: integrations/ga4.html
 msgid "Read the GA4 notes Duct's agent works from <0/>"
 msgstr "Lies die GA4 Notizen, von denen Ducts Agent arbeitet <0/>"
-
-#: integrations/ga4.html
-msgid "Reads two datasets"
-msgstr "Liest zwei Datensätze"
 
 #: integrations/ga4.html
 msgid "Register GA4 key event"
@@ -5634,6 +5638,12 @@ msgstr ""
 "<0>HubSpot</0><1>CRM-Lebenszyklusphasen, Pipeline und abgeschlossene Einnahmen.</1><2><3>Demnächst verfügbar</3></2>"
 
 #: integrations/index.html
+msgid ""
+"<0>RSS and Atom feeds</0><1>What you published: a blog, a Substack, a changelog page, YouTube uploads.</1><2><3>Feed addresses</3><4>Read-only</4></2>"
+msgstr ""
+"<0>RSS- und Atom-Feeds</0><1>Was du veröffentlicht hast: ein Blog, ein Substack, eine Changelog-Seite, YouTube-Uploads.</1><2><3>Feed-Adressen</3><4>Nur lesen</4></2>"
+
+#: integrations/index.html
 msgid "Ads"
 msgstr "Anzeigen"
 
@@ -5685,18 +5695,29 @@ msgstr "Duct Integrationen"
 #. meta og:title
 #. meta twitter:title
 #: integrations/index.html
-msgid "Duct integrations: thirteen tools, read as one"
-msgstr "Duct Integrationen: dreizehn Tools, als eines gelesen"
+msgid "Duct integrations: fourteen tools, read as one"
+msgstr "Duct Integrationen: vierzehn Tools, als eines gelesen"
+
+#. meta twitter:description
+#: integrations/index.html
+msgid ""
+"Fourteen connectors, read-only by default. Every change waits for your Apply."
+msgstr ""
+"Vierzehn Connectors, standardmäßig schreibgeschützt. Jede Änderung wartet auf dein Anwenden."
+
+#: integrations/index.html
+msgid "Fourteen tools. <0>Read as one.</0>"
+msgstr "Vierzehn Tools. <0>Als eines lesen.</0>"
 
 #: integrations/index.html
 msgid ""
-"Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, GitHub, Stripe and RevenueCat. The four Google tools connect when you sign in with Google; the rest take a key you paste once. HubSpot is next."
+"Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, GitHub, RSS and Atom feeds, Stripe and RevenueCat. The four Google tools connect when you sign in with Google; the rest take a key you paste once. HubSpot is next."
 msgstr ""
-"Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, GitHub, Stripe und RevenueCat. Die vier Google-Tools verbinden sich, wenn du dich mit Google anmeldest; der Rest benötigt einen Schlüssel, den du einmal einfügst. HubSpot ist als Nächstes dran."
+"Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, GitHub, RSS- und Atom-Feeds, Stripe und RevenueCat. Die vier Google-Tools verbinden sich, wenn du dich mit Google anmeldest; der Rest benötigt einen Schlüssel, den du einmal einfügst. HubSpot ist als Nächstes dran."
 
 #: integrations/index.html
-msgid "Integrations: Google Ads, GA4, Stripe and 10 more | Duct"
-msgstr "Integrationen: Google Ads, GA4, Stripe und 10 weitere | Duct"
+msgid "Integrations: Google Ads, GA4, Stripe and 11 more | Duct"
+msgstr "Integrationen: Google Ads, GA4, Stripe und 11 weitere | Duct"
 
 #: integrations/index.html
 msgid "Missing <0>yours?</0>"
@@ -5731,32 +5752,25 @@ msgid "Product and experiments"
 msgstr "Produkt und Experimente"
 
 #: integrations/index.html
+msgid "RSS and Atom feeds"
+msgstr "RSS- und Atom-Feeds"
+
+#: integrations/index.html
 msgid "Revenue"
 msgstr "Umsatz"
 
 #. meta description
 #: integrations/index.html
 msgid ""
-"The 13 tools Duct reads, from Google Ads and Meta to GA4, Mixpanel and Stripe, what each one can change, and how you connect it. Read-only by default."
+"The 14 tools Duct reads, from Google Ads and Meta to GA4, Mixpanel and Stripe, what each one can change, and how you connect it. Read-only by default."
 msgstr ""
-"Die 13 Tools, die Duct liest, von Google Ads und Meta bis GA4, Mixpanel und Stripe, was jedes ändern kann und wie du es verbindest. Standardmäßig schreibgeschützt."
+"Die 14 Tools, die Duct liest, von Google Ads und Meta bis GA4, Mixpanel und Stripe, was jedes ändern kann und wie du es verbindest. Standardmäßig schreibgeschützt."
 
 #: integrations/index.html
 msgid ""
 "The tools Duct reads and the changes it can make in them, generated from its source code."
 msgstr ""
 "Die Tools, die Duct liest, und die Änderungen, die es darin vornehmen kann, aus seinem Quellcode generiert."
-
-#. meta twitter:description
-#: integrations/index.html
-msgid ""
-"Thirteen connectors, read-only by default. Every change waits for your Apply."
-msgstr ""
-"Dreizehn Connectors, standardmäßig schreibgeschützt. Jede Änderung wartet auf dein Anwenden."
-
-#: integrations/index.html
-msgid "Thirteen tools. <0>Read as one.</0>"
-msgstr "Dreizehn Tools. <0>Als eines lesen.</0>"
 
 #: integrations/index.html
 msgid "Where are my connector credentials stored?"
@@ -13168,6 +13182,37 @@ msgstr "← Zurück"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← Neu beginnen"
+
+#~ msgid "Reads two datasets"
+#~ msgstr "Liest zwei Datensätze"
+
+#. meta og:title
+#. meta twitter:title
+#~ msgid "Duct integrations: thirteen tools, read as one"
+#~ msgstr "Duct Integrationen: dreizehn Tools, als eines gelesen"
+
+#~ msgid ""
+#~ "Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, GitHub, Stripe and RevenueCat. The four Google tools connect when you sign in with Google; the rest take a key you paste once. HubSpot is next."
+#~ msgstr ""
+#~ "Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, GitHub, Stripe und RevenueCat. Die vier Google-Tools verbinden sich, wenn du dich mit Google anmeldest; der Rest benötigt einen Schlüssel, den du einmal einfügst. HubSpot ist als Nächstes dran."
+
+#~ msgid "Integrations: Google Ads, GA4, Stripe and 10 more | Duct"
+#~ msgstr "Integrationen: Google Ads, GA4, Stripe und 10 weitere | Duct"
+
+#. meta description
+#~ msgid ""
+#~ "The 13 tools Duct reads, from Google Ads and Meta to GA4, Mixpanel and Stripe, what each one can change, and how you connect it. Read-only by default."
+#~ msgstr ""
+#~ "Die 13 Tools, die Duct liest, von Google Ads und Meta bis GA4, Mixpanel und Stripe, was jedes ändern kann und wie du es verbindest. Standardmäßig schreibgeschützt."
+
+#. meta twitter:description
+#~ msgid ""
+#~ "Thirteen connectors, read-only by default. Every change waits for your Apply."
+#~ msgstr ""
+#~ "Dreizehn Connectors, standardmäßig schreibgeschützt. Jede Änderung wartet auf dein Anwenden."
+
+#~ msgid "Thirteen tools. <0>Read as one.</0>"
+#~ msgstr "Dreizehn Tools. <0>Als eines lesen.</0>"
 
 #~ msgid "Download for macOS ↓"
 #~ msgstr "Für macOS herunterladen ↓"
