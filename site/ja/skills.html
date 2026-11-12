@@ -46,7 +46,7 @@
 {"@context":"https://schema.org","@type":"WebPage","inLanguage":"ja","name":"Claude Codeマーケティングスキル：launch-check（Duct提供）","url":"https://getduct.ai/ja/skills","description":"Claude Code、Codex、Cursor向けのオープンソースマーケティングスキル。launch-checkは公開サイトとリポジトリを読み込み、ローンチをスコア化して3つの修正に順位を付けます。","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ja","mainEntity":[{"@type":"Question","name":"対応しているエージェントは？","acceptedAnswer":{"@type":"Answer","text":"オープンskills CLIがインストール可能なすべてのエージェント（Claude Code、Codex、Cursor、OpenCode、Gemini CLI、GitHub Copilot、Windsurf、Zedなど）。このスキルはAgent Skillsフォーマットの1つのSKILL.mdフォルダであるため、そのフォーマットを読み取れるエージェントであればインストーラーなしで使用できます。"}},{"@type":"Question","name":"サイトやコードがDuctに送信されますか？","acceptedAnswer":{"@type":"Answer","text":"いいえ。このスキルは、エージェントが自身のWebおよびシェルツールを使用して従う一連の指示です。経路にDuctのサーバーは存在せず、アカウントもAPIキーもありません。エージェントが読み込んだデータは、エージェントの要求が常に送信される場所、つまり既に使用しているモデルにのみ送信されます。"}},{"@type":"Question","name":"コードは変更されますか？","acceptedAnswer":{"@type":"Answer","text":"許可なしでは行いません。単独で書き出すファイルはレポートであるduct-launch-check.mdのみです。各修正は差分と確認として1つずつ提示されます。コミット、プッシュ、デプロイは一切行わず、.envやキーファイルを開くこともありません。"}},{"@type":"Question","name":"リポジトリを開いておく必要がありますか？","acceptedAnswer":{"@type":"Answer","text":"いいえ、ただしリポジトリがある方が優れています。コードなしでは公開ページのみをチェックし、計測領域の大部分は失敗ではなく未検証として返されます。イベントを送信しないダウンロードのように、ページの監査では提示できない指摘事項は、リポジトリから得られます。"}},{"@type":"Question","name":"SEO監査とはどのように異なりますか？","acceptedAnswer":{"@type":"Answer","text":"SEO監査はHTMLを読み取ります。launch-checkはその背景にあるコードも読み取り、ページが約束している内容とプロダクトの実際の機能を照合します。検索は6つの領域の1つです。キーワードクラスタや競合他社を含む完全なクロールを行うには、Ductの無料SEO監査を実行してください。"}},{"@type":"Question","name":"費用と所要時間は？","acceptedAnswer":{"@type":"Answer","text":"このスキルは無料で、MITライセンスです。お使いのエージェント自身のモデルで実行されるため、チェックにかかるコストはエージェントが10ページとリポジトリの一部を読み取る費用のみです。10ページで停止し、10分以内での完了を目指します。"}},{"@type":"Question","name":"インストーラーは何らかのデータをトラッキングしますか？","acceptedAnswer":{"@type":"Answer","text":"オープンソースであり当社の管轄外であるskills CLIは、skills.shリーダーボード向けにインストール数を匿名でカウントします。無効化するには、実行前にDISABLE_TELEMETRY=1またはDO_NOT_TRACK=1を設定してください。スキル自体は一切データを送信しません。"}},{"@type":"Question","name":"更新または削除を行うにはどうすればよいですか？","acceptedAnswer":{"@type":"Answer","text":"npx skills updateで最新バージョンに更新され、npx skills remove launch-checkで削除されます。インストールは実行したプロジェクト内に行われます。すべてのプロジェクトで使用可能にするには-gを追加してください。CLIにはNode.js 22.20以降が必要です。"}},{"@type":"Question","name":"次に追加されるスキルは？","acceptedAnswer":{"@type":"Answer","text":"要望の多いものです。エージェントに任せたいマーケティング業務をGitHub Discussionsで教えてください。"}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ja","mainEntity":[{"@type":"Question","name":"対応しているエージェントは？","acceptedAnswer":{"@type":"Answer","text":"open skills CLI がインストールするあらゆるエージェント（Claude Code、Codex、Cursor、OpenCode、Gemini CLI、GitHub Copilot、Windsurf、Zed など）。スキルは Agent Skills フォーマットの1つの SKILL.md フォルダであるため、このフォーマットを読み込めるエージェントであればインストーラーなしで使用できます。Claude Code と Codex は、インストールボックスの下にあるコマンドを使用して、Duct の独自カタログからプラグインとしてインストールすることもできます。"}},{"@type":"Question","name":"サイトやコードがDuctに送信されますか？","acceptedAnswer":{"@type":"Answer","text":"いいえ。このスキルは、エージェントが自身のWebおよびシェルツールを使用して従う一連の指示です。経路にDuctのサーバーは存在せず、アカウントもAPIキーもありません。エージェントが読み込んだデータは、エージェントの要求が常に送信される場所、つまり既に使用しているモデルにのみ送信されます。"}},{"@type":"Question","name":"コードは変更されますか？","acceptedAnswer":{"@type":"Answer","text":"許可なしでは行いません。単独で書き出すファイルはレポートであるduct-launch-check.mdのみです。各修正は差分と確認として1つずつ提示されます。コミット、プッシュ、デプロイは一切行わず、.envやキーファイルを開くこともありません。"}},{"@type":"Question","name":"リポジトリを開いておく必要がありますか？","acceptedAnswer":{"@type":"Answer","text":"いいえ、ただしリポジトリがある方が優れています。コードなしでは公開ページのみをチェックし、計測領域の大部分は失敗ではなく未検証として返されます。イベントを送信しないダウンロードのように、ページの監査では提示できない指摘事項は、リポジトリから得られます。"}},{"@type":"Question","name":"SEO監査とはどのように異なりますか？","acceptedAnswer":{"@type":"Answer","text":"SEO監査はHTMLを読み取ります。launch-checkはその背景にあるコードも読み取り、ページが約束している内容とプロダクトの実際の機能を照合します。検索は6つの領域の1つです。キーワードクラスタや競合他社を含む完全なクロールを行うには、Ductの無料SEO監査を実行してください。"}},{"@type":"Question","name":"費用と所要時間は？","acceptedAnswer":{"@type":"Answer","text":"このスキルは無料で、MITライセンスです。お使いのエージェント自身のモデルで実行されるため、チェックにかかるコストはエージェントが10ページとリポジトリの一部を読み取る費用のみです。10ページで停止し、10分以内での完了を目指します。"}},{"@type":"Question","name":"インストーラーは何らかのデータをトラッキングしますか？","acceptedAnswer":{"@type":"Answer","text":"オープンソースであり当社の管轄外であるskills CLIは、skills.shリーダーボード向けにインストール数を匿名でカウントします。無効化するには、実行前にDISABLE_TELEMETRY=1またはDO_NOT_TRACK=1を設定してください。スキル自体は一切データを送信しません。"}},{"@type":"Question","name":"更新または削除を行うにはどうすればよいですか？","acceptedAnswer":{"@type":"Answer","text":"npx skills updateで最新バージョンに更新され、npx skills remove launch-checkで削除されます。インストールは実行したプロジェクト内に行われます。すべてのプロジェクトで使用可能にするには-gを追加してください。CLIにはNode.js 22.20以降が必要です。"}},{"@type":"Question","name":"次に追加されるスキルは？","acceptedAnswer":{"@type":"Answer","text":"要望の多いものです。エージェントに任せたいマーケティング業務をGitHub Discussionsで教えてください。"}}]}
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"ja","itemListElement":[{"@type":"ListItem","position":1,"name":"ホーム","item":"https://getduct.ai/ja/"},{"@type":"ListItem","position":2,"name":"Agent Skills","item":"https://getduct.ai/ja/skills"}]}
@@ -72,6 +72,15 @@
 .copy:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
 .copy .ic { font-size: 14px; }
 .copy.is-done { background: #1a7f37; }
+
+/* The plugin route: the same skill from Duct's own catalogue, for the two agents that have one.
+   Quieter than the main command, because npx skills add already covers both agents. */
+.cmd-alt { width: 100%; max-width: 520px; margin-top: 22px; text-align: left; display: grid; gap: 8px; animation: fadeUp .5s .28s ease both; }
+.cmd-alt .cmd-label { margin-bottom: 0; }
+.code.is-alt { flex-wrap: wrap; gap: 4px 10px; padding: 8px 8px 8px 16px; border-width: 1px; box-shadow: none; }
+.code.is-alt pre { font-size: 13.5px; padding: 0; }
+.code-tag { flex-basis: 100%; font-size: 12px; font-weight: 600; color: var(--navy-3); }
+.code.is-alt .copy { min-height: 40px; padding: 6px 14px; font-size: 13px; }
 
 /* How it works: the shared navy band, each step ending on a small picture of that moment */
 .how .step { display: flex; flex-direction: column; }
@@ -207,6 +216,11 @@
 <div class="cmd">
 <span class="cmd-label">インストール</span>
 <div class="code"><pre>npx skills add 5hirish/duct</pre><button type="button" class="copy" data-copy="hero" aria-label="インストールコマンドをコピー"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>コピー</span></button></div>
+</div>
+<div class="cmd-alt">
+<span class="cmd-label">またはプラグインとして</span>
+<div class="code is-alt"><span class="code-tag">Claude Code</span><pre>claude plugin marketplace add 5hirish/duct &amp;&amp; claude plugin install duct@duct</pre><button type="button" class="copy" data-copy="claude-plugin" aria-label="Claude Code プラグインのコマンドをコピー"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>コピー</span></button></div>
+<div class="code is-alt"><span class="code-tag">Codex</span><pre>codex plugin marketplace add 5hirish/duct &amp;&amp; codex plugin add duct@duct</pre><button type="button" class="copy" data-copy="codex-plugin" aria-label="Codex プラグインのコマンドをコピー"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>コピー</span></button></div>
 </div>
 <p class="sk-after">その後、エージェントに「サイトのローンチ準備はできている？」と尋ねるか、Claude Codeで<code>/launch-check</code>と入力してください。</p>
 </section>
@@ -380,7 +394,7 @@ $ grep -rn "capture(" src/
 <div class="faq-list reveal">
 <details class="faq-item">
 <summary class="faq-q">対応しているエージェントは？</summary>
-<p class="faq-a">オープンskills CLIがインストール可能なすべてのエージェント（Claude Code、Codex、Cursor、OpenCode、Gemini CLI、GitHub Copilot、Windsurf、Zedなど）。このスキルはAgent Skillsフォーマットの1つのSKILL.mdフォルダであるため、そのフォーマットを読み取れるエージェントであればインストーラーなしで使用できます。</p>
+<p class="faq-a">open skills CLI がインストールするあらゆるエージェント（Claude Code、Codex、Cursor、OpenCode、Gemini CLI、GitHub Copilot、Windsurf、Zed など）。スキルは Agent Skills フォーマットの1つの SKILL.md フォルダであるため、このフォーマットを読み込めるエージェントであればインストーラーなしで使用できます。Claude Code と Codex は、インストールボックスの下にあるコマンドを使用して、Duct の独自カタログからプラグインとしてインストールすることもできます。</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">サイトやコードがDuctに送信されますか？</summary>

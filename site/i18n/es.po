@@ -1198,7 +1198,7 @@ msgstr "Elige HTTP, pega la dirección y nómbralo <0>duct</0>:"
 msgid "Claude"
 msgstr "Claude"
 
-#: connect-agent.html
+#: connect-agent.html skills.html
 msgid "Claude Code"
 msgstr "Claude Code"
 
@@ -1213,7 +1213,7 @@ msgstr ""
 msgid "Claude, on claude.ai or Claude Desktop"
 msgstr "Claude, en claude.ai o Claude Desktop"
 
-#: connect-agent.html
+#: connect-agent.html skills.html
 msgid "Codex"
 msgstr "Codex"
 
@@ -9686,9 +9686,9 @@ msgstr "Motores de respuestas"
 
 #: skills.html
 msgid ""
-"Any agent the open skills CLI installs into: Claude Code, Codex, Cursor, OpenCode, Gemini CLI, GitHub Copilot, Windsurf and Zed among them. The skill is one SKILL.md folder in the Agent Skills format, so an agent that reads that format can use it without the installer."
+"Any agent the open skills CLI installs into: Claude Code, Codex, Cursor, OpenCode, Gemini CLI, GitHub Copilot, Windsurf and Zed among them. The skill is one SKILL.md folder in the Agent Skills format, so an agent that reads that format can use it without the installer. Claude Code and Codex can also install it as a plugin from Duct's own catalogue, with the commands under the install box."
 msgstr ""
-"Cualquier agente en el que se instale la CLI de open skills: Claude Code, Codex, Cursor, OpenCode, Gemini CLI, GitHub Copilot, Windsurf y Zed entre ellos. La skill es una carpeta SKILL.md en formato Agent Skills, por lo que un agente que lea ese formato puede usarla sin el instalador."
+"Cualquier agente en el que instale la CLI de open skills: Claude Code, Codex, Cursor, OpenCode, Gemini CLI, GitHub Copilot, Windsurf y Zed, entre ellos. La skill es una carpeta SKILL.md en el formato Agent Skills, por lo que un agente que lea ese formato puede usarla sin el instalador. Claude Code y Codex también pueden instalarla como plugin desde el catálogo propio de Duct, con los comandos debajo del cuadro de instalación."
 
 #: skills.html
 msgid "Apply fix 1? (yes / no / skip all)"
@@ -9719,6 +9719,16 @@ msgstr "Skills de marketing para Claude Code: launch-check, de Duct"
 #: skills.html
 msgid "Connect Duct to the same agent"
 msgstr "Conecta Duct al mismo agente"
+
+#. button aria-label
+#: skills.html
+msgid "Copy the Claude Code plugin command"
+msgstr "Copiar el comando del plugin de Claude Code"
+
+#. button aria-label
+#: skills.html
+msgid "Copy the Codex plugin command"
+msgstr "Copiar el comando del plugin de Codex"
 
 #. button aria-label
 #: skills.html
@@ -9911,6 +9921,10 @@ msgid ""
 "Open-source skills for Claude Code, Codex, Cursor and any agent that reads SKILL.md. The first, launch-check, reads your live site and the code behind it, scores the launch out of 100 and ranks three fixes."
 msgstr ""
 "Habilidades de código abierto para Claude Code, Codex, Cursor y cualquier agente que lea SKILL.md. La primera, launch-check, lee tu sitio publicado y el código detrás de él, califica el lanzamiento sobre 100 y clasifica tres correcciones."
+
+#: skills.html
+msgid "Or as a plugin"
+msgstr "O como plugin"
 
 #: skills.html
 msgid "Post this"
@@ -13192,6 +13206,11 @@ msgstr "← Volver"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← Empezar de nuevo"
+
+#~ msgid ""
+#~ "Any agent the open skills CLI installs into: Claude Code, Codex, Cursor, OpenCode, Gemini CLI, GitHub Copilot, Windsurf and Zed among them. The skill is one SKILL.md folder in the Agent Skills format, so an agent that reads that format can use it without the installer."
+#~ msgstr ""
+#~ "Cualquier agente en el que se instale la CLI de open skills: Claude Code, Codex, Cursor, OpenCode, Gemini CLI, GitHub Copilot, Windsurf y Zed entre ellos. La skill es una carpeta SKILL.md en formato Agent Skills, por lo que un agente que lea ese formato puede usarla sin el instalador."
 
 #~ msgid "Reads two datasets"
 #~ msgstr "Lee dos conjuntos de datos"
