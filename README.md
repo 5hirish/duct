@@ -4,7 +4,7 @@
 
 # Duct
 
-<p align="center"><b>English</b> · <a href="README.zh-CN.md">简体中文</a></p>
+<p align="center"><b>English</b> · <a href="README.es.md">Español</a> · <a href="README.zh-CN.md">简体中文</a></p>
 
 **Open-source AI marketing agent: a growth analyst with every login.**
 
