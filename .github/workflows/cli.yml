@@ -4,8 +4,9 @@ name: CLI Checks
 # so this needs no secret, no network beyond the checkout, and no install step:
 # the package has no dependencies. The matrix is the `engines` floor and the
 # current LTS lines, because `npx getduct` runs on whatever Node a user has.
-# The skill's checklist is in the path filter too: test/catalog.test.js holds
-# the CLI's ids and weights to it, so a checklist edit must run these.
+# The skill and the plugin README are in the path filter too: test/catalog.test.js
+# holds the CLI's ids, weights and version pin to them, so editing either must
+# run these.
 
 on:
   pull_request:
@@ -16,6 +17,7 @@ on:
     paths:
       - 'cli/**'
       - 'skills/launch-check/**'
+      - 'skills/README.md'
       - '.github/workflows/cli.yml'
   push:
     branches:
@@ -23,6 +25,7 @@ on:
     paths:
       - 'cli/**'
       - 'skills/launch-check/**'
+      - 'skills/README.md'
       - '.github/workflows/cli.yml'
   workflow_call:
 

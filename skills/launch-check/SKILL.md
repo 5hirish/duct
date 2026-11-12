@@ -57,10 +57,10 @@ will be mostly UNVERIFIED, then continue.
 checklist with its thresholds, the same way every time, in a few seconds:
 
 ```bash
-npx -y getduct@latest check "$URL" --json > "$TMPDIR/live.json"
+npx -y getduct@0.1.1 check "$URL" --json > "$TMPDIR/live.json"
 ```
 
-The JSON (its shape: `npx -y getduct@latest schema`) holds one entry per check
+The JSON (its shape: `npx -y getduct@0.1.1 schema`) holds one entry per check
 id with a status and evidence, the pages it read in `pages` (title,
 description, canonical, H1, og and twitter tags, analytics, headline and call
 to action), and `observations` for "Everything else". Read it instead of
@@ -218,7 +218,7 @@ judgement of A4, A5, F1 and F4, any regrade), each with its status,
 card:
 
 ```bash
-npx -y getduct@latest card duct-launch-check.json
+npx -y getduct@0.1.1 card duct-launch-check.json
 ```
 
 It validates the file, recomputes the score from the checks, and writes the

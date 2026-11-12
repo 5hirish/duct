@@ -11,7 +11,8 @@ name: CLI Release
 #
 # The very first version was published by hand, because npm can only trust a
 # workflow for a package that already exists. Release after that:
-#   bump cli/package.json, add the CHANGELOG line, merge, then
+#   bump cli/package.json and the getduct@ pins in skills/ (catalog.test.js
+#   fails until they match), add the CHANGELOG line, merge, then
 #   git tag cli-v0.1.1 && git push origin cli-v0.1.1
 
 on:
