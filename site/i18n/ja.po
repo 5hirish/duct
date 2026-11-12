@@ -1166,7 +1166,7 @@ msgstr "HTTPを選択し、アドレスを貼り付け、<0>duct</0>と名付け
 msgid "Claude"
 msgstr "Claude"
 
-#: connect-agent.html
+#: connect-agent.html skills.html
 msgid "Claude Code"
 msgstr "Claude Code"
 
@@ -1181,7 +1181,7 @@ msgstr ""
 msgid "Claude, on claude.ai or Claude Desktop"
 msgstr "Claude (claude.aiまたはClaude Desktop)"
 
-#: connect-agent.html
+#: connect-agent.html skills.html
 msgid "Codex"
 msgstr "Codex"
 
@@ -9344,9 +9344,9 @@ msgstr "回答エンジン"
 
 #: skills.html
 msgid ""
-"Any agent the open skills CLI installs into: Claude Code, Codex, Cursor, OpenCode, Gemini CLI, GitHub Copilot, Windsurf and Zed among them. The skill is one SKILL.md folder in the Agent Skills format, so an agent that reads that format can use it without the installer."
+"Any agent the open skills CLI installs into: Claude Code, Codex, Cursor, OpenCode, Gemini CLI, GitHub Copilot, Windsurf and Zed among them. The skill is one SKILL.md folder in the Agent Skills format, so an agent that reads that format can use it without the installer. Claude Code and Codex can also install it as a plugin from Duct's own catalogue, with the commands under the install box."
 msgstr ""
-"オープンskills CLIがインストール可能なすべてのエージェント（Claude Code、Codex、Cursor、OpenCode、Gemini CLI、GitHub Copilot、Windsurf、Zedなど）。このスキルはAgent Skillsフォーマットの1つのSKILL.mdフォルダであるため、そのフォーマットを読み取れるエージェントであればインストーラーなしで使用できます。"
+"open skills CLI がインストールするあらゆるエージェント（Claude Code、Codex、Cursor、OpenCode、Gemini CLI、GitHub Copilot、Windsurf、Zed など）。スキルは Agent Skills フォーマットの1つの SKILL.md フォルダであるため、このフォーマットを読み込めるエージェントであればインストーラーなしで使用できます。Claude Code と Codex は、インストールボックスの下にあるコマンドを使用して、Duct の独自カタログからプラグインとしてインストールすることもできます。"
 
 #: skills.html
 msgid "Apply fix 1? (yes / no / skip all)"
@@ -9377,6 +9377,16 @@ msgstr "Claude Codeマーケティングスキル：launch-check（Duct提供）
 #: skills.html
 msgid "Connect Duct to the same agent"
 msgstr "Ductを同じエージェントに接続する"
+
+#. button aria-label
+#: skills.html
+msgid "Copy the Claude Code plugin command"
+msgstr "Claude Code プラグインのコマンドをコピー"
+
+#. button aria-label
+#: skills.html
+msgid "Copy the Codex plugin command"
+msgstr "Codex プラグインのコマンドをコピー"
 
 #. button aria-label
 #: skills.html
@@ -9565,6 +9575,10 @@ msgid ""
 "Open-source skills for Claude Code, Codex, Cursor and any agent that reads SKILL.md. The first, launch-check, reads your live site and the code behind it, scores the launch out of 100 and ranks three fixes."
 msgstr ""
 "Claude Code、Codex、Cursor、およびSKILL.mdを読み込むあらゆるエージェント向けのオープンソーススキル。最初のスキルであるlaunch-checkは、公開サイトとその背景にあるコードを読み込み、ローンチを100点満点でスコア化し、3つの修正に順位を付けます。"
+
+#: skills.html
+msgid "Or as a plugin"
+msgstr "またはプラグインとして"
 
 #: skills.html
 msgid "Post this"
@@ -12667,6 +12681,11 @@ msgstr "← 戻る"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← 最初からやり直す"
+
+#~ msgid ""
+#~ "Any agent the open skills CLI installs into: Claude Code, Codex, Cursor, OpenCode, Gemini CLI, GitHub Copilot, Windsurf and Zed among them. The skill is one SKILL.md folder in the Agent Skills format, so an agent that reads that format can use it without the installer."
+#~ msgstr ""
+#~ "オープンskills CLIがインストール可能なすべてのエージェント（Claude Code、Codex、Cursor、OpenCode、Gemini CLI、GitHub Copilot、Windsurf、Zedなど）。このスキルはAgent Skillsフォーマットの1つのSKILL.mdフォルダであるため、そのフォーマットを読み取れるエージェントであればインストーラーなしで使用できます。"
 
 #~ msgid "Reads two datasets"
 #~ msgstr "2つのデータセットを読み取ります"

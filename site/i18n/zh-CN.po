@@ -1150,7 +1150,7 @@ msgstr "选择 HTTP，粘贴地址并将其命名为 <0>duct</0>："
 msgid "Claude"
 msgstr "Claude"
 
-#: connect-agent.html
+#: connect-agent.html skills.html
 msgid "Claude Code"
 msgstr "Claude Code"
 
@@ -1165,7 +1165,7 @@ msgstr ""
 msgid "Claude, on claude.ai or Claude Desktop"
 msgstr "Claude，在 claude.ai 或 Claude Desktop 上"
 
-#: connect-agent.html
+#: connect-agent.html skills.html
 msgid "Codex"
 msgstr "Codex"
 
@@ -9139,9 +9139,9 @@ msgstr "答案引擎"
 
 #: skills.html
 msgid ""
-"Any agent the open skills CLI installs into: Claude Code, Codex, Cursor, OpenCode, Gemini CLI, GitHub Copilot, Windsurf and Zed among them. The skill is one SKILL.md folder in the Agent Skills format, so an agent that reads that format can use it without the installer."
+"Any agent the open skills CLI installs into: Claude Code, Codex, Cursor, OpenCode, Gemini CLI, GitHub Copilot, Windsurf and Zed among them. The skill is one SKILL.md folder in the Agent Skills format, so an agent that reads that format can use it without the installer. Claude Code and Codex can also install it as a plugin from Duct's own catalogue, with the commands under the install box."
 msgstr ""
-"支持开源 skills CLI 可安装的任何智能体：包括 Claude Code、Codex、Cursor、OpenCode、Gemini CLI、GitHub Copilot、Windsurf 和 Zed。该技能是符合 Agent Skills 格式的单个 SKILL.md 文件夹，因此支持该格式的智能体无需安装器即可直接使用。"
+"开源 skills CLI 支持安装到的任何智能体，包括 Claude Code、Codex、Cursor、OpenCode、Gemini CLI、GitHub Copilot、Windsurf 和 Zed 等。该技能是一个 Agent Skills 格式的 SKILL.md 文件夹，因此读取该格式的智能体无需安装程序即可使用。Claude Code 和 Codex 也可以通过安装框下方的命令，从 Duct 的自有目录将其作为插件安装。"
 
 #: skills.html
 msgid "Apply fix 1? (yes / no / skip all)"
@@ -9172,6 +9172,16 @@ msgstr "Claude Code 营销技能：launch-check，由 Duct 出品"
 #: skills.html
 msgid "Connect Duct to the same agent"
 msgstr "将 Duct 连接到同一个智能体"
+
+#. button aria-label
+#: skills.html
+msgid "Copy the Claude Code plugin command"
+msgstr "复制 Claude Code 插件命令"
+
+#. button aria-label
+#: skills.html
+msgid "Copy the Codex plugin command"
+msgstr "复制 Codex 插件命令"
 
 #. button aria-label
 #: skills.html
@@ -9357,6 +9367,10 @@ msgid ""
 "Open-source skills for Claude Code, Codex, Cursor and any agent that reads SKILL.md. The first, launch-check, reads your live site and the code behind it, scores the launch out of 100 and ranks three fixes."
 msgstr ""
 "适用于 Claude Code、Codex、Cursor 以及任何支持 SKILL.md 智能体的开源技能。首个技能 launch-check 读取你的上线网站及其背后的代码，以 100 分制对发布打分，并对三项修复进行排序。"
+
+#: skills.html
+msgid "Or as a plugin"
+msgstr "或作为插件"
 
 #: skills.html
 msgid "Post this"
@@ -12386,6 +12400,11 @@ msgstr "← 返回"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← 重新开始"
+
+#~ msgid ""
+#~ "Any agent the open skills CLI installs into: Claude Code, Codex, Cursor, OpenCode, Gemini CLI, GitHub Copilot, Windsurf and Zed among them. The skill is one SKILL.md folder in the Agent Skills format, so an agent that reads that format can use it without the installer."
+#~ msgstr ""
+#~ "支持开源 skills CLI 可安装的任何智能体：包括 Claude Code、Codex、Cursor、OpenCode、Gemini CLI、GitHub Copilot、Windsurf 和 Zed。该技能是符合 Agent Skills 格式的单个 SKILL.md 文件夹，因此支持该格式的智能体无需安装器即可直接使用。"
 
 #~ msgid "Reads two datasets"
 #~ msgstr "读取两个数据集"

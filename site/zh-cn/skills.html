@@ -46,7 +46,7 @@
 {"@context":"https://schema.org","@type":"WebPage","inLanguage":"zh-CN","name":"Claude Code 营销技能：launch-check，由 Duct 出品","url":"https://getduct.ai/zh-cn/skills","description":"适用于 Claude Code、Codex 和 Cursor 的开源营销技能。launch-check 读取你的上线网站与代码仓库，为发布评分并对三项修复进行优先级排序。","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"zh-CN","mainEntity":[{"@type":"Question","name":"支持哪些智能体？","acceptedAnswer":{"@type":"Answer","text":"支持开源 skills CLI 可安装的任何智能体：包括 Claude Code、Codex、Cursor、OpenCode、Gemini CLI、GitHub Copilot、Windsurf 和 Zed。该技能是符合 Agent Skills 格式的单个 SKILL.md 文件夹，因此支持该格式的智能体无需安装器即可直接使用。"}},{"@type":"Question","name":"它会把我的网站或代码发送给 Duct 吗？","acceptedAnswer":{"@type":"Answer","text":"不会。此技能是一组由你的智能体使用其自带网络和 Shell 工具执行的指令。流程中没有 Duct 服务器，无需账号，也没有 API 密钥。你的智能体读取的内容只会发送到它一贯请求的目标：你已经在使用的模型。"}},{"@type":"Question","name":"它会修改我的代码吗？","acceptedAnswer":{"@type":"Answer","text":"未经确认不会更改。它自行写入的唯一文件是它的报告 duct-launch-check.md。每项修复都会依次以 Diff 和询问的形式呈现。它绝不会提交、推送或部署，也绝不会打开 .env 或密钥文件。"}},{"@type":"Question","name":"我需要打开代码仓库吗？","acceptedAnswer":{"@type":"Answer","text":"不需要，但有代码仓库效果更好。没有代码时，它仅检查上线页面，大多数衡量领域会返回未验证而非失败。页面审计无法发现的问题（例如下载未发送事件）均来自于代码仓库。"}},{"@type":"Question","name":"它与 SEO 审计有何不同？","acceptedAnswer":{"@type":"Answer","text":"SEO 审计只读取 HTML。launch-check 还会读取背后的代码，并对照产品实际功能核对页面承诺。搜索只是六个维度之一。如需包含关键词聚类和竞品分析的完整抓取，请运行 Duct 的免费 SEO 审计。"}},{"@type":"Question","name":"费用是多少，耗时多久？","acceptedAnswer":{"@type":"Answer","text":"该技能免费且采用 MIT 许可证。它在你智能体自身的模型上运行，因此一次检查的成本仅取决于你的智能体阅读 10 个页面和部分代码仓库所消耗的费用。它最多检查 10 个页面，目标是在 10 分钟内完成。"}},{"@type":"Question","name":"安装器会追踪任何数据吗？","acceptedAnswer":{"@type":"Answer","text":"skills CLI 是开源的且不归我们所有，它会为 skills.sh 排行榜匿名统计安装量。在运行前设置 DISABLE_TELEMETRY=1 或 DO_NOT_TRACK=1 即可将其关闭。技能本身不会向任何地方发送数据。"}},{"@type":"Question","name":"如何更新或移除它？","acceptedAnswer":{"@type":"Answer","text":"运行 npx skills update 可更新至最新版本，运行 npx skills remove launch-check 可将其移除。安装会作用于你当前运行它的项目；添加 -g 可使其在所有项目中可用。该 CLI 需要 Node.js 22.20 或更高版本。"}},{"@type":"Question","name":"接下来会推出哪些技能？","acceptedAnswer":{"@type":"Answer","text":"大家需要的那些。在 GitHub Discussions 中告诉我们你想交给智能体的营销任务。"}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"zh-CN","mainEntity":[{"@type":"Question","name":"支持哪些智能体？","acceptedAnswer":{"@type":"Answer","text":"开源 skills CLI 支持安装到的任何智能体，包括 Claude Code、Codex、Cursor、OpenCode、Gemini CLI、GitHub Copilot、Windsurf 和 Zed 等。该技能是一个 Agent Skills 格式的 SKILL.md 文件夹，因此读取该格式的智能体无需安装程序即可使用。Claude Code 和 Codex 也可以通过安装框下方的命令，从 Duct 的自有目录将其作为插件安装。"}},{"@type":"Question","name":"它会把我的网站或代码发送给 Duct 吗？","acceptedAnswer":{"@type":"Answer","text":"不会。此技能是一组由你的智能体使用其自带网络和 Shell 工具执行的指令。流程中没有 Duct 服务器，无需账号，也没有 API 密钥。你的智能体读取的内容只会发送到它一贯请求的目标：你已经在使用的模型。"}},{"@type":"Question","name":"它会修改我的代码吗？","acceptedAnswer":{"@type":"Answer","text":"未经确认不会更改。它自行写入的唯一文件是它的报告 duct-launch-check.md。每项修复都会依次以 Diff 和询问的形式呈现。它绝不会提交、推送或部署，也绝不会打开 .env 或密钥文件。"}},{"@type":"Question","name":"我需要打开代码仓库吗？","acceptedAnswer":{"@type":"Answer","text":"不需要，但有代码仓库效果更好。没有代码时，它仅检查上线页面，大多数衡量领域会返回未验证而非失败。页面审计无法发现的问题（例如下载未发送事件）均来自于代码仓库。"}},{"@type":"Question","name":"它与 SEO 审计有何不同？","acceptedAnswer":{"@type":"Answer","text":"SEO 审计只读取 HTML。launch-check 还会读取背后的代码，并对照产品实际功能核对页面承诺。搜索只是六个维度之一。如需包含关键词聚类和竞品分析的完整抓取，请运行 Duct 的免费 SEO 审计。"}},{"@type":"Question","name":"费用是多少，耗时多久？","acceptedAnswer":{"@type":"Answer","text":"该技能免费且采用 MIT 许可证。它在你智能体自身的模型上运行，因此一次检查的成本仅取决于你的智能体阅读 10 个页面和部分代码仓库所消耗的费用。它最多检查 10 个页面，目标是在 10 分钟内完成。"}},{"@type":"Question","name":"安装器会追踪任何数据吗？","acceptedAnswer":{"@type":"Answer","text":"skills CLI 是开源的且不归我们所有，它会为 skills.sh 排行榜匿名统计安装量。在运行前设置 DISABLE_TELEMETRY=1 或 DO_NOT_TRACK=1 即可将其关闭。技能本身不会向任何地方发送数据。"}},{"@type":"Question","name":"如何更新或移除它？","acceptedAnswer":{"@type":"Answer","text":"运行 npx skills update 可更新至最新版本，运行 npx skills remove launch-check 可将其移除。安装会作用于你当前运行它的项目；添加 -g 可使其在所有项目中可用。该 CLI 需要 Node.js 22.20 或更高版本。"}},{"@type":"Question","name":"接下来会推出哪些技能？","acceptedAnswer":{"@type":"Answer","text":"大家需要的那些。在 GitHub Discussions 中告诉我们你想交给智能体的营销任务。"}}]}
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"zh-CN","itemListElement":[{"@type":"ListItem","position":1,"name":"主页","item":"https://getduct.ai/zh-cn/"},{"@type":"ListItem","position":2,"name":"智能体技能","item":"https://getduct.ai/zh-cn/skills"}]}
@@ -72,6 +72,15 @@
 .copy:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
 .copy .ic { font-size: 14px; }
 .copy.is-done { background: #1a7f37; }
+
+/* The plugin route: the same skill from Duct's own catalogue, for the two agents that have one.
+   Quieter than the main command, because npx skills add already covers both agents. */
+.cmd-alt { width: 100%; max-width: 520px; margin-top: 22px; text-align: left; display: grid; gap: 8px; animation: fadeUp .5s .28s ease both; }
+.cmd-alt .cmd-label { margin-bottom: 0; }
+.code.is-alt { flex-wrap: wrap; gap: 4px 10px; padding: 8px 8px 8px 16px; border-width: 1px; box-shadow: none; }
+.code.is-alt pre { font-size: 13.5px; padding: 0; }
+.code-tag { flex-basis: 100%; font-size: 12px; font-weight: 600; color: var(--navy-3); }
+.code.is-alt .copy { min-height: 40px; padding: 6px 14px; font-size: 13px; }
 
 /* How it works: the shared navy band, each step ending on a small picture of that moment */
 .how .step { display: flex; flex-direction: column; }
@@ -207,6 +216,11 @@
 <div class="cmd">
 <span class="cmd-label">安装</span>
 <div class="code"><pre>npx skills add 5hirish/duct</pre><button type="button" class="copy" data-copy="hero" aria-label="复制安装命令"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div>
+</div>
+<div class="cmd-alt">
+<span class="cmd-label">或作为插件</span>
+<div class="code is-alt"><span class="code-tag">Claude Code</span><pre>claude plugin marketplace add 5hirish/duct &amp;&amp; claude plugin install duct@duct</pre><button type="button" class="copy" data-copy="claude-plugin" aria-label="复制 Claude Code 插件命令"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div>
+<div class="code is-alt"><span class="code-tag">Codex</span><pre>codex plugin marketplace add 5hirish/duct &amp;&amp; codex plugin add duct@duct</pre><button type="button" class="copy" data-copy="codex-plugin" aria-label="复制 Codex 插件命令"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div>
 </div>
 <p class="sk-after">然后向你的智能体提问“我的网站准备好上线了吗？”，或在 Claude Code 中输入 <code>/launch-check</code>。</p>
 </section>
@@ -380,7 +394,7 @@ $ grep -rn "capture(" src/
 <div class="faq-list reveal">
 <details class="faq-item">
 <summary class="faq-q">支持哪些智能体？</summary>
-<p class="faq-a">支持开源 skills CLI 可安装的任何智能体：包括 Claude Code、Codex、Cursor、OpenCode、Gemini CLI、GitHub Copilot、Windsurf 和 Zed。该技能是符合 Agent Skills 格式的单个 SKILL.md 文件夹，因此支持该格式的智能体无需安装器即可直接使用。</p>
+<p class="faq-a">开源 skills CLI 支持安装到的任何智能体，包括 Claude Code、Codex、Cursor、OpenCode、Gemini CLI、GitHub Copilot、Windsurf 和 Zed 等。该技能是一个 Agent Skills 格式的 SKILL.md 文件夹，因此读取该格式的智能体无需安装程序即可使用。Claude Code 和 Codex 也可以通过安装框下方的命令，从 Duct 的自有目录将其作为插件安装。</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">它会把我的网站或代码发送给 Duct 吗？</summary>
