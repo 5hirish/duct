@@ -4,7 +4,7 @@
 
 # Duct
 
-<p align="center"><a href="README.md">English</a> · <b>简体中文</b></p>
+<p align="center"><a href="README.md">English</a> · <a href="README.es.md">Español</a> · <b>简体中文</b></p>
 
 > 本文是机器翻译的初稿，尚待母语者校对。读到别扭的地方？欢迎直接提 PR，或在 [#537](https://github.com/5hirish/duct/issues/537) 里告诉我们：这是一个很好的第一个贡献。
 
