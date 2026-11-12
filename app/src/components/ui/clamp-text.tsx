@@ -38,7 +38,7 @@ export function clampClass(lines: ClampLines): string {
  * ClampText can't wrap itself — most often a `<Link>`/`<button>` that is
  * already the right tooltip trigger and already the row's one tab stop.
  * Pair with `Tooltip` + `TooltipTrigger asChild` around that element and
- * `clampClass(n)` on the clamped child. See `DeskCards.jsx`'s `Item`.
+ * `clampClass(n)` on the clamped child. See `DeskQueue.jsx`'s `Row`.
  */
 export function ClampTooltipContent({
   text,

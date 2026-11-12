@@ -265,3 +265,61 @@ async def test_a_resume_records_its_row_but_draws_no_notice():
     await announce_context(Recorder(), emit, {"resume": True, "blocks": {"resume_primer": "…"}})
     assert len(recorded) == 1
     assert events == []
+
+
+@pytest.mark.asyncio
+async def test_a_proposed_plan_is_a_success_not_a_failure():
+    # submit_plan answers "proposed" since plans became proposals; the row
+    # painted red for a tool that had done exactly what it was asked.
+    body = json.dumps({"status": "proposed", "plan_id": "", "days": 23, "kept_days": []})
+    events, _ = await run_call("submit_plan", {"title": "November"}, body)
+
+    assert events[-1]["kind"] == ActivityKind.ACTION
+    assert events[-1]["status"] == StepStatus.SUCCESS
+    assert events[-1]["meta"]["status"] == "proposed"
+
+
+@pytest.mark.asyncio
+async def test_opening_a_saved_post_is_named_by_its_topic_and_not_a_failure():
+    # fetch_post returns the post with its own ``status`` ("draft"); that is
+    # the post's state, not the call's verdict, and the row said the id.
+    post_id = "a9997d11-0197-4a71-ad09-b1f8cb4afbaa"
+    body = json.dumps({"post_id": post_id, "status": "draft", "topic": "Why 80% guess their face shape wrong", "slides": []})
+    events, _ = await run_call("fetch_post", {"post_id": post_id}, body)
+
+    assert events[0]["title"] == ""  # the id names nothing to the person
+    assert events[-1]["status"] == StepStatus.SUCCESS
+    assert events[-1]["title"] == "Why 80% guess their face shape wrong"
+
+
+@pytest.mark.asyncio
+async def test_a_tiktok_search_is_named_by_its_hashtags_and_a_skip_stays_quiet():
+    args = {"reason": "r", "hashtags": ["#glassskin", "skincareroutine"]}
+    found = json.dumps({"status": "ok", "count": 2, "posts": [{}, {}]})
+    events, _ = await run_call("discover_tiktok", args, found)
+
+    assert events[-1]["kind"] == ActivityKind.CONTEXT
+    assert events[-1]["status"] == StepStatus.SUCCESS
+    assert events[-1]["title"] == "#glassskin #skincareroutine"
+    assert events[-1]["meta"] == {"count": 2}
+
+    # The person said no on the approval card; the row does not say it back.
+    skipped = json.dumps({"status": "skipped", "message": "The person did not approve this search."})
+    events, _ = await run_call("discover_tiktok", args, skipped)
+
+    assert events[-1]["error"] == ""
+    assert events[-1]["reason"] == "skipped"
+
+
+@pytest.mark.asyncio
+async def test_a_publish_the_person_said_no_to_is_their_answer_not_published():
+    # A "skipped" status is neither ok nor a failure to _ok, so the harness's
+    # flag decided it and the row said "Published the post" for a post that
+    # never went out.
+    body = json.dumps({"status": "skipped", "post_id": "p1", "topic": "Morning ritual", "message": "for the model"})
+    events, _ = await run_call("publish_post", {"post_id": "p1"}, body)
+
+    assert events[-1]["kind"] == ActivityKind.ACTION
+    assert events[-1]["reason"] == "skipped"
+    assert events[-1]["error"] == ""
+    assert events[-1]["title"] == "Morning ritual"

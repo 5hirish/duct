@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>UTM 构建器——Duct 免费工具</title>
+<link rel="canonical" href="https://getduct.ai/zh-cn/tools/utm-builder"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/tools/utm-builder"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/tools/utm-builder"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/tools/utm-builder"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/tools/utm-builder"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/tools/utm-builder"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/tools/utm-builder"/>
+<link rel="alternate" hreflang="zh-CN" href="https://getduct.ai/zh-cn/tools/utm-builder"/>
+<meta property="og:locale" content="zh_CN"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="免费 UTM 构建器，带实时 URL 预览和 GA4 合规性验证。在几秒内构建并复制 UTM 广告系列链接。无需注册。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/zh-cn/tools/utm-builder"/>
+<meta property="og:title" content="UTM 构建器——Duct 免费工具"/>
+<meta property="og:description" content="构建 UTM 链接，带实时预览和 GA4 合规性验证。免费，无需注册。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/tools-utm-builder.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="UTM 构建器——Duct 免费工具"/>
+<meta name="twitter:description" content="免费 UTM 构建器，带实时 URL 预览和 GA4 合规性验证。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/tools-utm-builder.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookie，坦白说","We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold.":"我们使用 PostHog 来了解哪些页面促成了注册，以及 Duct 在何处阻碍了你，包括隐藏你输入的所有内容的访问回放。拒绝会关闭 PostHog，Duct 仍能正常运行。Google Analytics 也会统计访问量并设置自己的 Cookie，无论你选择什么。我们不会出售任何数据。","Privacy Policy":"隐私政策","Decline":"拒绝","Accept":"接受","{n} stars on GitHub":"{n} GitHub 星","UTM Builder":"UTM 构建器","SaaS Metrics Benchmark Calculator":"SaaS 指标基准计算器","Weekly Marketing Brief Generator":"每周营销简报生成器","CAC / LTV Calculator":"CAC / LTV 计算器","MRR Growth Rate Calculator":"MRR 增长率计算器","Engagement Rate Calculator":"互动率计算器","CTR Calculator":"CTR 计算器","CPM Calculator":"CPM 计算器","CPC Calculator":"CPC 计算器","CPA Calculator":"CPA 计算器","Marketing ROI Calculator":"营销 ROI 计算器","ROAS Calculator":"ROAS 计算器","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Menu":"菜单","Free Tools":"免费工具","Solutions":"解决方案","Download Duct ↓":"下载 Duct ↓","Language":"语言","Enlarged screenshot":"放大后的截图","Close":"关闭","Fit to screen":"适应屏幕","Zoom in":"放大","Enlarge":"放大","Universal · Apple silicon and Intel":"通用 · Apple 芯片和 Intel","Windows 10 and later":"Windows 10 及更高版本","Runs on any distribution":"可在任何发行版上运行","Debian and Ubuntu":"Debian 和 Ubuntu","Download ↓":"下载 ↓","Download for {label} ↓":"下载适用于 {label} ↓","Example numbers. Change any field and calculate again for yours.":"示例数字。修改任意字段，重新计算你的结果。"};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","inLanguage":"zh-CN","name":"UTM 构建器","url":"https://getduct.ai/zh-cn/tools/utm-builder","description":"免费 UTM 构建器，带实时 URL 预览和 GA4 合规性验证。即时构建并复制 UTM 广告系列链接。","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Organization","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<style>
+  .skip-link { position:absolute; top:-100%; left:16px; z-index:300; padding:10px 20px; background:var(--navy); color:#fff; font-size:14px; font-weight:500; border-radius:var(--r); text-decoration:none; transition:top .15s; }
+  .skip-link:focus { top:16px; }
+  :root { --orange:#2563EB; --orange-h:#1D4ED8; }
+  .btn-orange:hover { box-shadow:0 8px 24px rgba(37,99,235,.28); }
+
+  .tool-hero { padding:80px 24px 48px; text-align:center; max-width:760px; margin:0 auto; }
+  .tool-hero h1 { font-family:var(--serif); font-size:clamp(32px,5vw,52px); color:var(--navy); margin:16px 0; line-height:1.15; }
+  .tool-hero h1 em { color:var(--orange); font-style:italic; }
+  .tool-hero p { font-size:17px; color:var(--navy-3); font-weight:300; line-height:1.6; margin:0; }
+
+  .tool-wrap { max-width:960px; margin:0 auto 80px; padding:0 24px; }
+  .tool-card { background:var(--white); border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden; box-shadow:0 4px 32px rgba(0,0,0,.06); }
+
+  .tool-inputs { padding:32px 40px; display:grid; grid-template-columns:1fr 1fr; gap:20px 32px; }
+  @media (max-width:640px) { .tool-inputs { grid-template-columns:1fr; padding:24px; } }
+  .field { display:flex; flex-direction:column; gap:6px; }
+  .field label { font-size:13px; font-weight:500; color:var(--navy); }
+  .field .field-hint { font-size:11px; color:var(--navy-3); margin-top:-2px; }
+  .field-row { display:flex; align-items:center; gap:8px; }
+  .field input { flex:1; padding:11px 16px; border:1.5px solid var(--border); border-radius:var(--r); font-size:15px; font-family:var(--sans); color:var(--navy); outline:none; transition:border-color .15s; }
+  .field input:focus { border-color:var(--orange); }
+  .field input.inp-valid { border-color:#22c55e; }
+  .field input.inp-warn { border-color:#f59e0b; }
+  .field input.inp-error { border-color:#ef4444; }
+  .field-badge { flex-shrink:0; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; visibility:hidden; }
+  .field-badge.b-show { visibility:visible; }
+  .field-badge.b-valid { background:#dcfce7; color:#15803d; }
+  .field-badge.b-warn { background:#fef3c7; color:#92400e; }
+  .field-badge.b-error { background:#fee2e2; color:#991b1b; }
+  .field-msg { font-size:11px; margin-top:2px; min-height:14px; }
+  .field-msg.m-warn { color:#92400e; }
+  .field-msg.m-error { color:#991b1b; }
+  .field-msg.m-valid { color:#15803d; }
+  .field-full { grid-column:1/-1; }
+
+  .preview-wrap { padding:0 40px 32px; }
+  @media (max-width:640px) { .preview-wrap { padding:0 24px 24px; } }
+  .preview-label { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:var(--navy-3); margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .preview-box { background:#f8fafc; border:1.5px solid var(--border); border-radius:var(--r); padding:14px 16px; font-size:13px; font-family:monospace; color:var(--navy); word-break:break-all; line-height:1.6; min-height:48px; }
+  .preview-empty { color:var(--navy-3); font-family:var(--sans); font-style:italic; font-size:13px; }
+  .preview-url-base { color:var(--navy-3); }
+  .preview-url-params { color:var(--orange); }
+
+  .copy-row { padding:0 40px 32px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  @media (max-width:640px) { .copy-row { padding:0 24px 24px; } }
+  .copy-confirm { font-size:12px; color:#15803d; font-weight:500; opacity:0; transition:opacity .3s; }
+  .copy-confirm.show { opacity:1; }
+
+  .recent-wrap { border-top:1px solid var(--border); padding:20px 40px; }
+  @media (max-width:640px) { .recent-wrap { padding:16px 24px; } }
+  .recent-label { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:var(--navy-3); margin-bottom:10px; }
+  .recent-list { display:flex; flex-wrap:wrap; gap:8px; }
+  .recent-chip { font-size:12px; color:var(--navy-3); background:var(--off); border:1px solid var(--border); border-radius:100px; padding:4px 12px; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:260px; transition:border-color .15s, color .15s; }
+  .recent-chip:hover { border-color:var(--orange); color:var(--navy); }
+  .recent-empty { font-size:12px; color:var(--navy-3); font-style:italic; }
+
+  .insight-panel { margin:0 40px 32px; background:#eff6ff; border:1px solid rgba(37,99,235,.18); border-left:3px solid #2563EB; border-radius:var(--r); padding:16px 20px; display:none; }
+  @media (max-width:640px) { .insight-panel { margin:0 24px 24px; } }
+  .insight-panel.show { display:block; }
+  .insight-panel-label { font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:#2563EB; margin-bottom:8px; }
+  .insight-panel p { font-size:13px; color:var(--navy-3); line-height:1.6; margin:0; }
+
+  .faq-section { border-top:1px solid var(--border); padding:32px 40px; }
+  @media (max-width:640px) { .faq-section { padding:24px; } }
+  .faq-title { font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:var(--navy-3); margin:0 0 16px; }
+  .faq-item { border-bottom:1px solid var(--border); }
+  .faq-item:last-child { border-bottom:none; }
+  .faq-q { width:100%; background:none; border:none; padding:14px 0; font-size:14px; font-weight:500; color:var(--navy); text-align:left; cursor:pointer; font-family:var(--sans); }
+  .faq-q:hover { color:var(--orange); }
+  .faq-a { display:none; padding:0 0 16px; font-size:14px; color:var(--navy-3); line-height:1.7; }
+  .faq-item.open .faq-a { display:block; }
+  .faq-a-code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-size:12px; color:var(--navy); font-family:monospace; }
+
+  .tool-cta {
+    margin: 28px 40px 0;
+    background: var(--navy);
+    border-radius: var(--r);
+    padding: 28px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
+  .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
+  @media (max-width: 640px) {
+    .tool-cta { margin: 24px 24px 0; padding: 22px 20px; }
+  }
+
+
+  .about-section { max-width: 720px; margin: 0 auto 80px; padding: 0 24px; }
+  .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
+  .about-section h2 em { color: var(--orange); font-style: italic; }
+  .about-section p, .about-section li { font-size: 15px; color: var(--navy-3); line-height: 1.75; margin-bottom: 12px; }
+  .about-section ul { padding-left: 20px; }
+  .about-section li { margin-bottom: 6px; }
+  .about-section strong { color: var(--navy); }
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"zh-CN","itemListElement":[{"@type":"ListItem","position":1,"name":"主页","item":"https://getduct.ai/zh-cn/"},{"@type":"ListItem","position":2,"name":"免费工具","item":"https://getduct.ai/zh-cn/tools/"},{"@type":"ListItem","position":3,"name":"UTM 构建器","item":"https://getduct.ai/zh-cn/tools/utm-builder"}]}
+</script>
+</head>
+<body>
+<!-- EXPERIMENT: UTM Builder — differentiate from DashThis with live preview + GA4 validation -->
+<a href="#main-content" class="skip-link">跳到内容</a>
+<div data-duct-partial="/zh-cn/partials/nav-home.html"></div>
+<main id="main-content">
+
+<div class="tool-hero">
+  <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> 免费工具 · 无需注册</div>
+  <h1>UTM 构建器 <em>带实时预览</em></h1>
+  <p>你的 GA4 广告系列数据取决于你的 UTM 链接的规范程度。第一次就正确构建它们——实时验证、即时预览，无需电子表格。</p>
+</div>
+
+<div class="tool-wrap">
+  <div class="tool-card" role="region" aria-label="UTM 构建器">
+
+      <div class="tool-inputs">
+
+        <div class="field field-full">
+          <label for="inp-url">网站 URL <span style="color:var(--navy-3);font-weight:400">（必填）</span></label>
+          <span class="field-hint">你将流量发送到的页面——请包含 https://</span>
+          <div class="field-row">
+            <input type="url" id="inp-url" placeholder="https://yoursite.com/landing-page" autocomplete="off" spellcheck="false"/>
+            <span class="field-badge" id="badge-url" aria-hidden="true"></span>
+          </div>
+          <span class="field-msg" id="msg-url"></span>
+        </div>
+
+        <div class="field">
+          <label for="inp-source">广告系列来源 <span style="color:var(--navy-3);font-weight:400">（必填）</span></label>
+          <span class="field-hint">例如 google, newsletter, twitter</span>
+          <div class="field-row">
+            <input type="text" id="inp-source" placeholder="例如 google" autocomplete="off" spellcheck="false"/>
+            <span class="field-badge" id="badge-source" aria-hidden="true"></span>
+          </div>
+          <span class="field-msg" id="msg-source"></span>
+        </div>
+
+        <div class="field">
+          <label for="inp-medium">广告系列媒介 <span style="color:var(--navy-3);font-weight:400">（必填）</span></label>
+          <span class="field-hint">例如 cpc, email, social, organic</span>
+          <div class="field-row">
+            <input type="text" id="inp-medium" placeholder="例如 cpc" autocomplete="off" spellcheck="false"/>
+            <span class="field-badge" id="badge-medium" aria-hidden="true"></span>
+          </div>
+          <span class="field-msg" id="msg-medium"></span>
+        </div>
+
+        <div class="field">
+          <label for="inp-campaign">广告系列名称 <span style="color:var(--navy-3);font-weight:400">（必填）</span></label>
+          <span class="field-hint">例如 spring-launch, brand-q2</span>
+          <div class="field-row">
+            <input type="text" id="inp-campaign" placeholder="例如 spring-launch" autocomplete="off" spellcheck="false"/>
+            <span class="field-badge" id="badge-campaign" aria-hidden="true"></span>
+          </div>
+          <span class="field-msg" id="msg-campaign"></span>
+        </div>
+
+        <div class="field">
+          <label for="inp-term">广告系列字词 <span style="color:var(--navy-3);font-weight:400">（可选）</span></label>
+          <span class="field-hint">付费关键词——例如 running+shoes</span>
+          <div class="field-row">
+            <input type="text" id="inp-term" placeholder="例如 utm+builder" autocomplete="off" spellcheck="false"/>
+            <span class="field-badge" id="badge-term" aria-hidden="true"></span>
+          </div>
+          <span class="field-msg" id="msg-term"></span>
+        </div>
+
+        <div class="field">
+          <label for="inp-content">广告系列内容 <span style="color:var(--navy-3);font-weight:400">（可选）</span></label>
+          <span class="field-hint">区分广告——例如 banner-v1</span>
+          <div class="field-row">
+            <input type="text" id="inp-content" placeholder="例如 hero-banner" autocomplete="off" spellcheck="false"/>
+            <span class="field-badge" id="badge-content" aria-hidden="true"></span>
+          </div>
+          <span class="field-msg" id="msg-content"></span>
+        </div>
+
+      </div>
+
+      <div class="preview-wrap">
+        <div class="preview-label">
+          实时 URL 预览 <span id="preview-compliance" style="font-size:11px;font-weight:500;opacity:0;transition:opacity .2s"></span>
+        </div>
+        <div class="preview-box" id="preview-box" aria-live="polite" aria-label="生成的 UTM URL">
+          <span class="preview-empty" id="preview-placeholder">填写网站 URL、来源、媒介和广告系列以生成你的 UTM 链接。</span>
+        </div>
+      </div>
+
+      <div class="copy-row">
+        <button class="btn btn-orange" id="copy-btn" disabled>复制 URL</button>
+        <span class="copy-confirm" id="copy-confirm" aria-live="polite">已复制！</span>
+        <button class="btn btn-ghost" id="reset-btn" style="display:none">重置</button>
+      </div>
+
+      <div class="tool-cta">
+        <div class="tool-cta-text">
+          <p>链接已打标签。问题是它带来了多少转化。</p>
+          <p>Duct 读取你的广告、分析和收入工具数据，回答这个问题，并提出变更建议。你批准即可。</p>
+        </div>
+        <a href="/zh-cn/download" class="btn btn-orange" data-duct-download>下载 Duct ↓</a>
+      </div>
+
+      <div class="insight-panel" id="insight-panel" role="status">
+        <p class="insight-panel-label">GA4 合规性说明</p>
+        <p id="insight-body"></p>
+      </div>
+
+      <div class="recent-wrap" id="recent-wrap">
+        <div class="recent-label">最近的 URL</div>
+        <div class="recent-list" id="recent-list"></div>
+      </div>
+
+    <!-- FAQ -->
+    <div class="faq-section">
+      <div class="faq-title">GA4 中每个 UTM 参数的含义</div>
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          什么是 utm_source，我该填什么？
+        </button>
+        <div class="faq-a">
+          <span class="faq-a-code">utm_source</span> 识别流量来源——平台或发布商。使用小写字母，无空格。良好值：<span class="faq-a-code">google</span>，<span class="faq-a-code">newsletter</span>，<span class="faq-a-code">linkedin</span>，<span class="faq-a-code">twitter</span>。在 GA4 中，这显示为“会话来源”维度，并用于所有归因模型。
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          什么是 utm_medium，标准值有哪些？
+        </button>
+        <div class="faq-a">
+          <span class="faq-a-code">utm_medium</span> 描述营销渠道类型。GA4 用它将会话分配到默认渠道组。标准值：<span class="faq-a-code">cpc</span>（付费搜索），<span class="faq-a-code">email</span>（电子邮件），<span class="faq-a-code">social</span>（自然社交），<span class="faq-a-code">paid-social</span>（付费社交），<span class="faq-a-code">display</span>（展示）。非标准值会将这些会话归入“未分配”。
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          什么是 utm_campaign，我该如何命名广告系列？
+        </button>
+        <div class="faq-a">
+          <span class="faq-a-code">utm_campaign</span> 用于识别特定广告系列。使用小写字母和连字符，不要使用空格或下划线。一致的命名约定比确切的格式更重要。示例：<span class="faq-a-code">saas-pm-trial-q2-2026</span>。URL 中的空格会变成 <span class="faq-a-code">%20</span>，这在 GA4 报告中难以阅读。
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          何时使用 utm_term 和 utm_content？
+        </button>
+        <div class="faq-a">
+          <span class="faq-a-code">utm_term</span> 用于付费关键词——主要是 Google Ads。非搜索广告系列可省略。 <span class="faq-a-code">utm_content</span> 用于区分同一广告或电子邮件中的多个链接，例如 <span class="faq-a-code">hero-cta</span> 与 <span class="faq-a-code">footer-cta</span>，或 <span class="faq-a-code">banner-v1</span> 与 <span class="faq-a-code">banner-v2</span>。这对于 A/B 测试创意或跟踪长电子邮件中的点击位置很有用。
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          UTM 参数中大小写重要吗？
+        </button>
+        <div class="faq-a">
+          是的，GA4 将 UTM 值视为区分大小写。在你的报告中，<span class="faq-a-code">Google</span> 和 <span class="faq-a-code">google</span> 会显示为两个独立的来源。始终使用小写。这是最常见的 UTM 错误，也是最难追溯修复的。当检测到大写时，此工具会发出警告。
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" aria-expanded="false">
+          为什么 GA4 显示我的 UTM 参数为 (未设置)？
+        </button>
+        <div class="faq-a">
+          “（未设置）”意味着事件触发时参数不存在。常见原因：(1) GA4 加载前重定向剥离了参数，(2) 用户在跟踪触发前导航到第二个页面，(3) 链接通过二维码访问时丢失了参数。请验证 GA4 是否在确切的着陆页上触发，并且没有重定向移除查询字符串。
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<section class="duct-bridge reveal" aria-label="关于 Duct">
+  <div class="duct-bridge-inner">
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">UTM 参数告诉 GA4 流量来源。但它们不会告诉你这些流量是否值得。</p>
+      <p class="duct-bridge-body">Duct 将 GA4 与你的广告支出、转化和电子邮件数据结合，因此每个带标签的广告系列都根据其收益而非带来的流量进行评估。</p>
+      <a href="/zh-cn/" class="duct-bridge-link">Duct 工作原理 →</a>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="/assets/media/paid-session.webp" srcset="/assets/media/paid-session-768.webp 768w, /assets/media/paid-session-1536.webp 1536w, /assets/media/paid-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="一次洞察会话：询问广告预算在哪里流失，智能体会根据 CPA 目标评估每个广告系列，提出暂停、两个否定关键词和增加预算的建议，并在右侧撰写支出简报。"/>
+      <figcaption>找出预算流失的地方。Duct 会根据你的 CPA 目标评估每个广告系列成本，建议暂停、排除负面因素和调整预算，并等待你的批准。</figcaption>
+    </figure>
+  </div>
+</section>
+
+<div class="about-section reveal">
+  <h2>关于此<em>工具</em></h2>
+  <p>此构建器构建标准 UTM 查询参数并显示实时 URL 预览，以便你在将链接粘贴到广告、电子邮件或社交媒体之前发现格式问题。验证功能会引导你使用 GA4 友好的值——小写来源和媒介，避免保留令牌，并注意可能导致报告拆分的空格或大小写混合。</p>
+
+  <h2 style="margin-top:40px">UTM 在 <em>GA4</em> 中如何显示</h2>
+  <p>GA4 在会话开始时从着陆页 URL 读取 <strong>utm_source</strong>、<strong>utm_medium</strong>、<strong>utm_campaign</strong> 以及可选的 <strong>utm_term</strong> / <strong>utm_content</strong>。这些值会流入会话和流量获取维度。如果重定向在 GA 标签加载前剥离了查询字符串，或者用户访问的页面标签触发较晚，你可能会看到 <strong>（未设置）</strong>——链接构建器无法修复跟踪安装，只能修复链接本身。</p>
+  <p>广告系列报告的整洁度取决于你的命名约定。此工具鼓励一致性（例如小写和连字符），以避免意外为 <span class="faq-a-code">Google</span> 和 <span class="faq-a-code">google</span> 创建重复行。</p>
+
+  <h2 style="margin-top:40px">局限性</h2>
+  <ul>
+    <li>链接必须在参数完整的情况下到达带标签的着陆页——短链接、重定向链或应用深层链接可能会丢失 UTM。</li>
+    <li>GA4 渠道分组规则取决于媒介/来源组合；即使链接有效，异常值也可能归入 <strong>未分配</strong>。</li>
+    <li>此页面完全在你的浏览器中运行——我们不会在服务器上存储你的 URL 或表单字段。</li>
+  </ul>
+</div>
+
+<section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
+  <div class="related-tools-banner-inner">
+    <p class="tag">也是免费的</p>
+    <h2 id="related-tools-heading">探索相关 <em>工具</em></h2>
+    <p class="related-tools-banner-desc">将 UTM 构建与预算分配和 ROI 跟踪结合，以完善广告系列效果评估。</p>
+    <div class="insight-links related-tools" data-related-tools data-current-tool="utm-builder" data-related-limit="3"></div>
+  </div>
+</section>
+
+<div data-duct-partial="/zh-cn/partials/cta-tools.html"></div>
+
+</main>
+<div data-duct-partial="/zh-cn/partials/footer-expanded.html"></div>
+
+<script>
+(function () {
+
+  var GA4_RESERVED = ['(direct)', '(none)', '(not set)', '(other)', '(organic)', 'direct', 'none'];
+  var FIELDS = ['url', 'source', 'medium', 'campaign', 'term', 'content'];
+
+  // ── Validation ───────────────────────────────────────────────────────────
+  function setFieldState(fieldId, state, message) {
+    var badge = document.getElementById('badge-' + fieldId);
+    var msg = document.getElementById('msg-' + fieldId);
+    var input = document.getElementById('inp-' + fieldId);
+    ['inp-valid','inp-warn','inp-error'].forEach(function(c) { input.classList.remove(c); });
+    badge.className = 'field-badge';
+    badge.textContent = '';
+    msg.textContent = message || '';
+    msg.className = 'field-msg';
+    if (state === 'valid') {
+      input.classList.add('inp-valid');
+      badge.className = 'field-badge b-show b-valid';
+      badge.innerHTML = '<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg>';
+    } else if (state === 'warn') {
+      input.classList.add('inp-warn');
+      badge.className = 'field-badge b-show b-warn';
+      badge.textContent = '!';
+      msg.className = 'field-msg m-warn';
+    } else if (state === 'error') {
+      input.classList.add('inp-error');
+      badge.className = 'field-badge b-show b-error';
+      badge.innerHTML = '<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#x"/></svg>';
+      msg.className = 'field-msg m-error';
+    }
+  }
+
+  function validateUrl(value) {
+    if (!value) { setFieldState('url', '', ''); return 'empty'; }
+    if (!/^https?:\/\//i.test(value)) {
+      setFieldState('url', 'error', 'URL must start with https://'); return 'error';
+    }
+    if (/^http:\/\//i.test(value)) {
+      setFieldState('url', 'warn', 'Consider https:// — some ad platforms reject http:// landing pages.'); return 'warn';
+    }
+    setFieldState('url', 'valid', ''); return 'valid';
+  }
+
+  function validateParam(value, fieldId) {
+    if (!value) { setFieldState(fieldId, '', ''); return 'empty'; }
+    if (/[A-Z]/.test(value)) {
+      setFieldState(fieldId, 'warn', 'Use lowercase — GA4 treats "Google" and "google" as different sources.'); return 'warn';
+    }
+    if (/\s/.test(value) && fieldId !== 'term') {
+      setFieldState(fieldId, 'warn', 'Spaces become %20 in URLs — use hyphens instead.'); return 'warn';
+    }
+    if (GA4_RESERVED.indexOf(value.toLowerCase()) !== -1) {
+      setFieldState(fieldId, 'error', 'This is a GA4 reserved value — it will appear as internal traffic.'); return 'error';
+    }
+    if (/['"<>{}|\\^`]/.test(value)) {
+      setFieldState(fieldId, 'warn', 'Special characters may break URL parsing — remove them.'); return 'warn';
+    }
+    setFieldState(fieldId, 'valid', ''); return 'valid';
+  }
+
+  // ── URL building ─────────────────────────────────────────────────────────
+  function getVal(id) { return (document.getElementById(id).value || '').trim(); }
+
+  function buildUrl() {
+    var base = getVal('inp-url');
+    var source = getVal('inp-source');
+    var medium = getVal('inp-medium');
+    var campaign = getVal('inp-campaign');
+    var term = getVal('inp-term');
+    var content = getVal('inp-content');
+    if (!base || !source || !medium || !campaign) return '';
+    var params = [
+      'utm_source=' + encodeURIComponent(source),
+      'utm_medium=' + encodeURIComponent(medium),
+      'utm_campaign=' + encodeURIComponent(campaign)
+    ];
+    if (term) params.push('utm_term=' + encodeURIComponent(term));
+    if (content) params.push('utm_content=' + encodeURIComponent(content));
+    var sep = base.indexOf('?') !== -1 ? '&' : '?';
+    return base + sep + params.join('&');
+  }
+
+  // ── Preview (safe DOM — no innerHTML with dynamic content) ───────────────
+  function updatePreview() {
+    var url = buildUrl();
+    var box = document.getElementById('preview-box');
+    var copyBtn = document.getElementById('copy-btn');
+    var compliance = document.getElementById('preview-compliance');
+
+    while (box.firstChild) box.removeChild(box.firstChild);
+
+    if (!url) {
+      var placeholder = document.createElement('span');
+      placeholder.className = 'preview-empty';
+      placeholder.textContent = 'Fill in Website URL, Source, Medium and Campaign to generate your UTM link.';
+      box.appendChild(placeholder);
+      copyBtn.disabled = true;
+      compliance.style.opacity = '0';
+      document.getElementById('insight-panel').className = 'insight-panel';
+      return;
+    }
+
+    var qIdx = url.indexOf('?');
+    var base = qIdx !== -1 ? url.substring(0, qIdx) : url;
+    var qs = qIdx !== -1 ? url.substring(qIdx) : '';
+
+    var baseSpan = document.createElement('span');
+    baseSpan.className = 'preview-url-base';
+    baseSpan.textContent = base;
+    box.appendChild(baseSpan);
+
+    if (qs) {
+      var qsSpan = document.createElement('span');
+      qsSpan.className = 'preview-url-params';
+      qsSpan.textContent = qs;
+      box.appendChild(qsSpan);
+    }
+
+    copyBtn.disabled = false;
+
+    var hasWarning = ['source','medium','campaign','term','content'].some(function(f) {
+      var v = getVal('inp-' + f);
+      return v && /[A-Z\s]/.test(v);
+    });
+    compliance.style.opacity = '1';
+    if (hasWarning) {
+      compliance.style.color = '#92400e';
+      compliance.textContent = 'Check warnings below';
+    } else {
+      compliance.style.color = '#15803d';
+      compliance.textContent = 'GA4 compliant';
+    }
+
+    var warnings = [];
+    ['source','medium','campaign'].forEach(function(f) {
+      var v = getVal('inp-' + f);
+      if (v && /[A-Z]/.test(v)) warnings.push('"' + f + '" has uppercase — GA4 is case-sensitive, this creates split data.');
+      else if (v && /\s/.test(v)) warnings.push('"' + f + '" has spaces — these become %20 in URLs and make reports harder to read.');
+    });
+    var panel = document.getElementById('insight-panel');
+    var body = document.getElementById('insight-body');
+    if (warnings.length) {
+      body.textContent = warnings[0];
+      panel.className = 'insight-panel show';
+    } else {
+      panel.className = 'insight-panel';
+    }
+  }
+
+  // ── Input listeners ──────────────────────────────────────────────────────
+  FIELDS.forEach(function(f) {
+    var el = document.getElementById('inp-' + f);
+    if (!el) return;
+    el.addEventListener('input', function() {
+      if (f === 'url') validateUrl(el.value);
+      else validateParam(el.value, f);
+      updatePreview();
+      var any = FIELDS.some(function(x) { return !!(document.getElementById('inp-' + x) || {}).value; });
+      document.getElementById('reset-btn').style.display = any ? '' : 'none';
+    });
+  });
+
+  // ── Copy ─────────────────────────────────────────────────────────────────
+  document.getElementById('copy-btn').addEventListener('click', function() {
+    var url = buildUrl();
+    if (!url) return;
+    copyText(url);
+    var confirm = document.getElementById('copy-confirm');
+    confirm.classList.add('show');
+    setTimeout(function() { confirm.classList.remove('show'); }, 2000);
+    saveRecent(url);
+    renderRecent();
+  });
+
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text);
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      try { document.execCommand('copy'); } catch(e) {}
+      document.body.removeChild(ta);
+    }
+  }
+
+  // ── Reset ────────────────────────────────────────────────────────────────
+  document.getElementById('reset-btn').addEventListener('click', function() {
+    FIELDS.forEach(function(f) {
+      var el = document.getElementById('inp-' + f);
+      if (el) el.value = '';
+      setFieldState(f, '', '');
+    });
+    updatePreview();
+    document.getElementById('reset-btn').style.display = 'none';
+  });
+
+  // ── Recent URLs ──────────────────────────────────────────────────────────
+  var RECENT_KEY = 'duct_utm_recent';
+
+  function saveRecent(url) {
+    var list = getRecent().filter(function(u) { return u !== url; });
+    list.unshift(url);
+    if (list.length > 5) list = list.slice(0, 5);
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)); } catch(e) {}
+  }
+
+  function getRecent() {
+    try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); } catch(e) { return []; }
+  }
+
+  function renderRecent() {
+    var list = getRecent();
+    var container = document.getElementById('recent-list');
+    while (container.firstChild) container.removeChild(container.firstChild);
+    if (!list.length) {
+      var empty = document.createElement('span');
+      empty.className = 'recent-empty';
+      empty.textContent = 'Your last 5 UTM links will appear here after copying.';
+      container.appendChild(empty);
+      return;
+    }
+    list.forEach(function(url) {
+      var chip = document.createElement('button');
+      chip.className = 'recent-chip';
+      chip.title = url;
+      chip.textContent = url.length > 50 ? url.substring(0, 47) + '…' : url;
+      chip.setAttribute('aria-label', 'Copy recent URL: ' + url);
+      chip.addEventListener('click', function() {
+        copyText(url);
+        chip.textContent = 'Copied!';
+        setTimeout(function() {
+          chip.textContent = url.length > 50 ? url.substring(0, 47) + '…' : url;
+        }, 1500);
+      });
+      container.appendChild(chip);
+    });
+  }
+
+  renderRecent();
+
+  // ── FAQ accordion ─────────────────────────────────────────────────────────
+  document.querySelectorAll('.faq-q').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var item = btn.parentElement;
+      var isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(function(i) { i.classList.remove('open'); });
+      document.querySelectorAll('.faq-q').forEach(function(b) { b.setAttribute('aria-expanded', 'false'); });
+      if (!isOpen) {
+        item.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+
+}());
+</script>
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

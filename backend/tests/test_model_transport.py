@@ -276,13 +276,21 @@ def test_v1_supports_openrouter():
 # Registry completeness
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("provider", list(Provider))
+# A user's OpenAI-compatible endpoint is brought per user in Settings and has
+# no instance-wide key or env var to fall back to: there is nothing for either
+# table to name.
+_PER_USER_ONLY = {Provider.OPENAI_COMPATIBLE}
+
+
+@pytest.mark.parametrize("provider", [p for p in Provider if p not in _PER_USER_ONLY])
 def test_every_provider_has_a_config_attribute(provider: Provider):
     assert provider in PROVIDER_CONFIG_ATTR
 
 
 @pytest.mark.parametrize("provider", list(Provider))
 def test_every_provider_supported_by_v1_has_an_env_var(provider: Provider):
+    if provider in _PER_USER_ONLY:
+        pytest.skip(f"{provider.value} is brought per user, never set in env")
     if provider not in ENGINE_SUPPORTED_PROVIDERS[Engine.V1]:
         pytest.skip(f"{provider.value} is not a v1 provider")
     assert get_env_var_for_engine_provider(Engine.V1, provider)
@@ -612,3 +620,38 @@ def test_the_sdk_retries_nothing_underneath_the_reported_retry(provider, model, 
 
     llm = resolve_chat_model(provider, model, api_key)
     assert llm.max_retries == expected, provider
+
+
+# ---------------------------------------------------------------------------
+# OpenRouter reserves credit against the reply limit, so one is always sent
+# ---------------------------------------------------------------------------
+
+def test_openrouter_sends_a_reply_limit_so_credit_is_not_reserved_for_the_maximum():
+    """Without one, OpenRouter held a DeepSeek call's balance against 131,072
+    output tokens and refused it on a small balance (2026-11-10)."""
+    from agents.core.lc import OPENROUTER_REPLY_TOKENS, resolve_chat_model
+
+    llm = resolve_chat_model(Provider.OPENROUTER, "deepseek/deepseek-v4-flash", "sk-or-test")
+
+    assert llm.max_tokens == OPENROUTER_REPLY_TOKENS
+    assert llm._default_params["max_tokens"] == OPENROUTER_REPLY_TOKENS
+
+
+def test_a_model_that_writes_less_than_the_cap_keeps_its_own_limit():
+    from agents.core.lc import Provider as P, _bound_reply
+
+    class Small:
+        max_tokens = None
+        profile = {"max_output_tokens": 8_192}
+
+    assert _bound_reply(Small(), P.OPENROUTER).max_tokens == 8_192
+
+
+def test_direct_vendors_get_no_reply_limit_from_duct():
+    from agents.core.lc import _bound_reply
+
+    class Direct:
+        max_tokens = None
+        profile = {"max_output_tokens": 128_000}
+
+    assert _bound_reply(Direct(), Provider.ANTHROPIC).max_tokens is None

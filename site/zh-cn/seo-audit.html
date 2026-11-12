@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+
+<!-- EXPERIMENT: URL first, email second. The visitor gives a URL before anything is asked of
+     them, watches the scan, then trades an email for the report they can already see. Hypothesis:
+     a lead who has seen their own domain in the scanner converts at a higher rate than one asked
+     for an email cold. Measured by seo_audit_scan → seo_audit_lead in GTM. -->
+
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>免费 SEO 审计——准确了解是什么影响了你的排名 | Duct</title>
+<link rel="canonical" href="https://getduct.ai/zh-cn/seo-audit"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/seo-audit"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/seo-audit"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/seo-audit"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/seo-audit"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/seo-audit"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/seo-audit"/>
+<link rel="alternate" hreflang="zh-CN" href="https://getduct.ai/zh-cn/seo-audit"/>
+<meta property="og:locale" content="zh_CN"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="粘贴 URL，几分钟内即可获得真实的 SEO 审计：分数、页面上的每个问题以及按顺序排列的修复方案。免费、无需账户、开源。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/zh-cn/seo-audit"/>
+<meta property="og:title" content="免费 SEO 审计——准确了解是什么影响了你的排名"/>
+<meta property="og:description" content="粘贴你的 URL，观看抓取过程，获取报告：分数、页面上的每个问题以及按顺序排列的修复方案。免费开源，无需账户。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/seo-audit.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="免费 SEO 审计——准确了解是什么影响了你的排名"/>
+<meta name="twitter:description" content="在几分钟内对你的网站进行真实的 SEO 审计：分数、页面上的问题、按顺序排列的修复方案。免费、无需账户、开源。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/seo-audit.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookie，坦白说","We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold.":"我们使用 PostHog 来了解哪些页面促成了注册，以及 Duct 在何处阻碍了你，包括隐藏你输入的所有内容的访问回放。拒绝会关闭 PostHog，Duct 仍能正常运行。Google Analytics 也会统计访问量并设置自己的 Cookie，无论你选择什么。我们不会出售任何数据。","Privacy Policy":"隐私政策","Decline":"拒绝","Accept":"接受","{n} stars on GitHub":"{n} GitHub 星","UTM Builder":"UTM 构建器","SaaS Metrics Benchmark Calculator":"SaaS 指标基准计算器","Weekly Marketing Brief Generator":"每周营销简报生成器","CAC / LTV Calculator":"CAC / LTV 计算器","MRR Growth Rate Calculator":"MRR 增长率计算器","Engagement Rate Calculator":"互动率计算器","CTR Calculator":"CTR 计算器","CPM Calculator":"CPM 计算器","CPC Calculator":"CPC 计算器","CPA Calculator":"CPA 计算器","Marketing ROI Calculator":"营销 ROI 计算器","ROAS Calculator":"ROAS 计算器","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Menu":"菜单","Free Tools":"免费工具","Solutions":"解决方案","Download Duct ↓":"下载 Duct ↓","Language":"语言","Enlarged screenshot":"放大后的截图","Close":"关闭","Fit to screen":"适应屏幕","Zoom in":"放大","Enlarge":"放大","Universal · Apple silicon and Intel":"通用 · Apple 芯片和 Intel","Windows 10 and later":"Windows 10 及更高版本","Runs on any distribution":"可在任何发行版上运行","Debian and Ubuntu":"Debian 和 Ubuntu","Download ↓":"下载 ↓","Download for {label} ↓":"下载适用于 {label} ↓","Example numbers. Change any field and calculate again for yours.":"示例数字。修改任意字段，重新计算你的结果。"};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"zh-CN","name":"Duct 提供的免费 SEO 审计","url":"https://getduct.ai/zh-cn/seo-audit","description":"粘贴你的 URL，几分钟内即可获得真实的 SEO 审计：分数、页面上的每个问题以及按顺序排列的修复方案。免费、无需账户，由开源的 Duct 审计智能体提供。","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"zh-CN","mainEntity":[{"@type":"Question","name":"它真的是免费的吗？","acceptedAnswer":{"@type":"Answer","text":"是的。它使用我们的密钥运行。你的电子邮件用于获取报告，仅此而已。"}},{"@type":"Question","name":"需要多长时间？","acceptedAnswer":{"@type":"Answer","text":"两到四分钟，具体取决于你的站点地图列出的页面数量。"}},{"@type":"Question","name":"你会如何处理我的电子邮件？","acceptedAnswer":{"@type":"Answer","text":"我们会发送报告摘要。你可以随时取消订阅。绝不出售，绝不分享。"}},{"@type":"Question","name":"它和应用中的审计一样吗？","acceptedAnswer":{"@type":"Answer","text":"相同的开源智能体。在应用中，它使用你自己的密钥运行并保存你的报告。"}}]}
+</script>
+<style>
+/* ── SEO Audit lead magnet — page-specific styles ── */
+/* The accent, and only the accent: terracotta, one shade warmer than the
+   site's orange, so the page reads as Duct's and as its own thing. */
+:root { --orange: #c0543c; --orange-h: #a84430; }
+.skip-link { position: absolute; top: -100px; left: 16px; z-index: 200; padding: 10px 16px; background: var(--navy); color: #fff; border-radius: 8px; }
+.skip-link:focus { top: 16px; }
+
+/* ── State machine: the page is one of four things at a time ── */
+[data-lm-state="idle"] .lm-scanning,
+[data-lm-state="idle"] .lm-gate { display: none; }
+[data-lm-state="scanning"] .lm-hero,
+[data-lm-state="scanning"] .lm-gate { display: none; }
+[data-lm-state="gate"] .lm-hero,
+[data-lm-state="gate"] .lm-scanning,
+[data-lm-state="submitting"] .lm-hero,
+[data-lm-state="submitting"] .lm-scanning { display: none; }
+
+/* ── Hero: the ask on the left, the reward on the right ── */
+.lm-hero { padding: 120px 52px 40px; }
+.lm-hero-inner { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 56px; align-items: center; }
+.lm-hero h1 { font-size: clamp(38px, 4.6vw, 58px); line-height: 1.06; letter-spacing: -1.5px; margin: 22px 0 18px; }
+.lm-hero .sub { max-width: 40ch; margin: 0 0 28px; }
+.lm-hero .lm-url-form { margin-left: 0; }
+.lm-hero-shot { position: relative; margin: 0; }
+/* The report is taller than the copy beside it. Show its top, the score and
+   the first findings, fading out: there is more, and a click opens all of it. */
+.lm-hero-shot-crop { aspect-ratio: 5 / 4; overflow: hidden; border-radius: var(--r-lg); -webkit-mask-image: linear-gradient(#000 78%, transparent); mask-image: linear-gradient(#000 78%, transparent); }
+.lm-hero-shot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.lm-hero-shot figcaption { margin-top: 10px; font-size: 13px; color: var(--navy-3); text-align: center; }
+
+/* URL input */
+.lm-url-form {
+  display: flex;
+  align-items: center;
+  max-width: 580px;
+  margin: 0 auto 12px;
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,.07);
+  transition: border-color .15s, box-shadow .15s;
+}
+.lm-url-form:focus-within {
+  border-color: var(--orange);
+  box-shadow: 0 2px 16px rgba(192,84,60,.18);
+}
+.lm-url-prefix {
+  flex-shrink: 0;
+  padding: 0 0 0 18px;
+  font-size: 15px;
+  color: var(--navy-3);
+  font-weight: 500;
+  pointer-events: none;
+  user-select: none;
+}
+.lm-url-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 16px 12px;
+  font-size: 16px; /* ≥16px prevents iOS Safari auto-zoom on focus */
+  background: transparent;
+  color: var(--navy);
+  min-width: 0;
+}
+.lm-url-input::placeholder { color: #b0bac5; }
+.lm-url-btn {
+  flex-shrink: 0;
+  margin: 7px;
+  padding: 10px 20px;
+  background: var(--orange);
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, box-shadow .15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.lm-url-btn:hover { background: var(--orange-h); box-shadow: 0 4px 14px rgba(192,84,60,.3); }
+.lm-url-btn svg { flex-shrink: 0; }
+
+/* Mobile: stack button below input */
+@media (max-width: 540px) {
+  .lm-url-form {
+    flex-direction: column;
+    border-radius: 14px;
+    overflow: visible;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    gap: 10px;
+  }
+  .lm-url-form:focus-within {
+    border-color: transparent;
+    box-shadow: none;
+  }
+  .lm-url-form .lm-url-prefix {
+    display: none;
+  }
+  .lm-url-input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+    padding: 16px 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    transition: border-color .15s;
+    box-sizing: border-box;
+  }
+  .lm-url-input:focus { border-color: var(--orange); outline: none; }
+  .lm-url-btn {
+    width: 100%;
+    margin: 0;
+    border-radius: 12px;
+    padding: 16px 20px;
+    justify-content: center;
+  }
+}
+.lm-btn-checking { display: none; opacity: .75; }
+.lm-url-btn.is-checking .lm-btn-idle { display: none; }
+.lm-url-btn.is-checking .lm-btn-checking { display: inline; }
+.lm-url-error {
+  font-size: 13px;
+  color: #c0392b;
+  min-height: 20px;
+  margin-bottom: 4px;
+}
+.lm-footnote {
+  font-size: 13px;
+  color: var(--navy-3);
+  margin: 0;
+}
+
+.lm-footnote { font-size: 12px; color: var(--navy-3); margin: 10px 0 0; }
+
+/* ── Scanning section ── */
+.lm-scanning {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 60px 24px 72px;
+  text-align: center;
+}
+.lm-scanning-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--navy-3);
+  margin: 0 0 8px;
+  letter-spacing: .01em;
+}
+.lm-scanning-url {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0 0 32px;
+}
+
+/* Browser mockup */
+.lm-browser {
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 32px rgba(0,0,0,.09);
+  position: relative;
+  max-width: 720px;
+  margin: 0 auto 32px;
+}
+.lm-browser-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #f7f8fa;
+  border-bottom: 1px solid var(--border);
+}
+.lm-browser-dots {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.lm-browser-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.lm-browser-addr {
+  flex: 1;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--navy-3);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.lm-browser-body {
+  position: relative;
+  height: 280px;
+  overflow: hidden;
+  background: #fafbfc;
+}
+
+/* Generic website placeholder content */
+.lm-site-mock {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.lm-mock-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.lm-mock-logo  { width: 80px;  height: 12px; background: #dde2e8; border-radius: 4px; }
+.lm-mock-link  { width: 48px;  height: 10px; background: #eaecef; border-radius: 3px; }
+.lm-mock-hero-text { width: 65%; height: 18px; background: #dde2e8; border-radius: 5px; }
+.lm-mock-hero-sub  { width: 50%; height: 12px; background: #eaecef; border-radius: 4px; }
+.lm-mock-btn       { width: 100px; height: 28px; background: #d4d9df; border-radius: 6px; }
+.lm-mock-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+.lm-mock-card {
+  height: 60px;
+  background: #eaecef;
+  border-radius: 8px;
+}
+
+/* Scan-line animation */
+.lm-scan-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, rgba(192,84,60,.7) 30%, rgba(192,84,60,1) 50%, rgba(192,84,60,.7) 70%, transparent 100%);
+  box-shadow: 0 0 18px 6px rgba(192,84,60,.35);
+  animation: lm-scan 1.6s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+@keyframes lm-scan {
+  0%   { top: -4px; }
+  100% { top: 100%; }
+}
+
+/* Scan overlay gradient (bottom fade) */
+.lm-browser-body::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 60%, rgba(250,251,252,.9) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Step indicators */
+.lm-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 380px;
+  margin: 0 auto;
+}
+.lm-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--navy-3);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity .4s ease, transform .4s ease, color .3s, border-color .3s;
+}
+.lm-step.visible { opacity: 1; transform: translateY(0); }
+.lm-step.done {
+  color: var(--navy);
+  border-color: #c8e6d6;
+  background: #f4fbf7;
+}
+.lm-step.done .lm-step-icon { color: #2e9e6b; }
+.lm-step-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--orange);
+  border-top-color: transparent;
+  animation: lm-spin .75s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes lm-spin { to { transform: rotate(360deg); } }
+.lm-step-icon { font-size: 15px; flex-shrink: 0; }
+
+/* ── Gate: the real report, blurred, with the unlock card over it ── */
+.lm-gate { position: relative; overflow: hidden; }
+.lm-gate-wrap { position: relative; }
+/* Capped and faded at the foot: enough report to want, not a second page of blur
+   to scroll past, and the unlock card lands in the first screen. */
+.lm-report-blur { filter: blur(7px) saturate(.95); pointer-events: none; user-select: none; padding: 92px clamp(20px, 7vw, 88px) 0; max-height: 720px; overflow: hidden; -webkit-mask-image: linear-gradient(#000 70%, transparent); mask-image: linear-gradient(#000 70%, transparent); }
+.lm-report-blur img { display: block; width: 100%; max-width: 1000px; height: auto; margin: 0 auto; border-radius: var(--r-lg); }
+/* Lock overlay — a light scrim that lets the blurred report show through around
+   the unlock card (rather than a near-solid sheet that hides it). The card below
+   carries the contrast for the form, so this stays mostly see-through. */
+.lm-lock-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(120% 80% at 50% 50%, rgba(250,248,245,.32) 0%, rgba(250,248,245,.62) 100%);
+  padding: 28px;
+}
+/* Frosted unlock card — opaque enough for a crisp, readable form, floating over
+   the blurred report. */
+.lm-lock-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 460px;
+  padding: 36px 30px 30px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.97);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  box-shadow: 0 12px 48px rgba(13,17,23,.20);
+}
+.lm-lock-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 16px rgba(192,84,60,.35);
+}
+.lm-lock-headline {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0 0 6px;
+}
+.lm-lock-sub {
+  font-size: 14px;
+  color: var(--navy-3);
+  margin: 0 0 24px;
+}
+
+.lm-lock-icon .ic { font-size: 22px; color: #fff; }
+/* Email form in gate */
+.lm-email-form {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 440px;
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,.07);
+  transition: border-color .15s;
+}
+.lm-email-form:focus-within { border-color: var(--orange); }
+.lm-email-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 14px 14px;
+  font-size: 16px; /* ≥16px prevents iOS Safari auto-zoom on focus */
+  background: transparent;
+  color: var(--navy);
+  min-width: 0;
+}
+.lm-email-input::placeholder { color: #b0bac5; }
+.lm-email-btn {
+  flex-shrink: 0;
+  margin: 6px;
+  padding: 10px 18px;
+  background: var(--orange);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s;
+}
+.lm-email-btn:hover:not(:disabled) { background: var(--orange-h); }
+.lm-email-btn:disabled { opacity: .6; cursor: not-allowed; }
+
+/* Mobile: stack email button below input */
+@media (max-width: 480px) {
+  .lm-email-form {
+    flex-direction: column;
+    border-radius: 14px;
+    overflow: visible;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    gap: 10px;
+    width: 100%;
+    max-width: 100%;
+  }
+  .lm-email-form:focus-within {
+    border-color: transparent;
+  }
+  .lm-email-input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    transition: border-color .15s;
+    box-sizing: border-box;
+  }
+  .lm-email-input:focus { border-color: var(--orange); outline: none; }
+  .lm-email-btn {
+    width: 100%;
+    margin: 0;
+    border-radius: 12px;
+    padding: 16px 20px;
+  }
+}
+
+.lm-turnstile-wrap { margin: 14px 0 4px; display: flex; justify-content: center; }
+.lm-gate-error { font-size: 13px; color: #c0392b; margin: 8px 0 0; min-height: 20px; }
+.lm-gate-note { font-size: 12px; color: var(--navy-3); margin: 10px 0 0; }
+
+/* ── What the report says: four cards, one line each ── */
+.lm-what { padding: 88px 52px; background: var(--off); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.lm-what-inner { max-width: 1160px; margin: 0 auto; }
+.lm-what-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 40px; }
+.lm-feat { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 26px 24px; }
+.lm-feat-icon { font-size: 28px; color: var(--orange); display: block; margin-bottom: 14px; }
+.lm-feat h3 { font-family: var(--serif); font-size: 20px; line-height: 1.25; margin: 0 0 8px; color: var(--navy); }
+.lm-feat p { font-size: 14.5px; color: var(--navy-3); line-height: 1.6; margin: 0; }
+
+/* ── Trust strip ── */
+.lm-trust { display: flex; justify-content: center; gap: 12px 36px; flex-wrap: wrap; padding: 26px 24px; border-bottom: 1px solid var(--border); }
+.lm-trust span { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--navy); }
+.lm-trust .ic { font-size: 17px; color: var(--orange); }
+
+/* ── Closing form on navy ── */
+.lm-cta { padding: 104px 52px; text-align: center; background: var(--navy); }
+.lm-cta h2 { color: #fff; font-size: clamp(34px, 5vw, 54px); margin-bottom: 34px; }
+.lm-cta h2 em { color: var(--orange); }
+.lm-cta .lm-url-form { border-color: transparent; }
+.lm-cta .lm-footnote { color: rgba(255,255,255,.55); }
+.lm-cta .lm-url-error { color: #ffb4a6; }
+
+@media (max-width: 1000px) {
+  .lm-hero-inner { grid-template-columns: 1fr; gap: 36px; }
+  .lm-what-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 860px) {
+  .lm-hero { padding: 100px 24px 32px; }
+  .lm-what, .lm-cta { padding: 64px 24px; }
+}
+@media (max-width: 600px) {
+  .lm-what-grid { grid-template-columns: 1fr; }
+  .lm-hero-shot-crop { aspect-ratio: 4 / 3; }
+}
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"zh-CN","itemListElement":[{"@type":"ListItem","position":1,"name":"主页","item":"https://getduct.ai/zh-cn/"},{"@type":"ListItem","position":2,"name":"免费 SEO 审计","item":"https://getduct.ai/zh-cn/seo-audit"}]}
+</script>
+</head>
+<body data-lm-state="idle">
+<a href="#main-content" class="skip-link">跳到内容</a>
+
+<!-- NAV (this page only: site/partials/nav-seo-audit.html) -->
+<div data-duct-partial="/zh-cn/partials/nav-seo-audit.html"></div>
+
+<main id="main-content">
+
+<!-- HERO (state: idle) -->
+<section class="lm-hero">
+<div class="lm-hero-inner">
+<div>
+<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> 免费 · 开源</div>
+<h1>查看究竟是什么影响了你的<em>排名。</em></h1>
+<p class="sub">粘贴你的 URL。Duct 会抓取每个页面，对其评分，并按顺序提供修复方案。</p>
+<div class="lm-url-form" role="group" aria-label="网站 URL">
+<span class="lm-url-prefix" aria-hidden="true">https://</span>
+<input type="url" id="lmUrl" class="lm-url-input" placeholder="your-site.com" aria-label="你的网站 URL" autocomplete="url" autocapitalize="off" spellcheck="false"/>
+<button class="lm-url-btn" id="lmUrlBtn" onclick="lmStartScan(&#x27;lmUrl&#x27;)" aria-label="审计我的网站">
+<span class="lm-btn-idle">审计我的网站 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span>
+<span class="lm-btn-checking" aria-hidden="true">正在检查…</span>
+</button>
+</div>
+<p class="lm-url-error" id="lmUrlError" role="alert" aria-live="polite"></p>
+<p class="lm-footnote">免费 · 无需信用卡 · 两到四分钟</p>
+</div>
+<figure class="lm-hero-shot" data-zoom>
+<div class="lm-hero-shot-crop">
+<img src="/assets/media/audit-report.webp" srcset="/assets/media/audit-report-768.webp 768w, /assets/media/audit-report-1536.webp 1536w, /assets/media/audit-report.webp 1712w" sizes="(max-width: 860px) calc(100vw - 48px), 760px" fetchpriority="high" data-zoom-src="assets/media/audit-report-full.webp" width="1712" height="1712" alt="Duct 为 solobudget.app 生成的 SEO 审计报告：一个 68 分（满分 100）的得分环，它读取的来源，三个大数字表示的信号，以及六个关键词集群在从第一页到第三页的位置图上" fetchpriority="high"/>
+</div>
+<figcaption>这是一个虚构网站的示例报告。点击阅读完整报告；你的报告将与此类似。</figcaption>
+</figure>
+</div>
+</section>
+
+<!-- SCANNING (state: scanning) -->
+<section class="lm-scanning" aria-live="polite" aria-label="正在扫描你的网站">
+  <p class="lm-scanning-label">正在扫描</p>
+  <p class="lm-scanning-url" id="lmScanningUrl"></p>
+  <!-- Browser mockup -->
+  <div class="lm-browser" role="img" aria-label="带扫描动画的浏览器预览">
+    <div class="lm-browser-bar">
+      <div class="lm-browser-dots" aria-hidden="true">
+        <span class="lm-browser-dot" style="background:#ff5f57"></span>
+        <span class="lm-browser-dot" style="background:#febc2e"></span>
+        <span class="lm-browser-dot" style="background:#28c840"></span>
+      </div>
+      <div class="lm-browser-addr" id="lmBrowserAddr" aria-label="URL 栏">your-site.com</div>
+    </div>
+    <div class="lm-browser-body">
+      <!-- Scan line -->
+      <div class="lm-scan-line" aria-hidden="true"></div>
+      <!-- Generic placeholder website layout -->
+      <div class="lm-site-mock" aria-hidden="true">
+        <div class="lm-mock-nav">
+          <div class="lm-mock-logo"></div>
+          <div class="lm-mock-link"></div>
+          <div class="lm-mock-link"></div>
+          <div class="lm-mock-link"></div>
+        </div>
+        <div class="lm-mock-hero-text"></div>
+        <div class="lm-mock-hero-sub"></div>
+        <div class="lm-mock-btn" style="margin-top:4px"></div>
+        <div class="lm-mock-row" style="margin-top:18px">
+          <div class="lm-mock-card"></div>
+          <div class="lm-mock-card"></div>
+          <div class="lm-mock-card"></div>
+        </div>
+        <div class="lm-mock-row">
+          <div class="lm-mock-card"></div>
+          <div class="lm-mock-card"></div>
+          <div class="lm-mock-card"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step indicators -->
+  <div class="lm-steps" role="list" aria-label="扫描进度">
+    <div class="lm-step" id="lmStep1" role="listitem">
+      <div class="lm-step-spinner" aria-hidden="true"></div>
+      <span>映射站点结构</span>
+    </div>
+    <div class="lm-step" id="lmStep2" role="listitem">
+      <div class="lm-step-spinner" aria-hidden="true"></div>
+      <span>读取页面和信号</span>
+    </div>
+    <div class="lm-step" id="lmStep3" role="listitem">
+      <div class="lm-step-spinner" aria-hidden="true"></div>
+      <span>评分并生成报告</span>
+    </div>
+  </div>
+</section>
+
+<!-- EMAIL GATE (state: gate | submitting) -->
+<section class="lm-gate" aria-label="解锁你的 SEO 报告">
+  <div class="lm-gate-wrap">
+    <div class="lm-report-blur" aria-hidden="true">
+      <img src="/assets/media/audit-report.webp" srcset="/assets/media/audit-report-768.webp 768w, /assets/media/audit-report-1536.webp 1536w, /assets/media/audit-report.webp 1712w" sizes="(max-width: 860px) calc(100vw - 48px), 760px" decoding="async" width="1712" height="1712" alt="" loading="lazy"/>
+    </div>
+    <div class="lm-lock-overlay" id="lmLockOverlay">
+      <div class="lm-lock-card">
+        <div class="lm-lock-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg></div>
+        <p class="lm-lock-headline" id="lmLockHeadline">你的报告已准备就绪</p>
+        <p class="lm-lock-sub">你的电子邮件可以在此处打开报告并获取副本。</p>
+        <div class="lm-email-form" role="group" aria-label="通过电子邮件解锁报告">
+          <input type="email" id="lmEmail" class="lm-email-input" placeholder="you@company.com" aria-label="你的电子邮件地址" autocomplete="email" autocapitalize="off" spellcheck="false"/>
+          <button class="lm-email-btn" id="lmEmailBtn" onclick="lmSubmitLead()">解锁报告 →</button>
+        </div>
+        <div class="lm-turnstile-wrap"><div id="lmTurnstile" aria-label="安全验证"></div></div>
+        <p class="lm-gate-error" id="lmGateError" role="alert" aria-live="polite"></p>
+        <p class="lm-gate-note">无垃圾邮件。随时取消订阅。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="channel" aria-hidden="true"></div>
+
+<!-- WHAT THE REPORT SAYS -->
+<section class="lm-what reveal">
+<div class="lm-what-inner">
+<p class="tag">你将获得什么</p>
+<h2>不是分数。<em>而是修复列表。</em></h2>
+<div class="lm-what-grid">
+<div class="lm-feat">
+<span class="lm-feat-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#search"/></svg></span>
+<h3>每个问题，都在其页面上</h3>
+<p>每个发现都标明了它所在的 URL。</p>
+</div>
+<div class="lm-feat">
+<span class="lm-feat-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
+<h3>按类别评分</h3>
+<p>抓取健康度、页面优化、内容、结构化数据、Core Web Vitals。</p>
+</div>
+<div class="lm-feat">
+<span class="lm-feat-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg></span>
+<h3>按顺序修复</h3>
+<p>先是错误，然后是警告，最后是机会。</p>
+</div>
+<div class="lm-feat">
+<span class="lm-feat-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#map"/></svg></span>
+<h3>整个网站</h3>
+<p>你站点地图中的每个页面，而不仅仅是你输入的那个。</p>
+</div>
+</div>
+</div>
+</section>
+
+<div class="lm-trust reveal" aria-label="粘贴前须知">
+<span><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#github"/></svg> 开源，MIT 许可</span>
+<span><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> 无需账户，无需银行卡</span>
+<span><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg> 与应用中使用的智能体相同</span>
+</div>
+
+<!-- FAQ (shared .faq styles) -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">常见问题</p>
+<h2>四个<em>问题</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.1s">
+<details class="faq-item">
+<summary class="faq-q">它真的是免费的吗？</summary>
+<p class="faq-a">是的。它使用我们的密钥运行。你的电子邮件用于获取报告，仅此而已。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">需要多长时间？</summary>
+<p class="faq-a">两到四分钟，具体取决于你的站点地图列出的页面数量。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">你会如何处理我的电子邮件？</summary>
+<p class="faq-a">我们会发送报告摘要。你可以随时取消订阅。绝不出售，绝不分享。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">它和应用中的审计一样吗？</summary>
+<p class="faq-a">相同的开源智能体。在应用中，它使用你自己的密钥运行并保存你的报告。</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CLOSING FORM -->
+<section class="lm-cta reveal" id="cta">
+<h2>Duct 会在你的网站上发现什么<em>？</em></h2>
+<div class="lm-url-form" role="group" aria-label="网站 URL">
+<span class="lm-url-prefix" aria-hidden="true">https://</span>
+<input type="url" id="lmUrl2" class="lm-url-input" placeholder="your-site.com" aria-label="你的网站 URL" autocomplete="url" autocapitalize="off" spellcheck="false"/>
+<button class="lm-url-btn" id="lmUrl2Btn" onclick="lmStartScan(&#x27;lmUrl2&#x27;)" aria-label="审计我的网站">
+<span class="lm-btn-idle">审计我的网站 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span>
+<span class="lm-btn-checking" aria-hidden="true">正在检查…</span>
+</button>
+</div>
+<p class="lm-url-error" id="lmUrl2Error" role="alert" aria-live="polite"></p>
+<p class="lm-footnote">免费 · 无需信用卡 · 两到四分钟</p>
+</section>
+
+</main>
+
+<!-- FOOTER -->
+<div data-duct-partial="/zh-cn/partials/footer-expanded.html"><div class="legal-fallback"><a href="/zh-cn/">Duct</a><a href="/zh-cn/about">关于</a><a href="/zh-cn/privacy">隐私政策</a><a href="/zh-cn/terms">服务条款</a></div></div>
+
+<!-- LEAD MAGNET STATE MACHINE -->
+<script>
+(function () {
+  'use strict';
+
+  var capturedUrl = '';
+  var turnstileWidgetId = null;
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  function setState(s) {
+    document.body.setAttribute('data-lm-state', s);
+  }
+
+  function showStepVisible(id) {
+    var el = document.getElementById(id);
+    if (el) el.classList.add('visible');
+  }
+
+  function showStepDone(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add('visible', 'done');
+    var spinner = el.querySelector('.lm-step-spinner');
+    if (spinner) {
+      var icon = document.createElement('span');
+      icon.className = 'lm-step-icon';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.innerHTML = '<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg>';
+      spinner.parentNode.replaceChild(icon, spinner);
+    }
+  }
+
+  // GTM and PostHog read these; without them the funnel is a page view and
+  // nothing else. ductTrack (assets/duct.js) feeds both behind the consent gate.
+  function track(event) {
+    if (window.ductTrack) window.ductTrack(event);
+  }
+
+  function normalizeUrl(raw) {
+    raw = raw.trim();
+    if (!raw) return '';
+    if (!/^https?:\/\//i.test(raw)) raw = 'https://' + raw;
+    return raw;
+  }
+
+  function extractDomain(url) {
+    try {
+      return new URL(url).hostname.replace(/^www\./, '');
+    } catch (e) {
+      return url;
+    }
+  }
+
+  // ── Phase 1: URL → scan animation ─────────────────────────────────────────
+
+  // Two forms call this, the hero's and the closing one's: `inputId` names
+  // the input, and its button and error line share the id as a prefix.
+  window.lmStartScan = function (inputId) {
+    inputId = inputId || 'lmUrl';
+    var input = document.getElementById(inputId);
+    var raw = input.value;
+    var errEl = document.getElementById(inputId + 'Error');
+    var btn = document.getElementById(inputId + 'Btn');
+    errEl.textContent = '';
+
+    var url = normalizeUrl(raw);
+    if (!url || !/^https?:\/\/.+\..+/.test(url)) {
+      errEl.textContent = 'Please enter a valid website URL (e.g. your-site.com)';
+      input.focus();
+      return;
+    }
+
+    // Quick reachability pre-flight — swap button to "Checking…" state
+    btn.disabled = true;
+    btn.classList.add('is-checking');
+
+    var apiUrl = (window.DUCT_CONFIG && window.DUCT_CONFIG.api_url) || 'http://localhost:8002';
+    fetch(apiUrl + '/api/lead-magnet/check-url?url=' + encodeURIComponent(url))
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        btn.disabled = false;
+        btn.classList.remove('is-checking');
+        if (!data.ok) {
+          errEl.textContent = data.reason || 'We couldn\'t reach that site. Please double-check the URL.';
+          input.focus();
+          return;
+        }
+        lmRunScan(url);
+      })
+      .catch(function () {
+        // If the check itself fails (network error, offline), proceed anyway
+        btn.disabled = false;
+        btn.classList.remove('is-checking');
+        lmRunScan(url);
+      });
+  };
+
+  function lmRunScan(url) {
+    capturedUrl = url;
+    var domain = extractDomain(url);
+
+    // Fill scanning section UI
+    document.getElementById('lmScanningUrl').textContent = domain;
+    document.getElementById('lmBrowserAddr').textContent = domain;
+
+    // Transition to scanning state. The closing form sits at the foot of the
+    // page; the scan plays at the top, so go there.
+    setState('scanning');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    track('seo_audit_scan');
+
+    // Reveal steps with stagger
+    setTimeout(function () { showStepVisible('lmStep1'); }, 400);
+    setTimeout(function () { showStepDone('lmStep1'); showStepVisible('lmStep2'); }, 1600);
+    setTimeout(function () { showStepDone('lmStep2'); showStepVisible('lmStep3'); }, 2800);
+    setTimeout(function () { showStepDone('lmStep3'); }, 4200);
+
+    // Transition to gate after 5 seconds
+    setTimeout(function () { lmShowGate(domain); }, 5000);
+  }
+
+  function lmShowGate(domain) {
+    // Update gate headline with domain
+    var headline = document.getElementById('lmLockHeadline');
+    if (headline) headline.textContent = 'See what we found on ' + domain;
+
+    setState('gate');
+
+    // Initialize Turnstile if not already done
+    lmInitTurnstile();
+  }
+
+  // ── Turnstile ──────────────────────────────────────────────────────────────
+
+  function lmInitTurnstile() {
+    // Skip on localhost — Cloudflare rejects tokens from non-registered hostnames;
+    // backend also bypasses verification locally (app_env == "local")
+    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') return;
+    var siteKey = (window.DUCT_CONFIG && window.DUCT_CONFIG.turnstile_site_key) || '';
+    if (!siteKey || turnstileWidgetId !== null) return;
+
+    if (window.turnstile) {
+      _renderTurnstile(siteKey);
+    } else {
+      // Load Turnstile script
+      var script = document.createElement('script');
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=lmOnTurnstileLoad';
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+      window.lmOnTurnstileLoad = function () { _renderTurnstile(siteKey); };
+    }
+  }
+
+  function _renderTurnstile(siteKey) {
+    if (turnstileWidgetId !== null) return;
+    turnstileWidgetId = window.turnstile.render('#lmTurnstile', {
+      sitekey: siteKey,
+      theme: 'light',
+      appearance: 'always',
+      callback: function () { /* token available via getResponse */ },
+      'expired-callback': function () { turnstileWidgetId = null; },
+      'error-callback': function () {
+        document.getElementById('lmGateError').textContent = 'Security check failed. Please refresh and try again.';
+      },
+    });
+  }
+
+  // ── Phase 2: Email submit → backend → redirect ─────────────────────────────
+
+  window.lmSubmitLead = function () {
+    var email = document.getElementById('lmEmail').value.trim();
+    var errEl = document.getElementById('lmGateError');
+    errEl.textContent = '';
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errEl.textContent = 'Please enter a valid email address.';
+      document.getElementById('lmEmail').focus();
+      return;
+    }
+
+    var turnstileToken = '';
+    if (window.turnstile && turnstileWidgetId !== null) {
+      turnstileToken = window.turnstile.getResponse(turnstileWidgetId) || '';
+    }
+
+    // Disable form while submitting
+    var btn = document.getElementById('lmEmailBtn');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    setState('submitting');
+
+    var apiUrl = (window.DUCT_CONFIG && window.DUCT_CONFIG.api_url) || 'http://localhost:8002';
+    var appUrl = (window.DUCT_CONFIG && window.DUCT_CONFIG.app_url) || 'http://localhost:3003';
+
+    fetch(apiUrl + '/api/lead-magnet/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: email,
+        website_url: capturedUrl,
+        turnstile_token: turnstileToken,
+        magnet_type: 'seo_audit',
+      }),
+    })
+      .then(function (res) {
+        if (!res.ok) {
+          return res.json().then(function (data) {
+            throw new Error(data.detail || 'Submission failed. Please try again.');
+          });
+        }
+        return res.json();
+      })
+      .then(function (data) {
+        track('seo_audit_lead');
+        window.location.href =
+          appUrl +
+          '/lead/seo-audit?url=' +
+          encodeURIComponent(capturedUrl) +
+          '&token=' +
+          encodeURIComponent(data.token);
+      })
+      .catch(function (err) {
+        setState('gate');
+        btn.disabled = false;
+        btn.textContent = 'Unlock report →';
+        errEl.textContent = err.message || 'Something went wrong. Please try again.';
+        // Reset Turnstile
+        if (window.turnstile && turnstileWidgetId !== null) {
+          window.turnstile.reset(turnstileWidgetId);
+        }
+      });
+  };
+
+  // Allow Enter key in email field
+  document.addEventListener('DOMContentLoaded', function () {
+    var emailInput = document.getElementById('lmEmail');
+    if (emailInput) {
+      emailInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') window.lmSubmitLead();
+      });
+    }
+    ['lmUrl', 'lmUrl2'].forEach(function (id) {
+      var urlInput = document.getElementById(id);
+      if (urlInput) {
+        urlInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') window.lmStartScan(id);
+        });
+      }
+    });
+  });
+})();
+</script>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+
+</body>
+</html>

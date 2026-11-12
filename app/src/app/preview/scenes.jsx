@@ -23,6 +23,12 @@ import ContextCompressionCard from "@/components/ContextCompressionCard.jsx";
 import FrontDoor from "@/components/onboarding/FrontDoor";
 import DocumentPicker, { DocumentState } from "@/components/onboarding/DocumentPicker";
 import AgentAccess from "@/components/settings/AgentAccess";
+import AgentConsent, {
+  CONSENT_ALLOWED,
+  CONSENT_ASK,
+  CONSENT_EXPIRED,
+  CONSENT_SIGN_IN,
+} from "@/components/settings/AgentConsent";
 import { DocumentError } from "@/lib/onboardingApi";
 import Desk from "@/components/insights/Desk";
 import DeskComposer from "@/components/insights/desk/DeskComposer";
@@ -31,12 +37,19 @@ import ChatInput from "@/components/workspace/ChatInput";
 import { DropHint } from "@/components/workspace/Attachments";
 import { AUTONOMY_ASK } from "@/lib/projectsApi";
 import { CornerNotice } from "@/components/ui/corner-notice";
-import { FolderOpen, RefreshCw } from "lucide-react";
+import { CalendarPlus, FolderOpen, Plus, RefreshCw } from "lucide-react";
 import { CookieConsent } from "@/components/CookieConsent";
+import { StarAskNotice, StarAskView } from "@/components/StarAsk";
 import LoadError from "@/components/LoadError";
 import CloneFromUrlDialog from "@/components/content/CloneFromUrlDialog";
+import FeedPlanDialog from "@/components/content/FeedPlanDialog";
+import { DEFAULT_FEED } from "@/lib/contentFeed";
+import FeedSummary from "@/components/content/FeedSummary";
+import ScheduleCard from "@/components/schedules/ScheduleCard";
 import CloneSourceNote from "@/components/content/CloneSourceNote";
-import DeskCards from "@/components/insights/desk/DeskCards";
+import { FormatCard, FormatDetailSheet, FormatEditorSheet } from "@/components/content/FormatLibrary";
+import { DeskConnectFirst } from "@/components/insights/desk/DeskCards";
+import FirstSourceCelebration from "@/components/connections/FirstSourceCelebration";
 import DeskActivity, { activityGridClass } from "@/components/insights/desk/DeskActivity";
 import SplitWorkspace from "@/components/workspace/SplitWorkspace";
 import { ArtifactPaneHeader, BriefPane, DataPane, DocumentFocus } from "@/components/insights/InsightsWorkspace";
@@ -46,19 +59,30 @@ import { activitiesFromEvents, contextActivity, dataSourceRollup } from "@/lib/t
 import { briefFile } from "@/lib/brief";
 import { saveText } from "@/lib/download";
 import { ArtifactGallery } from "@/components/artifacts/ArtifactCards";
-import { NEEDS_YOU, FOUND, IN_PROGRESS } from "@/lib/desk";
+import { ChartJsonView } from "@/components/artifacts/ArtifactRenderer";
+import { DESK_SCENARIOS, deskScenario } from "@/lib/__fixtures__/deskScenarios.mjs";
+import { KANBAN_SCENARIO_IDS, PLAN_PICKER_SCENARIOS, PLAN_SCENARIOS, planChangeScenario, planPickerScenario, planScenario } from "@/lib/__fixtures__/planScenarios.mjs";
+import { PlanBoardView, PlanView } from "@/components/content/PlanBoard";
+import { startOfDay } from "@/lib/contentSchedule";
 import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
 import ConnectorTile from "@/components/connections/ConnectorTile";
 import ManualConnectorCard from "@/components/connections/ManualConnectorCard";
+import OAuthConnectorCard from "@/components/connections/OAuthConnectorCard";
 import McpConnectDialog from "@/components/connections/McpConnectDialog";
-import McpConnectors from "@/components/connections/McpConnectors";
-import { NATIVE_SOURCE } from "@/lib/connectorSource";
+import McpConnectors, { useMcpConnectors } from "@/components/connections/McpConnectors";
+import { NATIVE_SOURCE, mcpSource } from "@/lib/connectorSource";
+import BringAnyTool from "@/components/connections/BringAnyTool";
+import ConnectorBrowser, { NO_FILTERS, StatusTabs } from "@/components/connections/ConnectorBrowser";
+import { CATALOG_SCENARIOS, STARTERS as CATALOG_STARTERS, catalogScenario } from "@/lib/__fixtures__/connectorCatalogs.mjs";
+import { FIGMA_LISTINGS, GATEWAY_ONLY_LISTINGS, STRIPE_LISTINGS } from "@/lib/__fixtures__/mcpRegistry.mjs";
 import PauseCard from "@/components/workspace/PauseCard";
 import { AgentEvent } from "@/lib/agentEvents";
 import ProviderCard from "@/components/connections/ProviderCard";
+import InstanceProviderCard from "@/components/connections/InstanceProviderCard";
+import EndpointProviderCard from "@/components/connections/EndpointProviderCard";
 import { LOGOS } from "@/components/connections/logos";
-import { PROVIDERS } from "@/lib/providerKeys";
+import { ENDPOINT_PROVIDER, INSTANCE_PROVIDERS, PROVIDERS } from "@/lib/providerKeys";
 import EntityAvatar from "@/components/connections/EntityAvatar";
 import ProjectEntitySelect from "@/components/connections/ProjectEntitySelect";
 import StorageBadge from "@/components/connections/StorageBadge";
@@ -72,7 +96,18 @@ import AuditReportV1 from "@/components/audit/AuditReportV1";
 import MemoryTimeline from "@/components/memory/MemoryTimeline";
 import PlanKanban from "@/components/content/PlanKanban";
 import PlanStrategy from "@/components/content/PlanStrategy";
+import PlanDayOne from "@/components/content/PlanDayOne";
+import AccountsTab from "@/components/content/AccountsTab";
+import AnalyticsView, { AnalyticsGate } from "@/components/content/AnalyticsView";
+import AnalyticsReport from "@/components/content/AnalyticsReport";
+import GrowthReportView from "@/components/content/report/GrowthReportView";
+import { GROWTH_REPORT, reportPayload } from "@/lib/__fixtures__/growthReport.mjs";
+import { DiscoverGate } from "@/components/content/DiscoverPage";
+import PlanList from "@/components/content/PlanList";
+import { PlanPeriodMenu, PlanPeriodToggle } from "@/components/content/PlanPeriodPicker";
+import { planPeriodOptions } from "@/lib/contentSchedule";
 import PlanViewport from "@/components/content/PlanViewport";
+import PlanQuickActions from "@/components/content/PlanQuickActions";
 import PostMetricsForm from "@/components/content/PostMetricsForm";
 import PostVideo from "@/components/content/PostVideo";
 import VendorKeyForm from "@/components/content/VendorKeyForm";
@@ -80,7 +115,11 @@ import SynthesisPanel from "@/components/content/SynthesisPanel";
 import PublishReviewPanel from "@/components/content/PublishReviewPanel";
 import TextPostEditor from "@/components/content/TextPostEditor";
 import PostCard from "@/components/content/PostCard";
-import { MEMORY_KINDS } from "@/lib/memoryApi";
+import DraftsQueue from "@/components/content/DraftsQueue";
+import ReminderSetting from "@/components/content/ReminderSetting";
+import WritingSamples from "@/components/content/WritingSamples";
+import VoiceRulesFields from "@/components/content/VoiceRulesFields";
+import { PROJECT_KIND_GROUPS, USER_KIND_GROUPS } from "@/lib/memoryApi";
 import { ANSWERS as STORY_ANSWERS, AUDIT_REPORT as STORY_AUDIT, CHANGE_SET as STORY_CHANGE_SET, CONNECTORS as STORY_CONNECTORS, MEMORIES as STORY_MEMORIES, PLAN as STORY_PLAN, POSTS as STORY_POSTS } from "@/lib/__fixtures__/solo-story.mjs";
 import { TranscriptRow, WorkingIndicator } from "@/components/workspace/AgentChat";
 import StepProgress from "@/components/workspace/StepProgress";
@@ -90,7 +129,7 @@ import VoiceSample from "@/components/profile/VoiceSample";
 import { UsageEmpty } from "@/components/models/UsagePanel";
 import { TIERS } from "@/lib/modelTiers";
 import { Button } from "@/components/ui/button";
-import { NotificationRow } from "@/components/AppSidebar";
+import { AccountMenuItems, NotificationRow } from "@/components/AppSidebar";
 import { LanguageMenuItem } from "@/components/LanguageMenu";
 import {
   DropdownMenu,
@@ -211,6 +250,32 @@ function DialogScene({ label, ...props }) {
   );
 }
 
+// The star ask's card, live: Star swaps to the thank-you, Not now and the ✕
+// put it away, and a button brings it back. The rules that decide when it
+// appears are lib/starAsk.js and its tests; nothing here imitates them.
+function StarAskScene({ start = StarAskView.ASK }) {
+  const [view, setView] = useState(start);
+  if (!view) {
+    return (
+      <Button size="sm" variant="outline" onClick={() => setView(StarAskView.ASK)}>
+        Ask again
+      </Button>
+    );
+  }
+  return (
+    <StarAskNotice
+      view={view}
+      onStar={(event) => {
+        // Stay in the preview; the real card opens the repository.
+        event.preventDefault();
+        setView(StarAskView.THANKS);
+      }}
+      onNotNow={() => setView(null)}
+      onClose={() => setView(null)}
+    />
+  );
+}
+
 function Row({ children }) {
   return <div className="flex flex-wrap items-center gap-4">{children}</div>;
 }
@@ -258,12 +323,21 @@ function DocumentPickerScene({ initial = [] }) {
 const PREVIEW_MCP_URL = "https://api.example.com/mcp";
 const AGENT_TOKENS = [
   {
-    id: "t1", name: "Claude Code on the studio Mac", hint: "Q7mz",
+    id: "a1", kind: "agent", name: "Claude Code", hint: "",
+    created_at: "2026-10-30T09:00:00Z", expires_at: "2027-01-28T09:00:00Z",
+    last_used_at: new Date(Date.now() - 20 * 60_000).toISOString(),
+  },
+  {
+    id: "a2", kind: "agent", name: "Visual Studio Code, the Kestrel rebrand workspace with its two landing pages", hint: "",
+    created_at: "2026-11-01T09:00:00Z", expires_at: "2027-01-30T09:00:00Z", last_used_at: null,
+  },
+  {
+    id: "t1", kind: "token", name: "CI on GitHub Actions", hint: "Q7mz",
     created_at: "2026-09-02T09:00:00Z", expires_at: "2027-09-02T09:00:00Z",
     last_used_at: new Date(Date.now() - 3 * 3600_000).toISOString(),
   },
   {
-    id: "t2", name: "Cursor, client laptop for the Kestrel rebrand and its two landing pages", hint: "b81X",
+    id: "t2", kind: "token", name: "Cursor, client laptop for the Kestrel rebrand and its two landing pages", hint: "b81X",
     created_at: "2026-10-20T09:00:00Z", expires_at: "2027-10-20T09:00:00Z", last_used_at: null,
   },
 ];
@@ -279,12 +353,31 @@ const NO_TOKENS = [];
 // would stop it checking every other scene here.
 const previewPlaintext = (hint) => `duct_mcp_preview-only-not-a-real-token-${hint}`;
 
-function AgentAccessScene({ initial = NO_TOKENS, mintedFirst = false, error = "" }) {
+/** `signInAfterMs` plays the page's watch: copying step 1 starts it, and a
+ *  Claude Code agent signs in that long after, as the poll would find it. */
+function AgentAccessScene({
+  initial = NO_TOKENS, mintedFirst = false, error = "", signInAvailable = true, deepLinks = true, signInAfterMs = 0,
+}) {
   const [tokens, setTokens] = useState(null);
+  const [watching, setWatching] = useState(false);
   useEffect(() => setTokens(initial), [initial]);
-  const [minted, setMinted] = useState(
-    mintedFirst ? { ...initial[0], token: previewPlaintext(initial[0].hint) } : null,
-  );
+  useEffect(() => {
+    if (!watching || !signInAfterMs) return undefined;
+    const timer = setTimeout(() => {
+      setTokens((prev) => [
+        {
+          id: `a${Date.now()}`, kind: "agent", name: "Claude Code", hint: "", created_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 90 * 86400_000).toISOString(), last_used_at: null,
+        },
+        ...(prev || []),
+      ]);
+    }, signInAfterMs);
+    return () => clearTimeout(timer);
+  }, [watching, signInAfterMs]);
+  const [minted, setMinted] = useState(() => {
+    const first = initial.find((row) => row.kind === "token");
+    return mintedFirst && first ? { ...first, token: previewPlaintext(first.hint) } : null;
+  });
   return (
     <div className="p-6">
       <AgentAccess
@@ -292,9 +385,13 @@ function AgentAccessScene({ initial = NO_TOKENS, mintedFirst = false, error = ""
         tokens={tokens}
         minted={minted}
         error={error}
+        signInAvailable={signInAvailable}
+        watching={watching}
+        deepLinks={deepLinks}
+        onWatch={setWatching}
         onCreate={(name) => {
           const row = {
-            id: `t${Date.now()}`, name, hint: "Zp4c", created_at: new Date().toISOString(),
+            id: `t${Date.now()}`, kind: "token", name, hint: "Zp4c", created_at: new Date().toISOString(),
             expires_at: new Date(Date.now() + 365 * 86400_000).toISOString(), last_used_at: null,
           };
           setTokens((prev) => [row, ...(prev || [])]);
@@ -438,28 +535,11 @@ function DeskComposerScene(props) {
   return <DeskComposer {...props} autonomy={autonomy} onAutonomyChange={setAutonomy} />;
 }
 
-// Long titles on purpose — an agent wrote these, not someone picking a label
-// short enough to fit. This is the case that revealed DeskCards had no
-// line-clamp: a single item could run the card to nine lines and shove its
-// siblings off the bottom.
+// Long on purpose — an agent wrote this, not someone picking a label short
+// enough to fit. The desk's own long titles are in deskScenarios.mjs.
 const LONG_TITLE =
   "North-star window: Next 90 days: get net new MRR positive and keep it there. Measured 30-day position — $219.95 of new MRR against $297.86 lost to failed payments plus $209.88 sitting past-due, so the window is still net negative.";
 
-const DESK_BUCKETS = {
-  [NEEDS_YOU]: [
-    { id: "n1", title: "Audit our Google Search performance please.", detailCode: "resume", tone: "attention", at: "2026-09-09T06:00:00Z" },
-  ],
-  [FOUND]: [
-    { id: "f1", title: "Next growth milestone: 3_repeatable_growth", detailCode: "checked", tone: "sure", at: "2026-09-08T09:00:00Z" },
-    { id: "f2", title: LONG_TITLE, detailCode: "checked", tone: "sure", at: "2026-09-08T09:00:00Z" },
-    { id: "f3", title: "North-star metric: Net new revenue", detailCode: "checked", tone: "sure", at: "2026-09-08T09:00:00Z" },
-  ],
-  [IN_PROGRESS]: [
-    { id: "p1", title: "Audit our Google Search performance please.", detailCode: "working", tone: "running", at: "2026-09-09T06:00:00Z" },
-    { id: "p2", title: "Audit our Google Search performance please.", detailCode: "working", tone: "running", at: "2026-09-09T06:00:00Z" },
-  ],
-};
-const DESK_BUCKETS_SHAPED = { needsYou: DESK_BUCKETS[NEEDS_YOU], found: DESK_BUCKETS[FOUND], inProgress: DESK_BUCKETS[IN_PROGRESS] };
 
 // A brief the way the agent actually writes one: a decision up top, the
 // evidence as a table, the gaps as a list. Enough element kinds to catch a
@@ -526,7 +606,7 @@ const TOOL_TRAFFIC = [
   use("FetchData", "t3", { entity_id: "google_ads_campaigns" }),
   returned("FetchData", "t3", {
     status: "reauth_required", entity_id: "google_ads_campaigns", connector_id: "google_ads",
-    message: "google_ads rejected its stored credential (expired or revoked). Nothing from this source can be fetched until the user reconnects it on the Connections page.",
+    message: "google_ads rejected its stored credential (expired or revoked). Nothing from this source can be fetched until the user reconnects it in the Toolbox.",
   }),
   use("WebSearch", "t4", { query: "self-hosted AI gateway 2026 alternatives" }),
   returned("WebSearch", "t4", {
@@ -539,8 +619,11 @@ const TOOL_TRAFFIC = [
   }),
   use("WebFetch", "t5", { url: "https://docs.litellm.ai/docs/proxy/deploy" }),
   returned("WebFetch", "t5", { status: "ok", url: "https://docs.litellm.ai/docs/proxy/deploy", truncated: true }),
-  use("task", "t6", { subagent_type: "verifier", description: "Check every number in the brief against the pulls it cites." }),
+  use("task", "t6", { subagent_type: "verify", description: "Check every number in the brief against the pulls it cites." }),
   { kind: "tool_result", data: { name: "task", tool_use_id: "t6", result: "Checked 9 figures. Two were stated without their window; both corrected.", is_error: false } },
+  use("task", "t6b", { subagent_type: "research_pillar", description: "Fresh angles for the before-and-after pillar." }),
+  { kind: "tool_result", data: { name: "task", tool_use_id: "t6b", result: "Six candidate topics, three with a sound trending this week.", is_error: false } },
+  use("task", "t6c", { subagent_type: "research_pillar", description: "Fresh angles for the cheat-sheet pillar." }),
   use("SearchMemory", "t7", { query: "pricing change" }),
   returned("SearchMemory", "t7", { count: 2, memories: [{ title: "Pricing changed on 4 Sept" }, { title: "Mobile is the growth channel" }] }),
   use("ListDataSources", "t8", {}),
@@ -549,10 +632,16 @@ const TOOL_TRAFFIC = [
   returned("GetArtifact", "t9", { artifact_id: "a1", title: "Organic growth, week of 8 Sept", kind: "brief", version: 3 }),
   use("FetchPages", "t10", { urls: ["https://acme.io/", "https://acme.io/pricing", "https://acme.io/blog/launch"] }),
   returned("FetchPages", "t10", { pages: [{ url: "https://acme.io/" }, { url: "https://acme.io/pricing" }], errors: ["https://acme.io/blog/launch: 404"] }),
+  use("discover_tiktok", "t13", { reason: "Which hooks pull saves this week", hashtags: ["skincareroutine", "glassskin"] }),
+  returned("discover_tiktok", "t13", { status: "ok", count: 15, found: 30, searched: ["skincareroutine", "glassskin"], posts: new Array(15).fill({}) }),
+  use("discover_tiktok", "t14", { reason: "Trending sounds this week", hashtags: [] }),
+  returned("discover_tiktok", "t14", { status: "skipped", message: "for the model" }),
+  use("publish_post", "t15", { post_id: "p2" }),
+  returned("publish_post", "t15", { status: "skipped", post_id: "p2", topic: "Three fixes before Monday's call", message: "for the model" }),
   use("submit_assessment", "t12", { markers: [], notes: "" }),
   returned("submit_assessment", "t12", { status: "ok", post_id: "p1", topic: "Why your colours look off", overall: 56, band: "needs_work" }),
   use("publish_post", "t11", { post_id: "p1" }),
-  returned("publish_post", "t11", { status: "ok", post_id: "p1", post_bridge_post_id: "pb1", status_label: "scheduled", scheduled_at: "2026-09-23T09:00:00Z" }),
+  returned("publish_post", "t11", { status: "ok", post_id: "p1", publisher: "zernio", publisher_post_id: "zp1", status_label: "scheduled", scheduled_at: "2026-09-23T09:00:00Z" }),
 ];
 
 // A post's pre-publish review as `PostOut.assessment` carries it. Ids only —
@@ -633,6 +722,19 @@ const MCP_SERVERS = [
   }),
 ];
 
+// One server per reason the backend records (store.PROBLEM), so every
+// "Needs attention" line is on screen at once.
+const MCP_ATTENTION = [
+  mcpServer("openseo", { url: "https://app.openseo.so/mcp", name: "OpenSEO", preset: "openseo", auth: "key", status: "needs_reauth", problem: "key_refused", problem_at: "2026-11-01T08:12:00Z" }),
+  mcpServer("notion", { url: "https://mcp.notion.com/mcp", name: "Notion", preset: "notion", status: "needs_reauth", problem: "signed_out", problem_at: "2026-10-30T19:40:00Z" }),
+  mcpServer("linear", { url: "https://mcp.linear.app/mcp", name: "Linear", preset: "linear", status: "needs_reauth", problem: "unreadable" }),
+  mcpServer("posthog", { url: "https://mcp.posthog.com/mcp", name: "PostHog", preset: "posthog", status: "failing", problem: "unreachable", problem_at: "2026-11-02T03:05:00Z" }),
+  mcpServer("docs", { url: "https://mcp.docs-search.example.com/mcp", name: "Docs search", auth: "none", status: "needs_reauth", problem: "auth_required" }),
+  mcpServer("acme", { url: "https://mcp.acme-tools.example.com/mcp", name: "Acme CRM", status: "failing", problem: "failing" }),
+  // From a Duct older than recorded reasons: a status alone.
+  mcpServer("railway", { url: "https://mcp.railway.com", name: "Railway", preset: "railway", status: "needs_reauth" }),
+];
+
 // A run's connected-tool traffic as the recorder stores it: what the agent
 // asked each server, and what came back. Every outcome the row has words for.
 const MCP_TRAFFIC = [
@@ -647,7 +749,7 @@ const MCP_TRAFFIC = [
   use("CallConnectedTool", "m4b", { server: "notion", tool: "update_page" }),
   returned("CallConnectedTool", "m4b", { status: "arguments_too_long", server: "notion", name: "Notion", tool: "update_page", message: "Too long to show for approval, so nothing was sent." }),
   use("CallConnectedTool", "m5", { server: "notion", tool: "search" }),
-  returned("CallConnectedTool", "m5", { server: "notion", name: "Notion", status: "reauth_required", message: "Notion refused the stored sign-in. Reconnect it on the Connections page." }),
+  returned("CallConnectedTool", "m5", { server: "notion", name: "Notion", status: "reauth_required", message: "Notion refused the stored sign-in. Reconnect it in the Toolbox." }),
   use("CallConnectedTool", "m6", { server: "posthog", tool: "query_insights" }),
   returned("CallConnectedTool", "m6", { server: "posthog", name: "PostHog", status: "unreachable", message: "mcp.posthog.com did not answer within 30 seconds." }),
   use("CallConnectedTool", "m7", { server: "openseo", tool: "research_keywords" }),
@@ -675,6 +777,131 @@ const TOOL_APPROVAL = {
     null,
     2,
   ),
+};
+
+// The agent's publish (agents/content/publishing.publish_card): the same
+// card, read from the post and the scheduler rather than the model's words.
+const PUBLISH_APPROVAL = {
+  event: AgentEvent.TOOL_APPROVAL_REQUIRED,
+  interrupt_id: "preview-publish-approval",
+  server: "zernio",
+  server_name: "Zernio",
+  server_url: "https://zernio.com",
+  tool: "publish_post",
+  tool_title: "",
+  reason: "Why your colours look off under office lights",
+  why: "publishes",
+  fingerprint: "preview",
+  arguments: JSON.stringify(
+    {
+      post: "Why your colours look off under office lights",
+      channel: "tiktok",
+      accounts: ["101"],
+      when: "2026-11-13T09:00:00+01:00",
+      as_a_tiktok_draft: false,
+      caption: "Your foundation isn't wrong, your lighting is. Three fixes before Monday's call.",
+      replies: [],
+      replies_you_post_by_hand: 0,
+      media: ["slide-01.png", "slide-02.png", "slide-03.png", "slide-04.png", "slide-05.png", "slide-06.png"],
+    },
+    null,
+    2,
+  ),
+};
+
+// The content agents' TikTok search (agents/content/discover.py): the same
+// card, with the arguments Discover's policy built and its own words.
+const TIKTOK_APPROVAL = {
+  event: AgentEvent.TOOL_APPROVAL_REQUIRED,
+  interrupt_id: "preview-tiktok-approval",
+  server: "apify",
+  server_name: "Apify",
+  server_url: "https://apify.com",
+  tool: "discover_tiktok",
+  tool_title: "",
+  reason: "To see which skincare hooks are pulling saves this week before I re-think Thursday's post.",
+  why: "spends_credits",
+  arguments: JSON.stringify(
+    { hashtags: ["skincareroutine", "glassskin"], resultsPerPage: 30, shouldDownloadVideos: false, shouldDownloadCovers: false, shouldDownloadSubtitles: false },
+    null,
+    2,
+  ),
+};
+
+// The AskUserQuestion pause in the shape the agent is told to write
+// (agents/core/lc.py): a label that is the choice itself, one clause under it.
+// The card draws these as rows; a question whose options are all a word or
+// three and carry no description gets chips instead.
+const QUESTIONS_DIRECTION = {
+  event: AgentEvent.QUESTIONS_REQUIRED,
+  interrupt_id: "preview-questions-direction",
+  questions: [
+    {
+      question: "Where should the plan for 8–30 November go?",
+      header: "Direction",
+      multiSelect: false,
+      options: [
+        { label: "Keep the current plan", description: "The 23 days as scheduled: 16 videos, 4 slideshows, 3 cheat sheets." },
+        { label: "Pivot to cheat sheets", description: "More image cheat sheets and shopping carousels to break the saves stall." },
+        { label: "Double down on video", description: "Before-and-afters only, the format with the best completion." },
+        { label: "Start over", description: "Clear the schedule and draft a new angle for one audience." },
+      ],
+    },
+  ],
+};
+
+const QUESTIONS_QUICK = {
+  event: AgentEvent.QUESTIONS_REQUIRED,
+  interrupt_id: "preview-questions-quick",
+  questions: [
+    {
+      question: "Which channel should the first week lead on?",
+      header: "Channel",
+      multiSelect: false,
+      options: [{ label: "Instagram" }, { label: "TikTok" }, { label: "YouTube Shorts" }],
+    },
+    {
+      question: "What should the posts push?",
+      header: "Goal",
+      multiSelect: true,
+      options: [{ label: "Trial sign-ups" }, { label: "Saves" }, { label: "Follows" }, { label: "Comments" }],
+    },
+  ],
+};
+
+const QUESTIONS_EDGES = {
+  event: AgentEvent.QUESTIONS_REQUIRED,
+  interrupt_id: "preview-questions-edges",
+  questions: [
+    {
+      question: "Welche Zielgruppe soll der Plan für die zweite Novemberhälfte in den Mittelpunkt stellen?",
+      header: "Zielgruppe",
+      multiSelect: false,
+      options: [
+        {
+          label: "Wiederkehrende Kundinnen und Kunden mit abgelaufener Testphase",
+          description: "Die Gruppe mit der höchsten Abschlussquote im Oktober, aber ohne einen einzigen gespeicherten Beitrag seit drei Wochen.",
+        },
+        { label: "Neue Besucher aus der Suche", description: "Kurze Erklärvideos, die die erste Frage beantworten." },
+      ],
+    },
+    {
+      question: "Keep the Thursday slot?",
+      header: "Slot",
+      multiSelect: false,
+      options: [{ label: "Yes" }],
+    },
+    {
+      question: "Which of the three series carries on, if any?",
+      header: "Series",
+      multiSelect: true,
+      options: [
+        { label: "Before and after", description: "Six episodes posted, completion holding." },
+        { label: "One-minute cheat sheet", description: "Three posted, the only series with saves." },
+        { label: "Founder diary", description: "Two posted, no signal yet." },
+      ],
+    },
+  ],
 };
 
 const TOOL_APPROVAL_LONG = {
@@ -779,6 +1006,247 @@ function racingLoader() {
  * restart the load forever), and must start over on the next mount, or the
  * scene works once per page load and shows a finished desk ever after.
  */
+const CATALOG_TONE = { connected: "on", attention: "partial", available: "off" };
+const CATALOG_STATUS = { connected: "Connected", attention: "Needs reconnecting", available: "Not connected" };
+
+/** A fixture entry as the tile the page would draw for it. */
+function catalogTile(entry, extra = {}) {
+  return (
+    <ConnectorTile
+      key={entry.id}
+      logo={<EntityAvatar name={entry.logo} className="conn-favicon" />}
+      title={entry.title}
+      description={entry.description}
+      source={entry.origin === "duct" ? NATIVE_SOURCE : mcpSource(entry.publisher)}
+      tone={CATALOG_TONE[entry.status]}
+      status={CATALOG_STATUS[entry.status]}
+      onClick={() => {}}
+      {...extra}
+    />
+  );
+}
+
+/** One generated catalogue through the real browser, search and filters live. */
+function CatalogScenario({ id, initialFilters }) {
+  const entries = useMemo(
+    () => catalogScenario(id).map((e) => ({ ...e, render: () => catalogTile(e) })),
+    [id],
+  );
+  const byId = useMemo(() => Object.fromEntries(entries.map((e) => [e.id, e])), [entries]);
+  const [filters, setFilters] = useState({ ...NO_FILTERS, ...initialFilters });
+  return (
+    <div className="flex flex-col gap-10">
+      {/* The tabs sit in the page header's actions on the real page. */}
+      <div className="flex justify-end">
+        <StatusTabs entries={entries} filters={filters} onFiltersChange={setFilters} />
+      </div>
+      <ConnectorBrowser
+        entries={entries}
+        filters={filters}
+        onFiltersChange={setFilters}
+        featured={CATALOG_STARTERS}
+        renderFeatured={(fid) => catalogTile(byId[fid], { featured: true, benefit: byId[fid].description })}
+        hero={(searchFor) => <BringAnyTool onAdd={() => {}} onSearch={searchFor} />}
+        trailing={
+          <ConnectorTile
+            key="add"
+            logo={<Plus className="mcp-add-icon" aria-hidden="true" />}
+            title="Any MCP server"
+            source={mcpSource("")}
+            description="Paste the address of any remote MCP server."
+            status="Add by address"
+            onClick={() => {}}
+          />
+        }
+      />
+    </div>
+  );
+}
+
+/**
+ * The Toolbox search with the MCP Registry asked too, over a stub that
+ * answers like `GET /api/user/mcp/registry`: `answer` is "results" (the
+ * fixture matching the query), "gateways", "failed" (the server says so),
+ * "unreachable" (the request never landed), "off" or "slow". A
+ * connect with a key saves on the spot; Figma's without one waits on the
+ * browser; anything else connects as an open server would. Either way the
+ * server leaves the registry's section for the catalogue's results.
+ */
+function RegistryScenario({ id = "today", query, answer = "results", servers = MCP_NONE }) {
+  const [message, setMessage] = useState({});
+  const entries = useMemo(
+    () => catalogScenario(id).map((e) => ({ ...e, render: () => catalogTile(e) })),
+    [id],
+  );
+  const byId = useMemo(() => Object.fromEntries(entries.map((e) => [e.id, e])), [entries]);
+  const [filters, setFilters] = useState({ ...NO_FILTERS, query });
+  const api = useMemo(() => {
+    let rows = [...servers];
+    return {
+      listPresets: async () => MCP_PRESETS,
+      listServers: async () => rows,
+      systemBrowser: async () => true,
+      openSignIn: async () => "browser",
+      claim: async () => null,
+      remove: async (sid) => {
+        rows = rows.filter((r) => r.id !== sid);
+      },
+      check: async () => ({ server: rows[0], tools: 3 }),
+      searchRegistry: async (q) => {
+        if (answer === "slow") return new Promise(() => {});
+        await new Promise((r) => setTimeout(r, 400));
+        if (answer === "failed") throw Object.assign(new Error("The MCP Registry didn't answer in time."), { status: 502 });
+        if (answer === "unreachable") throw new TypeError("Load failed");
+        if (answer === "off") return { available: false, servers: [] };
+        if (answer === "gateways") return { available: true, servers: GATEWAY_ONLY_LISTINGS };
+        const all = [...STRIPE_LISTINGS, ...FIGMA_LISTINGS];
+        const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+        const found = all.filter((l) => words.every((w) => `${l.name} ${l.title} ${l.description}`.toLowerCase().includes(w)));
+        return { available: true, servers: found };
+      },
+      connect: async ({ url, name, apiKey }) => {
+        await new Promise((r) => setTimeout(r, 500));
+        if (!apiKey && url.includes("figma")) return { status: "authorize", authorize_url: "https://example.com/authorize" };
+        const server = mcpServer(`reg-${rows.length}`, { url, name, auth: apiKey ? "key" : "none" });
+        rows = [...rows.filter((r) => r.url !== url), server];
+        return { status: "connected", server };
+      },
+    };
+  }, [servers, answer]);
+  const mcp = useMcpConnectors({ signedIn: true, search: filters.query, api, onMessage: setMessage });
+  return (
+    <div className="flex flex-col gap-10">
+      <McpMessage message={message} />
+      <ConnectorBrowser
+        entries={[...entries, ...mcp.entries]}
+        filters={filters}
+        onFiltersChange={setFilters}
+        featured={CATALOG_STARTERS}
+        renderFeatured={(fid) => catalogTile(byId[fid], { featured: true, benefit: byId[fid].description })}
+        hero={
+          mcp.phase === "ready"
+            ? (searchFor) => <BringAnyTool onAdd={mcp.addServer} onSearch={mcp.registryAvailable ? searchFor : null} />
+            : null
+        }
+        trailing={mcp.phase === "ready" ? mcp.addTile() : mcp.placeholder}
+        moreResults={mcp.registry}
+        searchPlaceholder={mcp.registryAvailable ? "Search any tool or MCP server" : ""}
+      />
+      {mcp.overlays}
+    </div>
+  );
+}
+
+/**
+ * The board with its plan picker open, over one of the picker's situations,
+ * relative to today. Picking a plan shows it; the running plan's posts come
+ * from its board scenario.
+ */
+function PlanPickerScenario({ id }) {
+  const today = useMemo(() => startOfDay(new Date()), []);
+  const plans = useMemo(() => planPickerScenario(id, today), [id, today]);
+  const board = useMemo(() => planScenario("mid-month", today), [today]);
+  const [activeId, setActiveId] = useState(board.plan.id);
+  const plan = plans.find((p) => p.id === activeId) || plans[0];
+  return (
+    <div style={{ minHeight: 600 }}>
+      <PlanBoardView
+        plans={plans}
+        activeId={plan.id}
+        onSelectPlan={setActiveId}
+        plan={plan}
+        postsById={plan.id === board.plan.id ? board.postsById : {}}
+        view={PlanView.LIST}
+        onViewChange={() => {}}
+        calView="month"
+        onCalViewChange={() => {}}
+        today={today}
+        onStartPlan={() => {}}
+        onRevisePlan={() => {}}
+        onReviseDay={() => {}}
+        pickerOpen
+      />
+    </div>
+  );
+}
+
+/** A plan session's composer with the quick actions over it, for one plan scenario. */
+function PlanQuickActionsScene({ scenario }) {
+  const today = useMemo(() => startOfDay(new Date()), []);
+  const { plan } = useMemo(() => planScenario(scenario, today), [scenario, today]);
+  const [sent, setSent] = useState("");
+  return (
+    <div className="max-w-[720px]">
+      <PlanQuickActions plan={plan} today={today} onSend={setSent} />
+      <ChatInput onSend={() => {}} draftKey={`preview:plan-actions-${scenario}`} placeholder="Ask Duct to refine the plan or post…" />
+      {sent && <p className="mt-3 px-3 text-xs text-muted-foreground">Sent as your message: {sent}</p>}
+    </div>
+  );
+}
+
+/** One generated plan through the real board view, every control live. */
+function PlanScenario({ id, view = PlanView.LIST, channel = null }) {
+  const today = useMemo(() => startOfDay(new Date()), []);
+  const data = useMemo(() => planScenario(id, today), [id, today]);
+  const [current, setCurrent] = useState(view);
+  const [calView, setCalView] = useState("month");
+  const [activeId, setActiveId] = useState(data.plan.id);
+  return (
+    <PlanBoardView
+      plans={data.plans}
+      activeId={activeId}
+      onSelectPlan={setActiveId}
+      plan={data.plan}
+      postsById={data.postsById}
+      view={current}
+      onViewChange={setCurrent}
+      calView={calView}
+      onCalViewChange={setCalView}
+      today={today}
+      onStartPlan={() => {}}
+      onRevisePlan={() => {}}
+      onReviseDay={() => {}}
+      defaultChannel={channel}
+    />
+  );
+}
+
+/**
+ * The plan pane as a PLAN_GENERATED event leaves it, over one of the plan
+ * scenarios: proposed (over a live plan or fresh), accepted, or rejected.
+ * The same plan data the board scenes use, with the proposal fields the
+ * backend adds on top.
+ */
+function PlanViewportScene({ scenario, status, replaces = false, change = null }) {
+  const today = useMemo(() => startOfDay(new Date()), []);
+  const { plan } = useMemo(
+    () => (change ? { plan: planChangeScenario(change, today) } : planScenario(scenario, today)),
+    [scenario, change, today]
+  );
+  const proposed = status === "proposed";
+  const payload = {
+    type: "plan",
+    ...plan,
+    id: proposed ? null : plan.id,
+    status,
+    proposal_id: proposed ? "proposal-preview" : null,
+    replaces_plan_id: replaces ? "plan-live" : null,
+  };
+  return (
+    <div style={{ height: 720, display: "flex" }} className="bg-background">
+      <div className="flex-1 min-w-0">
+        <PlanViewport payload={payload} sessionId="preview" onSendMessage={() => {}} />
+      </div>
+    </div>
+  );
+}
+
+/** One generated desk, loaded once per mount like the real one. */
+function DeskScenario({ id }) {
+  const load = useMemo(() => stubLoader(deskScenario(id)), [id]);
+  return <Desk projectIdOverride="preview" loadDeskFn={load} />;
+}
+
 function DeskRaceScene() {
   const load = useMemo(racingLoader, []);
   useEffect(() => {
@@ -1014,6 +1482,34 @@ const PLAN_STRATEGY_COLD = {
   explore_evidence: "Spreading the month across all three types; next month's numbers decide.",
 };
 
+// A three-channel plan as the agent hands it over since #529: the agent's
+// fields, plus the facts the plan stored from its channel mix, plus days
+// spread the way that mix split them. The lesson keeps the snake_case hook
+// names the history block uses, as a model copies them.
+const PLAN_STRATEGY_DAYS = [
+  ...Array.from({ length: 9 }, () => ({ post_type: "video", platforms: ["tiktok", "instagram"] })),
+  ...Array.from({ length: 4 }, () => ({ post_type: "slideshow", platforms: ["tiktok"] })),
+  ...Array.from({ length: 3 }, () => ({ post_type: "image", platforms: ["tiktok"] })),
+  ...Array.from({ length: 4 }, () => ({ post_type: "slideshow", platforms: ["instagram"] })),
+  ...Array.from({ length: 2 }, () => ({ post_type: "image", platforms: ["instagram"] })),
+  ...Array.from({ length: 6 }, () => ({ post_type: "text", platforms: ["linkedin"] })),
+];
+const PLAN_STRATEGY_MIX = {
+  ...PLAN_STRATEGY,
+  lesson: "transformation_reveal hooks reached 6.5% completion against 1.9% for question_open_loop, so more reveals.",
+  review_notes:
+    "TikTok earned the most saves and shares per post, so it gets three more days; LinkedIn trails and gives one back, still more than a post a week. Instagram has no results yet and keeps its share.",
+  experiment: "Three image posts on TikTok, judged on saves against the video median.",
+  mix: {
+    goal: "intent",
+    channels: [
+      { channel: "tiktok", last_days: 13, standing: "leads", scaling: "video", testing: ["image"] },
+      { channel: "instagram", last_days: 6, standing: "untested", scaling: "", testing: [] },
+      { channel: "linkedin", last_days: 7, standing: "trails", scaling: "text", testing: [] },
+    ],
+  },
+};
+
 const PLAN_STRATEGY_ALL_PROVEN = {
   exploit: "slideshow",
   exploit_evidence:
@@ -1022,12 +1518,183 @@ const PLAN_STRATEGY_ALL_PROVEN = {
   explore_evidence: "Every type has at least three measured posts, so the test slot goes to identity_challenge hooks instead.",
 };
 
+// A whole month as the plan agent hands it over: thirty pending posts, the
+// story's five topics cycled with the bets each slot makes. What the plan
+// workspace's list shows the moment submit_plan runs.
+const MONTH_OBJECTIVES = ["saves", "follows", "shares", "clicks", "saves"];
+const PLAN_MONTH = {
+  id: "plan_preview_month",
+  name: "October content plan",
+  start_date: "2026-10-01T00:00:00",
+  days: Array.from({ length: 30 }, (_, i) => {
+    const d = STORY_PLAN.days[i % STORY_PLAN.days.length];
+    return { ...d, status: "pending", post_id: null, objective: MONTH_OBJECTIVES[i % MONTH_OBJECTIVES.length] };
+  }),
+};
+
+// The brand context the first-run Plans tab reads back. A project that came
+// through the audit usually has a voice and pillars and no linked account.
+const PLAN_BRAND_READY = {
+  description: "Budgeting for freelancers who invoice in euros.",
+  content_brand: { tone: "Practical, warm, a little dry. Numbers over adjectives." },
+  content_pillars: {
+    items: [
+      { id: "money_habits", name: "Money habits" },
+      { id: "invoicing", name: "Invoicing" },
+      { id: "tax_without_fear", name: "Tax without fear" },
+      { id: "behind_the_app", name: "Behind the app" },
+    ],
+  },
+};
+const PLAN_BRAND_EMPTY = { description: "", content_brand: {}, content_pillars: {} };
+const PLAN_ACCOUNTS = [
+  { account_id: 1, platform: "tiktok", username: "solo.money" },
+  { account_id: 2, platform: "instagram", username: "solomoney.app" },
+];
+// The Apify key a user brings, as GET /content/vendor-keys/apify answers; a
+// scheduler is any of GET /content/publishers being connected.
+const PLAN_VENDORS_MISSING = {
+  apify: { connected: false, own_key: false, is_owner: true },
+};
+const PLAN_VENDORS_CONNECTED = {
+  apify: { connected: true, own_key: true, is_owner: true },
+};
+const PLAN_VENDORS_COLLABORATOR = {
+  apify: { connected: false, own_key: false, is_owner: false },
+};
+// The Accounts tab's three reads, as GET /content/publishers, /social-accounts
+// and /linked-accounts answer them.
+const SCHEDULERS_NONE = [
+  { id: "post_bridge", label: "PostBridge", dashboard_url: "https://app.post-bridge.com", reports: ["facebook", "instagram", "tiktok", "youtube"], connected: false, own_key: false, is_owner: true },
+  { id: "zernio", label: "Zernio", dashboard_url: "https://zernio.com/dashboard", reports: ["bluesky", "facebook", "google_business", "instagram", "linkedin", "pinterest", "threads", "tiktok", "twitter", "youtube"], connected: false, own_key: false, is_owner: true },
+];
+const SCHEDULERS_BOTH = SCHEDULERS_NONE.map((p) => ({ ...p, connected: true, own_key: true }));
+const SCHEDULER_ACCOUNTS = [
+  { id: "101", publisher: "post_bridge", publisher_label: "PostBridge", platform: "tiktok", username: "solomoney.app" },
+  { id: "acc_li", publisher: "zernio", publisher_label: "Zernio", platform: "linkedin", username: "solomoney", display_name: "Solo Money" },
+  { id: "acc_x", publisher: "zernio", publisher_label: "Zernio", platform: "twitter", username: "solomoneyhq", needs_reconnect: true },
+];
+// The guide the agent is given per channel, as GET /content/channels carries
+// it (backend agents/content/platform_guides.py), shortened to what a scene
+// needs to show the shape: a cadence line, limit chips and three lists.
+const GUIDE_CHECKED = "2026-11";
+// The guides as the backend ships them (agents/content/platform_guides.py,
+// dumped by guide_payload), so the scene shows what the agent is told rather
+// than a paraphrase that drifts. Regenerate when that table changes.
+const CHANNEL_GUIDES = {
+  tiktok: {"formats": ["Video 9:16, 15 s to 10 min uploads; 21 to 60 s finishes most often", "Photo carousel (photo mode), up to 35 photos, with a sound", "On-screen text for the sound-off viewer"], "limits": ["Caption 4,000 characters; the first 50 carry the search weight", "3 to 5 hashtags", "Links in the caption are not clickable"], "wins": ["Completion and rewatches first, then shares and saves", "A hook in the first second and a payoff that makes the loop", "Captions written as the search phrase a viewer would type; creators can set a video's search keywords", "A trending sound only when it fits the post"], "avoid": ["Watermarked reposts from other apps", "Twenty hashtags", "Undisclosed AI-made footage: it is labelled and viewers can turn it down"], "cadence": "Daily if the quality holds, three to five a week at least", "media": ["video", "slideshow", "image"]},
+  instagram: {"formats": ["Reels 9:16 up to 3 min; 15 to 90 s is the working range", "Carousel 4:5, up to 20 slides; slide 2 is shown to people who scrolled past slide 1", "Single image 4:5; Stories 9:16 for the daily touch"], "limits": ["Caption 2,200 characters, folded after about 125", "At most 5 hashtags", "No clickable link in a caption: bio or sticker"], "wins": ["Sends per reach, then watch time and saves", "Carousels with a sound also surface in Reels", "Keywords in the caption and on-screen text: Instagram search reads them", "Alt text on every image"], "avoid": ["Undisclosed AI-generated content: reach drops", "Hashtags as the first line", "Engagement bait"], "cadence": "Three to five posts a week, a Story most days", "media": ["video", "slideshow", "image"]},
+  youtube: {"formats": ["Shorts 9:16 up to 3 min; 15 to 50 s is the sweet spot", "Long-form 16:9 with chapters when the topic needs more than a minute"], "limits": ["Title 100 characters, about 60 visible", "Description 5,000 characters; the first three hashtags show above the title", "More than 60 hashtags and none count"], "wins": ["Shorts: viewed vs swiped away, then rewatches and a loop that ends where it began", "Long-form: click-through and retention; the title carries the keyword", "Captions on, because many Shorts play muted"], "avoid": ["Mass-produced or repetitive uploads: YouTube calls it inauthentic content and demonetises it", "Realistic altered or synthetic footage without the AI disclosure", "A Short that restates a long video's title and nothing else"], "cadence": "Two or three Shorts a week; one long-form a week or fortnight", "media": ["video"]},
+  facebook: {"formats": ["Reels (every video posts as one); keep it under 90 s", "Photo and carousel posts", "Text posts that ask something; link posts sparingly"], "limits": ["63,206 characters; about three lines show before 'See more'", "Hashtags optional, at most 2 or 3"], "wins": ["Watch time and shares, then comments worth reading", "Native video over links to video", "A question in the first line"], "avoid": ["A link in the post body: reach is cut, so it goes in the first comment", "Engagement bait ('tag a friend who…')", "Posting more than once a day"], "cadence": "Three to five posts a week", "media": ["video", "slideshow", "image", "text"]},
+  twitter: {"formats": ["A post of 280 characters (Premium can write longer, but the feed shows the first lines)", "A thread: a hook post and five to eight that pay it off", "Native video up to 2 min 20 s on a free account; images 16:9 or 4:5"], "limits": ["280 characters per post, every link counts as 23", "0 or 1 hashtag"], "wins": ["Replies weigh far more than likes, so write the post that gets answered", "Native media and text; an outbound link belongs in the first reply", "The first line is the whole post for most readers"], "avoid": ["A link in the post itself: reach drops hard on a free account", "Hashtag strings", "Reposting the LinkedIn version unchanged"], "cadence": "One to three a day, replies included", "media": ["text", "image", "video"]},
+  linkedin: {"formats": ["Text post; the first 210 characters are what shows before 'see more'", "Document carousel (a PDF of 8 to 12 pages) for a how-to", "Vertical video of 1 to 2 min; polls; a newsletter for the long form"], "limits": ["3,000 characters", "0 to 3 hashtags", "No outbound link in the post body"], "wins": ["Comments and dwell time, especially in the first hour", "A specific story or a number in the first two lines", "Replying to every comment the same day"], "avoid": ["Template-shaped AI prose: it is down-ranked", "A link in the post: put it in a comment", "Tagging people who will not reply"], "cadence": "Three to five posts a week, weekday mornings", "media": ["text", "slideshow", "image", "video"]},
+  blog: {"formats": ["An article of 800 to 1,500 words, as long as the answer needs and no longer", "One H1, an H2 per question the reader has, 40 to 60 words of direct answer under each", "A short FAQ at the end, and a figure or table where a comparison is made"], "limits": ["Title under 60 characters with the keyword in it", "Meta description 120 to 155 characters", "One topic per article; a second topic is a second article"], "wins": ["The answer in the first paragraph: search and AI answers both quote it", "Named sources, dates and numbers, which is what gets cited", "Internal links to the two posts a reader would want next", "An author, a date, and an update when the facts change"], "avoid": ["Thin generated prose padded to a word count", "Keyword-stuffed headings", "Publishing without a canonical URL"], "cadence": "One or two a week, and a refresh of an old post a month", "media": ["article"]},
+  wordpress: {"formats": ["An article of 800 to 1,500 words in blocks: heading, paragraph, list, image, table", "One H1 (the title), an H2 per question, 40 to 60 words of answer under each", "A featured image at 1200 by 675 with alt text"], "limits": ["Title under 60 characters; slug three to five words", "Excerpt and meta description 120 to 155 characters", "One category, three to five tags"], "wins": ["The answer in the first paragraph; FAQ and Article schema from the SEO plugin", "Internal links to related posts and a clear next step", "Scheduled publishing at a steady hour"], "avoid": ["Thin generated prose", "Uncategorised posts and empty alt text", "A second H1 inside the body"], "cadence": "One or two a week", "media": ["article"]},
+};
+const CHANNEL_ORDER = ["tiktok", "instagram", "youtube", "facebook", "twitter", "linkedin", "blog", "wordpress"];
+const CHANNEL_LABELS = { tiktok: "TikTok", instagram: "Instagram", youtube: "YouTube", facebook: "Facebook", twitter: "Twitter / X", linkedin: "LinkedIn", blog: "Blog", wordpress: "WordPress" };
+const EMPTY_CHANNEL_PROFILE = { enabled: false, username: "", display_name: "", bio: "", notes: "", target_media: [] };
+// GET /content/channels for a project: every channel Duct offers, in its
+// order, with the project's profile for each and the linked accounts on it.
+const channelsFixture = ({ primary = "", profiles = {}, linked = [] } = {}) => ({
+  primary_publisher: primary,
+  chosen: Object.keys(profiles).length > 0,
+  channels: CHANNEL_ORDER.map((id) => ({
+    id,
+    label: CHANNEL_LABELS[id],
+    enabled: Boolean(profiles[id]?.enabled),
+    supported: ["tiktok", "twitter", "linkedin"].includes(id),
+    long_form: id === "blog" || id === "wordpress",
+    profile: { ...EMPTY_CHANNEL_PROFILE, ...profiles[id] },
+    guide: { platform: id, ...CHANNEL_GUIDES[id], checked: GUIDE_CHECKED },
+    accounts: linked.filter((a) => a.platform === id),
+  })),
+});
+const LINKED_LI = [{ account_id: "acc_li", publisher: "zernio", platform: "linkedin", username: "solomoney" }];
+const loadsAccounts = (publishers, accounts = [], linked = [], channels = channelsFixture()) =>
+  async () => ({ publishers, accounts, linked, channels });
+// The preview never writes: a save resolves after a beat, so the optimistic
+// state and the Saved flash can be seen without a backend.
+const PREVIEW_SAVE = { linked: () => acceptKey(), channels: () => acceptKey() };
+const ACCOUNTS_NONE = loadsAccounts(SCHEDULERS_NONE);
+const ACCOUNTS_BOTH = loadsAccounts(
+  SCHEDULERS_BOTH, SCHEDULER_ACCOUNTS, LINKED_LI,
+  channelsFixture({ primary: "zernio", profiles: { linkedin: { enabled: true }, twitter: { enabled: true } }, linked: LINKED_LI }),
+);
+const ACCOUNTS_COLLABORATOR = loadsAccounts(SCHEDULERS_NONE.map((p) => ({ ...p, is_owner: false })));
+const ACCOUNTS_BY_HAND = loadsAccounts(SCHEDULERS_NONE, [], [], channelsFixture({
+  profiles: {
+    blog: { enabled: true, username: "", display_name: "Solo Money blog", notes: "Hugo site, published by hand on Tuesdays.", target_media: ["article"] },
+    linkedin: { enabled: true, username: "solomoney" },
+  },
+}));
+const ACCOUNTS_OTHER_SCHEDULER = loadsAccounts(
+  SCHEDULERS_BOTH, SCHEDULER_ACCOUNTS, LINKED_LI,
+  channelsFixture({ primary: "zernio", profiles: { tiktok: { enabled: true, username: "solomoney.app" }, linkedin: { enabled: true } }, linked: LINKED_LI }),
+);
+const ACCOUNTS_CHANNEL_OPEN = loadsAccounts(
+  SCHEDULERS_BOTH, SCHEDULER_ACCOUNTS, LINKED_LI,
+  channelsFixture({
+    primary: "zernio",
+    profiles: { linkedin: { enabled: true, username: "solomoney", display_name: "Solo Money", bio: "Money habits for people who freelance.", target_media: ["text", "slideshow"] }, twitter: { enabled: true } },
+    linked: LINKED_LI,
+  }),
+);
+const ACCOUNTS_GERMAN = loadsAccounts(
+  SCHEDULERS_BOTH, SCHEDULER_ACCOUNTS, LINKED_LI,
+  channelsFixture({
+    primary: "zernio",
+    profiles: {
+      linkedin: {
+        enabled: true,
+        username: "solomoney",
+        display_name: "Solo Money – Finanzwissen für Selbstständige und Freiberuflerinnen",
+        bio: "Wir erklären Altersvorsorge, Steuervorauszahlungen und Liquiditätsplanung für Selbstständige in verständlicher Sprache, ohne Fachchinesisch und ohne Produktempfehlungen, die uns jemand bezahlt hat.",
+        notes: "Beiträge erscheinen werktags zwischen 7 und 9 Uhr. Keine Hashtag-Ketten, keine Emojis am Zeilenanfang, Links grundsätzlich im ersten Kommentar. Zahlen immer mit Quelle, am liebsten Destatis oder die Deutsche Rentenversicherung.",
+        target_media: ["text"],
+      },
+    },
+    linked: LINKED_LI,
+  }),
+);
+const NO_SCHEDULER = { connected: false };
+const A_SCHEDULER = { connected: true };
+// What the preview does with a pasted key: accept it after a beat, the way
+// the real save waits for the vendor, or refuse it the way a wrong key is.
+const acceptKey = () => new Promise((resolve) => setTimeout(resolve, 900));
+const refuseKey = (vendor) => Promise.reject(new Error(vendor === "apify"
+  ? "Apify didn't accept that key. Copy it again from your Apify account."
+  : "PostBridge didn't accept that key. Copy it again from your PostBridge dashboard."));
+
+// The period choices on fixed dates, so the scene reads the same any day:
+// a new plan on Oct 7, planning ahead from Nov 1 with a week already planned
+// from Nov 10, and a new plan on Oct 28, when the month rolls over.
+const planOn = (start, n) => ({ start_date: start, days: Array.from({ length: n }, () => ({})) });
+function PlanPeriodScene() {
+  const rollover = useMemo(() => planPeriodOptions(new Date(2026, 9, 28)), []);
+  const [length, setLength] = useState(rollover[0].length);
+  return (
+    <div className="flex flex-col gap-6 p-5">
+      <div className="flex flex-wrap items-center gap-2">
+        <PlanPeriodMenu options={planPeriodOptions(new Date(2026, 10, 1), [planOn("2026-11-10", 7)])} onPick={() => {}} icon={CalendarPlus} variant="outline">
+          Plan ahead
+        </PlanPeriodMenu>
+        <PlanPeriodMenu options={planPeriodOptions(new Date(2026, 9, 7))} onPick={() => {}} icon={Plus}>
+          New plan
+        </PlanPeriodMenu>
+      </div>
+      <PlanPeriodToggle options={rollover} value={length} onChange={setLength} />
+    </div>
+  );
+}
+
 // A posted post's numbers, as the metrics form receives them. The published
 // one carries what a PostBridge sync writes plus a typed saves count; the
 // other went out from the platform's own app, so nothing has synced.
 const METRICS_SYNCED_POST = {
   ...STORY_POSTS.post_1,
-  post_bridge_post_id: "pb_story_1",
+  publisher: "post_bridge",
+  publisher_post_id: "pb_story_1",
   perf: {
     view_count: 18400, like_count: 1120, comment_count: 86, share_count: 240,
     last_synced_at: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
@@ -1036,7 +1703,7 @@ const METRICS_SYNCED_POST = {
     manual_updated_at: new Date(Date.now() - 26 * 3600 * 1000).toISOString(),
   },
 };
-const METRICS_MANUAL_POST = { ...STORY_POSTS.post_2, post_bridge_post_id: "", perf: {} };
+const METRICS_MANUAL_POST = { ...STORY_POSTS.post_2, publisher: "", publisher_post_id: "", perf: {} };
 
 // Text posts (X, LinkedIn). `channel` is what the backend sends with every
 // post (agents/content/channels.channel_payload); the editor counts against it.
@@ -1068,7 +1735,54 @@ const X_OVER_POST = {
   ...X_THREAD_POST, id: "text-x-2", replies: [],
   caption: "Most freelancers who ask me about tax want a better percentage. The percentage is almost never the problem. The problem is that the money sits in the same account as everything else for weeks, and money that looks spendable gets spent. Move it the hour the invoice clears, into an account with no card.",
 };
-const X_METRICS_POST = { ...X_THREAD_POST, id: "text-x-3", status: "posted", post_bridge_post_id: "pb_story_x", perf: {} };
+const X_METRICS_POST = { ...X_THREAD_POST, id: "text-x-3", status: "posted", publisher: "post_bridge", publisher_post_id: "pb_story_x", perf: {} };
+
+// The drafts queue (issue 266): three drafts nobody has answered, from a
+// chat (X), a plan day (the carousel) and the LinkedIn writer, newest first.
+const QUEUE_DRAFTS = [
+  { ...X_THREAD_POST, id: "queue-x", created_at: "2026-10-30T18:00:00Z" },
+  { ...STORY_POSTS.post_1, id: "queue-carousel", status: "draft", created_at: "2026-10-30T09:00:00Z" },
+  { ...LINKEDIN_POST, id: "queue-li", created_at: "2026-10-29T16:00:00Z" },
+];
+// GET /content/best-slot per channel: X on its default, LinkedIn from the
+// account's own history, TikTok on the weekday-morning fallback.
+const QUEUE_SLOTS = {
+  twitter: { at: "2026-11-02T08:00:00Z", reason: "default", posts: 0, hour: 9 },
+  linkedin: { at: "2026-11-03T07:00:00Z", reason: "history", posts: 7, hour: 8 },
+  tiktok: { at: "2026-11-02T08:00:00Z", reason: "default", posts: 2, hour: 9 },
+};
+const queueSlot = (_project, channel) => Promise.resolve(QUEUE_SLOTS[channel]);
+
+// The Brand tab's voice (issue 271). VOICE_DEFAULTS is what GET /content/brand
+// answers as voice_rules_default: the rules every project had as constants.
+const VOICE_DEFAULTS = {
+  banned_words: ["game-changer", "revolutionary", "excited to share", "dive in", "unpopular opinion",
+    "hot take", "here's a thread", "a few thoughts on", "today I learned", "quick reminder", "let that sink in"],
+  no_client_names: true,
+  protect_the_edge: true,
+};
+const VOICE_BUILD_IN_PUBLIC = { banned_words: ["synergy", "game-changer"], no_client_names: false, protect_the_edge: false };
+
+/** Both fields are controlled by the Brand tab's form; this is that form's state. */
+function WritingSamplesScene({ initial }) {
+  const [samples, setSamples] = useState(initial);
+  return <div className="max-w-xl p-5"><WritingSamples samples={samples} onChange={setSamples} /></div>;
+}
+
+function VoiceRulesScene({ initial, customised: startCustomised }) {
+  const [rules, setRules] = useState(initial);
+  const [customised, setCustomised] = useState(startCustomised);
+  return (
+    <div className="max-w-xl p-5">
+      <VoiceRulesFields
+        rules={rules}
+        customised={customised}
+        onChange={(next) => { setRules(next); setCustomised(true); }}
+        onReset={() => { setRules(VOICE_DEFAULTS); setCustomised(false); }}
+      />
+    </div>
+  );
+}
 
 /** TextPostEditor is controlled by the post pane; this is that pane's state. */
 function TextPostScene({ initial }) {
@@ -1122,6 +1836,102 @@ const DISCOVER_POSTS_SPARSE = [
   { id: "s1", text: "#grwm", hashtags: ["grwm"], is_slideshow: false, play_count: 12_000, digg_count: 300 },
   { id: "s2", text: "", hashtags: ["outfit"], is_slideshow: false, play_count: 8_000, digg_count: 120 },
 ];
+
+
+// ---------------------------------------------------------------------------
+// Format library — the built-ins beside a project's own, and the editor that
+// needs no Markdown. Specs are short stand-ins for the real recipes.
+// ---------------------------------------------------------------------------
+
+const FORMAT_SPEC = `# Educational Carousel — one idea per slide, built to be saved
+
+**The format for teaching.** A carousel is the highest-engagement format on LinkedIn and Instagram because every swipe is a signal.
+
+## Slide Structure (6–10 slides)
+
+| Slide | Role | What it does | Caption style |
+|-------|------|--------------|---------------|
+| 1 | Hook | The promise or the pain, in under 10 words. | \`hook\` |
+| 2 | Stakes | Why this matters now. Ends on a tension. | \`cap-stroke\` |
+| 3 to N−2 | One idea each | One point per slide: headline ≤ 7 words, one line ≤ 20. | \`body-neutral\` |
+| N | CTA | One ask, matched to the objective. | \`cap-stroke\` |
+
+## Copy rules
+
+- One idea per slide. If a slide needs "and", split it.
+- Concrete over abstract: a number, a name, an example.
+- No slide counters ("1/8").
+
+> Treat slide 2 as a second hook: Instagram resurfaces a carousel from it.
+`;
+
+const FORMATS_FIXTURE = [
+  {
+    id: null, slug: "educational-carousel", name: "Educational Carousel", source: "builtin",
+    description: "A swipe-through lesson, one idea per slide, that people save and send. Use when the post teaches, compares or lists; not for a personal story.",
+    media: ["slideshow"], channels: ["linkedin", "instagram", "tiktok", "facebook"],
+    data: { spec_markdown: FORMAT_SPEC },
+  },
+  {
+    id: "f-1", slug: "ugc-carousel", name: "Our UGC carousel", source: "custom", overrides_builtin: true,
+    description: "Seven iPhone photos of one narrator, bold text on every slide. Ours keeps the dark bridge slides but drops the CTA question.",
+    media: ["slideshow"], channels: ["tiktok", "instagram"],
+    data: { spec_markdown: "# UGC Carousel\n\nSeven slides, one person." },
+    updated_at: new Date(Date.now() - 36e5 * 5).toISOString(),
+  },
+  {
+    id: null, slug: "short-video-script", name: "Short Video Script", source: "builtin",
+    description: "A 15 to 30 second vertical video with a three-second hook, one payoff and a reason to follow.",
+    media: ["video"], channels: ["tiktok", "instagram", "youtube", "threads", "facebook"],
+    data: { spec_markdown: "# Short Video Script\n\nHook in three seconds." },
+  },
+  {
+    id: "f-2", slug: "founder-weekly-note-with-a-very-long-name-that-wraps", name: "Founder weekly note — what we learned shipping this week, in the founder's own words", source: "custom",
+    description: "",
+    media: [], channels: [],
+    data: { spec_markdown: "" },
+    updated_at: new Date(Date.now() - 864e5 * 40).toISOString(),
+  },
+];
+
+function FormatGridScene() {
+  return (
+    <div className="@container p-5">
+      <div className="grid grid-cols-1 gap-3 @lg:grid-cols-2 @2xl:grid-cols-3">
+        {FORMATS_FIXTURE.map((f) => (
+          <FormatCard key={f.slug} format={f} onView={() => {}} onEdit={() => {}} onDelete={f.source === "builtin" ? null : () => {}} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FormatEditorScene({ initial }) {
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="p-5">
+      <Button size="sm" onClick={() => setOpen(true)}>Open editor</Button>
+      <FormatEditorSheet
+        open={open}
+        onOpenChange={setOpen}
+        projectId="preview"
+        initial={initial}
+        onSaved={() => setOpen(false)}
+        save={async () => {}}
+      />
+    </div>
+  );
+}
+
+function FormatDetailScene({ format }) {
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="p-5">
+      <Button size="sm" onClick={() => setOpen(true)}>Open format</Button>
+      <FormatDetailSheet format={format} open={open} onOpenChange={setOpen} onEdit={() => {}} onDelete={() => {}} />
+    </div>
+  );
+}
 
 export const SCENES = [
   {
@@ -1182,19 +1992,43 @@ export const SCENES = [
   },
   {
     id: "agent-access",
-    state: "first visit: no tokens, placeholder in every snippet",
+    state: "first visit: nothing connected, no tokens",
     group: "AgentAccess",
     title: "Connect your AI agent",
-    note: "The second paragraph, what an agent cannot do, is the reason a cautious person gets past the first step; it must read before the form. Every snippet shows duct_mcp_… until a token exists. Switch the three tabs: the Codex and Cursor snippets are multi-line and must wrap inside the box, never push the page wider, at 22rem.",
+    note: "The why comes before the how: a quiet card drawing repo → the picked agent → the Duct project, the one sentence on what that profile is for, and the can / can never lists the consent page shows too (one component, AgentAbilities). Change the picked tile and the middle node follows; at 36rem the drawing turns from a column into a row. The agent is picked by its own logo, because every step after names it. Five tiles, three to a row below 28rem and one row above; arrow keys move between them (they are radios). Step 1 is the current step until something in it is copied; Cursor and VS Code lead with a one-click install and fold the paste route under it. No snippet carries a secret. Step 2 draws the consent page in miniature with Allow ringed. Below 28rem the rail between markers goes, since the bodies sit under the numbers. The token section sits below a rule, plainly the second way in.",
     render: () => <AgentAccessScene />,
   },
   {
-    id: "agent-access-minted",
-    state: "a token just made: shown once, filled into each snippet; a second token never used, with a name long enough to clip",
+    id: "agent-access-live",
+    state: "copy step 1 and an agent signs in three seconds later",
     group: "AgentAccess",
     title: "Connect your AI agent",
-    note: "The new token sits under the form with its copy button, and the Claude Code command now carries it, so one copy is enough. In the list, the long name truncates and the hint, last use, expiry and Revoke stay on the row or wrap below it as a group. Revoke asks first, in the destructive tint, and the dialog says the projects stay as they are.",
+    note: "Copy step 1: its marker fills and checks, the rail below it turns orange, and step 2 says it is waiting with a spinner. Three seconds on, Claude Code appears in Connected agents with its logo, step 2 checks off with its name, and the Claude Code tile gains a green check. Copy the prompt and step 3 checks too. On the page the wait is a poll every 4 s while the tab is visible, for at most ten minutes; past that the line offers Check again.",
+    render: () => <AgentAccessScene signInAfterMs={3000} />,
+  },
+  {
+    id: "agent-access-desktop",
+    state: "inside the desktop shell: no one-click installs",
+    group: "AgentAccess",
+    title: "Connect your AI agent",
+    note: "Pick Cursor or VS Code: the shell opens only http(s) links outside itself, so the install button would do nothing; the paste route stands on its own, unfolded.",
+    render: () => <AgentAccessScene deepLinks={false} />,
+  },
+  {
+    id: "agent-access-minted",
+    state: "two agents signed in (one never used, its name long enough to clip), a token just made, a second token",
+    group: "AgentAccess",
+    title: "Connect your AI agent",
+    note: "Connected agents carry their agent's logo when the name they gave themselves matches one (Claude Code, Visual Studio Code), and the matching picker tiles show a green check; tokens show a key. Agents show when they connected and last called, with no hint (their token changes hourly); tokens show their last four and expiry. The new token sits under its form with the Claude Code command and the bare header, both carrying it. Disconnect and Revoke both ask first, in the destructive tint, and say the projects stay as they are.",
     render: () => <AgentAccessScene initial={AGENT_TOKENS} mintedFirst />,
+  },
+  {
+    id: "agent-access-sidecar",
+    state: "the desktop app's own backend: no browser sign-in, tokens only",
+    group: "AgentAccess",
+    title: "Connect your AI agent",
+    note: "The why card stays, with a generic agent in the middle node since nothing is picked. The steps and the Connected agents list are gone, replaced by one boxed sentence saying why. The token section heading drops its 'No browser?' and becomes the way in.",
+    render: () => <AgentAccessScene initial={AGENT_TOKENS.filter((row) => row.kind === "token")} signInAvailable={false} />,
   },
   {
     id: "agent-access-limit",
@@ -1210,6 +2044,63 @@ export const SCENES = [
     ),
   },
   {
+    id: "agent-consent",
+    state: "signed in, a local agent asking",
+    group: "AgentConsent",
+    title: "Allow an agent",
+    note: "What it can and can't do reads before the buttons, the can'ts in muted ink with an X, never red: nothing is wrong. The destination line says the sign-in goes to this computer. Allow is the filled button on the right, Cancel beside it; both stay one row down to 20rem.",
+    render: () => (
+      <AgentConsent
+        state={CONSENT_ASK}
+        request={{ client_name: "Claude Code (duct)", destination: "device", destination_name: "127.0.0.1" }}
+        viewerEmail="ana@kestrel.studio"
+      />
+    ),
+  },
+  {
+    id: "agent-consent-web",
+    state: "signed in, a hosted client with a long self-chosen name",
+    group: "AgentConsent",
+    title: "Allow an agent",
+    note: "A website destination is named in bold, so a page calling itself Claude that sends you to an unknown host is visible. The long name wraps in the heading and in the caution line without breaking the card.",
+    render: () => (
+      <AgentConsent
+        state={CONSENT_ASK}
+        request={{ client_name: "Claude for the Kestrel rebrand workspace", destination: "web", destination_name: "claude.ai" }}
+        viewerEmail="ana@kestrel.studio"
+      />
+    ),
+  },
+  {
+    id: "agent-consent-sign-in",
+    state: "signed out: who is asking, then sign-in",
+    group: "AgentConsent",
+    title: "Allow an agent",
+    note: "The agent's name shows before any sign-in, so the person knows why they are being asked. One line, then the Google button.",
+    render: () => (
+      <AgentConsent
+        state={CONSENT_SIGN_IN}
+        request={{ client_name: "Codex", destination: "device", destination_name: "127.0.0.1" }}
+      />
+    ),
+  },
+  {
+    id: "agent-consent-expired",
+    state: "the request is older than ten minutes",
+    group: "AgentConsent",
+    title: "Allow an agent",
+    note: "No button: nothing on this page can fix it. The way forward is in the agent, so the two commands that restart it are named.",
+    render: () => <AgentConsent state={CONSENT_EXPIRED} />,
+  },
+  {
+    id: "agent-consent-allowed",
+    state: "allowed; the browser is on its way back to the agent",
+    group: "AgentConsent",
+    title: "Allow an agent",
+    note: "Shown for the moment before the agent's own page loads, and left in place for a website or app that takes the hand-off without replacing this tab.",
+    render: () => <AgentConsent state={CONSENT_ALLOWED} request={{ client_name: "Claude Code" }} />,
+  },
+  {
     id: "desk-composer",
     state: "default — a project with a favicon, no thread yet",
     group: "DeskComposer",
@@ -1220,6 +2111,19 @@ export const SCENES = [
         project={{ id: "p1", name: "Sictec Infotech, Inc.", company: { name: "Sictec Infotech, Inc.", website_url: "https://sictec.example" } }}
         placeholder="Ask about &ldquo;Next growth milestone&rdquo; — or anything else"
       />
+    ),
+  },
+  {
+    id: "session-composer-connecting",
+    state: "the session opening, or its stream re-attaching",
+    group: "DeskComposer",
+    title: "The session composer while it connects",
+    note: "Every agent's composer while its session is opened or its stream re-attached (AgentChat passes `connecting`): no Stop, because there is no turn to stop yet and a Stop here used to cancel the connection, and Esc does nothing. The spinner and the word stand where Stop goes. Send stays off until the session is attached.",
+    render: () => (
+      <div className="max-w-[720px] space-y-4">
+        <ChatInput onSend={() => {}} disabled isStreaming onStop={() => {}} connecting="Connecting…" />
+        <ChatInput onSend={() => {}} disabled isStreaming onStop={() => {}} connecting="Reconnecting…" />
+      </div>
     ),
   },
   {
@@ -1325,6 +2229,22 @@ export const SCENES = [
         </p>
       </CornerNotice>
     ),
+  },
+  {
+    id: "star-ask",
+    state: "asking: after three good runs, never on day one, never mid-run",
+    group: "StarAsk",
+    title: "Is Duct earning its keep?",
+    note: "The GitHub star ask, iOS's rating prompt in the corner: it appears 8 s after a run that made something ends, at most twice ever, 60 days apart, and never again after a star or a second no. Check that Star on GitHub is the one heavy thing, that Not now sits at the same height beside it, and that \"Something missing? Tell us\" is quiet but on every showing: the star and the feedback link are offered to everyone together, so nobody unhappy is routed away from either. No star count, no reward. Click Star to see the thank-you. The two actions share the row at equal width while both fit and stack at full width when they do not (German, Japanese), the way iOS lays out an alert's actions; open it with ?lang=de to see the stack.",
+    render: () => <StarAskScene />,
+  },
+  {
+    id: "star-ask-thanks",
+    state: "after Star: the thank-you, then gone",
+    group: "StarAsk",
+    title: "Thank you",
+    note: "What the card turns into on Star. It counts down four seconds only while this window has focus, because the star opened GitHub in front of it and a thank-you that expired behind the browser was said to nobody. The star fills in the brand orange with one zoom (stripped under reduced motion), the only celebration. It thanks the gesture rather than claiming a star was given: nothing checks.",
+    render: () => <StarAskScene start={StarAskView.THANKS} />,
   },
   {
     id: "context-compression",
@@ -1462,6 +2382,14 @@ export const SCENES = [
     ),
   },
   {
+    id: "oauth-card-google",
+    state: "not connected, and connected with a partial grant",
+    group: "OAuthConnectorCard",
+    title: "A Google sign-in connector",
+    note: "Open each tile. What the card shows is the stored row and nothing else: there is no \u201cthis session only\u201d state any more, because the token never reaches the browser. Not connected, the dialog offers Sign in with Google; press it and the preview answers the way the desktop hand-off does, so the waiting line with Open it again appears. Connected, the storage glyph says where the row lives, the permissions list shows the scope that was declined, and the footer carries Disconnect (which asks first) and Reconnect.",
+    render: () => <OAuthCardScene />,
+  },
+  {
     id: "manual-card-one-click",
     state: "GitHub App available, not connected and connected",
     group: "ManualConnectorCard",
@@ -1534,6 +2462,110 @@ export const SCENES = [
         />
       </div>
     ),
+  },
+  {
+    id: "instance-provider",
+    state: "ready, and not answering",
+    group: "InstanceProviderCard",
+    title: "Local models: Ollama offered by the server, no key",
+    note: "Two tiles for one provider in its two states. Ready reads On this server in the info tone, not green: green is for a key the reader put there. Open the grey one: the two steps name the two ways it fails, and Check again asks the server which (in the preview there is no backend, so it answers with the request's own error). Neither dialog has a key field or a Remove button; nothing here is the reader's to store.",
+    render: () => (
+      <div className="conn-grid">
+        <InstanceProviderCard
+          provider={INSTANCE_PROVIDERS[0]}
+          logo={LOGOS.ollama}
+          status={{ id: "ollama", source: "instance", reachable: true, configured: true, keyless: true }}
+        />
+        <InstanceProviderCard
+          provider={INSTANCE_PROVIDERS[0]}
+          logo={LOGOS.ollama}
+          status={{ id: "ollama", source: "none", reachable: false, configured: true, keyless: true }}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "endpoint-provider",
+    state: "not connected, connected, self-hosted",
+    group: "EndpointProviderCard",
+    title: "Bring your own provider: an address, its models, a tool call",
+    note: "Three tiles. The first is a hosted Duct with nothing connected: open it, pick Together, and Find models lists a host's catalogue with a filter; type localhost instead and the field says why a hosted server cannot reach it before any request. Picking base-model and testing shows the no-tools failure with Connect anyway; any other model passes the check (saving then fails here, since the preview has no backend to remember it on). The second is connected and remembered: the host is the tile's tag, the dialog lists the chosen models with their context and offers Check again, Change and Disconnect. The third is a self-hosted Duct, which offers LM Studio, vLLM and llama.cpp as well.",
+    render: () => {
+      const listing = [
+        { id: "Qwen/Qwen3-235B-A22B", context_length: 262144 },
+        { id: "Qwen/Qwen3-32B", context_length: 40960 },
+        { id: "base-model", context_length: 0 },
+        { id: "deepseek-ai/DeepSeek-V4", context_length: 131072 },
+        { id: "meta-llama/Llama-4-Maverick-17B-128E-Instruct", context_length: 1048576 },
+        { id: "meta-llama/Llama-4-Scout", context_length: 131072 },
+        { id: "mistralai/Mistral-Small-4", context_length: 131072 },
+        { id: "moonshotai/Kimi-K2.5", context_length: 262144 },
+        { id: "openai/gpt-oss-120b", context_length: 131072 },
+        { id: "zai-org/GLM-5", context_length: 202752 },
+      ];
+      const probe = async ({ baseUrl, model }) => {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        if (/localhost|127\.0/.test(baseUrl)) {
+          return { ok: false, code: "refused", detail: "That address is on a private network, which Duct's servers can't reach." };
+        }
+        const base = baseUrl.replace(/\/+$/, "");
+        const answer = { ok: true, base_url: base, models: listing };
+        if (model) {
+          answer.check =
+            model === "base-model"
+              ? { ok: false, code: "no_tools", model, detail: "It answered in words instead of calling the tool it was given." }
+              : { ok: true, model, latency_ms: 1380 };
+        }
+        return answer;
+      };
+      const readKey = async () => ({ key: "" });
+      const check = async () => ({ ok: true, model: "Qwen/Qwen3-32B", latency_ms: 1210 });
+      const connected = {
+        id: "openai_compatible",
+        source: "stored",
+        reachable: true,
+        stored: true,
+        private_ok: false,
+        endpoint: {
+          base_url: "https://api.together.xyz/v1",
+          host: "api.together.xyz",
+          has_key: true,
+          models: [
+            { id: "Qwen/Qwen3-32B", context_length: 40960 },
+            { id: "meta-llama/Llama-4-Scout", context_length: 131072 },
+          ],
+        },
+      };
+      return (
+        <div className="conn-grid">
+          <EndpointProviderCard
+            provider={ENDPOINT_PROVIDER}
+            logo={LOGOS.compatible}
+            status={{ id: "openai_compatible", source: "none", reachable: false, stored: false, private_ok: false, endpoint: null }}
+            readKey={readKey}
+            probe={probe}
+            check={check}
+          />
+          <EndpointProviderCard
+            provider={ENDPOINT_PROVIDER}
+            logo={LOGOS.compatible}
+            status={connected}
+            readKey={readKey}
+            probe={probe}
+            check={check}
+            onOpenTiers={() => {}}
+          />
+          <EndpointProviderCard
+            provider={ENDPOINT_PROVIDER}
+            logo={LOGOS.compatible}
+            status={{ id: "openai_compatible", source: "none", reachable: false, stored: false, private_ok: true, endpoint: null }}
+            readKey={readKey}
+            probe={probe}
+            check={check}
+          />
+        </div>
+      );
+    },
   },
   {
     id: "storage-badge",
@@ -1647,7 +2679,7 @@ export const SCENES = [
     state: "nothing connected yet",
     group: "McpConnectors",
     title: "MCP connectors, before the first connect",
-    note: "The MCP tiles join the native ones in Connections' one grid, two native tiles ahead of them here. Every tile says its kind and publisher under its name: Native · by Duct, or MCP · by the company that runs the server. A tile per preset plus one for any server by address, each opening the connect dialog. Open OpenSEO and press Connect: this stub answers the way a sign-in does on the desktop shell, so the dialog waits on your browser. Open Notion's dialog: no key path, because Notion issues none. Open Railway's: it asks before every call, read-only or not, because its reads return secrets. The two notes at the dialog's foot are the facts worth knowing before connecting one.",
+    note: "The MCP tiles join the native ones in the Toolbox's one grid, two native tiles ahead of them here. Every tile says its kind and publisher under its name: Native · by Duct, or MCP · by the company that runs the server. A tile per preset plus one for any server by address, each opening the connect dialog. Open OpenSEO and press Connect: this stub answers the way a sign-in does on the desktop shell, so the dialog waits on your browser. Open Notion's dialog: no key path, because Notion issues none. Open Railway's: it asks before every call, read-only or not, because its reads return secrets. The two notes at the dialog's foot are the facts worth knowing before connecting one.",
     render: () => <McpScene servers={MCP_NONE} answer="authorize" />,
   },
   {
@@ -1657,6 +2689,14 @@ export const SCENES = [
     title: "MCP connectors, connected",
     note: "OpenSEO is connected with a key. Notion's sign-in lapsed: its tile goes amber and says Needs reconnecting, and its dialog opens on Reconnect. The third is a server added by address, now a tile of its own: MCP with no publisher (Duct can't know who runs it), its host underneath, and a name long enough to wrap. Disconnect, in the dialog, asks first, then the tile goes.",
     render: () => <McpScene servers={MCP_SERVERS} answer="needs_key" />,
+  },
+  {
+    id: "mcp-servers-attention",
+    state: "one server per reason it needs attention",
+    group: "McpConnectors",
+    title: "MCP connectors that need attention",
+    note: "Every reason the server records, on its tile as Needs attention · <reason> in amber: a refused key, an expired sign-in, a sign-in Duct can no longer read, a server not answering, one that now asks for a sign-in, one returning errors, and Railway, from an older Duct that sends a status and no reason (it reads as an expired sign-in). Open any: the dialog says the whole reason and what fixes it. Check connection on PostHog or Acme answers Working with a tool count and the tile goes green; on the others it says the reason again, because only reconnecting fixes a sign-in. OpenSEO opens with its key field showing.",
+    render: () => <McpScene servers={MCP_ATTENTION} answer="needs_key" />,
   },
   {
     id: "mcp-servers-needs-key",
@@ -1700,11 +2740,72 @@ export const SCENES = [
     ),
   },
   {
+    id: "tool-approval-publish",
+    state: "the agent asks before a post goes out",
+    group: "ToolApproval",
+    title: "Every publish waits for a yes",
+    note: "The card a connected tool uses, worded for a publish: the post's own topic under the heading and what goes out, where and when, open from the start because those are the decision. Skip and nothing is sent.",
+    render: () => (
+      <div className="max-w-xl">
+        <PauseCard pause={PUBLISH_APPROVAL} onAnswer={() => {}} />
+      </div>
+    ),
+  },
+  {
+    id: "tool-approval-tiktok",
+    state: "a TikTok search that spends Apify credits",
+    group: "ToolApproval",
+    title: "The content agent asks before searching TikTok",
+    note: "The same card a connected tool uses, worded for a search: whose credits it spends, the agent's reason, and the exact input Discover's policy built, folded. Skip and the agent carries on from the saved references.",
+    render: () => (
+      <div className="max-w-xl">
+        <PauseCard pause={TIKTOK_APPROVAL} onAnswer={() => {}} />
+      </div>
+    ),
+  },
+  {
+    id: "questions-direction",
+    state: "one question · four options with descriptions · a disabled copy",
+    group: "QuestionsCard",
+    title: "The agent asks for a direction",
+    note: "Drawn through PauseCard, the way the chat draws it. The question is the heaviest line; each option is a row with its label on its own line and the clause that tells it apart under it, a radio mark carrying the picked state without colour. Other is the last row and opens its field inside the row. Continue stays off until something is picked; Let Duct decide is the quiet way out. The second card is disabled, as it is while an answer is on its way.",
+    render: () => (
+      <div className="max-w-xl">
+        <PauseCard pause={QUESTIONS_DIRECTION} onAnswer={() => {}} />
+        <PauseCard pause={{ ...QUESTIONS_DIRECTION, interrupt_id: "preview-questions-disabled" }} onAnswer={() => {}} disabled />
+      </div>
+    ),
+  },
+  {
+    id: "questions-quick",
+    state: "two questions · short options · one multiple choice",
+    group: "QuestionsCard",
+    title: "Short options, as chips",
+    note: "Options of a word or three with no description are chips, the yes/no shape. The second question is a multiple choice: picked chips carry a tick as well as the fill, and the answer travels as one comma-joined string. Continue needs every question answered.",
+    render: () => (
+      <div className="max-w-xl">
+        <PauseCard pause={QUESTIONS_QUICK} onAnswer={() => {}} />
+      </div>
+    ),
+  },
+  {
+    id: "questions-edges",
+    state: "German-length labels · a single option · three questions · a multiple choice with descriptions",
+    group: "QuestionsCard",
+    title: "The question card at its edges",
+    note: "A label that wraps keeps the mark on its first line and the description under the whole label; a question with one option still gets Other; three questions stack with one Continue. Pick Other in the German question to see the field open inside the row on a phone.",
+    render: () => (
+      <div className="max-w-xl">
+        <PauseCard pause={QUESTIONS_EDGES} onAnswer={() => {}} />
+      </div>
+    ),
+  },
+  {
     id: "activity-connected-tools",
     state: "checked · used · skipped · needs approval · too long to show · signed out · unreachable · the server's error · unknown tool · running",
     group: "AgentChat",
     title: "Tools on connected servers, in the transcript",
-    note: "Built by lib/toolActivity from recorded traffic, the path a reopened thread takes. A skip is the person's choice and is not painted red, and neither is a call held back because it was too long to show first. A protocol or tool error carries no text of the server's: the row says the server returned an error, in our words. Signed out links to Connections; unreachable and an unknown tool keep Duct's own sentence behind the chevron.",
+    note: "Built by lib/toolActivity from recorded traffic, the path a reopened thread takes. A skip is the person's choice and is not painted red, and neither is a call held back because it was too long to show first. A protocol or tool error carries no text of the server's: the row says the server returned an error, in our words. Signed out links to the Toolbox; unreachable and an unknown tool keep Duct's own sentence behind the chevron.",
     render: () => (
       <div className="max-w-xl space-y-6">
         <ActivityGroup activities={MCP_ACTIVITIES} />
@@ -1762,13 +2863,156 @@ export const SCENES = [
       </DialogScene>
     ),
   },
+  // The desk in every situation it has to survive, generated from
+  // lib/__fixtures__/deskScenarios.mjs: the same payloads the unit tests hold
+  // the arrangement to. Each note is what the scenario holds the page to.
+  ...DESK_SCENARIOS.map((scenario) => ({
+    id: `desk-scenario-${scenario.id}`,
+    state: scenario.title,
+    group: "Desk scenarios",
+    title: `Desk — ${scenario.title}`,
+    note: `${scenario.expect} Content is generated at render time, relative to now; sweep the frame from phone to wide and check the page keeps its shape.`,
+    render: () => <DeskScenario id={scenario.id} />,
+  })),
+  // The content plan board in every situation it has to survive, generated
+  // from lib/__fixtures__/planScenarios.mjs relative to today: the same plans
+  // the schedule tests hold the agenda to. The list is the default view; the
+  // Kanban scenes show the same plan by status.
+  ...PLAN_SCENARIOS.map((scenario) => ({
+    id: `plan-scenario-${scenario.id}`,
+    state: scenario.title,
+    group: "Plan scenarios",
+    title: `Plan — ${scenario.title}`,
+    note: `${scenario.expect} Switch to Kanban and Calendar from the toolbar; sweep the frame from phone to wide.`,
+    render: () => <PlanScenario id={scenario.id} />,
+  })),
+  // The plan session's quick actions over its composer, from the board's
+  // scenarios: chosen from the plan's days in code, never by the model.
+  ...[
+    ["mid-month", "a running plan with missed days", "Both chips: revise what is left, and catch up on the missed count."],
+    ["planned-ahead", "a plan that has not started", "Only the revision: nothing can have been missed yet."],
+    ["ended-done", "an ended plan", "No chips at all, so the composer stands alone."],
+  ].map(([scenario, state, expect]) => ({
+    id: `plan-quick-actions-${scenario}`,
+    state,
+    group: "PlanQuickActions",
+    title: `Plan session quick actions — ${state}`,
+    note: `${expect} A chip sends its request as the person's own message (shown under the composer here). The session hides them while a turn runs or a proposal waits on Accept, Modify or Reject; at phone width they wrap rather than scroll.`,
+    render: () => <PlanQuickActionsScene scenario={scenario} />,
+  })),
+  // The board's plan picker: every plan as a rich row, from
+  // lib/__fixtures__/planScenarios.mjs relative to today. Opens on mount.
+  ...PLAN_PICKER_SCENARIOS.map((scenario) => ({
+    id: `plan-picker-${scenario.id}`,
+    state: scenario.title,
+    group: "PlanPicker",
+    title: `Plan picker — ${scenario.title}`,
+    note: `${scenario.expect} Arrow keys move between plans and Enter picks one; sweep the frame to phone width, where the menu keeps a 16px margin.`,
+    render: () => <PlanPickerScenario id={scenario.id} />,
+  })),
+  // The Toolbox catalogue at every size it has to hold, from
+  // lib/__fixtures__/connectorCatalogs.mjs, the sets the catalogue tests
+  // arrange. Type, pick a chip, open the two menus: all of it is live.
+  ...CATALOG_SCENARIOS.map((scenario) => ({
+    id: `catalog-${scenario.id}`,
+    state: scenario.title,
+    group: "Toolbox catalogue",
+    title: `Toolbox — ${scenario.title}`,
+    note: `${scenario.expect} Press / to search.`,
+    render: () => <CatalogScenario id={scenario.id} />,
+  })),
   {
-    id: "desk-cards-long-title",
-    state: "content",
+    id: "catalog-connected-tab",
+    state: "Connected tab",
+    group: "Toolbox catalogue",
+    title: "Toolbox — the Connected tab",
+    note: "Only what this account has, the source needing attention first, with the amber dot on the tab saying so. No starters and no Any MCP server tile here.",
+    render: () => <CatalogScenario id="hundreds" initialFilters={{ status: "connected" }} />,
+  },
+  {
+    id: "bring-any-tool",
+    state: "with names to try · search turned off",
+    group: "Toolbox catalogue",
+    title: "Bring any tool",
+    note: "The one brand-tinted card on Toolbox, drawn with the starters while browsing everything. It replaced the Any MCP server tile at the end of the list. The tiles are the picture and the controls: a name runs that search and each returned its vendor's own server when written, Yours opens the add dialog, and pointing at one lights its channel. A Duct that turned the registry off keeps the picture but its names stop being buttons, since they would find nothing. Sweep the width: the drawing sits beside the words from @2xl, under them below that, and gives way to wrapped tiles below @xs.",
+    render: () => (
+      <div className="flex flex-col gap-6">
+        <BringAnyTool onAdd={() => {}} onSearch={() => {}} />
+        <BringAnyTool onAdd={() => {}} />
+      </div>
+    ),
+  },
+  {
+    id: "catalog-search",
+    state: "searching \"ads\"",
+    group: "Toolbox catalogue",
+    title: "Toolbox — a search",
+    note: "Results ranked: titles that start with the words first, then a word of the title, the vendor and keywords, then the description. The category name counts, so \"advertising\" lists the ads. Chips keep their counts for this search.",
+    render: () => <CatalogScenario id="hundreds" initialFilters={{ query: "ads" }} />,
+  },
+  {
+    id: "mcp-registry-results",
+    state: "searching \"stripe\"",
+    group: "MCP Registry",
+    title: "Toolbox — a search that reaches the MCP Registry",
+    note: "The catalogue's own Stripe first, then From the MCP Registry: Stripe's own server tagged Official, then the servers whose publishers run their address, each badge naming the site it runs at. Two gateways wait behind Show 2 more from other publishers. Open Stripe Reports: the registry says it takes a key, so the key field is open with the publisher's line about it and a link to its site. Open Stripe and Connect: it saves, and moves up into the catalogue's results as Added by you. Open a gateway after Show more: an amber note says nobody has shown they run that address.",
+    render: () => <RegistryScenario query="stripe" />,
+  },
+  {
+    id: "mcp-registry-figma",
+    state: "nothing local, Figma's own server in the registry",
+    group: "MCP Registry",
+    title: "Toolbox — the registry finds what the catalogue doesn't",
+    note: "Nothing in the catalogue matches figma, so the registry's section comes straight after with Figma's own server, Official, and the way in by address waits at the end. Connect waits on the browser the way a desktop sign-in does.",
+    render: () => <RegistryScenario query="figma" />,
+  },
+  {
+    id: "mcp-registry-edges",
+    state: "only gateways · searching · failed · unreachable · nothing found",
+    group: "MCP Registry",
+    title: "The registry's section, when it has little to say",
+    note: "Only gateways: a line says nothing run by its publisher matched, and the button reveals them. Searching holds three tile shapes. A failed search says so with Try again, and never blocks the catalogue's results above it. One that never reached the server gets the same row in Duct's words, never the browser's Load failed. Nothing found says so in one line. A Duct with the search turned off shows no section at all (not drawn here).",
+    render: () => (
+      <div className="flex flex-col gap-16">
+        <RegistryScenario query="stripe" answer="gateways" />
+        <RegistryScenario query="google ads" answer="slow" />
+        <RegistryScenario query="hubspot" answer="failed" />
+        <RegistryScenario query="hubspot" answer="unreachable" />
+        <RegistryScenario query="hubspot" />
+      </div>
+    ),
+  },
+  {
+    id: "catalog-nothing-found",
+    state: "no match",
+    group: "Toolbox catalogue",
+    title: "Toolbox — nothing matches",
+    note: "Says what was searched, offers to clear, and the way in for anything unlisted: any MCP server by its address.",
+    render: () => <CatalogScenario id="today" initialFilters={{ query: "hubspot" }} />,
+  },
+  ...KANBAN_SCENARIO_IDS.map((id) => ({
+    id: `plan-scenario-${id}-kanban`,
+    state: "Kanban",
+    group: "Plan scenarios",
+    title: `Plan by status — ${PLAN_SCENARIOS.find((s) => s.id === id).title}`,
+    note: "Every lane is one width, at most 24rem, even beside empty ones; an empty lane is a header and nothing else; a planned post with no media is its words, not a grey 16:9 box.",
+    render: () => <PlanScenario id={id} view={PlanView.KANBAN} />,
+  })),
+  {
+    id: "desk-connect-first",
+    state: "nothing connected",
     group: "Desk",
-    title: "Cards, an agent-length finding title",
-    note: "Drag the frame through the 448–768px band: three columns to two to one. The long title in “What I found” clamps to two lines instead of pushing its siblings out — hover or tab to it for the rest.",
-    render: () => <DeskCards buckets={DESK_BUCKETS_SHAPED} />,
+    title: "Connect your first source",
+    note: "The Desk's one hero while nothing is connected: four logos, one line, one button. Below @2xl it stacks; check the button sits at the left edge, not stretched.",
+    render: () => <DeskConnectFirst />,
+  },
+  {
+    id: "connections-first-source",
+    state: "the first source just connected",
+    group: "Toolbox",
+    title: "First source celebration",
+    note: "Shown once per browser, only while exactly one source is connected. Clear localStorage key duct_first_source_celebrated to see it again; the tesserae burst once and are skipped under reduced motion.",
+    render: () => <FirstSourceCelebration connectedTypes={["gsc"]} ready />,
   },
   {
     id: "desk-background-refresh",
@@ -1928,7 +3172,7 @@ export const SCENES = [
   },
   {
     id: "activity-rows",
-    state: "the context notice · pulls · a search · a page · a sub-agent · memory · sources · a document · a site read · a publish",
+    state: "the context notice · pulls · a search · a page · a sub-agent · memory · sources · a document · a site read · a TikTok search, and one skipped · a publish declined · a publish",
     group: "AgentChat",
     title: "What the agent did, in the transcript",
     note: "One row per tool call, where it happened. A run used to show none of this — a pull became a line in another tab, a search and an image became nothing — so the reader got ninety seconds of \"Working…\" and then a brief citing a source they never saw it open. One line each until you click: twelve sources would otherwise push the prose off the screen. Every row here is built by lib/toolActivity from recorded tool traffic, the same path a reopened thread takes.",
@@ -2165,7 +3409,7 @@ export const SCENES = [
     state: "all four permission states",
     group: "AppSidebar",
     title: "The notification row, in every state it has",
-    note: "Lives in the user footer menu. Two of these are unreachable from a browser — \"System\" only happens inside the desktop shell, and \"Blocked\" needs a site permission you have to deny by hand — so this is the only place they get looked at. Clickability is the thing to check: \"Off\" asks the browser for permission and \"Notification settings\" opens the OS pane, while \"On\" and \"Blocked\" are statements and are dimmed to say so. The last row is a desktop shell too old to have `open_notification_settings`, or Linux, where there is no single page to open.",
+    note: "Lives in the preferences group of the account menu. Two of these are unreachable from a browser — \"System\" only happens inside the desktop shell, and \"Blocked\" needs a site permission you have to deny by hand — so this is the only place they get looked at. Every state but the first is \"Notifications\" with its value in muted text on the right, the shape Language and Appearance use. Clickability is the thing to check: \"Turn on notifications\" asks the browser, and the \"System\" row with an arrow opens the OS pane, while \"On\" and \"Blocked\" are statements and are dimmed to say so. The last row is a desktop shell too old to have `open_notification_settings`, or Linux, where there is no single page to open.",
     render: () => (
       <DropdownMenu defaultOpen modal={false}>
         <DropdownMenuTrigger asChild>
@@ -2186,7 +3430,7 @@ export const SCENES = [
     state: "sub-menu open on the current language",
     group: "AppSidebar",
     title: "The language row in the account menu",
-    note: "Sits under Profile in the user footer menu. The trigger shows the current language's own name; the sub-menu lists all five as a radio group, each in its own script, so someone who landed in the wrong language can still find theirs. Picking one switches this whole preview, the same way it switches the app: cookie, profile when signed in, then a refresh in place.",
+    note: "Opens the preferences group of the account menu. The trigger shows the current language's own name; the sub-menu lists all five as a radio group, each in its own script, so someone who landed in the wrong language can still find theirs. Picking one switches this whole preview, the same way it switches the app: cookie, profile when signed in, then a refresh in place.",
     render: () => (
       <DropdownMenu defaultOpen modal={false}>
         <DropdownMenuTrigger asChild>
@@ -2194,6 +3438,40 @@ export const SCENES = [
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-64">
           <LanguageMenuItem />
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+  },
+  {
+    id: "account-menu",
+    state: "signed in, open",
+    group: "AppSidebar",
+    title: "The account menu, whole",
+    note: "Five groups in the order people look: you (Profile, Your memory), what runs your work (models, usage, your own agent), how the app looks and talks to you (language, appearance, notifications, cookies), feedback (a bug, an idea, a star on GitHub), then Log out alone. The star row is the permanent home of the corner ask, which is why that ask can be rare: a star from here counts, and the corner never asks again. Check that every setting shows its current value the same way, muted on the right, and that no row wraps at this width in German. Manage projects is in the project switcher now, beside the projects.",
+    render: () => (
+      <DropdownMenu defaultOpen modal={false}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm">Open the account menu</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-64">
+          <AccountMenuItems onSignOut={() => {}} />
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+  },
+  {
+    id: "account-menu-guest",
+    state: "guest, open",
+    group: "AppSidebar",
+    title: "The account menu for a guest",
+    note: "The same menu with one row in front of it: sign in to keep what the audit made. It is the only thing a guest is missing, so it comes first and stands alone.",
+    render: () => (
+      <DropdownMenu defaultOpen modal={false}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm">Open the account menu</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="w-64">
+          <AccountMenuItems guest onSignOut={() => {}} />
         </DropdownMenuContent>
       </DropdownMenu>
     ),
@@ -2393,11 +3671,19 @@ export const SCENES = [
   },
   {
     id: "shot-memory-timeline",
-    state: "eight memories: one superseded, one pinned, one unconfirmed",
+    state: "current facts: one replaced a target, one pinned, one to review",
     group: "MemoryTimeline",
     title: "What Duct remembers about Solo",
-    note: "The rows the insights agent recalls in the session. One goal was raised from 700 to 900, so the old value is shown superseded rather than deleted; the CPA target is pinned; the watch the agent wrote this week is still unconfirmed. Every write here is a no-op.",
+    note: "The project tab. The weekly signups goal was raised from 700 to 900, so the current row says what it replaced (the old row appears under ⋯ › Show replaced and dismissed); the CPA target is pinned; the watch the agent wrote this week waits for Keep or Dismiss on the row. What to check: icons centred on the two-line text, Keep/Dismiss on one line at 390px, the date menu's presets. Every write here is a no-op.",
     render: () => <StoryMemoryScene />,
+  },
+  {
+    id: "memory-timeline-private",
+    state: "your memory: three rules, one to review",
+    group: "MemoryTimeline",
+    title: "Only you",
+    note: "The private tab: the person's own rules, grouped About you / Style / Methods / Corrections. One holds only on Solo (a private rule bound to one project); open a row for “Only on Solo” / “Use on every project”, and Remember asks where it applies. The agent's proposal came from a project run and landed here, not on the project, because it describes the person. Every write here is a no-op.",
+    render: () => <StoryMemoryScene items={PRIVATE_MEMORIES} groups={USER_KIND_GROUPS} binding={{ projectId: "solo", projectName: "Solo" }} />,
   },
   {
     id: "shot-connectors",
@@ -2520,6 +3806,93 @@ export const SCENES = [
     ),
   },
   {
+    id: "drafts-queue",
+    state: "three drafts waiting · one slot from history",
+    group: "DraftsQueue",
+    title: "The drafts queue on the Posts tab",
+    note: "The Posts tab opens on its Waiting chip while any draft is unanswered (issue 266): plan-day drafts and chat drafts alike, any channel, newest first. Each card says when it would go out and why: the account's own best hour once five posts on that channel have numbers, else the channel's default. Approve opens the publish dialog on that time; Edit in chat opens the post's workspace; Skip asks one of five reasons and turns it into a feedback memory the content agent's next draft reads. A long LinkedIn post folds behind Show all. What to check: Approve is the heaviest thing on each card, and Skip sits right, out of the way.",
+    render: () => (
+      <div className="p-5">
+        <DraftsQueue
+          posts={QUEUE_DRAFTS}
+          projectId="p"
+          loadSlot={queueSlot}
+          skip={(id) => new Promise((resolve) => setTimeout(() => resolve({ id, status: "discarded" }), 400))}
+          aside={<ReminderSetting surface="shell" />}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "drafts-queue-empty",
+    state: "the last draft answered",
+    group: "DraftsQueue",
+    title: "Nothing waiting",
+    note: "What the Waiting view says once the last draft is answered. The chip stays while it is the one selected, so the view never loses its label; on the next visit the tab opens on All instead.",
+    render: () => (
+      <div className="p-5">
+        <DraftsQueue posts={[]} projectId="p" loadSlot={queueSlot} aside={<ReminderSetting surface="browser" />} />
+      </div>
+    ),
+  },
+  {
+    id: "reminder-setting",
+    state: "the daily notice's time",
+    group: "ReminderSetting",
+    title: "When the daily notice arrives",
+    note: "One notice a day, \"3 drafts ready\", through the desktop shell or a browser tab that granted notifications, and only while the app is not being looked at. Per device, beside the queue. Hidden where nothing can notify, because a setting for a notice that can never arrive is a promise the page breaks.",
+    render: () => (
+      <div className="p-5">
+        <ReminderSetting surface="shell" />
+      </div>
+    ),
+  },
+  {
+    id: "writing-samples",
+    state: "two posts pasted",
+    group: "WritingSamples",
+    title: "Writing samples on the Brand tab",
+    note: "Posts the brand already wrote (issue 271). The text writer reads them before every X or LinkedIn draft, and a carousel caption hears them too, so a draft starts in a real voice. Up to five, 1,500 characters each, counted under each field. What to check: the counter sits right under its own field, and Add a post disables at five.",
+    render: () => <WritingSamplesScene initial={[X_THREAD_POST.caption, LINKEDIN_POST.caption]} />,
+  },
+  {
+    id: "writing-samples-empty",
+    state: "nothing pasted yet",
+    group: "WritingSamples",
+    title: "Before the first sample",
+    note: "One empty field rather than an empty list: the placeholder says what goes in it.",
+    render: () => <WritingSamplesScene initial={[]} />,
+  },
+  {
+    id: "voice-rules-default",
+    state: "Duct's defaults",
+    group: "VoiceRulesFields",
+    title: "Voice rules, never touched",
+    note: "The rules every project had as constants until issue 271, shown as settings: the banned list as chips, the two switches on. Change anything and Back to Duct's defaults appears. The writer refuses an X or LinkedIn draft with a banned word and says which, so the list is a promise, not a hint.",
+    render: () => <VoiceRulesScene initial={VOICE_DEFAULTS} customised={false} />,
+  },
+  {
+    id: "voice-rules-custom",
+    state: "a build-in-public founder's rules",
+    group: "VoiceRulesFields",
+    title: "Voice rules, customised",
+    note: "Clients may be named and the mechanism may be shown; each switch's line says what it means in its current position, not in the other one.",
+    render: () => <VoiceRulesScene initial={VOICE_BUILD_IN_PUBLIC} customised />,
+  },
+  {
+    id: "post-card-failed",
+    state: "a scheduled post PostBridge failed · with and without a reason",
+    group: "PostCard",
+    title: "A post that didn't go out",
+    note: "The board asks PostBridge about a scheduled post once its time has passed (issue 311). A failure gets the Failed chip and PostBridge's own sentence under the title; when PostBridge gave none, the card says so in its own words. Publishing again is the way out.",
+    render: () => (
+      <div className="grid max-w-md grid-cols-2 gap-4 p-5">
+        <PostCard post={{ ...X_THREAD_POST, id: "failed-1", status: "failed", publish_error: "The X account needs reconnecting." }} />
+        <PostCard post={{ ...LINKEDIN_POST, id: "failed-2", status: "failed", publish_error: "" }} />
+      </div>
+    ),
+  },
+  {
     id: "post-metrics-x",
     state: "X post published through PostBridge · nothing syncs",
     group: "PostMetricsForm",
@@ -2602,6 +3975,18 @@ export const SCENES = [
     ),
   },
   {
+    id: "vendor-key-inline",
+    state: "inline · Apify refused the key",
+    group: "VendorKeyForm",
+    title: "The key field inside a row",
+    note: "The same field with no card around it, for a row that already says what the vendor is for (the Plans tab's checklist). Submit any key: the refusal appears under the field the same way it does in the card.",
+    render: () => (
+      <div className="max-w-sm p-5">
+        <VendorKeyForm layout="inline" vendor="Apify" homeUrl="https://console.apify.com" onConnect={() => refuseKey("apify")} />
+      </div>
+    ),
+  },
+  {
     id: "vendor-key-collaborator",
     state: "collaborator · the owner hasn't connected PostBridge",
     group: "VendorKeyForm",
@@ -2614,42 +3999,486 @@ export const SCENES = [
     ),
   },
   {
+    id: "plan-board-channel",
+    state: "mid-month · one channel picked · list",
+    group: "PlanBoardView",
+    title: "The board on one channel",
+    note: "The channel chips in the header filter the list, the Kanban and the calendar alike, and the progress line under the plan's name counts what is shown: pick TikTok and the bar is TikTok's. The line itself is a period, a bar and words; posted, missed and to-go each have a word, so it reads in greyscale.",
+    render: () => <PlanScenario id="mid-month" channel="tiktok" />,
+  },
+  {
+    id: "plan-board-empty",
+    state: "voice and pillars set, no connector yet",
+    group: "PlanDayOne",
+    title: "The Plans tab, before the first plan",
+    note: "The first screen of Content Studio for a new project, and the usual case after the audit: the voice and pillars it drafted, neither connector's key saved. It used to be a dashed \"No plan yet\" box. Now it says what a plan is, reads back what Duct will plan from, takes the PostBridge and Apify keys right in their rows, asks how far ahead to plan (the month in progress, or 1 week, 2 weeks, 30 days, each naming its dates), and shows a sample week in the same list the plan workspace uses. Paste anything into a key field and press Enter: the preview refuses it the way a wrong key is refused. What to check: the button is the heaviest thing on the screen; the checklist sits beside the sample from @3xl and above it below that; the sample is dimmed, labelled and cannot be tabbed into.",
+    render: () => (
+      <div className="p-5">
+        <PlanDayOne brand={PLAN_BRAND_READY} accounts={[]} scheduler={NO_SCHEDULER} vendors={PLAN_VENDORS_MISSING} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={refuseKey} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-day-one-fresh",
+    state: "nothing set yet",
+    group: "PlanDayOne",
+    title: "A project with no brand context",
+    note: "Every source missing. Voice and pillars say what Duct does about them (it asks) and offer the tab that fixes them; the two connectors take their key in place. The button still works: the agent asks for what is missing before it plans. A pasted key is accepted after a beat here and the field stays busy, since the preview has no state to turn the row over with.",
+    render: () => (
+      <div className="p-5">
+        <PlanDayOne brand={PLAN_BRAND_EMPTY} accounts={[]} scheduler={NO_SCHEDULER} vendors={PLAN_VENDORS_MISSING} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-day-one-ready",
+    state: "everything set",
+    group: "PlanDayOne",
+    title: "All four sources ready",
+    note: "Voice, four pillars, two linked accounts and Apify connected. The plan learns from those accounts' own results, which is what the strategy band on a finished plan reports; the research row points at Discover, because only posts saved there reach the plan.",
+    render: () => (
+      <div className="p-5">
+        <PlanDayOne brand={PLAN_BRAND_READY} accounts={PLAN_ACCOUNTS} scheduler={A_SCHEDULER} vendors={PLAN_VENDORS_CONNECTED} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-day-one-collaborator",
+    state: "a collaborator, owner hasn't connected either key",
+    group: "PlanDayOne",
+    title: "When the keys are someone else's",
+    note: "A project spends its owner's PostBridge and Apify keys, so a collaborator gets no field, only who to ask.",
+    render: () => (
+      <div className="p-5">
+        <PlanDayOne brand={PLAN_BRAND_READY} accounts={[]} scheduler={NO_SCHEDULER} vendors={PLAN_VENDORS_COLLABORATOR} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
+      </div>
+    ),
+  },
+  // The growth report over fixtures: `reads` answers the GET with one state
+  // and the POST with the "generating" one, so every state is a URL.
+  ...[
+    ["no_sources", "nothing connected", "Growth report, nothing to read from", "Every source is a dashed chip with its reason; the panel sends the person to the Toolbox or to a scheduler. Nothing to click that would spend a model run."],
+    ["empty", "sources ready, never written", "Growth report, before the first run", "Ready sources are ticked by default and the one button writes the report. The line under it names what will be read and how long it keeps."],
+    ["generating", "a run writing, no earlier copy", "Growth report being written", "The status line names the sources being read and the skeleton has the loaded layout's shape, so the swap changes texture, not geometry."],
+    ["generating_with_old", "a run writing over a stale copy", "Refreshing a stale report", "The day-old report stays readable, dimmed, while the new one is written; the pickers are disabled for the run."],
+    ["fresh", "written three hours ago", "Growth report, fresh", "The whole report: verdict, KPIs with their deltas, a line, ranked bars, a table, a pie with its legend, signals, actions, and the gaps at the foot."],
+    ["stale", "written forty hours ago", "Growth report, stale", "Served as it is, with the status line saying how old it is and Refresh as the primary button. Nothing regenerates by itself."],
+    ["failed", "the run failed, no earlier copy", "Growth report run failed", "The failure is said in the backend's words with the validation problems under it, and Try again is right there."],
+    ["failed_with_old", "the run failed, an older copy exists", "Refresh failed, old report kept", "A failed refresh never takes away the report the person had; the error sits above it."],
+  ].map(([state, label, title, note]) => ({
+    id: `analytics-report-${state.replace(/_/g, "-")}`,
+    state: label,
+    group: "AnalyticsReport",
+    title,
+    note,
+    render: () => (
+      <div className="p-5">
+        <AnalyticsReport
+          projectId="preview"
+          onLinkAccounts={() => {}}
+          reads={{
+            get: async () => reportPayload(state),
+            generate: async () => reportPayload("generating", { report: reportPayload(state).report }),
+          }}
+        />
+      </div>
+    ),
+  })),
+  {
+    id: "growth-report-view",
+    state: "the stored report alone",
+    group: "GrowthReportView",
+    title: "A growth report, as the artifact library shows it",
+    note: "The same view the Analytics tab draws, with no pickers: this is what opens from the library and the artifact pane.",
+    render: () => <div className="p-5"><GrowthReportView report={GROWTH_REPORT} /></div>,
+  },
+  {
+    id: "growth-report-view-sparse",
+    state: "one KPI block and one gap",
+    group: "GrowthReportView",
+    title: "A report with one block",
+    note: "A run that could read one source writes one block and says what it could not check. The layout holds at the smallest count.",
+    render: () => (
+      <div className="p-5">
+        <GrowthReportView report={{ ...GROWTH_REPORT, blocks: GROWTH_REPORT.blocks.slice(0, 1), sources: GROWTH_REPORT.sources.slice(0, 1), could_not_check: ["Everything but Search Console: no other source was connected."] }} />
+      </div>
+    ),
+  },
+  {
+    id: "analytics-no-scheduler",
+    state: "no scheduler connected",
+    group: "ConnectorGate",
+    title: "Analytics, before any scheduler",
+    note: "What the tab does, what unlocks it, and the stat row it fills in, drawn by the real cards over invented numbers. The schedulers are the server's list, at most three.",
+    render: () => (
+      <div className="p-5"><AnalyticsGate publishers={SCHEDULERS_NONE} onConnect={acceptKey} /></div>
+    ),
+  },
+  {
+    id: "analytics-linked-empty",
+    state: "a scheduler connected · one account linked · nothing reported yet",
+    group: "AnalyticsView",
+    title: "Analytics with an account and no posts",
+    note: "Linked and empty is not the same zero as unlinked and empty: the first asks for a post, the second for a link. This one names the linked account and its scheduler and sends the person to the plan board; it never says Link an account.",
+    render: () => (
+      <div className="p-5">
+        <AnalyticsView
+          projectId="preview"
+          onLinkAccounts={() => {}}
+          reads={{
+            publishers: async () => SCHEDULERS_BOTH,
+            linked: async () => [{ account_id: "acc_li", publisher: "zernio", platform: "linkedin", username: "kestrel" }],
+            // With an account linked at Zernio only Zernio is asked, so a stale
+            // key at the other scheduler raises no notice here.
+            analytics: async () => ({ rows: [], notices: [] }),
+          }}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "discover-no-apify",
+    state: "Apify not connected",
+    group: "ConnectorGate",
+    title: "Discover, before Apify",
+    note: "One connector, so one card; who pays for the scraping is said under it. The example is two real result cards over invented posts.",
+    render: () => (
+      <div className="p-5"><DiscoverGate isOwner onConnect={acceptKey} /></div>
+    ),
+  },
+  {
+    id: "discover-no-apify-collaborator",
+    state: "a collaborator, owner hasn't connected Apify",
+    group: "ConnectorGate",
+    title: "Discover, when the key is the owner's",
+    note: "No Connect button: the project spends its owner's key, so anyone else is told who connects it.",
+    render: () => (
+      <div className="p-5"><DiscoverGate isOwner={false} onConnect={acceptKey} /></div>
+    ),
+  },
+  {
+    id: "accounts-no-scheduler",
+    state: "nothing connected, every channel off",
+    group: "AccountsTab",
+    title: "Accounts, before any scheduler",
+    note: "The schedulers section opens on its pitch: what the tab does once one is connected, each scheduler with the platforms it reports numbers for, and the accounts list it fills in. The channels list stays usable under it, because a channel can be on with no scheduler at all.",
+    render: () => (
+      <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_NONE} save={PREVIEW_SAVE} /></div>
+    ),
+  },
+  {
+    id: "accounts-two-schedulers",
+    state: "both connected, Zernio primary, one account linked",
+    group: "AccountsTab",
+    title: "Accounts at two schedulers",
+    note: "Two schedulers can be connected; the Primary radio says which one posts go out through, and the linked count counts only its accounts. Each channel row says in one line how it is posted: via the primary scheduler, by hand, or off.",
+    render: () => (
+      <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_BOTH} save={PREVIEW_SAVE} /></div>
+    ),
+  },
+  {
+    id: "accounts-scheduler-collaborator",
+    state: "a collaborator, owner hasn't connected one",
+    group: "AccountsTab",
+    title: "When the scheduler is the owner's to connect",
+    note: "A project publishes through its owner's scheduler, so Connect tells anyone else who sets it up rather than offering a key that would never be used.",
+    render: () => (
+      <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_COLLABORATOR} save={PREVIEW_SAVE} /></div>
+    ),
+  },
+  {
+    id: "accounts-by-hand",
+    state: "no scheduler, Blog and LinkedIn on by hand, Blog open",
+    group: "AccountsTab",
+    title: "Channels with no scheduler",
+    note: "A channel that is on with no account behind it is posted by hand, and the plan still covers it. Blog is open on its profile: the person's words about the channel ride into the agent's opening turn, and an article channel offers only Article as its media.",
+    render: () => (
+      <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_BY_HAND} save={PREVIEW_SAVE} defaultOpen={["blog"]} /></div>
+    ),
+  },
+  {
+    id: "accounts-other-scheduler",
+    state: "Zernio primary, PostBridge holds the TikTok account",
+    group: "AccountsTab",
+    title: "An account at the scheduler that is not primary",
+    note: "Only the primary scheduler's accounts can be linked, because that is the one a post goes out through. An account held at the other scheduler is shown muted with where it is, so switching Primary is the fix and the row is not a dead end.",
+    render: () => (
+      <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_OTHER_SCHEDULER} save={PREVIEW_SAVE} defaultOpen={["tiktok"]} /></div>
+    ),
+  },
+  {
+    id: "accounts-channel-open",
+    state: "LinkedIn open: guide popover, accounts, profile",
+    group: "AccountsTab",
+    title: "A channel opened",
+    note: "What the agent is told, at a glance: the cadence in one line, the limits as chips, and Make / Wins / Avoid behind the \"?\" (the card's chevron is the only expander). Under it the accounts at the primary scheduler with Link, and the profile form. Link does the whole job: the channel goes on, the fields fill from the account, every media kind is on. Media chips commit on click, fields on blur or Save; all chips on is the stored empty list.",
+    render: () => (
+      <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_CHANNEL_OPEN} save={PREVIEW_SAVE} defaultOpen={["linkedin"]} defaultGuideOpen={["linkedin"]} /></div>
+    ),
+  },
+  {
+    id: "accounts-german",
+    state: "a German-length display name, bio and notes",
+    group: "AccountsTab",
+    title: "A channel profile at German length",
+    note: "The fields grow with what is typed and the display name truncates nowhere: a long profile must not widen the row or push the switch off its line.",
+    render: () => (
+      <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_GERMAN} save={PREVIEW_SAVE} defaultOpen={["linkedin"]} /></div>
+    ),
+  },
+  {
+    id: "plan-day-one-unknown",
+    state: "brand context failed to load",
+    group: "PlanDayOne",
+    title: "When the sources cannot be read",
+    note: "The checklist is left out rather than reporting every source as missing: a failed read and an empty brand are different facts. The same goes for one connector whose status could not be read: its row and its share of the count drop out.",
+    render: () => (
+      <div className="p-5">
+        <PlanDayOne brand={null} accounts={null} vendors={{}} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-period-picker",
+    state: "Oct 7, Nov 1 with a plan from Nov 10, and Oct 28",
+    group: "PlanPeriodPicker",
+    title: "How far ahead a new plan looks",
+    note: "The Plans tab's \"Plan ahead\" and \"New plan\" menus, and the toggles the first-run screen uses for the same choice. Every option names the dates it will plan, by the run's own rules: the month in progress, or 1 week, 2 weeks, 30 days, never more than 30. What to check: \"Plan ahead\" starts on Nov 1 and stops the day before the plan already made from Nov 10, so the month is offered as \"9 days\" and the longer lengths, which come to the same dates, are not offered twice; the toggles are for Oct 28, so the month is November, not the four days left of October.",
+    render: () => <PlanPeriodScene />,
+  },
+  {
+    id: "feed-plan-dialog",
+    state: "GitHub connected, the defaults",
+    group: "FeedPlanDialog",
+    title: "Plan from what you shipped: the setup sheet",
+    note: "Opened from the plan board's \"From your work\" button. What Duct reads, how far back, how far ahead, how many days it may change and how much of a private repository it may talk about. What to check: every answer row stays on one line in a phone-width dialog; the hint under the disclosure row changes with the pick; unticking both sources disables Find stories and says why.",
+    render: () => <FeedDialogScene />,
+  },
+  {
+    id: "feed-plan-dialog-long",
+    state: "30 days back, 2 weeks ahead, 4 days",
+    group: "FeedPlanDialog",
+    title: "The setup sheet at its widest window",
+    note: "The drawing at its densest: 30 day cells read, 14 planned, four lit. What to check: every cell keeps the same width on both sides of today, the Today label stays under its bar, and the cells never shrink below a visible stone at phone width.",
+    render: () => <FeedDialogScene initial={{ ...DEFAULT_FEED, lookBack: 30, horizon: 14, maxDays: 4, disclosure: "releases" }} />,
+  },
+  {
+    id: "feed-plan-dialog-linear-notion",
+    state: "Linear and Notion connected, Notion ticked without a database",
+    group: "FeedPlanDialog",
+    title: "The setup sheet with Linear and Notion",
+    note: "Linear and Notion appear as sources only when the person has them connected. Ticking Notion asks for the one database to read, and Find stories waits until there is one. What to check: four tiles sit two by two from @md; the database field and its error sit under the tiles, not between them.",
+    render: () => <FeedDialogScene connected={["linear", "notion"]}
+      initial={{ ...DEFAULT_FEED, sources: ["github", "linear", "notion"] }} />,
+  },
+  {
+    id: "feed-plan-dialog-no-github",
+    state: "no repository connected",
+    group: "FeedPlanDialog",
+    title: "The setup sheet without GitHub",
+    note: "GitHub is unticked and disabled, with the way to the Toolbox under it; Duct's own record stays ticked, so the sheet still starts.",
+    render: () => <FeedDialogScene githubConnected={false} />,
+  },
+  {
+    id: "feed-summary-strip",
+    state: "five sources, 23 left out",
+    group: "FeedSummary",
+    title: "What a plan from shipped work read",
+    note: "The strip above the plan pane while the stories are found and after: the window, the sources as chips that open the PR, release or brief, and one folded line for what was left out. What to check: the chips wrap rather than widen the pane; opening the line lists each reason with its count.",
+    render: () => (
+      <div className="w-full max-w-xl bg-background">
+        <FeedSummary payload={FEED_READ} />
+      </div>
+    ),
+  },
+  {
+    id: "feed-summary-nothing-new",
+    state: "a quiet fortnight: chores and bumps only",
+    group: "FeedSummary",
+    title: "Nothing new worth a post",
+    note: "The whole pane when the read found nothing a reader would notice: the run ended with no model call, and the card says so, with the two ways on.",
+    render: () => (
+      <div style={{ height: 420, display: "flex" }} className="bg-background">
+        <FeedSummary payload={FEED_QUIET} onLookFurther={() => {}} onPlanFromGoals={() => {}} />
+      </div>
+    ),
+  },
+  {
+    id: "feed-summary-empty",
+    state: "nothing came back at all",
+    group: "FeedSummary",
+    title: "An empty read",
+    note: "No items and nothing left out usually means no repository is bound; the card points at the Toolbox.",
+    render: () => (
+      <div style={{ height: 420, display: "flex" }} className="bg-background">
+        <FeedSummary payload={{ ...FEED_QUIET, items: [], left_out: {} }} onPlanFromGoals={() => {}} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-list-feed-days",
+    state: "two days planned from shipped work",
+    group: "PlanList",
+    title: "Feed days in the agenda",
+    note: "A day from shipped work carries its sources under its title, at most two chips and +N. The other days are unchanged.",
+    render: () => (
+      <div style={{ height: 520, display: "flex" }} className="bg-background">
+        <PlanList plan={PLAN_WITH_FEED_DAYS} onReviseDay={() => {}} />
+      </div>
+    ),
+  },
+  {
+    id: "schedule-card-states",
+    state: "waiting on you, running, needs you, on release, paused",
+    group: "ScheduleCard",
+    title: "Scheduled: one card per schedule",
+    note: "The Scheduled page. What runs and when, the host it runs on, the state it is in, the last run with its cost and a way into the conversation it left, and the history behind a fold. What to check: the badge never wraps under the name; Needs you says what to do and links there; a paused card shows no next run.",
+    render: () => (
+      <div className="flex w-full max-w-2xl flex-col gap-3 bg-background p-4">
+        {SCHEDULES.map((s) => (
+          <ScheduleCard key={s.id} schedule={s} onRunNow={() => {}} onToggle={() => {}} onDelete={() => {}}
+            loadHistory={async () => SCHEDULE_HISTORY} />
+        ))}
+      </div>
+    ),
+  },
+  {
+    id: "plan-list-month",
+    state: "a fresh 30-day plan, every post pending",
+    group: "PlanList",
+    title: "The plan as an agenda",
+    note: "What the plan workspace shows once submit_plan runs: thirty posts in date order, grouped by week from the plan's first day, filterable by status. Pending rows carry no badge (thirty identical pills is noise); hovering one says Draft. What to check: the week header sticks while the list scrolls; platforms drop out of the row in a narrow pane before the title loses room.",
+    render: () => (
+      <div style={{ height: 640, display: "flex" }} className="bg-background">
+        <PlanList plan={PLAN_MONTH} onReviseDay={() => {}} />
+      </div>
+    ),
+  },
+  {
+    id: "plan-list-story",
+    state: "one week: two posted, one drafted, two pending",
+    group: "PlanList",
+    title: "A plan with posts moving",
+    note: "The story week. Posted and drafted rows carry their status and time; a scheduled post would say Scheduled. The filter counts follow, and Discarded appears only once something is in it.",
+    render: () => (
+      <div style={{ height: 420, display: "flex" }} className="bg-background">
+        <PlanList plan={STORY_PLAN} postsById={STORY_POSTS} onReviseDay={() => {}} />
+      </div>
+    ),
+  },
+  {
     id: "plan-strategy",
-    state: "history: doubling down on video, testing image",
+    state: "three channels, each on its own history",
     group: "PlanStrategy",
-    title: "The strategy a plan chose",
-    note: "Above the plan, on the Plan tab and in the live workspace. The two choices the account's own history led to, each with the agent's evidence, then what past posts taught it and when to post. What to check: the two choices sit side by side from @xl and stack below it; the notes' text lines up with the choices' text above; nothing here is a pill.",
-    render: () => <div className="bg-card"><PlanStrategy strategy={PLAN_STRATEGY} /></div>,
+    title: "What the plan bets on, by channel",
+    note: "One row per channel the plan's days are on: what that channel's own history says to lean on and to try, counted from its days, and how its share moved since the last plan and why. Instagram has no results yet, so it shows the mix it is trying; LinkedIn makes only text, so it leans on nothing. The agent's reasons are behind the ?, with the hook names written as words. Check: the channel names share one column from @xl and stack below it; the change line never wraps onto its own row at desktop width.",
+    render: () => <div className="bg-card"><PlanStrategy strategy={PLAN_STRATEGY_MIX} days={PLAN_STRATEGY_DAYS} /></div>,
+  },
+  {
+    id: "plan-strategy-card",
+    state: "on the board page",
+    group: "PlanStrategy",
+    title: "The board's strategy card",
+    note: "The same rows in the quiet card the full-bleed board route uses, where a ruled strip would float between the toolbar and the list.",
+    render: () => <div className="bg-background p-4"><PlanStrategy strategy={PLAN_STRATEGY_MIX} days={PLAN_STRATEGY_DAYS} variant="card" /></div>,
+  },
+  {
+    id: "plan-strategy-one-channel",
+    state: "the board filtered to one channel",
+    group: "PlanStrategy",
+    title: "One channel picked",
+    note: "With a channel chip picked on the board, the card says that channel's row alone, the way the list below shows that channel's posts alone.",
+    render: () => <div className="bg-card"><PlanStrategy strategy={PLAN_STRATEGY_MIX} days={PLAN_STRATEGY_DAYS} channel="tiktok" /></div>,
   },
   {
     id: "plan-strategy-cold",
     state: "no posting history yet",
     group: "PlanStrategy",
     title: "The strategy of a first plan",
-    note: "An account with nothing published: nothing to double down on, one type named to test, and no notes row because there is no history to learn from or time.",
-    render: () => <div className="bg-card"><PlanStrategy strategy={PLAN_STRATEGY_COLD} /></div>,
+    note: "An account with nothing published: no channel leans on anything, each shows the mix it is trying, and the ? has only the agent's reason for testing.",
+    render: () => <div className="bg-card"><PlanStrategy strategy={PLAN_STRATEGY_COLD} days={PLAN_STRATEGY_DAYS} /></div>,
   },
   {
-    id: "plan-strategy-all-proven",
-    state: "every type proven, long evidence",
+    id: "plan-strategy-legacy",
+    state: "a plan made before the channel mix",
     group: "PlanStrategy",
-    title: "Nothing left untested",
-    note: "Evidence longer than two lines clamps and carries the whole sentence in a tooltip (tab to it). The testing column says every type has results rather than going blank.",
-    render: () => <div className="bg-card"><PlanStrategy strategy={PLAN_STRATEGY_ALL_PROVEN} /></div>,
+    title: "An older plan",
+    note: "A plan stored before plans kept their channel mix has the agent's one choice and no per-channel facts: the choice lands on its busiest channel, the channel the prompt named, and the others show their mix. No up or down arrows, because nothing recorded the last plan's split.",
+    render: () => <div className="bg-card"><PlanStrategy strategy={PLAN_STRATEGY_ALL_PROVEN} days={PLAN_STRATEGY_DAYS} /></div>,
   },
   {
     id: "plan-viewport-strategy",
     state: "a live plan with its strategy",
     group: "PlanViewport",
     title: "The plan pane in the workspace",
-    note: "The right pane of a plan session once submit_plan has run: the name bar, the strategy, then the board. A plan made before strategies were recorded shows no strategy band at all.",
+    note: "The right pane of a plan session once submit_plan has run: the name bar, the strategy, then the list. A plan made before strategies were recorded shows no strategy band at all.",
     render: () => (
       <div style={{ height: 720, display: "flex" }} className="bg-background">
         <div className="flex-1 min-w-0">
-          <PlanViewport payload={{ type: "plan", ...STORY_PLAN, strategy: PLAN_STRATEGY }} />
+          <PlanViewport payload={{ type: "plan", ...PLAN_MONTH, strategy: PLAN_STRATEGY }} onReviseDay={() => {}} />
         </div>
       </div>
     ),
+  },
+  // The decision bar: a plan the agent submits is a proposal until the
+  // person accepts it, and the bar under the header is that choice. Accept
+  // and Reject call the real API here, so in the preview they end in the
+  // inline error; Modify opens the note and sends nowhere.
+  {
+    id: "plan-viewport-proposed-replacing",
+    state: "proposed · replaces a plan already running",
+    group: "PlanViewport",
+    title: "A proposal over a live plan",
+    note: "Half way through a month with posts out and drafted, the agent proposes a new plan. The bar says what Accept does to the running one (from today on, drafted posts stay) and offers Accept, Modify, Reject. Sweep the width: the buttons drop under the line on a phone, and nothing is under 24px.",
+    render: () => <PlanViewportScene scenario="mid-month" status="proposed" replaces />,
+  },
+  {
+    id: "plan-viewport-proposed-fresh",
+    state: "proposed · nothing to replace",
+    group: "PlanViewport",
+    title: "A first proposal",
+    note: "No live plan for the period, so the line is the short one: Accept saves it. Click Modify: the note opens under the bar with its label, Cancel and Send; Send is off until something is typed.",
+    render: () => <PlanViewportScene scenario="fresh" status="proposed" />,
+  },
+  {
+    id: "plan-viewport-day-change",
+    state: "proposed · one day changed",
+    group: "PlanViewport",
+    title: "A change to one day",
+    note: "What revise_plan_days puts in the pane when the person asks for one day: that day alone, the new topic over the old one, the type that moved as before → after, and a line saying the other days stay. Accept writes this day and nothing else.",
+    render: () => <PlanViewportScene status="proposed" replaces change="one" />,
+  },
+  {
+    id: "plan-viewport-week-change",
+    state: "proposed · four days of a week changed",
+    group: "PlanViewport",
+    title: "A change to a week",
+    note: "Four days at once: a hook moved, a channel moved, a series and objective set on a day whose topic stayed (no Was line), and a topic long enough to wrap. Field names are translated; values the agent wrote (hooks) lose their underscores.",
+    render: () => <PlanViewportScene status="proposed" replaces change="week" />,
+  },
+  {
+    id: "plan-viewport-day-change-rejected",
+    state: "a change to one day, rejected",
+    group: "PlanViewport",
+    title: "A day change, discarded",
+    note: "After Reject on a change to some days: the note says the plan stays as it was (a whole plan's says it was discarded), and the day turned down stays listed. Reject also tells the agent the changes were turned down, so it asks what to change instead.",
+    render: () => <PlanViewportScene status="rejected" replaces change="one" />,
+  },
+  {
+    id: "plan-viewport-accepted",
+    state: "accepted",
+    group: "PlanViewport",
+    title: "The plan, saved",
+    note: "What the pane shows once Accept has landed, or when the session's PLAN_GENERATED echo arrives with status accepted: the bar gives way to one chip and Draft the next post, which opens the post workspace on the first day from today still waiting for a draft (its topic in the tooltip). Accept sends nothing into the chat: the agent hears of it with the person's next message. A plan from before proposals existed has no status and shows nothing in this slot (the scene above).",
+    render: () => <PlanViewportScene scenario="fresh" status="accepted" />,
+  },
+  {
+    id: "plan-viewport-rejected",
+    state: "rejected",
+    group: "PlanViewport",
+    title: "The proposal, discarded",
+    note: "After Reject: a quiet note in the bar's slot, the proposed days still listed below so the person can see what they turned down. Nothing is deleted from the board.",
+    render: () => <PlanViewportScene scenario="fresh" status="rejected" />,
   },
   // One question, the sources read, the answer: the transcript with nothing
   // around it. Three audiences ask the story week three things; the copy
@@ -2671,6 +4500,48 @@ export const SCENES = [
       </div>
     ),
   })),
+  {
+    id: "chat-code-and-long-link",
+    group: "AgentChat",
+    title: "A code block and a long link in a reply",
+    state: "settled reply, highlighter loading on first sight",
+    note: "The highlighter is not in the chat's first load: the first code block on screen fetches it, and until then the block is drawn plain in the same dark box at the same size, so only the token colours arrive late. Reload with the network throttled to see the swap. The link has no spaces to break at; it must wrap inside the column rather than scroll the transcript sideways at phone width.",
+    render: () => (
+      <div className="max-w-xl">
+        <TranscriptRow
+          msg={{
+            role: "assistant",
+            text: "The redirect chain is in the response headers:\n\n```bash\ncurl -sI https://example.com/pricing | grep -i location\n```\n\nThe canonical it lands on is https://example.com/pricing/plans/annual?utm_source=newsletter&utm_medium=email&utm_campaign=october-launch-reminder-second-send, which no internal link points to.",
+          }}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "artifact-chart",
+    group: "Artifacts",
+    title: "A chart artifact",
+    state: "line chart, Recharts loaded on first sight",
+    note: "Recharts loads when a chart is on screen, not with every screen that can show an artifact; a skeleton of the chart's own height holds the place, so nothing below it moves when the chart arrives.",
+    render: () => (
+      <ChartJsonView
+        source={JSON.stringify({
+          type: "line",
+          title: "Organic sessions, last six weeks",
+          x: "week",
+          series: [{ key: "sessions", label: "Sessions" }, { key: "signups", label: "Sign-ups" }],
+          data: [
+            { week: "W1", sessions: 1240, signups: 31 },
+            { week: "W2", sessions: 1310, signups: 35 },
+            { week: "W3", sessions: 1180, signups: 29 },
+            { week: "W4", sessions: 1420, signups: 41 },
+            { week: "W5", sessions: 1510, signups: 44 },
+            { week: "W6", sessions: 1630, signups: 52 },
+          ],
+        })}
+      />
+    ),
+  },
   {
     id: "audit-report-v1",
     group: "Audit",
@@ -2726,6 +4597,38 @@ export const SCENES = [
       </div>
     ),
   },
+  {
+    id: "format-library-grid",
+    state: "a built-in, a customised built-in, a custom with no spec, a name that wraps",
+    group: "FormatLibrary",
+    title: "The format library as a grid",
+    note: "Built-ins carry the sparkle badge and no delete; a customised built-in offers reset instead. Each card says what it applies to: media kinds as words, channels as glyphs, and \"Any media · Every channel\" for a format that declared nothing. Sweep 448–720 for the badge row wrapping under a long description.",
+    render: () => <FormatGridScene />,
+  },
+  {
+    id: "format-editor-builtin",
+    state: "customising a built-in · slug locked · spec in the visual editor",
+    group: "FormatLibrary",
+    title: "Customise a built-in format",
+    note: "The slug is read-only so the copy stands in for the built-in, the header says what saving does, and the spec opens in the visual editor: headings, bold, lists and a real table from the toolbar, Markdown kept underneath (toggle Source on the right of the toolbar). No slider, no linked styles: the spec carries the slide count and names its caption classes.",
+    render: () => <FormatEditorScene initial={FORMATS_FIXTURE[0]} />,
+  },
+  {
+    id: "format-editor-new",
+    state: "a new format · nothing picked yet",
+    group: "FormatLibrary",
+    title: "A new format from nothing",
+    note: "Empty filters read as any media and every channel, and say so beside the chips rather than leaving a blank row. The editor shows its placeholder until the first keystroke.",
+    render: () => <FormatEditorScene initial={{}} />,
+  },
+  {
+    id: "format-detail-builtin",
+    state: "read view of a built-in",
+    group: "FormatLibrary",
+    title: "A built-in format, read",
+    note: "Customise where Edit would be, no delete, and the footer says the format ships with Duct. The applicability row repeats what the card said so the sheet stands alone.",
+    render: () => <FormatDetailScene format={FORMATS_FIXTURE[0]} />,
+  },
 ];
 
 const CLONE_SOURCE = {
@@ -2740,6 +4643,77 @@ const CLONE_SOURCE = {
 };
 
 /** The clone dialog, open on arrival; the button brings it back after Escape. */
+const FEED_ITEMS = [
+  { ref: "gh:r-v1.4.0", kind: "release", title: "v1.4.0: invoices in two clicks", url: "https://github.com/acme/app/releases/tag/v1.4.0" },
+  { ref: "cs:3f2a9c1d", kind: "change_set", title: "Shift budget to brand search (google_ads, applied)", url: "" },
+  { ref: "gh:pr-412", kind: "pull_request", title: "feat(invoices): send from the job card", url: "https://github.com/acme/app/pull/412" },
+  { ref: "art:weekly-brief", kind: "artifact", title: "Organic signups up 18% after the invoice launch", url: "/artifacts/1" },
+  { ref: "gh:c-bbb2222", kind: "commit", title: "fix: drafts keep their hook on resume", url: "" },
+];
+const FEED_READ = {
+  window: { from: "2026-10-29", to: "2026-11-11" },
+  worth_a_plan: true, score: 9, gate: 3, items: FEED_ITEMS,
+  left_out: { chore: 12, dependency: 6, squashed: 4, bot: 1 }, notes: [], max_days: 2, disclosure: "shipped",
+};
+const FEED_QUIET = {
+  window: { from: "2026-10-29", to: "2026-11-11" },
+  worth_a_plan: false, score: 1, gate: 3,
+  items: [{ ref: "gh:c-aaa1111", kind: "commit", title: "fix: typo in the footer", url: "" }],
+  left_out: { chore: 7, dependency: 3 }, notes: [], max_days: 2, disclosure: "shipped",
+};
+const PLAN_WITH_FEED_DAYS = {
+  ...PLAN_MONTH,
+  days: PLAN_MONTH.days.slice(0, 7).map((d, i) =>
+    i === 1 ? { ...d, topic: "Invoices in two clicks, from the job card", sources: FEED_ITEMS.slice(0, 3) }
+      : i === 4 ? { ...d, topic: "What the invoice launch did to signups", sources: [FEED_ITEMS[3]] }
+        : d,
+  ),
+};
+
+function FeedDialogScene({ githubConnected = true, initial, connected }) {
+  const [open, setOpen] = useState(true);
+  return (
+    <>
+      <Button size="sm" variant="outline" onClick={() => setOpen(true)}>Open the setup sheet</Button>
+      <FeedPlanDialog open={open} onOpenChange={setOpen} onStart={() => setOpen(false)} onRepeat={() => setOpen(false)}
+        githubConnected={githubConnected} connected={connected} {...(initial ? { initial } : {})} />
+    </>
+  );
+}
+
+const SCHEDULE_BASE = {
+  project_id: "p", job: "content.plan_from_work", cadence: "weekly", weekday: 0, at_time: "09:00",
+  timezone: "Europe/Berlin", enabled: true, host: "cloud", monthly_cap: 6, config: {}, running: false,
+  needs_reason: "", mine: true, next_run_at: "2026-11-16T08:00:21Z",
+};
+const SCHEDULES = [
+  { ...SCHEDULE_BASE, id: "s1", name: "Weekly plan from your work", runs_this_month: 2, waiting: true,
+    last: { at: "2026-11-09T08:04:00Z", outcome: "proposed", cost_usd: 0.0995, conversation_id: "c1" },
+    recent: [
+      { at: "2026-11-09T08:04:00Z", outcome: "proposed" }, { at: "2026-11-02T08:20:00Z", outcome: "interrupted", will_retry: true },
+      { at: "2026-10-26T08:03:00Z", outcome: "nothing_new" }, { at: "2026-10-19T08:06:00Z", outcome: "proposed" },
+      { at: "2026-10-12T08:02:00Z", outcome: "proposed" },
+    ] },
+  { ...SCHEDULE_BASE, id: "s2", name: "Daily plan from your work", cadence: "daily", host: "local", running: true,
+    runs_this_month: 5, last: { at: "2026-11-10T08:02:00Z", outcome: "nothing_new", cost_usd: 0 },
+    recent: Array.from({ length: 8 }, (_, i) => ({ at: `2026-11-${String(10 - i).padStart(2, "0")}T08:02:00Z`, outcome: i % 3 ? "nothing_new" : "proposed" })) },
+  { ...SCHEDULE_BASE, id: "s3", name: "Weekly plan, client repo", needs_reason: "no_model_key", runs_this_month: 0,
+    last: { at: "2026-11-09T08:01:00Z", outcome: "skipped", reason: "no_model_key" },
+    recent: [{ at: "2026-11-09T08:01:00Z", outcome: "skipped" }, { at: "2026-11-09T07:46:00Z", outcome: "skipped" }] },
+  { ...SCHEDULE_BASE, id: "s5", name: "Plan on each release", cadence: "on_release", runs_this_month: 1, waiting: false,
+    last: { at: "2026-11-06T14:12:00Z", outcome: "proposed", cost_usd: 0.11, conversation_id: "c5" },
+    recent: [{ at: "2026-11-06T14:12:00Z", outcome: "proposed" }, { at: "2026-10-22T10:05:00Z", outcome: "proposed" }] },
+  { ...SCHEDULE_BASE, id: "s4", name: "Paused experiment", enabled: false, next_run_at: null, cadence: "weekdays",
+    runs_this_month: 1, mine: false, last: { at: "2026-11-03T08:05:00Z", outcome: "failed", reason: "rate_limited" },
+    recent: [{ at: "2026-11-03T08:05:00Z", outcome: "failed" }, { at: "2026-11-02T08:05:00Z", outcome: "proposed" }] },
+];
+const SCHEDULE_HISTORY = [
+  { at: "2026-11-09T08:04:00Z", outcome: "proposed", cost_usd: 0.0995, conversation_id: "c1" },
+  { at: "2026-11-02T08:20:00Z", outcome: "interrupted", reason: "interrupted", will_retry: true },
+  { at: "2026-10-26T08:03:00Z", outcome: "nothing_new", cost_usd: 0 },
+  { at: "2026-10-19T08:06:00Z", outcome: "skipped", reason: "stale" },
+];
+
 function CloneDialogScene({ initialValue = "" }) {
   const [open, setOpen] = useState(true);
   return (
@@ -2757,17 +4731,24 @@ function CloneDialogScene({ initialValue = "" }) {
  * failures, a finding with affected URLs, and a phase whose tasks carry an
  * effort estimate.
  */
-function StoryMemoryScene() {
+const PRIVATE_MEMORIES = [
+  { id: "p-1", kind: "communication", status: "confirmed", title: "Give me the number first, then the why", body: "", source_type: "user", recorded_at: "2026-09-12T09:00:00Z", observed_at: "2026-09-12", source_refs: [] },
+  { id: "p-2", kind: "method", status: "confirmed", project_id: "solo", title: "Always compare to the same week last year", body: "Weekly numbers swing with paydays; week over week misleads.", source_type: "user", recorded_at: "2026-10-02T09:00:00Z", observed_at: "2026-10-02", source_refs: [] },
+  { id: "p-3", kind: "method", status: "proposed", title: "Trusts GA4 over the Ads conversion count", body: "Said twice in the 6 Nov brief chat.", source_type: "agent", recorded_at: "2026-11-06T15:00:00Z", observed_at: "2026-11-06", source_refs: [{ conversation_id: "c-1" }] },
+];
+
+function StoryMemoryScene({ items: source = STORY_MEMORIES, groups = PROJECT_KIND_GROUPS, binding = null }) {
   const api = useMemo(() => {
-    const items = STORY_MEMORIES.map((m) => ({ ...m })).sort((a, b) => (a.observed_at < b.observed_at ? 1 : -1));
+    const items = source.map((m) => ({ ...m })).sort((a, b) => (a.observed_at < b.observed_at ? 1 : -1));
     const kinds = Array.from(new Set(items.map((m) => m.kind))).sort();
     const noop = async () => ({});
     return {
-      list: async ({ q = "", kind = "", includeSuperseded = true } = {}) => ({
+      list: async ({ q = "", kind = "", status = "", includeSuperseded = true } = {}) => ({
         items: items.filter(
           (m) =>
-            (includeSuperseded || m.status !== "superseded") &&
-            (!kind || m.kind === kind) &&
+            (includeSuperseded || !["superseded", "archived"].includes(m.status)) &&
+            (!kind || kind.split(",").includes(m.kind)) &&
+            (!status || m.status === status) &&
             (!q || `${m.title} ${m.body}`.toLowerCase().includes(q.toLowerCase())),
         ),
         kinds,
@@ -2775,11 +4756,15 @@ function StoryMemoryScene() {
       }),
       get: async ({ memoryId }) => items.find((m) => m.id === memoryId) || null,
       create: noop, patch: noop, remove: noop, reset: noop, setPaused: noop,
+      move: binding ? noop : undefined,
     };
-  }, []);
+    // Keyed on the id: the scene passes a fresh object each render, and a new
+    // api would refetch on every one.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [source, binding?.projectId]);
   return (
     <div style={{ maxWidth: 880, padding: 24 }}>
-      <MemoryTimeline api={api} kinds={MEMORY_KINDS} defaultKind="goal" />
+      <MemoryTimeline api={api} groups={groups} binding={binding} />
     </div>
   );
 }
@@ -2840,6 +4825,49 @@ function OneClickCardScene() {
   );
 }
 
+function OAuthCardScene() {
+  const GA4_READ = "https://www.googleapis.com/auth/analytics.readonly";
+  const GA4_EDIT = "https://www.googleapis.com/auth/analytics.edit";
+  const scopes = [
+    { scope: GA4_READ, label: "Read reports", why: "To read traffic and conversions for briefs.", access: "read", required: true, granted: true },
+    { scope: GA4_EDIT, label: "Edit configuration", why: "To stage key events you approve.", access: "write", required: false, granted: false },
+  ];
+  const row = {
+    id: "r1",
+    connector_type: "ga4",
+    account_id: "",
+    account_name: "",
+    storage: "cloud",
+    residency: "server",
+    scopes,
+    scope_status: "partial",
+    missing_scopes: [GA4_EDIT],
+  };
+  const common = {
+    connectorType: "ga4",
+    title: "Google Analytics",
+    description: "Traffic, sessions, engagement and conversions.",
+    logo: LOGOS.ga4,
+    start: () => new Promise((resolve) => setTimeout(() => resolve("browser"), 400)),
+    onDisconnect: () => {},
+  };
+  return (
+    <div className="conn-grid">
+      <OAuthConnectorCard {...common} connected={false} oauthConnected={false} tone="off" status="Not connected" />
+      <OAuthConnectorCard
+        {...common}
+        connected
+        oauthConnected
+        tone="partial"
+        status="Connected · 1 permission missing"
+        scopes={scopes}
+        scopeStatus="partial"
+        rows={[row]}
+      />
+    </div>
+  );
+}
+
 /** The grid the MCP tiles join on Connections, with two native tiles ahead of
  *  them so the source lines can be compared, and the page's message line. */
 function ConnectorGrid({ children }) {
@@ -2891,6 +4919,16 @@ function McpScene({ servers, answer, signedIn = true }) {
       claim: async () => null,
       remove: async (id) => {
         rows = rows.filter((r) => r.id !== id);
+      },
+      // A server that was only down answers now; a sign-in or key problem
+      // is still there, because only reconnecting fixes those.
+      check: async (id) => {
+        await new Promise((r) => setTimeout(r, 600));
+        const row = rows.find((r) => r.id === id);
+        const fixed = !row?.status || row.status === "connected" || row.status === "failing";
+        const server = fixed ? { ...row, status: "connected", problem: "", problem_at: null } : row;
+        rows = rows.map((r) => (r.id === id ? server : r));
+        return { server, tools: fixed ? 4 : null };
       },
       connect: async ({ preset, url, name, apiKey }) => {
         await new Promise((r) => setTimeout(r, 500));

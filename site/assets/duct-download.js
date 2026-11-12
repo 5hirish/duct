@@ -66,6 +66,11 @@ var ductT = window.ductT || function (s) { var m = window.DUCT_I18N; return (m &
     // which would hand a Windows user a .dmg.
     var p = (navigator.userAgentData && navigator.userAgentData.platform) || '';
     var ua = p + ' ' + (navigator.platform || '') + ' ' + (navigator.userAgent || '');
+    // Phones and tablets first: an iPhone's user agent says "like Mac OS X",
+    // and iPadOS Safari reports a Mac outright, so without this both were
+    // offered the .dmg. There is no mobile build; they get the plain link.
+    if (/iPhone|iPad|iPod|Android/i.test(ua)) return null;
+    if (/Mac/i.test(ua) && navigator.maxTouchPoints > 1) return null;
     if (/Win/i.test(ua)) return 'windows';
     if (/Mac|Darwin/i.test(ua)) return 'macos';
     if (/Linux|X11/i.test(ua)) return 'linux-appimage';
@@ -115,7 +120,7 @@ var ductT = window.ductT || function (s) { var m = window.DUCT_I18N; return (m &
     // Only on the download page. Everywhere else a Download button is a link
     // to that page: a visitor who has not seen what the app is should land on
     // the page that shows it, not on a 90 MB installer from a nav button.
-    if (!/^\/download(\.html)?$/.test(location.pathname)) return;
+    if (!/^\/download(\.html)?$/.test(location.pathname)) return nameThePlatform();
     var nodes = document.querySelectorAll('[data-duct-download]');
     if (!nodes.length) return;
 
@@ -135,6 +140,21 @@ var ductT = window.ductT || function (s) { var m = window.DUCT_I18N; return (m &
     }
   }
 
+  /* Off the download page, a CTA that opts in with `data-duct-download-name`
+   * says the visitor's own platform ("Download for Windows ↓") and still links
+   * to /download. The markup says "Download Duct ↓", which is what a phone, a
+   * platform we do not build for, or no JavaScript sees. The home hero once
+   * hard-coded "Download for macOS ↓" for everyone. */
+  var NAMES = { macos: 'macOS', windows: 'Windows', 'linux-appimage': 'Linux' };
+  function nameThePlatform() {
+    var name = NAMES[detect()];
+    if (!name) return;
+    var nodes = document.querySelectorAll('[data-duct-download-name]');
+    for (var i = 0; i < nodes.length; i++) {
+      nodes[i].textContent = ductT('Download for {label} ↓').replace('{label}', name);
+    }
+  }
+
   /* The download click, which is the top of the desktop funnel and was the one
    * conversion on this site nobody was counting.
    *
@@ -143,8 +163,9 @@ var ductT = window.ductT || function (s) { var m = window.DUCT_I18N; return (m &
    * anchors that appear later. Matching on the release prefix is what makes a
    * per-platform link count and a link to /download not.
    *
-   * Queued on dataLayer whether or not GTM has loaded; if the visitor declined
-   * cookies it never loads and the array is simply never drained. */
+   * Sent through ductTrack (assets/duct.js), which queues it until PostHog
+   * has loaded; if the visitor declined cookies PostHog never loads and the
+   * queue is simply never drained. */
   function osForHref(href) {
     var slot = SLOTS.filter(function (s) { return href && href.indexOf(s.file) !== -1; })[0];
     return (slot && slot.key) || detect() || '';
@@ -155,8 +176,9 @@ var ductT = window.ductT || function (s) { var m = window.DUCT_I18N; return (m &
     // to /download is navigation, not a download.
     var el = ev.target && ev.target.closest && ev.target.closest('a[href*="' + LATEST + '"]');
     if (!el) return;
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({ event: 'download_started', os: osForHref(el.getAttribute('href') || '') });
+    // duct.js defines ductTrack and loads both tags; without it nothing would
+    // drain the event anyway.
+    if (window.ductTrack) window.ductTrack('download_started', { os: osForHref(el.getAttribute('href') || '') });
   }, true);
 
   window.DuctDownload = { load: load, detect: detect, mb: mb, urlFor: urlFor,

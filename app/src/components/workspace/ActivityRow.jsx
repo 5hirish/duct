@@ -21,7 +21,7 @@
  * and "it read Search Console" are the same kind of fact.
  */
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import Link from "next/link";
 import {
   BookOpen,
@@ -84,15 +84,40 @@ const TOOL_WORDS = {
   fetch_content_history: msg`Read what was posted before`,
   fetch_content_assets: msg`Read the asset library`,
   fetch_discovered_references: msg`Read the discovered references`,
+  discover_tiktok: msg`Searched TikTok`,
   fetch_post: msg`Opened the post`,
   fetch_slide_context: msg`Read the slide`,
-  submit_plan: msg`Saved the plan`,
+  submit_plan: msg`Proposed a plan`,
+  revise_plan_days: msg`Proposed changes to the plan`,
   submit_post_draft: msg`Saved the draft`,
   edit_slide: msg`Edited a slide`,
   submit_assessment: msg`Reviewed the post`,
   publish_post: msg`Published the post`,
   mark_posted: msg`Marked as posted`,
   log_metrics: msg`Logged metrics`,
+};
+
+// What a row says when the person answered no on the approval card, or the
+// run had nobody to ask. The verb in TOOL_WORDS would claim the thing happened.
+const DECLINED_WORDS = {
+  discover_tiktok: msg`Skipped the TikTok search`,
+  publish_post: msg`Didn't publish the post`,
+};
+const HELD_WORDS = {
+  discover_tiktok: msg`Held the TikTok search for your approval`,
+  publish_post: msg`Held the post for your approval`,
+};
+
+// The sub-agents a runner can dispatch, by the name the model calls them
+// (content: agents/content/subagents; insights: agents/insights/subagents),
+// as what they do while running and what they did once back. The name is a
+// code identifier and never the row's words.
+const SUBAGENT_WORDS = {
+  research_pillar: { running: msg`Researching a pillar`, done: msg`Researched a pillar` },
+  draft_post: { running: msg`Drafting a post`, done: msg`Drafted a post` },
+  review_post: { running: msg`Reviewing a post`, done: msg`Reviewed a post` },
+  verify: { running: msg`Checking the numbers`, done: msg`Checked the numbers` },
+  "general-purpose": { running: msg`Working on a side task`, done: msg`Finished a side task` },
 };
 
 // What each block of a run's context is called on the row. The keys are the
@@ -134,9 +159,18 @@ function toolWords(name) {
   return String(name || "").replace(/[_-]+/g, " ").trim();
 }
 
-/** A skip, or a run with nobody to ask: an answer, not a failure. */
+/** The row's words when the person declined it or it waits for them, else "". */
+function declinedWords(activity, i18n) {
+  const table = activity.reason === "skipped" ? DECLINED_WORDS : activity.reason === "needs_approval" ? HELD_WORDS : null;
+  const words = table?.[activity.tool];
+  return words ? i18n._(words) : "";
+}
+
+/** A skip, or a run with nobody to ask: an answer, not a failure. Whichever
+ *  kind the row is (a connected tool's call, a TikTok search, a publish), it
+ *  is never painted red. */
 function isDecision(activity) {
-  return activity.kind === ActivityKind.CONNECTED_TOOL && CONNECTED_DECISIONS.has(activity.reason);
+  return CONNECTED_DECISIONS.has(activity.reason);
 }
 
 /**
@@ -211,6 +245,8 @@ function useSummary(activity, named) {
         aside: typeof meta.count === "number" ? t`${meta.count} matches` : "",
       };
     case ActivityKind.CONTEXT: {
+      const declined = declinedWords(activity, i18n);
+      if (declined) return { lead: declined, detail: activity.title, aside: "" };
       const word = TOOL_WORDS[activity.tool] ? i18n._(TOOL_WORDS[activity.tool]) : t`Read project context`;
       const detail = Array.isArray(meta.blocks) ? blockWords(meta.blocks, i18n) : activity.title;
       return { lead: word, detail, aside: typeof meta.count === "number" ? String(meta.count) : "" };
@@ -219,6 +255,8 @@ function useSummary(activity, named) {
       if (meta.listing) return { lead: t`Listed this thread's documents`, detail: "", aside: typeof meta.count === "number" ? String(meta.count) : "" };
       return { lead: t`Opened`, detail: activity.title, aside: meta.version ? `v${meta.version}` : "" };
     case ActivityKind.ACTION: {
+      const declined = declinedWords(activity, i18n);
+      if (declined) return { lead: declined, detail: activity.title, aside: "" };
       const word = TOOL_WORDS[activity.tool] ? i18n._(TOOL_WORDS[activity.tool]) : t`Did something`;
       // When it goes out is the one fact a publish has that the verb does not.
       return { lead: word, detail: activity.title, aside: meta.scheduled_at ? formatDate(meta.scheduled_at, { locale: i18n.locale }) : "" };
@@ -264,6 +302,15 @@ function useSummary(activity, named) {
       }
       const lead = activity.status === StepStatus.RUNNING ? t`Using ${tool}` : t`Used ${tool}`;
       return { lead, detail: server, aside: "" };
+    }
+    case ActivityKind.SUBAGENT: {
+      const words = SUBAGENT_WORDS[activity.title];
+      const running = activity.status === StepStatus.RUNNING;
+      const lead = words
+        ? i18n._(running ? words.running : words.done)
+        : running ? t`Asked a helper agent` : t`A helper agent answered`;
+      // The brief says what was asked; the answer replaces it once it is back.
+      return { lead, detail: meta.summary || meta.brief || "", aside: "" };
     }
     default:
       return { lead: t`Asked ${activity.title}`, detail: meta.brief || "", aside: "" };
@@ -510,7 +557,7 @@ export function ActivityRow({ activity, defaultOpen = false, named = true }) {
  * then says something about them; the rail is what makes that read as one
  * action rather than four interruptions.
  */
-export function ActivityGroup({ activities, defaultOpen = false }) {
+export const ActivityGroup = memo(function ActivityGroup({ activities, defaultOpen = false }) {
   if (!activities?.length) return null;
   return (
     <div className="my-1.5 border-l border-border/60 pl-2">
@@ -519,6 +566,15 @@ export function ActivityGroup({ activities, defaultOpen = false }) {
       ))}
     </div>
   );
+}, sameGroup);
+
+/** The transcript regroups on every streamed token, so each group arrives as a
+ *  new array; it is the same group when it holds the same activity objects. */
+function sameGroup(prev, next) {
+  if (prev.defaultOpen !== next.defaultOpen) return false;
+  const a = prev.activities || [];
+  const b = next.activities || [];
+  return a.length === b.length && a.every((activity, i) => activity === b[i]);
 }
 
 export default ActivityGroup;

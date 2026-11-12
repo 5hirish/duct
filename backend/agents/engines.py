@@ -44,7 +44,12 @@ from agents.models import (
     ModelName,
     Provider,
     VideoModel,
+    compatible_model_id,
+    compatible_served_id,
     current_model_id,
+    is_compatible_model,
+    is_ollama_model,
+    ollama_model_id,
     provider_of,
 )
 
@@ -83,7 +88,7 @@ ENGINE_DEFAULT_MODEL: dict[tuple[Engine, Provider], ModelName] = {
 ENGINE_SUPPORTED_PROVIDERS: dict[Engine, frozenset[Provider]] = {
     Engine.V1: frozenset({
         Provider.OPENAI, Provider.GOOGLE_GENAI, Provider.ANTHROPIC, Provider.OPENROUTER,
-        Provider.XAI,
+        Provider.XAI, Provider.OLLAMA, Provider.OPENAI_COMPATIBLE,
     }),
 }
 
@@ -97,6 +102,8 @@ ENGINE_PROVIDER_ENV_VAR: dict[Engine, dict[Provider, str]] = {
         Provider.ANTHROPIC:    "ANTHROPIC_API_KEY",
         Provider.OPENROUTER:   "OPENROUTER_API_KEY",
         Provider.XAI:          "XAI_API_KEY",
+        # Not a key: the server the instance runs open models on.
+        Provider.OLLAMA:       "OLLAMA_BASE_URL",
     },
 }
 
@@ -139,7 +146,30 @@ PROVIDER_CONFIG_ATTR: dict[Provider, str] = {
     Provider.ANTHROPIC:    "anthropic_api_key",
     Provider.OPENROUTER:   "openrouter_api_key",
     Provider.XAI:          "xai_api_key",
+    # The one entry that is not a key. Ollama's credential is the server
+    # itself, so this says whether the instance offers one; nothing here ever
+    # spends it as a key (resolve_provider_key answers Ollama first).
+    Provider.OLLAMA:       "ollama_base_url",
 }
+
+
+def ollama_ready() -> bool:
+    """The instance's Ollama server is set, answering, and holds a model that
+    calls tools — the three things a run on it needs. Asked of the server
+    (``service/ollama.py``, cached for a minute), never assumed from the URL:
+    a local install defaults to one whether or not Ollama is installed."""
+    from service.ollama import tool_models
+
+    return bool(tool_models())
+
+
+def default_ollama_model() -> str:
+    """The model a run on Ollama takes when nobody picked one: the server's
+    most recently pulled model that calls tools, or "" when it has none."""
+    from service.ollama import tool_models
+
+    models = tool_models()
+    return ollama_model_id(models[0].tag) if models else ""
 
 
 # ---------------------------------------------------------------------------
@@ -200,6 +230,19 @@ def resolve_engine_model(
         (engine, provider),
         ENGINE_DEFAULT_MODEL.get((engine, ENGINE_DEFAULT_PROVIDER[engine]), ModelName.GEMINI_2_5_FLASH),
     )
+    if provider is Provider.OLLAMA:
+        # No catalogue and no fixed default: a picked tag runs as picked, and
+        # nothing picked takes the server's own first choice.
+        if override and is_ollama_model(override):
+            return override.strip()
+        return default_ollama_model() or default
+    if provider is Provider.OPENAI_COMPATIBLE:
+        # A model from the user's own server runs as picked. Nothing picked is
+        # settled once the key is in hand (``endpoint_model``), since only the
+        # credential knows which models they chose.
+        if override and is_compatible_model(override):
+            return override.strip()
+        return default
     if not override:
         return default
     candidate = current_model_id(override)
@@ -210,6 +253,25 @@ def resolve_engine_model(
             return candidate
         return default
     return resolved
+
+
+def endpoint_model(provider: Provider, model: ModelName | str, key: str) -> ModelName | str:
+    """The model a run on the user's own endpoint takes when nothing names one
+    they still offer: the first model they chose when they connected it.
+
+    A tier saved with a model they have since deselected counts as nothing
+    named. Sending it anyway would fail on a server that no longer serves it,
+    or run on one they decided against."""
+    if provider is not Provider.OPENAI_COMPATIBLE:
+        return model
+    from service.compatible import unpack
+
+    endpoint = unpack(key)
+    if endpoint is None:
+        return model
+    if is_compatible_model(model) and endpoint.model(compatible_served_id(model)) is not None:
+        return model
+    return compatible_model_id(endpoint.models[0].id)
 
 
 def get_env_var_for_engine_provider(engine: Engine, provider: Provider) -> str | None:
@@ -260,6 +322,7 @@ class ProviderKey:
     #: ``cloud`` — Duct's hosted key; our account is paying
     #: ``subscription`` — the user's own ChatGPT plan: an access token the
     #: desktop shell minted for this request (agents/core/codex.py)
+    #: ``instance`` — no key at all: the Ollama server this instance offers
     source: str
 
     @property
@@ -301,6 +364,13 @@ def resolve_provider_key(
     keys, and it is the only thing that needs a session.
     """
     from config import allow_server_provider_keys, get_configs
+
+    if provider is Provider.OLLAMA:
+        # No key to spend and nobody billed: whoever set OLLAMA_BASE_URL offered
+        # that server to every user of this instance.
+        if (get_configs().ollama_base_url or "").strip():
+            return ProviderKey("", provider, "instance")
+        raise ProviderKeyRequired(provider, "This server runs no Ollama. Set OLLAMA_BASE_URL to offer one.")
 
     supplied = (user_keys or {}).get(provider, "")
     plan = is_plan_credential(provider, supplied)
@@ -570,6 +640,7 @@ def resolve_run_model(
             provider = candidate
     model = resolve_engine_model(engine, provider, model_override)
     resolved = resolve_provider_key(provider, user_keys, stored_keys=stored_keys)
+    model = endpoint_model(provider, model, resolved.key)
     if resolved.billed_to_duct:
         logger.info("%s: run billed to Duct (%s/%s)", log_prefix, provider.value, resolved.source)
     api_key = resolved.key
@@ -658,8 +729,13 @@ def resolve_job_run(
     if duct_pays or allow_server_provider_keys():
         reachable |= {
             p for p in Provider
-            if (getattr(cfg, PROVIDER_CONFIG_ATTR.get(p, ""), "") or "").strip()
+            if p is not Provider.OLLAMA
+            and (getattr(cfg, PROVIDER_CONFIG_ATTR.get(p, ""), "") or "").strip()
         }
+    # Not gated like a key: the operator offered this server to everyone, and
+    # spending it costs nobody's account.
+    if Provider.OLLAMA in supported and ollama_ready():
+        reachable.add(Provider.OLLAMA)
 
     # Which of those a provider has already told us are out of quota. Resolved
     # per provider because the identity *is* the key, and a caller holding an
@@ -717,8 +793,10 @@ def resolve_job_run(
         if not tier_map and cfg.generate_model and provider_of(cfg.generate_model) is provider:
             model = resolve_engine_model(engine, provider, cfg.generate_model)
     else:
+        # Keys first, the caller's own before saved ones; the instance's Ollama
+        # last, so a key someone brought is never passed over for it.
         ordered = [
-            p for p in [*(user_keys or {}).keys(), *(stored_keys or {}).keys()]
+            p for p in [*(user_keys or {}).keys(), *(stored_keys or {}).keys(), Provider.OLLAMA]
             if p in reachable and p in supported
         ]
         if not ordered:
@@ -733,6 +811,7 @@ def resolve_job_run(
     resolved = resolve_provider_key(provider, user_keys, stored_keys=stored_keys, duct_pays=duct_pays)
     if resolved.billed_to_duct:
         logger.info("%s: run billed to Duct (%s/%s)", log_prefix, provider.value, resolved.source)
+    model = endpoint_model(provider, model, resolved.key)
     return JobRun(
         provider=provider,
         model=model,

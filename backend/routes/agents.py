@@ -55,6 +55,7 @@ from agents.content.persistence import (
     last_user_turn_at,
     list_conversations,
     load_events,
+    plan_decisions_since,
     resolve_or_create_conversation,
 )
 from agents.content.schema import DraftPostRequest, PlanRequest
@@ -305,7 +306,7 @@ def _owned_session(session_id: str, agent_type: str, user: User | None):
       anyone, and there is no signed-in caller to compare against.
 
     Session ids are unguessable, but unguessable is not a permission: an id
-    reaches a log, a shared URL, a Sentry breadcrumb. It should not also be
+    reaches a log, a shared URL, an error report. It should not also be
     the only thing standing between a stranger and someone else's live agent.
     """
     session = get_session(session_id)
@@ -348,8 +349,8 @@ def _require_caller(agent_type: str, body: dict, user: User | None) -> str | Non
 
     The token is consumed here and removed from the body: nothing downstream
     needs it, ``AuditRequest`` forbids unknown fields, and a credential that
-    stops travelling is one fewer thing to keep out of a log or a Sentry
-    breadcrumb.
+    stops travelling is one fewer thing to keep out of a log or an error
+    report.
 
     Returns the token when the run is the teaser, because the teaser runs on
     Duct's key (``duct_pays=req.lead_magnet``) and the token is what its limits
@@ -602,7 +603,9 @@ class AgentMessage(BaseModel):
     #   questions_required          -> {"<question>": "<answer>", ...}
     #   connection_required         -> {"connected": true} | {"skipped": true}
     #   account_selection_required  -> {"account_id": "...", "account_name": "..."}
-    #   tool_approval_required      -> {"approved": true} | {"approved": false}
+    #   tool_approval_required      -> {"approved": true} | {"approved": false},
+    #                                  plus the card's "fingerprint" when it had one
+    #                                  (a publish: agents/content/publishing.publish_card)
     # Values are Any rather than str because three of those carry booleans.
     answers: dict[str, Any] | None = None
     # Which pause this answers, when the run is parked on a checkpointed
@@ -900,18 +903,35 @@ def _decisions_block(session: Any) -> str:
 
     try:
         with next(db_session()) as db:
-            rows = user_decisions_since(db, conversation_id, last_user_turn_at(db, conversation_id))
+            since = last_user_turn_at(db, conversation_id)
+            rows = user_decisions_since(db, conversation_id, since)
+            plans = plan_decisions_since(db, conversation_id, since)
     except Exception:  # noqa: BLE001 — a missing reminder must never block a message
         logger.warning("agents: change-set decisions unavailable", exc_info=True)
         return ""
-    if not rows:
-        return ""
-    lines = "\n".join(f"- {r.created_at:%Y-%m-%d %H:%M} UTC: {r.summary}" for r in rows)
-    return xml_block(
-        "change_set_decisions",
-        "The user acted on your proposed change sets since their last message. "
-        "Take these as settled; call GetChangeSetStatus for per-change detail.\n" + lines,
-    ) + "\n\n"
+    out = ""
+    if rows:
+        lines = "\n".join(f"- {r.created_at:%Y-%m-%d %H:%M} UTC: {r.summary}" for r in rows)
+        out += xml_block(
+            "change_set_decisions",
+            "The user acted on your proposed change sets since their last message. "
+            "Take these as settled; call GetChangeSetStatus for per-change detail.\n" + lines,
+        ) + "\n\n"
+    if plans:
+        # Accept sends no message (it used to send "Carry on", and the agent
+        # went on to draft posts in the plan's pane), so this is how it hears.
+        lines = "\n".join(
+            f"- {r.created_at:%Y-%m-%d %H:%M} UTC: {(r.data or {}).get('decision', '')} "
+            f"\"{(r.data or {}).get('name', '')}\""
+            for r in plans
+        )
+        out += xml_block(
+            "plan_decisions",
+            "The user decided on the plan you proposed since their last message. Take it as "
+            "settled: an accepted plan is saved and on their board, so do not propose it again "
+            "or start drafting its posts unless they ask.\n" + lines,
+        ) + "\n\n"
+    return out
 
 
 def _inject_working_context(session: Any, content: str | list, version_id: int | None) -> str | list:
@@ -1471,7 +1491,7 @@ async def _start_tiktok_studio(
     plan/draft workers so the DB logic (Day resolution, post_id linkback) stays
     in one place."""
     # Imported lazily to avoid a route-module import cycle.
-    from routes.content import _run_draft_worker, _run_plan_worker
+    from routes.content import _requested_period, _run_draft_worker, _run_plan_worker
 
     mode = body.get("mode", "plan_month")
     # `mode` is a dispatch discriminator, and the conversation/resume fields are
@@ -1497,7 +1517,9 @@ async def _start_tiktok_studio(
             req = PlanRequest.model_validate(config)
         except Exception as exc:
             raise HTTPException(422, f"Invalid plan_month config: {exc}") from exc
-        coro = _run_plan_worker(session_id, req.project_id, emit_fn, user_keys)
+        coro = _run_plan_worker(
+            session_id, req.project_id, emit_fn, user_keys, period=_requested_period(req), feed=req.feed,
+        )
     else:
         raise HTTPException(422, f"mode must be 'plan_month' or 'draft_post', got {mode!r}")
 

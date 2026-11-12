@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Claude Code 营销技能：launch-check，由 Duct 出品</title>
+<link rel="canonical" href="https://getduct.ai/zh-cn/skills"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/skills"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/skills"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/skills"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/skills"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/skills"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/skills"/>
+<link rel="alternate" hreflang="zh-CN" href="https://getduct.ai/zh-cn/skills"/>
+<meta property="og:locale" content="zh_CN"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="适用于 Claude Code、Codex 和 Cursor 的开源营销技能。launch-check 读取你的上线网站与代码仓库，为发布评分并对三项修复进行优先级排序。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/zh-cn/skills"/>
+<meta property="og:title" content="Claude Code 营销技能：launch-check，由 Duct 出品"/>
+<meta property="og:description" content="一条命令即可让你的代码智能体运行发布检查：读取页面和代码，评估六大维度，仅在确认后执行修复。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/skills.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Claude Code 营销技能：launch-check，由 Duct 出品"/>
+<meta name="twitter:description" content="你的网站准备好发布了吗？问问你的智能体。它会将页面承诺的内容与代码实际执行的操作进行比对。无需账号，MIT 许可。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/skills.jpg"/>
+<link rel="alternate" type="application/rss+xml" title="Duct 博客" href="/blog/feed.xml"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookie，坦白说","We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold.":"我们使用 PostHog 来了解哪些页面促成了注册，以及 Duct 在何处阻碍了你，包括隐藏你输入的所有内容的访问回放。拒绝会关闭 PostHog，Duct 仍能正常运行。Google Analytics 也会统计访问量并设置自己的 Cookie，无论你选择什么。我们不会出售任何数据。","Privacy Policy":"隐私政策","Decline":"拒绝","Accept":"接受","{n} stars on GitHub":"{n} GitHub 星","UTM Builder":"UTM 构建器","SaaS Metrics Benchmark Calculator":"SaaS 指标基准计算器","Weekly Marketing Brief Generator":"每周营销简报生成器","CAC / LTV Calculator":"CAC / LTV 计算器","MRR Growth Rate Calculator":"MRR 增长率计算器","Engagement Rate Calculator":"互动率计算器","CTR Calculator":"CTR 计算器","CPM Calculator":"CPM 计算器","CPC Calculator":"CPC 计算器","CPA Calculator":"CPA 计算器","Marketing ROI Calculator":"营销 ROI 计算器","ROAS Calculator":"ROAS 计算器","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Menu":"菜单","Free Tools":"免费工具","Solutions":"解决方案","Download Duct ↓":"下载 Duct ↓","Language":"语言","Enlarged screenshot":"放大后的截图","Close":"关闭","Fit to screen":"适应屏幕","Zoom in":"放大","Enlarge":"放大","Universal · Apple silicon and Intel":"通用 · Apple 芯片和 Intel","Windows 10 and later":"Windows 10 及更高版本","Runs on any distribution":"可在任何发行版上运行","Debian and Ubuntu":"Debian 和 Ubuntu","Download ↓":"下载 ↓","Download for {label} ↓":"下载适用于 {label} ↓","Example numbers. Change any field and calculate again for yours.":"示例数字。修改任意字段，重新计算你的结果。"};</script>
+<script src="/assets/config.js" defer></script>
+<!-- The FAQPage is the page's own <details>, word for word: the i18n generator translates these
+     strings through the same catalogue entries as the visible text. -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"zh-CN","name":"Claude Code 营销技能：launch-check，由 Duct 出品","url":"https://getduct.ai/zh-cn/skills","description":"适用于 Claude Code、Codex 和 Cursor 的开源营销技能。launch-check 读取你的上线网站与代码仓库，为发布评分并对三项修复进行优先级排序。","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"zh-CN","mainEntity":[{"@type":"Question","name":"支持哪些智能体？","acceptedAnswer":{"@type":"Answer","text":"开源 skills CLI 支持安装到的任何智能体，包括 Claude Code、Codex、Cursor、OpenCode、Gemini CLI、GitHub Copilot、Windsurf 和 Zed 等。该技能是一个 Agent Skills 格式的 SKILL.md 文件夹，因此读取该格式的智能体无需安装程序即可使用。Claude Code 和 Codex 也可以通过安装框下方的命令，从 Duct 的自有目录将其作为插件安装。"}},{"@type":"Question","name":"它会把我的网站或代码发送给 Duct 吗？","acceptedAnswer":{"@type":"Answer","text":"不会。此技能是一组由你的智能体使用其自带网络和 Shell 工具执行的指令。流程中没有 Duct 服务器，无需账号，也没有 API 密钥。你的智能体读取的内容只会发送到它一贯请求的目标：你已经在使用的模型。"}},{"@type":"Question","name":"它会修改我的代码吗？","acceptedAnswer":{"@type":"Answer","text":"未经确认不会更改。它自行写入的唯一文件是它的报告 duct-launch-check.md。每项修复都会依次以 Diff 和询问的形式呈现。它绝不会提交、推送或部署，也绝不会打开 .env 或密钥文件。"}},{"@type":"Question","name":"我需要打开代码仓库吗？","acceptedAnswer":{"@type":"Answer","text":"不需要，但有代码仓库效果更好。没有代码时，它仅检查上线页面，大多数衡量领域会返回未验证而非失败。页面审计无法发现的问题（例如下载未发送事件）均来自于代码仓库。"}},{"@type":"Question","name":"它与 SEO 审计有何不同？","acceptedAnswer":{"@type":"Answer","text":"SEO 审计只读取 HTML。launch-check 还会读取背后的代码，并对照产品实际功能核对页面承诺。搜索只是六个维度之一。如需包含关键词聚类和竞品分析的完整抓取，请运行 Duct 的免费 SEO 审计。"}},{"@type":"Question","name":"费用是多少，耗时多久？","acceptedAnswer":{"@type":"Answer","text":"该技能免费且采用 MIT 许可证。它在你智能体自身的模型上运行，因此一次检查的成本仅取决于你的智能体阅读 10 个页面和部分代码仓库所消耗的费用。它最多检查 10 个页面，目标是在 10 分钟内完成。"}},{"@type":"Question","name":"安装器会追踪任何数据吗？","acceptedAnswer":{"@type":"Answer","text":"skills CLI 是开源的且不归我们所有，它会为 skills.sh 排行榜匿名统计安装量。在运行前设置 DISABLE_TELEMETRY=1 或 DO_NOT_TRACK=1 即可将其关闭。技能本身不会向任何地方发送数据。"}},{"@type":"Question","name":"如何更新或移除它？","acceptedAnswer":{"@type":"Answer","text":"运行 npx skills update 可更新至最新版本，运行 npx skills remove launch-check 可将其移除。安装会作用于你当前运行它的项目；添加 -g 可使其在所有项目中可用。该 CLI 需要 Node.js 22.20 或更高版本。"}},{"@type":"Question","name":"接下来会推出哪些技能？","acceptedAnswer":{"@type":"Answer","text":"大家需要的那些。在 GitHub Discussions 中告诉我们你想交给智能体的营销任务。"}}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"zh-CN","itemListElement":[{"@type":"ListItem","position":1,"name":"主页","item":"https://getduct.ai/zh-cn/"},{"@type":"ListItem","position":2,"name":"智能体技能","item":"https://getduct.ai/zh-cn/skills"}]}
+</script>
+<style>
+/* ── SKILLS-ONLY STYLES ── */
+.sk-hero { padding-bottom: 72px; }
+.sk-hero h1 { font-size: clamp(34px, 4.4vw, 62px); max-width: 1160px; }
+.sk-hero .hero-sub { max-width: 600px; margin-bottom: 32px; }
+.sk-after { margin-top: 18px; font-size: 14px; line-height: 1.6; color: var(--navy-3); max-width: 60ch; animation: fadeUp .5s .32s ease both; }
+.sk-link { color: var(--navy); font-weight: 500; text-decoration: underline; text-decoration-color: var(--orange); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+.sk-sec code, .sk-after code, .faq-a code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9em; padding: 1px 6px; background: var(--off); border: 1px solid var(--border); border-radius: 6px; overflow-wrap: anywhere; }
+
+/* The install command: the one thing the page is for, so it sits where the eye lands.
+   The command is in a <pre>, which the i18n generator never translates. */
+.cmd { width: 100%; max-width: 520px; text-align: left; animation: fadeUp .5s .24s ease both; }
+.cmd-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); margin: 0 0 8px 4px; }
+.code { display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 20px; background: var(--white); border: 1.5px solid var(--border); border-radius: var(--r-lg); box-shadow: 0 18px 48px rgba(13,15,26,.08); }
+.code pre { flex: 1; min-width: 0; margin: 0; padding: 5px 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 17px; line-height: 1.5; color: var(--navy); white-space: pre-wrap; overflow-wrap: anywhere; }
+.code pre::before { content: '$ '; color: var(--navy-3); }
+.copy { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 8px 18px; border-radius: var(--pill); border: none; background: var(--navy); color: #fff; font-family: var(--sans); font-size: 14px; font-weight: 500; line-height: 1; cursor: pointer; transition: background .2s; }
+.copy:hover { background: var(--navy-2); }
+.copy:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+.copy .ic { font-size: 14px; }
+.copy.is-done { background: #1a7f37; }
+
+/* The plugin route: the same skill from Duct's own catalogue, for the two agents that have one.
+   Quieter than the main command, because npx skills add already covers both agents. */
+.cmd-alt { width: 100%; max-width: 520px; margin-top: 22px; text-align: left; display: grid; gap: 8px; animation: fadeUp .5s .28s ease both; }
+.cmd-alt .cmd-label { margin-bottom: 0; }
+.code.is-alt { flex-wrap: wrap; gap: 4px 10px; padding: 8px 8px 8px 16px; border-width: 1px; box-shadow: none; }
+.code.is-alt pre { font-size: 13.5px; padding: 0; }
+.code-tag { flex-basis: 100%; font-size: 12px; font-weight: 600; color: var(--navy-3); }
+.code.is-alt .copy { min-height: 40px; padding: 6px 14px; font-size: 13px; }
+
+/* How it works: the shared navy band, each step ending on a small picture of that moment */
+.how .step { display: flex; flex-direction: column; }
+.how .step-title { font-weight: 400; }
+.how .step-body { font-size: 15px; font-weight: 400; color: rgba(255,255,255,.72); }
+.step-mini { margin-top: auto; padding-top: 26px; }
+.mini-cmd { margin: 0; padding: 12px 14px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.7; color: rgba(255,255,255,.85); white-space: pre-wrap; overflow-wrap: anywhere; }
+.mini-cmd .dim { color: rgba(255,255,255,.5); }
+.mini-score { display: flex; align-items: baseline; gap: 10px; padding: 14px 18px; background: var(--white); border-radius: var(--r); box-shadow: 0 18px 40px rgba(0,0,0,.28); }
+.mini-score strong { font-family: var(--serif); font-size: 40px; font-weight: 400; line-height: 1; color: var(--navy); }
+.mini-score span { font-size: 14px; color: var(--navy-3); }
+.mini-score em { margin-left: auto; font-style: normal; font-size: 13px; font-weight: 600; color: #9a5b00; }
+.mini-chat { display: grid; gap: 10px; }
+.mini-q { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11.5px; line-height: 1.6; color: rgba(255,255,255,.85); }
+.mini-yes { justify-self: end; padding: 7px 16px; background: var(--white); color: var(--navy); border-radius: 14px 14px 4px 14px; font-size: 14px; }
+
+/* Section shells, as on /connect-agent */
+.sk-sec { padding: 96px 52px; }
+.sk-sec.is-off { background: var(--off); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.sk-inner { max-width: 1160px; margin: 0 auto; }
+.sk-head { max-width: 780px; }
+.sk-head h2 { margin-bottom: 14px; }
+.sk-head .sub { max-width: 60ch; }
+.split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: start; }
+.split h2 { font-size: clamp(30px, 3.2vw, 42px); }
+
+/* What it checks: one row per area, the bar is the weight */
+.areas { list-style: none; border-top: 1px solid var(--border); }
+/* The bars share one column and one left edge, so the weights compare at a glance */
+.area { display: grid; grid-template-columns: 56px minmax(0, 1fr) 120px; column-gap: 20px; align-items: center; padding: 18px 0; border-bottom: 1px solid var(--border); }
+.area-w { grid-row: span 2; font-family: var(--serif); font-size: 34px; line-height: 1; color: var(--navy); }
+.area-name { grid-column: 2; font-size: 16px; font-weight: 600; color: var(--navy); }
+.area-bar { grid-column: 3; grid-row: 1 / span 2; height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+.area-bar i { display: block; height: 100%; background: var(--orange); border-radius: 3px; }
+.area-q { grid-column: 2; margin-top: 4px; font-size: 15px; line-height: 1.6; color: var(--navy-3); max-width: 56ch; }
+.rules { margin-top: 28px; font-size: 15px; line-height: 1.7; color: var(--navy-2); max-width: 52ch; }
+.bands { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; list-style: none; }
+.bands li { padding: 6px 12px; border-radius: var(--pill); border: 1px solid var(--border); background: var(--white); font-size: 13px; color: var(--navy-2); }
+.bands b { font-weight: 600; color: var(--navy); }
+
+/* The real run: the report as a document, the page's one heavy element */
+.report { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: 0 24px 64px rgba(13,15,26,.08); overflow: hidden; }
+.report-bar { display: flex; align-items: center; gap: 7px; padding: 10px 16px; background: var(--off); border-bottom: 1px solid var(--border); }
+.report-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+.report-file { margin-left: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: var(--navy-3); }
+.report-body { padding: 28px 32px 32px; }
+.report h3 { font-family: var(--serif); font-size: 26px; font-weight: 400; line-height: 1.2; color: var(--navy); }
+.report-score { margin-top: 10px; font-size: 15px; line-height: 1.6; color: var(--navy-2); }
+.report-score strong { color: var(--navy); }
+.report h4 { margin-top: 26px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); }
+.report-note { margin-top: 8px; font-size: 14px; line-height: 1.6; color: var(--navy-3); }
+.fixes { list-style: none; counter-reset: fix; margin-top: 14px; display: grid; gap: 22px; }
+.fixes > li { counter-increment: fix; position: relative; padding-left: 42px; }
+.fixes > li::before { content: counter(fix); position: absolute; left: 0; top: 0; width: 27px; height: 27px; border-radius: 50%; background: var(--navy); color: #fff; font-size: 12px; font-weight: 600; line-height: 27px; text-align: center; }
+.fix-title { font-size: 16px; font-weight: 600; line-height: 1.45; color: var(--navy); }
+.fix-why { margin-top: 4px; font-size: 15px; line-height: 1.65; color: var(--navy-2); max-width: 62ch; }
+.fix-meta { margin-top: 8px; font-size: 13px; line-height: 1.6; color: var(--navy-3); }
+.diff { margin: 12px 0 0; padding: 12px 14px; background: var(--navy); border-radius: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.7; color: rgba(255,255,255,.7); white-space: pre-wrap; overflow-wrap: anywhere; }
+.diff .del { color: #ffb4ab; }
+.diff .add { color: #a6ecc2; }
+.diff .ask { color: #fff; }
+.post-this { margin-top: 12px; padding: 14px 18px; border-left: 3px solid var(--orange); background: var(--off); border-radius: 0 var(--r) var(--r) 0; font-size: 15px; line-height: 1.65; color: var(--navy); }
+.again { margin-top: 32px; max-width: 520px; }
+.again .cmd-label { margin-left: 4px; }
+.again .code { box-shadow: none; }
+/* The second command sits in a narrow column, so its button is the icon alone and the
+   command keeps one line */
+.again .code pre { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.again .copy { padding: 8px 12px; }
+.again .copy span { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+
+/* What it never does: three cards on a hairline grid */
+.nevers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin-top: 44px; background: var(--border); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+.never { padding: 30px 28px 32px; background: var(--white); }
+.never .ic { display: block; font-size: 24px; color: var(--orange); margin-bottom: 16px; }
+.never h3 { font-family: var(--serif); font-size: 22px; font-weight: 400; line-height: 1.25; color: var(--navy); margin-bottom: 10px; }
+.never p { font-size: 15px; line-height: 1.7; color: var(--navy-3); max-width: 44ch; }
+
+/* Where Duct comes in: two cards */
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 44px; }
+.card { display: flex; flex-direction: column; align-items: flex-start; padding: 28px; background: var(--white); border: 1.5px solid var(--border); border-radius: var(--r-lg); }
+.card > .ic { font-size: 24px; color: var(--orange); margin-bottom: 16px; }
+.card h3 { font-family: var(--serif); font-size: 22px; font-weight: 400; line-height: 1.25; letter-spacing: -.2px; color: var(--navy); margin-bottom: 10px; }
+.card p { font-size: 15px; line-height: 1.7; color: var(--navy-3); max-width: 54ch; }
+.card .sk-link, .card .btn { margin-top: 20px; }
+.card .sk-link { display: inline-block; padding: 4px 0; }
+
+.sk-sec .faq-list { max-width: 820px; margin-top: 40px; }
+.sk-sec .faq-a { max-width: 66ch; }
+
+/* Phones: the command keeps its line, the copy button drops its word */
+@media (max-width: 600px) {
+  .code { padding: 8px 8px 8px 16px; }
+  .code pre { font-size: 15px; }
+  .copy { padding: 8px 12px; }
+  .copy span { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+  .report-body { padding: 22px 18px 24px; }
+  .fixes > li { padding-left: 38px; }
+  .diff { font-size: 12px; }
+}
+@media (max-width: 860px) {
+  .sk-hero { padding-bottom: 56px; }
+  .sk-sec { padding: 64px 24px; }
+  .split, .pair, .nevers { grid-template-columns: 1fr; }
+  .split { gap: 32px; }
+  .area { grid-template-columns: 44px minmax(0, 1fr) 64px; column-gap: 16px; }
+  .area-w { font-size: 28px; }
+  .never, .card { padding: 22px; }
+}
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">跳到内容</a>
+
+<!-- EXPERIMENT: the shelf for Duct's own Agent Skills, starting with launch-check. Hypothesis:
+     developers and marketers who already run a coding agent (Claude Code, Codex, Cursor) install a
+     skill from this page when the install is one command and the page shows a real run, and the
+     ones who install meet Duct where they already work. Measured by copy-command clicks
+     (ductTrack skill_install_copied, by block) and by skills.sh installs of 5hirish/duct. Owns
+     the query "claude code marketing skills" (90/mo, KD 3) by answering it, not by repeating it. -->
+
+<!-- NAV (shared: site/partials/nav-simple.html) -->
+<div data-duct-partial="/zh-cn/partials/nav-simple.html"></div>
+
+<main id="main-content">
+
+<!-- HERO: the command is the answer, so it sits where the eye lands -->
+<section class="hero sk-hero">
+<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Agent Skills · MIT · 无需账号</div>
+<h1>专为你代码智能体打造的营销技能。<br/><em>它已经拥有代码仓库。</em></h1>
+<p class="hero-sub">适用于 Claude Code、Codex、Cursor 以及任何支持 SKILL.md 智能体的开源技能。首个技能 launch-check 读取你的上线网站及其背后的代码，以 100 分制对发布打分，并对三项修复进行排序。</p>
+<div class="cmd">
+<span class="cmd-label">安装</span>
+<div class="code"><pre>npx skills add 5hirish/duct</pre><button type="button" class="copy" data-copy="hero" aria-label="复制安装命令"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div>
+</div>
+<div class="cmd-alt">
+<span class="cmd-label">或作为插件</span>
+<div class="code is-alt"><span class="code-tag">Claude Code</span><pre>claude plugin marketplace add 5hirish/duct &amp;&amp; claude plugin install duct@duct</pre><button type="button" class="copy" data-copy="claude-plugin" aria-label="复制 Claude Code 插件命令"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div>
+<div class="code is-alt"><span class="code-tag">Codex</span><pre>codex plugin marketplace add 5hirish/duct &amp;&amp; codex plugin add duct@duct</pre><button type="button" class="copy" data-copy="codex-plugin" aria-label="复制 Codex 插件命令"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div>
+</div>
+<p class="sk-after">然后向你的智能体提问“我的网站准备好上线了吗？”，或在 Claude Code 中输入 <code>/launch-check</code>。</p>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="launch-check">
+<div class="how-inner">
+<p class="tag">首个技能：launch-check</p>
+<h2>它读取页面。<em>然后读取代码。</em></h2>
+<div class="channel on-dark" aria-hidden="true"></div>
+<div class="steps">
+<div class="step reveal">
+<span class="step-num">01</span>
+<h3 class="step-title">读取网站与代码仓库</h3>
+<p class="step-body">最多 10 个线上页面、站点地图以及每张卡片图片，接着是它们背后的代码：分析代码标签、注册或下载事件、head 来源，以及页面陈述的内容。</p>
+<div class="step-mini" aria-hidden="true"><pre class="mini-cmd">$ curl -sSL yoursite.com
+<span class="dim">  10 pages · sitemap · llms.txt</span>
+$ grep -rn "capture(" src/
+<span class="dim">  no event on the signup form</span></pre></div>
+</div>
+<div class="step reveal" style="transition-delay:.1s">
+<span class="step-num">02</span>
+<h3 class="step-title">从 100 分对六个领域打分</h3>
+<p class="step-body">每条发现都会标明来源 URL 或文件及行号。无法查看的内容会标记为未验证，绝不会算作失败。</p>
+<div class="step-mini" aria-hidden="true">
+<div class="mini-score"><strong>64</strong><span>/100</span><em>待改进</em></div>
+</div>
+</div>
+<div class="step reveal" style="transition-delay:.2s">
+<span class="step-num">03</span>
+<h3 class="step-title">对三项修复排序，经确认后应用一项</h3>
+<p class="step-body">发布日最关键的三项，均以 diff 形式呈现。每项操作前都会询问，且绝不自动提交、推送或部署。</p>
+<div class="step-mini" aria-hidden="true">
+<div class="mini-chat">
+<p class="mini-q">应用修复 1？(yes / no / skip all)</p>
+<p class="mini-yes">是</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- WHAT IT CHECKS -->
+<section class="sk-sec" id="what-it-checks">
+<div class="sk-inner split">
+<div class="sk-head reveal">
+<p class="tag">检查内容</p>
+<h2>六个领域，<em>按发布可能造成的损失加权。</em></h2>
+<p class="sub">无法衡量的发布毫无参考价值，因此测量权重最高。发布当天被置顶评论的往往是与代码相悖的说辞，因此陈述紧随其后。</p>
+<p class="rules">每个维度初始均为 100 分。FAIL 扣 25 分，WARN 扣 10 分。无法检查的项目不扣分并标为未验证，因此缺少仓库只会降低置信度，不会拉低分数。</p>
+<ul class="bands">
+<li><b>85–100</b> 就绪</li>
+<li><b>70–84</b> 修复后就绪</li>
+<li><b>55–69</b> 待改进</li>
+<li><b>低于 55</b> 未就绪</li>
+</ul>
+</div>
+<ol class="areas reveal" style="transition-delay:.08s">
+<li class="area"><span class="area-w">25</span><span class="area-name">衡量指标</span><span class="area-bar" aria-hidden="true"><i style="width:100%"></i></span><p class="area-q">发布过程会被记录下来吗，精确到具体操作？</p></li>
+<li class="area"><span class="area-w">20</span><span class="area-name">陈述</span><span class="area-bar" aria-hidden="true"><i style="width:80%"></i></span><p class="area-q">产品功能是否与页面及发布说明一致？</p></li>
+<li class="area"><span class="area-w">20</span><span class="area-name">搜索</span><span class="area-bar" aria-hidden="true"><i style="width:80%"></i></span><p class="area-q">搜索引擎能否索引并描述每个核心页面？</p></li>
+<li class="area"><span class="area-w">15</span><span class="area-name">社交分享卡片</span><span class="area-bar" aria-hidden="true"><i style="width:60%"></i></span><p class="area-q">分享的链接是否显示标题、描述和图片？</p></li>
+<li class="area"><span class="area-w">10</span><span class="area-name">答案引擎</span><span class="area-bar" aria-hidden="true"><i style="width:40%"></i></span><p class="area-q">ChatGPT、Perplexity 和 Claude 能否读取并引用它？</p></li>
+<li class="area"><span class="area-w">10</span><span class="area-name">第一印象</span><span class="area-bar" aria-hidden="true"><i style="width:40%"></i></span><p class="area-q">首屏是否说明了目标受众和使用指引？</p></li>
+</ol>
+</div>
+</section>
+
+<!-- A REAL RUN: Duct's own site, so no third party is named -->
+<section class="sk-sec is-off" id="sample">
+<div class="sk-inner split">
+<div class="sk-head reveal">
+<p class="tag">一次真实运行</p>
+<h2>我们在 getduct.ai 上运行了它。<em>96 / 100 分。</em></h2>
+<p class="sub">2026 年 11 月 10 日的 getduct.ai 及其代码仓库。只有两项发现达到了修复门槛，且第一项仅存在于代码中：来自欧洲的下载量读数偏低，而页面上没有任何迹象表明这一点。</p>
+<div class="again">
+<span class="cmd-label">在你的网站上运行</span>
+<div class="code"><pre>npx skills add 5hirish/duct</pre><button type="button" class="copy" data-copy="sample" aria-label="复制安装命令"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div>
+</div>
+</div>
+<article class="report reveal" style="transition-delay:.08s" aria-label="示例报告：getduct.ai 的发布检查">
+<div class="report-bar"><span class="report-dot" aria-hidden="true"></span><span class="report-dot" aria-hidden="true"></span><span class="report-dot" aria-hidden="true"></span><span class="report-file">duct-launch-check.md</span></div>
+<div class="report-body">
+<h3>发布检查：getduct.ai</h3>
+<p class="report-score"><strong>96/100，就绪</strong> · 已读取 10 个页面 · 仓库：5hirish/duct<br/>转化行为：下载桌面应用，追踪为 <code>download_started</code></p>
+<h4>三项修复</h4>
+<p class="report-note">仅有两项发现达到处理标准。其余皆为细节打磨。</p>
+<ol class="fixes">
+<li>
+<p class="fix-title">统计未获用户同意因而遗漏的下载量。</p>
+<p class="fix-why">在欧洲经济区、英国和瑞士，分析脚本仅在点击接受后加载，而对于忽略横幅的访客，<code>download_started</code> 会在队列中等待且永远不会发送。发布当天来自欧洲的下载量统计将会偏低。</p>
+<p class="fix-meta">影响 2 · 难度 1 · 发现来源：代码仓库 · <code>site/assets/duct.js:364</code></p>
+<p class="fix-why">修复方式：无需代码。在发布当天读取 GitHub 上的 Release 下载量作为基准底数，并与 <code>download_started</code> 进行比对。</p>
+</li>
+<li>
+<p class="fix-title">别再向所有访客都显示下载 macOS 版。</p>
+<p class="fix-why">主页按钮对 Windows、Linux 和手机访客均显示“下载 macOS 版”，因为按平台显示标签的逻辑仅在 <code>/download</code> 上运行。</p>
+<p class="fix-meta">影响 2 · 难度 1 · 发现来源：二者兼有 · <code>site/index.html:308</code></p>
+<pre class="diff"><span class="del">- Download for macOS ↓</span>
+<span class="add">+ Download Duct ↓</span>
+<span class="ask">Apply fix 2? (yes / no / skip all)</span></pre>
+</li>
+</ol>
+<h4>发布此帖</h4>
+<p class="post-this">用我的代码智能体对 getduct.ai 运行了发布检查：96/100。它发现受 Cookie 横幅阻挡，来自欧洲的下载量会被少计，这是任何页面审计都无法告诉我的。</p>
+</div>
+</article>
+</div>
+</section>
+
+<!-- WHAT IT NEVER DOES -->
+<section class="sk-sec" id="never">
+<div class="sk-inner">
+<div class="sk-head reveal">
+<p class="tag">绝不会执行的操作</p>
+<h2>无需账号。无需上传。<em>未经确认不作更改。</em></h2>
+</div>
+<div class="nevers reveal">
+<div class="never">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg>
+<h3>无需账号</h3>
+<p>无需注册，无需 API 密钥，无需登录 Duct。它直接使用智能体自带的网络和 Shell 工具，绝不会在任何地方注册、登录或提交表单。</p>
+</div>
+<div class="never">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>
+<h3>不会向 Duct 发送任何内容</h3>
+<p>该技能是指令集，而非服务。你的网站和代码仅由你的智能体读取，绝不会传到别处。它绝不会打开 <code>.env</code> 或密钥文件。</p>
+</div>
+<div class="never">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#git-branch"/></svg>
+<h3>未经确认不作更改</h3>
+<p>它只写入一个文件，即它的报告。每项修复都先展示 Diff，只有经你确认后才会应用。它绝不会提交、推送或部署。</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- WHERE DUCT COMES IN -->
+<section class="sk-sec is-off" id="duct">
+<div class="sk-inner">
+<div class="sk-head reveal">
+<p class="tag">Duct 的作用</p>
+<h2>检查只是一瞬间。<em>Duct 持续解读上线后的数周数据。</em></h2>
+<p class="sub">launch-check 会告诉你发布是否被统计。Duct（此技能架所属的开源 AI 营销智能体）则会告诉你这些统计数字意味着什么。</p>
+</div>
+<div class="pair">
+<div class="card reveal">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg>
+<h3>将 Duct 连接到同一个智能体</h3>
+<p>Duct 的 MCP 服务器允许你刚才使用的智能体列出并读取你的 Duct 项目，并根据此代码仓库完成配置。一个地址，在浏览器中允许一次即可。它绝不能批准变更。</p>
+<a class="sk-link" href="/zh-cn/connect-agent">从你的智能体中使用 Duct →</a>
+</div>
+<div class="card reveal" style="transition-delay:.08s">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-line"/></svg>
+<h3>查看发布带来的影响</h3>
+<p>桌面应用整合读取 GA4、Search Console、你的广告和 Stripe，解答注册量变化的原因，并提出变更建议，在你点击应用后生效。</p>
+<a class="btn btn-orange" href="/zh-cn/download" data-duct-download>下载 Duct ↓</a>
+</div>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="sk-sec" id="faq">
+<div class="sk-inner">
+<div class="sk-head reveal">
+<p class="tag">常见问题</p>
+<h2>在你<em>安装之前</em>。</h2>
+</div>
+<div class="faq-list reveal">
+<details class="faq-item">
+<summary class="faq-q">支持哪些智能体？</summary>
+<p class="faq-a">开源 skills CLI 支持安装到的任何智能体，包括 Claude Code、Codex、Cursor、OpenCode、Gemini CLI、GitHub Copilot、Windsurf 和 Zed 等。该技能是一个 Agent Skills 格式的 SKILL.md 文件夹，因此读取该格式的智能体无需安装程序即可使用。Claude Code 和 Codex 也可以通过安装框下方的命令，从 Duct 的自有目录将其作为插件安装。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">它会把我的网站或代码发送给 Duct 吗？</summary>
+<p class="faq-a">不会。此技能是一组由你的智能体使用其自带网络和 Shell 工具执行的指令。流程中没有 Duct 服务器，无需账号，也没有 API 密钥。你的智能体读取的内容只会发送到它一贯请求的目标：你已经在使用的模型。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">它会修改我的代码吗？</summary>
+<p class="faq-a">未经确认不会更改。它自行写入的唯一文件是它的报告 <code>duct-launch-check.md</code>。每项修复都会依次以 Diff 和询问的形式呈现。它绝不会提交、推送或部署，也绝不会打开 <code>.env</code> 或密钥文件。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">我需要打开代码仓库吗？</summary>
+<p class="faq-a">不需要，但有代码仓库效果更好。没有代码时，它仅检查上线页面，大多数衡量领域会返回未验证而非失败。页面审计无法发现的问题（例如下载未发送事件）均来自于代码仓库。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">它与 SEO 审计有何不同？</summary>
+<p class="faq-a">SEO 审计只读取 HTML。launch-check 还会读取背后的代码，并对照产品实际功能核对页面承诺。搜索只是六个维度之一。如需包含关键词聚类和竞品分析的完整抓取，请运行 <a class="sk-link" href="/zh-cn/seo-audit">Duct 的免费 SEO 审计</a>。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">费用是多少，耗时多久？</summary>
+<p class="faq-a">该技能免费且采用 MIT 许可证。它在你智能体自身的模型上运行，因此一次检查的成本仅取决于你的智能体阅读 10 个页面和部分代码仓库所消耗的费用。它最多检查 10 个页面，目标是在 10 分钟内完成。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">安装器会追踪任何数据吗？</summary>
+<p class="faq-a">skills CLI 是开源的且不归我们所有，它会为 skills.sh 排行榜匿名统计安装量。在运行前设置 <code>DISABLE_TELEMETRY=1</code> 或 <code>DO_NOT_TRACK=1</code> 即可将其关闭。技能本身不会向任何地方发送数据。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">如何更新或移除它？</summary>
+<p class="faq-a"><code>npx skills update</code> 可更新至最新版本，<code>npx skills remove launch-check</code> 可将其移除。技能会安装到当前运行命令的项目中；添加 <code>-g</code> 可在所有项目中可用。CLI 需要 Node.js 22.20 或更高版本。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">接下来会推出哪些技能？</summary>
+<p class="faq-a">大家最需要的技能。在 <a class="sk-link" href="https://github.com/5hirish/duct/discussions" rel="noopener">GitHub Discussions</a> 中告诉我们你想交给智能体处理的营销任务。</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- The copy buttons' confirmation. Written here rather than in the script so the i18n generator
+     translates it: it never reads an inline <script>. -->
+<p class="sr-only" role="status" aria-live="polite" data-copy-status></p>
+<p hidden data-copy-done>已复制</p>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/zh-cn/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/zh-cn/partials/footer-expanded.html"><div class="legal-fallback"><a href="/zh-cn/">Duct</a><a href="/zh-cn/about">关于</a><a href="/zh-cn/privacy">隐私政策</a><a href="/zh-cn/terms">服务条款</a></div></div>
+
+<script>
+// Copy buttons: the text is the <pre> beside the button. The second inline copy of
+// /connect-agent's script; a third page that needs one moves it into duct.js instead.
+(function () {
+  var doneEl = document.querySelector('[data-copy-done]');
+  var doneText = doneEl ? doneEl.textContent : 'Copied';
+  var status = document.querySelector('[data-copy-status]');
+
+  function copyText(text, ok, fail) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(ok, fail);
+      return;
+    }
+    var area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    var copied = false;
+    try { copied = document.execCommand('copy'); } catch (e) { copied = false; }
+    document.body.removeChild(area);
+    if (copied) ok(); else fail();
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-copy]'), function (button) {
+    var pre = button.parentNode.querySelector('pre');
+    var label = button.querySelector('span');
+    var icon = button.querySelector('use');
+    var sprite = icon.getAttribute('href').split('#')[0];
+    var idle = label.textContent;
+    var timer = null;
+
+    button.addEventListener('click', function () {
+      // Tracked on the click, not on success: a refused clipboard still means someone meant to
+      // install, and the fallback below selects the command for them.
+      if (window.ductTrack) window.ductTrack('skill_install_copied', { skill: 'launch-check', block: button.getAttribute('data-copy') });
+      copyText(pre.textContent, function () {
+        label.textContent = doneText;
+        icon.setAttribute('href', sprite + '#check');
+        button.classList.add('is-done');
+        if (status) status.textContent = doneText;
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+          label.textContent = idle;
+          icon.setAttribute('href', sprite + '#copy');
+          button.classList.remove('is-done');
+          if (status) status.textContent = '';
+        }, 2000);
+      }, function () {
+        var range = document.createRange();
+        range.selectNodeContents(pre);
+        var selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+      });
+    });
+  });
+})();
+</script>
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

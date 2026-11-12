@@ -56,8 +56,15 @@ class EditSlideResult(BaseModel):
 
 
 class SubmitPlanResult(BaseModel):
-    plan_id: str
+    # "proposed" until the person accepts it in the viewport; plan_id is then
+    # the live plan's and "" before, because a proposal is not a row.
+    status: str = "proposed"
+    plan_id: str = ""
+    replaces_plan_id: str = ""
     days: int
+    # Day indexes left as they were because a post was already drafted for
+    # them; the plan's chat says so rather than claiming the change landed.
+    kept_days: list[int] = []
 
 
 class SubmitPostResult(BaseModel):

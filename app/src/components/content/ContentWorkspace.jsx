@@ -16,7 +16,8 @@ import {
   mediaUrl,
   postSlideRender,
 } from "../../lib/contentApi";
-import { ContentEvent, STEP_LABELS } from "../../lib/contentEvents";
+import { ContentEvent, ContentStep, STEP_LABELS } from "../../lib/contentEvents";
+import { feedFromHistory } from "../../lib/contentFeed";
 import { captureSlideDocToPng } from "../../lib/slideCapture";
 
 /**
@@ -30,15 +31,21 @@ import { captureSlideDocToPng } from "../../lib/slideCapture";
  * Props:
  *   - mode: 'plan_month' | 'draft_post'
  *   - context: { projectId } | { projectId, planId, dayIndex, topic, pillar, postId, cloneUrl }
- *   - renderViewport: ({ payload, mode, sessionId, phase, steps, building, onSendMessage }) => ReactNode
+ *   - renderViewport: ({ payload, mode, sessionId, phase, steps, building, feed, onSendMessage }) => ReactNode
  *     Called every render with the latest plan/post payload from the agent.
  *     onSendMessage(text) sends a chat turn into the live session (used by the
  *     viewport for "approve & generate images" / per-slide regenerate).
+ *   - renderFooter?: ({ payload, idle, onSendMessage }) => ReactNode, drawn over
+ *     the composer (the plan session's quick actions). `idle` is true while
+ *     the session waits for the person: no turn running, nothing parked.
  */
-export default function ContentWorkspace({ mode, context, renderViewport }) {
+export default function ContentWorkspace({ mode, context, renderViewport, renderFooter }) {
   const { t, i18n } = useLingui();
   const [payload, setPayload] = useState(null);
   const [channelNote, setChannelNote] = useState(null);
+  // What a plan from shipped work read, from the transcript on a reopened
+  // thread; a live run has it on its read step instead.
+  const [storedFeed, setStoredFeed] = useState(null);
 
   const artifactType = mode === "plan_month" ? "plan" : "post";
   const artifactId = mode === "plan_month" ? context.planId : context.postId;
@@ -50,15 +57,20 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   // this post's run (and finds this post's draft) and never a different
   // one's. A clone has no artifact yet, so its link scopes it: cloning a
   // second post in the same tab must start a second run, not reattach to
-  // the first.
-  const handleKey = `${CONTENT_AGENT_TYPE}:${mode}:${artifactId || context.cloneUrl || context.projectId || ""}`;
+  // the first. A new plan is scoped by its period for the same reason.
+  // A plan from shipped work is its own run, never a reattach to a plan
+  // from goals over the same dates.
+  const periodKey = context.startDate && `${context.feed ? "work:" : ""}from:${context.startDate}+${context.days || ""}`;
+  const handleKey = `${CONTENT_AGENT_TYPE}:${mode}:${artifactId || context.cloneUrl || periodKey || context.projectId || ""}`;
   const agent = useAgentSession({
     agentType: CONTENT_AGENT_TYPE,
     notifyAs: t`Content Studio`,
     body,
     handleKey,
     onEvent: handleEvent,
+    onHydrate: (events) => setStoredFeed(feedFromHistory(events)),
   });
+  const feed = agent.steps.find((s) => s.step_id === ContentStep.READ_WORK)?.payload || storedFeed;
 
   function handleEvent(event, { appendMessage, sessionId }) {
     switch (event.event) {
@@ -74,11 +86,16 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
         }
         break;
 
+      // The pane shows this session's kind of artifact and no other: a plan
+      // session that drafts a post, asked to in chat, must not swap the plan
+      // for a post the plan pane cannot show (it read as the plan vanishing).
       case ContentEvent.PLAN_GENERATED:
+        if (mode !== "plan_month") break;
         setPayload({ type: "plan", ...event.payload });
         break;
 
       case ContentEvent.POST_DRAFT_UPDATED: {
+        if (mode === "plan_month") break;
         const base = { type: "post", ...event.payload };
         const ip = event.inline_preview;
         if (!ip?.data_uri) {
@@ -158,8 +175,8 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
   const hasPayload = Boolean(payload);
   // The right viewport is mid-build whenever there's no payload yet and the run
   // hasn't failed — including while a question is pending.
-  const viewportBuilding = !hasPayload && agent.phase !== Phase.FAILED;
-  const paneLabel = mode === "plan_month" ? t`30-day plan` : t`Post draft`;
+  const viewportBuilding = !hasPayload && agent.phase !== Phase.FAILED && !(feed && !feed.worth_a_plan);
+  const paneLabel = mode === "plan_month" ? t`Content plan` : t`Post draft`;
   // STEP_LABELS is a module-level table of descriptors; resolve here so the
   // shared StepProgress receives plain strings whatever it does with them.
   const stepLabels = Object.fromEntries(
@@ -183,6 +200,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
             phase: agent.phase,
             steps: agent.steps,
             building: viewportBuilding,
+            feed,
             onSendMessage: agent.send,
           })
         ) : (
@@ -230,9 +248,17 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
           onStartFresh={handleStartFresh}
           canStartFresh={Boolean(agent.conversationId) && (agent.phase === Phase.READY || agent.phase === Phase.CHATTING)}
           stepLabels={stepLabels}
-          questionsCopy={{ hint: t`A clearer brief produces sharper content. Skip if you'd rather Duct decide.` }}
           inputPlaceholder={t`Ask Duct to refine the plan or post…`}
           inputAriaLabel={t`Message the content agent`}
+          footer={
+            renderFooter
+              ? renderFooter({
+                  payload,
+                  idle: agent.phase === Phase.READY && !agent.reconnecting,
+                  onSendMessage: agent.send,
+                })
+              : null
+          }
         />
       }
     />
@@ -240,7 +266,7 @@ export default function ContentWorkspace({ mode, context, renderViewport }) {
 }
 
 const MODE_LABELS = {
-  plan_month: msg`Generating 30-day plan`,
+  plan_month: msg`Content plan`,
   draft_post: msg`Drafting post`,
 };
 

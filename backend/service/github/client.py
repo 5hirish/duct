@@ -82,12 +82,12 @@ class ApiError(BaseApiError):
         if self.status == 401:
             return (
                 "GitHub rejected the credentials: the token has expired or been "
-                "revoked. Reconnect GitHub on the Connections page."
+                "revoked. Reconnect GitHub in the Toolbox."
             )
         if self.status == 301:
             return (
-                "The repository was renamed or transferred. Pick it again on the "
-                "Connections page."
+                "The repository was renamed or transferred. Pick it again in the "
+                "Toolbox."
             )
         if self.rate_limited:
             return (
@@ -128,7 +128,7 @@ def require_repo(creds: dict[str, str]) -> tuple[str, str]:
     if not _REPO_RE.match(repo):
         raise ValueError(
             "GitHub repository missing or malformed — expected owner/name. Pick the "
-            "repository on the Connections page."
+            "repository in the Toolbox."
         )
     owner, name = repo.split("/", 1)
     return owner, name
@@ -168,6 +168,12 @@ def _headers(creds: dict[str, str]) -> dict[str, str]:
 def api(path: str, creds: dict[str, str], params: dict | None = None) -> Any:
     """GET one GitHub endpoint. Returns parsed JSON (a list for list reads)."""
     return _ENDPOINT.request(path, headers=_headers(creds), params=params)
+
+
+def api_accept(path: str, creds: dict[str, str], accept: str, params: dict | None = None) -> Any:
+    """One GET with a media type of its own, e.g. the stargazers list with
+    ``application/vnd.github.star+json`` so each row carries ``starred_at``."""
+    return _ENDPOINT.request(path, headers={**_headers(creds), "Accept": accept}, params=params)
 
 
 def get_pages(

@@ -38,6 +38,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardDescription, CardFooter, CardHeader, CardTitle, cardLinkClass } from "@/components/ui/card";
+import { Page, PageHeader, Section, TileGrid } from "@/components/ui/page";
 import { Label } from "@/components/ui/label";
 import { Lightbox } from "@/components/ui/lightbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -305,6 +308,101 @@ export const PRIMITIVES = [
           </p>
         </div>
       </div>
+    ),
+  },
+  {
+    id: "ui-textarea",
+    group: "Primitives",
+    title: "Textarea",
+    state: "3 states",
+    note: "The field radius, not a capsule. Grows with what is typed up to max-h-80, then scrolls inside the field.",
+    render: () => (
+      <div className="flex max-w-sm flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="pv-desc">Short description</Label>
+          <Textarea
+            id="pv-desc"
+            defaultValue="AI interior design and virtual staging. Upload a photo of any room and get a photorealistic redesign in seconds, across 32 styles and 34 room types."
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="pv-goal">Primary goal</Label>
+          <Textarea id="pv-goal" rows={2} placeholder="More trial signups from organic search" />
+        </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="pv-locked-ta">Brand voice</Label>
+          <Textarea id="pv-locked-ta" defaultValue="Professional" disabled />
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: "ui-card",
+    group: "Primitives",
+    title: "Card",
+    state: "4 variants",
+    note: "One hero a screen. The footer is pinned to the bottom, so a row of cards with different amounts of text shares one baseline.",
+    render: () => (
+      <TileGrid cols={2}>
+        <Card variant="hero">
+          <CardHeader>
+            <CardTitle>Connect your first source</CardTitle>
+            <CardDescription>Search Console is the easiest start.</CardDescription>
+          </CardHeader>
+          <CardFooter>
+            <Button size="sm">Connect a source</Button>
+          </CardFooter>
+        </Card>
+        <Card variant="interactive">
+          <CardHeader>
+            <CardTitle>
+              <button type="button" data-card-link className={cardLinkClass}>Google Analytics</button>
+            </CardTitle>
+            <CardDescription>Where visitors come from and what they do next, by channel and landing page.</CardDescription>
+          </CardHeader>
+          <CardFooter className="text-xs text-muted-foreground">Connected</CardFooter>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Default</CardTitle>
+            <CardDescription>A surface that groups content.</CardDescription>
+          </CardHeader>
+          <CardFooter className="text-xs text-muted-foreground">Footer on the shared baseline</CardFooter>
+        </Card>
+        <Card variant="quiet">
+          <CardHeader>
+            <CardTitle>Quiet</CardTitle>
+            <CardDescription>Recessed, no border, for secondary content.</CardDescription>
+          </CardHeader>
+        </Card>
+      </TileGrid>
+    ),
+  },
+  {
+    id: "ui-page",
+    group: "Primitives",
+    title: "Page frame",
+    state: "header + section + grid",
+    note: "Every routed screen: one title, one line of state, actions on the right, how it works behind the \"?\". No paragraph under the title.",
+    render: () => (
+      <Page>
+        <PageHeader
+          title="Toolbox"
+          status="3 sources connected"
+          help="Connect an account once and every project can use it."
+          actions={<Button size="sm">Add a source</Button>}
+        />
+        <Section title="Connected" count={3}>
+          <TileGrid size="sm">
+            {["Search Console", "Analytics", "Stripe"].map((name) => (
+              <Card key={name} size="sm">
+                <CardTitle>{name}</CardTitle>
+                <CardFooter className="text-xs text-muted-foreground">Connected</CardFooter>
+              </Card>
+            ))}
+          </TileGrid>
+        </Section>
+      </Page>
     ),
   },
   {

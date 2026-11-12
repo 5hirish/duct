@@ -2,6 +2,8 @@
 name: prioritize
 description: Product management for Duct — find what deserves attention, run it through the lean prioritization bar, file it as a properly-typed and scheduled GitHub issue, keep the board honest, and report where things stand.
 argument-hint: "<idea, issue number, short description, or 'sweep' / 'readout' / 'sprint'>"
+metadata:
+  internal: "true"
 ---
 
 Development here is 100% agent-executed, so implementation speed is not the
@@ -27,7 +29,8 @@ approval to file the set.
 
 Everything else is autonomous, and stays that way without asking again: type
 and severity, area labels, which milestone something targets, every status
-move, closing an already-discussed "not planned" item, and — just as much
+move, closing an already-discussed "not planned" item or one a merged removal
+provably obsoleted (Mechanics says how to prove it), and — just as much
 the job as executing — proactively flagging what needs a decision: a stale
 branch, a PR blocked on nothing but attention, a milestone whose due date is
 closer than its open count suggests. Autonomous means acted-on and reported,
@@ -325,6 +328,45 @@ existed in conversation. A written "not now, because X" is the same kind of
 artifact as a shipped feature — it's what stops the idea being re-litigated
 from zero in six months. Declined ideas get no milestone and no board slot.
 
+**Obsolete means deleted from `origin/main`, not replaced in spirit.** Before
+closing an issue because something superseded it, prove that what it names
+is gone:
+
+```bash
+git fetch -q origin
+git ls-tree -r --name-only origin/main | grep -iE '<name>'         # any hit: still live
+gh issue list --repo 5hirish/duct --state open --search "<name>"   # what else it touches
+```
+
+Any hit means the issue is still true, whatever is planned. Leave it open,
+or decline it on the bar with the real reason; if the plan is to remove the
+thing, file that removal and let its PR close the issue. A real closure is
+`not planned` with a comment naming the PR that deleted it.
+
+Keep two things apart while checking: **Duct's own stack**, what
+Duct runs on (analytics, error reporting, tracing, email), and
+**connectors**, what Duct reads for a user. The open-source stance governs
+the first; a closed vendor stays welcome as the second, as Google Ads and
+Stripe are. Changing one never obsoletes an issue about the other.
+
+On 2026-11-01 #319, wire-level tests for the Clarity and GrowthBook fetchers,
+was closed as replaced by the PostHog migration. That migration swapped
+Duct's own telemetry (Sentry, GTM, GA4). Clarity and GrowthBook are
+connectors, and both were still on `main`: fetchers, catalog entries and an
+integration page in five languages. A contributor had claimed the issue the
+day before. Declining it on the bar would have been a fair answer; citing a
+removal that had not happened was not.
+
+**A removal closes its own issues.** The PR that deletes a module,
+connector, dependency or vendor runs that search before it merges and
+closes what it obsoletes, the way a PR that finishes an issue says
+`Closes #N`. Nothing else ties a deletion to the tickets about it. The sprint
+refresh catches what slips through.
+
+**An issue a contributor has claimed is the maintainer's to close.** Closing
+it turns a person away, not a ticket. An agent lists it under "Needs you"
+with the evidence and leaves it open.
+
 ## Where the work comes from
 
 A PM that only files what it's handed is a typist. Sweep these — on request,
@@ -375,3 +417,12 @@ The roadmap is what's open across the current and next milestones plus
 `Status: Ready` — read it from there rather than keeping a second copy in a
 document, which would drift the way the old root `AGENTS.md` preferences
 file did.
+
+## Related
+
+The method here, with every Duct mechanic removed, is the cross-project
+`product-strategy` skill (the maintainer's agent-skill hub at
+`~/.agents/skills/product-strategy/`, not in this repository;
+`references/prioritisation.md`). This file keeps what is Duct's: the board, its ids, labels and
+milestones. A lesson any product could use goes in that skill's
+`references/lessons.md`.

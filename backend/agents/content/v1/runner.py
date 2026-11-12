@@ -52,6 +52,7 @@ import base64
 import logging
 from collections import deque
 from collections.abc import Awaitable, Callable
+from datetime import date
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
@@ -60,16 +61,27 @@ from agents.content.artifacts import (
     ARTIFACT_POST,
     RECOVERY_NUDGE_PLAN,
     RECOVERY_NUDGE_POST,
+    RECOVERY_NUDGE_REVIEW,
     parse_artifact_json,
 )
 from agents.content.events import STEP_LABELS, ContentEvent, ContentStep, StepStatus
-from agents.content.channels import brand_platforms
-from agents.content.performance import AccountPerformance, load_account_performance
+from agents.content.channel_config import linked_pairs, load_channel_config
+from agents.content.publishing import linked_accounts
+from agents.content.channel_mix import ChannelMix, goal_from, load_channel_mix
+from agents.content.plan_period import MAX_PLAN_DAYS, PlanPeriod, default_period, plan_end
+from agents.content.voice_rules import voice_rules_of, writing_samples_of
 from agents.core.events import run_context
+from agents.content.feed import render_digest
+from agents.content.plan_review import load_plan_review, render_plan_review
+from agents.content.voice_rules import render_voice_stanza
 from agents.content.prompts import (
+    _research_stanza,
     build_clone_user_prompt,
     build_orchestrator_system_prompt,
+    build_feed_plan_prompt,
+    build_plan_review_prompt,
     build_plan_user_prompt,
+    build_post_revise_prompt,
     build_post_user_prompt,
     build_reference_diagnosis_prompt,
 )
@@ -87,6 +99,7 @@ from agents.content.schema import (
     RunMode,
     make_session,
 )
+from agents.content.discover import build_discover_tool_lc
 from agents.content.subagents import (
     DRAFT_POST_TOOLS,
     GENERAL_PURPOSE_TOOLS,
@@ -100,6 +113,7 @@ from agents.content.subagents import (
 from agents.content.tools import build_content_tools_lc
 from agents.core import session as _core_session
 from agents.core.activity import activity_hooks, announce_context
+from agents.core.connector_tools import build_connector_tools_lc
 from agents.core.deep_session import (
     subagent_middleware,
     DeepSession,
@@ -112,19 +126,23 @@ from agents.core.deep_session import (
 )
 from agents.core.lc import (
     UsageTracker,
+    bind_tool_lc,
     build_ask_user_tool,
     inspection_chat_model,
     interrupt_pause,
     resolve_chat_model,
     structured_output,
 )
+from agents.core.mcp_tools import build_mcp_tools_lc
 from agents.core.quota import credential_identity
 from agents.core.turn import TurnContext, build_turn, spec_for
 from agents.core.session import register_session
 from agents.core.web_tools import WEB_FETCH_TOOL, build_web_tools_lc
+from agents.insights.data_tools import build_data_tools_lc
 from agents.engines import Engine, resolve_fallback_models
 from agents.models import ModelName, Provider, run_model_fields
 from agents.registry import AgentType
+from utils.dates import utcnow
 
 if TYPE_CHECKING:
     from service.clone_reference import CloneReference, TikTokPost
@@ -176,10 +194,23 @@ CHAT_IDLE_TIMEOUT = 1800.0
 VISION_PROVIDERS = frozenset({Provider.ANTHROPIC})
 
 ASK_USER_DESCRIPTION = (
-    "Ask the user up to 3 clarifying questions when their answer would materially "
-    "change the plan or the post — a missing brand voice, an audience you cannot "
-    "infer, which of two directions they want. Ask early, ask once, and never ask "
+    "Ask the user up to 3 questions when their answer would materially change "
+    "the plan or the post: the direction after a review (two to four options in "
+    "their words, each a label of two to five words with one short clause under "
+    "it), a missing brand voice, an audience you cannot "
+    "infer, which of two tools or directions they want. Ask early, and never ask "
     "for something already in the brand context or the project memory."
+)
+
+RESEARCH_TOOL = "research_trends"
+RESEARCH_TOOL_DESCRIPTION = (
+    "Run the research pass: what is working right now for the brand's audience on the "
+    "channels it posts on (sounds, hashtags and search terms, hooks, formats and recent "
+    "platform rule changes, named competitors' cadence and hooks, seasonal dates inside "
+    "the period), dated and sourced. `focus` is the direction the person gave, in one "
+    "sentence. One call per plan, or per post when the person wants a new concept rather "
+    "than an edit; the result is the <content_research> block to work from, or a sentence "
+    "saying nothing came back, in which case work from the account's own numbers and say so."
 )
 
 # Cap on what a step chip shows of a stage's detail.
@@ -209,6 +240,52 @@ def create_draft_session(
     if plan_id is not None:
         session.plan_id = plan_id
     return register_session(session)
+
+
+# ---------------------------------------------------------------------------
+# A plan proposal that outlived its session
+# ---------------------------------------------------------------------------
+
+
+def _held_proposal_sync(session: ContentSession):
+    from sqlmodel import Session
+
+    from agents.content.plan_proposal import held_proposal
+    from db.session import get_engine
+
+    engine = get_engine()
+    if engine is None:
+        return None
+    with Session(engine) as db:
+        return held_proposal(db, getattr(session, "conversation_id", None))
+
+
+async def _restore_proposal(session: ContentSession, emit: EmitFn) -> None:
+    """Show a resumed plan session the proposal its conversation still holds,
+    with Accept, Modify and Reject, as the session that made it did
+    (agents/content/plan_proposal.py). Only one made against the plan this
+    session manages: a proposal for another plan, or a new plan for a period
+    that has one since, would write over the wrong thing. ``replay``, because
+    it is the same proposal, not a second one."""
+    from agents.content.plan_proposal import PROPOSED
+
+    if getattr(session, "proposal", None) is not None:
+        return
+    try:
+        held = await asyncio.to_thread(_held_proposal_sync, session)
+    except Exception:
+        logger.warning("content: held proposal not read for session %s", session.session_id, exc_info=True)
+        return
+    if held is None or held.project_id != session.project_id or held.replaces_plan_id != session.plan_id:
+        return
+    session.proposal = held
+    await emit({
+        "event": ContentEvent.PLAN_GENERATED,
+        "session_id": session.session_id,
+        "plan_id": str(held.replaces_plan_id) if held.replaces_plan_id else None,
+        "payload": held.payload(PROPOSED),
+        "replay": True,
+    })
 
 
 # ---------------------------------------------------------------------------
@@ -260,6 +337,7 @@ def _load_brand_context(project_id: UUID) -> ContentBrandContext:
         # truth); content-specific fields stay in content_brand. Fall back to the
         # legacy content_brand values for projects edited before this split.
         channels_blob = proj.brand_channels or {}
+        channel_config = load_channel_config(channels_blob, linked_pairs(linked_accounts(db, proj.id)))
         brand_voice = str(channels_blob.get("brand_voice") or brand_blob.get("brand_voice") or "")
         audience = _compose_audience(proj.audience) or str(brand_blob.get("audience") or "")
 
@@ -280,8 +358,66 @@ def _load_brand_context(project_id: UUID) -> ContentBrandContext:
             features=features,
             pillars=pillars,
             visual=visual,
-            active_channels=brand_platforms(channels_blob.get("active_channels")),
+            active_channels=channel_config.enabled(),
+            channel_profiles=channel_config.profiles(),
+            writing_samples=writing_samples_of(brand_blob),
+            voice_rules=voice_rules_of(brand_blob),
         )
+
+
+def _load_business_block(project_id: UUID) -> str:
+    """The project's business context as the shared ``<business_context>``
+    block: goals, positioning, competitors, growth stage. Insights and audit
+    had it from day one; the plan turn never did, so the plan served a
+    north-star it had only ever met as a memory chip. The mapping is
+    ``agents/core/context.business_context_from_project``, shared with the
+    report and the scheduled brief."""
+    from sqlmodel import Session
+
+    from agents.core.context import business_context_from_project, format_business_context
+    from db.session import get_engine
+    from models.project import Project
+
+    engine = get_engine()
+    if engine is None:
+        return ""
+    with Session(engine) as db:
+        proj = db.get(Project, project_id)
+        if proj is None:
+            return ""
+        return format_business_context(business_context_from_project(proj))
+
+
+def _competitor_names(competition: dict | None) -> list[str]:
+    """The shared reading of the competition blob, capped: a research pass
+    over more than six competitors is a research project."""
+    from agents.core.context import competitor_names
+
+    return competitor_names(competition)[:6]
+
+
+def _project_competitors(project_id: UUID) -> list[str]:
+    from sqlmodel import Session
+
+    from db.session import get_engine
+    from models.project import Project
+
+    engine = get_engine()
+    if engine is None:
+        return []
+    with Session(engine) as db:
+        proj = db.get(Project, project_id)
+        return _competitor_names(proj.competition if proj and isinstance(proj.competition, dict) else {})
+
+
+async def _safely(awaitable: Any, default: Any, what: str) -> Any:
+    """A context block that could not be read is a block that says so, not
+    a plan that never opens."""
+    try:
+        return await awaitable
+    except Exception:  # noqa: BLE001 — a signal for the plan, never a blocker
+        logger.warning("content: %s unavailable", what, exc_info=True)
+        return default
 
 
 def _compose_audience(audience: dict | None) -> str:
@@ -326,16 +462,74 @@ def _voice_block(user_id) -> str:
         logger.warning("content: profile unavailable", exc_info=True)
         return ""
 
-async def _account_performance(project_id: UUID) -> AccountPerformance | None:
-    """What the account's own posts say, for the plan's opening turn.
+
+def _resolve_plan_period(
+    session: ContentSession, requested: PlanPeriod | None, today: date,
+) -> list[dict] | None:
+    """Decide which plan this run manages and fix its dates on the session.
+    Returns the plan's days when the run manages a plan that already exists,
+    None when it is about to make one.
+
+    One plan per period: a run is bound to the plan it was opened on, else to
+    the plan already covering the first date of its period (the month in
+    progress, or the period the person picked), and only makes a new plan
+    when none does. A bound run keeps that plan's own dates; revising never
+    moves them. A new plan stops short of the next plan already made, so two
+    plans never claim the same date. The app resolves the same plan before it
+    opens the session (content/sessions/new), so the pane shows the plan the
+    agent is managing.
+    """
+    from sqlmodel import Session, select
+
+    from db.session import get_engine
+    from models.content import ContentPlan
+
+    engine = get_engine()
+    if engine is None:
+        raise RuntimeError("DATABASE_URL is not configured.")
+    with Session(engine) as db:
+        row = db.get(ContentPlan, session.plan_id) if session.plan_id else None
+        if row is not None and row.project_id == session.project_id and row.days:
+            plans = []
+        else:
+            plans = [
+                p for p in db.execute(
+                    select(ContentPlan)
+                    .where(ContentPlan.project_id == session.project_id)
+                    .order_by(ContentPlan.created_at.desc())
+                ).scalars().all()
+                if p.start_date and p.days
+            ]
+            period = requested or default_period(today)
+            row = next(
+                (p for p in plans if p.start_date <= period.start <= plan_end(p.start_date, len(p.days))),
+                None,
+            )
+        if row is not None:
+            session.plan_id = row.id
+            session.period_start = row.start_date or today
+            session.period_days = min(len(row.days), MAX_PLAN_DAYS)
+            return list(row.days)
+        later = [p.start_date for p in plans if p.start_date > period.start]
+        period = period.stopping_before(min(later, default=None))
+        session.plan_id = None
+        session.period_start, session.period_days = period.start, period.days
+        return None
+
+
+async def _channel_mix(project_id: UUID, brand: ContentBrandContext, days: int) -> ChannelMix | None:
+    """What each channel's own posts say and how many days it gets, judged on
+    the brand's content goal, for the plan's opening turn.
 
     None when it cannot be read: the prompt then says so rather than claiming
     the account has no history, and the plan still gets made.
     """
     try:
-        return await asyncio.to_thread(load_account_performance, project_id)
+        return await asyncio.to_thread(
+            load_channel_mix, project_id, list(brand.active_channels or []), goal_from(brand.content_goal), days,
+        )
     except Exception:  # noqa: BLE001 — a signal for the plan, never a blocker
-        logger.warning("content: account performance unavailable", exc_info=True)
+        logger.warning("content: channel performance unavailable", exc_info=True)
         return None
 
 
@@ -478,7 +672,9 @@ class ContentRunner:
         subagents: list[dict] = []
         if session is not None and project_id is not None and emit is not None:
             content_tools = build_content_tools_lc(
-                project_id, emit, session, vision=self.vision, remember=remember
+                project_id, emit, session, vision=self.vision, remember=remember,
+                # Publishing asks first; only a run with someone to ask can send.
+                pause=interrupt_pause if interactive else None,
             )
             tools += content_tools
             by_name = {t.name: t for t in content_tools}
@@ -526,6 +722,41 @@ class ContentRunner:
                     log_prefix="content-v1",
                     description=ASK_USER_DESCRIPTION,
                 )
+            )
+            # The tools the session's user connected over MCP, the same two
+            # fixed tools insights mounts (agents/core/mcp_tools.py): nothing
+            # when they connected none, so most sessions keep their prefix.
+            # Content had none until 2026-11-08, so a connected SEO or
+            # analytics tool was invisible to the agent planning the content.
+            user_id = getattr(session, "user_id", None)
+            tools += build_mcp_tools_lc(user_id, pause=interrupt_pause, log_prefix="content-v1")
+            # The project's own data, the reach the insights agent has: which
+            # sources are connected, a pull from one, and the notes on reading
+            # it. A plan built on what people search for, or a post judged on
+            # the visits it sent, needs the numbers the content tables do not
+            # hold. The same binders and the same credential path as insights.
+            tools += build_connector_tools_lc(
+                project_id,
+                user_id=user_id,
+                session=session,
+                session_id=session_id,
+                emit=emit,
+                log_prefix="content-v1",
+                pause=interrupt_pause,
+            )
+            tools += build_data_tools_lc(project_id, user_id=user_id, log_prefix="content-v1")
+            # Both modes: a post the person wants re-thought needs the same
+            # research a plan gets, and until 2026-11-11 only the planner had it.
+            tools.append(self._build_research_tool(session, emit, llm if injected_llm else None))
+            if project_id is not None:
+                tools.append(build_discover_tool_lc(project_id, pause=interrupt_pause))
+        elif session is not None and getattr(session, "unattended", False):
+            # A scheduled run (#563) keeps what needs nobody's yes: a trusted
+            # preset's read-only MCP tools (a Linear or Notion read can feed a
+            # plan from shipped work). Every other server, and every tool that
+            # would show an approval card, stays off.
+            tools += build_mcp_tools_lc(
+                getattr(session, "user_id", None), log_prefix="content-v1", trusted_only=True,
             )
 
         # One same-provider step down keeps a run alive on the key the caller
@@ -623,17 +854,71 @@ class ContentRunner:
         project_id: UUID,
         emit: EmitFn,
         *,
+        period: PlanPeriod | None = None,
+        feed: Any = None,
         chat_idle_timeout: float = CHAT_IDLE_TIMEOUT,
         llm: Any = None,
     ) -> None:
-        """Run a plan_month session end-to-end: load, enrich, plan, then chat."""
+        """Run a plan_month session end-to-end: load, enrich, plan, then chat.
+
+        With ``feed`` (feed.FeedOptions) the plan is from shipped work
+        (#561): the repository and Duct's record are read and filtered
+        before the model starts, and a window with nothing worth a post ends
+        the run there, with no model call.
+
+        A session bound to an existing plan (opened from "Revise plan") is the
+        plan manager for that plan: it keeps the plan's dates, and on a fresh
+        conversation it opens by asking what to change instead of researching
+        and writing a whole new month."""
         session = get_session(session_id) or create_plan_session(session_id, project_id)
+        try:
+            bound_days = await asyncio.to_thread(_resolve_plan_period, session, period, utcnow().date())
+        except Exception:  # noqa: BLE001 — without a period the plan is still made, just unchecked
+            logger.warning("content: plan period unavailable for session %s", session_id, exc_info=True)
+            bound_days = None
+        managed = (
+            PlanPeriod(session.period_start, session.period_days)
+            if session.period_start and session.period_days
+            else None
+        )
 
         async def _opening(brand: ContentBrandContext) -> str:
-            research = await self._enrich_step(brand, emit, llm, session)
-            performance = await _account_performance(project_id)
+            # What the plan turn reads, each piece on its own thread and each
+            # allowed to be missing: the plan never waits on a block it can
+            # say it lacked.
+            session.active_channels = list(brand.active_channels or [])
+            today = utcnow().date()
+            performance = await _channel_mix(project_id, brand, (managed or default_period(today)).days)
+            session.channel_mix = performance
+            business = await _safely(asyncio.to_thread(_load_business_block, project_id), "", "business context")
+            voice = render_voice_stanza(brand.voice_rules, brand.writing_samples, with_rules=False)
+            review = await _safely(
+                asyncio.to_thread(load_plan_review, project_id, today=today, period=managed),
+                None, "plan review",
+            )
+            review_block = render_plan_review(review)
+            if feed is not None:
+                digest = await self._read_work_step(session, feed, emit, today=today)
+                session.feed = digest
+                if not digest.worth_a_plan:
+                    return None
+                return build_feed_plan_prompt(
+                    brand, feed=render_digest(digest), max_days=feed.max_days, performance=performance,
+                    period=managed, business=business, voice=voice, current_days=bound_days,
+                    unattended=getattr(session, "unattended", False),
+                )
+            if bound_days is not None or (review is not None and review.has_history):
+                # Something to review: the opening turn is the review and the
+                # direction question. The plan comes after the answer, and the
+                # research pass is a tool the agent calls then.
+                session.review_opening = True
+                return build_plan_review_prompt(
+                    brand, review=review_block, performance=performance, period=managed,
+                    business=business, voice=voice, current_days=bound_days,
+                )
             return build_plan_user_prompt(
-                brand, history=[], formats=[], avatars=[], research=research, performance=performance,
+                brand, history=[], formats=[], avatars=[], research=None, performance=performance,
+                period=managed, review=review_block, business=business, voice=voice,
             )
 
         await self._run_mode(
@@ -643,6 +928,84 @@ class ContentRunner:
             llm=llm,
             chat_idle_timeout=chat_idle_timeout,
         )
+
+    @staticmethod
+    async def _read_work_step(session: ContentSession, options: Any, emit: EmitFn, *, today: date) -> Any:
+        """What shipped, read and filtered as a visible step. Its payload is
+        the card the app draws: the chips, what was left out, and whether it
+        is worth a plan. Both reads are sync (a connector call, a DB query)
+        and run off the loop so the stream stays live."""
+        from sqlmodel import Session, select
+
+        from agents.content.feed import (
+            GITHUB_ENTITY, FeedSource, build_digest, duct_items, feed_window, github_note, planned_refs,
+        )
+        from agents.insights.fetchers import fetch_entity
+        from db.session import get_engine
+        from models.content import ContentPlan
+
+        label = STEP_LABELS[ContentStep.READ_WORK]
+        await emit({
+            "event": ContentEvent.STEP_STARTED,
+            "step_id": ContentStep.READ_WORK,
+            "label": label,
+            "status": StepStatus.RUNNING,
+        })
+        project_id = session.project_id
+        user_id = getattr(session, "user_id", None)
+
+        def _plans() -> list:
+            with Session(get_engine()) as db:
+                return list(db.execute(
+                    select(ContentPlan).where(ContentPlan.project_id == project_id)
+                ).scalars().all())
+
+        plans = await asyncio.to_thread(_plans)
+        window = feed_window(options, plans, today=today)
+        already = planned_refs(plans)
+        rows, note = None, ""
+        if FeedSource.GITHUB in options.sources:
+            # A connector read is on someone's credentials; a run with no
+            # user (a legacy stream route) reads Duct's record alone.
+            fetched = await asyncio.to_thread(
+                fetch_entity, GITHUB_ENTITY, user_id=user_id, project_id=project_id,
+                date_from=window[0].isoformat(), date_to=window[1].isoformat(),
+            ) if user_id is not None else {"status": "not_connected", "message": "No signed-in user."}
+            rows, note = github_note(fetched)
+
+        def _duct() -> list:
+            with Session(get_engine()) as db:
+                return duct_items(db, project_id, window[0], window[1], already=already)
+
+        duct = await asyncio.to_thread(_duct) if FeedSource.DUCT in options.sources else None
+        extra = None
+        if user_id is not None and ({FeedSource.LINEAR, FeedSource.NOTION} & set(options.sources)):
+            from agents.content.feed_mcp import read_mcp_feeds
+
+            # Linear and Notion through the user's own trusted connections,
+            # read by code like GitHub so the gate still decides (#565).
+            extra = await read_mcp_feeds(
+                user_id, options.sources, window, disclosure=options.disclosure, already=already,
+                notion_database=options.notion_database, today=today,
+            )
+        more = None
+        if user_id is not None and ({FeedSource.RSS, FeedSource.MILESTONES} & set(options.sources)):
+            from agents.content.feed_more import read_published_and_milestones
+
+            # The project's own feeds and its milestones (#564), read by code too.
+            more = await read_published_and_milestones(
+                user_id, project_id, options.sources, window, already=already,
+            )
+        digest = build_digest(options, window, github_rows=rows, github_note_text=note, duct=duct,
+                              already=already, extra=[e for e in (extra, more) if e is not None])
+        await emit({
+            "event": ContentEvent.STEP_FINISHED,
+            "step_id": ContentStep.READ_WORK,
+            "label": label,
+            "status": StepStatus.SUCCESS,
+            "payload": digest.payload(),
+        })
+        return digest
 
     async def run_draft(
         self,
@@ -655,17 +1018,28 @@ class ContentRunner:
         pillar: str | None = None,
         format_slug: str = "",
         channel: str | None = None,
+        existing_post_id: UUID | None = None,
         chat_idle_timeout: float = CHAT_IDLE_TIMEOUT,
         llm: Any = None,
     ) -> None:
-        """Run a draft_post session end-to-end: load, write, then chat."""
+        """Run a draft_post session end-to-end: load, write, then chat.
+
+        ``existing_post_id`` is the post a plan day already holds. With it, or
+        with a session already bound to a post (opened from the post page),
+        the opening turn reviews the saved post and asks, instead of drafting
+        over it."""
         from agents.content.channels import resolve as resolve_channel
 
         session = get_session(session_id) or create_draft_session(session_id, project_id)
         ch = resolve_channel(channel)  # sync, no DB — safe before the first emit
         session.channel = ch.id
+        if existing_post_id is not None:
+            session.post_id = existing_post_id
+        revising = session.post_id is not None
 
         async def _opening(brand: ContentBrandContext) -> str:
+            if revising:
+                return build_post_revise_prompt(brand, day, channel=ch)
             return build_post_user_prompt(
                 brand, day,
                 topic=topic, pillar=pillar, format_slug=format_slug,
@@ -838,7 +1212,7 @@ class ContentRunner:
         session: ContentSession,
         emit: EmitFn,
         *,
-        opening: Callable[[ContentBrandContext], Awaitable[str]],
+        opening: Callable[[ContentBrandContext], Awaitable[str | None]],
         memory_query: str,
         channel: Any = None,
         started: dict | None = None,
@@ -865,6 +1239,17 @@ class ContentRunner:
             })
             brand = await self._load_project_step(session.project_id, emit)
             opening_prompt = await opening(brand)
+            if opening_prompt is None:
+                # The opening decided there is nothing for a model to do (a
+                # plan from shipped work with nothing new): the run ends here,
+                # and the step it just finished says why.
+                await emit({
+                    "event": ContentEvent.PIPELINE_FINISHED,
+                    "status": StepStatus.SUCCESS,
+                    "session_id": session.session_id,
+                    "outcome": "nothing_new",
+                })
+                return
             # Who is being written for, and in which language. In the opening
             # turn rather than the system prompt: the orchestrator prompt is
             # shared across this account's sessions and per-user text in it
@@ -912,13 +1297,44 @@ class ContentRunner:
             context_blocks=context_blocks,
         )
 
+    def _build_research_tool(self, session: ContentSession, emit: EmitFn, llm: Any) -> Any:
+        """``research_trends``: the research pass as a tool the agent calls
+        once it knows the direction, instead of a pre-flight step that ran
+        before the first word and could not know what the person wanted."""
+        from pydantic import BaseModel, Field
+
+        class ResearchArgs(BaseModel):
+            focus: str = Field("", description="The direction the person gave, in one sentence; empty to scout broadly.")
+
+        async def research_trends(focus: str = "") -> str:
+            brand = await asyncio.to_thread(_load_brand_context, session.project_id)
+            research = await self._enrich_step(brand, emit, llm, session, focus=focus)
+            block = _research_stanza(research)
+            return block or (
+                "No trend research came back this run. Work from the account's own numbers and say so."
+            )
+
+        return bind_tool_lc(
+            research_trends, name=RESEARCH_TOOL, description=RESEARCH_TOOL_DESCRIPTION, args_schema=ResearchArgs
+        )
+
     async def _enrich_step(
         self, brand: ContentBrandContext, emit: EmitFn, llm: Any,
         session: ContentSession | None = None,
+        *,
+        focus: str = "",
     ) -> Any:
-        """The pre-flight research pass, as a visible step. Plan mode only."""
+        """The research pass, as a visible step, called by the ``research_trends``
+        tool once the person has given a direction (a plan, or a post's new concept)."""
         from agents.content.enrichment import enrich_content_context
 
+        period = ""
+        if session is not None and session.period_start and session.period_days:
+            period = PlanPeriod(session.period_start, session.period_days).label()
+        competitors = await _safely(
+            asyncio.to_thread(_project_competitors, session.project_id if session else brand.project_id),
+            [], "competitors",
+        )
         await emit({
             "event": ContentEvent.STEP_STARTED,
             "step_id": ContentStep.ENRICHING,
@@ -933,6 +1349,9 @@ class ContentRunner:
             # Backs Duct's own WebSearch where the provider has no usable
             # built-in; the same key the image tools already run on.
             gemini_api_key=getattr(session, "gemini_api_key", "") or "",
+            focus=focus,
+            period=period,
+            competitors=competitors,
         )
         await emit({
             "event": ContentEvent.STEP_FINISHED,
@@ -949,6 +1368,8 @@ class ContentRunner:
                 "trending_hashtags": len(research.trending_hashtags),
                 "trending_hooks": len(research.trending_hooks),
                 "trending_styles": len(research.trending_styles),
+                "competitors": len(research.competitor_notes),
+                "seasonal_hooks": len(research.seasonal_hooks),
             },
         })
         return research
@@ -1016,6 +1437,9 @@ class ContentRunner:
             mode=session.mode,
             channel=channel,
             remember=not getattr(session, "memory_off", False),
+            # A scheduled run has nobody to ask: no question card, no
+            # approval-carded tool, and the opening turn says so.
+            interactive=not getattr(session, "unattended", False),
             system_prompt=system_prompt,
         )
         recorder = getattr(session, "recorder", None)
@@ -1042,7 +1466,9 @@ class ContentRunner:
             # having stashed the id on the session. The <duct_artifact> tag
             # only drives the live preview, so a draft streamed but never
             # written still counts as "not produced".
-            return (session.plan_id if is_plan else session.post_id) is not None
+            if is_plan:
+                return session.plan_id is not None or getattr(session, "proposal", None) is not None
+            return session.post_id is not None
 
         async def _on_todo(todos: list) -> None:
             session.todos = todos
@@ -1070,21 +1496,32 @@ class ContentRunner:
                 **({"resumed": True} if resume else {}),
             }
 
-        nudged = False
+        # One nudge per phase: the review turn may need "ask the question",
+        # and the planning turn after it may still need "save the plan".
+        nudged: set[str] = set()
 
         async def _nudge_if_empty(pauses: list[dict]) -> list[dict]:
             """A turn ended with nothing persisted: one nudge to save, then the
             user takes over. Never on a resume — there the thread already holds
             whatever it holds."""
-            nonlocal nudged
-            if pauses or nudged or resume or _artifact_produced():
+            # A review turn is meant to end in a question, so its nudge asks
+            # for the question; a plan nudge there would write the plan the
+            # review exists to hold back. Whatever this turn did, the next one
+            # is the planning turn, so the flag goes down here.
+            reviewing = is_plan and getattr(session, "review_opening", False)
+            if reviewing:
+                session.review_opening = False
+            phase = "review" if reviewing else "deliverable"
+            if pauses or phase in nudged or resume or (not reviewing and _artifact_produced()):
                 return pauses
-            nudged = True
+            nudged.add(phase)
             logger.warning(
-                "content: turn ended with no %s persisted for session %s — sending one recovery nudge",
-                "plan" if is_plan else "post", session_id,
+                "content: turn ended with no %s for session %s — sending one recovery nudge",
+                "direction question" if reviewing else ("plan" if is_plan else "post"), session_id,
             )
-            pauses = await loop.turn(RECOVERY_NUDGE_PLAN if is_plan else RECOVERY_NUDGE_POST)
+            pauses = await loop.turn(
+                RECOVERY_NUDGE_REVIEW if reviewing else (RECOVERY_NUDGE_PLAN if is_plan else RECOVERY_NUDGE_POST)
+            )
             if not pauses and not _artifact_produced():
                 logger.error("content: session %s still has no %s after the nudge", session_id, "plan" if is_plan else "post")
             return pauses
@@ -1103,6 +1540,11 @@ class ContentRunner:
             )
             session.needs_reprime = True
 
+        async def _on_resume(snapshot: Any) -> None:
+            await _reprime_if_no_checkpoint(snapshot)
+            if is_plan:
+                await _restore_proposal(session, emit)
+
         loop = DeepSession(
             agent,
             session=session,
@@ -1119,7 +1561,7 @@ class ContentRunner:
             on_tool_result=_on_tool_result,
             finish_payload=_finish_payload,
             after_turn=_nudge_if_empty,
-            on_resume=_reprime_if_no_checkpoint,
+            on_resume=_on_resume,
         )
         await loop.run(opening_prompt, resume=resume, chat_idle_timeout=chat_idle_timeout)
 

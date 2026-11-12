@@ -58,9 +58,11 @@ export const ACTIVITY_TOOLS = Object.freeze({
   fetch_content_history: ActivityKind.CONTEXT,
   fetch_content_assets: ActivityKind.CONTEXT,
   fetch_discovered_references: ActivityKind.CONTEXT,
+  discover_tiktok: ActivityKind.CONTEXT,
   fetch_post: ActivityKind.CONTEXT,
   fetch_slide_context: ActivityKind.CONTEXT,
   submit_plan: ActivityKind.ACTION,
+  revise_plan_days: ActivityKind.ACTION,
   submit_post_draft: ActivityKind.ACTION,
   edit_slide: ActivityKind.ACTION,
   submit_assessment: ActivityKind.ACTION,
@@ -181,6 +183,17 @@ function rowCount(data) {
 }
 
 /** A listing's size: its own `count`, else the first list at the top level. */
+/** The content agents' TikTok search (agents/content/discover.py). */
+const TIKTOK_SEARCH_TOOL = "discover_tiktok";
+
+function hashtagTitle(tags) {
+  return (Array.isArray(tags) ? tags : [])
+    .map((t) => String(t || "").trim().replace(/^#+/, ""))
+    .filter(Boolean)
+    .map((t) => `#${t}`)
+    .join(" ");
+}
+
 function listLen(env) {
   if (!env) return null;
   if (typeof env.count === "number") return env.count;
@@ -190,11 +203,33 @@ function listLen(env) {
   return null;
 }
 
-/** The backend's verdict rule (`_ok`): an envelope with a status says so;
- *  the rest go by the harness's error flag. */
+/** A strict verdict: an envelope with a status is ok only when it says so;
+ *  the rest go by the harness's error flag. What the backend's data, search
+ *  and connected-tool mappers apply. */
 function okOf(env, isError) {
   if (env && "status" in env) return ["ok", "received", "success"].includes(env.status);
   return !isError;
+}
+
+// The backend's `_OK_STATUSES` and `_FAIL_STATUSES` (agents/core/activity.py).
+const OK_STATUSES = new Set(["ok", "received", "success", "proposed"]);
+const FAIL_STATUSES = new Set(["error", "failed", "failure"]);
+
+/** The backend's `_ok`, which its action mapper applies: a status
+ *  that is a verdict says so; any other status is the thing's own state (a
+ *  post's "scheduled", a post's "draft") and the harness's error flag
+ *  decides. The strict rule painted a reopened publish red. */
+function verdictOf(env, isError) {
+  const status = env?.status;
+  if (OK_STATUSES.has(status)) return true;
+  if (FAIL_STATUSES.has(status)) return false;
+  return !isError;
+}
+
+/** The person's answer on an approval card, when a result carries one. */
+function decisionOf(env) {
+  const status = String(env?.status || "");
+  return CONNECTED_DECISIONS.has(status) ? status : "";
 }
 
 /** One stored call → the row it was live. `args` is the recorded input, `env`
@@ -232,11 +267,17 @@ function replayRow({ tool, id, args, env, raw, isError }) {
   }
   if (kind === ActivityKind.CONTEXT) {
     const count = ok ? listLen(env) : null;
+    // The TikTok search (backend `_tiktok_start`): titled by its hashtags, and
+    // a skip is the person's answer on the card, not an error to repeat.
+    const tiktok = tool === TIKTOK_SEARCH_TOOL;
+    const decision = decisionOf(env);
     return {
       ...base,
-      title: args.post_id || args.slide_id || args.query || "",
+      status: decision ? StepStatus.ERROR : base.status,
+      reason: decision,
+      title: tiktok ? hashtagTitle(args.hashtags) : args.post_id || args.slide_id || args.query || "",
       meta: count === null ? {} : { count },
-      error: ok ? "" : String(env?.message || ""),
+      error: ok || (tiktok && CONNECTED_QUIET.has(String(env?.status || ""))) ? "" : String(env?.message || ""),
     };
   }
   if (kind === ActivityKind.ARTIFACT) {
@@ -258,11 +299,18 @@ function replayRow({ tool, id, args, env, raw, isError }) {
     for (const key of ["post_id", "slide_id", "status", "scheduled_at"]) if (env?.[key]) meta[key] = String(env[key]);
     // The row names the thing by its words (a topic, a headline), never by
     // a row id the person has no way to read.
+    const title = env?.topic || env?.headline || args.title || args.topic || "";
+    // A publish the person said no to (backend `_action_finish`): their
+    // answer, never "Published the post" and never a failure.
+    const decision = decisionOf(env);
+    if (decision) return { ...base, status: StepStatus.ERROR, reason: decision, title, meta, error: "" };
+    const done = verdictOf(env, isError);
     return {
       ...base,
-      title: env?.topic || env?.headline || args.title || args.topic || "",
+      status: done ? StepStatus.SUCCESS : StepStatus.ERROR,
+      title,
       meta,
-      error: ok ? "" : String(env?.message || env?.error || ""),
+      error: done ? "" : String(env?.message || env?.error || ""),
     };
   }
   if (kind === ActivityKind.CONNECTED_TOOL) {

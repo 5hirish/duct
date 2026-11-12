@@ -4,15 +4,19 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Check,
   Clapperboard,
+  FileText,
   Hash,
+  Image as ImageIcon,
   Layers,
   Pencil,
   Plus,
+  RotateCcw,
   Save,
+  Sparkles,
   Trash2,
   Type,
 } from "lucide-react";
-import { Plural, Trans, useLingui } from "@lingui/react/macro";
+import { Trans, useLingui } from "@lingui/react/macro";
 import { Button, buttonVariants } from "@/components/ui/button";
 import EmptyState from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
@@ -26,7 +30,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { relativeTime } from "@/lib/format";
 import {
   AlertDialog,
@@ -40,36 +43,37 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   listFormats,
-  listStyles,
   upsertFormat,
   patchFormat,
   deleteFormat,
 } from "@/lib/contentApi";
+import { MEDIA_KIND_LABELS, MediaKind, PLATFORM_LABELS, Platform } from "@/lib/contentEnums";
+import { PlatformGlyph } from "@/components/content/platformGlyphs";
 import MarkdownSpec from "@/components/content/MarkdownSpec";
+import SpecEditor from "@/components/content/SpecEditor";
 import LoadError from "@/components/LoadError";
-
-const SLIDE_MIN = 1;
-const SLIDE_MAX = 12;
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function specOf(f)  { return f?.data?.spec_markdown || ""; }
-function slidesOf(f){ return f?.data?.default_slide_count ?? null; }
-/** Styles this format links to (renamed from caption_classes; reads both). */
-function linkedOf(f) {
-  const c = f?.data?.linked_styles ?? f?.data?.caption_classes;
-  return Array.isArray(c) ? c : [];
-}
+function specOf(f)        { return f?.data?.spec_markdown || ""; }
+function descriptionOf(f) { return f?.description || f?.data?.description || ""; }
+function mediaOf(f)       { return Array.isArray(f?.media) ? f.media : (Array.isArray(f?.data?.media) ? f.data.media : []); }
+function channelsOf(f)    { return Array.isArray(f?.channels) ? f.channels : (Array.isArray(f?.data?.channels) ? f.data.channels : []); }
+export function isBuiltin(f) { return f?.source === "builtin"; }
 
-/** A short human subtitle: the H1 tail after an em dash, else the name. */
-function subtitleOf(f) {
-  const spec = specOf(f);
-  const h1 = spec.match(/^#\s+(.+)$/m)?.[1] || "";
-  const tail = h1.split(/\s+[—-]\s+/).slice(1).join(" — ").trim();
-  return tail || f?.name || f?.slug || "";
-}
+// The media kinds a format can declare, in the order the chips show. Article
+// is the long form a blog channel takes; the four others mirror PostType.
+const MEDIA_ORDER = [MediaKind.SLIDESHOW, MediaKind.VIDEO, MediaKind.IMAGE, MediaKind.TEXT, MediaKind.ARTICLE];
+const MEDIA_ICONS = {
+  [MediaKind.SLIDESHOW]: Layers,
+  [MediaKind.VIDEO]:     Clapperboard,
+  [MediaKind.IMAGE]:     ImageIcon,
+  [MediaKind.TEXT]:      Type,
+  [MediaKind.ARTICLE]:   FileText,
+};
+const CHANNEL_ORDER = Object.values(Platform);
 
 /** First readable sentence — skip blockquotes, headings, tables, fences. */
 function excerptOf(f) {
@@ -92,7 +96,7 @@ const relTime = (iso, locale) => relativeTime(iso, { fallbackAfterDays: 7, local
 
 const ACCENTS = [
   "from-destructive/25 to-warning/15 text-destructive",
-  "from-primary/25 to-primary/15 text-primary",
+  "from-primary/25 to-primary/15 text-brand",
   "from-success/25 to-success/15 text-success",
   "from-info/25 to-info/15 text-info",
   "from-warning/25 to-warning/15 text-warning",
@@ -124,7 +128,7 @@ export default function FormatLibrary({ projectId }) {
 
   const [viewing, setViewing] = useState(null);   // format being viewed
   const [editing, setEditing] = useState(null);   // format being edited, or {} for new
-  const [deleting, setDeleting] = useState(null);  // format pending delete
+  const [deleting, setDeleting] = useState(null);  // custom format pending delete / reset
   const [busy, setBusy] = useState(false);
 
   async function refresh() {
@@ -163,20 +167,21 @@ export default function FormatLibrary({ projectId }) {
   }
 
   const deletingName = deleting?.name || deleting?.slug;
+  const isReset = !!deleting?.overrides_builtin;
 
   return (
     <section>
       <div className="mb-4 flex items-end justify-between gap-3">
         <div>
           <h2 className="flex items-center gap-2 text-sm font-semibold">
-            <Layers className="h-4 w-4 text-primary" />
+            <Layers className="h-4 w-4 text-brand" />
             <Trans>Formats</Trans>
             <span className="text-xs font-normal tabular-nums text-muted-foreground">
               {formats.length}
             </span>
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            <Trans>Reusable post recipes the drafting agent pulls at generation time.</Trans>
+            <Trans>Recipes the drafting agent follows. Each one says which media and channels it is for; the built-ins can be customised.</Trans>
           </p>
         </div>
         <Button size="sm" onClick={() => setEditing({})}>
@@ -211,19 +216,19 @@ export default function FormatLibrary({ projectId }) {
           }
         >
           <Trans>
-            A reusable recipe — slide structure, caption styles, image prompt rules — that the
-            drafting agent follows.
+            A reusable recipe — structure, hook rules, image prompt rules — that the
+            drafting agent follows for the media and channels you pick.
           </Trans>
         </EmptyState>
       ) : (
         <div className="grid grid-cols-1 gap-3 @lg:grid-cols-2 @2xl:grid-cols-3">
           {formats.map((f) => (
             <FormatCard
-              key={f.id}
+              key={f.id || `builtin:${f.slug}`}
               format={f}
               onView={() => setViewing(f)}
               onEdit={() => setEditing(f)}
-              onDelete={() => setDeleting(f)}
+              onDelete={isBuiltin(f) ? null : () => setDeleting(f)}
             />
           ))}
         </div>
@@ -238,7 +243,7 @@ export default function FormatLibrary({ projectId }) {
       />
 
       <FormatEditorSheet
-        key={editing?.id || (editing ? "new" : "closed")}
+        key={editing?.id || editing?.slug || (editing ? "new" : "closed")}
         open={!!editing}
         onOpenChange={(o) => !o && setEditing(null)}
         projectId={projectId}
@@ -249,13 +254,22 @@ export default function FormatLibrary({ projectId }) {
       <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle><Trans>Delete this format?</Trans></AlertDialogTitle>
+            <AlertDialogTitle>
+              {isReset ? <Trans>Reset to the built-in?</Trans> : <Trans>Delete this format?</Trans>}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              <Trans>
-                <span className="font-medium text-foreground">{deletingName}</span> will
-                be removed. Posts already drafted with it are unaffected, but the agent can no longer pull it.
-                This can’t be undone.
-              </Trans>
+              {isReset ? (
+                <Trans>
+                  Your copy of <span className="font-medium text-foreground">{deletingName}</span> will
+                  be removed and the built-in version comes back. Posts already drafted with it are unaffected.
+                </Trans>
+              ) : (
+                <Trans>
+                  <span className="font-medium text-foreground">{deletingName}</span> will
+                  be removed. Posts already drafted with it are unaffected, but the agent can no longer pull it.
+                  This can’t be undone.
+                </Trans>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -269,7 +283,9 @@ export default function FormatLibrary({ projectId }) {
               // where it measured 2.89:1 on the lifted coral.
               className={buttonVariants({ variant: "destructive" })}
             >
-              {busy ? <Trans>Deleting…</Trans> : <Trans>Delete format</Trans>}
+              {busy
+                ? (isReset ? <Trans>Resetting…</Trans> : <Trans>Deleting…</Trans>)
+                : (isReset ? <Trans>Reset format</Trans> : <Trans>Delete format</Trans>)}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -279,16 +295,64 @@ export default function FormatLibrary({ projectId }) {
 }
 
 // ---------------------------------------------------------------------------
+// Applicability badges — media kinds as words, channels as glyphs
+// ---------------------------------------------------------------------------
+
+export function AppliesTo({ format, size = "sm" }) {
+  const { i18n, t } = useLingui();
+  const media = mediaOf(format);
+  const channels = channelsOf(format);
+  const glyph = size === "sm" ? "size-3" : "size-3.5";
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {media.length === 0 ? (
+        <Badge variant="secondary" className="text-2xs"><Trans>Any media</Trans></Badge>
+      ) : media.map((m) => {
+        const Icon = MEDIA_ICONS[m] || Layers;
+        return (
+          <Badge key={m} variant="secondary" className="gap-1 text-2xs">
+            <Icon className="h-3 w-3" aria-hidden="true" />
+            {MEDIA_KIND_LABELS[m] ? i18n._(MEDIA_KIND_LABELS[m]) : m}
+          </Badge>
+        );
+      })}
+      <span className="mx-0.5 h-3 w-px bg-border" aria-hidden="true" />
+      {channels.length === 0 ? (
+        <span className="text-2xs text-muted-foreground"><Trans>Every channel</Trans></span>
+      ) : (
+        <span className="inline-flex items-center gap-1 text-muted-foreground" aria-label={t`Channels`}>
+          {channels.map((c) => (
+            <PlatformGlyph key={c} platform={c} className={glyph} title={PLATFORM_LABELS[c] || c} />
+          ))}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function SourceBadge({ format }) {
+  if (isBuiltin(format)) {
+    return (
+      <Badge variant="outline" className="gap-1 border-primary/40 text-2xs text-brand">
+        <Sparkles className="h-3 w-3" aria-hidden="true" /><Trans>Built-in</Trans>
+      </Badge>
+    );
+  }
+  if (format?.overrides_builtin) {
+    return <Badge variant="outline" className="text-2xs"><Trans>Customised built-in</Trans></Badge>;
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // Format card
 // ---------------------------------------------------------------------------
 
-function FormatCard({ format, onView, onEdit, onDelete }) {
+export function FormatCard({ format, onView, onEdit, onDelete }) {
   const { t, i18n } = useLingui();
-  const slides = slidesOf(format);
-  const linked = linkedOf(format);
-  const excerpt = excerptOf(format);
-  const updated = relTime(format.updated_at, i18n.locale);
-  const linkedCount = linked.length;
+  const description = descriptionOf(format) || excerptOf(format);
+  const builtin = isBuiltin(format);
+  const updated = builtin ? "" : relTime(format.updated_at, i18n.locale);
 
   return (
     <article className="group relative flex flex-col rounded-xl border border-border/70 bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-ring/50">
@@ -308,51 +372,44 @@ function FormatCard({ format, onView, onEdit, onDelete }) {
               {format.name || format.slug}
             </button>
           </h3>
-          <p className="truncate text-xs text-muted-foreground">{subtitleOf(format)}</p>
+          <p className="truncate font-mono text-2xs text-muted-foreground">{format.slug}</p>
         </div>
-        <div className="relative z-10 flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+        <div className="relative z-10 flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
           <button
             type="button"
-            title={t`Edit`}
+            title={builtin ? t`Customise` : t`Edit`}
             onClick={(e) => { e.stopPropagation(); onEdit(); }}
             className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
           >
             <Pencil className="h-3.5 w-3.5" />
           </button>
-          <button
-            type="button"
-            title={t`Delete`}
-            onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
+          {onDelete && (
+            <button
+              type="button"
+              title={format.overrides_builtin ? t`Reset to built-in` : t`Delete`}
+              onClick={(e) => { e.stopPropagation(); onDelete(); }}
+              className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+            >
+              {format.overrides_builtin ? <RotateCcw className="h-3.5 w-3.5" /> : <Trash2 className="h-3.5 w-3.5" />}
+            </button>
+          )}
         </div>
       </div>
 
-      {excerpt && (
-        <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{excerpt}</p>
+      {description && (
+        <p className="mt-3 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{description}</p>
       )}
 
-      <div className="mt-3 flex flex-wrap items-center gap-1.5">
-        <Badge variant="outline" className="gap-1 font-mono text-2xs">
-          <Hash className="h-3 w-3" />{format.slug}
-        </Badge>
-        {slides != null && (
-          <Badge variant="secondary" className="gap-1 text-2xs">
-            <Clapperboard className="h-3 w-3" /><Plural value={slides} one="# slide" other="# slides" />
-          </Badge>
-        )}
-        {linked.length > 0 && (
-          <Badge variant="secondary" className="gap-1 text-2xs">
-            <Type className="h-3 w-3" /><Plural value={linkedCount} one="# linked style" other="# linked styles" />
-          </Badge>
-        )}
+      <div className="mt-3">
+        <AppliesTo format={format} />
       </div>
 
       <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2.5 text-2xs text-muted-foreground">
-        <span><Trans>Updated {updated}</Trans></span>
-        <span className="text-primary opacity-0 transition-opacity group-hover:opacity-100"><Trans>View →</Trans></span>
+        <span className="inline-flex items-center gap-1.5">
+          <SourceBadge format={format} />
+          {updated && <span><Trans>Updated {updated}</Trans></span>}
+        </span>
+        <span className="text-brand opacity-0 transition-opacity group-hover:opacity-100"><Trans>View →</Trans></span>
       </div>
     </article>
   );
@@ -362,11 +419,11 @@ function FormatCard({ format, onView, onEdit, onDelete }) {
 // Detail sheet — read view
 // ---------------------------------------------------------------------------
 
-function FormatDetailSheet({ format, open, onOpenChange, onEdit, onDelete }) {
+export function FormatDetailSheet({ format, open, onOpenChange, onEdit, onDelete }) {
   const { i18n } = useLingui();
-  const slides = slidesOf(format);
-  const linked = linkedOf(format);
-  const updated = format ? relTime(format.updated_at, i18n.locale) : "";
+  const builtin = isBuiltin(format);
+  const updated = format && !builtin ? relTime(format.updated_at, i18n.locale) : "";
+  const description = descriptionOf(format);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -380,24 +437,32 @@ function FormatDetailSheet({ format, open, onOpenChange, onEdit, onDelete }) {
                 </div>
                 <div className="min-w-0 flex-1">
                   <SheetTitle className="truncate text-base">{format.name || format.slug}</SheetTitle>
-                  <p className="truncate text-xs text-muted-foreground">{subtitleOf(format)}</p>
+                  {description
+                    ? <p className="text-xs text-muted-foreground">{description}</p>
+                    : <p className="truncate font-mono text-2xs text-muted-foreground">{format.slug}</p>}
                 </div>
               </div>
 
-              <div className="mt-4 flex flex-wrap items-center gap-1.5">
+              <div className="mt-4 flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className="gap-1 font-mono text-2xs"><Hash className="h-3 w-3" />{format.slug}</Badge>
-                {slides != null && <Badge variant="secondary" className="text-2xs"><Plural value={slides} one="# slide" other="# slides" /></Badge>}
-                {linked.map((c) => (
-                  <Badge key={c} variant="ghost" className="border border-border/60 font-mono text-2xs">{c}</Badge>
-                ))}
+                <SourceBadge format={format} />
+                <AppliesTo format={format} size="md" />
               </div>
 
               <div className="mt-3 flex items-center gap-2">
-                <Button size="sm" onClick={onEdit}><Pencil className="h-3.5 w-3.5" /> <Trans>Edit</Trans></Button>
-                <Button size="sm" variant="ghost" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={onDelete}>
-                  <Trash2 className="h-3.5 w-3.5" /> <Trans>Delete</Trans>
+                <Button size="sm" onClick={onEdit}>
+                  <Pencil className="h-3.5 w-3.5" /> {builtin ? <Trans>Customise</Trans> : <Trans>Edit</Trans>}
                 </Button>
-                <span className="ml-auto text-2xs text-muted-foreground"><Trans>Updated {updated}</Trans></span>
+                {!builtin && (
+                  <Button size="sm" variant="ghost" className="text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={onDelete}>
+                    {format.overrides_builtin
+                      ? <><RotateCcw className="h-3.5 w-3.5" /> <Trans>Reset to built-in</Trans></>
+                      : <><Trash2 className="h-3.5 w-3.5" /> <Trans>Delete</Trans></>}
+                  </Button>
+                )}
+                <span className="ml-auto text-2xs text-muted-foreground">
+                  {builtin ? <Trans>Ships with Duct · customising makes your own copy</Trans> : <Trans>Updated {updated}</Trans>}
+                </span>
               </div>
             </SheetHeader>
 
@@ -414,70 +479,91 @@ function FormatDetailSheet({ format, open, onOpenChange, onEdit, onDelete }) {
 }
 
 // ---------------------------------------------------------------------------
-// Editor sheet — create / edit
+// Editor sheet — create / edit / customise a built-in
 // ---------------------------------------------------------------------------
 
-function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved }) {
+/** Chip row for a multi-select; nothing selected reads as "any". */
+function ChipPicker({ options, value, onChange, renderLabel, anyLabel }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {options.map((key) => {
+        const on = value.includes(key);
+        return (
+          <button
+            key={key}
+            type="button"
+            aria-pressed={on}
+            onClick={() => onChange(on ? value.filter((k) => k !== key) : [...value, key])}
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-2xs font-medium transition-colors ${
+              on
+                ? "border-primary bg-primary/10 text-brand"
+                : "border-border text-muted-foreground hover:bg-muted"
+            }`}
+          >
+            {on ? <Check className="h-3 w-3" aria-hidden="true" /> : <Plus className="h-3 w-3" aria-hidden="true" />}
+            {renderLabel(key)}
+          </button>
+        );
+      })}
+      {value.length === 0 && anyLabel && (
+        <span className="self-center text-2xs text-muted-foreground">{anyLabel}</span>
+      )}
+    </div>
+  );
+}
+
+// `save` is injectable so /preview can open the editor without the API.
+async function saveToApi({ isNew, builtin, initial, projectId, slug, name, data }) {
+  if (isNew || builtin) {
+    return upsertFormat({ projectId, slug, name, data });
+  }
+  return patchFormat(initial.id, { projectId, slug, name, data });
+}
+
+export function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved, save = saveToApi }) {
   const { t, i18n } = useLingui();
-  const isNew = !initial?.id;
+  const isNew = !initial?.id && !isBuiltin(initial);
+  const builtin = isBuiltin(initial);
 
   const [name, setName]               = useState("");
   const { slug, setSlug, reset: resetSlug, syncFromName } = useAutoSlug("", "-");
-  const [slideCount, setSlideCount]   = useState(7);
-  const [linked, setLinked]           = useState([]);
+  const [description, setDescription] = useState("");
+  const [media, setMedia]             = useState([]);
+  const [channels, setChannels]       = useState([]);
   const [spec, setSpec]               = useState("");
   const [saving, setSaving]           = useState(false);
   const [err, setErr]                 = useState("");
-
-  // Available base styles to link (shared registry).
-  const [available, setAvailable] = useState([]);
-  useEffect(() => {
-    let cancelled = false;
-    listStyles()
-      .then((d) => { if (!cancelled) setAvailable(Array.isArray(d?.styles) ? d.styles : []); })
-      .catch(() => {});
-    return () => { cancelled = true; };
-  }, []);
 
   useEffect(() => {
     if (!open) return;
     setName(initial?.name || "");
     resetSlug(initial?.slug || "");
-    const sc = slidesOf(initial);
-    setSlideCount(sc == null ? 7 : Math.min(SLIDE_MAX, Math.max(SLIDE_MIN, sc)));
-    setLinked(linkedOf(initial));
+    setDescription(descriptionOf(initial));
+    setMedia(mediaOf(initial));
+    setChannels(channelsOf(initial));
     setSpec(specOf(initial));
     setErr("");
   }, [open, initial]);
 
-  const slugValid = useMemo(() => /^[a-z0-9-]+$/.test(slug), [slug]);
-  const charCount = spec.length;
+  const slugValid = useMemo(() => /^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug), [slug]);
 
-  function toggleLinked(key) {
-    setLinked((cur) => (cur.includes(key) ? cur.filter((k) => k !== key) : [...cur, key]));
-  }
-
-  async function save() {
+  async function doSave() {
     if (!slug.trim()) { setErr(t`Slug is required.`); return; }
     if (!slugValid)   { setErr(t`Slug must be lowercase letters, numbers, and hyphens only.`); return; }
     setSaving(true);
     setErr("");
 
+    // Only the current shape is sent: the older slider and linked-style keys
+    // are dropped here as well as on the server, so a saved row converges.
     const data = {
-      ...(initial?.data || {}),
-      default_slide_count: slideCount,
-      linked_styles: linked,
+      description: description.trim(),
+      media,
+      channels,
       spec_markdown: spec,
     };
-    delete data.format_style;     // removed — posts link by format_id
-    delete data.caption_classes;  // renamed → linked_styles
 
     try {
-      if (isNew) {
-        await upsertFormat({ projectId, slug: slug.trim(), name: name.trim(), data });
-      } else {
-        await patchFormat(initial.id, { projectId, slug: slug.trim(), name: name.trim(), data });
-      }
+      await save({ isNew, builtin, initial, projectId, slug: slug.trim(), name: name.trim(), data });
       onSaved();
     } catch (e) {
       setErr(e.message || t`Save failed.`);
@@ -485,114 +571,99 @@ function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved }) 
     }
   }
 
+  const title = isNew ? <Trans>New format</Trans> : builtin ? <Trans>Customise built-in format</Trans> : <Trans>Edit format</Trans>;
+  const subtitle = isNew
+    ? <Trans>A recipe the drafting agent follows. Say what it applies to, then write the spec.</Trans>
+    : builtin
+      ? <Trans>Saving makes this project’s own copy, which replaces the built-in here. Reset it later to go back.</Trans>
+      : <Trans>Changes apply to future drafts that pull this format.</Trans>;
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full gap-0 p-0 !max-w-[min(760px,100vw)]">
+      <SheetContent side="right" className="w-full gap-0 p-0 !max-w-[min(820px,100vw)]">
         <SheetHeader className="border-b border-border/60 p-5">
-          <SheetTitle className="text-base">{isNew ? <Trans>New format</Trans> : <Trans>Edit format</Trans>}</SheetTitle>
-          <p className="text-xs text-muted-foreground">
-            {isNew
-              ? <Trans>Define a reusable post recipe. The spec doc is what the drafting agent reads.</Trans>
-              : <Trans>Changes apply to future drafts that pull this format.</Trans>}
-          </p>
+          <SheetTitle className="text-base">{title}</SheetTitle>
+          <p className="text-xs text-muted-foreground">{subtitle}</p>
         </SheetHeader>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-5">
-          <div className="grid grid-cols-1 gap-4 @lg:grid-cols-2">
-            <Field label={t`Name`} hint={t`Human-friendly title`}>
-              <Input value={name} onChange={(e) => setName(e.target.value)} onBlur={() => syncFromName(name)} placeholder={t`Format D — UGC / Raw Authentic`} />
+          <div className="grid grid-cols-1 gap-4 @lg:grid-cols-[1fr_auto]">
+            <Field label={t`Name`}>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onBlur={() => { if (!builtin) syncFromName(name); }}
+                placeholder={t`Educational carousel`}
+              />
             </Field>
-            <Field label={t`Slug`} hint={t`Stable key — lowercase, hyphens`} error={slug && !slugValid ? t`Lowercase, numbers, hyphens only` : ""}>
-              <Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder={t`format-d`} className="font-mono" />
+            <Field
+              label={t`Slug`}
+              hint={builtin ? t`Fixed, so your copy stands in for the built-in` : t`Lowercase, hyphens`}
+              error={slug && !slugValid ? t`Lowercase, numbers, hyphens only` : ""}
+            >
+              <Input
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                placeholder={t`educational-carousel`}
+                className="font-mono @lg:w-56"
+                readOnly={builtin}
+                aria-readonly={builtin || undefined}
+              />
             </Field>
           </div>
 
-          {/* Slide count — slider 1..12 */}
           <div className="mt-4">
-            <div className="mb-1.5 flex items-center justify-between">
-              <Label className="text-xs"><Trans>Default slides</Trans></Label>
-              <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-semibold tabular-nums">{slideCount}</span>
-            </div>
-            <input
-              type="range"
-              min={SLIDE_MIN}
-              max={SLIDE_MAX}
-              step={1}
-              value={slideCount}
-              aria-label={t`Default slides`}
-              onChange={(e) => setSlideCount(Number(e.target.value))}
-              className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-muted accent-primary"
-            />
-            <div className="mt-1 flex justify-between text-2xs text-muted-foreground">
-              <span>{SLIDE_MIN}</span><span>{SLIDE_MAX}</span>
-            </div>
+            <Field label={t`What it is for`} hint={t`One or two sentences. The agent reads this to pick between formats, so say what it does and when to use it.`}>
+              <Input
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder={t`A swipe-through lesson, one idea per slide. Use when the post teaches or lists; not for a personal story.`}
+              />
+            </Field>
           </div>
 
-          {/* Linked styles — pick from the shared base styles */}
-          <div className="mt-5">
-            <Label className="text-xs"><Trans>Linked styles</Trans></Label>
-            <p className="mb-2 text-2xs text-muted-foreground">
-              <Trans>Base styles the slide builder inlines for this format. Browse them in Library → Styles.</Trans>
-            </p>
-            {available.length === 0 ? (
-              <p className="rounded-md border border-dashed border-border/60 px-3 py-3 text-center text-2xs text-muted-foreground">
-                <Trans>No base styles available.</Trans>
-              </p>
-            ) : (
-              <div className="flex flex-wrap gap-1.5">
-                {available.map((s) => {
-                  const on = linked.includes(s.key);
-                  return (
-                    <button
-                      key={s.key}
-                      type="button"
-                      title={s.description}
-                      onClick={() => toggleLinked(s.key)}
-                      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-2xs font-medium transition-colors ${
-                        on
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border text-muted-foreground hover:bg-muted"
-                      }`}
-                    >
-                      {on ? <Check className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
-                      {s.name}
-                      <span className="font-mono opacity-60">.{s.key}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          <div className="mt-5">
-            <Label className="text-xs"><Trans>Spec document (Markdown)</Trans></Label>
-            <p className="mb-1.5 text-2xs text-muted-foreground">
-              <Trans>The full recipe — slide structure, image prompt rules, failure modes. GFM tables supported.</Trans>
-            </p>
-            <Tabs defaultValue="edit" className="w-full">
-              <TabsList>
-                <TabsTrigger value="edit"><Trans>Edit</Trans></TabsTrigger>
-                <TabsTrigger value="preview"><Trans>Preview</Trans></TabsTrigger>
-              </TabsList>
-              <TabsContent value="edit">
-                <textarea
-                  value={spec}
-                  aria-label={t`Format spec`}
-                  onChange={(e) => setSpec(e.target.value)}
-                  spellCheck={false}
-                  placeholder={t`# My Format\n\n## Slide Structure\n\n| Slide | Type |\n|-------|------|\n| 1 | Hook |`}
-                  className="h-[48vh] w-full resize-y rounded-md border border-border/70 bg-background p-3 font-mono text-xs leading-relaxed outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+          {/* Applies to — the filters the agent reads the library through. */}
+          <fieldset className="mt-5 rounded-lg border border-border/60 p-4">
+            <legend className="px-1 text-xs font-semibold"><Trans>Applies to</Trans></legend>
+            <div className="space-y-4">
+              <div>
+                <Label className="text-xs"><Trans>Media</Trans></Label>
+                <p className="mb-2 text-2xs text-muted-foreground"><Trans>What kind of post this recipe makes.</Trans></p>
+                <ChipPicker
+                  options={MEDIA_ORDER}
+                  value={media}
+                  onChange={setMedia}
+                  anyLabel={t`Nothing picked = any media`}
+                  renderLabel={(m) => {
+                    const Icon = MEDIA_ICONS[m] || Layers;
+                    return <><Icon className="h-3 w-3" aria-hidden="true" />{MEDIA_KIND_LABELS[m] ? i18n._(MEDIA_KIND_LABELS[m]) : m}</>;
+                  }}
                 />
-                <p className="mt-1 text-right text-2xs tabular-nums text-muted-foreground"><Plural value={charCount} one="# char" other="# chars" /></p>
-              </TabsContent>
-              <TabsContent value="preview">
-                <div className="h-[48vh] overflow-y-auto rounded-md border border-border/70 bg-background px-4 py-3">
-                  {spec.trim()
-                    ? <MarkdownSpec>{spec}</MarkdownSpec>
-                    : <p className="text-sm text-muted-foreground"><Trans>Nothing to preview yet.</Trans></p>}
-                </div>
-              </TabsContent>
-            </Tabs>
+              </div>
+              <div>
+                <Label className="text-xs"><Trans>Channels</Trans></Label>
+                <p className="mb-2 text-2xs text-muted-foreground"><Trans>Where it is offered. The plan only pulls it for posts on these channels.</Trans></p>
+                <ChipPicker
+                  options={CHANNEL_ORDER}
+                  value={channels}
+                  onChange={setChannels}
+                  anyLabel={t`Nothing picked = every channel`}
+                  renderLabel={(c) => <><PlatformGlyph platform={c} className="size-3" />{PLATFORM_LABELS[c] || c}</>}
+                />
+              </div>
+            </div>
+          </fieldset>
+
+          <div className="mt-5">
+            <Label className="text-xs"><Trans>Spec document</Trans></Label>
+            <p className="mb-1.5 text-2xs text-muted-foreground">
+              <Trans>The full recipe — structure, hook rules, image prompt rules, failure modes. Write it like a brief to a new hire; headings and tables help the agent find things.</Trans>
+            </p>
+            <SpecEditor
+              value={spec}
+              onChange={setSpec}
+              placeholder={t`Start with a title, then the structure as a table, then the rules…`}
+            />
           </div>
         </div>
 
@@ -600,9 +671,9 @@ function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSaved }) 
           {err && <p className="mr-auto text-xs text-destructive">{err}</p>}
           {!err && <span className="mr-auto" />}
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}><Trans>Cancel</Trans></Button>
-          <Button onClick={save} disabled={saving || !slug.trim() || !slugValid}>
+          <Button onClick={doSave} disabled={saving || !slug.trim() || !slugValid}>
             <Save className="h-4 w-4" />
-            {saving ? <Trans>Saving…</Trans> : isNew ? <Trans>Create format</Trans> : <Trans>Save changes</Trans>}
+            {saving ? <Trans>Saving…</Trans> : isNew ? <Trans>Create format</Trans> : builtin ? <Trans>Save my copy</Trans> : <Trans>Save changes</Trans>}
           </Button>
         </div>
       </SheetContent>

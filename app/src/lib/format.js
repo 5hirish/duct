@@ -40,6 +40,24 @@ export function formatDate(value, { withYear = true, locale, fallback = "" } = {
   });
 }
 
+// Spaces ICU versions disagree on. Node's ICU writes a range's dash between
+// thin spaces (U+2009) where Chromium and WebKit write plain ones, so the
+// server's HTML and the first client render differed by a character nobody
+// can see, and React threw the tree away as a hydration mismatch (the plan
+// board header, 2026-11-08). Plain spaces are what both browsers print.
+const ICU_SPACES = /[\u2009\u202f]/g;
+
+/** "Oct 7 – 31", "Oct 28 – Nov 3": a span of days, the way the locale writes
+ * one, so the month is not repeated when it does not change. */
+export function formatDateRange(start, end, { locale } = {}) {
+  const a = toDate(start);
+  const b = toDate(end);
+  if (!a || !b) return "";
+  return new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" })
+    .formatRange(a, b)
+    .replace(ICU_SPACES, " ");
+}
+
 /** "3:04 PM". */
 export function formatTime(value, { locale, fallback = "" } = {}) {
   const d = toDate(value);
@@ -106,6 +124,41 @@ export function formatPercent(ratio, { locale, digits = 1 } = {}) {
   const v = Number(ratio);
   return new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: digits })
     .format(Number.isFinite(v) ? v : 0);
+}
+
+/**
+ * A number an agent stored with its unit, for a chip: "€2.1K", "11.2%",
+ * "1.8K clicks". The unit is model-written, so every shape is handled: an ISO
+ * currency code, "%" with the value either as a ratio (0.112) or as points
+ * (11.2), any other word as a suffix, or none.
+ */
+export function formatMeasure(value, unit = "", { locale } = {}) {
+  const v = Number(value);
+  if (!Number.isFinite(v)) return "";
+  if (unit === "%") {
+    return Math.abs(v) <= 1
+      ? formatPercent(v, { locale })
+      : `${new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(v)}%`;
+  }
+  if (/^[A-Z]{3}$/.test(unit)) {
+    try {
+      return new Intl.NumberFormat(locale, {
+        style: "currency", currency: unit, notation: "compact", maximumFractionDigits: 1,
+      }).format(v);
+    } catch {
+      // Not a currency Intl knows: fall through to the plain suffix.
+    }
+  }
+  const n = new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 1 }).format(v);
+  return unit ? `${n} ${unit}` : n;
+}
+
+/** A change as a signed percentage: 0.14 → "+14%", -0.091 → "-9.1%", 0 → "0%". */
+export function formatDelta(ratio, { locale } = {}) {
+  const v = Number(ratio);
+  return new Intl.NumberFormat(locale, {
+    style: "percent", signDisplay: "exceptZero", maximumFractionDigits: 1,
+  }).format(Number.isFinite(v) ? v : 0);
 }
 
 /** "938" / "1.2k" / "3M" — for metric chips where width is tight. */

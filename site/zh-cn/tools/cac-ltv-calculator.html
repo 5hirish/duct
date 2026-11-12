@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>适用于 SaaS 的 CAC / LTV 计算器——Duct 免费工具</title>
+<link rel="canonical" href="https://getduct.ai/zh-cn/tools/cac-ltv-calculator"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/tools/cac-ltv-calculator"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/tools/cac-ltv-calculator"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/tools/cac-ltv-calculator"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/tools/cac-ltv-calculator"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/tools/cac-ltv-calculator"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/tools/cac-ltv-calculator"/>
+<link rel="alternate" hreflang="zh-CN" href="https://getduct.ai/zh-cn/tools/cac-ltv-calculator"/>
+<meta property="og:locale" content="zh_CN"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="免费的 SaaS CAC 和 LTV 计算器。输入支出、客户和收入，即可获得 CAC、LTV、LTV:CAC 比率和回收期，并根据基准进行颜色编码。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/zh-cn/tools/cac-ltv-calculator"/>
+<meta property="og:title" content="适用于 SaaS 的 CAC / LTV 计算器——Duct 免费工具"/>
+<meta property="og:description" content="计算你的 SaaS CAC、LTV、LTV:CAC 比率和回收期。免费、即时、无需注册。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/tools-cac-ltv-calculator.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="适用于 SaaS 的 CAC / LTV 计算器——Duct 免费工具"/>
+<meta name="twitter:description" content="免费的 SaaS CAC 和 LTV 计算器，提供即时健康评分，并与行业基准进行对比。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/tools-cac-ltv-calculator.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookie，坦白说","We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold.":"我们使用 PostHog 来了解哪些页面促成了注册，以及 Duct 在何处阻碍了你，包括隐藏你输入的所有内容的访问回放。拒绝会关闭 PostHog，Duct 仍能正常运行。Google Analytics 也会统计访问量并设置自己的 Cookie，无论你选择什么。我们不会出售任何数据。","Privacy Policy":"隐私政策","Decline":"拒绝","Accept":"接受","{n} stars on GitHub":"{n} GitHub 星","UTM Builder":"UTM 构建器","SaaS Metrics Benchmark Calculator":"SaaS 指标基准计算器","Weekly Marketing Brief Generator":"每周营销简报生成器","CAC / LTV Calculator":"CAC / LTV 计算器","MRR Growth Rate Calculator":"MRR 增长率计算器","Engagement Rate Calculator":"互动率计算器","CTR Calculator":"CTR 计算器","CPM Calculator":"CPM 计算器","CPC Calculator":"CPC 计算器","CPA Calculator":"CPA 计算器","Marketing ROI Calculator":"营销 ROI 计算器","ROAS Calculator":"ROAS 计算器","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Menu":"菜单","Free Tools":"免费工具","Solutions":"解决方案","Download Duct ↓":"下载 Duct ↓","Language":"语言","Enlarged screenshot":"放大后的截图","Close":"关闭","Fit to screen":"适应屏幕","Zoom in":"放大","Enlarge":"放大","Universal · Apple silicon and Intel":"通用 · Apple 芯片和 Intel","Windows 10 and later":"Windows 10 及更高版本","Runs on any distribution":"可在任何发行版上运行","Debian and Ubuntu":"Debian 和 Ubuntu","Download ↓":"下载 ↓","Download for {label} ↓":"下载适用于 {label} ↓","Example numbers. Change any field and calculate again for yours.":"示例数字。修改任意字段，重新计算你的结果。"};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","inLanguage":"zh-CN","name":"SaaS CAC / LTV 计算器","url":"https://getduct.ai/zh-cn/tools/cac-ltv-calculator","description":"免费计算器，可根据你的 SaaS 指标计算客户获取成本 (CAC)、客户生命周期价值 (LTV)、LTV:CAC 比率和 CAC 回收期，提供颜色编码的健康评分，并与行业基准进行对比。","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Organization","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"zh-CN","mainEntity":[{"@type":"Question","name":"CAC 在 SaaS 中是什么？","acceptedAnswer":{"@type":"Answer","text":"CAC（客户获取成本）是获取一个新客户所需的销售和营销总支出。公式：CAC = 同期销售和营销总支出 ÷ 新客户数。在分子中包含薪资、工具、广告支出和代理费，以获得准确的数字。"}},{"@type":"Question","name":"如何计算客户生命周期价值 (LTV)？","acceptedAnswer":{"@type":"Answer","text":"LTV = 每客户平均月收入 × 平均客户生命周期（月）。或者：LTV = ARPU ÷ 月流失率。例如，如果 ARPU 为 €100，平均生命周期为 36 个月，则 LTV = €3,600。如果月流失率为 2%，则 LTV = €100 ÷ 0.02 = €5,000。"}},{"@type":"Question","name":"好的 LTV:CAC 比率是多少？","acceptedAnswer":{"@type":"Answer","text":"对于 SaaS 而言，理想的 LTV:CAC 比率应高于 3:1。这意味着每投入 1 欧元获取客户，你就能收回 3 欧元的生命周期价值。2–3:1 的比率可以覆盖成本，但无法建立可持续的经济效益。低于 2:1 通常意味着该模式无法大规模可行。高于 5:1 则常表明增长投入不足。"}},{"@type":"Question","name":"CAC 回收期是什么？","acceptedAnswer":{"@type":"Answer","text":"CAC 回收期是指从客户的月收入中收回获客成本所需的月数。公式：回收期 = CAC ÷ ARPU。SaaS 的健康回收期应在 12 个月以内。超过 18 个月则风险很高——客户可能会在您收支平衡之前流失。"}},{"@type":"Question","name":"如何降低 CAC？","acceptedAnswer":{"@type":"Answer","text":"最有效的杠杆：构建可复利的有机内容（博客、SEO）以减少对付费获客的依赖；缩短销售周期；提高试用转付费的转化率，从现有漏斗顶部获取更多价值；并构建推荐或 PLG 循环，以随着时间推移降低每客户获取成本。"}}]}
+</script>
+<style>
+  .skip-link {
+    position: absolute; top: -100%; left: 16px; z-index: 300;
+    padding: 10px 20px; background: var(--navy); color: #fff;
+    font-size: 14px; font-weight: 500; border-radius: var(--r);
+    text-decoration: none; transition: top .15s;
+  }
+  .skip-link:focus { top: 16px; }
+
+  :root {
+    --orange: #2563EB;
+    --orange-h: #1D4ED8;
+  }
+  .btn-orange:hover { box-shadow: 0 8px 24px rgba(37,99,235,.28); }
+
+  .tool-hero {
+    padding: 80px 24px 48px; text-align: center;
+    max-width: 680px; margin: 0 auto;
+  }
+  .tool-hero h1 {
+    font-family: var(--serif); font-size: clamp(32px, 5vw, 52px);
+    color: var(--navy); margin: 16px 0 16px; line-height: 1.15;
+  }
+  .tool-hero h1 em { color: var(--orange); font-style: italic; }
+  .tool-hero p { font-size: 17px; color: var(--navy-3); font-weight: 300; line-height: 1.6; margin: 0; }
+
+  .tool-wrap { max-width: 820px; margin: 0 auto 80px; padding: 0 24px; }
+  .tool-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--r-lg); overflow: hidden;
+    box-shadow: 0 4px 32px rgba(0,0,0,.06);
+  }
+  .tool-inputs {
+    padding: 36px 40px; display: grid;
+    grid-template-columns: 1fr 1fr; gap: 24px 32px;
+  }
+  @media (max-width: 600px) { .tool-inputs { grid-template-columns: 1fr; padding: 24px; } }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 13px; font-weight: 500; color: var(--navy); letter-spacing: .01em; }
+  .field .field-hint { font-size: 11px; color: var(--navy-3); margin-top: -2px; }
+  .field input {
+    padding: 11px 16px; border: 1.5px solid var(--border);
+    border-radius: var(--r); font-size: 15px; font-family: var(--sans);
+    color: var(--navy); background: var(--white);
+    transition: border-color .15s; outline: none; appearance: textfield; -moz-appearance: textfield;
+  }
+  .field input::-webkit-outer-spin-button,
+  .field input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .field input:focus { border-color: var(--orange); }
+  .field input::placeholder { color: var(--navy-3); opacity: .6; }
+
+  .tool-action { padding: 0 40px 36px; display: flex; align-items: center; gap: 16px; }
+  @media (max-width: 600px) { .tool-action { padding: 0 24px 24px; flex-direction: column; align-items: stretch; } }
+
+  .tool-results { border-top: 1px solid var(--border); padding: 36px 40px; display: none; }
+  @media (max-width: 600px) { .tool-results { padding: 24px; } }
+  .tool-results.visible { display: block; }
+
+  .results-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-bottom:28px; }
+
+  .result-card { border: 1.5px solid var(--border); border-radius: var(--r); padding: 20px; }
+  .result-card.green { border-color: #22c55e; background: #f0fdf4; }
+  .result-card.amber { border-color: #f59e0b; background: #fffbeb; }
+  .result-card.red   { border-color: #ef4444; background: #fef2f2; }
+  .result-card.neutral { border-color: var(--border); background: var(--off); }
+
+  .result-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--navy-3); margin-bottom: 6px; }
+  .result-value { font-size: 26px; font-family: var(--serif); color: var(--navy); font-weight: 400; margin-bottom: 4px; line-height: 1.1; }
+  .result-badge {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 11px;
+    font-weight: 500; padding: 2px 9px; border-radius: 100px; margin-bottom: 8px;
+  }
+  .result-badge.green { background: #dcfce7; color: #15803d; }
+  .result-badge.amber { background: #fef3c7; color: #92400e; }
+  .result-badge.red   { background: #fee2e2; color: #991b1b; }
+  .result-badge.neutral { background: #f1f5f9; color: var(--navy-3); }
+
+  .result-context { font-size: 12px; color: var(--navy-3); line-height: 1.5; margin: 0; }
+
+  .tool-cta {
+    margin-top: 28px; background: var(--navy); border-radius: var(--r);
+    padding: 28px 32px; display: flex; align-items: center;
+    justify-content: space-between; gap: 24px; flex-wrap: wrap;
+  }
+  .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
+  .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
+
+  .about-section { max-width: 720px; margin: 0 auto 80px; padding: 0 24px; }
+  .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
+  .about-section h2 em { color: var(--orange); font-style: italic; }
+  .about-section p, .about-section li { font-size: 15px; color: var(--navy-3); line-height: 1.75; margin-bottom: 12px; }
+  .about-section ul { padding-left: 20px; }
+  .about-section li { margin-bottom: 6px; }
+  .about-section strong { color: var(--navy); }
+
+  .insight-panel {
+    margin-top: 24px;
+    background: #eff6ff;
+    border: 1px solid rgba(37,99,235,.18);
+    border-left: 3px solid #2563EB;
+    border-radius: var(--r);
+    padding: 20px 24px;
+  }
+  .insight-label {
+    font-size: 10px; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; color: #2563EB; margin-bottom: 10px;
+  }
+  .insight-panel p { font-size: 14px; color: var(--navy-3); line-height: 1.7; margin: 0 0 8px; }
+  .insight-panel p:last-of-type { margin-bottom: 0; }
+  .insight-links { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .insight-link {
+    font-size: 13px; font-weight: 500; color: #2563EB;
+    text-decoration: none; border: 1px solid rgba(37,99,235,.25);
+    padding: 6px 12px; border-radius: var(--pill);
+    background: var(--white); transition: background .15s;
+  }
+  .insight-link:hover { background: #dbeafe; }
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"zh-CN","itemListElement":[{"@type":"ListItem","position":1,"name":"主页","item":"https://getduct.ai/zh-cn/"},{"@type":"ListItem","position":2,"name":"免费工具","item":"https://getduct.ai/zh-cn/tools/"},{"@type":"ListItem","position":3,"name":"适用于 SaaS 的 CAC / LTV 计算器","item":"https://getduct.ai/zh-cn/tools/cac-ltv-calculator"}]}
+</script>
+</head>
+<body>
+
+<!-- EXPERIMENT: CAC/LTV calculator as lead magnet — do growth PMs landing on high-volume "cac ltv ratio" keywords convert to beta signups at a higher rate than blog traffic? -->
+
+<a href="#main-content" class="skip-link">跳到内容</a>
+
+<div data-duct-partial="/zh-cn/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<div class="tool-hero">
+  <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> 免费工具 · 无需注册</div>
+  <h1>CAC 和 LTV 计算器 <em>（适用于 SaaS）</em></h1>
+  <p>你的增长模型只有在单位经济健康时才健康。一次性计算 CAC、LTV 和回收期——经过基准测试、可供决策、无电子表格延迟。</p>
+</div>
+
+<div class="tool-wrap">
+  <div class="tool-card" role="region" aria-label="CAC 和 LTV 计算器">
+
+    <div class="tool-inputs">
+      <div class="field">
+        <label for="inp-customers">每月新客户数</label>
+        <span class="field-hint">本月获取的新客户数量</span>
+        <input type="number" id="inp-customers" placeholder="e.g. 25" min="1" inputmode="numeric" aria-required="true"/>
+      </div>
+      <div class="field">
+        <label for="inp-spend">每月总销售和营销支出</label>
+        <span class="field-hint">获取这些客户的所有成本（美元/欧元）</span>
+        <input type="number" id="inp-spend" placeholder="e.g. 20000" min="0" inputmode="numeric" aria-required="true"/>
+      </div>
+      <div class="field">
+        <label for="inp-arpu">每客户平均月收入</label>
+        <span class="field-hint">MRR ÷ 总客户数 (USD/EUR)</span>
+        <input type="number" id="inp-arpu" placeholder="e.g. 120" min="0" inputmode="numeric" aria-required="true"/>
+      </div>
+      <div class="field">
+        <label for="inp-lifespan">平均客户生命周期（月）</label>
+        <span class="field-hint">典型客户的留存时长——如果不确定，请使用 1 ÷ 流失率</span>
+        <input type="number" id="inp-lifespan" placeholder="e.g. 36" min="1" inputmode="numeric" aria-required="true"/>
+      </div>
+      <div class="field">
+        <label for="inp-gross-margin">毛利率 % <span style="font-weight:400;color:var(--navy-3)">(可选)</span></label>
+        <span class="field-hint">留空以计算收入回收期 (CAC ÷ ARPU)。输入毛利率以计算贡献回收期：CAC ÷ (ARPU × 毛利率)。</span>
+        <input type="number" id="inp-gross-margin" placeholder="e.g. 75" min="0" max="100" step="0.1" inputmode="decimal"/>
+      </div>
+    </div>
+
+    <div class="tool-action">
+      <button class="btn btn-orange btn-lg" id="calc-btn" aria-controls="results-section">
+        计算 →
+      </button>
+      <button class="btn btn-ghost" id="reset-btn" style="display:none">
+        重置
+      </button>
+    </div>
+
+    <div id="calc-form-error" class="tool-form-error" role="alert" aria-live="assertive"></div>
+
+    <div class="tool-results" id="results-section" role="region" aria-label="CAC 和 LTV 结果" aria-live="polite">
+      <p style="font-size:13px;font-weight:500;color:var(--navy-3);margin:0 0 20px;letter-spacing:.02em;text-transform:uppercase">你的结果</p>
+      <div class="results-row" id="results-row"></div>
+
+      <div class="tool-cta">
+        <div class="tool-cta-text">
+          <p>一个周期的 CAC 和 LTV。问题是哪个渠道正在推动它们。</p>
+          <p>Duct 读取你的广告、分析和收入工具数据，回答这个问题，并提出变更建议。你批准即可。</p>
+        </div>
+        <a href="/zh-cn/download" class="btn btn-orange" data-duct-download>下载 Duct ↓</a>
+      </div>
+
+      <div id="insight-panel" class="insight-panel" hidden aria-live="polite">
+        <p class="insight-label">这意味着什么</p>
+        <div id="insight-body"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<section class="duct-bridge reveal" aria-label="关于 Duct">
+  <div class="duct-bridge-inner">
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">LTV:CAC 能告诉你当前模型的健康状况。它不会告诉你下一次恶化从何开始。</p>
+      <p class="duct-bridge-body">Duct 会一起读取 Google Ads、GA4 和 Stripe 的数据，因此当比率下滑时，它能指出哪个渠道的客户不再留存，并建议预算应投向何处。</p>
+      <a href="/zh-cn/" class="duct-bridge-link">Duct 工作原理 →</a>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="/assets/media/insights-session.webp" srcset="/assets/media/insights-session-768.webp 768w, /assets/media/insights-session-1536.webp 1536w, /assets/media/insights-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="一次洞察会话：当被问及 ROAS 上升但注册量下降的原因时，智能体将广告、分析和收入数据结合起来阅读，提出一个待批准的变更集在左侧，并在右侧撰写简报"/>
+      <figcaption>询问为什么 ROAS 上升但注册量下降。Duct 会将广告、分析和收入数据结合起来阅读，指出正在流失的群体，并提出变更。你批准即可。</figcaption>
+    </figure>
+  </div>
+</section>
+
+<div class="about-section reveal">
+  <h2><em>计算原理</em></h2>
+  <p>此计算器使用四个标准的 SaaS 单位经济学公式：</p>
+  <ul>
+    <li><strong>CAC</strong> = 每月销售和营销总支出 ÷ 每月新客户数</li>
+    <li><strong>LTV</strong> = 每客户平均月收入 × 平均客户生命周期</li>
+    <li><strong>LTV:CAC 比率</strong> = LTV ÷ CAC</li>
+    <li><strong>CAC 回本期</strong> = CAC ÷ 每客户平均月收入（基于收入）。可选的毛利率 % 切换为贡献回本期：CAC ÷ (ARPU × 毛利率 %)。</li>
+  </ul>
+  <p>结果与广泛引用的 SaaS 标准进行基准对比：健康的 LTV:CAC 应高于 3:1 (David Skok / OpenView)，回收期应在 12 个月以内 (OpenView SaaS Benchmarks 2024)。</p>
+
+  <h2 style="margin-top:40px">为什么这些指标 <em>一起很重要</em></h2>
+  <p>单独看 CAC 几乎毫无意义。如果 LTV 是 €6,000（5:1 的比例），€1,200 的 CAC 是健康的；如果 LTV 是 €1,800（1.5:1 的比例），则很危险。重要的是这四个数字之间的关系，以及它是否每周都在朝着正确的方向发展。</p>
+  <p>最常见的增长产品经理错误：每月在电子表格中跟踪 CAC 和 LTV，三个月后才发现问题。Duct 每周自动运行此计算，并在 LTV:CAC 开始收缩时立即发出趋势警报。</p>
+
+  <h2 style="margin-top:40px">局限性</h2>
+  <ul>
+    <li>CAC 计算使用混合支出——它不区分新业务和扩展业务。</li>
+    <li>LTV 计算假设线性流失。如果流失率因同期群而异，实际 LTV 可能会有所不同。</li>
+    <li>这里的 LTV 是基于收入的；对于毛利率调整后的 LTV，请手动乘以毛利率 %。回收期可以使用可选的毛利率来计算基于贡献的 CAC 回收月数。</li>
+    <li>所有计算都在你的浏览器中运行。不发送或存储任何数据。</li>
+  </ul>
+</div>
+
+<section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
+  <div class="related-tools-banner-inner">
+    <p class="tag">也是免费的</p>
+    <h2 id="related-tools-heading">探索相关 <em>工具</em></h2>
+    <p class="related-tools-banner-desc">基准、增长计算和每周简报模板——每个都在你的浏览器中运行，与此页面采用相同的隐私模型。选择你接下来想测试的数字。</p>
+    <div class="insight-links related-tools" data-related-tools data-current-tool="cac-ltv-calculator" data-related-limit="3"></div>
+  </div>
+</section>
+
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+  <p class="tag">常见问题</p>
+  <h2>常见<em>问题</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.1s">
+  <details class="faq-item">
+    <summary class="faq-q">CAC 在 SaaS 中是什么？</summary>
+    <p class="faq-a">CAC（客户获取成本）是获取一个新客户所需的销售和营销总支出。公式：CAC = 同期销售和营销总支出 ÷ 新客户数。在分子中包含薪资、工具、广告支出和代理费，以获得准确的数字。</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">如何计算客户生命周期价值 (LTV)？</summary>
+    <p class="faq-a">LTV = 每客户平均月收入 × 平均客户生命周期（月）。或者：LTV = ARPU ÷ 月流失率。例如，如果 ARPU 为 €100，平均生命周期为 36 个月，则 LTV = €3,600。如果月流失率为 2%，则 LTV = €100 ÷ 0.02 = €5,000。</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">好的 LTV:CAC 比率是多少？</summary>
+    <p class="faq-a">对于 SaaS 而言，理想的 LTV:CAC 比率应高于 3:1。这意味着每投入 1 欧元获取客户，你就能收回 3 欧元的生命周期价值。2–3:1 的比率可以覆盖成本，但无法建立可持续的经济效益。低于 2:1 通常意味着该模式无法大规模可行。高于 5:1 则常表明增长投入不足。</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">CAC 回收期是什么？</summary>
+    <p class="faq-a">CAC 回收期是指从客户的月收入中收回获客成本所需的月数。公式：回收期 = CAC ÷ ARPU。SaaS 的健康回收期应在 12 个月以内。超过 18 个月则风险很高——客户可能会在您收支平衡之前流失。</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">如何降低 CAC？</summary>
+    <p class="faq-a">最有效的杠杆：构建可复利的有机内容（博客、SEO）以减少对付费获客的依赖；缩短销售周期；提高试用转付费的转化率，从现有漏斗顶部获取更多价值；并构建推荐或 PLG 循环，以随着时间推移降低每客户获取成本。</p>
+  </details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-tools.html) -->
+<div data-duct-partial="/zh-cn/partials/cta-tools.html"></div>
+
+</main>
+
+<div data-duct-partial="/zh-cn/partials/footer-expanded.html"></div>
+
+<script src="/assets/tool-validation.js"></script>
+<script>
+(function () {
+  var ERR = 'calc-form-error';
+  var fieldIds = ['inp-customers', 'inp-spend', 'inp-arpu', 'inp-lifespan', 'inp-gross-margin'];
+  DuctToolFormError.bindClear(ERR, fieldIds);
+
+  var THRESHOLDS = {
+    ltvcac: [
+      { min: 3,   level: 'green', badge: 'Healthy',     context: 'Above 3:1. Strong unit economics.' },
+      { min: 2,   level: 'amber', badge: 'Marginal',    context: 'Between 2–3:1. Improve CAC or reduce churn.' },
+      { min: 0,   level: 'red',   badge: 'Unsustainable', context: 'Below 2:1. Not viable at scale.' }
+    ],
+    payback: [
+      { max: 12,  level: 'green', badge: 'Healthy',     context: 'Under 12 months to recover CAC.' },
+      { max: 18,  level: 'amber', badge: 'Marginal',    context: '12–18 months. Watch early churn.' },
+      { max: 999, level: 'red',   badge: 'High risk',   context: 'Over 18 months. May not recoup before churn.' }
+    ]
+  };
+
+  function getLevel(key, value) {
+    var ths = THRESHOLDS[key];
+    for (var i = 0; i < ths.length; i++) {
+      var t = ths[i];
+      if (t.max !== undefined && value <= t.max) return t;
+      if (t.min !== undefined && value >= t.min) return t;
+    }
+    return ths[ths.length - 1];
+  }
+
+  function fmtCurrency(v) {
+    return v >= 1000
+      ? (v / 1000).toFixed(1) + 'k'
+      : v.toFixed(0);
+  }
+
+  function makeCard(label, display, level, badge, context) {
+    var card = document.createElement('div');
+    card.className = 'result-card ' + level;
+
+    var lbl = document.createElement('div');
+    lbl.className = 'result-label';
+    lbl.textContent = label;
+
+    var val = document.createElement('div');
+    val.className = 'result-value';
+    val.textContent = display;
+
+    var bdg = document.createElement('span');
+    bdg.className = 'result-badge ' + level;
+    bdg.textContent = badge;
+
+    var ctx = document.createElement('p');
+    ctx.className = 'result-context';
+    ctx.textContent = context;
+
+    card.appendChild(lbl);
+    card.appendChild(val);
+    card.appendChild(bdg);
+    card.appendChild(ctx);
+    return card;
+  }
+
+  function getVal(id) { return parseFloat(document.getElementById(id).value); }
+
+  document.getElementById('calc-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
+    var customers = getVal('inp-customers');
+    var spend     = getVal('inp-spend');
+    var arpu      = getVal('inp-arpu');
+    var lifespan  = getVal('inp-lifespan');
+    var gmRaw     = document.getElementById('inp-gross-margin').value;
+    var gmPct     = gmRaw === '' ? NaN : parseFloat(gmRaw);
+
+    var bad = [];
+    if (isNaN(customers) || customers <= 0) bad.push('inp-customers');
+    if (isNaN(spend) || spend <= 0) bad.push('inp-spend');
+    if (isNaN(arpu) || arpu <= 0) bad.push('inp-arpu');
+    if (isNaN(lifespan) || lifespan <= 0) bad.push('inp-lifespan');
+    if (bad.length) {
+      DuctToolFormError.show(ERR, 'Fill in monthly new customers, spend, ARPU, and lifespan — each must be greater than zero.', bad);
+      document.getElementById(bad[0]).focus();
+      return;
+    }
+    if (!isNaN(gmPct) && gmRaw !== '' && (gmPct <= 0 || gmPct > 100)) {
+      DuctToolFormError.show(ERR, 'Gross margin must be greater than zero and at most 100 when provided.', ['inp-gross-margin']);
+      document.getElementById('inp-gross-margin').focus();
+      return;
+    }
+
+    var cac     = spend / customers;
+    var ltv     = arpu * lifespan;
+    var ltvcac  = ltv / cac;
+    var useContribution = !isNaN(gmPct) && gmRaw !== '' && gmPct > 0 && gmPct <= 100;
+    var monthlyForPayback = useContribution ? arpu * (gmPct / 100) : arpu;
+    var payback = cac / monthlyForPayback;
+
+    var row = document.getElementById('results-row');
+    while (row.firstChild) { row.removeChild(row.firstChild); }
+
+    // CAC — neutral (computed value, no benchmark)
+    row.appendChild(makeCard('CAC', fmtCurrency(cac), 'neutral', 'Calculated', 'Your blended cost to acquire one new customer.'));
+
+    // LTV — neutral (computed value)
+    row.appendChild(makeCard('Customer LTV', fmtCurrency(ltv), 'neutral', 'Calculated', 'Revenue you expect from a typical customer over their lifetime.'));
+
+    // LTV:CAC — benchmarked
+    var r1 = getLevel('ltvcac', ltvcac);
+    row.appendChild(makeCard('LTV:CAC Ratio', ltvcac.toFixed(2) + ':1', r1.level, r1.badge, r1.context));
+
+    // Payback — benchmarked
+    var r2 = getLevel('payback', payback);
+    var paybackCtx = r2.context;
+    if (useContribution) {
+      paybackCtx += ' Contribution payback uses ARPU × ' + gmPct.toFixed(1) + '% gross margin per month.';
+    } else {
+      paybackCtx += ' Revenue payback uses full ARPU per month (enter gross margin % for contribution payback).';
+    }
+    row.appendChild(makeCard('CAC Payback', payback.toFixed(1) + ' mo', r2.level, r2.badge, paybackCtx));
+
+    buildInsight({ ltvcac: ltvcac, payback: payback, useContribution: useContribution });
+
+    var section = document.getElementById('results-section');
+    section.classList.add('visible');
+    document.getElementById('reset-btn').style.display = '';
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  function buildInsight(values) {
+    var panel = document.getElementById('insight-panel');
+    var body  = document.getElementById('insight-body');
+    while (body.firstChild) { body.removeChild(body.firstChild); }
+
+    function addP(text) {
+      var p = document.createElement('p');
+      p.textContent = text;
+      body.appendChild(p);
+    }
+
+    var ltvcac  = values.ltvcac;
+    var payback = values.payback;
+    var useContribution = values.useContribution;
+
+    if (ltvcac >= 3) {
+      addP('Your ' + ltvcac.toFixed(1) + ':1 LTV:CAC is healthy. Watch for compression as CAC rises with scale — ratios typically tighten 20–30% in later growth phases.');
+    } else if (ltvcac >= 2) {
+      addP('Your ' + ltvcac.toFixed(1) + ':1 LTV:CAC leaves limited headroom for rising acquisition costs. Improving retention by 1 percentage point typically moves LTV:CAC more than reducing CAC by the same proportion.');
+    } else {
+      addP('An LTV:CAC of ' + ltvcac.toFixed(1) + ':1 means you may be spending close to what you earn per customer. Sustainable SaaS growth typically requires 3:1 or above. The two levers: reduce CAC or improve retention.');
+    }
+
+    var paybackBasis = useContribution ? 'contribution-based' : 'revenue-based';
+    if (payback <= 12) {
+      addP('Your ' + payback.toFixed(1) + '-month ' + paybackBasis + ' payback is strong — you\'re recovering acquisition spend faster than the SaaS median of 15–18 months. This gives flexibility to reinvest in growth without cash flow pressure.');
+    } else if (payback <= 18) {
+      addP('Your ' + payback.toFixed(1) + '-month ' + paybackBasis + ' payback is within the acceptable range for growth-stage SaaS. Venture-backed companies often target sub-12 months at scale — reducing CAC or increasing ARPU are the direct levers.');
+    } else {
+      addP('An ' + payback.toFixed(1) + '-month ' + paybackBasis + ' payback puts pressure on cash flow and limits how aggressively you can invest in acquisition. A 10% increase in average contract value meaningfully shortens payback at fixed CAC.');
+    }
+
+    addP('CAC payback and LTV:CAC measure unit economics at a point in time. What matters is the trend — whether these ratios are improving or degrading week over week.');
+
+    panel.removeAttribute('hidden');
+  }
+
+  document.getElementById('reset-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, fieldIds);
+    ['inp-customers','inp-spend','inp-arpu','inp-lifespan','inp-gross-margin'].forEach(function (id) {
+      document.getElementById(id).value = '';
+    });
+    var section = document.getElementById('results-section');
+    section.classList.remove('visible');
+    var row = document.getElementById('results-row');
+    while (row.firstChild) { row.removeChild(row.firstChild); }
+    document.getElementById('reset-btn').style.display = 'none';
+    document.getElementById('insight-panel').setAttribute('hidden', '');
+  });
+  DuctToolExample.seed(['inp-customers', 'inp-spend', 'inp-arpu', 'inp-lifespan', 'inp-gross-margin'], 'calc-btn', 'results-section');
+}());
+</script>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { expressExecutionInterest } from '../../lib/api';
 import { trackEvent, AnalyticsEvent } from '../../lib/analytics';
+import { Textarea } from "@/components/ui/textarea";
 
 const DUCT_ORANGE = '#ff5c00';
 const DUCT_NAVY = '#0d0f1a';
@@ -325,13 +326,13 @@ export function ExecutionRequestModal({ open, onClose, services, leadToken, emai
               })}
             </div>
 
-            <textarea
+            <Textarea
               value={note}
               aria-label={t`Anything specific (optional)`}
               onChange={(e) => setNote(e.target.value)}
               rows={2}
               placeholder={t`Anything specific? (optional)`}
-              className="mt-3 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus-visible:border-brand"
+              className="mt-3"
             />
 
             {status === 'error' && (

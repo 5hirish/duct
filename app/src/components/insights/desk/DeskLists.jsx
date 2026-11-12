@@ -14,6 +14,9 @@ import { FileText, FileBarChart2, Table2, Image as ImageIcon, Pin } from "lucide
 import { msg } from "@lingui/core/macro";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Section } from "@/components/ui/page";
 import { artifactLook, pinnedFirst } from "@/lib/desk";
 import { capitalize } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -21,8 +24,8 @@ import { useRelativeTime } from "./useRelativeTime";
 
 // A document says what it is before you read its name.
 const LOOKS = {
-  brief: { Icon: FileText, className: "bg-primary/15 text-primary" },
-  report: { Icon: FileBarChart2, className: "bg-[var(--orange)]/15 text-brand" },
+  brief: { Icon: FileText, className: "bg-primary/15 text-brand" },
+  report: { Icon: FileBarChart2, className: "bg-info/15 text-info" },
   data: { Icon: Table2, className: "bg-success/15 text-success" },
   image: { Icon: ImageIcon, className: "bg-muted text-muted-foreground" },
 };
@@ -49,7 +52,7 @@ function threadState(conv, i18n) {
   if (conv.status === "archived") return { label: i18n._(msg`Closed`), className: "text-muted-foreground" };
   switch (conv.run_status) {
     case "running":
-      return { label: i18n._(msg`Working…`), className: "text-primary animate-pulse" };
+      return { label: i18n._(msg`Working…`), className: "text-brand animate-pulse" };
     case "paused":
       return { label: i18n._(msg`Needs you`), className: "text-warning font-medium" };
     case "failed":
@@ -60,7 +63,7 @@ function threadState(conv, i18n) {
       break;
   }
   if (conv.last_seq === 0) return { label: i18n._(msg`Not started`), className: "text-muted-foreground" };
-  return { label: i18n._(msg`Open`), className: "text-primary" };
+  return { label: i18n._(msg`Open`), className: "text-brand" };
 }
 
 function PinButton({ pinned, onToggle, label }) {
@@ -79,7 +82,9 @@ function PinButton({ pinned, onToggle, label }) {
         "rounded p-0.5 transition-opacity",
         pinned
           ? "text-brand opacity-100"
-          : "text-muted-foreground opacity-0 group-hover:opacity-70 focus-visible:opacity-100"
+          // Revealed by hover, so shown outright where there is none (touch),
+          // the same rule RowMeta follows in the transcript.
+          : "text-muted-foreground opacity-0 group-hover:opacity-70 focus-visible:opacity-100 [@media(hover:none)]:opacity-70"
       )}
     >
       <Pin className="size-3.5" fill={pinned ? "currentColor" : "none"} />
@@ -99,9 +104,25 @@ function Row({ children, onClick }) {
           onClick();
         }
       }}
-      className="group grid cursor-pointer grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-3 border-b border-border/60 py-3 last:border-0 hover:bg-accent/40 @lg:grid-cols-[20px_minmax(0,1fr)_130px_110px_150px]"
+      className="group grid cursor-pointer grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-4 py-3 outline-none transition-colors last:border-0 hover:bg-accent/50 focus-visible:bg-accent/50 @lg:grid-cols-[20px_minmax(0,1fr)_130px_110px_150px]"
     >
       {children}
+    </div>
+  );
+}
+
+// Rows a tab shows before "Show all". The desk is a summary: a project with a
+// year of threads must not make Home a year long (DESIGN.md, "Content
+// awareness": rank and bound).
+const RECENT_LIMIT = 5;
+
+function ShowAll({ total, open, onToggle }) {
+  if (total <= RECENT_LIMIT) return null;
+  return (
+    <div className="pt-2">
+      <Button variant="ghost" size="sm" onClick={onToggle} aria-expanded={open}>
+        {open ? <Trans>Show fewer</Trans> : <Plural value={total} one="Show all #" other="Show all #" />}
+      </Button>
     </div>
   );
 }
@@ -110,26 +131,34 @@ export default function DeskLists({ conversations, artifacts, onPinThread, onPin
   const { t, i18n } = useLingui();
   const router = useRouter();
   const [tab, setTab] = useState("threads");
+  const [allThreads, setAllThreads] = useState(false);
+  const [allDocs, setAllDocs] = useState(false);
 
   const threads = pinnedFirst(conversations, (c) => c.last_active_at || c.created_at);
   const docs = pinnedFirst(artifacts, (a) => a.created_at);
   const ago = useRelativeTime();
 
+  // Nothing yet on either list: say nothing. The composer below is the
+  // invitation, and two empty tabs above it explaining that they are empty
+  // were the noise the 2026-11-02 audit counted.
+  if (threads.length === 0 && docs.length === 0) return null;
+
   return (
+    <Section title={<Trans>Recent</Trans>}>
     <Tabs value={tab} onValueChange={setTab} className="gap-3">
       <TabsList>
-        <TabsTrigger value="threads"><Trans>Threads</Trans></TabsTrigger>
-        <TabsTrigger value="artifacts"><Trans>Artifacts</Trans></TabsTrigger>
+        <TabsTrigger value="threads"><Trans>Conversations</Trans></TabsTrigger>
+        <TabsTrigger value="artifacts"><Trans>Documents</Trans></TabsTrigger>
       </TabsList>
 
       <TabsContent value="threads">
         {threads.length === 0 ? (
-          <p className="py-4 text-xs text-muted-foreground">
-            <Trans>No threads yet. Ask something below and one starts.</Trans>
+          <p className="py-4 text-sm text-muted-foreground">
+            <Trans>No conversations yet.</Trans>
           </p>
         ) : (
-          <div>
-            {threads.map((conv) => {
+          <Card className="gap-0 overflow-hidden p-0">
+            {(allThreads ? threads : threads.slice(0, RECENT_LIMIT)).map((conv) => {
               const state = threadState(conv, i18n);
               const title = conv.title || t`Untitled thread`;
               const messageCount = conv.last_seq;
@@ -158,18 +187,19 @@ export default function DeskLists({ conversations, artifacts, onPinThread, onPin
                 </Row>
               );
             })}
-          </div>
+          </Card>
         )}
+        <ShowAll total={threads.length} open={allThreads} onToggle={() => setAllThreads((v) => !v)} />
       </TabsContent>
 
       <TabsContent value="artifacts">
         {docs.length === 0 ? (
-          <p className="py-4 text-xs text-muted-foreground">
-            <Trans>Nothing written yet. Artifacts a thread produces collect here.</Trans>
+          <p className="py-4 text-sm text-muted-foreground">
+            <Trans>No documents yet.</Trans>
           </p>
         ) : (
-          <div>
-            {docs.map((doc) => {
+          <Card className="gap-0 overflow-hidden p-0">
+            {(allDocs ? docs : docs.slice(0, RECENT_LIMIT)).map((doc) => {
               const look = artifactLook(doc);
               const { Icon, className } = LOOKS[look.tone] || LOOKS.data;
               // Opening a document opens the thread that wrote it, with the
@@ -217,9 +247,11 @@ export default function DeskLists({ conversations, artifacts, onPinThread, onPin
                 </Row>
               );
             })}
-          </div>
+          </Card>
         )}
+        <ShowAll total={docs.length} open={allDocs} onToggle={() => setAllDocs((v) => !v)} />
       </TabsContent>
     </Tabs>
+    </Section>
   );
 }

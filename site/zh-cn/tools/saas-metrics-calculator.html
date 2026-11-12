@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>SaaS 指标基准计算器——Duct 免费工具</title>
+<link rel="canonical" href="https://getduct.ai/zh-cn/tools/saas-metrics-calculator"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/tools/saas-metrics-calculator"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/tools/saas-metrics-calculator"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/tools/saas-metrics-calculator"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/tools/saas-metrics-calculator"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/tools/saas-metrics-calculator"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/tools/saas-metrics-calculator"/>
+<link rel="alternate" hreflang="zh-CN" href="https://getduct.ai/zh-cn/tools/saas-metrics-calculator"/>
+<meta property="og:locale" content="zh_CN"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="免费 SaaS 指标基准计算器。输入 MRR、流失率、CAC、LTV 和试用到付费率，即可获得与 OpenView 和 ChartMogul 平均水平对比的颜色编码分数。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/zh-cn/tools/saas-metrics-calculator"/>
+<meta property="og:title" content="SaaS 指标基准计算器——Duct 免费工具"/>
+<meta property="og:description" content="查看你的流失率、LTV:CAC 和试用到付费率与 SaaS 基准的对比。免费、即时、无需注册。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/tools-saas-metrics-calculator.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="SaaS 指标基准计算器——Duct 免费工具"/>
+<meta name="twitter:description" content="颜色编码的 SaaS 流失率、LTV:CAC、CAC 回报期和试用到付费基准。免费且即时。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/tools-saas-metrics-calculator.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookie，坦白说","We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold.":"我们使用 PostHog 来了解哪些页面促成了注册，以及 Duct 在何处阻碍了你，包括隐藏你输入的所有内容的访问回放。拒绝会关闭 PostHog，Duct 仍能正常运行。Google Analytics 也会统计访问量并设置自己的 Cookie，无论你选择什么。我们不会出售任何数据。","Privacy Policy":"隐私政策","Decline":"拒绝","Accept":"接受","{n} stars on GitHub":"{n} GitHub 星","UTM Builder":"UTM 构建器","SaaS Metrics Benchmark Calculator":"SaaS 指标基准计算器","Weekly Marketing Brief Generator":"每周营销简报生成器","CAC / LTV Calculator":"CAC / LTV 计算器","MRR Growth Rate Calculator":"MRR 增长率计算器","Engagement Rate Calculator":"互动率计算器","CTR Calculator":"CTR 计算器","CPM Calculator":"CPM 计算器","CPC Calculator":"CPC 计算器","CPA Calculator":"CPA 计算器","Marketing ROI Calculator":"营销 ROI 计算器","ROAS Calculator":"ROAS 计算器","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Menu":"菜单","Free Tools":"免费工具","Solutions":"解决方案","Download Duct ↓":"下载 Duct ↓","Language":"语言","Enlarged screenshot":"放大后的截图","Close":"关闭","Fit to screen":"适应屏幕","Zoom in":"放大","Enlarge":"放大","Universal · Apple silicon and Intel":"通用 · Apple 芯片和 Intel","Windows 10 and later":"Windows 10 及更高版本","Runs on any distribution":"可在任何发行版上运行","Debian and Ubuntu":"Debian 和 Ubuntu","Download ↓":"下载 ↓","Download for {label} ↓":"下载适用于 {label} ↓","Example numbers. Change any field and calculate again for yours.":"示例数字。修改任意字段，重新计算你的结果。"};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","inLanguage":"zh-CN","name":"SaaS 指标基准计算器","url":"https://getduct.ai/zh-cn/tools/saas-metrics-calculator","description":"免费计算器，可将你的 SaaS 指标——流失率、LTV:CAC 比率、CAC 回报期和试用到付费转化率——与 OpenView 和 ChartMogul 的行业平均水平进行基准比较。","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Organization","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"zh-CN","mainEntity":[{"@type":"Question","name":"什么是好的 SaaS 流失率？","acceptedAnswer":{"@type":"Answer","text":"SaaS 的良好每月流失率低于 2%。2–4% 之间是平均水平，需要关注。每月流失率高于 4% 是关键——按此速度，你每年将损失近一半的收入基础。基准因阶段而异：早期 SaaS 通常比成熟产品有更高的流失率。"}},{"@type":"Question","name":"如何计算 SaaS 业务的 LTV？","acceptedAnswer":{"@type":"Answer","text":"LTV = 每客户平均月收入 ÷ 月流失率。例如，如果 ARPU 为 100 欧元，月流失率为 2%，则 LTV = 100 欧元 ÷ 0.02 = 5,000 欧元。毛利率调整版本：LTV = (ARPU × 毛利率) ÷ 流失率。除非你提供自己的 LTV，否则此计算器使用简单版本。"}},{"@type":"Question","name":"健康的 LTV:CAC 比率是多少？","acceptedAnswer":{"@type":"Answer","text":"SaaS 的健康 LTV:CAC 比率高于 3:1——每花费 1 欧元用于获客，你就能收回 3 欧元的生命周期价值。2–3:1 的比率可以覆盖成本，但无法建立强大的单位经济效益。低于 2:1 通常意味着该模型无法大规模可行。高于 5:1 通常表明对增长投入不足。"}},{"@type":"Question","name":"我应该多久跟踪一次 SaaS 指标？","acceptedAnswer":{"@type":"Answer","text":"每月跟踪 MRR、流失率和新客户。LTV 和 LTV:CAC 变化缓慢，因此按季度跟踪更有意义。每周涵盖 4-5 个最重要指标的简报，总是优于每月一次的电子表格数据倾倒。"}},{"@type":"Question","name":"此计算器使用哪些数据源？","acceptedAnswer":{"@type":"Answer","text":"基准数据来自 OpenView Partners 的 SaaS Benchmarks Report (2023–2024) 和 ChartMogul 的 SaaS Benchmarks Report。LTV:CAC 阈值遵循 David Skok 在 For Entrepreneurs 的 SaaS 指标框架中广泛引用的 3:1 标准。"}}]}
+</script>
+<style>
+  .skip-link {
+    position: absolute; top: -100%; left: 16px; z-index: 300;
+    padding: 10px 20px; background: var(--navy); color: #fff;
+    font-size: 14px; font-weight: 500; border-radius: var(--r);
+    text-decoration: none; transition: top .15s;
+  }
+  .skip-link:focus { top: 16px; }
+
+  :root {
+    --orange: #2563EB;
+    --orange-h: #1D4ED8;
+  }
+  .btn-orange:hover { box-shadow: 0 8px 24px rgba(37,99,235,.28); }
+
+  .tool-hero {
+    padding: 80px 24px 48px;
+    text-align: center;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .tool-hero h1 {
+    font-family: var(--serif);
+    font-size: clamp(32px, 5vw, 52px);
+    color: var(--navy);
+    margin: 16px 0 16px;
+    line-height: 1.15;
+  }
+  .tool-hero h1 em { color: var(--orange); font-style: italic; }
+  .tool-hero p { font-size: 17px; color: var(--navy-3); font-weight: 300; line-height: 1.6; margin: 0; }
+
+  .tool-wrap { max-width: 820px; margin: 0 auto 80px; padding: 0 24px; }
+  .tool-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    box-shadow: 0 4px 32px rgba(0,0,0,.06);
+  }
+  .tool-inputs {
+    padding: 36px 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px 32px;
+  }
+  @media (max-width: 600px) { .tool-inputs { grid-template-columns: 1fr; padding: 24px; } }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 13px; font-weight: 500; color: var(--navy); letter-spacing: .01em; }
+  .field .field-hint { font-size: 11px; color: var(--navy-3); margin-top: -2px; }
+  .field input {
+    padding: 11px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--r);
+    font-size: 15px;
+    font-family: var(--sans);
+    color: var(--navy);
+    background: var(--white);
+    transition: border-color .15s;
+    outline: none;
+    -moz-appearance: textfield;
+  }
+  .field input::-webkit-outer-spin-button,
+  .field input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .field input:focus { border-color: var(--orange); }
+  .field input::placeholder { color: var(--navy-3); opacity: .6; }
+
+  .tool-action { padding: 0 40px 36px; display: flex; align-items: center; gap: 16px; }
+  @media (max-width: 600px) { .tool-action { padding: 0 24px 24px; flex-direction: column; align-items: stretch; } }
+
+  .tool-results { border-top: 1px solid var(--border); padding: 36px 40px; display: none; }
+  @media (max-width: 600px) { .tool-results { padding: 24px; } }
+  .tool-results.visible { display: block; }
+
+  .results-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 28px; }
+  @media (max-width: 600px) { .results-grid { grid-template-columns: 1fr; } }
+
+  .result-card { border: 1.5px solid var(--border); border-radius: var(--r); padding: 20px; }
+  .result-card.green { border-color: #22c55e; background: #f0fdf4; }
+  .result-card.amber { border-color: #f59e0b; background: #fffbeb; }
+  .result-card.red   { border-color: #ef4444; background: #fef2f2; }
+
+  .result-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--navy-3); margin-bottom: 6px; }
+  .result-value { font-size: 28px; font-family: var(--serif); color: var(--navy); font-weight: 400; margin-bottom: 4px; line-height: 1.1; }
+
+  .result-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12px; font-weight: 500; padding: 3px 10px;
+    border-radius: 100px; margin-bottom: 8px;
+  }
+  .result-badge.green { background: #dcfce7; color: #15803d; }
+  .result-badge.amber { background: #fef3c7; color: #92400e; }
+  .result-badge.red   { background: #fee2e2; color: #991b1b; }
+
+  .result-context { font-size: 13px; color: var(--navy-3); line-height: 1.5; margin: 0; }
+  .result-source { font-size: 11px; color: var(--navy-3); margin-top: 6px; }
+
+  .results-source { font-size: 11px; color: var(--navy-3); margin-top: 4px; }
+  .results-source a { color: var(--orange); text-decoration: underline; }
+
+  .tool-cta {
+    margin-top: 28px; background: var(--navy); border-radius: var(--r);
+    padding: 28px 32px; display: flex; align-items: center;
+    justify-content: space-between; gap: 24px; flex-wrap: wrap;
+  }
+  .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
+  .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
+
+  .about-section { max-width: 720px; margin: 0 auto 80px; padding: 0 24px; }
+  .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
+  .about-section h2 em { color: var(--orange); font-style: italic; }
+  .about-section p, .about-section li { font-size: 15px; color: var(--navy-3); line-height: 1.75; margin-bottom: 12px; }
+  .about-section ul { padding-left: 20px; }
+  .about-section li { margin-bottom: 6px; }
+  .about-section strong { color: var(--navy); }
+
+  .insight-panel {
+    margin-top: 24px;
+    background: #eff6ff;
+    border: 1px solid rgba(37,99,235,.18);
+    border-left: 3px solid #2563EB;
+    border-radius: var(--r);
+    padding: 20px 24px;
+  }
+  .insight-label {
+    font-size: 10px; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; color: #2563EB; margin-bottom: 10px;
+  }
+  .insight-panel p { font-size: 14px; color: var(--navy-3); line-height: 1.7; margin: 0 0 8px; }
+  .insight-panel p:last-of-type { margin-bottom: 0; }
+  .insight-links { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 10px; }
+  .insight-link {
+    font-size: 13px; font-weight: 500; color: #2563EB;
+    text-decoration: none; border: 1px solid rgba(37,99,235,.25);
+    padding: 6px 12px; border-radius: var(--pill);
+    background: var(--white); transition: background .15s;
+  }
+  .insight-link:hover { background: #dbeafe; }
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"zh-CN","itemListElement":[{"@type":"ListItem","position":1,"name":"主页","item":"https://getduct.ai/zh-cn/"},{"@type":"ListItem","position":2,"name":"免费工具","item":"https://getduct.ai/zh-cn/tools/"},{"@type":"ListItem","position":3,"name":"SaaS 指标基准计算器","item":"https://getduct.ai/zh-cn/tools/saas-metrics-calculator"}]}
+</script>
+</head>
+<body>
+
+<!-- EXPERIMENT: Free tool as lead magnet — does a benchmark calculator with immediate ungated results drive higher-intent beta signups than a standard landing page CTA? -->
+
+<a href="#main-content" class="skip-link">跳到内容</a>
+
+<div data-duct-partial="/zh-cn/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<div class="tool-hero">
+  <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> 免费工具 · 无需注册</div>
+  <h1>SaaS 指标<em>基准</em>计算器</h1>
+  <p>你的 SaaS 决策的强度取决于你的基线指标。清晰地基准化流失率、LTV:CAC 和试用转化率——颜色编码、决策就绪、无电子表格延迟。</p>
+</div>
+
+<div class="tool-wrap">
+  <div class="tool-card" role="region" aria-label="SaaS 指标计算器">
+
+    <div class="tool-inputs">
+      <div class="field">
+        <label for="inp-mrr">月经常性收入 (MRR)</label>
+        <span class="field-hint">你当前的 MRR（美元或欧元）</span>
+        <input type="number" id="inp-mrr" placeholder="e.g. 50000" min="0" inputmode="numeric" aria-required="true"/>
+      </div>
+      <div class="field">
+        <label for="inp-churn">月流失率 (%)</label>
+        <span class="field-hint">每月流失的客户或收入百分比</span>
+        <input type="number" id="inp-churn" placeholder="e.g. 2.5" min="0" max="100" step="0.1" inputmode="decimal" aria-required="true"/>
+      </div>
+      <div class="field">
+        <label for="inp-cac">客户获取成本 (CAC)</label>
+        <span class="field-hint">总销售额 + 营销支出 ÷ 新客户</span>
+        <input type="number" id="inp-cac" placeholder="e.g. 800" min="0" inputmode="numeric" aria-required="true"/>
+      </div>
+      <div class="field">
+        <label for="inp-arpu">每客户平均月收入</label>
+        <span class="field-hint">如果下方留空，则用于计算 LTV</span>
+        <input type="number" id="inp-arpu" placeholder="e.g. 120" min="0" inputmode="numeric"/>
+      </div>
+      <div class="field">
+        <label for="inp-gross-margin">毛利率 % <span style="font-weight:400;color:var(--navy-3)">(可选)</span></label>
+        <span class="field-hint">留空以计算收入回报期 (CAC ÷ ARPU)。输入毛利率以计算贡献回报期：CAC ÷ (ARPU × 毛利率)。</span>
+        <input type="number" id="inp-gross-margin" placeholder="e.g. 75" min="0" max="100" step="0.1" inputmode="decimal"/>
+      </div>
+      <div class="field">
+        <label for="inp-ltv">LTV——可选，自动计算</label>
+        <span class="field-hint">留空以从 ARPU ÷ 流失率计算</span>
+        <input type="number" id="inp-ltv" placeholder="自动计算" min="0" inputmode="numeric"/>
+      </div>
+      <div class="field">
+        <label for="inp-trial">试用到付费转化率 (%)</label>
+        <span class="field-hint">试用用户转化为付费用户的百分比</span>
+        <input type="number" id="inp-trial" placeholder="e.g. 22" min="0" max="100" step="0.1" inputmode="decimal"/>
+      </div>
+    </div>
+
+    <div class="tool-action">
+      <button class="btn btn-orange btn-lg" id="calc-btn" aria-controls="results-section">
+        计算基准 →
+      </button>
+      <button class="btn btn-ghost" id="reset-btn" style="display:none">
+        重置
+      </button>
+    </div>
+
+    <div id="calc-form-error" class="tool-form-error" role="alert" aria-live="assertive"></div>
+
+    <div class="tool-results" id="results-section" role="region" aria-label="基准结果" aria-live="polite">
+      <p style="font-size:13px;font-weight:500;color:var(--navy-3);margin:0 0 20px;letter-spacing:.02em;text-transform:uppercase">你的结果</p>
+      <div class="results-grid" id="results-grid"></div>
+      <div class="tool-cta">
+        <div class="tool-cta-text">
+          <p>今天，分数与中位数对比。问题是上周以来有什么变化。</p>
+          <p>Duct 读取你的广告、分析和收入工具数据，回答这个问题，并提出变更建议。你批准即可。</p>
+        </div>
+        <a href="/zh-cn/download" class="btn btn-orange" data-duct-download>下载 Duct ↓</a>
+      </div>
+<div id="insight-panel" class="insight-panel" hidden aria-live="polite">
+        <p class="insight-label">这意味着什么</p>
+        <div id="insight-body"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<section class="duct-bridge reveal" aria-label="关于 Duct">
+  <div class="duct-bridge-inner">
+    <div class="duct-bridge-text">
+      <p class="duct-bridge-headline">基准分数告诉你当前状况。它们不会告诉你本周发生了什么变化。</p>
+      <p class="duct-bridge-body">Duct 每次都会读取你的工具中的流失率、CAC 和转化率，说明变化的原因，并在问题恶化前提出解决方案。</p>
+      <a href="/zh-cn/" class="duct-bridge-link">Duct 工作原理 →</a>
+    </div>
+    <figure class="shot-frame duct-bridge-shot">
+      <img src="/assets/media/insights-session.webp" srcset="/assets/media/insights-session-768.webp 768w, /assets/media/insights-session-1536.webp 1536w, /assets/media/insights-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="一次洞察会话：当被问及 ROAS 上升但注册量下降的原因时，智能体将广告、分析和收入数据结合起来阅读，提出一个待批准的变更集在左侧，并在右侧撰写简报"/>
+      <figcaption>询问为什么 ROAS 上升但注册量下降。Duct 会将广告、分析和收入数据结合起来阅读，指出正在流失的群体，并提出变更。你批准即可。</figcaption>
+    </figure>
+  </div>
+</section>
+
+<div class="about-section reveal">
+  <h2>关于此<em>计算器</em></h2>
+  <p>此工具根据 MRR 范围，将你的核心 SaaS 健康指标与行业平均水平进行基准比较。输入你的数据，查看每个指标的颜色编码分数——绿色表示高于中位数，琥珀色表示有改进空间，红色表示正在造成复合损失。</p>
+
+  <h2 style="margin-top:40px">每个指标的<em>含义</em></h2>
+  <p><strong>每月流失率</strong>是你每月取消的客户群（或收入）的百分比。它是 SaaS 中最重要的单一指标，因为它决定了你的 LTV 上限。如果每月流失率为 4%，你每年将损失约 40% 的客户群——新的增长只是填补了漏水的桶。</p>
+  <p><strong>LTV:CAC 比率</strong>告诉你你的增长效率如何。你每花费一个单位获取客户，在其生命周期内能收回多少个单位？低于 3:1，你没有建立持久的经济效益。高于 5:1 可能表明对增长投入不足。</p>
+  <p><strong>CAC 回收期</strong>是指通过每月收入（收入回收）或通过毛利润（如果你输入毛利率百分比）（贡献回收）收回获客成本所需的月数。</p>
+  <p><strong>试用转付费转化率</strong>衡量你的漏斗顶部兴趣有多少转化为真实客户。低于 15% 通常表示入职或产品市场契合度问题。高于 25% 对大多数 B2B SaaS 来说是健康的。</p>
+
+  <h2 style="margin-top:40px">局限性</h2>
+  <ul>
+    <li>基准基于行业平均水平，可能无法反映你的特定垂直领域或市场推广策略。</li>
+    <li>LTV 自动计算假设流失率恒定，不考虑扩展收入。回报期可使用可选毛利率来计算基于贡献的 CAC 回收月数。</li>
+    <li>试用到付费基准因产品主导和销售主导模式而异。</li>
+    <li>所有计算都在你的浏览器中进行——不会发送或存储任何数据。</li>
+  </ul>
+</div>
+
+<section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
+  <div class="related-tools-banner-inner">
+    <p class="tag">也是免费的</p>
+    <h2 id="related-tools-heading">探索相关 <em>工具</em></h2>
+    <p class="related-tools-banner-desc">根据基准压力测试流失率和 LTV，模拟 CAC 回报期，或构建每周简报——无需账户，数据不会离开你的设备。</p>
+    <div class="insight-links related-tools" data-related-tools data-current-tool="saas-metrics-calculator" data-related-limit="3"></div>
+  </div>
+</section>
+
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+  <p class="tag">常见问题</p>
+  <h2>常见<em>问题</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.1s">
+  <details class="faq-item">
+    <summary class="faq-q">什么是好的 SaaS 流失率？</summary>
+    <p class="faq-a">SaaS 的良好每月流失率低于 2%。2–4% 之间是平均水平，需要关注。每月流失率高于 4% 是关键——按此速度，你每年将损失近一半的收入基础。基准因阶段而异：早期 SaaS 通常比成熟产品有更高的流失率。</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">如何计算 SaaS 业务的 LTV？</summary>
+    <p class="faq-a">LTV = 每客户平均月收入 ÷ 月流失率。例如，如果 ARPU 为 100 欧元，月流失率为 2%，则 LTV = 100 欧元 ÷ 0.02 = 5,000 欧元。毛利率调整版本：LTV = (ARPU × 毛利率) ÷ 流失率。除非你提供自己的 LTV，否则此计算器使用简单版本。</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">健康的 LTV:CAC 比率是多少？</summary>
+    <p class="faq-a">SaaS 的健康 LTV:CAC 比率高于 3:1——每花费 1 欧元用于获客，你就能收回 3 欧元的生命周期价值。2–3:1 的比率可以覆盖成本，但无法建立强大的单位经济效益。低于 2:1 通常意味着该模型无法大规模可行。高于 5:1 通常表明对增长投入不足。</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">我应该多久跟踪一次 SaaS 指标？</summary>
+    <p class="faq-a">每月跟踪 MRR、流失率和新客户。LTV 和 LTV:CAC 变化缓慢，因此按季度跟踪更有意义。每周涵盖 4-5 个最重要指标的简报，总是优于每月一次的电子表格数据倾倒。</p>
+  </details>
+  <details class="faq-item">
+    <summary class="faq-q">此计算器使用哪些数据源？</summary>
+    <p class="faq-a">基准数据来自 OpenView Partners 的 SaaS Benchmarks Report (2023–2024) 和 ChartMogul 的 SaaS Benchmarks Report。LTV:CAC 阈值遵循 David Skok 在 For Entrepreneurs 的 SaaS 指标框架中广泛引用的 3:1 标准。</p>
+  </details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-tools.html) -->
+<div data-duct-partial="/zh-cn/partials/cta-tools.html"></div>
+
+</main>
+
+<div data-duct-partial="/zh-cn/partials/footer-expanded.html"></div>
+
+<script src="/assets/tool-validation.js"></script>
+<script>
+(function () {
+  var BENCHMARKS = {
+    churn: {
+      label: 'Monthly Churn Rate',
+      thresholds: [
+        { max: 2,   level: 'green', badge: 'Good',       context: "Below 2% monthly churn. You're in the top tier — focus on reducing it further as you scale.", source: 'Median: 2–3% · ChartMogul 2024' },
+        { max: 4,   level: 'amber', badge: 'Needs work', context: "Between 2–4% monthly churn. Industry average. At this rate you're replacing ~30–40% of your base per year.", source: 'Median: 2–3% · ChartMogul 2024' },
+        { max: 999, level: 'red',   badge: 'Critical',   context: "Above 4% monthly churn. You're losing nearly half your revenue base annually. This is the number to fix first.", source: 'Median: 2–3% · ChartMogul 2024' }
+      ],
+      format: function (v) { return v.toFixed(1) + '%'; }
+    },
+    ltvcac: {
+      label: 'LTV:CAC Ratio',
+      thresholds: [
+        { min: 3,   level: 'green', badge: 'Good',       context: "Above 3:1. Strong unit economics. You recover more than 3× your acquisition cost over a customer's lifetime.", source: 'Target: >3:1 · OpenView / David Skok' },
+        { min: 2,   level: 'amber', badge: 'Needs work', context: "Between 2–3:1. Marginal. You're covering costs but growth is expensive relative to what customers return.", source: 'Target: >3:1 · OpenView / David Skok' },
+        { min: 0,   level: 'red',   badge: 'Critical',   context: "Below 2:1. Unsustainable. Fix churn or CAC before scaling acquisition spend.", source: 'Target: >3:1 · OpenView / David Skok' }
+      ],
+      format: function (v) { return v.toFixed(2) + ':1'; }
+    },
+    payback: {
+      label: 'CAC Payback Period',
+      thresholds: [
+        { max: 12,  level: 'green', badge: 'Good',       context: "Under 12 months to recover acquisition cost. Healthy — you break even before most churn risk materialises.", source: 'Target: <12 months · OpenView 2024' },
+        { max: 18,  level: 'amber', badge: 'Needs work', context: "12–18 months payback. Manageable but you're exposed if churn spikes in the first year.", source: 'Target: <12 months · OpenView 2024' },
+        { max: 999, level: 'red',   badge: 'Critical',   context: "Over 18 months payback. High-risk — customers may churn before you recoup acquisition cost.", source: 'Target: <12 months · OpenView 2024' }
+      ],
+      format: function (v) { return v.toFixed(1) + ' months'; }
+    },
+    trial: {
+      label: 'Trial-to-Paid Rate',
+      thresholds: [
+        { min: 25,  level: 'green', badge: 'Good',       context: "Above 25% trial-to-paid. Strong onboarding and product-market fit signal.", source: 'Median: 15–25% · OpenView SaaS benchmarks' },
+        { min: 15,  level: 'amber', badge: 'Needs work', context: "15–25% trial-to-paid. Average for B2B SaaS. Onboarding improvements typically move this needle fastest.", source: 'Median: 15–25% · OpenView SaaS benchmarks' },
+        { min: 0,   level: 'red',   badge: 'Critical',   context: "Below 15% trial-to-paid. Most trial users are leaving — usually a product fit or onboarding problem.", source: 'Median: 15–25% · OpenView SaaS benchmarks' }
+      ],
+      format: function (v) { return v.toFixed(1) + '%'; }
+    }
+  };
+
+  function getThreshold(key, value) {
+    var ths = BENCHMARKS[key].thresholds;
+    for (var i = 0; i < ths.length; i++) {
+      var t = ths[i];
+      if (t.max !== undefined && value <= t.max) return t;
+      if (t.min !== undefined && value >= t.min) return t;
+    }
+    return ths[ths.length - 1];
+  }
+
+  function makeCard(key, value, contextExtra) {
+    var m = BENCHMARKS[key];
+    var t = getThreshold(key, value);
+
+    var card = document.createElement('div');
+    card.className = 'result-card ' + t.level;
+
+    var label = document.createElement('div');
+    label.className = 'result-label';
+    label.textContent = m.label;
+
+    var val = document.createElement('div');
+    val.className = 'result-value';
+    val.textContent = m.format(value);
+
+    var badge = document.createElement('span');
+    badge.className = 'result-badge ' + t.level;
+    badge.textContent = t.badge;
+
+    var ctx = document.createElement('p');
+    ctx.className = 'result-context';
+    ctx.textContent = contextExtra ? t.context + ' ' + contextExtra : t.context;
+
+    var src = document.createElement('p');
+    src.className = 'result-source';
+    src.textContent = t.source;
+
+    card.appendChild(label);
+    card.appendChild(val);
+    card.appendChild(badge);
+    card.appendChild(ctx);
+    card.appendChild(src);
+    return card;
+  }
+
+  function getVal(id) {
+    return parseFloat(document.getElementById(id).value);
+  }
+
+  function buildInsight(values) {
+    var panel = document.getElementById('insight-panel');
+    var body  = document.getElementById('insight-body');
+    while (body.firstChild) { body.removeChild(body.firstChild); }
+
+    function addP(text) {
+      var p = document.createElement('p');
+      p.textContent = text;
+      body.appendChild(p);
+    }
+
+    var churn   = values.churn;
+    var ltvcac  = values.ltvcac;
+    var trial   = values.trial;
+
+    var churnDec = churn / 100;
+    var annualRetentionPct = Math.round(Math.pow(1 - churnDec, 12) * 100);
+    var annualNetChurnPct = Math.round(100 - annualRetentionPct);
+    var halfLifeMonths = churnDec > 0 && churnDec < 1
+      ? Math.round(Math.log(0.5) / Math.log(1 - churnDec))
+      : null;
+
+    if (churn < 2) {
+      addP('Your ' + churn.toFixed(1) + '% monthly churn is top-quartile for B2B SaaS. With compounding churn, about ' + annualRetentionPct + '% of a starting cohort remains after 12 months — strong retention gives you leverage to invest more confidently in acquisition.');
+    } else if (churn <= 4) {
+      addP('Your ' + churn.toFixed(1) + '% monthly churn is near the B2B SaaS median. At this compound rate, roughly ' + annualNetChurnPct + '% of a starting cohort churns out over a full year. Churn and activation are almost always correlated — improving onboarding is typically the highest-leverage fix before scaling spend.');
+    } else {
+      var halfLifePhrase = halfLifeMonths != null
+        ? ' cohort retention halves about every ' + halfLifeMonths + ' months.'
+        : '';
+      addP('At ' + churn.toFixed(1) + '% monthly churn, sustainable acquisition economics are difficult.' + halfLifePhrase + ' Diagnosing fit, onboarding, or product gaps is worth prioritising before increasing spend.');
+    }
+
+    if (!isNaN(ltvcac)) {
+      if (ltvcac >= 3) {
+        addP('Your ' + ltvcac.toFixed(1) + ':1 LTV:CAC is healthy. Watch for compression as CAC rises with scale — ratios typically tighten 20–30% in later growth phases.');
+      } else if (ltvcac >= 2) {
+        addP('Your ' + ltvcac.toFixed(1) + ':1 LTV:CAC leaves limited headroom for rising acquisition costs. Improving retention by 1 percentage point typically moves LTV:CAC more than reducing CAC by the same proportion.');
+      } else {
+        addP('An LTV:CAC of ' + ltvcac.toFixed(1) + ':1 means you may be spending close to what you earn per customer. Sustainable SaaS growth typically requires 3:1 or above. The two levers: reduce CAC or improve retention.');
+      }
+    }
+
+    if (!isNaN(trial)) {
+      if (trial > 25) {
+        addP('Your ' + trial.toFixed(1) + '% trial-to-paid rate is above the SaaS median — a strong signal that onboarding and trial experience are working.');
+      } else if (trial >= 15) {
+        addP('Your ' + trial.toFixed(1) + '% trial-to-paid rate is within the typical B2B SaaS range. Each 5-point improvement here compounds quickly and often outperforms equivalent CAC reduction.');
+      } else {
+        addP('A ' + trial.toFixed(1) + '% trial-to-paid rate is worth investigating before scaling acquisition. Common causes: long time-to-value, trial friction, or targeting-ICP misalignment.');
+      }
+    }
+
+    panel.removeAttribute('hidden');
+  }
+
+  var ERR = 'calc-form-error';
+  var requiredFields = ['inp-churn', 'inp-cac'];
+  var clearFields = ['inp-churn', 'inp-cac', 'inp-arpu', 'inp-gross-margin', 'inp-ltv', 'inp-trial', 'inp-mrr'];
+  DuctToolFormError.bindClear(ERR, clearFields);
+
+  document.getElementById('calc-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, clearFields);
+
+    var churn = getVal('inp-churn');
+    var cac   = getVal('inp-cac');
+    var arpu  = getVal('inp-arpu');
+    var ltv   = getVal('inp-ltv');
+    var trial = getVal('inp-trial');
+    var gmRaw = document.getElementById('inp-gross-margin').value;
+    var gmPct = gmRaw === '' ? NaN : parseFloat(gmRaw);
+
+    var churnBad = isNaN(churn) || churn <= 0;
+    var cacBad = isNaN(cac) || cac <= 0;
+
+    if (churnBad || cacBad) {
+      if (churnBad && cacBad) {
+        DuctToolFormError.show(ERR, 'Enter your Monthly Churn Rate and CAC above — both must be greater than zero.', ['inp-churn', 'inp-cac']);
+      } else if (churnBad) {
+        DuctToolFormError.show(ERR, 'Enter a Monthly Churn Rate greater than zero.', ['inp-churn']);
+      } else {
+        DuctToolFormError.show(ERR, 'Enter a Customer Acquisition Cost (CAC) greater than zero.', ['inp-cac']);
+      }
+      document.getElementById(churnBad ? 'inp-churn' : 'inp-cac').focus();
+      return;
+    }
+
+    if (!isNaN(gmPct) && gmRaw !== '' && (gmPct <= 0 || gmPct > 100)) {
+      DuctToolFormError.show(ERR, 'Gross margin must be greater than zero and at most 100 when provided.', ['inp-gross-margin']);
+      document.getElementById('inp-gross-margin').focus();
+      return;
+    }
+
+    if (isNaN(ltv) && !isNaN(arpu) && arpu > 0) {
+      ltv = arpu / (churn / 100);
+    }
+
+    var grid = document.getElementById('results-grid');
+    while (grid.firstChild) { grid.removeChild(grid.firstChild); }
+
+    grid.appendChild(makeCard('churn', churn));
+
+    if (!isNaN(ltv) && ltv > 0) {
+      grid.appendChild(makeCard('ltvcac', ltv / cac));
+      if (!isNaN(arpu) && arpu > 0) {
+        var useContribution = !isNaN(gmPct) && gmRaw !== '' && gmPct > 0 && gmPct <= 100;
+        var monthlyForPayback = useContribution ? arpu * (gmPct / 100) : arpu;
+        var paybackVal = cac / monthlyForPayback;
+        var payExtra = useContribution
+          ? 'Contribution-based payback uses ARPU × ' + gmPct.toFixed(1) + '% gross margin per month.'
+          : 'Revenue-based payback uses full ARPU; add gross margin % for contribution payback.';
+        grid.appendChild(makeCard('payback', paybackVal, payExtra));
+      }
+    }
+
+    if (!isNaN(trial) && trial > 0) {
+      grid.appendChild(makeCard('trial', trial));
+    }
+
+    var ltvcac = (!isNaN(ltv) && ltv > 0) ? ltv / cac : NaN;
+    buildInsight({ churn: churn, ltvcac: ltvcac, trial: (!isNaN(trial) && trial > 0) ? trial : NaN });
+
+    var section = document.getElementById('results-section');
+    section.classList.add('visible');
+    document.getElementById('reset-btn').style.display = '';
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  document.getElementById('reset-btn').addEventListener('click', function () {
+    DuctToolFormError.clear(ERR, clearFields);
+    ['inp-mrr','inp-churn','inp-cac','inp-arpu','inp-gross-margin','inp-ltv','inp-trial'].forEach(function (id) {
+      document.getElementById(id).value = '';
+    });
+    var section = document.getElementById('results-section');
+    section.classList.remove('visible');
+    var grid = document.getElementById('results-grid');
+    while (grid.firstChild) { grid.removeChild(grid.firstChild); }
+    document.getElementById('reset-btn').style.display = 'none';
+    document.getElementById('insight-panel').setAttribute('hidden', '');
+  });
+  DuctToolExample.seed(['inp-mrr', 'inp-churn', 'inp-cac', 'inp-arpu', 'inp-gross-margin', 'inp-ltv', 'inp-trial'], 'calc-btn', 'results-section');
+}());
+</script>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

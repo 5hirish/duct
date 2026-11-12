@@ -4,12 +4,14 @@
 
 # Duct
 
-**See the whole picture. Fix it in the same moment.**
+<p align="center"><b>English</b> · <a href="README.es.md">Español</a> · <a href="README.zh-CN.md">简体中文</a></p>
 
-Duct is an open-source AI marketing agent for product and growth teams. It connects
-Google Ads, GA4, Search Console, Mixpanel, Stripe and seven more, reads across
-all of them at once, remembers what it learns about your business, and, with
-your approval, changes things in those tools for you. The approve tool does
+**Open-source AI marketing agent: a growth analyst with every login.**
+
+Duct is for product and growth teams. It connects Google Ads, GA4, Search
+Console, Mixpanel, Stripe and seven more, reads across all of them at once the
+way an analyst holding every login would, remembers what it learns about your
+business, and, with your approval, changes things in those tools for you. The approve tool does
 not exist in the list the model can call; you press the button.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
@@ -65,6 +67,22 @@ CRM, calls and product usage), E-commerce & DTC (LTV-versus-ROAS blind spots
 across Meta Ads, Stripe and RevenueCat), and Customer Success (at-risk accounts
 from NPS, usage and support signals). Follow along in
 [Issues](https://github.com/5hirish/duct/issues) and at [getduct.ai](https://getduct.ai).
+
+## 🧩 For your coding agent
+
+Ask Claude Code, Codex or Cursor "is my site ready to launch?" and it reads
+your live pages and the repository behind them, checks what the page promises
+against what the code does, scores the launch out of 100 and gives you three
+ranked fixes, each as a diff it applies only when you say yes. No Duct account,
+nothing sent to us.
+
+| Agent | Install |
+|---|---|
+| Claude Code | `/plugin marketplace add 5hirish/duct`, then `/plugin install duct@duct` |
+| Codex | `codex plugin marketplace add 5hirish/duct`, then install Duct from `/plugins` |
+| Cursor, Copilot, OpenCode and the rest | `npx skills add 5hirish/duct` |
+
+What it checks, and a real run on our own site: [getduct.ai/skills](https://getduct.ai/skills).
 
 ## 🔑 Use your ChatGPT subscription
 

@@ -23,8 +23,6 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { FolderKanban } from "lucide-react";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,12 +36,14 @@ import {
 } from "@/components/ui/select";
 import {
   LANGUAGES,
+  NAME_FILLED_KEY,
   NOTES_MAX_CHARS,
   PROFILE_DEFAULTS,
   ROLE_OPTIONS,
   WRITING_PRESETS,
   detectTimezone,
   fetchProfile,
+  firstName,
   listTimezones,
   loadProfile,
   migrateLegacyPreferences,
@@ -52,18 +52,23 @@ import {
   zoneOffsetLabel,
   zoneRegion,
 } from "@/lib/userProfile";
+import { useAuth } from "@/lib/auth";
 import { hasAuthToken } from "@/lib/authFetch";
 import VoiceSample from "@/components/profile/VoiceSample";
 import LanguageMenu from "@/components/LanguageMenu";
+import { Page, PageHeader } from "@/components/ui/page";
+import { Textarea } from "@/components/ui/textarea";
 
 /** Long enough that a typist is not interrupted, short enough to feel saved. */
 const SAVE_DEBOUNCE_MS = 600;
 
-/** Radix cannot hold "" as a select value; this is "not saying". */
-const NO_ROLE = "none";
-
 /** Same constraint for the timezone: "" is stored, "utc" is what Radix holds. */
 const UTC_VALUE = "utc";
+
+/** One picker entry: the city, and how far its clock is from UTC today. */
+function zoneEntry(zone) {
+  return { zone, city: zoneLabel(zone), offset: zoneOffsetLabel(zone) };
+}
 
 /**
  * The zone list, grouped by region and built once per mount.
@@ -84,16 +89,33 @@ function groupedZones(pinned = "") {
     if (zone === pinned) continue;
     const region = zoneRegion(zone);
     if (!groups.has(region)) groups.set(region, []);
-    groups.get(region).push(zone);
+    groups.get(region).push(zoneEntry(zone));
   }
   return [...groups.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([region, zones]) => [region, zones.sort((a, b) => zoneLabel(a).localeCompare(zoneLabel(b)))]);
+    .map(([region, zones]) => [region, zones.sort((a, b) => a.city.localeCompare(b.city))]);
+}
+
+/**
+ * A zone as the picker and its closed trigger show it: "Madrid UTC+1". The
+ * offset is muted and after the city, never before it: Radix type-ahead reads
+ * from the start of the text, and three letters of a city is how anyone
+ * finds theirs among four hundred.
+ */
+function ZoneItem({ entry }) {
+  return (
+    <SelectItem value={entry.zone} textValue={entry.city}>
+      {entry.city}
+      {entry.offset && <span className="font-normal tabular-nums text-muted-foreground">{entry.offset}</span>}
+    </SelectItem>
+  );
 }
 
 export default function ProfilePage() {
   const { t, i18n } = useLingui();
+  const { user } = useAuth();
   const [profile, setProfile] = useState(() => loadProfile());
+  const [loaded, setLoaded] = useState(false);
   const [saved, setSaved] = useState("");
   const [offline, setOffline] = useState(false);
   // Read after mount, never during render: `hasAuthToken` reads localStorage,
@@ -113,6 +135,7 @@ export default function ProfilePage() {
       if (!alive) return;
       const next = { ...row, ...(carried || {}) };
       setProfile(next);
+      setLoaded(true);
       if (carried) saveProfile(carried);
     });
     return () => {
@@ -149,38 +172,44 @@ export default function ProfilePage() {
     [flash],
   );
 
+  // An empty name is filled from Google once, after the server's row is in
+  // (the cache can be a sign-in behind), and saved: a value in the field that
+  // was not stored would be the page saying something untrue. Once per
+  // device, so clearing it on purpose sticks.
+  useEffect(() => {
+    if (!loaded || profile.display_name) return;
+    const name = firstName(user);
+    if (!name) return;
+    try {
+      if (localStorage.getItem(NAME_FILLED_KEY)) return;
+      localStorage.setItem(NAME_FILLED_KEY, "1");
+    } catch {
+      return;
+    }
+    update({ display_name: name });
+  }, [loaded, profile.display_name, user, update]);
+
   const notesLeft = NOTES_MAX_CHARS - (profile.notes || "").length;
   // Both are environment facts, not props: read once per mount rather than on
   // every keystroke in the notes box, which re-renders this whole form.
   const [deviceZone] = useState(detectTimezone);
   const [zoneGroups] = useState(() => groupedZones(deviceZone));
   const chosenZone = profile.timezone || "";
-  const offset = zoneOffsetLabel(chosenZone || "UTC");
-  const offsetSuffix = offset ? ` · ${offset}` : "";
 
   return (
-    <section>
-      <div className="page-toolbar-back">
-        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight"><Trans>Profile</Trans></h1>
-        <span aria-live="polite" className={`mt-saved${saved ? " mt-saved--on" : ""}`}>
-          {saved}
-        </span>
-        <Button asChild variant="ghost" size="sm" className="ml-auto">
-          {/* A shortcut, not a back link: the arrow read as "you came from
-              projects", which is rarely where a settings page was opened
-              from. The folder says what it is. */}
-          <Link href="/projects">
-            <FolderKanban className="size-4" /> <Trans>Your projects</Trans>
-          </Link>
-        </Button>
-      </div>
-
-      <p className="app-subtle" style={{ marginTop: 0, marginBottom: 20 }}>
-        <Trans>Every agent reads this, on every project. Only you can see it.</Trans>
-      </p>
+    <Page width="narrow">
+      <PageHeader
+        title={<Trans>Profile</Trans>}
+        status={<Trans>Every agent reads this, on every project. Only you can see it.</Trans>}
+        actions={
+          <span aria-live="polite" className={`mt-saved${saved ? " mt-saved--on" : ""}`}>
+            {saved}
+          </span>
+        }
+      />
 
       {!signedIn && (
-        <p className="app-subtle" style={{ marginBottom: 16, fontSize: 13 }}>
+        <p className="text-sm text-muted-foreground">
           <Trans>
             Saved on this device until you sign in. A signed-in profile follows you, and the
             scheduled brief can read it.
@@ -188,7 +217,7 @@ export default function ProfilePage() {
         </p>
       )}
       {offline && (
-        <p role="alert" className="text-destructive" style={{ marginBottom: 16, fontSize: 13 }}>
+        <p role="alert" className="text-sm text-destructive">
           <Trans>Not saved to your account. It is kept on this device; try again in a moment.</Trans>
         </p>
       )}
@@ -209,7 +238,7 @@ export default function ProfilePage() {
               className="pf-input"
               value={profile.display_name}
               maxLength={80}
-              placeholder={t`Shirish`}
+              placeholder={t`Your first name`}
               onChange={(e) => update({ display_name: e.target.value }, { debounce: true })}
             />
           </div>
@@ -218,18 +247,15 @@ export default function ProfilePage() {
             <label className="pf-label" htmlFor="pf-role">
               <Trans>What do you do?</Trans>
             </label>
-            {/* Radix treats "" as no selection, so the empty option travels as a
-                sentinel and is mapped back on the way in and out. */}
-            <Select
-              value={profile.role || NO_ROLE}
-              onValueChange={(role) => update({ role: role === NO_ROLE ? "" : role })}
-            >
+            {/* "" is Radix's no-selection, so an unset role shows the
+                placeholder, and Reset puts it back there. */}
+            <Select value={profile.role || ""} onValueChange={(role) => update({ role })}>
               <SelectTrigger id="pf-role" className="pf-control">
-                <SelectValue />
+                <SelectValue placeholder={t`Helps Duct fit its answers to your job`} />
               </SelectTrigger>
               <SelectContent>
                 {ROLE_OPTIONS.map((option) => (
-                  <SelectItem key={option.value || NO_ROLE} value={option.value || NO_ROLE}>
+                  <SelectItem key={option.value} value={option.value}>
                     {i18n._(option.label)}
                   </SelectItem>
                 ))}
@@ -298,11 +324,11 @@ export default function ProfilePage() {
                 {deviceZone && (
                   <SelectGroup>
                     <SelectLabel><Trans>This device</Trans></SelectLabel>
-                    {/* Just the city, like every other item: the trigger
+                    {/* The same entry as every other item: the trigger
                         renders the selected item's own text, so a pinned entry
                         spelled differently makes the closed control read
                         differently depending on where you picked from. */}
-                    <SelectItem value={deviceZone}>{zoneLabel(deviceZone)}</SelectItem>
+                    <ZoneItem entry={zoneEntry(deviceZone)} />
                   </SelectGroup>
                 )}
                 <SelectGroup>
@@ -312,19 +338,19 @@ export default function ProfilePage() {
                 {zoneGroups.map(([region, zones]) => (
                   <SelectGroup key={region}>
                     <SelectLabel>{region}</SelectLabel>
-                    {zones.map((zone) => (
-                      <SelectItem key={zone} value={zone}>
-                        {zoneLabel(zone)}
-                      </SelectItem>
+                    {zones.map((entry) => (
+                      <ZoneItem key={entry.zone} entry={entry} />
                     ))}
                   </SelectGroup>
                 ))}
               </SelectContent>
             </Select>
             <p className="pf-hint">
+              {/* The offset is in the control now; the hint keeps the zone's
+                  full name, which the city alone does not always settle. */}
               {chosenZone
-                ? <Trans>Duct reads "last week" and "yesterday" in {chosenZone}{offsetSuffix}.</Trans>
-                : <Trans>Dates resolve in UTC{offsetSuffix}. Pick your zone so "last week" means your week.</Trans>}
+                ? <Trans>Duct reads "last week" and "yesterday" in {chosenZone}.</Trans>
+                : <Trans>Dates resolve in UTC. Pick your zone so "last week" means your week.</Trans>}
             </p>
           </div>
         </div>
@@ -359,8 +385,7 @@ export default function ProfilePage() {
             wins when it disagrees with the setting above.
           </Trans>
         </p>
-        <textarea
-          className="pf-notes"
+        <Textarea
           value={profile.notes}
           maxLength={NOTES_MAX_CHARS}
           rows={4}
@@ -384,6 +409,6 @@ export default function ProfilePage() {
           </Button>
         </div>
       </div>
-    </section>
+    </Page>
   );
 }

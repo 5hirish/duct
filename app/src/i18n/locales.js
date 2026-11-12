@@ -16,6 +16,7 @@ export const LOCALES = Object.freeze([
   { value: "pt-BR", label: "Português (Brasil)" },
   { value: "de", label: "Deutsch" },
   { value: "ja", label: "日本語" },
+  { value: "zh-CN", label: "简体中文" },
 ]);
 
 export const DEFAULT_LOCALE = "en";

@@ -1,8 +1,11 @@
-"""The person's MCP tokens — GET/POST/DELETE /api/user/mcp-tokens.
+"""The person's MCP tokens and connected agents — GET/POST/DELETE /api/user/mcp-tokens.
 
 Minting needs a signed-in session (a JWT), and an MCP token cannot mint
 another: ``get_current_user`` reads sign-in JWTs only, so an agent holding a
 token can never widen its own access or outlive a revocation by copying itself.
+The list carries agents that signed in through the browser too
+(``kind: "agent"``), and DELETE disconnects one the same way it revokes a
+token.
 """
 
 from __future__ import annotations
@@ -23,11 +26,15 @@ from service.mcp_tokens import (
     NAME_MAX_CHARS,
     TokenLimitReached,
     active_tokens,
+    is_connected_agent,
     mint,
     revoke,
 )
 
 router = APIRouter(tags=["mcp-tokens"])
+
+KIND_TOKEN = "token"
+KIND_AGENT = "agent"
 
 
 class TokenIn(BaseModel):
@@ -36,9 +43,12 @@ class TokenIn(BaseModel):
 
 class TokenOut(BaseModel):
     id: UUID
+    # "token" was pasted into the agent; "agent" signed in through the browser.
+    kind: str
     name: str
     hint: str
     created_at: datetime
+    # For an agent, when the connection lapses unless it renews first.
     expires_at: datetime
     last_used_at: datetime | None
 
@@ -49,12 +59,15 @@ class MintedTokenOut(TokenOut):
 
 
 def _out(row: McpToken) -> dict:
+    agent = is_connected_agent(row)
     return {
         "id": row.id,
+        "kind": KIND_AGENT if agent else KIND_TOKEN,
         "name": row.name,
-        "hint": row.hint,
+        # An agent's access token changes every hour; its hint names nothing.
+        "hint": "" if agent else row.hint,
         "created_at": row.created_at,
-        "expires_at": row.expires_at,
+        "expires_at": row.refresh_expires_at if agent else row.expires_at,
         "last_used_at": row.last_used_at,
     }
 

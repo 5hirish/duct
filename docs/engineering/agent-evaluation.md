@@ -1,6 +1,6 @@
 # Agent output QA
 
-**Author:** Shirish Kadam, Claude · **Updated:** 2026-10-26
+**Author:** Shirish Kadam, Claude · **Updated:** 2026-11-10
 
 Duct's agents write briefs, audits and posts, so no test can assert the one right answer. This is how we learn whether a change made an agent worse, before it merges.
 
@@ -121,6 +121,7 @@ Where a failed trial's evidence is:
 | A trial that wrote no brief | The step summary adds the last thing the agent said in chat and any file it wrote to its scratch filesystem instead |
 | Every trial's brief, chat reply, tool calls, scratch files, pulls and judge card | `eval-results.jsonl`, the run's artifact |
 | Provenance: the share of figures with three or more significant digits that trace to a pull | The report's Figures traced column; a metric, never a gate |
+| What a good brief costs, and how sure the pass rate is (#532) | The report's Pass rate, 95% (a Wilson interval: 3/3 is 44% to 100%), Cost per pass (everything spent, failed trials included, over the passes), median tokens in and out, and Cache read (cached share of input) columns; token counts per trial in `eval-results.jsonl`. Metrics, never gates |
 | A judge verdict that leaves markers out | Asked for again, then counted as a judge outage: the trial is judged on its deterministic checks alone, never failed for it |
 
 CLI flags and settings (`scripts/agent_eval.py`):
@@ -163,14 +164,14 @@ Directions not yet built:
 | A/B regression | Pairwise-judge old against new on a fixed topic set, order randomised, to catch drift between prompt or model changes |
 | Human calibration | Hand-score a sample periodically; adjust thresholds and weights from the judge-to-human correlation |
 | Multi-judge | Average independent judges on high-stakes dimensions. Naive panels amplify shared biases, so keep them independent |
-| Phoenix export | Push scorecards into Phoenix, already a dev dependency, for trend and regression views |
+| Scorecard trends | Keep scorecards where trends and regressions show, in an open-source tool chosen once there are enough to trend |
 
 Landscape, 2025 to 2026:
 
 | Tier | Tools | Where we sit |
 |---|---|---|
 | CI gating, lightweight, code-defined | Promptfoo (now part of OpenAI; strong red-teaming), DeepEval, RAGAS | Our harness |
-| Platforms: tracing, human annotation, regression, dashboards | Braintrust, LangSmith, Arize Phoenix (already a backend dev dependency), Helicone | The recommended pairing: a light framework for CI plus a platform for annotation and trends |
+| Platforms: tracing, human annotation, regression, dashboards | Braintrust, LangSmith, Arize Phoenix, Helicone | The recommended pairing: a light framework for CI plus a platform for annotation and trends |
 
 Sources:
 

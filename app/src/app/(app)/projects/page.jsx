@@ -20,6 +20,9 @@ import {
 import { deleteProject, getProjects, resolveActiveProjectId, setActiveProjectId } from "../../../lib/projects";
 import { faviconUrl, safeHostname } from "@/lib/favicon";
 import EmptyState from "@/components/ui/empty-state";
+import { Card, CardFooter, cardLinkClass } from "@/components/ui/card";
+import { Page, PageHeader, TileGrid } from "@/components/ui/page";
+import { cn } from "@/lib/utils";
 
 export default function ProjectsPage() {
   const { t } = useLingui();
@@ -94,14 +97,15 @@ export default function ProjectsPage() {
     projectPendingDelete?.name || projectPendingDelete?.company?.name || t`Untitled project`;
 
   return (
-    <section>
-      <div className="page-toolbar">
-        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight"><Trans>Manage projects</Trans></h1>
-      </div>
-
-      <p className="app-subtle" style={{ marginTop: 0, marginBottom: 18 }}>
-        <Trans>Select a project to edit its configuration, or manage existing projects safely.</Trans>
-      </p>
+    <Page>
+      <PageHeader
+        title={<Trans>Projects</Trans>}
+        actions={
+          <Button asChild>
+            <Link href="/start"><Trans>New project</Trans></Link>
+          </Button>
+        }
+      />
 
       {!hasProjects && (
         <EmptyState
@@ -120,10 +124,10 @@ export default function ProjectsPage() {
         </EmptyState>
       )}
 
-      <div className="grid gap-4 @md:grid-cols-2 @4xl:grid-cols-3">
+      <TileGrid>
         {sortedProjects.map((project) => {
           const name = project.name || project.company?.name || t`Untitled project`;
-          const industry = project.company?.industry || t`Unspecified industry`;
+          const industry = project.company?.industry || "";
           const url = project.company?.website_url || "";
           const favicon = faviconUrl(url);
           const host = safeHostname(url);
@@ -131,19 +135,7 @@ export default function ProjectsPage() {
           const owner = project.ownerEmail || t`another user`;
 
           return (
-            <div
-              key={project.id}
-              role="button"
-              tabIndex={0}
-              onClick={() => handleOpenProject(project.id)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  handleOpenProject(project.id);
-                }
-              }}
-              className="group cursor-pointer rounded-3xl border border-border bg-card p-4 text-left shadow-sm ring-1 ring-foreground/5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-            >
+            <Card key={project.id} variant="interactive" size="sm">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="flex size-9 shrink-0 items-center justify-center rounded-full border border-border bg-muted/40">
@@ -154,12 +146,19 @@ export default function ProjectsPage() {
                     )}
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate font-semibold text-foreground">{name}</p>
-                    <p className="truncate text-xs text-muted-foreground">{industry}</p>
+                    <button
+                      type="button"
+                      data-card-link
+                      onClick={() => handleOpenProject(project.id)}
+                      className={cn("block max-w-full truncate text-left text-sm font-semibold", cardLinkClass)}
+                    >
+                      {name}
+                    </button>
+                    {industry && <p className="truncate text-xs text-muted-foreground">{industry}</p>}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="relative z-10 flex items-center gap-1">
                   {project.id === activeId && <Badge variant="secondary"><Trans>Active</Trans></Badge>}
                   <Button
                     type="button"
@@ -198,22 +197,20 @@ export default function ProjectsPage() {
                 </div>
               </div>
 
-              <div className="mt-3 flex min-h-5 items-center gap-2 text-xs text-muted-foreground">
-                {url ? (
-                  <span className="truncate">{host || url}</span>
-                ) : (
-                  <span><Trans>No website URL</Trans></span>
-                )}
-                {isShared && (
-                  <Badge variant="outline" className="ml-auto shrink-0 font-normal">
-                    <Trans>Shared by {owner}</Trans>
-                  </Badge>
-                )}
-              </div>
-            </div>
+              {(url || isShared) && (
+                <CardFooter className="min-h-5 text-xs text-muted-foreground">
+                  {url && <span className="truncate">{host || url}</span>}
+                  {isShared && (
+                    <Badge variant="outline" className="ml-auto shrink-0 font-normal">
+                      <Trans>Shared by {owner}</Trans>
+                    </Badge>
+                  )}
+                </CardFooter>
+              )}
+            </Card>
           );
         })}
-      </div>
+      </TileGrid>
 
       <AlertDialog
         open={Boolean(projectPendingDelete)}
@@ -247,6 +244,6 @@ export default function ProjectsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </section>
+    </Page>
   );
 }

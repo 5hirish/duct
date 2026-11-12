@@ -19,7 +19,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-fastapi = "^0.161"
+fastapi = "^0.162"
 uvicorn = {version = "^0.54", extras = ["standard"]}
 # Starlette's form parser. FastAPI needs it at *import* time for any route
 # declaring Form()/File() — routes/content.py:/content/uploads does — so an
@@ -28,15 +28,15 @@ uvicorn = {version = "^0.54", extras = ["standard"]}
 # which is why every deploy died on "Form data requires python-multipart".
 # Not a caret: poetry reads ^0.0.31 as <0.0.32, so a floor is what we want here.
 # FastAPI's own is 0.0.18; Dependabot walks ours forward as releases land.
-python-multipart = ">=0.0.32"
+python-multipart = ">=0.0.33"
 # 32.0.0 (2026-09-09) dropped developer_token from the client's required
 # config keys, the same day Google sunset developer tokens. Access level now
 # follows the Cloud project that owns the OAuth client, so there is no token
 # left to send. Do not float back below this.
-google-ads = "^33.0"
+google-ads = "^35.0"
 google-analytics-data = "^0.23"
 google-api-python-client = "^2.201.0"
-google-genai = "^2.32"
+google-genai = "^2.34"
 python-dotenv = "^1.2"
 pydantic = "^2.14"
 pydantic-settings = "^2.16"
@@ -47,17 +47,16 @@ langchain = "^1.4.7"
 # instead of `block-delta` snapshots; nothing in Duct reads either (lc.py's
 # split_chunk takes text and thinking blocks and ignores the rest, and
 # routes/chat.py reads chunk.content), which was checked when this moved.
-langchain-core = "^1.7.0"
-langchain-openai = "^1.7.2"
-langchain-google-genai = "^4.4.2"
-langchain-anthropic = "^1.7.6"
-langgraph = "^1.2.17"
+langchain-core = "^1.7.6"
+langchain-openai = "^1.7.4"
+langchain-google-genai = "^4.4.3"
+langchain-anthropic = "^1.7.10"
+langgraph = "^1.2.20"
 pyjwt = "^2.15"
 httpx = "^0.28"
 # The client for MCP servers a user connects (service/mcp/). The reference SDK
 # rather than fastmcp: its client covers discovery, client metadata documents
-# and registration without fastmcp's server stack in production. Phoenix's
-# fastmcp 4 (dev) pins it to 2.x; move both together.
+# and registration without fastmcp's server stack in production.
 mcp = "^2.3"
 # Cloudflare R2 image storage over the S3 API (service/storage.py). Only loaded
 # when the 'r2' storage backend is active.
@@ -65,8 +64,9 @@ boto3 = "^1.43"
 sqlmodel = "^0.0.48"
 alembic = "^1.20"
 psycopg = {version = "^3.3", extras = ["binary"]}
-sentry-sdk = "^2.73.0"
-dlt = "^1.31.0"
+# Server analytics, request context, and automatic exception capture for FastAPI.
+posthog = ">=7.86.0"
+dlt = "^1.32.0"
 selectolax = ">=1.0.2"
 extruct = ">=0.16"
 trafilatura = ">=2.3.1"
@@ -76,18 +76,18 @@ trafilatura = ">=2.3.1"
 # change what numbers a brief quotes. Ships an abi3 Rust extension with
 # manylinux_2_28 and macOS wheels, so no toolchain is needed to build it, and
 # agents/core/compaction.py degrades to plain JSON wherever it is absent.
-headroom-ai = "~0.41"
+headroom-ai = "~0.42"
 deepagents = "0.7.32"   # exact: 0.x with no stability policy; changes behaviour in minors (task planning became opt-in in 0.7). tests/test_deepagents_harness.py is the upgrade gate.
 # OTel GenAI spans for the agents (agents/core/telemetry.py). The API is what
 # the spans are opened with; the SDK and the OTLP/HTTP exporter are what
 # `configure_tracing` installs when OTEL_EXPORTER_OTLP_ENDPOINT is set
-# (Phoenix locally, any collector in production). Declared explicitly because
+# (Jaeger locally, any collector in production). Declared explicitly because
 # the API used to arrive transitively via google-adk, removed with v2.
 opentelemetry-api = "^1.44"
 opentelemetry-sdk = "^1.44"
 opentelemetry-exporter-otlp-proto-http = "^1.44"
 reportlab = ">=5.1.0"
-cloudflare = ">=5.9.0"
+cloudflare = ">=5.10.0"
 # Durable conversation state (agents/core/checkpoint.py). Both, not one: the
 # same app serves Postgres on Railway and SQLite in the desktop sidecar, and the
 # checkpointer follows DATABASE_URL rather than forcing a database of its own.
@@ -95,7 +95,7 @@ cloudflare = ">=5.9.0"
 # `langgraph-api` (the Platform server, Elastic-2.0), which Duct does not use:
 # the library runs in-process inside FastAPI, with our own SSE transport.
 langgraph-checkpoint-postgres = "^3.2.0"
-langgraph-checkpoint-sqlite = "^3.1.2"
+langgraph-checkpoint-sqlite = "^3.1.3"
 # OpenRouter's first-party LangChain integration — `init_chat_model(
 # model_provider="openrouter")` resolves to it. Duct never imports it directly;
 # LangChain does, which is why no agents/ file gains a framework import and the
@@ -114,17 +114,22 @@ langgraph-checkpoint-sqlite = "^3.1.2"
 # do not reach for `route`.
 langchain-openrouter = "^0.2.9"
 langchain-xai = "^1.3.0"
+# Open models on the instance's own Ollama server (Provider.OLLAMA). The native
+# integration rather than ChatOpenAI at Ollama's /v1: the OpenAI-compatible
+# route drops `reasoning_content`, and `num_ctx` — the context Ollama loads,
+# 4,096 tokens by default on most laptops — has no field there at all.
+langchain-ollama = "^1.1.0"
 # Text out of the PDFs a user adds at onboarding (service/documents.py). Pure
 # Python and no dependencies of its own; Word and PowerPoint need no library
 # because they are zip files of XML. Duct extracts text rather than handing
 # the model a PDF block because DeepSeek, among others, reads no PDF at all.
-pypdf = "^6.21.2"
+pypdf = "^7.0.0"
+feedparser = "^6.0.14"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9"
-pytest-asyncio = "^1.0"
+pytest-asyncio = "^1.4"
 ruff = "^0.17"
-arize-phoenix = "^20.16.0"
 pyinstaller = "^6.22"
 
 [tool.pytest.ini_options]

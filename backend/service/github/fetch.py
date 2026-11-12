@@ -315,6 +315,20 @@ def _read_credentials(creds: dict[str, str]) -> dict[str, str]:
     return {**creds, "token": gh_app.installation_token(installation_id, name)}
 
 
+def latest_release_tag(creds: dict[str, str]) -> str | None:
+    """The tag of the repository's newest published release, or None when it
+    has none. One request: the cheap check an on-release schedule makes each
+    hour (#563), never the whole read. Prereleases are passed over, as the
+    feed passes over them. Raises ApiError or ValueError when GitHub refuses."""
+    creds = _read_credentials(creds)
+    owner, name = gh.require_repo(creds)
+    releases = gh.api(f"repos/{owner}/{name}/releases", creds, {"per_page": 10})
+    for raw in releases if isinstance(releases, list) else []:
+        if not raw.get("draft") and not raw.get("prerelease") and raw.get("tag_name"):
+            return str(raw["tag_name"])
+    return None
+
+
 def fetch_github(creds: dict[str, str], date_from: str, date_to: str) -> dict[str, Any]:
     """The work events of one repository inside ``[date_from, date_to]``, inclusive."""
     creds = _read_credentials(creds)  # ValueError, with the fix, when GitHub refuses
@@ -473,3 +487,37 @@ GITHUB_META = ConnectorMeta(
 )
 
 register_connector(GITHUB_META, GitHubConnector())
+
+
+STAR_MEDIA_TYPE = "application/vnd.github.star+json"
+STAR_PAGE = 100
+# Pages read from the newest end of the stargazers list: enough for a window of
+# a few hundred new stars, and a bound on a repository that went viral.
+MAX_STAR_PAGES = 5
+
+
+def recent_stars(creds: dict[str, str], since: str) -> tuple[int, list[str], bool]:
+    """The repository's star count now, the ``starred_at`` dates of its stars
+    newest first back to ``since`` (ISO date), and whether the read reached
+    ``since`` (False when ``MAX_STAR_PAGES`` ran out first). The stargazers
+    list is oldest first, so the read starts at its last page and walks back."""
+    creds = _read_credentials(creds)
+    owner, name = gh.require_repo(creds)
+    repo = gh.api(f"repos/{owner}/{name}", creds)
+    total = int((repo or {}).get("stargazers_count") or 0) if isinstance(repo, dict) else 0
+    dates: list[str] = []
+    page = -(-total // STAR_PAGE)  # ceil
+    reached = total == 0
+    for _ in range(MAX_STAR_PAGES):
+        if page < 1:
+            reached = True
+            break
+        rows = gh.api_accept(f"repos/{owner}/{name}/stargazers", creds, STAR_MEDIA_TYPE,
+                             {"per_page": STAR_PAGE, "page": page})
+        stamps = [str(r.get("starred_at") or "")[:10] for r in (rows if isinstance(rows, list) else [])]
+        for stamp in reversed(stamps):
+            if stamp and stamp < since:
+                return total, dates, True
+            dates.append(stamp)
+        page -= 1
+    return total, dates, reached

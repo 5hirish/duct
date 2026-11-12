@@ -16,12 +16,12 @@ from uuid import uuid4
 import pytest
 
 from agents.content.performance import (
+    FLAT,
     PROVEN,
     UNPROVEN,
     UNTESTED,
     PostSample,
     best_posting_times,
-    load_account_performance,
     planned_bets,
     read_metric,
     summarise,
@@ -203,34 +203,44 @@ def test_best_times_wait_for_enough_posts():
 # ---------------------------------------------------------------------------
 
 
-def test_the_block_says_unknown_in_words_and_names_both_choices():
-    from agents.content.prompts import _performance_stanza
+def _block_for(samples: list[PostSample]) -> str:
+    """The plan's block for one TikTok channel holding ``samples``."""
+    from agents.content.channel_mix import Goal, GoalKind, build_mix
+    from agents.content.prompts import _channel_mix_stanza
 
+    tiktok = [PostSample(**{**s.__dict__, "channel": "tiktok"}) for s in samples]
+    return _channel_mix_stanza(build_mix(tiktok, ["tiktok"], Goal(GoalKind.INTENT), 30, None))
+
+
+def test_the_block_says_unknown_in_words_and_names_both_choices():
     samples = [_post("video", completion_rate=0.3, view_count=1000) for _ in range(3)] + [
         _post("slideshow", view_count=5000) for _ in range(2)
     ]
-    block = _performance_stanza(summarise(samples))
+    block = _block_for(samples)
 
     assert block.startswith("<account_performance>") and block.endswith("</account_performance>")
     assert "completion 30.0% (3)" in block
     assert "completion not recorded" in block
+    assert "saves + shares not recorded" in block  # the goal's own measure, unknown here
     assert "exploit: video" in block
     assert "explore: image, slideshow" in block
 
 
 def test_the_block_for_no_history_and_for_an_unreadable_one():
-    from agents.content.prompts import _performance_stanza
+    from agents.content.prompts import _channel_mix_stanza
 
-    assert "No published posts yet" in _performance_stanza(summarise([]))
-    assert "could not be read" in _performance_stanza(None)
+    assert "No published posts yet" in _block_for([])
+    assert "could not be read" in _channel_mix_stanza(None)
 
 
 def test_the_block_rides_in_the_plan_turn_not_the_system_prompt():
+    from agents.content.channel_mix import Goal, GoalKind, build_mix
     from agents.content.prompts import build_orchestrator_system_prompt, build_plan_user_prompt
     from agents.content.schema import ContentBrandContext
 
     brand = ContentBrandContext(project_id=uuid4(), project_name="Solo")
-    turn = build_plan_user_prompt(brand, history=[], formats=[], avatars=[], performance=summarise([]))
+    mix = build_mix([], ["tiktok"], Goal(GoalKind.INTENT), 30, None)
+    turn = build_plan_user_prompt(brand, history=[], formats=[], avatars=[], performance=mix)
     assert "<account_performance>" in turn
     assert "<account_performance>\n" not in build_orchestrator_system_prompt(brand, "plan_month")
 
@@ -251,37 +261,6 @@ def engine(monkeypatch):
     monkeypatch.setattr(db_session, "get_engine", lambda: eng)
     monkeypatch.setattr(content_tools, "get_engine", lambda: eng)
     return eng
-
-
-def test_history_is_loaded_from_published_posts_and_their_plans(engine):
-    from sqlmodel import Session
-
-    from models.content import ContentPlan, ContentPost
-
-    project = uuid4()
-    posted = [
-        ContentPost(project_id=project, post_dir_slug=f"p{i}", post_type="video",
-                    posted_at=_at(i, 18), perf={"completionRate": 50}, hook_type="")
-        for i in range(3)
-    ]
-    unposted = ContentPost(project_id=project, post_dir_slug="draft", post_type="image", perf={"saves": 99})
-    other_project = ContentPost(project_id=uuid4(), post_dir_slug="x", post_type="image",
-                                posted_at=_at(0, 1), perf={"saves": 99})
-    plan = ContentPlan(project_id=project, days=[
-        {"topic": "t", "pillar": "p", "post_id": str(p.id), "hook_type": "question", "funnel_stage": "awareness"}
-        for p in posted
-    ])
-    with Session(engine) as db:
-        db.add_all([*posted, unposted, other_project, plan])
-        db.commit()
-
-    perf = load_account_performance(project)
-
-    assert perf.posts == 3
-    assert perf.exploit == "video"
-    assert perf.explore == ["slideshow", "image"]
-    assert [g.key for g in perf.bets["hook_type"]] == ["question"]
-    assert perf.bets["hook_type"][0].measures["completion_rate"].median == pytest.approx(0.5)
 
 
 def test_submit_plan_records_the_strategy_it_chose(engine):
@@ -312,15 +291,20 @@ def test_submit_plan_records_the_strategy_it_chose(engine):
                   "funnel_stage": "awareness", "objective": "saves"}],
     }
     result = json.loads(asyncio.run(tool.ainvoke({"plan": plan})))
-    assert result.get("status") != "error", result
+    assert result.get("status") == "proposed", result
+
+    from agents.content.plan_proposal import apply_proposal
+    from utils.dates import utcnow
 
     with Session(engine) as db:
-        row = db.get(ContentPlan, session.plan_id)
+        row = apply_proposal(db, session.proposal, now=utcnow())
+        row = db.get(ContentPlan, row.id)
     assert row.strategy["exploit"] == "video"  # normalised
     assert row.strategy["explore"] == "image"
     assert row.days[0]["hook_type"] == "question" and row.days[0]["objective"] == "saves"
-    generated = next(e for e in events if e.get("plan_id"))
+    generated = next(e for e in events if e.get("payload", {}).get("status") == "proposed")
     assert generated["payload"]["strategy"]["explore_evidence"] == "no image posts yet"
+    assert generated["payload"]["id"] is None
 
 
 def test_a_strategy_naming_an_unknown_type_is_refused():
@@ -332,3 +316,27 @@ def test_a_strategy_naming_an_unknown_type_is_refused():
     PlanDraft.model_validate({**base, "strategy": {"exploit": "", "explore": ""}})
     with pytest.raises(ValidationError):
         PlanDraft.model_validate({**base, "strategy": {"exploit": "reels"}})
+
+
+def test_a_type_that_earned_nothing_is_measured_not_proven():
+    """MaxAura, 2026-11-08: three videos with 0 saves and shares between them
+    were the "proven" type to scale, over slideshows with four times the views."""
+    perf = summarise(
+        [*[_post("video", saves=0, shares=0, views=261) for _ in range(3)],
+         *[_post("slideshow", saves=1, shares=0, views=1062) for _ in range(2)]],
+        ladder=("intent", "completion_rate"),
+    )
+    verdicts = {t.key: t.verdict for t in perf.types}
+    assert (verdicts["video"], verdicts["slideshow"]) == (FLAT, UNPROVEN)
+    assert perf.exploit is None
+    assert perf.explore == ["image", "slideshow", "video"], "untested, then unproven, then flat"
+
+
+def test_a_hook_one_post_tried_is_graded_a_hint():
+    perf = summarise(
+        [_post("video", hook="transformation_reveal", saves=4),
+         *[_post("slideshow", hook="myth_bust", saves=3) for _ in range(3)]],
+        ladder=("saves",),
+    )
+    graded = {g.key: g.verdict for g in perf.bets["hook_type"]}
+    assert graded == {"transformation_reveal": UNPROVEN, "myth_bust": PROVEN}

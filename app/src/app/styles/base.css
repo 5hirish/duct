@@ -29,6 +29,49 @@ html {
   scrollbar-color: color-mix(in oklch, var(--muted-foreground) 35%, transparent) transparent;
 }
 
+/* `scrollbar-color` inherits and `scrollbar-width` does not, so the rule above
+   thinned only the document's own bar: every pane, the transcript included,
+   kept the full ~17px classic bar on Windows and Linux. Zero specificity, so
+   a component that wants something else still only has to say so. */
+:where(html *) {
+  scrollbar-width: thin;
+}
+
+/* Platform adaptations, keyed on the attributes the root layout's
+   PLATFORM_SCRIPT sets before first paint.
+
+   Linux: WebKitGTK (the desktop app) often composites in software — always so
+   once the DMA-BUF renderer is off on NVIDIA — and there a backdrop blur is
+   recomputed on every scroll frame under the sticky header. Every blurred
+   surface here is already 85–95% opaque, so the blur is the part nobody
+   misses. Unlayered, so it outranks the utilities without `!important`; the
+   header, the most translucent of them, goes solid. */
+html[data-platform="linux"] * {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+html[data-platform="linux"] .app-header {
+  background-color: var(--background);
+}
+
+/* The desktop window is an app, not a page: a trackpad flick past the end
+   should stop, not rubber-band the whole window off its own chrome. */
+html[data-shell="desktop"],
+html[data-shell="desktop"] body {
+  overscroll-behavior: none;
+}
+
+/* Windows High Contrast (forced colours) drops box-shadows, and the focus ring
+   on every primitive is a box-shadow over `outline: none` — so a keyboard user
+   in that mode had no focus indicator anywhere. A real outline, in the
+   system's own text colour, only where the OS has taken over the palette. */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid CanvasText;
+    outline-offset: 2px;
+  }
+}
+
 .app-shell {
   /* Fallback, then the real thing — `100vh` alone pins to Safari's large
      (toolbar-hidden) viewport and overshoots the visible window whenever the

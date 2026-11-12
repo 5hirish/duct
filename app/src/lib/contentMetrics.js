@@ -24,9 +24,10 @@ export const METRIC_ALIASES = Object.freeze({
   completion_rate: ["completion_rate", "completionRate"],
 });
 
-// What PostBridge's analytics carry, which the same test checks against its
-// schema. On a post PostBridge published these sync on their own, so the form
-// shows them rather than asking for them.
+// The four counts every scheduler syncs (PostBridge's analytics carry exactly
+// these, which the same test checks against its schema). On a post a
+// scheduler published they sync on their own, so the form shows them rather
+// than asking for them.
 export const SYNCED_METRICS = Object.freeze(["views", "likes", "comments", "shares"]);
 
 export const METRIC_NAMES = Object.freeze(Object.keys(METRIC_ALIASES));
@@ -49,13 +50,13 @@ export function metricsOf(perf) {
   return Object.fromEntries(METRIC_NAMES.map((name) => [name, metricValue(perf, name)]));
 }
 
-/** PostBridge published it and reports its platform, so its counts sync.
- *  PostBridge reports TikTok, YouTube, Instagram and Facebook only
- *  (`post.channel.synced_metrics`, from the backend's channel rules); an X or
- *  LinkedIn post it published still has every number typed in. A post from a
- *  backend that predates the channel rules keeps the old answer. */
+/** A scheduler published it and reports its platform, so its counts sync.
+ *  Which platforms depends on the scheduler (`post.channel.synced_metrics`,
+ *  from its spec on the backend): PostBridge reports TikTok, YouTube,
+ *  Instagram and Facebook, Zernio LinkedIn and X as well. A post from a
+ *  backend that predates schedulers still names `post_bridge_post_id`. */
 export function isSyncedPost(post) {
-  return Boolean(post?.post_bridge_post_id) && post?.channel?.synced_metrics !== false;
+  return Boolean(post?.publisher_post_id || post?.post_bridge_post_id) && post?.channel?.synced_metrics !== false;
 }
 
 /** The metrics a person may type in on this post. */

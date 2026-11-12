@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>面向产品团队的Duct——产品智能AI智能体</title>
+<link rel="canonical" href="https://getduct.ai/zh-cn/for-product-intelligence"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/for-product-intelligence"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/for-product-intelligence"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/for-product-intelligence"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/for-product-intelligence"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/for-product-intelligence"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/for-product-intelligence"/>
+<link rel="alternate" hreflang="zh-CN" href="https://getduct.ai/zh-cn/for-product-intelligence"/>
+<meta property="og:locale" content="zh_CN"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="询问激活量为何下降。Duct会同时读取Mixpanel、Clarity、GrowthBook和GA4的数据，并回答原因、来源以及它提出的变更。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/zh-cn/for-product-intelligence"/>
+<meta property="og:title" content="面向产品团队的Duct——产品智能AI智能体"/>
+<meta property="og:description" content="询问激活量为何下降。Duct会同时读取Mixpanel、Clarity、GrowthBook和GA4的数据，并回答原因、来源以及它提出的修复方案。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/for-product-intelligence.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="面向产品团队的Duct——产品智能AI智能体"/>
+<meta name="twitter:description" content="面向产品团队的开源AI智能体：同时读取Mixpanel、Clarity、GrowthBook和GA4的数据，指出原因，提出修复方案。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/for-product-intelligence.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookie，坦白说","We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold.":"我们使用 PostHog 来了解哪些页面促成了注册，以及 Duct 在何处阻碍了你，包括隐藏你输入的所有内容的访问回放。拒绝会关闭 PostHog，Duct 仍能正常运行。Google Analytics 也会统计访问量并设置自己的 Cookie，无论你选择什么。我们不会出售任何数据。","Privacy Policy":"隐私政策","Decline":"拒绝","Accept":"接受","{n} stars on GitHub":"{n} GitHub 星","UTM Builder":"UTM 构建器","SaaS Metrics Benchmark Calculator":"SaaS 指标基准计算器","Weekly Marketing Brief Generator":"每周营销简报生成器","CAC / LTV Calculator":"CAC / LTV 计算器","MRR Growth Rate Calculator":"MRR 增长率计算器","Engagement Rate Calculator":"互动率计算器","CTR Calculator":"CTR 计算器","CPM Calculator":"CPM 计算器","CPC Calculator":"CPC 计算器","CPA Calculator":"CPA 计算器","Marketing ROI Calculator":"营销 ROI 计算器","ROAS Calculator":"ROAS 计算器","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Menu":"菜单","Free Tools":"免费工具","Solutions":"解决方案","Download Duct ↓":"下载 Duct ↓","Language":"语言","Enlarged screenshot":"放大后的截图","Close":"关闭","Fit to screen":"适应屏幕","Zoom in":"放大","Enlarge":"放大","Universal · Apple silicon and Intel":"通用 · Apple 芯片和 Intel","Windows 10 and later":"Windows 10 及更高版本","Runs on any distribution":"可在任何发行版上运行","Debian and Ubuntu":"Debian 和 Ubuntu","Download ↓":"下载 ↓","Download for {label} ↓":"下载适用于 {label} ↓","Example numbers. Change any field and calculate again for yours.":"示例数字。修改任意字段，重新计算你的结果。"};</script>
+<script src="/assets/config.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"zh-CN","name":"Duct产品智能版","url":"https://getduct.ai/zh-cn/for-product-intelligence","description":"询问激活量为何下降。Duct会同时读取Mixpanel、Clarity、GrowthBook和GA4的数据，并回答原因、来源以及它提出的变更。开源，MIT。","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"zh-CN","mainEntity":[{"@type":"Question","name":"Duct 在产品智能方面有什么用？","acceptedAnswer":{"@type":"Answer","text":"一个开源AI智能体，可同时读取Mixpanel、Microsoft Clarity、GrowthBook和GA4的数据。询问激活量为何下降，它会回答原因和来源，提出变更建议，在你批准后应用，并记住该决定以备下次使用。"}},{"@type":"Question","name":"Duct 连接哪些工具，设置难度如何？","acceptedAnswer":{"@type":"Answer","text":"GA4和Google Ads通过OAuth一键连接。Mixpanel、Clarity、GrowthBook、Stripe和RevenueCat只需粘贴一次密钥。整个堆栈大约十分钟即可完成，然后你就可以询问数据波动的原因。"}},{"@type":"Question","name":"我的产品数据在Duct中安全吗？","acceptedAnswer":{"@type":"Answer","text":"你的数据通过 TLS 加密传输，OAuth 令牌在静态时加密，绝不会暴露给浏览器。Duct 读取你的工具来回答你的问题，除非你事先批准特定变更，否则不会修改任何内容。访问权限仅限于你邀请的项目成员，你可以随时断开数据源或删除你的数据。"}},{"@type":"Question","name":"Duct与直接使用Mixpanel仪表盘有何不同？","acceptedAnswer":{"@type":"Answer","text":"Mixpanel了解漏斗。但它不知道会话是什么样子，实验是否开启，或者账户是否已付费。Duct会同时读取Mixpanel、Clarity、GrowthBook和Stripe的数据并指出原因，因此下一步要发布什么是一个决定，而非猜测。"}},{"@type":"Question","name":"Duct产品智能版收费吗？","acceptedAnswer":{"@type":"Answer","text":"始终免费，使用你自己的密钥。Duct 采用 MIT 许可：你直接向模型提供商付费，或使用你已有的 ChatGPT 计划登录。付费计划稍后会捆绑模型，适用于不愿持有密钥的团队；目前所有开源功能都不会转为付费。哪些功能会收费在开源页面上详细说明。"}},{"@type":"Question","name":"答案实际是什么样的？","acceptedAnswer":{"@type":"Answer","text":"聊天中会有一条简短回复，包含发现和建议的变更，旁边附有简报：简报中包含所用数据、阅读来源以及本周待办事项清单。每个数据在到达你之前都会由第二个智能体重新核对，简报会保存在项目中并进行版本管理。"}}]}
+</script>
+<style>
+  .skip-link {
+    position: absolute; top: -100%; left: 16px; z-index: 300;
+    padding: 10px 20px; background: var(--navy); color: #fff;
+    font-size: 14px; font-weight: 500; border-radius: var(--r);
+    text-decoration: none; transition: top .15s;
+  }
+  .skip-link:focus { top: 16px; }
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"zh-CN","itemListElement":[{"@type":"ListItem","position":1,"name":"主页","item":"https://getduct.ai/zh-cn/"},{"@type":"ListItem","position":2,"name":"面向产品团队","item":"https://getduct.ai/zh-cn/for-product-intelligence"}]}
+</script>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">跳到内容</a>
+
+<!-- EXPERIMENT: three real jobs with product shots instead of an interactive walkthrough demo. Hypothesis: PMs convert on seeing the answer to their own question, not on clicking through a mock brief. Measured by download clicks per visit (GTM). -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/zh-cn/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+
+<section class="hero">
+<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> 产品智能测试版 · 免费且开源</div>
+<h1>了解数据波动的原因。<br/><em>在站会前修复它。</em></h1>
+<p class="hero-sub">Duct会同时读取Mixpanel、Clarity、GrowthBook和GA4的数据，指出原因及其来源，并提出变更。在你批准之前，任何内容都不会被应用。</p>
+<div class="hero-form">
+<a class="btn btn-orange btn-lg" href="/zh-cn/download" data-duct-download>下载 Duct ↓</a>
+<a class="btn btn-ghost btn-lg" href="https://github.com/5hirish/duct" rel="noopener">在 GitHub 上标星</a>
+</div>
+<p class="hero-footnote">Beta期间免费 · 无需信用卡 · 适用于20-200人公司的产品经理</p>
+</section>
+
+<!-- PRODUCT SHOT (from docs/assets/readme, shot by scripts/shots/shoot.mjs) -->
+<section class="shot">
+<figure class="shot-frame reveal">
+<img src="/assets/media/product-session.webp" srcset="/assets/media/product-session-768.webp 768w, /assets/media/product-session-1536.webp 1536w, /assets/media/product-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 48px), 1536px" fetchpriority="high" width="3072" height="2052" alt="洞察会话：当被问及Android发布后激活量为何下降时，智能体指出日期、平台和屏幕，建议两个GA4关键事件，并在右侧撰写激活简报。"/>
+<figcaption>询问激活量为何下降。Duct会读取发布前后GA4、Clarity和Stripe的数据，指出屏幕，并建议跟踪哪些内容，以便下周的简报能验证修复效果。</figcaption>
+</figure>
+</section>
+
+<!-- TOOL STRIP -->
+
+<div class="strip">
+<p class="strip-label">连接你已使用的工具</p>
+<div class="marquee" aria-hidden="true">
+<span>Mixpanel</span><span>Microsoft Clarity</span><span>GrowthBook</span><span>GA4</span>
+<span>Search Console</span><span>Stripe</span><span>RevenueCat</span><span>Google Ads</span>
+<span>Mixpanel</span><span>Microsoft Clarity</span><span>GrowthBook</span><span>GA4</span>
+<span>Search Console</span><span>Stripe</span><span>RevenueCat</span><span>Google Ads</span>
+</div>
+</div>
+
+
+
+<!-- PROBLEM -->
+
+<section class="problem">
+<div class="reveal">
+<p class="tag">问题</p>
+<h2>答案已在你的工具中。<br/>但没有人<em>将这些点连接起来。</em></h2>
+<ul class="pain-list">
+<li class="pain-item"><span class="pi-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-help"/></svg></span> Mixpanel 说功能使用稳定。Clarity 显示用户在设置过程中狂点。你不知道哪个信号值得优先处理。</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#layers"/></svg></span> GrowthBook 说发布已达到 100%。HubSpot 说困惑仍在继续。Clarity 显示用户仍然卡在相同的流程中。</li>
+<li class="pain-item"><span class="pi-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#timer"/></svg></span> 你每周花费 3 小时手动聚合数据，而这本应只需 10 分钟。</li>
+</ul>
+</div>
+<div class="diag reveal">
+<div class="diag-header" aria-hidden="true">
+<span class="diag-dot" style="background:#ff5f57"></span>
+<span class="diag-dot" style="background:#febc2e"></span>
+<span class="diag-dot" style="background:#28c840"></span>
+</div>
+<div class="diag-body">
+<div class="diag-tool">
+<span class="diag-chip" style="background:#f0ecff"><img src="/assets/icons/mixpanel.svg" width="18" height="18" alt="Mixpanel"/></span>
+<div class="diag-info"><b>Mixpanel</b><s aria-hidden="true">本周留存率下降4%</s></div>
+</div>
+<div class="diag-divider" aria-hidden="true">无连接</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#e6f3fd"><img src="/assets/icons/hubspot.svg" width="18" height="18" alt="HubSpot"/></span>
+<div class="diag-info"><b>HubSpot</b><s aria-hidden="true">关于入职摩擦的 32 张工单</s></div>
+</div>
+<div class="diag-divider" aria-hidden="true">无连接</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#eeeffe"><img src="/assets/icons/growthbook.svg" width="18" height="18" alt="GrowthBook"/></span>
+<div class="diag-info"><b>GrowthBook</b><s aria-hidden="true">新手引导修复——周二已发布</s></div>
+</div>
+<div class="diag-divider" aria-hidden="true">无连接</div>
+<div class="diag-tool dim">
+<span class="diag-chip" style="background:#ede8f2"><img src="/assets/icons/clarity.svg" width="18" height="18" alt="Microsoft Clarity"/></span>
+<div class="diag-info"><b>Clarity</b><s aria-hidden="true">回放显示41%的用户在队友邀请环节停滞</s></div>
+</div>
+<div class="diag-result">
+<strong><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg> 使用 Duct 后</strong> 留存率下降 → 支持量激增 → 回放摩擦 → 发布时间。一个故事，自动连接。
+</div>
+</div>
+</div>
+</section>
+
+<!-- HOW IT WORKS -->
+
+<section class="how" id="how">
+<div class="how-inner">
+<p class="tag">工作原理</p>
+<h2>连接。询问。<em>批准。</em></h2>
+<div class="channel on-dark" aria-hidden="true"></div>
+<div class="steps">
+<div class="step reveal">
+<span class="step-num">01</span>
+<span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg></span>
+<p class="step-title">连接你的技术栈</p>
+<p class="step-body">GA4使用OAuth；Mixpanel、Clarity和GrowthBook使用粘贴的只读密钥。报告仅需读取权限；无需手动导出任何内容。</p>
+</div>
+<div class="step reveal" style="transition-delay:.1s">
+<span class="step-num">02</span>
+<span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#message-square"/></svg></span>
+<p class="step-title">提出问题</p>
+<p class="step-body">像询问同事一样输入。Duct 会读取所有连接的工具，显示来源，并在你看到数字之前由第二个智能体重新检查。</p>
+</div>
+<div class="step reveal" style="transition-delay:.2s">
+<span class="step-num">03</span>
+<span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg></span>
+<p class="step-title">批准变更</p>
+<p class="step-body">当答案是变更时，它会以变更集的形式出现，并附带预览和安全检查。你可以应用，也可以不应用。无论哪种方式，它都会记住。</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- WHAT IT DOES -->
+
+<section class="jobs" id="features">
+<div class="jobs-inner">
+<div class="reveal">
+<p class="tag">功能介绍</p>
+<h2>它为 <em>产品经理</em> 做什么。</h2>
+</div>
+<div class="job-grid">
+<article class="job reveal" style="transition-delay:0.05s">
+<div class="job-shot"><img src="/assets/media/answer-product.webp" srcset="/assets/media/answer-product-768.webp 768w, /assets/media/answer-product.webp 1392w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="1392" height="920" loading="lazy" alt="一个问题及其答案：激活量为何下降，从GA4、Clarity和Stripe读取，指出日期、平台和屏幕。"/></div>
+<div class="job-body">
+<h3>为什么激活量下降了？</h3>
+<dl>
+<dt>何时</dt><dd>周一数据波动，无人知晓原因。</dd>
+<dt>今天</dt><dd>在Mixpanel、Clarity和GrowthBook上花费三小时，仍然只是猜测。</dd>
+<dt>使用 Duct</dt><dd class="with">它会针对一个问题读取所有数据，并回答原因、来源以及它提出的变更。</dd>
+</dl>
+</div>
+</article>
+<article class="job reveal" style="transition-delay:0.1s">
+<div class="job-shot"><img src="/assets/media/review-card.webp" srcset="/assets/media/review-card-768.webp 768w, /assets/media/review-card.webp 1088w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="1088" height="936" loading="lazy" alt="一个变更集卡片：暂停一个广告系列，一个被护栏阻止的变更，拒绝和应用按钮。"/></div>
+<div class="job-body">
+<h3>执行，经你批准</h3>
+<dl>
+<dt>何时</dt><dd>答案是“标记该GA4事件”或“暂停该广告系列”。</dd>
+<dt>今天</dt><dd>给工程团队发工单，或者你手动操作后忘记通知任何人。</dd>
+<dt>使用 Duct</dt><dd class="with">带有预览和安全检查的变更集。只有当你按下“应用”后才会生效。</dd>
+</dl>
+</div>
+</article>
+<article class="job reveal" style="transition-delay:0.15s">
+<div class="job-shot"><img src="/assets/media/memory-timeline.webp" srcset="/assets/media/memory-timeline-768.webp 768w, /assets/media/memory-timeline-1536.webp 1536w, /assets/media/memory-timeline.webp 2008w" sizes="(max-width: 860px) calc(100vw - 48px), 360px" decoding="async" width="2008" height="1990" loading="lazy" alt="记忆时间轴：一个 CPA 目标、一个决策、一个事件，以及智能体本周所学"/></div>
+<div class="job-body">
+<h3>记住该决定</h3>
+<dl>
+<dt>何时</dt><dd>下周的问题取决于上周的通话。</dd>
+<dt>今天</dt><dd>一份 Notion 文档，没有人会在再次提问前重新阅读。</dd>
+<dt>使用 Duct</dt><dd class="with">目标、决策以及它所学到的内容，都在你可以修正的时间线上。下一个答案将从那里开始。</dd>
+</dl>
+</div>
+</article>
+</div>
+</div>
+</section>
+
+<!-- AUDIENCE -->
+
+<section class="audience" id="who">
+<div class="aud-inner">
+<div class="reveal">
+<p class="tag">适用人群</p>
+<h2>负责<em>增长</em>但没有数据团队的产品经理</h2>
+<p class="sub" style="margin-top:16px">你没有分析师可以依靠。你没有时间写 SQL。你需要快速获得全貌——而且你需要它是正确的。</p>
+<a href="#cta" class="btn btn-orange" style="margin-top:30px">就是我——下载 Duct ↓</a>
+</div>
+<div class="aud-cards reveal">
+<div class="aud-card hi">
+<span class="aud-av" style="background:#fff0e5" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#rocket"/></svg></span>
+<div><span class="aud-name">增长产品经理</span><span class="aud-role">20-200 人的 SaaS</span></div>
+<span class="aud-badge">完美契合</span>
+</div>
+<div class="aud-card">
+<span class="aud-av" style="background:#e8f4ff" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#megaphone"/></svg></span>
+<div><span class="aud-name">产品营销经理</span><span class="aud-role">跟踪功能发布</span></div>
+<span class="aud-badge">非常适合</span>
+</div>
+<div class="aud-card">
+<span class="aud-av" style="background:#efffef" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#trending-up"/></svg></span>
+<div><span class="aud-name">创始产品经理</span><span class="aud-role">身兼数职</span></div>
+<span class="aud-badge">非常适合</span>
+</div>
+<div class="aud-card" style="opacity:.45">
+<span class="aud-av" style="background:#f5f5f5" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#building-2"/></svg></span>
+<div><span class="aud-name">企业数据团队</span><span class="aud-role">500+ 人，配备专属分析师</span></div>
+<span class="aud-badge off">暂无</span>
+</div>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">常见问题</p>
+<h2>常见<em>问题</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.1s">
+<details class="faq-item">
+<summary class="faq-q">Duct 在产品智能方面有什么用？</summary>
+<p class="faq-a">一个开源AI智能体，可同时读取Mixpanel、Microsoft Clarity、GrowthBook和GA4的数据。询问激活量为何下降，它会回答原因和来源，提出变更建议，在你批准后应用，并记住该决定以备下次使用。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Duct 连接哪些工具，设置难度如何？</summary>
+<p class="faq-a">GA4和Google Ads通过OAuth一键连接。Mixpanel、Clarity、GrowthBook、Stripe和RevenueCat只需粘贴一次密钥。整个堆栈大约十分钟即可完成，然后你就可以询问数据波动的原因。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">我的产品数据在Duct中安全吗？</summary>
+<p class="faq-a">你的数据通过 TLS 加密传输，OAuth 令牌在静态时加密，绝不会暴露给浏览器。Duct 读取你的工具来回答你的问题，除非你事先批准特定变更，否则不会修改任何内容。访问权限仅限于你邀请的项目成员，你可以随时断开数据源或删除你的数据。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Duct与直接使用Mixpanel仪表盘有何不同？</summary>
+<p class="faq-a">Mixpanel了解漏斗。但它不知道会话是什么样子，实验是否开启，或者账户是否已付费。Duct会同时读取Mixpanel、Clarity、GrowthBook和Stripe的数据并指出原因，因此下一步要发布什么是一个决定，而非猜测。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Duct产品智能版收费吗？</summary>
+<p class="faq-a">始终免费，使用你自己的密钥。Duct 采用 MIT 许可：你直接向模型提供商付费，或使用你已有的 ChatGPT 计划登录。付费计划稍后会捆绑模型，适用于不愿持有密钥的团队；目前所有开源功能都不会转为付费。<a href="/zh-cn/open-source#pricing">哪些功能会收费</a>在开源页面上详细说明。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">答案实际是什么样的？</summary>
+<p class="faq-a">聊天中会有一条简短回复，包含发现和建议的变更，旁边附有简报：简报中包含所用数据、阅读来源以及本周待办事项清单。每个数据在到达你之前都会由第二个智能体重新核对，简报会保存在项目中并进行版本管理。</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-for-pages.html) -->
+<div data-duct-partial="/zh-cn/partials/cta-for-pages.html"></div>
+
+</main>
+
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/zh-cn/partials/footer-expanded.html"><div class="legal-fallback"><a href="/zh-cn/">Duct</a><a href="/zh-cn/about">关于</a><a href="/zh-cn/privacy">隐私政策</a><a href="/zh-cn/terms">服务条款</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+
+</body>
+</html>

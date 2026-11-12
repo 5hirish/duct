@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>等待你应用的 Google Ads AI 智能体 | Duct</title>
+<link rel="canonical" href="https://getduct.ai/zh-cn/integrations/google-ads"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/integrations/google-ads"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/integrations/google-ads"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/integrations/google-ads"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/integrations/google-ads"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/integrations/google-ads"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/integrations/google-ads"/>
+<link rel="alternate" hreflang="zh-CN" href="https://getduct.ai/zh-cn/integrations/google-ads"/>
+<meta property="og:locale" content="zh_CN"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="Duct 读取 Google Ads，同时参考 GA4 和 Stripe，找出从未带来付费的支出，并建议修复方案：否定关键词、预算、出价。在你应用之前，任何操作都不会运行。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/zh-cn/integrations/google-ads"/>
+<meta property="og:title" content="等待你应用的 Google Ads AI 智能体"/>
+<meta property="og:description" content="Google Ads 与 GA4 和 Stripe 一起读取。八种变更，每种都附带其影响范围，并可根据请求回滚。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/integrations-google-ads.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="等待你应用的 Google Ads AI 智能体"/>
+<meta name="twitter:description" content="找出从未转化为收入的 Google Ads 支出，然后通过你控制的一次点击来修复它。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/integrations-google-ads.jpg"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookie，坦白说","We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold.":"我们使用 PostHog 来了解哪些页面促成了注册，以及 Duct 在何处阻碍了你，包括隐藏你输入的所有内容的访问回放。拒绝会关闭 PostHog，Duct 仍能正常运行。Google Analytics 也会统计访问量并设置自己的 Cookie，无论你选择什么。我们不会出售任何数据。","Privacy Policy":"隐私政策","Decline":"拒绝","Accept":"接受","{n} stars on GitHub":"{n} GitHub 星","UTM Builder":"UTM 构建器","SaaS Metrics Benchmark Calculator":"SaaS 指标基准计算器","Weekly Marketing Brief Generator":"每周营销简报生成器","CAC / LTV Calculator":"CAC / LTV 计算器","MRR Growth Rate Calculator":"MRR 增长率计算器","Engagement Rate Calculator":"互动率计算器","CTR Calculator":"CTR 计算器","CPM Calculator":"CPM 计算器","CPC Calculator":"CPC 计算器","CPA Calculator":"CPA 计算器","Marketing ROI Calculator":"营销 ROI 计算器","ROAS Calculator":"ROAS 计算器","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Menu":"菜单","Free Tools":"免费工具","Solutions":"解决方案","Download Duct ↓":"下载 Duct ↓","Language":"语言","Enlarged screenshot":"放大后的截图","Close":"关闭","Fit to screen":"适应屏幕","Zoom in":"放大","Enlarge":"放大","Universal · Apple silicon and Intel":"通用 · Apple 芯片和 Intel","Windows 10 and later":"Windows 10 及更高版本","Runs on any distribution":"可在任何发行版上运行","Debian and Ubuntu":"Debian 和 Ubuntu","Download ↓":"下载 ↓","Download for {label} ↓":"下载适用于 {label} ↓","Example numbers. Change any field and calculate again for yours.":"示例数字。修改任意字段，重新计算你的结果。"};</script>
+<script src="/assets/config.js"></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"zh-CN","name":"等待你应用的 Google Ads AI 智能体","url":"https://getduct.ai/zh-cn/integrations/google-ads","description":"Duct 读取 Google Ads，同时参考 GA4 和 Stripe，找出从未带来付费的支出，并建议修复方案：否定关键词、预算、出价。在你应用之前，任何操作都不会运行。","about":{"@type":"SoftwareApplication","name":"Google Ads"},"isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"zh-CN","itemListElement":[{"@type":"ListItem","position":1,"name":"主页","item":"https://getduct.ai/zh-cn/"},{"@type":"ListItem","position":2,"name":"集成","item":"https://getduct.ai/zh-cn/integrations/"},{"@type":"ListItem","position":3,"name":"Google Ads","item":"https://getduct.ai/zh-cn/integrations/google-ads"}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"zh-CN","mainEntity":[{"@type":"Question","name":"Duct 可以在未经我同意的情况下更改我的 Google Ads 吗？","acceptedAnswer":{"@type":"Answer","text":"默认情况下不会。每次更改都是一个提案，会显示它影响的内容，并在你按下应用时运行。如果你将项目切换到辅助模式，添加关键词和否定关键词可以自动应用；预算、出价和状态始终会等待你的批准。"}},{"@type":"Question","name":"Duct 可以在 Google Ads 中进行哪些更改？","acceptedAnswer":{"@type":"Answer","text":"八种：添加否定关键词、暂停广告系列、设置广告系列状态、设置广告组状态、设置关键词状态、添加关键词、设置广告系列每日预算和设置广告系列出价 (tCPA/tROAS)。默认情况下，每种变更都等待你的应用，并且每一种都可以回滚。"}},{"@type":"Question","name":"它是否适用于经理 (MCC) 账号？","acceptedAnswer":{"@type":"Answer","text":"是的。连接时添加经理账户的 ID，Duct 会读取其下的客户账户。"}},{"@type":"Question","name":"这与 Google Ads 内置的 AI 有何不同？","acceptedAnswer":{"@type":"Answer","text":"Google 自己的工具能看到 Google Ads。Duct 会同时读取 Google Ads、GA4 和 Stripe 的数据，因此它可以判断哪些广告系列带来了付费客户，并且它以同样的方式读取 Meta、Apple 和 ChatGPT 广告的数据。"}},{"@type":"Question","name":"免费吗？","acceptedAnswer":{"@type":"Answer","text":"是的。Duct 可免费使用你自己的模型密钥或你已有的 ChatGPT 套餐，核心部分采用 MIT 许可。付费套餐稍后会捆绑模型；目前开源的部分不会转为付费。哪些会收费。"}}]}
+</script>
+</head>
+<body>
+<a href="#main-content" class="skip-link">跳到内容</a>
+
+<!-- GENERATED by scripts/build_integrations.py from the backend and scripts/integrations/connectors.py.
+     Do not edit this file: edit those and run the script. -->
+<!-- EXPERIMENT: An evaluator from a &#x27;google ads ai&#x27; search (320/mo, KD 35) or from the hub decides faster when the page names the eight real changes and the rule that none runs without them. Measured by download clicks per visit, split by landing page. -->
+
+<!-- NAV (shared: site/partials/nav-home.html) -->
+<div data-duct-partial="/zh-cn/partials/nav-home.html"></div>
+
+<main id="main-content">
+
+<!-- HERO -->
+<section class="ig-hero">
+<div class="ig-hero-text">
+<nav class="ig-crumbs" aria-label="面包屑"><a href="/zh-cn/integrations/">集成</a><span aria-hidden="true">/</span><span aria-current="page">Google Ads</span></nav>
+<div class="ig-lockup" aria-hidden="true"><img src="/assets/icons/google-ads.svg" width="40" height="40" alt=""/><span class="ig-plus">+</span><span class="logo">duct <span class="logo-mark"></span></span></div>
+<h1>Google Ads，<em>与你的收入一起读取。</em></h1>
+<p class="hero-sub">Duct 将你的广告系列和搜索词与 GA4 和 Stripe 关联起来，然后建议变更。八种变更，每一种都等待你的应用。</p>
+<div class="ig-cta">
+<a class="btn btn-orange btn-lg" href="/zh-cn/download" data-duct-download>下载 Duct ↓</a>
+<a class="btn btn-ghost btn-lg" href="/zh-cn/integrations/">所有集成</a>
+</div>
+<ul class="ig-facts" aria-label="一览"><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>使用 Google 登录</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg><span>读取五个数据集</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>八种变更</span></li><li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>字段审计日期：2026 年 8 月 29 日</span></li></ul>
+
+</div>
+<figure class="ig-mock reveal has-change">
+<div class="ig-mock-panel" aria-hidden="true">
+<div class="ig-sources"><img src="/assets/icons/google-ads.svg" width="34" height="34" alt=""/><img src="/assets/icons/googleanalytics.svg" width="34" height="34" alt=""/><img src="/assets/icons/stripe.svg" width="34" height="34" alt=""/></div>
+<svg class="ig-flow" viewBox="0 0 170 30" width="170" height="30" aria-hidden="true"><g class="ig-flow-bed"><path pathLength="1" d="M15 0C15 16 85 14 85 30"/><path pathLength="1" d="M85 0V30"/><path pathLength="1" d="M155 0C155 16 85 14 85 30"/></g><g class="ig-flow-water"><path d="M15 0C15 16 85 14 85 30"/><path d="M85 0V30"/><path d="M155 0C155 16 85 14 85 30"/></g></svg>
+<div class="ig-answer"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg><span>本月有六个搜索词花费了 2,140 美元。它们都没有带来付费客户。</span></div>
+<div class="ig-change"><img src="/assets/icons/google-ads.svg" width="22" height="22" alt=""/><span><b>添加 6 个否定关键词</b><s>影响 2 个广告系列。可回滚。</s></span></div>
+<div class="ig-actions"><span class="ig-btn ig-btn-reject">拒绝</span><span class="ig-btn ig-btn-apply"><span class="ig-apply-idle">应用</span><span class="ig-apply-done"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg>已应用</span><svg class="ig-cursor" aria-hidden="true"><use href="/assets/icons.svg#mouse-pointer-click"/></svg></span></div>
+</div>
+<figcaption>一个示例答案。你的数据将从你自己的账户中读取。</figcaption>
+</figure>
+</section>
+
+<!-- SESSION: shot by scripts/shots/shoot.mjs from the story's CONNECTOR_SESSIONS -->
+<section class="shot ig-shot">
+<figure class="shot-frame reveal">
+<img src="/assets/media/paid-session.webp" srcset="/assets/media/paid-session-768.webp 768w, /assets/media/paid-session-1536.webp 1536w, /assets/media/paid-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 48px), 1536px" loading="lazy" decoding="async" width="3072" height="2052" alt="一次 Duct 运行：询问广告预算流失在哪里，Duct 读取 Google Ads 广告系列和搜索词，同时参考 GA4 和 Stripe，建议暂停、添加两个否定关键词和提高预算，并撰写支出简报"/>
+<figcaption>询问预算流失在哪里。Duct 根据你的 CPA 目标计算每个广告系列的成本，并建议暂停、添加否定关键词和调整预算。越过护栏的那个（变更）等待你的操作。</figcaption>
+</figure>
+</section>
+
+<div class="channel" aria-hidden="true"></div>
+
+<!-- ASK -->
+<section class="ig-sec" id="ask">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">提问</p>
+<h2>你可以<em>直接提问</em>的问题</h2>
+</div>
+<ul class="ig-qs">
+<li class="ig-q reveal" style="transition-delay:0.00s"><p>哪些搜索词花费了金钱但从未带来付费客户？</p><span class="ig-q-joins"><img src="/assets/icons/google-ads.svg" width="18" height="18" alt=""/><img src="/assets/icons/stripe.svg" width="18" height="18" alt=""/><span>Google Ads + Stripe</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.06s"><p>Google Ads 显示 120 次转化。其中有多少是付费的？</p><span class="ig-q-joins"><img src="/assets/icons/google-ads.svg" width="18" height="18" alt=""/><img src="/assets/icons/stripe.svg" width="18" height="18" alt=""/><span>Google Ads + Stripe</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.12s"><p>GA4 看到我 60% 的 Ads 点击。自动标记是否已损坏？</p><span class="ig-q-joins"><img src="/assets/icons/google-ads.svg" width="18" height="18" alt=""/><img src="/assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><span>Google Ads + GA4</span></span></li>
+<li class="ig-q reveal" style="transition-delay:0.18s"><p>哪个广告系列可以在不提高每个客户成本的情况下获得更多预算？</p><span class="ig-q-joins"><img src="/assets/icons/google-ads.svg" width="18" height="18" alt=""/><img src="/assets/icons/googleanalytics.svg" width="18" height="18" alt=""/><img src="/assets/icons/stripe.svg" width="18" height="18" alt=""/><span>Google Ads + GA4 + Stripe</span></span></li>
+</ul>
+</div>
+</section>
+
+<!-- ACCESS: generated from the catalogue and the executor registry -->
+<section class="ig-sec ig-access" id="access">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">访问</p>
+<h2>它读取的内容。<em>它能更改的内容。</em></h2>
+</div>
+<div class="ig-cols reveal">
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg>它读取什么</h3>
+<ul class="ig-reads">
+<li><b>广告系列表现</b><span class="ig-fields"><span>广告系列</span><span>支出</span><span>点击</span><span>展示</span><span>转化</span><span>转化价值</span><span>ROAS</span><span>每次转化费用</span><span>CTR</span><span>建议操作</span></span></li>
+<li><b>搜索词</b><span class="ig-fields"><span>搜索词</span><span>广告系列</span><span>匹配类型</span><span>支出</span><span>点击</span><span>转化</span><span>每次转化费用</span><span>ROAS</span><span>CTR</span></span></li>
+<li><b>设备表现</b><span class="ig-fields"><span>广告系列</span><span>设备</span><span>支出</span><span>转化</span><span>ROAS</span><span>每次转化费用</span></span></li>
+<li><b>地域表现</b><span class="ig-fields"><span>广告系列</span><span>国家/地区</span><span>支出</span><span>转化</span><span>ROAS</span><span>每次转化费用</span></span></li>
+<li><b>广告组表现</b><span class="ig-fields"><span>广告系列</span><span>广告组</span><span>支出</span><span>转化</span><span>ROAS</span><span>每次转化费用</span></span></li>
+</ul>
+<p class="ig-note">Google Ads API v23 · 字段审计日期：2026 年 8 月 29 日 · <a href="https://github.com/5hirish/duct/blob/main/backend/agents/insights/catalog/google_ads.py" rel="noopener">阅读源代码</a></p>
+</div>
+<div class="ig-col">
+<h3><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>它可以更改什么</h3>
+<ul class="ig-ops">
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">添加否定关键词</span><span class="ig-badges"><span class="ig-badge is-auto">在辅助模式下可自动应用</span></span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">暂停广告系列</span><span class="ig-badges"></span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">设置广告系列状态</span><span class="ig-badges"></span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">设置广告组状态</span><span class="ig-badges"></span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">设置关键词状态</span><span class="ig-badges"></span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">添加关键词</span><span class="ig-badges"></span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">设置广告系列每日预算</span><span class="ig-badges"></span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#check"/></svg><span class="ig-op">设置广告系列出价 (tCPA/tROAS)</span><span class="ig-badges"></span></li>
+</ul>
+<p class="ig-note">每项变更都可回滚。默认情况下，每项变更都需你点击应用：它会以预览形式显示所影响的内容，并记录在活动日志中。<a href="/zh-cn/doctrine">批准工作原理</a></p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- KNOWS: the knowledge pack, in plain words -->
+<section class="ig-sec ig-knows" id="knows">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">知识</p>
+<h2>Duct 已知 <em>关于 Google Ads 的信息</em></h2>
+</div>
+<ol class="ig-k">
+<li class="reveal" style="transition-delay:0.00s"><span class="ig-k-num">01</span><h3>移除是永久性的，所以 Duct 会暂停。</h3><p>Google Ads 无法恢复已移除的广告系列、广告组或关键词。Duct 只建议暂停，暂停可以回滚。</p></li>
+<li class="reveal" style="transition-delay:0.06s"><span class="ig-k-num">02</span><h3>共享预算会一起变动。</h3><p>更改共享预算，其上的每个广告系列也会随之更改。在你应用之前，预览会显示影响多少个广告系列。</p></li>
+<li class="reveal" style="transition-delay:0.12s"><span class="ig-k-num">03</span><h3>你的批准是针对你看到的数字。</h3><p>如果你批准后有人更改了预算、出价或状态，Duct 会拒绝覆盖这些更改。</p></li>
+<li class="reveal" style="transition-delay:0.18s"><span class="ig-k-num">04</span><h3>每个平台都声称是同一个销售。</h3><p>Google 统计最后一次点击，Meta 统计七天点击和一天浏览，两者都统计相同的购买。Duct 会对照 Stripe 检查总数。</p></li>
+</ol>
+<p class="ig-k-src"><a href="https://github.com/5hirish/duct/blob/main/backend/agents/knowledge/google_ads.md" rel="noopener">阅读 Duct 智能体工作所依据的 Google Ads 笔记 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></a></p>
+</div>
+</section>
+
+<!-- PAIRS -->
+<section class="ig-sec" id="pairs">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">协同更好</p>
+<h2>Google Ads <em>与合作伙伴</em> 的回答</h2>
+</div>
+<div class="ig-pairs">
+<a class="ig-pair reveal" style="transition-delay:0.00s" href="/zh-cn/integrations/stripe"><span class="ig-pair-logos"><img src="/assets/icons/google-ads.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/stripe.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">哪些广告系列带来了实际付费的客户？</span><span class="ig-pair-go">Google Ads + Stripe <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.06s" href="/zh-cn/integrations/ga4"><span class="ig-pair-logos"><img src="/assets/icons/google-ads.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/googleanalytics.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">你的 Ads 点击是否作为带标签的会话到达？</span><span class="ig-pair-go">Google Ads + GA4 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+<a class="ig-pair reveal" style="transition-delay:0.12s" href="/zh-cn/integrations/meta-ads"><span class="ig-pair-logos"><img src="/assets/icons/google-ads.svg" width="28" height="28" alt=""/><span class="ig-pair-pipe" aria-hidden="true"></span><img src="/assets/icons/meta.svg" width="28" height="28" alt=""/></span><span class="ig-pair-q">哪个平台获客成本更低？</span><span class="ig-pair-go">Google Ads + Meta Ads <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#arrow-right"/></svg></span></a>
+</div>
+</div>
+</section>
+
+<!-- SETUP -->
+<section class="ig-sec ig-setup" id="setup">
+<div class="ig-inner">
+<div class="reveal">
+<p class="tag">设置</p>
+<h2>连接 Google Ads <em>分三步</em></h2>
+</div>
+<ol class="ig-steps reveal">
+<li><span class="ig-step-n">1</span><p>在 Duct 中，打开工具箱并选择 Google Ads。</p></li>
+<li><span class="ig-step-n">2</span><p>使用 Google 登录并允许访问。</p></li>
+<li><span class="ig-step-n">3</span><p>选择此项目要读取的账户。对于经理 (MCC) 账户，添加其 ID 后，Duct 会读取其下的账户。</p></li>
+</ol>
+<div class="ig-trust reveal">
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg><span>Google Ads 提供一种 API 权限，其中包括进行更改；没有只读选项。Duct 的限制在于其代码：智能体没有批准变更的工具，因此它最多只能提出建议。</span></p>
+<p><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>密钥和令牌由 Duct 的托管 API 加密存储，绝不会存储在你的浏览器中，你可以随时移除连接。自托管版本会将它们保存在你自己的机器上。</span></p>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+<div class="faq-inner">
+<div class="reveal">
+<p class="tag">常见问题</p>
+<h2>Google Ads，<em>已解答</em></h2>
+</div>
+<div class="faq-list reveal" style="transition-delay:.08s">
+<details class="faq-item">
+<summary class="faq-q">Duct 可以在未经我同意的情况下更改我的 Google Ads 吗？</summary>
+<p class="faq-a">默认情况下不会。每次更改都是一个提案，会显示它影响的内容，并在你按下应用时运行。如果你将项目切换到辅助模式，添加关键词和否定关键词可以自动应用；预算、出价和状态始终会等待你的批准。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Duct 可以在 Google Ads 中进行哪些更改？</summary>
+<p class="faq-a">八种：添加否定关键词、暂停广告系列、设置广告系列状态、设置广告组状态、设置关键词状态、添加关键词、设置广告系列每日预算和设置广告系列出价 (tCPA/tROAS)。默认情况下，每种变更都等待你的应用，并且每一种都可以回滚。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">它是否适用于经理 (MCC) 账号？</summary>
+<p class="faq-a">是的。连接时添加经理账户的 ID，Duct 会读取其下的客户账户。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">这与 Google Ads 内置的 AI 有何不同？</summary>
+<p class="faq-a">Google 自己的工具能看到 Google Ads。Duct 会同时读取 Google Ads、GA4 和 Stripe 的数据，因此它可以判断哪些广告系列带来了付费客户，并且它以同样的方式读取 Meta、Apple 和 ChatGPT 广告的数据。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">免费吗？</summary>
+<p class="faq-a">是的。Duct 可免费使用你自己的模型密钥或你已有的 ChatGPT 套餐，核心部分采用 MIT 许可。付费套餐稍后会捆绑模型；目前开源的部分不会转为付费。<a href="/zh-cn/open-source#pricing">哪些会收费</a>。</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/zh-cn/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/zh-cn/partials/footer-expanded.html"><div class="legal-fallback"><a href="/zh-cn/">Duct</a><a href="/zh-cn/about">关于</a><a href="/zh-cn/privacy">隐私政策</a><a href="/zh-cn/terms">服务条款</a></div></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

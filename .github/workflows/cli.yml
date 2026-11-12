@@ -1,0 +1,70 @@
+name: CLI Checks
+
+# The getduct npm package (cli/). Its tests run offline against fixture files,
+# so this needs no secret, no network beyond the checkout, and no install step:
+# the package has no dependencies. The matrix is the `engines` floor and the
+# current LTS lines, because `npx getduct` runs on whatever Node a user has.
+# The skill and the plugin README are in the path filter too: test/catalog.test.js
+# holds the CLI's ids, weights and version pin to them, so editing either must
+# run these.
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    paths:
+      - 'cli/**'
+      - 'skills/launch-check/**'
+      - 'skills/README.md'
+      - '.github/workflows/cli.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'cli/**'
+      - 'skills/launch-check/**'
+      - 'skills/README.md'
+      - '.github/workflows/cli.yml'
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: getduct tests (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20', '22', '24']
+    defaults:
+      run:
+        working-directory: cli
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Tests
+        run: npm test
+
+      # What `npm publish` would ship: the files allowlist must keep the fonts'
+      # licences and the schema, and must not pick up tests or the font script.
+      - name: Package contents
+        run: |
+          npm pack --dry-run --json > pack.json
+          node -e '
+            const files = require("./pack.json")[0].files.map((f) => f.path);
+            const need = ["bin/getduct.js", "schema/launch-check.schema.json", "src/card/fonts/OFL-dm-sans.txt", "src/card/fonts/OFL-gelasio.txt", "LICENSE", "README.md"];
+            const missing = need.filter((f) => !files.includes(f));
+            const extra = files.filter((f) => /^(test|scripts|assets)\//.test(f));
+            if (missing.length || extra.length) { console.error({ missing, extra }); process.exit(1); }
+            console.log(files.length + " files");'

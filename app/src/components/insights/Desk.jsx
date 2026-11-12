@@ -7,21 +7,29 @@
 // asked the user to classify their problem before describing it and then
 // admitted it had nothing; both are gone.
 //
-// Six reads, issued together (lib/deskApi.js), folded into three cards by one
-// rule (lib/desk.js). A single GET /projects/{id}/desk is the right end state
-// once the shape settles.
+// Six reads, issued together (lib/deskApi.js), arranged by one function
+// (`arrangeDesk` in lib/desk.js) into a fixed shape: a headline picked from
+// the page's state, at most one lead item, a bounded queue, a few notes. The
+// page holds no rule of its own, because everything on it was written at run
+// time and its count, length and age cannot be known when the page is drawn.
+// A single GET /projects/{id}/desk is the right end state once the shape
+// settles.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
-import { HEADLINE_CLEAR, HEADLINE_NEEDS_YOU, buildDesk, headline } from "@/lib/desk";
+import { DESK_STATE, arrangeDesk, elapsed } from "@/lib/desk";
 import { loadDesk, pinArtifact, pinConversation } from "@/lib/deskApi";
 import { getActiveProjectId, getProjectById, PROJECTS_CHANGED } from "@/lib/projects";
+import { pageHidden } from "@/lib/visibility";
 import { AUTONOMY_ASK } from "@/lib/projectsApi";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Reveal } from "@/components/ui/reveal";
 import { cn } from "@/lib/utils";
-import DeskCards from "./desk/DeskCards";
+import { Page, PageHeader } from "@/components/ui/page";
+import { DeskAllClear, DeskConnectFirst, DeskFreshLook } from "./desk/DeskCards";
+import { DeskFiled, DeskLead, DeskNotes, DeskRows, DeskWorking } from "./desk/DeskQueue";
+import { useGreeting } from "./desk/useGreeting";
 import DeskLists from "./desk/DeskLists";
 import DeskActivity, { activityGridClass } from "./desk/DeskActivity";
 import DeskComposer from "./desk/DeskComposer";
@@ -41,7 +49,7 @@ const EMPTY = {
 };
 
 export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }) {
-  const { t } = useLingui();
+  const { t, i18n } = useLingui();
   const relative = useRelativeTime();
   const router = useRouter();
   // `null` until the active project has been read, which is not the same as
@@ -146,33 +154,29 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
       if (document.visibilityState === "visible") refresh();
     };
     document.addEventListener("visibilitychange", onVisible);
-    const timer = working ? setInterval(refresh, DESK_POLL_MS) : null;
+    // The visibility listener above already refreshes on return, so a hidden
+    // tick has nothing to add.
+    const timer = working
+      ? setInterval(() => {
+          if (!pageHidden()) refresh();
+        }, DESK_POLL_MS)
+      : null;
     return () => {
       document.removeEventListener("visibilitychange", onVisible);
       if (timer) clearInterval(timer);
     };
   }, [refresh, working]);
 
-  const buckets = useMemo(
-    () => buildDesk({
-      memories: data.memories,
-      changeSets: data.changeSets,
-      conversations: data.conversations,
-    }),
-    [data]
-  );
+  const desk = useMemo(() => arrangeDesk(data), [data]);
+  const { state } = desk;
 
-  const lastRunAt = data.activity[0]?.created_at || "";
-  const head = headline({
-    needsYou: buckets.needsYou.length,
-    found: buckets.found.length,
-    lastRunAt,
-    sourceCount: data.sourceCount,
-  });
-  // Plain identifiers, so the catalogue names them ({needsYou}) rather than
+  // Plain identifiers, so the catalogue names them ({waiting}) rather than
   // numbering them ({0}) — AGENTS.md, "Values in a string".
-  const { needsYou, found, sourceCount } = head;
-  const lastChecked = relative(head.lastRunAt);
+  const { waiting, sourceCount } = desk;
+  const lastChecked = relative(desk.lookedAt);
+  const since = elapsed(desk.lookedAt, { locale: i18n.locale });
+  const hasActivity = data.activity.length > 0;
+  const greeting = useGreeting();
 
   // Day one is "this project has produced nothing yet" — not "the fetch was
   // slow" and not "there is no project".
@@ -180,8 +184,9 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
     !loading &&
     data.conversations.length === 0 &&
     data.artifacts.length === 0 &&
-    buckets.found.length === 0 &&
-    buckets.needsYou.length === 0;
+    desk.notesTotal === 0 &&
+    desk.waiting === 0 &&
+    desk.filed.length === 0;
 
   function ask(question) {
     const params = new URLSearchParams({ q: question });
@@ -223,40 +228,36 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
     }
   }
 
-  const topFinding = buckets.found[0]?.title || "";
-
   // `mt-auto` belongs on the sticky element itself, not on a wrapper around it.
   // A sticky box can only travel inside its parent's content box, and a wrapper
   // sized to exactly one child gives it nowhere to go — so this read as sticky,
   // passed review as sticky, and scrolled away like any other block.
   const composer = (
-    <div className="sticky bottom-0 -mx-4 mt-auto bg-gradient-to-t from-background from-70% px-4 pb-4 pt-10">
+    <div className="sticky bottom-0 z-10 mt-auto bg-gradient-to-t from-background from-60% pb-4 pt-8">
       <DeskComposer
         project={project}
         autonomy={autonomy}
         onAutonomyChange={setAutonomy}
-        placeholder={
-          topFinding
-            ? t`Ask about “${topFinding}” — or anything else`
-            : t`Ask me anything about your site`
-        }
+        // Not the top finding's title: that is model-written and any length,
+        // and a placeholder clips it mid-thought.
+        placeholder={t`Ask me anything about your site`}
       />
     </div>
   );
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-8">
+      <Page>
         <div className="flex flex-col gap-3">
-          <Skeleton className="h-8 w-[420px] max-w-full" />
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="h-10 w-[420px] max-w-full" />
           <Skeleton className="h-4 w-[300px] max-w-full" />
         </div>
-        <div className="grid gap-4 @md:grid-cols-2 @3xl:grid-cols-3">
-          <Skeleton className="h-48" />
-          <Skeleton className="h-48" />
-          <Skeleton className="h-48" />
+        <div className="grid gap-3 @xl:grid-cols-2">
+          <Skeleton className="h-40" />
+          <Skeleton className="h-40" />
         </div>
-      </div>
+      </Page>
     );
   }
 
@@ -264,6 +265,7 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
     return (
       <div className="flex min-h-[calc(100svh-160px)] flex-col">
         <DeskDayOne
+          greeting={greeting}
           hasProject={Boolean(project)}
           sourceCount={data.sourceCount}
           hasThread={data.conversations.length > 0}
@@ -278,67 +280,101 @@ export default function Desk({ loadDeskFn = loadDesk, projectIdOverride = null }
     // The skeleton above is a different subtree, not this one crossfading
     // with itself — Reveal just eases the swap in rather than popping.
     <Reveal className="flex min-h-[calc(100svh-160px)] flex-col">
-      {/* Sized off this region's own box, not the viewport (AGENTS.md) — the
-          sidebar and the Activity rail itself both eat into the window
-          without moving a `lg:` breakpoint, so viewport-based collapse was
-          firing far later than the space actually ran out. */}
-      <div className={cn("grid gap-y-8", activityGridClass(activityCollapsed))}>
+      {/* Sized off this region's own box, not the viewport (AGENTS.md). The
+          rail only exists once there is activity to show: an empty 288px
+          column of "Nothing yet" was what pushed the cards into one stacked
+          column at the desktop app's default width. */}
+      <div className={cn("grid flex-1 gap-y-10", hasActivity && activityGridClass(activityCollapsed))}>
         {/* Its own container: once split, this column is narrower than
-            `.app-main`, and DeskCards/DeskLists need to size off that, not
-            the ancestor the row-vs-stacked decision above just used. */}
-        <div className="@container flex min-w-0 flex-col gap-8">
-          <div>
-            <h1 className="text-3xl font-bold leading-tight tracking-tight">
-              {head.state === HEADLINE_NEEDS_YOU ? (
-                <Plural value={needsYou} one="# thing needs you." other="# things need you." />
-              ) : head.state === HEADLINE_CLEAR ? (
-                <Trans>Nothing needs you right now.</Trans>
-              ) : (
-                <Trans>Nothing to report yet.</Trans>
-              )}
-            </h1>
-            <p className="measure mt-2.5 text-sm leading-relaxed text-muted-foreground">
-              {head.state === HEADLINE_CLEAR && (
-                <>
-                  <Plural value={found} one="# finding on file." other="# findings on file." />{" "}
-                </>
-              )}
-              {head.hasRun ? (
-                <Trans>
-                  Last checked {lastChecked}.{" "}
-                  <Plural value={sourceCount} one="# source connected." other="# sources connected." />
-                </Trans>
-              ) : (
-                <Trans>
-                  Nothing has run yet.{" "}
-                  <Plural value={sourceCount} one="# source connected." other="# sources connected." />
-                </Trans>
-              )}
-            </p>
-          </div>
+            `.app-main`, and the cards size off that. The composer lives in
+            this column too, so it shares the content's left edge instead of
+            centring under the rail. */}
+        <div className="@container flex min-w-0 flex-col">
+          <Page className="flex-1">
+            <PageHeader
+              size="hero"
+              eyebrow={greeting}
+              title={<DeskHeadline state={state} waiting={waiting} since={since} />}
+              status={
+                state === DESK_STATE.STALE || !desk.hasRun ? (
+                  sourceCount ? (
+                    <Plural value={sourceCount} one="# source connected" other="# sources connected" />
+                  ) : (
+                    <Trans>Nothing is connected yet.</Trans>
+                  )
+                ) : (
+                  <Trans>
+                    Last checked {lastChecked} ·{" "}
+                    <Plural value={sourceCount} one="# source connected" other="# sources connected" />
+                  </Trans>
+                )
+              }
+              actions={desk.working.length ? <DeskWorking items={desk.working} /> : null}
+            />
 
-          <DeskCards buckets={buckets} />
+            {/* One lead a page, whichever state supplies it. */}
+            {state === DESK_STATE.CONNECT && <DeskConnectFirst returning={desk.hasRun} />}
+            {state === DESK_STATE.STALE && <DeskFreshLook lookedAt={desk.lookedAt} onAsk={ask} />}
+            {desk.lead && <DeskLead item={desk.lead} />}
 
-          <p className="-mt-4 text-xs text-muted-foreground">
-            <Trans>Each item shows up in one card only — sorted by who’s holding it.</Trans>
-          </p>
+            {desk.rows.length + desk.more.length > 0 ? (
+              <DeskRows
+                rows={desk.rows}
+                more={desk.more}
+                filed={desk.filed}
+                title={desk.lead ? <Trans>Up next</Trans> : <Trans>Still open</Trans>}
+              />
+            ) : (
+              desk.filed.length > 0 && <DeskFiled items={desk.filed} />
+            )}
 
-          <DeskLists
-            conversations={data.conversations}
-            artifacts={data.artifacts}
-            onPinThread={togglePinThread}
-            onPinArtifact={togglePinArtifact}
-          />
+            {state === DESK_STATE.CLEAR && desk.notes.length === 0 && (
+              <DeskAllClear lastChecked={lastChecked} />
+            )}
+            {desk.notes.length > 0 && (
+              <DeskNotes notes={desk.notes} total={desk.notesTotal} projectId={projectId} />
+            )}
+
+            <DeskLists
+              conversations={data.conversations}
+              artifacts={data.artifacts}
+              onPinThread={togglePinThread}
+              onPinArtifact={togglePinArtifact}
+            />
+          </Page>
+          {composer}
         </div>
 
-        <DeskActivity
-          items={data.activity}
-          collapsed={activityCollapsed}
-          onToggle={toggleActivity}
-        />
+        {hasActivity && (
+          <DeskActivity
+            items={data.activity}
+            collapsed={activityCollapsed}
+            onToggle={toggleActivity}
+          />
+        )}
       </div>
-
-      {composer}
     </Reveal>
   );
+}
+
+/**
+ * The page's one sentence, from its state and never from content: the agent's
+ * words go in the lead below, where a clamp holds them. Each state has one
+ * sentence, so the largest type on the page is always a known length.
+ */
+function DeskHeadline({ state, waiting, since }) {
+  switch (state) {
+    case DESK_STATE.CONNECT:
+      return <Trans>Nothing is connected right now.</Trans>;
+    case DESK_STATE.WORKING:
+      return <Trans>Duct is looking now.</Trans>;
+    case DESK_STATE.STALE:
+      return <Trans>Duct last looked {since}.</Trans>;
+    case DESK_STATE.NEEDS_YOU:
+      return <Plural value={waiting} one="One thing needs you." other="# things need you." />;
+    case DESK_STATE.CLEAR:
+      return <Trans>Nothing needs you right now.</Trans>;
+    default:
+      return <Trans>Nothing to report yet.</Trans>;
+  }
 }

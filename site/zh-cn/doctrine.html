@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Duct Doctrine——此项目所信奉的理念及原因</title>
+<link rel="canonical" href="https://getduct.ai/zh-cn/doctrine"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/doctrine"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/doctrine"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/doctrine"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/doctrine"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/doctrine"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/doctrine"/>
+<link rel="alternate" hreflang="zh-CN" href="https://getduct.ai/zh-cn/doctrine"/>
+<meta property="og:locale" content="zh_CN"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="pt_BR"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<!-- hreflang:end -->
+<meta name="description" content="Duct 所基于的七项原则，每项原则都附有强制执行它的文件：先批准后行动、租用智能体线束，以及为何欢迎智能体编写的代码。"/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="article"/>
+<meta property="og:url" content="https://getduct.ai/zh-cn/doctrine"/>
+<meta property="og:title" content="Duct Doctrine——此项目所信奉的理念及原因"/>
+<meta property="og:description" content="Duct 所基于的七项原则，每项原则都附有强制执行它的文件。一个可以提议更改生产环境但不能批准更改的智能体，以及其他六项立场。"/>
+<meta property="og:image" content="https://getduct.ai/assets/og/doctrine.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Duct Doctrine——此项目所信奉的理念及原因"/>
+<meta name="twitter:description" content="Duct 所基于的七项原则，每项原则都附有强制执行它的文件。"/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/doctrine.jpg"/>
+<link rel="alternate" type="application/rss+xml" title="Duct 博客" href="/blog/feed.xml"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookie，坦白说","We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold.":"我们使用 PostHog 来了解哪些页面促成了注册，以及 Duct 在何处阻碍了你，包括隐藏你输入的所有内容的访问回放。拒绝会关闭 PostHog，Duct 仍能正常运行。Google Analytics 也会统计访问量并设置自己的 Cookie，无论你选择什么。我们不会出售任何数据。","Privacy Policy":"隐私政策","Decline":"拒绝","Accept":"接受","{n} stars on GitHub":"{n} GitHub 星","UTM Builder":"UTM 构建器","SaaS Metrics Benchmark Calculator":"SaaS 指标基准计算器","Weekly Marketing Brief Generator":"每周营销简报生成器","CAC / LTV Calculator":"CAC / LTV 计算器","MRR Growth Rate Calculator":"MRR 增长率计算器","Engagement Rate Calculator":"互动率计算器","CTR Calculator":"CTR 计算器","CPM Calculator":"CPM 计算器","CPC Calculator":"CPC 计算器","CPA Calculator":"CPA 计算器","Marketing ROI Calculator":"营销 ROI 计算器","ROAS Calculator":"ROAS 计算器","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Menu":"菜单","Free Tools":"免费工具","Solutions":"解决方案","Download Duct ↓":"下载 Duct ↓","Language":"语言","Enlarged screenshot":"放大后的截图","Close":"关闭","Fit to screen":"适应屏幕","Zoom in":"放大","Enlarge":"放大","Universal · Apple silicon and Intel":"通用 · Apple 芯片和 Intel","Windows 10 and later":"Windows 10 及更高版本","Runs on any distribution":"可在任何发行版上运行","Debian and Ubuntu":"Debian 和 Ubuntu","Download ↓":"下载 ↓","Download for {label} ↓":"下载适用于 {label} ↓","Example numbers. Change any field and calculate again for yours.":"示例数字。修改任意字段，重新计算你的结果。"};</script>
+<script src="/assets/config.js" defer></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "inLanguage": "zh-CN",
+  "headline": "Duct Doctrine",
+  "url": "https://getduct.ai/zh-cn/doctrine",
+  "description": "Duct 所基于的七项原则，每项原则都附有强制执行它的文件。",
+  "author": {
+    "@type": "Person",
+    "name": "Shirish Kadam",
+    "url": "https://shirishkadam.com",
+    "sameAs": [
+      "https://github.com/5hirish",
+      "https://x.com/5hirish",
+      "https://youtube.com/@5hirish"
+    ]
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Duct",
+    "url": "https://getduct.ai"
+  },
+  "mainEntityOfPage": "https://getduct.ai/zh-cn/doctrine"
+}
+</script>
+<style>
+/* ── DOCTRINE-ONLY STYLES ── */
+.doc-hero {
+  padding: 150px 52px 70px; max-width: 780px; margin: 0 auto; text-align: center;
+}
+.doc-hero h1 {
+  font-family: var(--serif);
+  font-size: clamp(40px, 6.5vw, 74px);
+  line-height: 1.05; letter-spacing: -2px; color: var(--navy); margin-bottom: 26px;
+  animation: fadeUp .5s .08s ease both;
+}
+.doc-hero h1 em { font-style: italic; color: var(--orange); }
+.doc-hero-sub {
+  font-size: 18px; font-weight: 300; color: var(--navy-3);
+  line-height: 1.8; max-width: 620px; margin: 0 auto;
+  animation: fadeUp .5s .16s ease both;
+}
+.doc-preamble {
+  max-width: 700px; margin: 0 auto; padding: 0 52px 80px;
+  font-size: 16px; font-weight: 300; color: var(--navy-3); line-height: 1.85;
+}
+.doc-preamble p + p { margin-top: 18px; }
+.doc-preamble strong { color: var(--navy-2); font-weight: 500; }
+
+.tenets { max-width: 760px; margin: 0 auto; padding: 0 52px 40px; }
+.tenet { padding: 48px 0; border-top: 1px solid var(--border); }
+.tenet:last-of-type { border-bottom: 1px solid var(--border); }
+.tenet-num {
+  font-family: var(--serif); font-size: 11px; color: var(--orange);
+  letter-spacing: .08em; margin-bottom: 16px; display: block;
+}
+.tenet-title {
+  font-family: var(--serif); font-size: clamp(24px, 3.4vw, 32px);
+  color: var(--navy); line-height: 1.2; letter-spacing: -.4px; margin-bottom: 16px;
+}
+.tenet-body { font-size: 16px; font-weight: 300; color: var(--navy-3); line-height: 1.82; }
+.tenet-body + .tenet-body { margin-top: 14px; }
+.tenet-quote {
+  margin: 20px 0; padding: 16px 20px; border-left: 2px solid var(--orange);
+  background: var(--off); border-radius: 0 var(--r) var(--r) 0;
+  font-size: 15px; font-weight: 300; color: var(--navy-2); line-height: 1.7; font-style: italic;
+}
+.tenet-src {
+  display: inline-flex; align-items: center; gap: 7px; margin-top: 20px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12.5px; color: var(--navy-3); text-decoration: none;
+  border-bottom: 1px solid var(--border); padding-bottom: 2px; transition: color .2s, border-color .2s;
+}
+.tenet-src:hover { color: var(--orange); border-color: var(--orange); }
+.tenet-src::before { content: "↳"; color: var(--orange); }
+
+.doc-cta { padding: 110px 52px; text-align: center; background: var(--off); border-top: 1px solid var(--border); }
+.doc-cta-inner { max-width: 580px; margin: 0 auto; }
+.doc-cta h2 { font-size: clamp(30px, 4.6vw, 46px); margin-bottom: 16px; }
+.doc-cta .sub { max-width: 460px; margin: 0 auto 34px; }
+
+@media (max-width: 860px) {
+  .doc-hero { padding: 110px 24px 50px; }
+  .doc-preamble { padding: 0 24px 56px; }
+  .tenets { padding: 0 24px 24px; }
+  .tenet { padding: 36px 0; }
+  .doc-cta { padding: 72px 24px; }
+}
+</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"zh-CN","itemListElement":[{"@type":"ListItem","position":1,"name":"主页","item":"https://getduct.ai/zh-cn/"},{"@type":"ListItem","position":2,"name":"Doctrine","item":"https://getduct.ai/zh-cn/doctrine"}]}
+</script>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">跳到内容</a>
+
+<!-- NAV (shared: site/partials/nav-simple.html) -->
+<div data-duct-partial="/zh-cn/partials/nav-simple.html"></div>
+
+<main id="main-content">
+
+<section class="doc-hero">
+  <h1>坚定的观点，<br/>由<em>代码</em>支撑</h1>
+  <p class="doc-hero-sub">每个项目都有其信念。大多数信念存在于某人的脑海中，并在每次代码审查时逐渐泄露。这些是 Duct 的信念，已书面记录，每条都附有强制执行它的文件。</p>
+</section>
+
+<section class="doc-preamble">
+  <p>Duct 是一个 AI 智能体，它能读取你的产品和增长技术栈，并能对其进行更改。这对于一个并非你编写的工具来说，需要极大的信任。因此，其推理过程是公开的，支撑它的代码也是公开的。</p>
+  <p><strong>以下内容均非空想。</strong> 每条原则都链接到使其成立的文件。如果你发现代码与页面不符，那是一个 bug，请提交问题。</p>
+</section>
+
+<div class="tenets">
+
+  <article class="tenet reveal">
+    <span class="tenet-num">01</span>
+    <h2 class="tenet-title">智能体提出建议。人类批准。</h2>
+    <p class="tenet-body">Duct 可以为你的实时系统准备变更：暂停广告系列、添加否定关键词、标记 GA4 关键事件。它会向你显示预览和安全检查。然后它会停止。</p>
+    <p class="tenet-body">没有面向智能体的批准或应用工具。没有禁用版本，也没有隐藏在功能标志后面的版本。它不存在于模型看到的工具注册表中，因此模型无法调用它，无法被说服调用它，也无法通过提示注入来调用它。破坏性门控是绝对的：没有任何配置允许破坏性操作自动应用。回滚是每个执行器契约的一部分，而不是事后才考虑的。</p>
+    <p class="tenet-body">更高的自主性是一种姿态，而非更宽泛的允许列表。它改变了智能体打断你的频率。它从不改变未经点击即可应用的内容。</p>
+    <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/backend/service/execution/policy.py" rel="noopener">backend/service/execution/policy.py</a>
+  </article>
+
+  <article class="tenet reveal">
+    <span class="tenet-num">02</span>
+    <h2 class="tenet-title">Duct 租用智能体线束。它不绑定任何一个。</h2>
+    <p class="tenet-body">智能体框架是此技术栈中变化最快、差异化最小的层。它们是 0.x 版本，每周发布，并且每个都曾强制某人进行破坏性迁移。在此之上构建产品无异于租用地基。</p>
+    <p class="tenet-body">因此，这里的领域代码不导入任何智能体框架。提示、工具、模式、目标、评分和成果文档契约都是纯 Python。框架导入仅存在于运行器和绑定器中，并且一个测试通过显式允许列表来强制执行边界。将文件添加到该允许列表是一个有意的行为，而不是你修复失败测试的方式。</p>
+    <p class="tenet-quote">我们刻意没有 <code>AgentHarness</code> 接口，也永远不应该有。取交集会让你失去子智能体、文件系统、技能、HITL 粒度和压缩，而这正是租用 harness 的全部原因。取并集则是在编写一个框架。</p>
+    <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/backend/agents/core/ports/__init__.py" rel="noopener">backend/agents/core/ports/__init__.py</a>
+  </article>
+
+  <article class="tenet reveal">
+    <span class="tenet-num">03</span>
+    <h2 class="tenet-title">在第二个实现上编写适配器，而不是第一个。</h2>
+    <p class="tenet-body">只有一个实现的端口是猜测。有两个实现的端口是事实。在第二个实现出现之前构建的抽象会编码第一个实现碰巧需要的任何东西，然后后续的一切都将与该形状作斗争。</p>
+    <p class="tenet-body">智能体层中的每个端口都有两个适配器，只有一个例外，该端口在其自己的文档字符串中说明了这一点，并命名了将获得它的实现。指出这个空白可以防止它被悄悄地用猜测填补。</p>
+    <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/STYLE.md" rel="noopener">STYLE.md</a>
+  </article>
+
+  <article class="tenet reveal">
+    <span class="tenet-num">04</span>
+    <h2 class="tenet-title">授权即成员资格，API key 并非边界。</h2>
+    <p class="tenet-body">应用的 API 密钥会发送到浏览器。它证明“此请求来自 Duct 应用”。它从未证明“此调用者拥有该行”，如果这样对待它，就会导致多租户数据泄露。</p>
+    <p class="tenet-body">因此，每个涉及项目范围行的路由都会解析已登录用户<em>并</em>检查成员资格。非成员会收到 404，而不是 403，因为 403 会告诉他们该行存在。一个测试会遍历树中的每个路由，如果某个路由未经书面理由而未受限制，则构建失败。</p>
+    <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/backend/tests/test_route_auth_boundaries.py" rel="noopener">backend/tests/test_route_auth_boundaries.py</a>
+  </article>
+
+  <article class="tenet reveal">
+    <span class="tenet-num">05</span>
+    <h2 class="tenet-title">你的机器，你的密钥，你的数据。</h2>
+    <p class="tenet-body">Duct 作为桌面应用运行，将后端捆绑为本地伴随服务：磁盘上的 SQLite，仅限回环，提供商密钥存储在操作系统密钥链中。没有账户，没有服务器，没有任何东西离开你的机器。或者自托管后端。或者使用 getduct.ai 上的托管版本，它运行的代码与你可阅读的代码相同。</p>
+    <p class="tenet-body">也请自带模型。Anthropic、OpenAI、Gemini 或 OpenRouter 上的任何模型，按作业分配到三个层级，这样推理密集型工作和廉价摘要就不会支付相同的价格。一个读取你整个业务的工具不应该同时决定你的供应商是谁。</p>
+    <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/desktop/README.md" rel="noopener">desktop/README.md</a>
+  </article>
+
+  <article class="tenet reveal">
+    <span class="tenet-num">06</span>
+    <h2 class="tenet-title">注释承载原因。差异已显示内容。</h2>
+    <p class="tenet-body">重复下方代码的注释比没有注释更糟糕，因为它会引导读者跳过注释。值得编写的注释应承载代码无法表达的内容：约束、契约、促成该行的失败原因，以及被拒绝的替代方案及其原因。</p>
+    <p class="tenet-body">在部分由智能体编写的代码库中，这一点变得更加重要。一组单独可辩护的变更，如果它们共同瓦解了架构，正是智能体加速的代码库失败的特定方式：每个变更都为自己辩护，但没有人为整体辩护。文件中留下的推理能让下一个人或下一个模型分辨出差异。</p>
+    <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/STYLE.md" rel="noopener">STYLE.md</a>
+  </article>
+
+  <article class="tenet reveal">
+    <span class="tenet-num">07</span>
+    <h2 class="tenet-title">欢迎智能体编写的贡献。审查更严格，而非更宽松。</h2>
+    <p class="tenet-body">许多项目正在悄悄禁止 AI 辅助的拉取请求。Duct 则要求相反：PR 模板会询问智能体在何处提供了帮助，以便审阅者知道在哪里最需要仔细查看。那不是惩罚区。这与你说明对变更的哪个部分最不确定是出于同样的原因。</p>
+    <p class="tenet-body">Duct 是一个用智能体构建的智能体产品。在贡献过程中假装不是这样是不诚实的，并且会丢弃审阅者能获得的最有用的信号。</p>
+    <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">CONTRIBUTING.md</a>
+  </article>
+
+</div>
+
+<section class="doc-cta">
+  <div class="doc-cta-inner">
+    <p class="tag" style="justify-content:center;display:flex">不同意？</p>
+    <h2>好的。<em>提交问题。</em></h2>
+    <p class="sub">这些默认设置都有其原因，而非法律。如果原因有误，应改变的是原因。这种讨论应公开进行。</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:32px">
+      <a class="btn btn-orange btn-lg" href="https://github.com/5hirish/duct/discussions" rel="noopener">开始讨论 →</a>
+      <a class="btn btn-lg" href="https://github.com/5hirish/duct" rel="noopener" style="border:1px solid var(--border);color:var(--navy);background:var(--white)">阅读代码 →</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/zh-cn/partials/footer-expanded.html"></div>
+
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+
+</body>
+</html>

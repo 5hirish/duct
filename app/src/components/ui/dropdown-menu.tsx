@@ -45,7 +45,7 @@ function DropdownMenuContent({
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
         className={cn(
-          "z-50 min-w-48 overflow-hidden rounded-3xl bg-popover p-1.5 text-popover-foreground shadow-lg ring-1 ring-foreground/5 dark:ring-foreground/10",
+          "z-50 min-w-48 overflow-hidden rounded-xl bg-popover p-1.5 text-popover-foreground shadow-lg ring-1 ring-foreground/5 dark:ring-foreground/10",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
           "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
@@ -102,7 +102,7 @@ function DropdownMenuItem({
       data-inset={inset}
       data-variant={variant}
       className={cn(
-        "relative flex cursor-default select-none items-center gap-2 rounded-2xl px-3 py-2 text-sm outline-none transition-colors",
+        "relative flex cursor-default select-none items-center gap-2 rounded-md px-3 py-2 text-sm outline-none transition-colors",
         "focus:bg-accent focus:text-accent-foreground",
         "data-disabled:pointer-events-none data-disabled:opacity-50",
         "data-[inset]:pl-9",
@@ -125,9 +125,12 @@ function DropdownMenuCheckboxItem({
     <DropdownMenuPrimitive.CheckboxItem
       data-slot="dropdown-menu-checkbox-item"
       className={cn(
-        "relative flex cursor-default select-none items-center rounded-2xl py-2 pr-3 pl-9 text-sm outline-none transition-colors",
+        "relative flex cursor-default select-none items-center gap-2 rounded-md py-2 pr-3 pl-9 text-sm outline-none transition-colors",
         "focus:bg-accent focus:text-accent-foreground",
         "data-disabled:pointer-events-none data-disabled:opacity-50",
+        // Same icon rule as DropdownMenuItem. Without it an icon beside the
+        // label rendered at lucide's 24px default, touching the text.
+        "[&>svg]:pointer-events-none [&>svg]:size-4 [&>svg]:shrink-0",
         className
       )}
       checked={checked}
@@ -163,9 +166,12 @@ function DropdownMenuRadioItem({
     <DropdownMenuPrimitive.RadioItem
       data-slot="dropdown-menu-radio-item"
       className={cn(
-        "relative flex cursor-default select-none items-center rounded-2xl py-2 pr-3 pl-9 text-sm outline-none transition-colors",
+        "relative flex cursor-default select-none items-center gap-2 rounded-md py-2 pr-3 pl-9 text-sm outline-none transition-colors",
         "focus:bg-accent focus:text-accent-foreground",
         "data-disabled:pointer-events-none data-disabled:opacity-50",
+        // Same icon rule as DropdownMenuItem. Without it an icon beside the
+        // label rendered at lucide's 24px default, touching the text.
+        "[&>svg]:pointer-events-none [&>svg]:size-4 [&>svg]:shrink-0",
         className
       )}
       {...props}
@@ -228,7 +234,7 @@ function DropdownMenuSubTrigger({
       data-slot="dropdown-menu-sub-trigger"
       data-inset={inset}
       className={cn(
-        "flex cursor-default select-none items-center gap-2 rounded-2xl px-3 py-2 text-sm outline-none",
+        "flex cursor-default select-none items-center gap-2 rounded-md px-3 py-2 text-sm outline-none",
         "focus:bg-accent data-[state=open]:bg-accent",
         "data-[inset]:pl-9",
         "[&>svg]:pointer-events-none [&>svg]:size-4 [&>svg]:shrink-0",
@@ -237,7 +243,8 @@ function DropdownMenuSubTrigger({
       {...props}
     >
       {children}
-      <ChevronRightIcon className="ml-auto size-4" />
+      {/* Muted: the chevron says "opens", and the row's words come first. */}
+      <ChevronRightIcon className="ml-auto size-4 text-muted-foreground" />
     </DropdownMenuPrimitive.SubTrigger>
   )
 }
@@ -250,7 +257,7 @@ function DropdownMenuSubContent({
     <DropdownMenuPrimitive.SubContent
       data-slot="dropdown-menu-sub-content"
       className={cn(
-        "z-50 min-w-32 overflow-hidden rounded-3xl bg-popover p-1.5 text-popover-foreground shadow-lg ring-1 ring-foreground/5 dark:ring-foreground/10",
+        "z-50 min-w-32 overflow-hidden rounded-xl bg-popover p-1.5 text-popover-foreground shadow-lg ring-1 ring-foreground/5 dark:ring-foreground/10",
         "data-[state=open]:animate-in data-[state=closed]:animate-out",
         "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
         "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",

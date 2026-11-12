@@ -1,4 +1,8 @@
-"""Unit tests for execution credential resolution (override → stored → env)."""
+"""Unit tests for execution credential resolution (binding → stored → env).
+
+There is no request override: a change applied with a token only one browser
+tab held could not be rolled back by anything else (issue #456).
+"""
 
 from __future__ import annotations
 
@@ -67,7 +71,7 @@ def test_env_fallback_when_nothing_stored(db_session, cfg, user):
     assert creds["client_secret"] == "env-client-secret"
 
 
-def test_stored_credentials_used_when_override_empty(db_session, cfg, user):
+def test_stored_credentials_used(db_session, cfg, user):
     _store(db_session, user, "google_ads", "", {"refresh_token": "stored-rt"})
     creds = resolve_execution_creds(db_session, user.id, "google_ads")
     assert creds["refresh_token"] == "stored-rt"
@@ -75,12 +79,11 @@ def test_stored_credentials_used_when_override_empty(db_session, cfg, user):
     assert creds["login_customer_id"] == "env-mcc"
 
 
-def test_override_wins_over_stored(db_session, cfg, user):
-    _store(db_session, user, "google_ads", "", {"refresh_token": "stored-rt"})
-    creds = resolve_execution_creds(
-        db_session, user.id, "google_ads", override={"refresh_token": "byo-rt"}
-    )
-    assert creds["refresh_token"] == "byo-rt"
+def test_the_stored_manager_account_wins_over_the_server_default(db_session, cfg, user):
+    """The MCC id moved from the browser to the stored row; executors read it there."""
+    _store(db_session, user, "google_ads", "", {"refresh_token": "stored-rt", "login_customer_id": "9998887777"})
+    creds = resolve_execution_creds(db_session, user.id, "google_ads")
+    assert creds["login_customer_id"] == "9998887777"
 
 
 def test_account_specific_row_preferred(db_session, cfg, user):

@@ -14,8 +14,8 @@ import { Button } from "@/components/ui/button";
 // head back to the app.
 //
 // It must never redeem a code itself: they are single-use and belong to the
-// shell's webview (`/auth/exchange` for sign-in, `/auth/connectors/exchange`
-// for a connector).
+// shell's webview (`/auth/exchange` for sign-in; for a connector, the claim
+// the Connections page makes with the webview's own session).
 //
 // It is also where the backend sends *failed* attempts (`?error=`). The OAuth
 // dance runs in the system browser, so anything the loopback sidecar returns is

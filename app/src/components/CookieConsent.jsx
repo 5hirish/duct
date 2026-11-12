@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { Trans } from "@lingui/react/macro";
 
 import { Button } from "@/components/ui/button";
+import { useHoldCorner } from "@/components/ui/corner-notice";
 
 /**
  * The consent question, as a bar rather than a blocking overlay: the page stays
@@ -14,6 +15,8 @@ import { Button } from "@/components/ui/button";
  */
 export function CookieConsent({ onAccept, onDecline }) {
   const heading = useRef(null);
+  // One question at a time along the bottom edge: this one is the law's.
+  useHoldCorner();
 
   // Move focus to the question when it appears, or a screen reader is never
   // told it is there — the same thing the site build does on `showBanner`.
@@ -39,9 +42,11 @@ export function CookieConsent({ onAccept, onDecline }) {
         </h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
           <Trans>
-            We use Google Analytics to see which pages earn a signup. That is the whole
-            use — no ad targeting, no profiles, nothing sold. Decline and Duct behaves
-            exactly the same.{" "}
+            We use PostHog to see which pages earn a signup and
+            where Duct gets in your way, including replays of visits with everything
+            you type hidden. Decline turns PostHog off, and Duct works exactly the
+            same. Google Analytics also counts visits and sets its own cookies,
+            whichever you choose. Nothing is sold.{" "}
             <a
               href="https://getduct.ai/privacy"
               target="_blank"

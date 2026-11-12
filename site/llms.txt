@@ -1,6 +1,6 @@
 # Duct
 
-> Duct (Duct AI) is an open-source (MIT) AI marketing agent for product and growth teams: see the whole picture, fix it in the same moment. It connects Google Ads, GA4, Search Console, Mixpanel, Stripe and eight more tools, reads across all of them at once, finds what needs to change, and changes it when you approve. It remembers what it learns about your business. Desktop app for Mac, Windows and Linux, free with your own model keys or a ChatGPT subscription; self-hostable; source at https://github.com/5hirish/duct. This site is published in English, Spanish, Brazilian Portuguese, German and Japanese.
+> Duct (Duct AI) is an open-source (MIT) AI marketing agent: a growth analyst with every login. It is for product and growth teams. It connects Google Ads, GA4, Search Console, Mixpanel, Stripe and seven more tools, reads across all of them at once, finds what needs to change, and changes it when you approve. It remembers what it learns about your business. Desktop app for Mac, Windows and Linux, free with your own model keys or a ChatGPT subscription; self-hostable; source at https://github.com/5hirish/duct. This site is published in English, Spanish, Brazilian Portuguese, German, Japanese and Simplified Chinese.
 
 Duct is built and maintained by Shirish Kadam in Spain. It answers questions a single dashboard cannot ("why did signups drop last week", "which content converts", "where is the ads budget leaking") by reading the tools together rather than one at a time, and every number in an answer is re-checked by a verification sub-agent before it reaches you.
 
@@ -24,7 +24,9 @@ Duct is built and maintained by Shirish Kadam in Spain. It answers questions a s
 - [Download](https://getduct.ai/download): The whole picture in one window: the desktop app for Mac, Windows and Linux. Free, no credit card.
 - [Compare](https://getduct.ai/compare): Duct beside Claude Cowork and n8n, by job: where each is the right call, what each connects, cross-tool questions, who approves a change, licence and price. Checked September 29, 2026.
 - [Open source](https://getduct.ai/open-source): Why it is MIT, what runs where in the desktop app versus a self-hosted install, how to self-host, and the pricing promise.
-- [MCP servers](https://getduct.ai/mcp): Connect your own tools to Duct's agent over MCP: OpenSEO, PostHog, Notion, Linear, Railway and Cloudflare in one click, any other public Streamable HTTP server by its address. Read-only tools run straight away; anything else waits for approval. Used by the insights chat today.
+- [Your MCP servers in Duct](https://getduct.ai/mcp): Connect your own tools to Duct's agent over MCP: OpenSEO, PostHog, Notion, Linear, Railway and Cloudflare in one click, any other public Streamable HTTP server by its address. Read-only tools run straight away; anything else waits for approval. Used by the insights chat today.
+- [Use Duct from your agent](https://getduct.ai/connect-agent): Duct's own MCP server, https://api.getduct.ai/mcp, for Claude Code, Codex, Cursor, VS Code, OpenCode, Claude and ChatGPT. Add the address, sign in with the browser and click Allow; a token works where there is no browser. The agent can list and read projects and draft a project's description, audience and competitors from a repo or files; it can never approve or apply changes, connect tools, see credentials, or overwrite what a person typed.
+- [Agent skills](https://getduct.ai/skills): Duct's open-source skills for Claude Code, Codex, Cursor and other coding agents, installed with `npx skills add 5hirish/duct`, or as a Claude Code or Codex plugin from Duct's own catalogue (`claude plugin marketplace add 5hirish/duct`, `codex plugin marketplace add 5hirish/duct`). The first, launch-check, reads a live site and the repository behind it, checks what the page promises against what the code does, scores six areas out of 100 (measurement 25, claims 20, search 20, social card 15, answer engines 10, first impression 10) and ranks three fixes, each applied only on a yes. No account, nothing sent to Duct.
 - [For product teams](https://getduct.ai/for-product-intelligence): See why the number moved, from Mixpanel, Clarity, GrowthBook and GA4 read together, and fix it before the standup.
 - [For SEO and content teams](https://getduct.ai/for-organic-growth): See which content actually converts, from Search Console, GA4 and Clarity, and fix it in the same sitting; the free audit; the content plan.
 - [For performance marketers](https://getduct.ai/for-paid-ads): See what your ad spend bought, from Google Ads, Meta, GA4 and Stripe read together, and move it in the same moment; the pause or the shift, applied on approval.
@@ -36,13 +38,14 @@ Duct is built and maintained by Shirish Kadam in Spain. It answers questions a s
 
 ## Languages
 
-Every page below, the free tools included, exists in five languages at the same path under a language prefix. The English page is the source; the others are generated from it and carry hreflang and their own canonical.
+Every page below, the free tools included, exists in six languages at the same path under a language prefix. The English page is the source; the others are generated from it and carry hreflang and their own canonical.
 
 - [English](https://getduct.ai/): the default, and what `x-default` points to.
 - [Español](https://getduct.ai/es/): https://getduct.ai/es/<page>
 - [Português (Brasil)](https://getduct.ai/pt-br/): https://getduct.ai/pt-br/<page>
 - [Deutsch](https://getduct.ai/de/): https://getduct.ai/de/<page>
 - [日本語](https://getduct.ai/ja/): https://getduct.ai/ja/<page>
+- [简体中文](https://getduct.ai/zh-cn/): https://getduct.ai/zh-cn/<page>
 
 The blog and the changelog are English only.
 
@@ -79,6 +82,7 @@ What Duct reads in each connected tool, what it can change there, and how each o
 
 ## Blog posts
 
+- [Claude Code for Marketers: The Skills Worth Installing](https://getduct.ai/blog/claude-code-marketing-skills): Which Claude Code marketing skills to install, sorted by what each can read (your words, your site, your accounts or your code), with how to install and vet them.
 - [Local AI Agents: What Stays on Your Machine, What Leaves It](https://getduct.ai/blog/local-ai-agents): What a local AI agent is, how it differs from self-hosted and cloud agents, and where your marketing data, keys and memory sit in one open-source desktop agent.
 - [What Is an Agentic Workflow? The Weekly Growth Brief, Step by Step](https://getduct.ai/blog/what-is-an-agentic-workflow): An agentic workflow, explained on one real job: the weekly growth brief. Every step, who decides each one, and which step was taken away from the model and why.
 - [AI Agent Examples for Marketing: Seven Jobs, One Week, Thirteen Tools](https://getduct.ai/blog/ai-agent-examples-marketing): Seven concrete AI agent examples for marketing, each with the tools it reads, what it produces and what it may change, from an open-source agent that does them.

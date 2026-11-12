@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
+<link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
+<title>Skills de marketing para Claude Code: launch-check, por Duct</title>
+<link rel="canonical" href="https://getduct.ai/pt-br/skills"/>
+<!-- hreflang:start -->
+<link rel="alternate" hreflang="x-default" href="https://getduct.ai/skills"/>
+<link rel="alternate" hreflang="en" href="https://getduct.ai/skills"/>
+<link rel="alternate" hreflang="es" href="https://getduct.ai/es/skills"/>
+<link rel="alternate" hreflang="pt-BR" href="https://getduct.ai/pt-br/skills"/>
+<link rel="alternate" hreflang="de" href="https://getduct.ai/de/skills"/>
+<link rel="alternate" hreflang="ja" href="https://getduct.ai/ja/skills"/>
+<link rel="alternate" hreflang="zh-CN" href="https://getduct.ai/zh-cn/skills"/>
+<meta property="og:locale" content="pt_BR"/>
+<meta property="og:locale:alternate" content="en_US"/>
+<meta property="og:locale:alternate" content="es_ES"/>
+<meta property="og:locale:alternate" content="de_DE"/>
+<meta property="og:locale:alternate" content="ja_JP"/>
+<meta property="og:locale:alternate" content="zh_CN"/>
+<!-- hreflang:end -->
+<meta name="description" content="Skills de marketing em código aberto para Claude Code, Codex e Cursor. O launch-check lê seu site no ar e seu repositório, pontua o lançamento e classifica três correções."/>
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://getduct.ai/pt-br/skills"/>
+<meta property="og:title" content="Skills de marketing para Claude Code: launch-check, por Duct"/>
+<meta property="og:description" content="Um comando oferece ao seu agente de código uma verificação de lançamento: ele lê a página e o código, pontua seis áreas e só corrige com um sim."/>
+<meta property="og:image" content="https://getduct.ai/assets/og/skills.jpg"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="Duct"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Skills de marketing para Claude Code: launch-check, por Duct"/>
+<meta name="twitter:description" content="Seu site está pronto para o lançamento? Pergunte ao seu agente. Ele compara o que a página promete com o que o código faz. Sem conta, MIT."/>
+<meta name="twitter:image" content="https://getduct.ai/assets/og/skills.jpg"/>
+<link rel="alternate" type="application/rss+xml" title="Blog do Duct" href="/blog/feed.xml"/>
+<link rel="stylesheet" href="/assets/duct.css"/>
+<!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookies, honestamente","We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold.":"Usamos o PostHog para ver quais páginas geram um cadastro e onde o Duct atrapalha você, incluindo replays de visitas com tudo o que você digita oculto. Recusar desativa o PostHog, e o Duct funciona exatamente da mesma forma. O Google Analytics também conta as visitas e define os próprios cookies, seja qual for a sua escolha. Nada é vendido.","Privacy Policy":"Política de Privacidade","Decline":"Recusar","Accept":"Aceitar","{n} stars on GitHub":"{n} estrelas no GitHub","UTM Builder":"Construtor de UTM","SaaS Metrics Benchmark Calculator":"Calculadora de Benchmark de Métricas SaaS","Weekly Marketing Brief Generator":"Gerador de Resumo Semanal de Marketing","CAC / LTV Calculator":"Calculadora de CAC / LTV","MRR Growth Rate Calculator":"Calculadora de Taxa de Crescimento de MRR","Engagement Rate Calculator":"Calculadora de Taxa de Engajamento","CTR Calculator":"Calculadora de CTR","CPM Calculator":"Calculadora de CPM","CPC Calculator":"Calculadora de CPC","CPA Calculator":"Calculadora de CPA","Marketing ROI Calculator":"Calculadora de ROI de Marketing","ROAS Calculator":"Calculadora de ROAS","Open navigation menu":"Abrir menu de navegação","Close navigation menu":"Fechar menu de navegação","Menu":"Menu","Free Tools":"Ferramentas gratuitas","Solutions":"Soluções","Download Duct ↓":"Baixar Duct ↓","Language":"Idioma","Enlarged screenshot":"Captura de tela ampliada","Close":"Fechar","Fit to screen":"Ajustar à tela","Zoom in":"Ampliar","Enlarge":"Ampliar","Universal · Apple silicon and Intel":"Universal · Apple silicon e Intel","Windows 10 and later":"Windows 10 e posterior","Runs on any distribution":"Funciona em qualquer distribuição","Debian and Ubuntu":"Debian e Ubuntu","Download ↓":"Baixar ↓","Download for {label} ↓":"Baixar para {label} ↓","Example numbers. Change any field and calculate again for yours.":"Números de exemplo. Altere qualquer campo e calcule novamente para os seus."};</script>
+<script src="/assets/config.js" defer></script>
+<!-- The FAQPage is the page's own <details>, word for word: the i18n generator translates these
+     strings through the same catalogue entries as the visible text. -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"pt-BR","name":"Skills de marketing para Claude Code: launch-check, por Duct","url":"https://getduct.ai/pt-br/skills","description":"Skills de marketing em código aberto para Claude Code, Codex e Cursor. O launch-check lê seu site no ar e seu repositório, pontua o lançamento e classifica três correções.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"}}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"pt-BR","mainEntity":[{"@type":"Question","name":"Com quais agentes funciona?","acceptedAnswer":{"@type":"Answer","text":"Qualquer agente no qual a CLI do open skills instala: Claude Code, Codex, Cursor, OpenCode, Gemini CLI, GitHub Copilot, Windsurf e Zed entre eles. A skill é uma pasta SKILL.md no formato Agent Skills, então um agente que leia esse formato pode usá-la sem o instalador. O Claude Code e o Codex também podem instalá-la como plugin a partir do próprio catálogo do Duct, com os comandos abaixo da caixa de instalação."}},{"@type":"Question","name":"Ele envia meu site ou meu código para o Duct?","acceptedAnswer":{"@type":"Answer","text":"Não. A skill é um conjunto de instruções que seu agente segue com suas próprias ferramentas de web e shell. Não há nenhum servidor do Duct no processo, nenhuma conta e nenhuma chave de API. O que o agente lê vai apenas para onde as requisições dele sempre vão: para o modelo que você já usa."}},{"@type":"Question","name":"Ela vai alterar meu código?","acceptedAnswer":{"@type":"Answer","text":"Não sem um sim. O único arquivo que ele grava sozinho é o relatório, duct-launch-check.md. Cada correção vem como um diff e uma pergunta, uma por vez. Ele nunca faz commit, push ou deploy, e nunca abre o .env nem arquivos de chaves."}},{"@type":"Question","name":"Preciso de um repositório aberto?","acceptedAnswer":{"@type":"Answer","text":"Não, mas é melhor com um. Sem o código, ele verifica apenas as páginas públicas, e a maior parte da área de métricas volta como não verificada em vez de reprovada. As constatações que uma auditoria de página não consegue identificar, como um download que não envia eventos, vêm do repositório."}},{"@type":"Question","name":"Como ele se diferencia de uma auditoria de SEO?","acceptedAnswer":{"@type":"Answer","text":"Uma auditoria de SEO lê o HTML. O launch-check também lê o código por trás dele e confere o que a página promete contra o que o produto faz. Busca é uma área de seis. Para uma varredura completa com clusters de palavras-chave e concorrentes, execute a auditoria gratuita de SEO do Duct."}},{"@type":"Question","name":"Quanto custa e quanto tempo leva?","acceptedAnswer":{"@type":"Answer","text":"A skill é gratuita e tem licença MIT. Ela roda no próprio modelo do seu agente, então uma checagem custa o que o seu agente gasta para ler dez páginas e parte de um repositório. Ela para em dez páginas e busca terminar em dez minutos."}},{"@type":"Question","name":"O instalador rastreia algo?","acceptedAnswer":{"@type":"Answer","text":"A CLI de skills, que é de código aberto e não é nossa, conta as instalações anonimamente para o ranking do skills.sh. Defina DISABLE_TELEMETRY=1 ou DO_NOT_TRACK=1 antes de rodar para desativar isso. A skill em si não envia nada para lugar nenhum."}},{"@type":"Question","name":"Como atualizo ou removo?","acceptedAnswer":{"@type":"Answer","text":"npx skills update atualiza para a versão mais recente, e npx skills remove launch-check faz a remoção. A instalação vai para o projeto em que você a executa; adicione -g para disponibilizá-la em todos os projetos. A CLI precisa do Node.js 22.20 ou superior."}},{"@type":"Question","name":"Quais são as próximas skills?","acceptedAnswer":{"@type":"Answer","text":"As que as pessoas pedirem. Conte no GitHub Discussions qual tarefa de marketing você passaria para o seu agente."}}]}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"pt-BR","itemListElement":[{"@type":"ListItem","position":1,"name":"Início","item":"https://getduct.ai/pt-br/"},{"@type":"ListItem","position":2,"name":"Agent skills","item":"https://getduct.ai/pt-br/skills"}]}
+</script>
+<style>
+/* ── SKILLS-ONLY STYLES ── */
+.sk-hero { padding-bottom: 72px; }
+.sk-hero h1 { font-size: clamp(34px, 4.4vw, 62px); max-width: 1160px; }
+.sk-hero .hero-sub { max-width: 600px; margin-bottom: 32px; }
+.sk-after { margin-top: 18px; font-size: 14px; line-height: 1.6; color: var(--navy-3); max-width: 60ch; animation: fadeUp .5s .32s ease both; }
+.sk-link { color: var(--navy); font-weight: 500; text-decoration: underline; text-decoration-color: var(--orange); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+.sk-sec code, .sk-after code, .faq-a code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9em; padding: 1px 6px; background: var(--off); border: 1px solid var(--border); border-radius: 6px; overflow-wrap: anywhere; }
+
+/* The install command: the one thing the page is for, so it sits where the eye lands.
+   The command is in a <pre>, which the i18n generator never translates. */
+.cmd { width: 100%; max-width: 520px; text-align: left; animation: fadeUp .5s .24s ease both; }
+.cmd-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); margin: 0 0 8px 4px; }
+.code { display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 20px; background: var(--white); border: 1.5px solid var(--border); border-radius: var(--r-lg); box-shadow: 0 18px 48px rgba(13,15,26,.08); }
+.code pre { flex: 1; min-width: 0; margin: 0; padding: 5px 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 17px; line-height: 1.5; color: var(--navy); white-space: pre-wrap; overflow-wrap: anywhere; }
+.code pre::before { content: '$ '; color: var(--navy-3); }
+.copy { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 8px 18px; border-radius: var(--pill); border: none; background: var(--navy); color: #fff; font-family: var(--sans); font-size: 14px; font-weight: 500; line-height: 1; cursor: pointer; transition: background .2s; }
+.copy:hover { background: var(--navy-2); }
+.copy:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+.copy .ic { font-size: 14px; }
+.copy.is-done { background: #1a7f37; }
+
+/* The plugin route: the same skill from Duct's own catalogue, for the two agents that have one.
+   Quieter than the main command, because npx skills add already covers both agents. */
+.cmd-alt { width: 100%; max-width: 520px; margin-top: 22px; text-align: left; display: grid; gap: 8px; animation: fadeUp .5s .28s ease both; }
+.cmd-alt .cmd-label { margin-bottom: 0; }
+.code.is-alt { flex-wrap: wrap; gap: 4px 10px; padding: 8px 8px 8px 16px; border-width: 1px; box-shadow: none; }
+.code.is-alt pre { font-size: 13.5px; padding: 0; }
+.code-tag { flex-basis: 100%; font-size: 12px; font-weight: 600; color: var(--navy-3); }
+.code.is-alt .copy { min-height: 40px; padding: 6px 14px; font-size: 13px; }
+
+/* How it works: the shared navy band, each step ending on a small picture of that moment */
+.how .step { display: flex; flex-direction: column; }
+.how .step-title { font-weight: 400; }
+.how .step-body { font-size: 15px; font-weight: 400; color: rgba(255,255,255,.72); }
+.step-mini { margin-top: auto; padding-top: 26px; }
+.mini-cmd { margin: 0; padding: 12px 14px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.7; color: rgba(255,255,255,.85); white-space: pre-wrap; overflow-wrap: anywhere; }
+.mini-cmd .dim { color: rgba(255,255,255,.5); }
+.mini-score { display: flex; align-items: baseline; gap: 10px; padding: 14px 18px; background: var(--white); border-radius: var(--r); box-shadow: 0 18px 40px rgba(0,0,0,.28); }
+.mini-score strong { font-family: var(--serif); font-size: 40px; font-weight: 400; line-height: 1; color: var(--navy); }
+.mini-score span { font-size: 14px; color: var(--navy-3); }
+.mini-score em { margin-left: auto; font-style: normal; font-size: 13px; font-weight: 600; color: #9a5b00; }
+.mini-chat { display: grid; gap: 10px; }
+.mini-q { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11.5px; line-height: 1.6; color: rgba(255,255,255,.85); }
+.mini-yes { justify-self: end; padding: 7px 16px; background: var(--white); color: var(--navy); border-radius: 14px 14px 4px 14px; font-size: 14px; }
+
+/* Section shells, as on /connect-agent */
+.sk-sec { padding: 96px 52px; }
+.sk-sec.is-off { background: var(--off); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.sk-inner { max-width: 1160px; margin: 0 auto; }
+.sk-head { max-width: 780px; }
+.sk-head h2 { margin-bottom: 14px; }
+.sk-head .sub { max-width: 60ch; }
+.split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: start; }
+.split h2 { font-size: clamp(30px, 3.2vw, 42px); }
+
+/* What it checks: one row per area, the bar is the weight */
+.areas { list-style: none; border-top: 1px solid var(--border); }
+/* The bars share one column and one left edge, so the weights compare at a glance */
+.area { display: grid; grid-template-columns: 56px minmax(0, 1fr) 120px; column-gap: 20px; align-items: center; padding: 18px 0; border-bottom: 1px solid var(--border); }
+.area-w { grid-row: span 2; font-family: var(--serif); font-size: 34px; line-height: 1; color: var(--navy); }
+.area-name { grid-column: 2; font-size: 16px; font-weight: 600; color: var(--navy); }
+.area-bar { grid-column: 3; grid-row: 1 / span 2; height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+.area-bar i { display: block; height: 100%; background: var(--orange); border-radius: 3px; }
+.area-q { grid-column: 2; margin-top: 4px; font-size: 15px; line-height: 1.6; color: var(--navy-3); max-width: 56ch; }
+.rules { margin-top: 28px; font-size: 15px; line-height: 1.7; color: var(--navy-2); max-width: 52ch; }
+.bands { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; list-style: none; }
+.bands li { padding: 6px 12px; border-radius: var(--pill); border: 1px solid var(--border); background: var(--white); font-size: 13px; color: var(--navy-2); }
+.bands b { font-weight: 600; color: var(--navy); }
+
+/* The real run: the report as a document, the page's one heavy element */
+.report { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: 0 24px 64px rgba(13,15,26,.08); overflow: hidden; }
+.report-bar { display: flex; align-items: center; gap: 7px; padding: 10px 16px; background: var(--off); border-bottom: 1px solid var(--border); }
+.report-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+.report-file { margin-left: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: var(--navy-3); }
+.report-body { padding: 28px 32px 32px; }
+.report h3 { font-family: var(--serif); font-size: 26px; font-weight: 400; line-height: 1.2; color: var(--navy); }
+.report-score { margin-top: 10px; font-size: 15px; line-height: 1.6; color: var(--navy-2); }
+.report-score strong { color: var(--navy); }
+.report h4 { margin-top: 26px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); }
+.report-note { margin-top: 8px; font-size: 14px; line-height: 1.6; color: var(--navy-3); }
+.fixes { list-style: none; counter-reset: fix; margin-top: 14px; display: grid; gap: 22px; }
+.fixes > li { counter-increment: fix; position: relative; padding-left: 42px; }
+.fixes > li::before { content: counter(fix); position: absolute; left: 0; top: 0; width: 27px; height: 27px; border-radius: 50%; background: var(--navy); color: #fff; font-size: 12px; font-weight: 600; line-height: 27px; text-align: center; }
+.fix-title { font-size: 16px; font-weight: 600; line-height: 1.45; color: var(--navy); }
+.fix-why { margin-top: 4px; font-size: 15px; line-height: 1.65; color: var(--navy-2); max-width: 62ch; }
+.fix-meta { margin-top: 8px; font-size: 13px; line-height: 1.6; color: var(--navy-3); }
+.diff { margin: 12px 0 0; padding: 12px 14px; background: var(--navy); border-radius: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.7; color: rgba(255,255,255,.7); white-space: pre-wrap; overflow-wrap: anywhere; }
+.diff .del { color: #ffb4ab; }
+.diff .add { color: #a6ecc2; }
+.diff .ask { color: #fff; }
+.post-this { margin-top: 12px; padding: 14px 18px; border-left: 3px solid var(--orange); background: var(--off); border-radius: 0 var(--r) var(--r) 0; font-size: 15px; line-height: 1.65; color: var(--navy); }
+.again { margin-top: 32px; max-width: 520px; }
+.again .cmd-label { margin-left: 4px; }
+.again .code { box-shadow: none; }
+/* The second command sits in a narrow column, so its button is the icon alone and the
+   command keeps one line */
+.again .code pre { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.again .copy { padding: 8px 12px; }
+.again .copy span { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+
+/* What it never does: three cards on a hairline grid */
+.nevers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin-top: 44px; background: var(--border); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+.never { padding: 30px 28px 32px; background: var(--white); }
+.never .ic { display: block; font-size: 24px; color: var(--orange); margin-bottom: 16px; }
+.never h3 { font-family: var(--serif); font-size: 22px; font-weight: 400; line-height: 1.25; color: var(--navy); margin-bottom: 10px; }
+.never p { font-size: 15px; line-height: 1.7; color: var(--navy-3); max-width: 44ch; }
+
+/* Where Duct comes in: two cards */
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 44px; }
+.card { display: flex; flex-direction: column; align-items: flex-start; padding: 28px; background: var(--white); border: 1.5px solid var(--border); border-radius: var(--r-lg); }
+.card > .ic { font-size: 24px; color: var(--orange); margin-bottom: 16px; }
+.card h3 { font-family: var(--serif); font-size: 22px; font-weight: 400; line-height: 1.25; letter-spacing: -.2px; color: var(--navy); margin-bottom: 10px; }
+.card p { font-size: 15px; line-height: 1.7; color: var(--navy-3); max-width: 54ch; }
+.card .sk-link, .card .btn { margin-top: 20px; }
+.card .sk-link { display: inline-block; padding: 4px 0; }
+
+.sk-sec .faq-list { max-width: 820px; margin-top: 40px; }
+.sk-sec .faq-a { max-width: 66ch; }
+
+/* Phones: the command keeps its line, the copy button drops its word */
+@media (max-width: 600px) {
+  .code { padding: 8px 8px 8px 16px; }
+  .code pre { font-size: 15px; }
+  .copy { padding: 8px 12px; }
+  .copy span { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+  .report-body { padding: 22px 18px 24px; }
+  .fixes > li { padding-left: 38px; }
+  .diff { font-size: 12px; }
+}
+@media (max-width: 860px) {
+  .sk-hero { padding-bottom: 56px; }
+  .sk-sec { padding: 64px 24px; }
+  .split, .pair, .nevers { grid-template-columns: 1fr; }
+  .split { gap: 32px; }
+  .area { grid-template-columns: 44px minmax(0, 1fr) 64px; column-gap: 16px; }
+  .area-w { font-size: 28px; }
+  .never, .card { padding: 22px; }
+}
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">Pular para o conteúdo</a>
+
+<!-- EXPERIMENT: the shelf for Duct's own Agent Skills, starting with launch-check. Hypothesis:
+     developers and marketers who already run a coding agent (Claude Code, Codex, Cursor) install a
+     skill from this page when the install is one command and the page shows a real run, and the
+     ones who install meet Duct where they already work. Measured by copy-command clicks
+     (ductTrack skill_install_copied, by block) and by skills.sh installs of 5hirish/duct. Owns
+     the query "claude code marketing skills" (90/mo, KD 3) by answering it, not by repeating it. -->
+
+<!-- NAV (shared: site/partials/nav-simple.html) -->
+<div data-duct-partial="/pt-br/partials/nav-simple.html"></div>
+
+<main id="main-content">
+
+<!-- HERO: the command is the answer, so it sits where the eye lands -->
+<section class="hero sk-hero">
+<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Agent skills · MIT · Sem conta</div>
+<h1>Skills de marketing para seu agente de código.<br/><em>Ele já tem o repositório.</em></h1>
+<p class="hero-sub">Skills em código aberto para Claude Code, Codex, Cursor e qualquer agente que leia o SKILL.md. A primeira, launch-check, lê seu site no ar e o código por trás dele, dá uma nota até 100 para o lançamento e classifica três correções.</p>
+<div class="cmd">
+<span class="cmd-label">Instalar</span>
+<div class="code"><pre>npx skills add 5hirish/duct</pre><button type="button" class="copy" data-copy="hero" aria-label="Copiar o comando de instalação"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copiar</span></button></div>
+</div>
+<div class="cmd-alt">
+<span class="cmd-label">Ou como plugin</span>
+<div class="code is-alt"><span class="code-tag">Claude Code</span><pre>claude plugin marketplace add 5hirish/duct &amp;&amp; claude plugin install duct@duct</pre><button type="button" class="copy" data-copy="claude-plugin" aria-label="Copiar o comando do plugin do Claude Code"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copiar</span></button></div>
+<div class="code is-alt"><span class="code-tag">Codex</span><pre>codex plugin marketplace add 5hirish/duct &amp;&amp; codex plugin add duct@duct</pre><button type="button" class="copy" data-copy="codex-plugin" aria-label="Copiar o comando do plugin do Codex"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copiar</span></button></div>
+</div>
+<p class="sk-after">Depois, pergunte ao seu agente “Meu site está pronto para o lançamento?”, ou digite <code>/launch-check</code> no Claude Code.</p>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="launch-check">
+<div class="how-inner">
+<p class="tag">A primeira skill: launch-check</p>
+<h2>Ele lê a página. <em>Depois lê o código.</em></h2>
+<div class="channel on-dark" aria-hidden="true"></div>
+<div class="steps">
+<div class="step reveal">
+<span class="step-num">01</span>
+<h3 class="step-title">Lê o site e o repositório</h3>
+<p class="step-body">Até dez páginas no ar, o sitemap e cada imagem de card, além do código por trás delas: a tag de analytics, o evento de cadastro ou download, de onde vem o head e as afirmações feitas na página.</p>
+<div class="step-mini" aria-hidden="true"><pre class="mini-cmd">$ curl -sSL yoursite.com
+<span class="dim">  10 pages · sitemap · llms.txt</span>
+$ grep -rn "capture(" src/
+<span class="dim">  no event on the signup form</span></pre></div>
+</div>
+<div class="step reveal" style="transition-delay:.1s">
+<span class="step-num">02</span>
+<h3 class="step-title">Pontua seis áreas até 100</h3>
+<p class="step-body">Cada constatação indica a URL ou o arquivo e a linha de onde veio. O que não pôde ser visto é marcado como não verificado, nunca como falha.</p>
+<div class="step-mini" aria-hidden="true">
+<div class="mini-score"><strong>64</strong><span>/100</span><em>Precisa melhorar</em></div>
+</div>
+</div>
+<div class="step reveal" style="transition-delay:.2s">
+<span class="step-num">03</span>
+<h3 class="step-title">Classifica três correções, aplica uma com um sim</h3>
+<p class="step-body">As três mais importantes para o dia do lançamento, cada uma como um diff. Ela pergunta antes de cada uma e nunca faz commit, push ou deploy.</p>
+<div class="step-mini" aria-hidden="true">
+<div class="mini-chat">
+<p class="mini-q">Aplicar a correção 1? (sim / não / pular todas)</p>
+<p class="mini-yes">sim</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- WHAT IT CHECKS -->
+<section class="sk-sec" id="what-it-checks">
+<div class="sk-inner split">
+<div class="sk-head reveal">
+<p class="tag">O que ela verifica</p>
+<h2>Seis áreas, <em>ponderadas pelo que um lançamento perde.</em></h2>
+<p class="sub">Um lançamento que ninguém consegue medir não ensina nada, por isso a mensuração tem o maior peso. Uma alegação contrariada pelo código vira o comentário principal no dia do lançamento, então as alegações vêm em seguida.</p>
+<p class="rules">Cada área começa em 100. Um FAIL desconta 25 pontos e um WARN, 10. Algo que não pôde ser verificado não desconta nada e é listado como não verificado; assim, a falta de um repositório diminui a confiança, não a pontuação.</p>
+<ul class="bands">
+<li><b>85–100</b> Pronto</li>
+<li><b>70–84</b> Pronto após correções</li>
+<li><b>55–69</b> Precisa de ajustes</li>
+<li><b>Abaixo de 55</b> Não está pronto</li>
+</ul>
+</div>
+<ol class="areas reveal" style="transition-delay:.08s">
+<li class="area"><span class="area-w">25</span><span class="area-name">Métricas</span><span class="area-bar" aria-hidden="true"><i style="width:100%"></i></span><p class="area-q">O lançamento será registrado, até a ação específica?</p></li>
+<li class="area"><span class="area-w">20</span><span class="area-name">Alegações</span><span class="area-bar" aria-hidden="true"><i style="width:80%"></i></span><p class="area-q">O produto faz o que a página e as notas de versão dizem?</p></li>
+<li class="area"><span class="area-w">20</span><span class="area-name">Busca</span><span class="area-bar" aria-hidden="true"><i style="width:80%"></i></span><p class="area-q">Os mecanismos de busca conseguem indexar e descrever cada página importante?</p></li>
+<li class="area"><span class="area-w">15</span><span class="area-name">Card social</span><span class="area-bar" aria-hidden="true"><i style="width:60%"></i></span><p class="area-q">Um link compartilhado exibe título, descrição e imagem?</p></li>
+<li class="area"><span class="area-w">10</span><span class="area-name">Motores de resposta</span><span class="area-bar" aria-hidden="true"><i style="width:40%"></i></span><p class="area-q">ChatGPT, Perplexity e Claude conseguem ler e citar o conteúdo?</p></li>
+<li class="area"><span class="area-w">10</span><span class="area-name">Primeira impressão</span><span class="area-bar" aria-hidden="true"><i style="width:40%"></i></span><p class="area-q">A primeira tela informa para quem é e o que fazer?</p></li>
+</ol>
+</div>
+</section>
+
+<!-- A REAL RUN: Duct's own site, so no third party is named -->
+<section class="sk-sec is-off" id="sample">
+<div class="sk-inner split">
+<div class="sk-head reveal">
+<p class="tag">Uma execução real</p>
+<h2>Rodamos no getduct.ai. <em>96 de 100.</em></h2>
+<p class="sub">getduct.ai e o repositório dele, em 10 de novembro de 2026. Apenas duas constatações atingiram o critério para uma correção, e a primeira existe apenas no código: os downloads da Europa apareceriam mais baixos, sem nada na página para indicar isso.</p>
+<div class="again">
+<span class="cmd-label">Execute no seu</span>
+<div class="code"><pre>npx skills add 5hirish/duct</pre><button type="button" class="copy" data-copy="sample" aria-label="Copiar o comando de instalação"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copiar</span></button></div>
+</div>
+</div>
+<article class="report reveal" style="transition-delay:.08s" aria-label="Exemplo de relatório: verificação de lançamento do getduct.ai">
+<div class="report-bar"><span class="report-dot" aria-hidden="true"></span><span class="report-dot" aria-hidden="true"></span><span class="report-dot" aria-hidden="true"></span><span class="report-file">duct-launch-check.md</span></div>
+<div class="report-body">
+<h3>Verificação de lançamento: getduct.ai</h3>
+<p class="report-score"><strong>96/100, Pronto</strong> · 10 páginas lidas · repo: 5hirish/duct<br/>A ação: baixar o app para desktop, monitorada como <code>download_started</code></p>
+<h4>Três correções</h4>
+<p class="report-note">Apenas duas constatações atingiram o critério. O restante é polimento.</p>
+<ol class="fixes">
+<li>
+<p class="fix-title">Conte os downloads que o consentimento nunca vê.</p>
+<p class="fix-why">No EEE, Reino Unido e Suíça, os dados analíticos só carregam após Aceitar, e <code>download_started</code> aguarda em uma fila que nunca é enviada para visitantes que ignoram o banner. Os downloads da Europa no dia do lançamento parecerão baixos.</p>
+<p class="fix-meta">Impacto 2 · Esforço 1 · Encontrado por: repositório · <code>site/assets/duct.js:364</code></p>
+<p class="fix-why">Correção: sem código. Leia a contagem de downloads da versão no GitHub no dia do lançamento como valor mínimo e compare com <code>download_started</code>.</p>
+</li>
+<li>
+<p class="fix-title">Pare de dizer a todos os visitantes que o download é para macOS.</p>
+<p class="fix-why">O botão da página inicial diz “Baixar para macOS” para visitantes no Windows, Linux e celular também, porque o rótulo por plataforma só roda em <code>/download</code>.</p>
+<p class="fix-meta">Impacto 2 · Esforço 1 · Encontrado por: ambos · <code>site/index.html:308</code></p>
+<pre class="diff"><span class="del">- Download for macOS ↓</span>
+<span class="add">+ Download Duct ↓</span>
+<span class="ask">Apply fix 2? (yes / no / skip all)</span></pre>
+</li>
+</ol>
+<h4>Publicar isso</h4>
+<p class="post-this">Executei uma verificação de lançamento no getduct.ai com meu agente de código: 96/100. Ele descobriu que os downloads da Europa seriam subnotificados atrás do banner de cookies, algo que nenhuma auditoria de página revelaria.</p>
+</div>
+</article>
+</div>
+</section>
+
+<!-- WHAT IT NEVER DOES -->
+<section class="sk-sec" id="never">
+<div class="sk-inner">
+<div class="sk-head reveal">
+<p class="tag">O que ela nunca faz</p>
+<h2>Sem conta. Sem upload. <em>Nenhuma alteração sem um sim.</em></h2>
+</div>
+<div class="nevers reveal">
+<div class="never">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg>
+<h3>Sem conta</h3>
+<p>Sem cadastro, sem chave de API, sem login no Duct. Ele usa as próprias ferramentas de web e shell do seu agente e nunca se cadastra, faz login ou envia formulários em lugar nenhum.</p>
+</div>
+<div class="never">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>
+<h3>Nada enviado ao Duct</h3>
+<p>A skill são instruções, não um serviço. Seu site e seu código são lidos pelo seu agente e não vão para nenhum outro lugar. Ela nunca abre o <code>.env</code> nem arquivos de chaves.</p>
+</div>
+<div class="never">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#git-branch"/></svg>
+<h3>Nenhuma alteração sem um sim</h3>
+<p>Ele grava um único arquivo, o relatório. Cada correção é um diff exibido primeiro e aplicado apenas quando você disser sim. Ele nunca faz commit, push ou deploy.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- WHERE DUCT COMES IN -->
+<section class="sk-sec is-off" id="duct">
+<div class="sk-inner">
+<div class="sk-head reveal">
+<p class="tag">Onde o Duct entra</p>
+<h2>A verificação é um momento. <em>O Duct lê as semanas seguintes.</em></h2>
+<p class="sub">O launch-check diz se o lançamento será contabilizado. O Duct, o agente de marketing de IA de código aberto de onde vem esta prateleira, mostra o que essa contagem significa.</p>
+</div>
+<div class="pair">
+<div class="card reveal">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg>
+<h3>Conecte o Duct ao mesmo agente</h3>
+<p>O servidor MCP do Duct permite que o agente que você acabou de usar liste e leia seus projetos do Duct, e configure um a partir deste repositório. Um endereço, um Permitir no seu navegador. Ele nunca pode aprovar uma alteração.</p>
+<a class="sk-link" href="/pt-br/connect-agent">Use o Duct no seu agente →</a>
+</div>
+<div class="card reveal" style="transition-delay:.08s">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-line"/></svg>
+<h3>Veja o resultado do lançamento</h3>
+<p>O app para desktop lê o GA4, Search Console, seus anúncios e Stripe juntos, explica por que os cadastros mudaram e propõe a alteração, aplicada ao clicar em Aplicar.</p>
+<a class="btn btn-orange" href="/pt-br/download" data-duct-download>Baixar Duct ↓</a>
+</div>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section class="sk-sec" id="faq">
+<div class="sk-inner">
+<div class="sk-head reveal">
+<p class="tag">FAQ</p>
+<h2>Antes de <em>instalar.</em></h2>
+</div>
+<div class="faq-list reveal">
+<details class="faq-item">
+<summary class="faq-q">Com quais agentes funciona?</summary>
+<p class="faq-a">Qualquer agente no qual a CLI do open skills instala: Claude Code, Codex, Cursor, OpenCode, Gemini CLI, GitHub Copilot, Windsurf e Zed entre eles. A skill é uma pasta SKILL.md no formato Agent Skills, então um agente que leia esse formato pode usá-la sem o instalador. O Claude Code e o Codex também podem instalá-la como plugin a partir do próprio catálogo do Duct, com os comandos abaixo da caixa de instalação.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Ele envia meu site ou meu código para o Duct?</summary>
+<p class="faq-a">Não. A skill é um conjunto de instruções que seu agente segue com suas próprias ferramentas de web e shell. Não há nenhum servidor do Duct no processo, nenhuma conta e nenhuma chave de API. O que o agente lê vai apenas para onde as requisições dele sempre vão: para o modelo que você já usa.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Ela vai alterar meu código?</summary>
+<p class="faq-a">Não sem um sim. O único arquivo que ele grava sozinho é o relatório, <code>duct-launch-check.md</code>. Cada correção vem como um diff e uma pergunta, uma por vez. Ele nunca faz commit, push ou deploy, e nunca abre o <code>.env</code> nem arquivos de chaves.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Preciso de um repositório aberto?</summary>
+<p class="faq-a">Não, mas é melhor com um. Sem o código, ele verifica apenas as páginas públicas, e a maior parte da área de métricas volta como não verificada em vez de reprovada. As constatações que uma auditoria de página não consegue identificar, como um download que não envia eventos, vêm do repositório.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Como ele se diferencia de uma auditoria de SEO?</summary>
+<p class="faq-a">Uma auditoria de SEO lê o HTML. O launch-check também lê o código por trás dele e confere o que a página promete contra o que o produto faz. Busca é uma área de seis. Para uma varredura completa com clusters de palavras-chave e concorrentes, execute a <a class="sk-link" href="/pt-br/seo-audit">auditoria gratuita de SEO do Duct</a>.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Quanto custa e quanto tempo leva?</summary>
+<p class="faq-a">A skill é gratuita e tem licença MIT. Ela roda no próprio modelo do seu agente, então uma checagem custa o que o seu agente gasta para ler dez páginas e parte de um repositório. Ela para em dez páginas e busca terminar em dez minutos.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">O instalador rastreia algo?</summary>
+<p class="faq-a">A CLI de skills, que é de código aberto e não é nossa, conta as instalações anonimamente para o ranking do skills.sh. Defina <code>DISABLE_TELEMETRY=1</code> ou <code>DO_NOT_TRACK=1</code> antes de rodar para desativar isso. A skill em si não envia nada para lugar nenhum.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Como atualizo ou removo?</summary>
+<p class="faq-a"><code>npx skills update</code> atualiza para a versão mais recente, e <code>npx skills remove launch-check</code> remove o skill. A instalação vai para o projeto onde você a executa; adicione <code>-g</code> para disponibilizá-la em todos os projetos. A CLI precisa do Node.js 22.20 ou posterior.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Quais são as próximas skills?</summary>
+<p class="faq-a">Aquelas que as pessoas pedirem. Conte para nós qual tarefa de marketing você passaria ao seu agente no <a class="sk-link" href="https://github.com/5hirish/duct/discussions" rel="noopener">GitHub Discussions</a>.</p>
+</details>
+</div>
+</div>
+</section>
+
+<!-- The copy buttons' confirmation. Written here rather than in the script so the i18n generator
+     translates it: it never reads an inline <script>. -->
+<p class="sr-only" role="status" aria-live="polite" data-copy-status></p>
+<p hidden data-copy-done>Copiado</p>
+
+<!-- CTA (shared: site/partials/cta-home.html) -->
+<div data-duct-partial="/pt-br/partials/cta-home.html"></div>
+
+</main>
+
+<!-- FOOTER (shared: site/partials/footer-expanded.html) -->
+<div data-duct-partial="/pt-br/partials/footer-expanded.html"><div class="legal-fallback"><a href="/pt-br/">Duct</a><a href="/pt-br/about">Sobre</a><a href="/pt-br/privacy">Política de privacidade</a><a href="/pt-br/terms">Termos de serviço</a></div></div>
+
+<script>
+// Copy buttons: the text is the <pre> beside the button. The second inline copy of
+// /connect-agent's script; a third page that needs one moves it into duct.js instead.
+(function () {
+  var doneEl = document.querySelector('[data-copy-done]');
+  var doneText = doneEl ? doneEl.textContent : 'Copied';
+  var status = document.querySelector('[data-copy-status]');
+
+  function copyText(text, ok, fail) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(ok, fail);
+      return;
+    }
+    var area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    var copied = false;
+    try { copied = document.execCommand('copy'); } catch (e) { copied = false; }
+    document.body.removeChild(area);
+    if (copied) ok(); else fail();
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-copy]'), function (button) {
+    var pre = button.parentNode.querySelector('pre');
+    var label = button.querySelector('span');
+    var icon = button.querySelector('use');
+    var sprite = icon.getAttribute('href').split('#')[0];
+    var idle = label.textContent;
+    var timer = null;
+
+    button.addEventListener('click', function () {
+      // Tracked on the click, not on success: a refused clipboard still means someone meant to
+      // install, and the fallback below selects the command for them.
+      if (window.ductTrack) window.ductTrack('skill_install_copied', { skill: 'launch-check', block: button.getAttribute('data-copy') });
+      copyText(pre.textContent, function () {
+        label.textContent = doneText;
+        icon.setAttribute('href', sprite + '#check');
+        button.classList.add('is-done');
+        if (status) status.textContent = doneText;
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+          label.textContent = idle;
+          icon.setAttribute('href', sprite + '#copy');
+          button.classList.remove('is-done');
+          if (status) status.textContent = '';
+        }, 2000);
+      }, function () {
+        var range = document.createRange();
+        range.selectNodeContents(pre);
+        var selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+      });
+    });
+  });
+})();
+</script>
+<script src="/assets/duct-partials.js"></script>
+<script src="/assets/duct.js" defer></script>
+<script src="/assets/duct-download.js" defer></script>
+</body>
+</html>

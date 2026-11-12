@@ -87,6 +87,58 @@ export const PROVIDERS = [
   },
 ];
 
+/**
+ * Providers the server offers itself, with no key: today Ollama, open models on
+ * a server the person running Duct points it at (`OLLAMA_BASE_URL`).
+ *
+ * Kept apart from PROVIDERS because nothing here is pasted, stored, sent as a
+ * header or lent to a background job, and every reader of that list does one
+ * of those. `backend/routes/providers.py` holds the same sentence. Change both.
+ */
+export const INSTANCE_PROVIDERS = [
+  {
+    id: "ollama",
+    statusId: "ollama",
+    label: "Local models",
+    description: "Models on this server's own Ollama. No key: whoever runs Duct offers it.",
+    downloadUrl: "https://ollama.com/download",
+  },
+];
+
+/**
+ * A server the reader brings, rather than a vendor: anything that speaks
+ * OpenAI's chat API, from vLLM on their own GPU to a host of open-weight
+ * models. Its credential is the address, an optional key and the models they
+ * chose, packed into one string (`lib/endpointCredential.js`), so it is stored,
+ * sent and lent exactly as a key is. Kept out of PROVIDERS because every
+ * reader of that list offers a paste-a-key field, which this is not.
+ *
+ * `presets` fill the address for the common hosts; `local` ones are offered
+ * only where the server may reach a private network (`private_ok` on its
+ * status row), since a hosted Duct cannot reach anyone's localhost.
+ * `backend/routes/providers.py` holds the same sentence. Change both.
+ */
+export const ENDPOINT_PROVIDER = {
+  id: "compatible",
+  statusId: "openai_compatible",
+  label: "Bring your own provider",
+  header: "X-Provider-Compatible",
+  placeholder: "https://api.together.xyz/v1",
+  description: "Any host or server that speaks OpenAI's API: Together, Groq, vLLM, LM Studio and more.",
+  presets: [
+    { id: "together", label: "Together", url: "https://api.together.xyz/v1", keyUrl: "https://api.together.ai/settings/api-keys" },
+    { id: "fireworks", label: "Fireworks", url: "https://api.fireworks.ai/inference/v1", keyUrl: "https://fireworks.ai/account/api-keys" },
+    { id: "groq", label: "Groq", url: "https://api.groq.com/openai/v1", keyUrl: "https://console.groq.com/keys" },
+    { id: "deepinfra", label: "DeepInfra", url: "https://api.deepinfra.com/v1/openai", keyUrl: "https://deepinfra.com/dash/api_keys" },
+    { id: "lmstudio", label: "LM Studio", url: "http://localhost:1234/v1", local: true },
+    { id: "vllm", label: "vLLM", url: "http://localhost:8000/v1", local: true },
+    { id: "llamacpp", label: "llama.cpp", url: "http://localhost:8080/v1", local: true },
+  ],
+};
+
+/** Everything whose credential rides as an `X-Provider-*` header. */
+export const KEYED_PROVIDERS = [...PROVIDERS, ENDPOINT_PROVIDER];
+
 const STORAGE_PREFIX = "duct_provider_key_";
 const OPENAI_HEADER = PROVIDERS.find((p) => p.id === "openai").header;
 
@@ -211,7 +263,7 @@ export const OPENAI_ACCOUNT_HEADER = "X-OpenAI-Account-Id";
 export async function providerKeyHeaders() {
   const headers = {};
   if (typeof window === "undefined") return headers;
-  for (const provider of PROVIDERS) {
+  for (const provider of KEYED_PROVIDERS) {
     const key = await getProviderKey(provider.id);
     if (key) headers[provider.header] = key;
   }

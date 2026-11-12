@@ -56,6 +56,8 @@ DEFAULT_TRIALS = 3
 #: an effort downgrade shows up first as a cost drop with no visible change.
 DRIFT = 0.30
 BASELINES = Path(__file__).with_name("baselines.json")
+#: z for a two-sided 95% interval.
+Z_95 = 1.96
 #: A judge verdict is one call; a minute is slow, five is a stalled stream.
 JUDGE_SECONDS = 300.0
 #: A verdict that leaves markers out is asked for again this many times in all.
@@ -112,6 +114,12 @@ class Trial:
     failures: list[str] = field(default_factory=list)
     cost_usd: float = 0.0
     model_calls: int = 0
+    # Summed over the trial's model calls, from TOKEN_USAGE. Input counts the
+    # cached tokens too (as LangChain's usage does), so the cache share is
+    # cache_read_tokens / input_tokens.
+    input_tokens: int = 0
+    output_tokens: int = 0
+    cache_read_tokens: int = 0
     tool_calls: int = 0
     seconds: float = 0.0
     fetches: list[list[str]] = field(default_factory=list)
@@ -144,6 +152,33 @@ class CaseResult:
     def median(self, attr: str) -> float:
         values = [getattr(t, attr) for t in self.trials]
         return statistics.median(values) if values else 0.0
+
+    @property
+    def cost_per_pass(self) -> float | None:
+        """Everything the case spent, failed trials included, over the briefs
+        that passed: what one good brief costs. None when nothing passed,
+        because a cost per nothing is not a number worth printing as one."""
+        if not self.passes:
+            return None
+        return sum(t.cost_usd for t in self.trials) / self.passes
+
+    @property
+    def cache_share(self) -> float | None:
+        """The share of input tokens read from the provider's cache, over all
+        trials. None when no trial reported input: a provider that reports no
+        usage is unknown, not a cache that missed everything."""
+        read = sum(t.cache_read_tokens for t in self.trials)
+        total = sum(t.input_tokens for t in self.trials)
+        return read / total if total else None
+
+    def pass_interval(self) -> tuple[float, float] | None:
+        """A 95% Wilson interval on the pass rate. Three trials are few, and
+        the interval says how few: 3/3 is 44% to 100%, which is why a single
+        run's pass rate is never the whole story."""
+        n = len(self.trials)
+        if not n:
+            return None
+        return wilson_interval(self.passes, n)
 
 
 # ---------------------------------------------------------------------------
@@ -266,6 +301,9 @@ async def _run_one(
         if event.get("event") == AgentEvent.TOKEN_USAGE:
             trial.model_calls += 1
             trial.cost_usd += float(event.get("cost_usd") or 0.0)
+            trial.input_tokens += int(event.get("input_tokens") or 0)
+            trial.output_tokens += int(event.get("output_tokens") or 0)
+            trial.cache_read_tokens += int(event.get("cache_read_tokens") or 0)
             over = trial.cost_usd > case.cost_cap_usd or trial.model_calls > case.max_model_calls
             if over and task is not None and not task.done():
                 task.cancel()
@@ -500,6 +538,19 @@ def numbers_in(pulls: list[dict]) -> set[float]:
 # Verdicts
 # ---------------------------------------------------------------------------
 
+def wilson_interval(passes: int, n: int, z: float = Z_95) -> tuple[float, float]:
+    """The Wilson score interval for ``passes`` out of ``n``.
+
+    Chosen over the normal approximation because it stays inside 0 to 1 and
+    does not collapse to a zero-width interval at 0/n or n/n, the two results
+    a three-trial case produces most."""
+    p = passes / n
+    denom = 1 + z * z / n
+    centre = (p + z * z / (2 * n)) / denom
+    half = z * ((p * (1 - p) + z * z / (4 * n)) / n) ** 0.5 / denom
+    return max(0.0, centre - half), min(1.0, centre + half)
+
+
 def baseline_mismatch(baseline: dict | None, model: str) -> str | None:
     """Why ``baseline`` cannot judge a run on ``model``, or None.
 
@@ -563,14 +614,21 @@ def report(results: list[CaseResult], *, provider: str, model: str, spent: float
     lines = [
         f"### Agent eval · {provider} · {model} · ${spent:.2f}",
         "",
-        "| Case | Verdict | Passed | Median cost | Median calls | Median time | Figures traced |",
-        "| --- | --- | :---: | ---: | ---: | ---: | ---: |",
+        "| Case | Verdict | Passed | Pass rate, 95% | Cost per pass | Median cost | Median calls "
+        "| Median tokens in / out | Cache read | Median time | Figures traced |",
+        "| --- | --- | :---: | :---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
     ]
     for r in results:
         traced = [t.provenance for t in r.trials if t.provenance is not None]
+        interval = r.pass_interval()
+        per_pass, share = r.cost_per_pass, r.cache_share
         lines.append(
             f"| `{r.case_id}` | **{r.verdict}** | {r.passes}/{len(r.trials)} | "
-            f"${r.median('cost_usd'):.3f} | {r.median('model_calls'):g} | {r.median('seconds'):.0f}s | "
+            f"{f'{interval[0]:.0%} to {interval[1]:.0%}' if interval else 'n/a'} | "
+            f"{f'${per_pass:.3f}' if per_pass is not None else 'n/a'} | "
+            f"${r.median('cost_usd'):.3f} | {r.median('model_calls'):g} | "
+            f"{r.median('input_tokens'):,.0f} / {r.median('output_tokens'):,.0f} | "
+            f"{f'{share:.0%}' if share is not None else 'n/a'} | {r.median('seconds'):.0f}s | "
             f"{(statistics.median(traced) if traced else 0):.0%} |"
         )
     for r in results:

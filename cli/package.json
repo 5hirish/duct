@@ -1,0 +1,60 @@
+{
+  "name": "getduct",
+  "version": "0.1.1",
+  "description": "Check a site before you launch it: search, social card, answer engines, analytics. Scores it out of 100 and draws a card to post. The engine of Duct's launch-check skill for coding agents. No account, no dependencies.",
+  "type": "module",
+  "bin": {
+    "getduct": "bin/getduct.js"
+  },
+  "exports": {
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "schema/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "keywords": [
+    "launch",
+    "launch-checklist",
+    "seo",
+    "seo-audit",
+    "open-graph",
+    "og-image",
+    "social-card",
+    "llms-txt",
+    "ai-search",
+    "geo",
+    "analytics",
+    "marketing",
+    "audit",
+    "cli",
+    "agent-skills",
+    "claude-code",
+    "codex",
+    "cursor",
+    "duct"
+  ],
+  "homepage": "https://getduct.ai/skills",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/5hirish/duct.git",
+    "directory": "cli"
+  },
+  "bugs": {
+    "url": "https://github.com/5hirish/duct/issues"
+  },
+  "author": {
+    "name": "Shirish Kadam",
+    "url": "https://getduct.ai"
+  },
+  "license": "MIT"
+}

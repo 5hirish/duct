@@ -67,6 +67,7 @@ DUCT_REPORT_JSON = "application/vnd.duct.report+json"   # structured audit repor
 DUCT_TABLE_JSON  = "application/vnd.duct.table+json"    # {"columns": [...], "rows": [[...]]}
 DUCT_CHART_JSON  = "application/vnd.duct.chart+json"    # chart spec rendered by app chart components
 DUCT_DIFF_JSON   = "application/vnd.duct.diff+json"     # change-set preview (before/after items)
+GROWTH_REPORT_JSON = "application/vnd.duct.growth-report+json"  # the Analytics tab's report (app-rendered blocks)
 MERMAID          = "text/vnd.mermaid"
 MARKDOWN         = "text/markdown"
 HTML             = "text/html"
@@ -83,7 +84,7 @@ AGENT_WRITABLE_TYPES = {
     MARKDOWN, HTML, CSV, MERMAID, SVG, DUCT_TABLE_JSON, DUCT_CHART_JSON, DUCT_DIFF_JSON,
 }
 # Types whose content must parse as JSON after any edit.
-JSON_TYPES = {DUCT_REPORT_JSON, DUCT_TABLE_JSON, DUCT_CHART_JSON, DUCT_DIFF_JSON, "application/json"}
+JSON_TYPES = {DUCT_REPORT_JSON, DUCT_TABLE_JSON, DUCT_CHART_JSON, DUCT_DIFF_JSON, GROWTH_REPORT_JSON, "application/json"}
 
 _EXTENSIONS = {
     HTML: "html",
@@ -97,6 +98,7 @@ _EXTENSIONS = {
     DUCT_TABLE_JSON: "json",
     DUCT_CHART_JSON: "json",
     DUCT_DIFF_JSON: "json",
+    GROWTH_REPORT_JSON: "json",
 }
 
 

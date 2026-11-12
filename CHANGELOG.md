@@ -26,6 +26,129 @@ published without one. The same script, with no arguments, holds
 
 ### Added
 
+- **A launch check for your coding agent.** `npx skills add 5hirish/duct`
+  installs the `launch-check` skill into Claude Code, Codex, Cursor or any
+  agent that reads skills. It reads up to ten live pages and the repository
+  behind them, checks whether the analytics tag ships and the one conversion
+  event is sent, scores the launch out of 100 and writes three ranked fixes to
+  `duct-launch-check.md`, applying a diff only on a yes. No account, no call to
+  Duct. The twelve contributor skills are marked internal, so the install
+  offers only this one (#536).
+- **The launch check as a Claude Code and Codex plugin.** `/plugin marketplace
+  add 5hirish/duct` in Claude Code, or `codex plugin marketplace add
+  5hirish/duct` in Codex, installs the same skill from Duct's own catalogue,
+  ready for the Claude directory. The skill now runs a pinned `getduct@0.1.1`
+  instead of `@latest`, so what a directory reviewed is what runs.
+- **`npx getduct`, the launch check's engine and its score card.**
+  `npx getduct check yoursite.com` runs the 22 live checks of the launch
+  checklist with fixed thresholds in about ten seconds, with no account and no
+  dependencies, so the same site scores the same every time. `npx getduct
+  card` draws a 1200x630 card to post: the score, the three fixes, the date.
+  The skill now calls both, and does the live checks by hand where Node is
+  missing (#536).
+- **Duct speaks Simplified Chinese.** The interface, the site under `/zh-cn/`
+  and a Chinese README, machine-translated against the glossary, which now
+  pins every product term for `zh-CN` and renders "agent" as 智能体 rather than
+  代理, the word for a proxy. A native speaker's pass is #537.
+- **Duct asks for a GitHub star, rarely and only after it helped.** After a
+  third run that made something, once a run has ended and never on the first
+  day, a corner card offers "Star on GitHub" beside "Something missing? Tell
+  us". At most twice ever, 60 days apart, never again after a star; any other
+  notice takes the corner first. The account menu always has "Star Duct on
+  GitHub" (#539).
+
+### Changed
+
+- **The cookie bar and the privacy policy name Google Analytics.** Cloudflare's
+  Google tag gateway kept adding Google Tag Manager and GA4 at the edge after
+  they left this repository, on the site, in the web app and in the desktop
+  window, whatever a visitor chose. They stay, and both now say so. The bar's
+  "no ad targeting" line is gone, because these tags also reach Google's
+  advertising services.
+
+### Fixed
+
+- **GA4 recognises a returning visitor.** The site deleted `_ga` and `_gcl_au`
+  on every page load, so GA4 read nearly every visitor as new.
+- **The privacy page fits a phone in German.** Its one-word heading pushed the
+  page wider than the screen.
+
+## [0.7.3] — 2026-11-05
+
+The desktop app signs in again on macOS and Linux. Around it: one searchable Toolbox
+for every connector and MCP server, your coding agent signing in to Duct
+from the browser, and models from your own Ollama or any OpenAI-compatible
+server.
+
+### Fixed
+
+- **Desktop: sign-in on macOS and Linux.** 0.7.2 opened the sign-in security
+  check in the browser and reported "Security check failed to load", so the
+  downloaded app could not sign in. The shell's navigation guard was treating
+  the check's frame as a page to open outside; it now loads where it belongs.
+
+### Added
+
+- **Toolbox: one searchable catalogue.** Connections is now Toolbox: native
+  connectors and MCP servers in one list, a search that also asks the MCP
+  Registry, and a way in for any server by its address when nothing matches.
+  A connected server that needs attention says why on its tile, and a tenant
+  of a platform is never labelled as the vendor's own server.
+- **Connect your AI agent.** Claude Code, Codex, Cursor, VS Code or OpenCode
+  can use Duct's MCP server by signing in through the browser: one line to
+  paste, no secret in it, and a consent page that names the agent asking.
+- **Content Studio: a drafts queue and a plan for any period.** Waiting
+  drafts gather in one queue and approve onto the channel's best slot, the
+  Plan tab plans the month, one or two weeks, or thirty days ahead, and a
+  project's own writing samples and voice rules shape its text posts.
+- **Post through Zernio or PostBridge, whichever you connect.** Social
+  schedulers are connectors now, and none is on by default. Zernio adds whole
+  threads on X and Threads, a first comment on LinkedIn, Instagram and
+  Facebook, and numbers from LinkedIn and X. Accounts, Analytics and Discover
+  open on a page saying what they do and what unlocks them, not on an error.
+- **Local models on your own Ollama.** A self-hosted Duct pointed at an Ollama
+  server runs on any model pulled there that can call tools, with no key and
+  no bill: pick one for a tier like any other model. Duct asks Ollama for a
+  context long enough for its prompts, where Ollama's own default would cut
+  them short.
+- **Mail through any SMTP server.** A self-hosted Duct sends invitations and
+  audit reports through its own mail server or any provider's SMTP relay, and
+  Mailpit catches local mail so a flow can be read as it would arrive. Resend's
+  dedicated integration is gone; Resend accepts SMTP too.
+- **Bring your own provider.** Connect any host or server that speaks
+  OpenAI's API from Settings, from Together, Fireworks, Groq or DeepInfra to
+  vLLM, llama.cpp or LM Studio. Duct lists the server's models, you pick which
+  ones it may use, and it checks the first one really calls tools before
+  saving. Off your own network the address has to be public and https.
+
+### Changed
+
+- **Every screen on one page frame.** Home arranges what the agent wrote into
+  fixed slots, the top bar takes the page title over once it scrolls away,
+  and the account menu is five groups with a profile that fills itself in.
+- **New Google Ads keywords always wait for you.** A project set to assisted
+  or auto could add keywords without a click; a new keyword goes live enabled,
+  so it spends before anyone looks, and undo removes it but not the money.
+  Keywords now wait for approval like budgets, bids and pauses do. On assisted
+  and auto, negative keywords still apply on their own.
+
+### Removed
+
+- **Google Tag Manager and GA4, from this repository's site and web app code.**
+  Correction: this did not take them out of production, because Cloudflare's
+  Google tag gateway kept adding them at the edge, and they stay.
+
+## [0.7.2] — 2026-10-29
+
+Pages that arrive drawn, conversations that stay fast however long they get,
+and a desktop shell that fits a small laptop, zooms on a 4K screen and updates
+on Windows without asking for admin.
+
+
+### Added
+
+- **Desktop: zoom.** View has Zoom In, Zoom Out and Actual Size on the
+  browser's ladder, so 14 px text on a 4K screen at 100% scaling can grow.
 - **GitHub connector, through a GitHub App.** Commits, merged pull requests,
   closed issues, releases and changed docs for the window asked, so Insights
   can test "did the drop start with a change we shipped?". Each pull mints a
@@ -54,6 +177,22 @@ published without one. The same script, with no arguments, holds
 
 ### Changed
 
+- **Pages render on the server.** The gate that waits for the desktop shell
+  to name its backend holds hydration, not the HTML, so the front door and
+  onboarding arrive drawn instead of "Starting Duct…" while 300–600 KB of
+  script loads. A pre-paint session hint keeps a signed-in member from seeing
+  the front door on the way into the app.
+- **Long sessions stop slowing down with their length.** A settled reply no
+  longer re-renders on every streamed token, a brief beside the chat stops
+  re-parsing with it, a brief being written re-parses ten times a second, and
+  the artifact library fills its cards as they near the screen.
+- **Charts, code themes and slide capture load on first use**, behind a
+  placeholder of the same size: about a quarter less script on an Insights
+  thread and a sixth less on Content Studio.
+- **Windows installs per user.** Updates no longer raise an admin prompt.
+  The first update from a per-machine install retires it with one last
+  prompt and keeps the Start menu and desktop shortcuts.
+- The desktop window checks its connection only while it is visible.
 - **Claude Haiku 5.5 is Anthropic's Light rung**, replacing Haiku 4.5: a
   tenth of the price up to a 100k-token prompt, a 1M window, and the same
   effort dial as Opus 5.5. A saved pick of Haiku 4.5 moves with it.
@@ -76,6 +215,21 @@ published without one. The same script, with no arguments, holds
 
 ### Fixed
 
+- **The cookie bar no longer crashes the page that asks.** It rendered outside
+  the translation provider, so every first-time visitor asked about cookies
+  (the EEA, the UK, Switzerland) got "This page couldn't load", and the root
+  error page crashed the same way.
+- The desktop window opens centred and on screen at 1366×768 and 1280×800;
+  Linux no longer shows a blank window on NVIDIA and paints its splash before
+  registering deep links; About sits under Help on Windows and Linux, and the
+  splash has no menu bar; the `.deb` no longer depends on an unused tray
+  library.
+- Phones to 4K: safe areas apply once, so full-screen views fit a notched
+  iPhone; the split view waits until both panes fit; Enter no longer sends in
+  the middle of Japanese, Chinese or Korean composition; replies keep a
+  reading width, long URLs wrap and tabs scroll on phones; grids grow at 2560
+  and 3840 px. The page learns its platform before first paint, so Linux drops
+  backdrop blur and the desktop window stops rubber-banding.
 - **Project selection stays in its tab.** Switching projects in another tab no longer retargets the work in the current tab.
 
 - The desktop app keeps painting while it reads the keychain, a reload no
@@ -101,6 +255,10 @@ published without one. The same script, with no arguments, holds
 
 ### Security
 
+- Signing in to a connected MCP server is held to the server you typed: if
+  its metadata names another address as the resource, or another issuer than
+  the one it was found at, the sign-in stops instead of minting a token in
+  that name.
 - The desktop window only ever shows Duct: a page that sends it elsewhere
   opens in your browser instead, a sign-in or connector code returning
   through a deep link always lands on Duct's own origin, and the page can

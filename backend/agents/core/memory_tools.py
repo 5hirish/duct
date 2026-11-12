@@ -44,9 +44,12 @@ _SEARCH_LIMIT = 15
 REMEMBER_DESCRIPTION = (
     "Remember one durable fact about this project so future sessions start knowing it. "
     "Write a memory when something is TRUE ACROSS SESSIONS and NOT re-derivable by "
-    "calling a tool or opening an artifact: a decision and its reason, a goal or target, "
-    "an incident with when it started and what caused it, a milestone, a change to the "
-    "site or account, a conclusion you reached with its evidence, or something to watch. "
+    "calling a tool or opening an artifact: a standing rule the team set (kind 'rule', "
+    "entity_key 'rule:<topic>', e.g. never bidding on competitor brand terms), a decision "
+    "and its reason, a goal or target, an incident with when it started and what caused it, "
+    "a launch or other dated event, a change to the site or account, what a change did once "
+    "its numbers are in (kind 'outcome', entity_key naming the change, period the window "
+    "measured), a conclusion you reached with its evidence, or something to watch. "
     "Metrics are the exception to 're-derivable' — a dated value for a named period is "
     "exactly what memory is for. Do NOT remember: anything you can fetch again, running "
     "commentary, restated user questions, or judgements about the person. "
@@ -71,16 +74,30 @@ GET_DESCRIPTION = (
 )
 
 KIND_HELP = (
-    "One of: status, goal, milestone, event, incident, metric, decision, conclusion, "
-    "action, watch, entity."
+    "One of: rule, goal, status, entity, metric, event, incident, decision, action, "
+    "outcome, conclusion, watch."
 )
+
+
+# A memory's title is what the desk, the timeline and every recall show, at
+# one line in a row and two in the desk's lead (app/DESIGN.md, "Content
+# awareness"). The service stores up to 200 characters and cuts the rest,
+# which ends a sentence wherever the cut lands; refusing a long one here lets
+# the model rewrite it as a headline instead, and the detail goes in `body`.
+TITLE_HEADLINE_MAX = 90
 
 
 class RememberFactArgs(BaseModel):
     """Arguments for RememberFact (LangChain transport)."""
 
     kind: str = Field(description=KIND_HELP)
-    title: str = Field(description="The fact in one line, with its number or date if it has one.")
+    title: str = Field(
+        description=(
+            f"A headline of at most {TITLE_HEADLINE_MAX} characters: the subject first, with its "
+            "number or date if it has one ('Pricing page sessions fell 9% week over week'). "
+            "Name things as a person would, never by an id. Everything else goes in body."
+        ),
+    )
     body: str = Field(
         default="",
         description=(
@@ -182,7 +199,20 @@ def _entry_payload(row, *, full: bool = False) -> dict:
 
 def _remember_sync(args: dict, *, project_id, user_id, conversation_id, agent_type, scope, source_type) -> dict:
     from db.session import get_session as db_session
-    from service.memory import remember, short_id
+    from service.memory import readable_title, remember, short_id
+
+    # Measured without the ids remember() strips, so an id never gets an
+    # otherwise short headline sent back for a rewrite.
+    title = readable_title(args.get("title"))
+    if len(title) > TITLE_HEADLINE_MAX:
+        return {
+            "status": "not_stored",
+            "message": (
+                f"Rejected — the title is {len(title)} characters and a title is a headline of at "
+                f"most {TITLE_HEADLINE_MAX}. Lead with the subject and its number, and move the "
+                "rest into body. Nothing was written."
+            ),
+        }
 
     refs: list[dict] = []
     if conversation_id:
@@ -193,7 +223,7 @@ def _remember_sync(args: dict, *, project_id, user_id, conversation_id, agent_ty
             db,
             scope=scope,
             kind=str(args.get("kind") or "").strip(),
-            title=str(args.get("title") or "").strip(),
+            title=title,
             body=str(args.get("body") or ""),
             project_id=project_id,
             user_id=user_id,

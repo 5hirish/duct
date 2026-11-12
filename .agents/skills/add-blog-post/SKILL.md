@@ -2,6 +2,8 @@
 name: add-blog-post
 description: Research, write, illustrate and publish a post on the Duct blog that ranks in search and gets cited by answer engines (ChatGPT, Perplexity, Google AI Overviews, Claude). Runs a research arm first (demand, the pages answer engines cite today, primary sources, Duct's first-hand evidence), then writes for extraction, draws the hero, renders, lists and verifies the post, and keeps the publishing cadence. Use for "write a blog post", "next post", "blog about <topic or URL>", or a blog content calendar.
 argument-hint: "<topic, question or source URL> [Engineering|Design|Growth|Guide|Announcement|Story]"
+metadata:
+  internal: "true"
 ---
 
 A post exists to be **found, quoted and trusted**: found by search, quoted by
@@ -329,7 +331,7 @@ How each is made:
   Follow the `mosaic-panel` skill's six stones, ground and border, but 16:9,
   no inscription, one subject that is the post's metaphor. Pass one of
   `app/art-src/mosaic/*.jpg` as the style reference to
-  `mcp__gemini-image-generation__generate_image` (`gemini-3-pro-image-preview`,
+  `mcp__gemini-image-generation__generate_image` (`gemini-3-pro-image`,
   `aspect_ratio: 16:9`, `image_size: 2K`). A hero stands alone, so a naive
   oblique view is allowed where it reads better; app panels stay flat. Expect
   one re-roll; keep the better image, not the more rule-abiding one.
@@ -478,3 +480,13 @@ refresh starts from.
 - [ ] Card drawn, page and index rendered, three listings added, `--check` green
 - [ ] Looked at in a browser at desktop and phone width
 - [ ] Distribution list drafted for the maintainer; issue updated with the brief and the publish date
+
+## Related
+
+The method here (research before writing, demand and citation checks,
+cadence, Google's generated-content rules) is the cross-project version in
+the `growth-playbook` skill (the maintainer's agent-skill hub at
+`~/.agents/skills/growth-playbook/`, not in this repository;
+`references/content-and-seo.md`). This file keeps what is Duct's: paths,
+build scripts, categories, the bridge. A lesson any blog could use goes in
+that skill's `references/lessons.md`.

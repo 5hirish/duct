@@ -28,7 +28,7 @@ from sqlalchemy import update
 from sqlmodel import Session, select
 
 from agents.core.errors import DESCRIPTIONS, ErrorCode
-from agents.core.events import AgentEvent, EventKind, RunStatus
+from agents.core.events import AgentEvent, AgentStep, EventKind, RunStatus
 from agents.models import ModelName, Provider
 from db.session import get_session as db_session
 from models.content import AgentConversation, AgentEvent as AgentEventRow, ContentPlan, ContentPost
@@ -172,6 +172,20 @@ def last_user_turn_at(db: Session, conversation_id: UUID):
     ).first()
 
 
+def plan_decisions_since(db: Session, conversation_id: UUID, since) -> list[AgentEventRow]:
+    """The person's Accept or Reject on a proposed plan after ``since``. A
+    click on the pane is no message, so the agent hears of it only through
+    these rows (routes/agents.py, the next turn's decisions block)."""
+    stmt = (
+        select(AgentEventRow)
+        .where(AgentEventRow.conversation_id == conversation_id)
+        .where(AgentEventRow.kind == EventKind.PLAN_DECISION)
+    )
+    if since is not None:
+        stmt = stmt.where(AgentEventRow.created_at > since)
+    return list(db.exec(stmt.order_by(AgentEventRow.seq)))
+
+
 def get_conversation(db: Session, conversation_id: UUID) -> AgentConversation | None:
     return db.get(AgentConversation, conversation_id)
 
@@ -224,7 +238,9 @@ def find_active_conversation(
     )
     if project_id is not None:
         query = query.where(AgentConversation.project_id == project_id)
-    return db.exec(query).first()
+    # A post can carry more than one chat (drafted in one, revised in
+    # another); the one worked in last is the one to reopen.
+    return db.exec(query.order_by(AgentConversation.last_active_at.desc())).first()
 
 
 def archive_conversation(db: Session, conversation_id: UUID) -> None:
@@ -559,6 +575,9 @@ class ConversationRecorder:
             await self._append(EventKind.MEMORY_RECALLED, {"memories": list(body["memories"])})
         elif event == AgentEvent.MEMORY_WRITTEN and body.get("memory"):
             await self._append(EventKind.MEMORY_WRITTEN, {"memory": body["memory"]})
+        elif (event == AgentEvent.STEP_FINISHED and body.get("step_id") == AgentStep.READ_WORK
+              and isinstance(body.get("payload"), dict)):
+            await self._append(EventKind.FEED, body["payload"])
         await self._track(event, body)
 
     # -- run status ---------------------------------------------------------

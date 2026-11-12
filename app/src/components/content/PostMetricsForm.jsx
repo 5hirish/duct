@@ -32,8 +32,9 @@ const FIELDS = Object.freeze({
 });
 
 /**
- * The numbers of a posted post that PostBridge cannot pull: saves, reach, watch
- * time and completion, plus the four counts when PostBridge did not publish it.
+ * The numbers of a posted post its scheduler cannot pull: saves, reach, watch
+ * time and completion where it reports none, plus the four counts when no
+ * scheduler published it.
  * One form, no charts. What is typed here is stored as manual, and a sync never
  * overwrites it (backend/service/content_metrics.py).
  *

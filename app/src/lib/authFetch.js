@@ -64,6 +64,12 @@ export const DESKTOP_AUTH_BACKEND_KEY = "duct_auth_backend__desktop";
  */
 export const POST_SIGNIN_REDIRECT_KEY = "duct_post_signin_redirect";
 
+/** `/?signin=now`: a page that has already asked the person to sign in (an
+ *  agent's consent page) sends them here to start Google's flow at once,
+ *  rather than to a front door with a second sign-in button on it. */
+export const SIGN_IN_NOW_PARAM = "signin";
+export const SIGN_IN_NOW_VALUE = "now";
+
 /** sessionStorage flag: the user was sent to sign-in, they did not choose it. */
 export const SIGNIN_REASON_KEY = "duct_signin_reason";
 export const SIGNIN_REASON_EXPIRED = "expired";
@@ -126,8 +132,9 @@ export function hasAuthToken() {
  * page load will talk to. Returns what it decided, for tests and for callers
  * that want to say so.
  *
- * Called once, from `LocalBackendGate`, at the only moment the answer is
- * knowable: the base is settled and nothing has made a request yet. The point
+ * Called once, by `lib/localBackend.js` as it settles the backend: the only
+ * moment the answer is knowable, since the base is settled and nothing below
+ * `LocalBackendGate` has rendered, let alone made a request. The point
  * is that a mismatch is *not* an expired session. Left alone it becomes a 401,
  * `endSession` retires the session for real — clearing the token, parking a
  * redirect, telling the user their session ended — and the desktop app bounces

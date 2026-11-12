@@ -5,6 +5,7 @@ import { ArrowUp, Paperclip, Square } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import {
   ATTACH_MAX_BYTES,
   AttachmentKind,
@@ -15,7 +16,7 @@ import {
   pastedAttachment,
 } from "@/lib/attachments";
 import { clearDraft, readDraft, writeDraft } from "@/lib/composerDraft";
-import { matchesCombo } from "@/lib/shortcuts";
+import { matchesCombo, isComposing } from "@/lib/shortcuts";
 import { AttachmentStrip, DropHint } from "./Attachments";
 
 /**
@@ -51,12 +52,19 @@ import { AttachmentStrip, DropHint } from "./Attachments";
  * stops a streaming turn — scoped to the box on purpose, since a
  * window-level Escape would also fire while someone closes a popover — and
  * the footer names both that and Shift+Enter while the box has focus.
+ *
+ * `connecting` is the session being opened or its stream re-attached: there
+ * is no turn to stop yet, so Stop gives way to the word for what is
+ * happening. A Stop there used to cancel the connection itself.
  */
 export default function ChatInput({
   onSend,
   disabled,
   isStreaming,
   onStop,
+  // What the session is doing while there is no turn to stop: "Connecting…",
+  // "Reconnecting…". Empty once it is attached.
+  connecting = "",
   // Both default to the shell's own words, resolved below so they follow the
   // interface language.
   placeholder,
@@ -75,6 +83,7 @@ export default function ChatInput({
 }) {
   const { t } = useLingui();
   const placeholderText = placeholder ?? t`Ask a follow-up question…`;
+  const canStop = isStreaming && !connecting;
   const ariaLabelText = ariaLabel ?? t`Message the agent`;
   const [text, setText] = useState("");
   const [attachments, setAttachments] = useState(initialAttachments);
@@ -121,12 +130,12 @@ export default function ChatInput({
   }
 
   function handleKeyDown(e) {
-    if (isStreaming && onStop && matchesCombo(e, "escape")) {
+    if (canStop && onStop && matchesCombo(e, "escape")) {
       e.preventDefault();
       onStop();
       return;
     }
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey && !isComposing(e)) {
       e.preventDefault();
       handleSend();
     }
@@ -233,7 +242,10 @@ export default function ChatInput({
   return (
     <div className="border-t border-border/60 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))]">
       <div
-        className={`relative rounded-xl border bg-card focus-within:border-ring ${dragging ? "border-ring" : ""}`}
+        // The box a person types in. The star ask (components/StarAsk.jsx)
+        // measures it and never sits over it.
+        data-composer=""
+        className={`relative mx-auto max-w-3xl rounded-xl border bg-card focus-within:border-ring ${dragging ? "border-ring" : ""}`}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -291,7 +303,7 @@ export default function ChatInput({
             {tools}
             {focused && (
               <span id={hintId} className="hidden text-2xs text-muted-foreground @md:inline">
-                {isStreaming
+                {canStop
                   ? <Trans>Shift+Enter for a new line · Esc to stop</Trans>
                   : <Trans>Shift+Enter for a new line</Trans>}
               </span>
@@ -300,11 +312,18 @@ export default function ChatInput({
 
           <div className="ml-auto flex shrink-0 items-center gap-1.5">
             {status}
-            {isStreaming && (
-              <Button type="button" variant="destructive" size="xs" onClick={onStop}>
-                <Square className="fill-current" aria-hidden />
-                <Trans>Stop</Trans>
-              </Button>
+            {connecting ? (
+              <span className="inline-flex h-6 items-center gap-1.5 px-1.5 text-xs text-muted-foreground" role="status">
+                <Spinner className="size-3" />
+                {connecting}
+              </span>
+            ) : (
+              canStop && (
+                <Button type="button" variant="destructive" size="xs" onClick={onStop}>
+                  <Square className="fill-current" aria-hidden />
+                  <Trans>Stop</Trans>
+                </Button>
+              )
             )}
             <Button
               type="button"

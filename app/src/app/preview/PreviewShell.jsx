@@ -153,7 +153,7 @@ function Frame({ src, label, theme, device, fit }) {
   /**
    * Mount the iframe only once it is near the viewport.
    *
-   * Each frame is a whole Next document — the app bundle, Sentry, the HMR
+   * Each frame is a whole Next document — the app bundle, analytics, the HMR
    * client — and the design system is 24 entries. At two devices that is 48 of
    * them, which is not slow, it is `ERR_INSUFFICIENT_RESOURCES`: the browser
    * runs out of connections and the page half-loads. Deferring is not a

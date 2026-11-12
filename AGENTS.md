@@ -32,6 +32,31 @@ replaces was not a supported form, so Claude Code discovered none of these
 skills at all. Adding one means creating the directory and both symlinks —
 copies drift, so never copy.
 
+`skills/` at the root is a different shelf: skills **for Duct's users**, which
+they install into their own repositories with `npx skills add 5hirish/duct`.
+They must work in any repository, so they name no path, script or convention
+of this one, and they get no `.claude/` or `.cursor/` symlink. The `skills`
+CLI scans `skills/` *and* `.agents/skills/`, so every contributor skill carries
+`metadata: internal: "true"` in its frontmatter, which hides it from the
+default install. A new contributor skill without that line is offered to
+every user who installs Duct's skills; a skill in `skills/` with it is offered
+to nobody.
+
+`skills/` is also a plugin for Claude Code and Codex, so the same folder ships
+three ways: `npx skills add 5hirish/duct`, `/plugin marketplace add
+5hirish/duct` (Claude Code) and `codex plugin marketplace add 5hirish/duct`.
+`skills/.claude-plugin/plugin.json` finds skills with `"skills": "./"`;
+`skills/.codex-plugin/plugin.json` lists each skill folder
+(`["./launch-check"]`), because Codex 0.167 loads nothing from `"./"` (tried),
+so a new user-facing skill is added to that array or Codex never sees it. The two
+catalogues are `.claude-plugin/marketplace.json` and
+`.agents/plugins/marketplace.json` at the root. `skills/README.md` is the
+plugin's listing page and must say everything the plugin runs, fetches and
+sends, because the Claude directory's scan rejects a plugin whose README
+leaves something out. Check with `claude plugin validate ./skills` and
+`claude plugin validate .`; the skill pins `getduct@<version>`, and
+`cli/test/catalog.test.js` keeps that pin equal to the CLI's version.
+
 MCP servers get no such shared file, because none can exist: VS Code names the
 key `servers` rather than `mcpServers`, Codex is TOML, Zed calls them
 `context_servers` and puts them among its other settings, and Cursor expands
@@ -73,6 +98,8 @@ the area you are editing; site conventions do not apply to `backend/`.
 | `app/` | Next.js App Router (JS, not TS), Cloudflare Workers | [`app/AGENTS.md`](app/AGENTS.md) |
 | `desktop/` | Tauri v2 shell; OS-keychain BYO provider keys | [`desktop/AGENTS.md`](desktop/AGENTS.md) |
 | `site/` | Static HTML/CSS/JS, no build step | [`site/AGENTS.md`](site/AGENTS.md) |
+| `skills/` | User-facing Agent Skills (`npx skills add 5hirish/duct`) | above, "How the instruction files work" |
+| `cli/` | `getduct` npm CLI: the launch check's live checks and score card (Node 20+, no dependencies) | [`cli/AGENTS.md`](cli/AGENTS.md) |
 | `docs/` | Engineering plans and reference material | [`docs/README.md`](docs/README.md) |
 | `scripts/` | Deploy/env plumbing and repo hygiene | below |
 | `design/` | Storyboards (Claude Design) and the Remotion film | [`design/motion/README.md`](design/motion/README.md) |
@@ -199,6 +226,13 @@ scratchpad.
   it.
 - **Green before merge, even with the bypass.** Admin bypass on the `main`
   ruleset exists for emergencies, not for impatience. Let the checks finish.
+- **A contributor's pull request is read, never run.** Review it against the
+  issue it closes (the seam the issue named, nothing more), approve its
+  waiting CI runs once the diff is read, post the review, and leave the merge
+  to the maintainer: `main` wants signed commits, a fork's are not, so it
+  goes in as a squash. Never check the branch out or run its code locally;
+  CI is the machine it runs on. The contributor-facing half is in
+  [`CONTRIBUTING.md`](CONTRIBUTING.md), "How a contribution is reviewed".
 - **Branches are short-lived and named for their type** (`feat/`, `fix/`,
   `chore/`, `docs/`, `ci/`, `test/`). When it merges, delete the branch and
   remove its worktree the same day. A merged branch left lying around is what
@@ -258,7 +292,7 @@ that happened twice in one session, for two `next build`s that bind no port
 and needed nothing stopped. Three commands answer most of it:
 
 ```bash
-lsof -nP -iTCP -sTCP:LISTEN | grep -E ':(3003|8002|8090|6006)\b'  # app, API, site, Phoenix
+lsof -nP -iTCP -sTCP:LISTEN | grep -E ':(3003|8002|8090|16686)\b' # app, API, site, Jaeger
 curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8002/health
 curl -s -D - -o /dev/null http://localhost:8002/health             # headers say where it broke
 ```
@@ -280,9 +314,9 @@ Two traps. `:8002` is the uvicorn dev server and **not** the desktop app,
 which runs a frozen PyInstaller sidecar on a port of its own
 ([`backend/AGENTS.md`](backend/AGENTS.md), "Desktop (local sidecar) mode") —
 a desktop symptom reproduced against `:8002` proves nothing about the desktop
-build. And Phoenix on **6006** already holds the traces of every agent turn,
-model call and tool call, with its own MCP server at `/mcp` on the same port:
-read a slow or failed run there rather than reconstructing it from the
+build. And Jaeger on **16686** already holds the traces of every agent turn,
+model call and tool call, with its own MCP server at `/api/ai/mcp/` on the same
+port: read a slow or failed run there rather than reconstructing it from the
 transcript.
 
 The server's log lines are readable too, because the editor launch configs set
@@ -359,8 +393,11 @@ Check here before hand-rolling env or secret plumbing:
   `.env.test` targets.
 - `envfile.py` — shared dotenv parser used by the above.
 - `dev_stop.sh` — stop what a dev session started: `all`, or any of `backend`,
-  `app`, `site`, `phoenix`, `desktop`. Both editors' stop tasks call it, so the
+  `app`, `site`, `jaeger`, `desktop`. Both editors' stop tasks call it, so the
   kill list exists once.
+- `jaeger.sh` — the local trace viewer for agent runs: Jaeger, pinned and
+  checked against its release checksum on first run. UI and MCP on 16686,
+  OTLP on 4318, spans on disk for a week (`jaeger.yaml`).
 - `security/audit.py`, `security/leak_scan.py` — repo hygiene, both run in CI.
 - `shots/shoot.mjs` — product screenshots from the real app for the README and
   the site: one story (`app/src/lib/__fixtures__/solo-story.mjs`) feeds the
@@ -387,7 +424,7 @@ before writing in an area you have not written in before.
   when the PR is linked that way — #127 sat open a week after it shipped
   because its commits said `Refs`.
 - Any change to user-facing copy in `app/` or `site/` ends with `make i18n`,
-  which translates the new and changed strings into the four other languages
+  which translates the new and changed strings into the five other languages
   and commits nothing by itself; `make check` is red until the catalogues and
   the generated `site/<lang>/` pages are current. The writing rules live in
   each area's `AGENTS.md` under "Interface language" and "Translated pages".

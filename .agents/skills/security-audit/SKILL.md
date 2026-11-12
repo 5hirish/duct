@@ -3,6 +3,8 @@ name: security-audit
 description: Run deep local security audits for backend and app changes to catch secrets exposure, DB compromise vectors, and user privacy risks before PRs.
 argument-hint: "[changed|deep]"
 disable-model-invocation: true
+metadata:
+  internal: "true"
 ---
 
 # Local Security Audit Skill + Hooks

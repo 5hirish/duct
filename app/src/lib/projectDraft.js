@@ -59,6 +59,9 @@ function rankOf(provenance) {
 
 // Where each drafted field lands in the project profile. A field the backend
 // emits that is not listed here is ignored, never spread somewhere new.
+// Pillars are not here: they live in the content brand, which this profile
+// does not carry, so the server lands them (service/project_draft.py FIELDS,
+// `saved=False`) and the Brand tab shows them.
 const FIELD_PATHS = Object.freeze({
   name: ["name"],
   company_name: ["company", "name"],
@@ -72,7 +75,6 @@ const FIELD_PATHS = Object.freeze({
   competitors: ["competition", "competitors"],
   brand_voice: ["brand_channels", "brand_voice"],
   active_channels: ["brand_channels", "active_channels"],
-  content_pillars: ["brand_channels", "content_pillars"],
 });
 
 // Personas and competitors are rows keyed by name. The settings page seeds one

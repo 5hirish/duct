@@ -26,11 +26,21 @@ from service.membership import accessible_projects, get_project_for_user, member
 from service.project_draft import (
     DRAFT_SOURCES,
     FIELDS,
+    LEGACY_PILLARS_KEY,
     clean_labels,
     reconcile_save,
     snapshot,
 )
-from service.project_writes import apply_draft, finish_write, project_for_write
+from models.activity import ActivityLog
+from service.activity import log_activity
+from service.project_writes import (
+    ACTION_EDIT_UNDONE,
+    ACTION_EDITED,
+    apply_draft,
+    finish_write,
+    project_for_write,
+    undo_edit,
+)
 from utils.dates import utcnow
 
 router = APIRouter(tags=["user-projects"])
@@ -63,6 +73,14 @@ class ProjectIn(BaseModel):
         if len(json.dumps(v)) > _JSONB_MAX_BYTES:
             raise ValueError("Section payload too large (max 128 KB).")
         return v
+
+    @field_validator("brand_channels", mode="after")
+    @classmethod
+    def _no_second_pillar_list(cls, v: dict) -> dict:
+        # Pillars live in projects.content_pillars (service/project_draft.py).
+        # A device that drafted before that still carries its copy here, and
+        # saving it back would grow the second list again, one nobody reads.
+        return {k: val for k, val in v.items() if k != LEGACY_PILLARS_KEY}
 
 
 class DraftFieldIn(BaseModel):
@@ -272,6 +290,51 @@ def draft_project(
         project_id, {key: field.model_dump() for key, field in body.fields.items()}, user, session
     )
     return _out(project, user, session)
+
+
+@router.post("/{project_id}/edits/{activity_id}/undo")
+def undo_project_edit(
+    project_id: UUID,
+    activity_id: UUID,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> dict:
+    """Put back what one agent edit replaced (MCP ``update_project``).
+
+    Any member who can edit the project can undo an edit to it. A field
+    changed again since the edit is left as it is and named in ``skipped``:
+    undoing one change must never wipe out a later one. Undoing twice is a 409.
+    """
+    from fastapi import HTTPException
+
+    # 404 for a non-member, before saying anything about the edit.
+    get_project_for_user(project_id, user, session)
+    row = session.get(ActivityLog, activity_id)
+    if row is None or row.project_id != project_id or row.action != ACTION_EDITED:
+        raise HTTPException(status_code=404, detail="Edit not found")
+    data = dict(row.data or {})
+    if data.get("undone_at"):
+        raise HTTPException(status_code=409, detail="This edit was already undone.")
+
+    project, restored, skipped = undo_edit(project_id, data, user, session)
+    # Marked on the edit itself, so the feed can show it as undone and a
+    # second click cannot put back values the first already restored.
+    row.data = {**data, "undone_at": utcnow().isoformat(), "undone_by": str(user.id)}
+    session.add(row)
+    session.commit()
+    log_activity(
+        session,
+        category="project",
+        action=ACTION_EDIT_UNDONE,
+        source="user",
+        project_id=project.id,
+        user_id=user.id,
+        target_type="project",
+        target_id=str(project.id),
+        summary=f"Undid an agent's edit to {', '.join(restored) or 'nothing'}",
+        data={"edit_id": str(activity_id), "restored": restored, "skipped": skipped},
+    )
+    return {"restored": restored, "skipped": skipped, "project": _out(project, user, session)}
 
 
 class ProjectSettingsIn(BaseModel):

@@ -7,13 +7,13 @@ const { test, expect } = require("@playwright/test");
 // alternates in both directions, and that the switcher lands on the same page
 // in the other language rather than on the home page.
 
-const LOCALES = ["es", "pt-br", "de", "ja"];
+const LOCALES = ["es", "pt-br", "de", "ja", "zh-cn"];
 
 for (const locale of LOCALES) {
   test(`/${locale}/ renders in its language with alternates`, async ({ page }) => {
     const response = await page.goto(`/${locale}/`);
     expect(response && response.ok()).toBeTruthy();
-    await expect(page.locator("html")).toHaveAttribute("lang", /^(es|pt-BR|de|ja)$/);
+    await expect(page.locator("html")).toHaveAttribute("lang", /^(es|pt-BR|de|ja|zh-CN)$/);
     const canonical = await page.locator('link[rel="canonical"]').getAttribute("href");
     expect(canonical).toBe(`https://getduct.ai/${locale}/`);
     const alternates = page.locator('link[rel="alternate"][hreflang]');

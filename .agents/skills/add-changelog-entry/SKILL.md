@@ -2,6 +2,8 @@
 name: add-changelog-entry
 description: Write a new release entry on the public Duct changelog at site/changelog/ — from git history, in the voice of someone who uses the product
 argument-hint: "[\"<release name>\"] [\"<date>\"] [\"<version badge>\"]"
+metadata:
+  internal: "true"
 ---
 
 Turns what shipped since the last published release into one human-readable entry
@@ -216,6 +218,19 @@ Nothing here is generated: `scripts/build_blog.py` renders posts, not releases,
 so there is no `--check` to run and no build output to commit.
 
 ---
+
+### After the merge: the announcement posts itself
+
+The feed item is also the GitHub Discussion. On every push to `main` that
+changes `site/changelog/feed.xml`, `.github/workflows/announce.yml` posts each
+new item to Discussions → Announcements: its title, its `<description>`, a link
+to the entry, and one line inviting replies. So the feed `<description>` is
+read by two audiences, the RSS reader and everyone watching the repository;
+write it as a paragraph that stands on its own, never "see below". Do not post
+the announcement by hand: the workflow skips an entry already announced, but a
+hand-made post has no marker, so the workflow would post it a second time. An
+entry that merged before the workflow existed is announced with *Run workflow*
+on `announce`, naming its guid.
 
 ## Year rollover (the older-releases archive)
 

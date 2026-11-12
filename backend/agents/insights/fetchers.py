@@ -37,6 +37,7 @@ from uuid import UUID
 
 from agents.core.errors import ErrorCode, classify_error, safe_excerpt
 from agents.insights.catalog.base import _CATALOGS
+from agents.insights.catalog.publishers import PUBLISHERS_SOURCE
 from utils.dates import last_n_days
 
 logger = logging.getLogger(__name__)
@@ -210,7 +211,7 @@ def _build_specs() -> dict[str, FetchSpec]:
         fetch_geo_performance,
         fetch_search_terms,
     )
-    from service.google.ga4 import fetch_ga4_conversion_paths, fetch_ga4_landing_pages
+    from service.google.ga4 import fetch_ga4_conversion_paths, fetch_ga4_landing_pages, fetch_ga4_weekly_users
     from service.google.gsc import (
         fetch_gsc_page_performance,
         fetch_gsc_query_page,
@@ -220,6 +221,7 @@ def _build_specs() -> dict[str, FetchSpec]:
     from service.github.fetch import fetch_github
     from service.growthbook.fetch import fetch_growthbook
     from service.mixpanel.fetch import fetch_mixpanel
+    from service.rss.fetch import fetch_rss
 
     by_tool: dict[str, Callable[[str, str, str, dict], dict]] = {
         "fetch_campaign_performance": _campaigns,
@@ -229,6 +231,7 @@ def _build_specs() -> dict[str, FetchSpec]:
         "fetch_ad_group_performance": _google_ads(fetch_ad_group_performance),
         "fetch_ga4_landing_pages": _google_oauth(fetch_ga4_landing_pages),
         "fetch_ga4_conversion_paths": _google_oauth(fetch_ga4_conversion_paths),
+        "fetch_ga4_weekly_users": _google_oauth(fetch_ga4_weekly_users),
         "fetch_gsc_query_performance": _google_oauth(fetch_gsc_query_performance),
         "fetch_gsc_page_performance": _google_oauth(fetch_gsc_page_performance),
         "fetch_gsc_query_page": _google_oauth(fetch_gsc_query_page),
@@ -236,6 +239,8 @@ def _build_specs() -> dict[str, FetchSpec]:
         "fetch_clarity": _manual(fetch_clarity),
         "fetch_growthbook": _manual(fetch_growthbook, "project_id"),
         "fetch_github": _manual_dated(fetch_github, "repo"),
+        "fetch_rss": _manual_dated(fetch_rss, "account_id"),
+        "fetch_social_post_metrics": _publishers_unreachable,
     }
 
     specs: dict[str, FetchSpec] = {}
@@ -318,6 +323,11 @@ def fetch_entity(
         resolve_read_credentials,
     )
 
+    # The schedulers are a vendor key on the project's owner, not a connector
+    # credential on the user, so they resolve their own way.
+    if spec.connector_id == PUBLISHERS_SOURCE:
+        return fetch_publishers(spec, project_id=project_id, date_from=date_from, date_to=date_to)
+
     with next(db_session()) as db:
         source = get_data_source(db, spec.connector_id, user_id=user_id, project_id=project_id)
         if source is None or source.status != STATUS_BOUND or not source.account_id:
@@ -378,7 +388,7 @@ def fetch_entity(
                 "message": (
                     f"{spec.connector_id} rejected its stored credential (expired or "
                     "revoked). Nothing from this source can be fetched until the user "
-                    "reconnects it on the Connections page — call RequestConnection "
+                    "reconnects it in the Toolbox — call RequestConnection "
                     "if the analysis needs it, and do not fetch from it again this session."
                 ),
             }
@@ -443,4 +453,95 @@ def _not_ready(spec: FetchSpec, source: Any) -> dict[str, Any]:
             f"{spec.connector_id} is connected but this project has not chosen an "
             "account. Call SelectAccount first, then fetch again."
         ),
+    }
+
+
+# ---------------------------------------------------------------------------
+# The schedulers: social post metrics
+# ---------------------------------------------------------------------------
+
+def _publishers_unreachable(account_id: str, date_from: str, date_to: str, creds: dict) -> dict:
+    """Never called: ``fetch_entity`` branches to :func:`fetch_publishers`
+    before resolving connector credentials. Exists so the catalog's entity has
+    a dispatch entry and the catalog contract test can see it."""
+    raise RuntimeError("social_post_metrics is fetched through service/publishers, not a connector")
+
+
+def _in_window(posted_at: str, date_from: str, date_to: str) -> bool:
+    day = (posted_at or "")[:10]
+    return bool(day) and date_from <= day <= date_to
+
+
+def fetch_publishers(
+    spec: FetchSpec, *, project_id: UUID | None, date_from: str = "", date_to: str = ""
+) -> dict[str, Any]:
+    """Every post the project's schedulers report, inside the window by
+    posting date. Never raises; the statuses mirror a connector's so the
+    agent reacts the same way ("not_connected" names Content → Accounts)."""
+    import asyncio
+
+    from db.session import get_session as db_session
+    from models.project import Project
+    from service.publishers.metrics import as_rows, collect_reported_posts, owner_has_scheduler
+
+    window_from, window_to = resolve_window(date_from, date_to)
+    not_connected = {
+        "status": "not_connected",
+        "entity_id": spec.entity_id,
+        "connector_id": spec.connector_id,
+        "message": (
+            "No scheduler is connected to this project. The owner connects PostBridge or "
+            "Zernio in Content → Accounts; until then there are no post numbers to read."
+        ),
+    }
+    with next(db_session()) as db:
+        proj = db.get(Project, project_id) if project_id is not None else None
+        if proj is None or not owner_has_scheduler(db, proj.user_id):
+            return not_connected
+        # fetch_entity runs on a worker thread with no loop of its own, so the
+        # async adapters get one here; the DB reads inside happen first.
+        collected = asyncio.run(collect_reported_posts(db, proj))
+
+    if collected.all_failed:
+        spec_failed, exc = collected.failures[0]
+        return {
+            "status": "fetch_failed",
+            "entity_id": spec.entity_id,
+            "connector_id": spec.connector_id,
+            "date_from": window_from,
+            "date_to": window_to,
+            "message": (
+                f"{spec_failed.label} returned an error: {safe_excerpt(exc)}. Do not retry the "
+                "same call — say the post numbers could not be read and carry on."
+            ),
+        }
+
+    every = as_rows(collected)
+    rows = [r for r in every if _in_window(r["posted_at"], window_from, window_to)]
+    undated = sum(1 for r in every if not r["posted_at"])
+    data: dict[str, Any] = {
+        "rows": sorted(rows, key=lambda r: r["views"], reverse=True),
+        "rows_available": len(every),
+        "schedulers": [s.id for s in collected.asked],
+        "platforms": sorted({r["platform"] for r in rows if r["platform"]}),
+        "notices": [
+            f"{s.label} did not answer: {safe_excerpt(exc)}" for s, exc in collected.failures
+        ],
+    }
+    if undated:
+        data["undated_rows"] = undated
+        data["data_quality"] = [
+            f"{undated} posts carry no posting date at the scheduler and are left out of the window."
+        ]
+
+    from agents.insights.totals import summarise
+
+    return {
+        "status": "ok",
+        "entity_id": spec.entity_id,
+        "connector_id": spec.connector_id,
+        "date_from": window_from,
+        "date_to": window_to,
+        **summarise(spec.entity_id, data),
+        "data": data,
     }

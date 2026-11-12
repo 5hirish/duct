@@ -2,6 +2,8 @@
 name: add-connector
 description: Research-first evaluation of a third-party data source for Duct (OAuth, scopes, quotas, APIs) using official docs via web search, then map findings to repo structure—no step-by-step coding walkthrough.
 argument-hint: "<VendorOrProduct> [optional slug for saved memo]"
+metadata:
+  internal: "true"
 ---
 
 Evaluate and scaffold a new **Duct connector** in two layers: (1) a **Connector research memo** backed by **current official documentation**, discovered through **heavy use of web search** (and fetching doc pages when snippets are thin); (2) a **compact map** of where wiring lives in this monorepo. **Do not** treat this skill as a line-by-line implementation guide—implementation starts only after the memo is reviewed.

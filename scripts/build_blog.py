@@ -142,7 +142,6 @@ PARTIALS = SITE / "partials"
 BASE = "https://getduct.ai"
 REPO_URL = "https://github.com/5hirish/duct"
 OG_DIR = SITE / "assets" / "og"
-GTM_ID = "GTM-PKL589SW"
 AUTHOR = {
     "name": "Shirish Kadam",
     "url": "https://shirishkadam.com",
@@ -948,10 +947,6 @@ def render_page(slug: str, fm: dict[str, str], body: str, siblings: list[dict]) 
 <body>
 
 <a href="#prose" class="skip-link">Skip to content</a>
-
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id={GTM_ID}" height="0" width="0" style="display:none;visibility:hidden" title="Google Tag Manager"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
 
 <div id="reading-progress" role="progressbar" aria-label="Reading progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
 

@@ -29,6 +29,9 @@ const SCALE = new Set([
 const CLEAN = new Set([
   "base.css",
   "connector-tiles.css",
+  // The feed and schedule drawings (#561, #562): stones and stripes, no type
+  // of their own, so it starts on the ratchet.
+  "feed.css",
   "forms.css",
   "layout-grids.css",
   "mode-selector.css",

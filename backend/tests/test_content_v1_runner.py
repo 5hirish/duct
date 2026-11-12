@@ -92,6 +92,19 @@ def test_the_orchestrator_gets_every_content_tool_and_the_scaffolding(plan_sessi
     assert {"task", "write_todos", "AskUserQuestion", "WebFetch"} <= names
 
 
+@pytest.mark.parametrize("mode", ["plan_month", "draft_post"])
+def test_both_agents_research_search_tiktok_and_read_the_projects_data(mode, plan_session, draft_session, emitted):
+    """Until 2026-11-11 only the planner could research, neither agent could
+    search TikTok, and neither could read the project's connected sources."""
+    session = plan_session if mode == "plan_month" else draft_session
+    session.user_id = uuid.uuid4()
+
+    names = tool_names(_agent(session, emitted))
+
+    assert {"research_trends", "discover_tiktok"} <= names
+    assert {"ListDataSources", "SelectAccount", "RequestConnection", "FetchData", "ReadConnectorNotes"} <= names
+
+
 def test_filesystem_is_virtual_and_there_is_no_shell(plan_session, emitted):
     names = tool_names(_agent(plan_session, emitted))
 
@@ -102,7 +115,7 @@ def test_filesystem_is_virtual_and_there_is_no_shell(plan_session, emitted):
 def test_sub_agents_never_get_the_writer_tools():
     """Enforced by which tools are on their lists, not by the prompt — the
     harness's general-purpose default (every tool of the parent) included."""
-    writers = {ContentTool.SUBMIT_PLAN, ContentTool.SUBMIT_POST_DRAFT, ContentTool.EDIT_SLIDE,
+    writers = {ContentTool.SUBMIT_PLAN, ContentTool.REVISE_PLAN_DAYS, ContentTool.SUBMIT_POST_DRAFT, ContentTool.EDIT_SLIDE,
                ContentTool.GENERATE_IMAGE, ContentTool.EDIT_IMAGE, ContentTool.PUBLISH_POST,
                ContentTool.MARK_POSTED, ContentTool.RENDER_SLIDE, ContentTool.SUBMIT_ASSESSMENT}
 
@@ -323,6 +336,35 @@ async def test_resume_of_an_idle_thread_is_silent_and_ready(plan_session, emitte
     kinds = _kinds(emitted)
     assert kinds == [AgentEvent.PIPELINE_FINISHED]
     assert emitted.events[0]["resumed"] is True
+
+
+async def test_resume_shows_the_proposal_its_conversation_held(plan_session, emitted, monkeypatch):
+    """A deploy between the agent proposing and the person deciding lost the
+    plan: the board kept the old one and the chat said a new one was made.
+    The conversation holds it now, and a resumed session shows it again, but
+    only over the plan it was made against."""
+    from datetime import date
+
+    import agents.content.v1.runner as content_runner
+    from agents.content.events import ContentEvent
+    from agents.content.plan_proposal import build_proposal
+
+    held = build_proposal(
+        project_id=PROJECT, draft_name="November", character={}, strategy={}, new_days=[{"topic": "t"}],
+        live_days=None, live_plan_id=None, period=None, today=date(2031, 10, 1),
+    )
+    monkeypatch.setattr(content_runner, "_held_proposal_sync", lambda _session: held)
+    plan_session.conversation_id = uuid.uuid4()
+    await _drive(plan_session, emitted, fake_llm("x"), resume=True)
+
+    (shown,) = [e for e in emitted.events if e["event"] == ContentEvent.PLAN_GENERATED]
+    assert shown["replay"] is True and shown["payload"]["proposal_id"] == held.proposal_id
+    assert plan_session.proposal is held
+
+    plan_session.proposal, plan_session.plan_id = None, uuid.uuid4()
+    emitted.events.clear()
+    await _drive(plan_session, emitted, fake_llm("x"), resume=True)
+    assert plan_session.proposal is None, "a proposal for a new plan never lands on an existing one"
 
 
 async def test_resume_of_a_pre_checkpoint_conversation_primes_the_first_message(plan_session, emitted, monkeypatch):

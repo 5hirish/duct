@@ -129,8 +129,6 @@ def test_the_callers_gemini_key_reaches_the_image_tools(monkeypatch):
     content_routes._attach_image_run("sid", {Provider.GOOGLE_GENAI: "AIza-mine"})
     assert session.image_provider is Provider.GOOGLE_GENAI
     assert session.image_api_key == "AIza-mine"
-    # The Gemini key doubles as the WebSearch key, as it always has.
-    assert session.gemini_api_key == "AIza-mine"
 
 
 def test_an_openai_key_alone_draws_on_openai(monkeypatch):
@@ -141,8 +139,6 @@ def test_an_openai_key_alone_draws_on_openai(monkeypatch):
     content_routes._attach_image_run("sid", {Provider.OPENAI: "sk-mine"})
     assert session.image_provider is Provider.OPENAI
     assert session.image_api_key == "sk-mine"
-    # And no Gemini-grounded search: there is no Gemini key to run it on.
-    assert session.gemini_api_key == ""
 
 
 def test_an_xai_key_alone_draws_on_xai(monkeypatch):
@@ -226,7 +222,71 @@ def test_no_image_key_leaves_the_run_alive(monkeypatch):
     content_routes._attach_image_run("sid", {})  # must not raise
     assert session.image_provider is None
     assert session.image_api_key == ""
+
+
+# --- the web search key is its own question --------------------------------
+#
+# It used to ride on the image resolution, so a run whose images were on
+# OpenAI searched nothing even with the user's Gemini key in the request.
+
+
+def _hosted(monkeypatch, *, duct_key="AIza-duct"):
+    """A hosted instance: an env Gemini key exists and is not the user's."""
+    from types import SimpleNamespace
+
+    import config
+
+    monkeypatch.setattr(config, "allow_server_provider_keys", lambda: False)
+    monkeypatch.setattr(config, "get_configs", lambda: SimpleNamespace(gemini_api_key=duct_key))
+
+
+def _run(source):
+    from types import SimpleNamespace
+
+    return SimpleNamespace(source=source)
+
+
+def test_search_uses_the_callers_gemini_key_whatever_draws_the_images(monkeypatch):
+    session = _session_under(monkeypatch)
+    _patch_resolution(monkeypatch, raises=True)
+    _hosted(monkeypatch)
+    keys = {Provider.OPENAI: "sk-mine", Provider.GOOGLE_GENAI: "AIza-mine"}
+
+    content_routes._attach_image_run("sid", {Provider.OPENAI: "sk-mine"})
+    content_routes._attach_search_key("sid", _run("user"), keys)
+    assert session.image_provider is Provider.OPENAI
+    assert session.gemini_api_key == "AIza-mine"
+
+
+def test_a_saved_gemini_key_backs_search(monkeypatch):
+    session = _session_under(monkeypatch)
+    _patch_resolution(monkeypatch, stored={Provider.GOOGLE_GENAI: "AIza-saved"}, raises=True)
+    _hosted(monkeypatch)
+
+    content_routes._attach_search_key("sid", _run("user"), {Provider.OPENAI: "sk-mine"})
+    assert session.gemini_api_key == "AIza-saved"
+
+
+def test_no_gemini_key_means_no_search_on_ducts_key(monkeypatch):
+    """Grounded search is billed per query. A run on the user's key does not
+    get Duct's, and a ChatGPT plan is the user's too."""
+    session = _session_under(monkeypatch)
+    _patch_resolution(monkeypatch, raises=True)
+    _hosted(monkeypatch)
+
+    content_routes._attach_search_key("sid", _run("user"), {Provider.OPENAI: "sk-mine"})
     assert session.gemini_api_key == ""
+    content_routes._attach_search_key("sid", _run("subscription"), {Provider.OPENAI: PLAN_TOKEN})
+    assert session.gemini_api_key == ""
+
+
+def test_a_run_duct_pays_for_searches_on_ducts_key(monkeypatch):
+    session = _session_under(monkeypatch)
+    _patch_resolution(monkeypatch, raises=True)
+    _hosted(monkeypatch)
+
+    content_routes._attach_search_key("sid", _run("cloud"), {})
+    assert session.gemini_api_key == "AIza-duct"
 
 
 # --- the model follows the provider ----------------------------------------

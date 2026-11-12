@@ -38,12 +38,15 @@ from service.execution.registry import ExecutorSpec
 # Budget and bid changes (google_ads.set_campaign_budget / set_campaign_bidding)
 # are reversible but move money — they stay OFF the allowlist until numeric
 # guardrail limits (max % delta, absolute caps) exist. Same for status flips
-# (pausing a campaign stops spend instantly). Proposing them still works; they
-# just always wait for approval.
+# (pausing a campaign stops spend instantly), and for new keywords: they go in
+# ENABLED, at any match type, so a wrong one spends before anyone looks, and
+# rollback removes the keyword but not the money or the bidding's re-learning.
+# It sat on this list until 2026-10-30 (G1 in
+# docs/engineering/2026-09-27-execution-approval-ux-research.md). Proposing
+# any of them still works; they just always wait for approval.
 AUTO_APPLY_ALLOWLIST: frozenset[str] = frozenset(
     {
         "google_ads.add_negative_keywords",
-        "google_ads.add_keywords",
         "ga4.create_key_event",
         "ga4.create_audience",
         # Workspace-only edits — invisible to production until a separate,

@@ -1,6 +1,6 @@
 # Data model
 
-**Author:** Shirish Kadam, Claude · **Updated:** 2026-10-26
+**Author:** Shirish Kadam, Claude · **Updated:** 2026-11-11
 
 Every table the backend owns, what it records, and which one answers a given
 question. The models in [`backend/models/`](../../backend/models/) are the
@@ -45,7 +45,7 @@ this list: LangGraph creates and migrates its own tables outside Alembic
 | `users` | one row per person (or per desktop install, for a guest); user-scope switches like `memory_paused` |
 | `auth_identities` | how a user signs in: Google, guest install, or a linked ChatGPT account (a merge key, never a login alone) |
 | `oauth_states` | short-lived OAuth `state` values, single-use, with an expiry |
-| `mcp_tokens` | personal tokens an outside agent sends to Duct's MCP server; a hash and a four-character hint, never the token, and accepted on `/mcp` only |
+| `mcp_tokens` | what an outside agent sends to Duct's MCP server: a pasted personal token, or an agent that signed in through the browser (its client id and a refresh token); hashes and a four-character hint, never a token, and accepted on `/mcp` only |
 | `projects` | the unit everything else hangs off: settings, `autonomy_level`, `memory_paused`, and `provenance` (where each drafted field came from) |
 | `project_members` | who can see a project. Authorization is membership, not `projects.user_id` |
 | `project_invitations` | pending email invites into a project |
@@ -63,13 +63,19 @@ this list: LangGraph creates and migrates its own tables outside Alembic
 
 | Table | Holds |
 |---|---|
-| `agent_conversations` | one thread: agent type, project, run status, compaction summary, `seq` allocator, optional link to the artifact it edits |
-| `agent_events` | the thread's transcript (see above). `kind` is free text: `user`, `assistant`, `thinking`, `tool_use`, `tool_result`, `question`, `answer`, `context`, `compacted`, `memory_*`, `failure` |
-| `activity_logs` | see above. The project's audit trail: change-set transitions, GTM publishes, artifact versions. Not a mirror of tool calls |
+| `agent_conversations` | one thread: agent type, project, run status, compaction summary, `seq` allocator, optional link to the artifact it edits; `meta` holds the memory watermark and a plan proposal waiting on the person |
+| `agent_events` | the thread's transcript (see above). `kind` is free text: `user`, `assistant`, `thinking`, `tool_use`, `tool_result`, `question`, `answer`, `context`, `compacted`, `memory_*`, `failure`, `plan_decision`, `feed` (what a plan from shipped work read) |
+| `activity_logs` | see above. The project's audit trail: change-set transitions, GTM publishes, artifact versions, a scheduled post its scheduler failed to publish (whose reason the post's card reads back). Not a mirror of tool calls |
 | `agent_contexts` | per project and agent, a JSON blob of working notes the agent carries between runs |
 | `artifacts` | every version of every output (brief, report, image): `group_id` is the identity, one immutable row per version; bytes in object storage, never a public URL |
 | `project_memories` | see above. Scopes `user`, `project`, `artifact` in one table |
 | `model_usage` | one row per model call with tokens and cost, so a user can see their own bill |
+
+### Schedules
+
+| Table | Holds |
+|---|---|
+| `agent_schedules` | a run nobody starts by hand: the job and its settings, a preset cadence in a named time zone, enabled, the host that owns it (`cloud` / `local`), the monthly cap, the loop's own claim, lease and retry state, and for an on-release schedule (#563) the last release tag it saw (`cursor`) and a Run now that skips the check once (`forced`). What each run did is an `activity_logs` row (category `schedule`), linked to the conversation it left, never a second history |
 
 ### Execution
 
@@ -82,12 +88,12 @@ this list: LangGraph creates and migrates its own tables outside Alembic
 
 | Table | Holds |
 |---|---|
-| `content_plans` | a content plan and its strategy |
-| `content_posts` | one post, whatever platform it is bound for: type (slideshow, video, image, text), its words (`caption`), its own follow-ups under it (`replies`: an X reply, a LinkedIn first comment), slides (none for a text post), a video post's chosen clip (`video`), status, performance counts (`perf`: keys per `service/content_metrics.py`; typed-in ones listed in `manual_keys`, which no sync overwrites), its last pre-publish review, and the TikTok it was cloned from (`clone_source`). What differs by platform is rules, not columns: `agents/content/channels.RULES` |
+| `content_plans` | a content plan and its strategy (`strategy.feed`: the window a plan from shipped work read, where the next one starts) |
+| `content_posts` | one post, whatever platform it is bound for: type (slideshow, video, image, text), its words (`caption`), its own follow-ups under it (`replies`: an X reply, a LinkedIn first comment), slides (none for a text post), a video post's chosen clip (`video`), status, performance counts (`perf`: keys per `service/content_metrics.py`; typed-in ones listed in `manual_keys`, which no sync overwrites), its last pre-publish review, and the TikTok it was cloned from (`clone_source`), and once sent, the scheduler holding it (`publisher`) with its ids there. What differs by platform is rules, not columns: `agents/content/channels.RULES` |
 | `content_assets` | generated images and video clips (every take), uploads and references |
 | `content_formats` | a project's library of post formats |
 | `content_avatars` | a project's library of avatars |
-| `content_social_links` | social accounts linked for publishing |
+| `content_social_links` | social accounts linked for publishing, each at the scheduler that holds it (`publisher`: PostBridge, Zernio) |
 
 ### Growth experiments
 

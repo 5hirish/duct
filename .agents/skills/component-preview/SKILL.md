@@ -2,6 +2,8 @@
 name: component-preview
 description: Render an app/ component in isolation at /preview to inspect layout, states, responsiveness and surfaces (dialog, sheet, alert, corner notice) without signing in or loading the real screen. Use before calling any UI change done.
 argument-hint: "<ComponentName> [state or surface to check]"
+metadata:
+  internal: "true"
 ---
 
 Look at a component on its own, in the real app's CSS, before calling a UI

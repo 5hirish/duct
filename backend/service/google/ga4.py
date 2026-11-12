@@ -14,7 +14,11 @@ from service.connectors import (
     entity_facts,
     register_connector,
 )
-from service.google.constants import GA4_CONNECTOR_ID, GA4_READ_SCOPE
+from service.google.constants import (
+    GA4_CONNECTOR_ID,
+    GA4_READ_SCOPE,
+    GOOGLE_SERVER_ONLY_KEYS,
+)
 
 _GA4_SCOPE = GA4_READ_SCOPE
 # Requested on top of readonly at consent time so stored GA4 tokens can also
@@ -31,6 +35,8 @@ _TOKEN_URI = "https://oauth2.googleapis.com/token"
 KEY_EVENTS_METRIC = "keyEvents"
 
 LANDING_PAGE_ROWS = 250
+# A year of weeks: enough history for "best week yet" to mean something.
+WEEKLY_USER_ROWS = 60
 
 # What GA4 says it left out of a report, or estimated. It withholds low-count
 # rows under its privacy thresholds, samples a large query, rolls
@@ -248,6 +254,56 @@ def fetch_ga4_landing_pages(
     }
 
 
+def fetch_ga4_weekly_users(
+    property_id: str,
+    date_from: str,
+    date_to: str,
+    *,
+    refresh_token: str,
+    client_id: str,
+    client_secret: str,
+) -> dict[str, Any]:
+    """Active users per ISO week, oldest first: the series a "best week yet"
+    milestone is read from (#564). Users are not additive across weeks, so the
+    catalog gives the metric no ``agg`` and nothing sums it."""
+    from google.analytics.data_v1beta import BetaAnalyticsDataClient
+    from google.analytics.data_v1beta.types import (
+        DateRange,
+        Dimension,
+        Metric,
+        OrderBy,
+        RunReportRequest,
+    )
+
+    credentials = _build_credentials(
+        refresh_token=refresh_token,
+        client_id=client_id,
+        client_secret=client_secret,
+    )
+    client = BetaAnalyticsDataClient(credentials=credentials)
+    req = RunReportRequest(
+        property=f"properties/{property_id.strip()}",
+        date_ranges=[DateRange(start_date=date_from, end_date=date_to)],
+        dimensions=[Dimension(name="isoYearIsoWeek")],
+        metrics=[Metric(name="activeUsers")],
+        order_bys=[OrderBy(dimension=OrderBy.DimensionOrderBy(dimension_name="isoYearIsoWeek"))],
+        limit=WEEKLY_USER_ROWS,
+    )
+    resp = client.run_report(req)
+    rows = [
+        {"iso_week": row.dimension_values[0].value, "active_users": int(float(row.metric_values[0].value or 0))}
+        for row in resp.rows
+    ]
+    notes = _data_quality(getattr(resp, "metadata", None))
+    return {
+        "report_type": "ga4_weekly_users",
+        "date_range": f"{date_from} to {date_to}",
+        "row_count": len(rows),
+        **({"data_quality": notes} if notes else {}),
+        "rows": rows,
+    }
+
+
 def fetch_ga4_conversion_paths(
     property_id: str,
     date_from: str,
@@ -321,6 +377,7 @@ GA4_META = ConnectorMeta(
     capabilities=frozenset({CAP_ACCOUNTS}),
     entity_noun="property",
     entity_noun_plural="properties",
+    server_only_keys=GOOGLE_SERVER_ONLY_KEYS,
 )
 
 register_connector(GA4_META, GA4Connector())

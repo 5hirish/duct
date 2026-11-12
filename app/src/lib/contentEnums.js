@@ -22,6 +22,10 @@ export const Platform = Object.freeze({
   BLUESKY:         "bluesky",
   PINTEREST:       "pinterest",
   GOOGLE_BUSINESS: "google_business",
+  // The brand's own site: an article, published by hand or through the
+  // site's own tooling (backend agents/content/channels.py).
+  BLOG:            "blog",
+  WORDPRESS:       "wordpress",
 });
 
 export const PLATFORM_LABELS = Object.freeze({
@@ -35,6 +39,8 @@ export const PLATFORM_LABELS = Object.freeze({
   [Platform.BLUESKY]:         "Bluesky",
   [Platform.PINTEREST]:       "Pinterest",
   [Platform.GOOGLE_BUSINESS]: "Google Business",
+  [Platform.BLOG]:            "Blog",
+  [Platform.WORDPRESS]:       "WordPress",
 });
 
 // Mirrors ContentStatus in backend/agents/content/schema.py.
@@ -43,7 +49,17 @@ export const PostStatus = Object.freeze({
   DRAFT:     "draft",     // saved/kept
   SCHEDULED: "scheduled",
   POSTED:    "posted",
+  FAILED:    "failed",    // its scheduler didn't publish it at its time; post.publish_error says why
   DISCARDED: "discarded",
+});
+
+// What a PLAN_GENERATED payload says about the plan it carries. A plan the
+// agent submits is a proposal until the person accepts it on the viewport;
+// an event with no status predates proposals and is a saved plan.
+export const PlanStatus = Object.freeze({
+  PROPOSED: "proposed",
+  ACCEPTED: "accepted",
+  REJECTED: "rejected",
 });
 
 // Message descriptors, not strings: this table is module-level, so it is
@@ -54,6 +70,7 @@ export const POST_STATUS_LABELS = Object.freeze({
   [PostStatus.DRAFT]:     msg`Draft`,
   [PostStatus.SCHEDULED]: msg`Scheduled`,
   [PostStatus.POSTED]:    msg`Posted`,
+  [PostStatus.FAILED]:    msg`Failed`,
   [PostStatus.DISCARDED]: msg`Discarded`,
 });
 
@@ -85,9 +102,24 @@ export const DRAFT_CHANNELS = Object.freeze([
   { id: Platform.TWITTER,  textFirst: true },
 ]);
 
+// An article channel is written as text whatever playbook stands in for it.
+const LONG_FORM = new Set([Platform.BLOG, Platform.WORDPRESS]);
+
 export function isTextChannel(id) {
-  return DRAFT_CHANNELS.some((c) => c.id === id && c.textFirst);
+  return LONG_FORM.has(id) || DRAFT_CHANNELS.some((c) => c.id === id && c.textFirst);
 }
+
+// The kinds of media a channel can be asked to take (backend platform_guides.MEDIA_KINDS).
+export const MediaKind = Object.freeze({
+  VIDEO: "video", SLIDESHOW: "slideshow", IMAGE: "image", TEXT: "text", ARTICLE: "article",
+});
+export const MEDIA_KIND_LABELS = Object.freeze({
+  [MediaKind.VIDEO]: msg`Video`,
+  [MediaKind.SLIDESHOW]: msg`Slideshow`,
+  [MediaKind.IMAGE]: msg`Image`,
+  [MediaKind.TEXT]: msg`Text post`,
+  [MediaKind.ARTICLE]: msg`Article`,
+});
 
 // Mirrors CloneApproach in backend/agents/content/schema.py: how closely a
 // cloned post copies its reference, derived there from FIT × PROOF.
@@ -101,6 +133,32 @@ export const CLONE_APPROACH_LABELS = Object.freeze({
   [CloneApproach.CLOSE]:          msg`Copied closely`,
   [CloneApproach.ADAPT]:          msg`Adapted`,
   [CloneApproach.STRUCTURE_ONLY]: msg`Structure only`,
+});
+
+// Mirrors SkipReason in backend/routes/content.py: a no to a draft, which
+// the content agent's next run reads back as a feedback memory. Few, and
+// each says something different about what to write next time.
+export const SkipReason = Object.freeze({
+  NOT_TRUE:        "not_true",
+  TOO_REVEALING:   "too_revealing",
+  NOT_INTERESTING: "not_interesting",
+  ALREADY_SAID:    "already_said",
+  WRONG_VOICE:     "wrong_voice",
+});
+
+export const SKIP_REASON_LABELS = Object.freeze({
+  [SkipReason.NOT_TRUE]:        msg`Not true`,
+  [SkipReason.TOO_REVEALING]:   msg`Gives too much away`,
+  [SkipReason.NOT_INTERESTING]: msg`Not interesting`,
+  [SkipReason.ALREADY_SAID]:    msg`Already said`,
+  [SkipReason.WRONG_VOICE]:     msg`Not my voice`,
+});
+
+// Mirrors SlotReason in backend/agents/content/best_time.py: why the
+// drafts queue suggests the time it does.
+export const SlotReason = Object.freeze({
+  HISTORY: "history",
+  DEFAULT: "default",
 });
 
 export const AspectRatio = Object.freeze({

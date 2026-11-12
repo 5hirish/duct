@@ -372,10 +372,9 @@ Measured against the principles above, these are the places the tree
 currently falls short. Do not fix them in a sweep; fix each one when a change
 already touches the line, and shrink this list in the same PR.
 
-- **The connector id vocabulary is spelled as literals in five parallel
+- **The connector id vocabulary is spelled as literals in three parallel
   places** — `service/pipeline.py` (three literal sets),
-  `agents/insights/catalog/base.py`, `service/connectors.py`,
-  `app/src/lib/api.js`, `app/src/lib/executionApi.js` — while
+  `agents/insights/catalog/base.py`, `service/connectors.py` — while
   `service/google/constants.py::GOOGLE_ADS_CONNECTOR_ID` sits unused beside
   them. New connector ids get a constant; touched literals switch to it.
 - **`ContentStatus` (`agents/content/schema.py`) documents itself as

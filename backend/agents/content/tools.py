@@ -1,7 +1,7 @@
 """The Content Studio agent's tools, bound for the LangChain (V1) harness.
 
 Four groups:
-  - Writers: submit_plan, submit_post_draft, edit_slide — validate Pydantic,
+  - Writers: submit_plan, revise_plan_days, submit_post_draft, edit_slide — validate Pydantic,
     upsert DB rows, emit SSE events (PLAN_GENERATED / POST_DRAFT_UPDATED).
   - Readers: fetch_brand_context, fetch_topic_bank, fetch_format_library,
     fetch_avatar_library, fetch_content_history, fetch_content_assets,
@@ -39,12 +39,13 @@ import base64
 import json
 import logging
 from collections.abc import Awaitable, Callable
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 from uuid import UUID, uuid4
 
 from langchain_core.tools import StructuredTool
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from langgraph.errors import GraphBubbleUp
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from agents.content.results import (
     EditImageResult,
@@ -70,37 +71,68 @@ from agents.models import (
     video_model_for,
 )
 from agents.core.events import AgentEvent
+from agents.core.mcp_tools import APPROVAL_TIMEOUT
 from agents.core.memory_tools import build_memory_tools_lc
+from agents.core.session import PauseFn
 from agents.content.assessment import assess, reassess_post
 from agents.content.channels import (
     Platform,
-    brand_platforms,
     channel_payload,
     copy_problems,
     primary_channel,
     resolve as resolve_channel,
 )
+from agents.content.channel_mix import mix_snapshot, overreaching_hooks
+from agents.content.feed import resolve_sources, source_problems
+from agents.content.channel_config import linked_pairs, load_channel_config
+from agents.content.plan_period import MAX_PLAN_DAYS, PlanPeriod, link_post_to_day, plan_end
+from agents.content.persistence import link_artifact
+from agents.content.plan_proposal import (
+    DRAFTED,
+    OUTSIDE,
+    PAST,
+    PROPOSED,
+    build_proposal,
+    change_days,
+    hold_proposal,
+    propose_day_changes,
+    revise_held_proposal,
+)
 from agents.content.publishing import (
+    SLIDE_RENDER,
+    MediaUnreadable,
     PostAlreadyOut,
-    create_request,
-    is_queued_at_postbridge,
+    chosen_publisher,
+    default_account,
+    is_queued_at_publisher,
     is_text_only,
+    linked_accounts,
+    load_media,
     metrics_sync,
     no_sync_message,
+    not_synced_yet,
+    pick_media,
+    project_publishing,
     publish_blockers,
+    publish_card,
     publish_failure,
+    pull_metrics,
     push_edit,
     record_published,
+    send_post,
     unpublished_replies,
     went_out,
     words_changed,
 )
+from agents.content.voice_rules import banned_words_in, voice_rules_of
 from agents.content.events import ContentEvent
 from agents.content.schema import (
     ContentSession,
     ContentStatus,
     ContentTool,
+    Day,
     MarkerScore,
+    PlanDayChange,
     PlanDraft,
     PostDraft,
     ReviewMarker,
@@ -109,9 +141,12 @@ from agents.content.schema import (
     clone_source,
 )
 from agents.content.templates import derive_image_prompts, render_slides_html
-from agents.content.video import VIDEO_POST_TYPE, cut_of, publish_asset, video_takes
+from agents.content.video import VIDEO_POST_TYPE, cut_of, video_takes
 from service import storage
-from service.content_metrics import merge_synced_metrics
+from service.content_metrics import metric_value
+from service.publishers import PublisherError, Target
+from service.publishers.registry import publisher_for, spec_for
+from service.vendor_keys import VendorNotConnected
 from db.session import get_engine
 from models.content import (
     ContentAsset,
@@ -121,7 +156,7 @@ from models.content import (
     ContentPost,
 )
 from models.project import Project
-from utils.dates import now_iso
+from utils.dates import now_iso, parse_iso, utcnow
 
 logger = logging.getLogger(__name__)
 
@@ -448,6 +483,14 @@ def _merge_slide_images(incoming: list[Slide], existing_row: ContentPost | None)
     return merged
 
 
+def _post_spec(db: Session, row: ContentPost):
+    """The scheduler a post goes through (publishing.ProjectPublishing)."""
+    proj = db.get(Project, row.project_id)
+    if proj is None:
+        return spec_for(row.publisher)
+    return project_publishing(db, proj.id, proj.user_id).for_post(row)
+
+
 def _build_post_payload(row: ContentPost, db: Session) -> dict:
     """The POST_DRAFT_UPDATED payload — shared by submit_post_draft, the
     per-slide image attach path and the video attach, so the frontend always
@@ -481,7 +524,7 @@ def _build_post_payload(row: ContentPost, db: Session) -> dict:
         "emotional_arc":   row.emotional_arc,
         "camera_ref_pool": row.camera_ref_pool,
         "platforms":       row.platforms,
-        "channel":         channel_payload(primary_channel(row.platforms)),
+        "channel":         channel_payload(primary_channel(row.platforms), _post_spec(db, row)),
         "status":          row.status,
         "clone_source":    row.clone_source,
         # Recomputed on every emit, so the panel's checks follow each edit and
@@ -613,7 +656,7 @@ def _downscale_for_vision(data: bytes, mime: str, max_edge: int = 1536) -> tuple
 def _persist_slide_render(project_id: UUID, post_id: UUID, slide_id: str, png: bytes) -> str:
     """Best-effort: write a rasterized slide PNG to object storage + a
     ContentAsset row (asset_type='slide_render'). These composed renders are what
-    publish_post uploads to TikTok. Returns the public url."""
+    both publish paths upload (publishing.pick_media). Returns the public url."""
     fname = f"{slide_id}-{uuid4().hex[:8]}.png"
     key = f"projects/{project_id}/renders/{fname}"
     url = storage.put_image(key, png, "image/png")
@@ -621,7 +664,7 @@ def _persist_slide_render(project_id: UUID, post_id: UUID, slide_id: str, png: b
         db.add(ContentAsset(
             project_id=project_id,
             post_id=post_id,
-            asset_type="slide_render",
+            asset_type=SLIDE_RENDER,
             source="render",
             url=url,
             filename=fname,
@@ -657,6 +700,7 @@ def build_content_tools_lc(
     *,
     vision: bool = True,
     remember: bool = True,
+    pause: PauseFn | None = None,
 ) -> list[StructuredTool]:
     """Build the content tools scoped to this session, for ``create_deep_agent``.
 
@@ -673,6 +717,10 @@ def build_content_tools_lc(
     ``remember=False`` is a session the user asked not to be remembered: it
     gets no memory tools at all, so the agent cannot write what it cannot
     reach.
+
+    ``pause`` is how ``publish_post`` asks the person before anything goes
+    out. Without one there is nobody to ask, and publishing answers
+    ``needs_approval`` instead of sending.
     """
     # Typed input models for the image tools — the tool's argument schema and
     # the field constraints the model sees in one place (enums from StrEnum so
@@ -812,6 +860,13 @@ def build_content_tools_lc(
     class SubmitPlanArgs(BaseModel):
         plan: PlanDraft = Field(description="The plan — the same object emitted in <duct_artifact>.")
 
+    class RevisePlanDaysArgs(BaseModel):
+        changes: list[PlanDayChange] = Field(
+            min_length=1,
+            max_length=MAX_PLAN_DAYS,
+            description="One entry per day to change: its date and only the fields that change.",
+        )
+
     class SubmitPostDraftArgs(BaseModel):
         post: PostDraft = Field(description="The post — the same object emitted in <duct_artifact>.")
 
@@ -821,6 +876,19 @@ def build_content_tools_lc(
 
     class HistoryArgs(BaseModel):
         limit: int = Field(30, ge=1, le=100, description="Max rows to return. Default 30, max 100.")
+
+    class FormatArgs(BaseModel):
+        media: str = Field(
+            "",
+            description="Keep only formats for this media kind: video, slideshow, image, text or article. Empty = all.",
+        )
+        channel: str = Field(
+            "",
+            description="Keep only formats that apply on this channel (tiktok, linkedin, twitter, ...). Empty = all.",
+        )
+
+    class AnalyticsArgs(BaseModel):
+        days: int = Field(30, ge=1, le=365, description="How many days back to read, from today.")
 
     class DiscoveredReferencesArgs(BaseModel):
         min_play_count: int = Field(
@@ -849,8 +917,27 @@ def build_content_tools_lc(
 
     class PublishPostArgs(BaseModel):
         post_id: str = Field(description="UUID of the content_posts row to publish.")
-        social_account_ids: list[int] = Field(description="Numeric PostBridge social account IDs (at least one).")
-        scheduled_at: str | None = Field(None, description="Optional ISO 8601 timestamp; omit to post now.")
+        social_account_ids: list[str] = Field(
+            default_factory=list,
+            description=(
+                "Account ids at the project's scheduler, as the error lists them. Omit to post from "
+                "the account this project linked for the post's platform; if there is none, or more "
+                "than one, the error names them."
+            ),
+        )
+
+        @field_validator("social_account_ids", mode="before")
+        @classmethod
+        def _ids_as_text(cls, value):
+            # PostBridge's ids are numbers, and a model passes them as such.
+            return [str(v) for v in value] if isinstance(value, list) else value
+        scheduled_at: str | None = Field(
+            None,
+            description=(
+                "Optional ISO 8601 time WITH the user's UTC offset, e.g. 2026-10-02T09:00:00+02:00 "
+                "(a time without one is read as UTC); omit to post now."
+            ),
+        )
         tiktok_draft: bool = Field(False, description="If true, post lands as a TikTok draft instead of scheduling.")
         allow_uncomposed: bool = Field(
             False,
@@ -883,6 +970,60 @@ def build_content_tools_lc(
 
     # ----------------------- Writers -----------------------
 
+    def _overreach_error(overreach) -> str:
+        return _err(" ".join(
+            f"{o.hook} is on {o.days} of {o.channel}'s {o.channel_days} days, and {o.channel}'s history "
+            f"backs it with {o.record}: a hint, not proof. Give it at most {o.cap} of those days."
+            for o in overreach
+        ) + " Spread the rest over other hooks; a hook earns more days once its posts earn the goal.")
+
+    def _stray_channels(days: list[dict]) -> str | None:
+        """The refusal for a day bound for a channel the brand does not post on."""
+        active = set(session.active_channels or ())
+        if not active:
+            return None
+        strays = sorted({str(p) for d in days for p in (d.get("platforms") or []) if str(p) not in active})
+        if not strays:
+            return None
+        return _err(
+            f"This brand posts on {', '.join(sorted(active))}. Days name {', '.join(strays)}, "
+            "which it does not post on: keep every day's platforms within the brand's channels."
+        )
+
+    def _feed_sources(days: list) -> str | None:
+        """Hold a plan's cited sources to the feed this run read. Only a plan
+        from shipped work cites one: on any other run a source the model
+        wrote is dropped, because nothing it could cite was shown to it. A
+        refusal names every problem, so one retry can fix them all."""
+        digest = getattr(session, "feed", None)
+        if digest is None:
+            for day in days:
+                day.sources = [] if isinstance(day, Day) else None
+            return None
+        known = digest.refs()
+        problems = source_problems(days, known, max_days=digest.options.max_days)
+        if problems:
+            return _err("Nothing was proposed: " + " ".join(problems))
+        resolve_sources(days, known)
+        return None
+
+    async def _propose(proposal, live_id) -> None:
+        """Put ``proposal`` in front of the person: on the session, held on the
+        conversation (a deploy before they decide used to lose it), and in the
+        viewport."""
+        session.proposal = proposal
+        try:
+            with _open_db() as db:
+                hold_proposal(db, getattr(session, "conversation_id", None), proposal)
+        except Exception:
+            logger.warning("content: proposal for session %s not held", session.session_id, exc_info=True)
+        await emit({
+            "event": ContentEvent.PLAN_GENERATED,
+            "session_id": session.session_id,
+            "plan_id": str(live_id) if live_id else None,
+            "payload": proposal.payload(PROPOSED),
+        })
+
     async def submit_plan(plan: PlanDraft | dict) -> str:
         try:
             payload = plan if isinstance(plan, dict) else plan.model_dump(mode="json")
@@ -895,60 +1036,187 @@ def build_content_tools_lc(
                     f"project_id mismatch: payload has {draft.project_id}, "
                     f"session is scoped to {project_id}."
                 )
-            # Monthly model: anchor the plan to the first of the current month;
-            # the calendar lays items on sequential dates from there.
-            from datetime import date as _date
-            today = _date.today()
-            month_start = today.replace(day=1)
-            month_label = today.strftime("%B %Y")
-            with _open_db() as db:
-                row = ContentPlan(
-                    project_id=project_id,
-                    name=draft.name or f"{month_label} plan",
-                    start_date=month_start,
-                    character=draft.character.model_dump(mode="json"),
-                    strategy=draft.strategy.model_dump(mode="json"),
-                    days=[d.model_dump(mode="json") for d in draft.days],
-                    status="draft",
+            refused = _feed_sources(draft.days)
+            if refused:
+                return refused
+            # The plan manages a period: one post per date in it, no more, no
+            # fewer. A run sets the period before its opening turn.
+            if session.period_days and len(draft.days) != session.period_days:
+                end = plan_end(session.period_start, session.period_days)
+                return _err(
+                    f"This plan covers {session.period_days} days, {session.period_start} to {end}: "
+                    f"send exactly {session.period_days} days, one per date. You sent {len(draft.days)}."
                 )
-                db.add(row)
-                db.commit()
-                db.refresh(row)
-                session.plan_id = row.id
-                logger.info("content: plan %s persisted (%d days)", row.id, len(draft.days))
-                await emit({
-                    "event": ContentEvent.PLAN_GENERATED,
-                    "session_id": session.session_id,
-                    "plan_id": str(row.id),
-                    "payload": {
-                        "id": str(row.id),
-                        "name": row.name,
-                        "start_date": row.start_date.isoformat() if row.start_date else None,
-                        "days": row.days,
-                        "character": row.character,
-                        "strategy": row.strategy,
-                    },
-                })
-                return _ok_model(SubmitPlanResult(plan_id=str(row.id), days=len(draft.days)))
+            # A proposal, not a write (agents/content/plan_proposal.py). The
+            # live plan is read only to show what Accept would keep: days
+            # before today and days with a drafted post. The person decides
+            # in the viewport; the accept route writes.
+            with _open_db() as db:
+                row = db.get(ContentPlan, session.plan_id) if session.plan_id else None
+                if row is not None and row.project_id != project_id:
+                    row = None
+                live_days = list(row.days or []) if row is not None else None
+                live_id = row.id if row is not None else None
+            new_days = [d.model_dump(mode="json") for d in draft.days]
+            stray = _stray_channels(new_days)
+            if stray:
+                return stray
+            # A hook only one post tried is a hint, and a plan built on it is
+            # a guess repeated: held in code, because the brief said so and a
+            # plan still put 9 of 23 days on one (channel_mix.HINT_SHARE).
+            overreach = overreaching_hooks(session.channel_mix, new_days)
+            if overreach:
+                return _overreach_error(overreach)
+            strategy = draft.strategy.model_dump(mode="json")
+            if session.channel_mix is not None:
+                strategy["mix"] = mix_snapshot(session.channel_mix)
+            if getattr(session, "feed", None) is not None:
+                strategy["feed"] = session.feed.strategy()
+            proposal = build_proposal(
+                project_id=project_id,
+                draft_name=draft.name,
+                character=draft.character.model_dump(mode="json"),
+                strategy=strategy,
+                new_days=new_days,
+                live_days=live_days,
+                live_plan_id=live_id,
+                period=(
+                    PlanPeriod(session.period_start, session.period_days)
+                    if session.period_start and session.period_days
+                    else None
+                ),
+                today=utcnow().date(),
+            )
+            logger.info(
+                "content: plan proposed for session %s (%d days, %d kept, replaces %s)",
+                session.session_id, len(proposal.days), len(proposal.kept_days), proposal.replaces_plan_id,
+            )
+            await _propose(proposal, live_id)
+            return _ok_model(SubmitPlanResult(
+                status=PROPOSED,
+                plan_id="",
+                replaces_plan_id=str(live_id) if live_id else "",
+                days=len(proposal.days),
+                kept_days=proposal.kept_days,
+            ))
         except Exception as exc:
             logger.exception("submit_plan failed")
             return _err(f"submit_plan failed: {exc}")
 
-    async def _push_queued_edit(db: Session, post: ContentPost) -> str | None:
-        """A rewrite of a post PostBridge is holding reaches PostBridge before
-        it is saved, or it is not saved: the queue would publish the old words.
-        Returns the refusal for the model, or None once PostBridge has it."""
-        from service.post_bridge import PostBridgeAPIError, client_for_user
+    # Why a day keeps what it has, in words the agent relays.
+    _REFUSED = {
+        DRAFTED: "has a drafted post, and the plan keeps a drafted day as it is: change the post itself, "
+                 "from its card on the board",
+        PAST: "is in the past, and the plan keeps what happened",
+        OUTSIDE: "is outside this plan",
+    }
 
+    async def revise_plan_days(changes: list[PlanDayChange | dict]) -> str:
+        try:
+            try:
+                parsed = [c if isinstance(c, PlanDayChange) else PlanDayChange.model_validate(c) for c in changes]
+            except ValidationError as exc:
+                return _err(f"PlanDayChange validation failed: {exc}")
+            refused_sources = _feed_sources(parsed)
+            if refused_sources:
+                return refused_sources
+            today = utcnow().date()
+            # A proposal still waiting is what the person is looking at, so a
+            # change applies to it; otherwise to the plan this session manages.
+            held = session.proposal if getattr(session, "proposal", None) is not None else None
+            if held is not None and held.project_id != project_id:
+                held = None
+            saved = None
+            if held is None:
+                with _open_db() as db:
+                    row = db.get(ContentPlan, session.plan_id) if session.plan_id else None
+                    if row is not None and row.project_id == project_id:
+                        saved = {
+                            "plan_id": row.id, "name": row.name, "character": row.character,
+                            "strategy": row.strategy, "days": list(row.days or []),
+                            "start": row.start_date or session.period_start,
+                        }
+                if saved is None:
+                    return _err(
+                        "There is no plan to change yet. Write the whole plan with submit_plan; "
+                        "revise_plan_days changes days of a plan that exists."
+                    )
+            base_days = list(held.days) if held is not None else saved["days"]
+            start = held.start_date if held is not None else saved["start"]
+            if start is None:
+                return _err("This plan has no start date, so its days have no dates to change by.")
+            days, changed, refused = change_days(
+                base_days, [(c.date, c.fields()) for c in parsed], start=start, today=today,
+            )
+            if refused:
+                end = start + timedelta(days=max(len(base_days) - 1, 0))
+                said = "; ".join(
+                    f"{r.on.isoformat()} was sent twice" if r.reason not in _REFUSED
+                    else f"{r.on.isoformat()} {_REFUSED[r.reason]}"
+                    + (f" ({start.isoformat()} to {end.isoformat()})" if r.reason == OUTSIDE else "")
+                    for r in refused
+                )
+                return _err(f"Nothing was proposed: {said}. Send the change again without those days.")
+            if not changed:
+                return _err("Those days already read that way, so there is nothing to propose.")
+            unplanned = [days[i] for i in changed if not str(days[i].get("topic") or "").strip()
+                         or not str(days[i].get("pillar") or "").strip()]
+            if unplanned:
+                return _err("Every day needs a topic and a pillar; a change cannot clear either.")
+            stray = _stray_channels([days[i] for i in changed])
+            if stray:
+                return stray
+            # Only a change that crowds a hook further is refused: a plan made
+            # before the cap may lean on one already, and a one-day edit that
+            # leaves that alone is not the edit to stop.
+            before = {(o.channel, o.hook): o.days for o in overreaching_hooks(session.channel_mix, base_days)}
+            worse = [
+                o for o in overreaching_hooks(session.channel_mix, days)
+                if o.days > before.get((o.channel, o.hook), 0)
+            ]
+            if worse:
+                return _overreach_error(worse)
+            if held is not None:
+                proposal = revise_held_proposal(held, days, changed, today=today)
+                live_id = held.replaces_plan_id
+            else:
+                proposal = propose_day_changes(
+                    project_id=project_id, plan_id=saved["plan_id"], name=saved["name"], start=start,
+                    character=saved["character"], strategy=saved["strategy"], live_days=base_days,
+                    days=days, changed=changed, today=today,
+                )
+                live_id = saved["plan_id"]
+            if getattr(session, "feed", None) is not None:
+                proposal.strategy = {**(proposal.strategy or {}), "feed": session.feed.strategy()}
+            logger.info(
+                "content: %d day(s) proposed for session %s (of %s)",
+                len(changed), session.session_id, "a proposal" if held is not None else f"plan {live_id}",
+            )
+            await _propose(proposal, live_id)
+            return _ok({
+                "status": PROPOSED,
+                "changed": [(start + timedelta(days=i)).isoformat() for i in changed],
+                "message": "The change is in the viewport with Accept and Reject; nothing is saved until "
+                           "the person accepts. Say in a line what changed and why.",
+            })
+        except Exception as exc:
+            logger.exception("revise_plan_days failed")
+            return _err(f"revise_plan_days failed: {exc}")
+
+    async def _push_queued_edit(db: Session, post: ContentPost) -> str | None:
+        """A rewrite of a post a scheduler is holding reaches the scheduler
+        before it is saved, or it is not saved: the queue would publish the old
+        words. Returns the refusal for the model, or None once it has them."""
         proj = db.get(Project, project_id)
+        label = (spec_for(post.publisher).label if spec_for(post.publisher) else "its scheduler")
         try:
-            client = client_for_user(proj.user_id, db)
-        except ValueError as exc:
+            pub = publisher_for(proj.user_id, post.publisher, db)
+        except VendorNotConnected as exc:
             db.rollback()
-            return _err(f"The post is scheduled on PostBridge and the rewrite can't reach it: {exc}")
+            return _err(f"The post is scheduled on {label} and the rewrite can't reach it: {exc}")
         try:
-            async with client as pb:
-                await push_edit(pb, post)
+            async with pub:
+                await push_edit(pub, post)
         except PostAlreadyOut:
             db.rollback()
             db.refresh(post)
@@ -959,11 +1227,11 @@ def build_content_tools_lc(
                 "That post already went out, so the rewrite can't reach it; it is marked posted now. "
                 "Draft a new post for the new words."
             )
-        except PostBridgeAPIError as exc:
+        except PublisherError as exc:
             db.rollback()
             return _err(
-                "The post is scheduled on PostBridge and the update didn't go through, so nothing "
-                f"was saved: {exc.error.message or 'try again shortly'}."
+                f"The post is scheduled on {label} and the update didn't go through, so nothing "
+                f"was saved: {exc.message or 'try again shortly'}."
             )
         return None
 
@@ -996,9 +1264,27 @@ def build_content_tools_lc(
             replies = [r for r in draft.replies if r.strip()]
             # The platform's own limits, checked here rather than trusted to
             # the model: an over-length tweet does not publish.
-            problems = copy_problems(ch.id, draft.caption, replies)
+            with _open_db() as db:
+                spec = _channel_spec(db, ch.id)
+            problems = copy_problems(
+                ch.id, draft.caption, replies, strips_links=bool(spec and spec.strips_links_on(ch.id)),
+            )
             if problems:
                 return _err("Nothing saved. " + " ".join(problems) + " Tighten it and submit again.")
+            if draft.post_type == TEXT_POST_TYPE:
+                # The project's banned words, checked here for the same reason
+                # as the length: a rule the model may forget is a suggestion.
+                # Read fresh, so a Brand tab edit binds the very next submit.
+                with _open_db() as db:
+                    proj = db.get(Project, project_id)
+                    banned = voice_rules_of(proj.content_brand if proj else None).banned_words
+                used = banned_words_in("\n".join([draft.caption, *replies]), banned)
+                if used:
+                    named = ", ".join(f'"{w}"' for w in used)
+                    return _err(
+                        f"Nothing saved. The post uses {named}, which this project's voice rules ban. "
+                        "Rewrite that line and submit again."
+                    )
             # Serialize against concurrent image-attach / edit_slide on this post.
             lock_key = str(session.post_id) if session.post_id else f"slug:{project_id}:{draft.post_dir_slug}"
             async with _post_lock(lock_key):
@@ -1085,7 +1371,7 @@ def build_content_tools_lc(
                 if recorded is not None:
                     values["clone_source"] = recorded
                 if existing is not None:
-                    queued = is_queued_at_postbridge(existing)
+                    queued = is_queued_at_publisher(existing)
                     before = (existing.caption, list(existing.replies or []))
                     for k, v in values.items():
                         setattr(existing, k, v)
@@ -1103,8 +1389,32 @@ def build_content_tools_lc(
                     # pending → draft (see routes/content.py PATCH + the UI).
                     row = ContentPost(**values, status=ContentStatus.PENDING)
                     db.add(row)
+                # A draft for a plan day fills that day now, in the same
+                # commit, not when the chat ends: a chat cut off mid-way used
+                # to leave the board offering to draft the day again.
+                if session.plan_id is not None and session.day_index is not None:
+                    plan_row = db.get(ContentPlan, session.plan_id)
+                    # Only this project's plan: the session's plan id came in
+                    # on the request, and a post must never land on another
+                    # project's board however it was addressed.
+                    if plan_row is not None and plan_row.project_id != project_id:
+                        plan_row = None
+                    days = link_post_to_day(plan_row.days or [], session.day_index, row.id) if plan_row else None
+                    if days is not None:
+                        plan_row.days = days
+                        plan_row.updated_at = utcnow()
+                        db.add(plan_row)
                 db.commit()
                 db.refresh(row)
+                if session.post_id != row.id and session.conversation_id is not None:
+                    # "Open the draft → its chat" finds the conversation by
+                    # this link. It too used to wait for the chat to end, so
+                    # a draft whose chat was cut off reopened on a new one.
+                    try:
+                        link_artifact(db, session.conversation_id, "post", row.id)
+                    except Exception:
+                        logger.warning("content: failed to link conversation %s → post %s",
+                                       session.conversation_id, row.id, exc_info=True)
                 session.post_id = row.id
                 logger.info(
                     "content: post %s upserted (slug=%s, layout=%s, slides=%d, images=%d)",
@@ -1198,6 +1508,7 @@ def build_content_tools_lc(
                 proj = db.get(Project, project_id)
                 if proj is None:
                     return _err(f"Project {project_id} not found.")
+                channel_config = load_channel_config(proj.brand_channels, linked_pairs(linked_accounts(db, project_id)))
                 payload = {
                     "project_id":            str(proj.id),
                     "project_name":          proj.name,
@@ -1211,11 +1522,12 @@ def build_content_tools_lc(
                     "content_brand":         proj.content_brand,
                     "content_pillars":       proj.content_pillars,
                     "content_visual_assets": proj.content_visual_assets,
-                    # Where the brand already posts, as the platform values a
-                    # plan day's `platforms` takes.
-                    "active_channels":       brand_platforms(
-                        (proj.brand_channels or {}).get("active_channels")
-                    ),
+                    # Where the brand posts, as the platform values a plan
+                    # day's `platforms` takes, and what the person said about
+                    # each channel (Accounts tab; channel_config).
+                    "active_channels":       channel_config.enabled(),
+                    "channels":              channel_config.profiles(),
+                    "primary_publisher":     channel_config.primary_publisher,
                 }
                 return _ok(payload)
         except Exception as exc:
@@ -1249,25 +1561,38 @@ def build_content_tools_lc(
             logger.exception("fetch_topic_bank failed")
             return _err(f"fetch_topic_bank failed: {exc}")
 
-    async def fetch_format_library() -> str:
+    async def fetch_format_library(media: str = "", channel: str = "") -> str:
+        # Built-ins from disk plus the project's own rows, one shape, filtered
+        # by what the agent is making (agents/content/formats.py). The slide
+        # renderer inlines the whole caption-style registry, so no CSS rides
+        # along: the spec names the classes and the engine already has them.
         try:
-            from agents.content.styles import css_for
+            from agents.content import formats as format_library
             with _open_db() as db:
                 rows = db.exec(
                     select(ContentFormat).where(ContentFormat.project_id == project_id)
                 ).all()
-                out = []
-                for r in rows:
-                    data = r.data or {}
-                    linked = data.get("linked_styles") or data.get("caption_classes") or []
-                    out.append({
-                        "id":   str(r.id),
-                        "slug": r.slug,
-                        "name": r.name,
-                        "data": data,
-                        "resolved_css": css_for(linked),
-                    })
-                return _ok({"formats": out})
+                library = format_library.library(rows)
+            picked = format_library.select(
+                library, media=(media or "").strip().lower() or None,
+                channel=(channel or "").strip().lower() or None,
+            )
+            return _ok({
+                "formats": [
+                    {
+                        "slug": f["slug"],
+                        "name": f["name"],
+                        "source": f["source"],
+                        "description": f["description"],
+                        "media": f["media"],
+                        "channels": f["channels"],
+                        "spec_markdown": f["spec_markdown"],
+                    }
+                    for f in picked
+                ],
+                "filtered_by": {"media": media or "", "channel": channel or ""},
+                "total_in_library": len(library),
+            })
         except Exception as exc:
             logger.exception("fetch_format_library failed")
             return _err(f"fetch_format_library failed: {exc}")
@@ -1323,6 +1648,74 @@ def build_content_tools_lc(
         except Exception as exc:
             logger.exception("fetch_content_history failed")
             return _err(f"fetch_content_history failed: {exc}")
+
+    async def fetch_content_analytics(days: int = 30) -> str:
+        """Published posts' numbers for the whole project, split the way a
+        review needs them: by platform and by post type, with the hook and
+        topic of the best and worst. fetch_content_history is the list; this
+        is the reading of it. Posted posts only, from what Duct recorded."""
+        from collections import defaultdict
+
+        from service.content_metrics import metric_value
+
+        try:
+            days = max(1, min(int(days or 30), 365))
+            since = utcnow() - timedelta(days=days)
+            with _open_db() as db:
+                rows = db.exec(
+                    select(ContentPost)
+                    .where(ContentPost.project_id == project_id)
+                    .where(ContentPost.posted_at.is_not(None))  # type: ignore[union-attr]
+                    .where(ContentPost.posted_at >= since)  # type: ignore[operator]
+                    .order_by(ContentPost.posted_at.desc())  # type: ignore[union-attr]
+                    .limit(200)
+                ).all()
+            groups: dict[str, dict[str, list]] = {"platform": defaultdict(list), "post_type": defaultdict(list)}
+            scored: list[tuple[float, ContentPost, str]] = []
+            for r in rows:
+                for platform in (r.platforms or ["tiktok"]):
+                    groups["platform"][str(platform)].append(r)
+                groups["post_type"][r.post_type or "slideshow"].append(r)
+                for key in ("completion_rate", "saves", "shares", "views"):
+                    value = metric_value(r.perf or {}, key)
+                    if value is not None:
+                        scored.append((float(value), r, key))
+                        break
+
+            def _summary(items: list) -> dict:
+                out: dict[str, Any] = {"posts": len(items)}
+                for key in ("views", "completion_rate", "saves", "shares", "likes", "comments"):
+                    vals = [v for v in (metric_value(p.perf or {}, key) for p in items) if v is not None]
+                    if vals:
+                        vals.sort()
+                        out[f"median_{key}"] = vals[len(vals) // 2]
+                        out[f"measured_{key}"] = len(vals)
+                return out
+
+            def _named(p: ContentPost, key: str, value: float) -> dict:
+                return {
+                    "topic": p.topic, "pillar": p.pillar, "post_type": p.post_type,
+                    "hook_type": p.hook_type, "platforms": p.platforms,
+                    "posted_at": p.posted_at.isoformat() if p.posted_at else None,
+                    key: value,
+                }
+
+            scored.sort(key=lambda t: -t[0])
+            return _ok({
+                "window_days": days,
+                "posted": len(rows),
+                "by_platform": {k: _summary(v) for k, v in groups["platform"].items()},
+                "by_post_type": {k: _summary(v) for k, v in groups["post_type"].items()},
+                "best": [_named(p, k, v) for v, p, k in scored[:5]],
+                "weakest": [_named(p, k, v) for v, p, k in scored[-5:][::-1]] if len(scored) > 5 else [],
+                "unmeasured": sum(1 for r in rows if not any(
+                    metric_value(r.perf or {}, k) is not None for k in ("views", "completion_rate", "saves", "shares")
+                )),
+                "note": "Medians over the posts that recorded each metric; an absent metric is unknown, not zero.",
+            })
+        except Exception as exc:
+            logger.exception("fetch_content_analytics failed")
+            return _err(f"fetch_content_analytics failed: {exc}")
 
     async def fetch_discovered_references(min_play_count: int = 10000, limit: int = 30) -> str:
         try:
@@ -1859,174 +2252,155 @@ def build_content_tools_lc(
             logger.exception("edit_image failed")
             return _err("Image editing hit a snag — please try again.")
 
-    # ----------------------- PostBridge (Phase 4) -----------------------
+    # ----------------------- Publishing (service/publishers) -----------------------
+
+    def _channel_spec(db: Session, channel: str):
+        """The scheduler this project's ``channel`` goes through, or None."""
+        proj = db.get(Project, project_id)
+        return project_publishing(db, proj.id, proj.user_id).for_channel(channel) if proj else None
 
     async def publish_post(
         post_id: str,
-        social_account_ids: list[int],
+        social_account_ids: list[str] | None = None,
         scheduled_at: str | None = None,
         tiktok_draft: bool = False,
         allow_uncomposed: bool = False,
     ) -> str:
         try:
-            from service.post_bridge import PostBridgeAPIError, client_for_user
-
-            post_id_raw = post_id
-            raw_ids     = social_account_ids or []
-            scheduled_raw  = scheduled_at
-            tiktok_draft = bool(tiktok_draft)
-            allow_uncomposed = bool(allow_uncomposed)
-            if not post_id_raw:
+            if not post_id:
                 return _err("post_id is required.")
-            try:
-                social_account_ids = [int(x) for x in raw_ids]
-            except (TypeError, ValueError):
-                return _err("social_account_ids must be a list of numbers.")
-            if not social_account_ids:
-                return _err("social_account_ids is required (at least one).")
-
-            post_id = UUID(str(post_id_raw))
-            scheduled_at = None
-            if scheduled_raw:
-                try:
-                    scheduled_at = datetime.fromisoformat(str(scheduled_raw))
-                except ValueError as exc:
-                    return _err(f"scheduled_at invalid: {exc}")
+            account_ids = [str(x) for x in (social_account_ids or []) if str(x).strip()]
+            due = parse_iso(scheduled_at) if scheduled_at else None
+            if scheduled_at and due is None:
+                return _err(
+                    f"scheduled_at {scheduled_at!r} isn't a time I can read. Send ISO 8601 with the "
+                    "user's UTC offset, e.g. 2026-10-02T09:00:00+02:00."
+                )
 
             with _open_db() as db:
-                post, err = _require_post(db, project_id, post_id)
+                post, err = _require_post(db, project_id, UUID(str(post_id)))
                 if err:
                     return err
                 proj = db.get(Project, project_id)
                 if proj is None:
                     return _err("Project missing.")
-                blockers = publish_blockers(post)
+                publishing = project_publishing(db, proj.id, proj.user_id)
+                if not account_ids:
+                    # No list_social_accounts tool exists for the model to
+                    # find an id with, so naming none means the project's
+                    # own linked account for this platform.
+                    link, why_not = default_account(db, post)
+                    if link is None:
+                        return _err(why_not)
+                    account_ids = [link.external_account_id]
+                spec, why_not = chosen_publisher(db, project_id, account_ids, publishing)
+                if spec is None:
+                    return _err(why_not)
+                blockers = publish_blockers(post, spec)
                 if blockers:
                     return _err(" ".join(blockers))
 
-                # Gather what to upload, in slide order. PREFER the composed
-                # slide renders (caption + layout baked in) — those are what
-                # should appear on TikTok. Fall back to a single-image slide's
-                # raw photo only when it has no render yet.
-                all_assets = db.execute(
-                    select(ContentAsset)
-                    .where(ContentAsset.post_id == post.id, ContentAsset.project_id == post.project_id)
-                    .order_by(ContentAsset.created_at)
-                ).scalars().all()
-                renders_by_slide: dict[str, ContentAsset] = {}
-                by_url: dict[str, ContentAsset] = {}
-                for a in all_assets:
-                    if a.asset_type == "slide_render":
-                        sid = (a.params or {}).get("slide_id")
-                        if sid:
-                            renders_by_slide[str(sid)] = a   # asc order → latest wins
-                    if a.url:
-                        by_url.setdefault(a.url, a)
-
-                slides_meta = [s for s in (post.slides or []) if isinstance(s, dict)]
-                asset_rows: list[ContentAsset] = []
-                missing: list[str] = []
-                uncomposed: list[str] = []
-                if post.post_type == VIDEO_POST_TYPE:
-                    # A video post sends its cut, alone — not the keyframes
-                    # and references that also carry its id.
-                    clip = publish_asset(db, post)
-                    if clip is None:
-                        return _err(
-                            "This video post has no clip yet — make one with generate_video, "
-                            "then publish."
-                        )
-                    asset_rows = [clip]
-                elif slides_meta:
-                    for s in slides_meta:
-                        sid = str(s.get("slide_id") or "")
-                        ren = renders_by_slide.get(sid)
-                        if ren is not None:
-                            asset_rows.append(ren)
-                            continue
-                        # No composed render. Only a single-image slide can fall
-                        # back to its raw photo, and only when explicitly allowed
-                        # (collage / before-after MUST be rendered to compose).
-                        url = s.get("image_url")
-                        fallback = by_url.get(url) if url else None
-                        if allow_uncomposed and fallback is not None and not s.get("items"):
-                            asset_rows.append(fallback)
-                            uncomposed.append(sid or "(unnamed)")
-                        else:
-                            missing.append(sid or "(unnamed)")
-                elif is_text_only(post):
-                    # Words alone. Nothing linked to the post rides along.
-                    asset_rows = []
-                else:
-                    # Legacy posts with no structured slides — upload whatever's linked.
-                    asset_rows = list(all_assets)
-
-                if missing:
+                pick = pick_media(db, post, allow_uncomposed=allow_uncomposed)
+                if post.post_type == VIDEO_POST_TYPE and not pick.files:
+                    return _err(
+                        "This video post has no clip yet — make one with generate_video, "
+                        "then publish."
+                    )
+                if pick.missing:
                     return _err(
                         "These slides have no composed render, so their captions "
-                        f"wouldn't publish: {missing}. Call render_slide on each, then "
+                        f"wouldn't publish: {pick.missing}. Call render_slide on each, then "
                         "publish again — or pass allow_uncomposed=true to publish "
                         "single-image slides as raw photos (captions won't appear; "
                         "collage / before-after still require a render)."
                     )
                 # A text post goes out as words alone; a post with slides
                 # carries them.
-                if not asset_rows and not is_text_only(post):
+                if not pick.files and not is_text_only(post):
                     return _err("No slide images to publish — render or generate images first.")
 
+                # The person says yes to every send, on a card that shows what
+                # goes out, where and when. The agent reads pages, search
+                # results and strangers' captions; a sentence in any of them
+                # could otherwise publish a post early. Asked after the checks
+                # (a post that cannot go out is never put to the person) and
+                # before any media is read: a resumed thread re-runs this body
+                # from the top, so everything above is a read.
+                if pause is None:
+                    return _ok({
+                        "status": "needs_approval",
+                        "post_id": str(post.id),
+                        "message": "Publishing needs the person's yes and nobody is here to give it. Leave the post as it is.",
+                    })
+                card = publish_card(post, spec, account_ids, due, tiktok_draft=bool(tiktok_draft), files=pick.files)
+                answer = await pause(AgentEvent.TOOL_APPROVAL_REQUIRED, card, timeout=APPROVAL_TIMEOUT)
+                if answer.get("approved") and answer.get("fingerprint") != card["fingerprint"]:
+                    # The yes was for the post as the card showed it. On a
+                    # resume this body re-reads the post, and anything that
+                    # moved since (or an app too old to send the print back)
+                    # goes to the person again rather than out unseen.
+                    return _err(
+                        "The post changed after the person saw the publish card, so nothing was "
+                        "sent. Call publish_post again so they approve this version."
+                    )
+                if not answer.get("approved"):
+                    return _ok({
+                        "status": "skipped",
+                        "post_id": str(post.id),
+                        "topic": post.topic,
+                        "message": (
+                            "The person did not approve publishing, so nothing was sent and the post is "
+                            "unchanged. Do not publish it again unless they ask."
+                        ),
+                    })
                 try:
-                    client = client_for_user(proj.user_id, db)
-                except ValueError as exc:
+                    media = await load_media(pick.files)
+                except MediaUnreadable:
+                    return _err("Some media for this post couldn't be loaded — try regenerating the images.")
+
+                try:
+                    pub = publisher_for(proj.user_id, spec.id, db)
+                except VendorNotConnected as exc:
                     return _err(str(exc))
-
-                # Upload each asset → media_id list.
-                media_ids: list[str] = []
                 try:
-                    async with client as pb:
-                        for asset in asset_rows:
-                            data = _load_asset_bytes(asset)
-                            if not data:
-                                return _err("Some media for this post couldn't be loaded — try regenerating the images.")
-                            upload = await pb.create_upload_url(
-                                name=asset.filename or f"slide-{len(media_ids)+1}.png",
-                                mime_type=asset.mime_type or "image/png",
-                                size_bytes=len(data),
-                            )
-                            await pb.upload_media(data, upload.upload_url, asset.mime_type or "image/png")
-                            media_ids.append(upload.media_id)
-
-                        resp = await pb.create_post(create_request(
-                            post,
-                            social_account_ids=social_account_ids,
-                            media_ids=media_ids,
-                            scheduled_at=scheduled_at,
-                            tiktok_draft=tiktok_draft,
-                        ))
-                except PostBridgeAPIError as exc:
+                    async with pub:
+                        remote = await send_post(
+                            pub, post, media,
+                            targets=[Target(a) for a in account_ids],
+                            scheduled_at=due,
+                            tiktok_draft=bool(tiktok_draft),
+                        )
+                except PublisherError as exc:
                     logger.warning("content: publish failed: %s", exc, exc_info=True)
-                    return _err(f"Couldn't publish that just now — {exc.error.message or 'please try again shortly'}.")
+                    return _err(f"Couldn't publish that just now — {exc.message or 'please try again shortly'}.")
 
-                if why := publish_failure(resp):
+                if why := publish_failure(remote, spec):
                     return _err(why)
-                record_published(post, resp, scheduled_at)
+                record_published(post, remote, due, spec)
                 db.add(post)
                 db.commit()
                 db.refresh(post)
                 logger.info(
-                    "content: published post %s via PostBridge → id=%s status=%s",
-                    post.id, resp.id, resp.status,
+                    "content: published post %s via %s → id=%s status=%s",
+                    post.id, spec.id, remote.id, remote.status,
                 )
                 return _ok({
                     "post_id":               str(post.id),
-                    "post_bridge_post_id":   resp.id,
+                    "publisher":             spec.id,
+                    "publisher_post_id":     remote.id,
                     "status":                post.status,
-                    "scheduled_at":          resp.scheduled_at.isoformat() if resp.scheduled_at else None,
-                    "media_count":           len(media_ids),
-                    # Replies the channel does not publish: tell the user to
+                    "scheduled_at":          remote.scheduled_at.isoformat() if remote.scheduled_at else None,
+                    "social_account_ids":    account_ids,
+                    "media_count":           len(media),
+                    # Replies the scheduler does not publish: tell the user to
                     # post them by hand (a thread's tail, a LinkedIn comment).
-                    "replies_to_post_by_hand": unpublished_replies(post),
-                    "uncomposed_slides":     uncomposed,   # published as raw photos (no caption)
+                    "replies_to_post_by_hand": unpublished_replies(post, spec),
+                    "uncomposed_slides":     pick.uncomposed,   # published as raw photos (no caption)
                 })
+        except GraphBubbleUp:
+            # The approval card parks the thread by raising; that is the loop
+            # working, not a failed publish.
+            raise
         except Exception as exc:
             logger.exception("publish_post failed")
             return _err(f"publish_post failed: {exc}")
@@ -2041,13 +2415,14 @@ def build_content_tools_lc(
                 post, err = _require_post(db, project_id, post_id)
                 if err:
                     return err
-                # PostBridge still holds a scheduled post and will publish it
-                # at its time whatever this row says; marking it posted by
+                # The scheduler still holds a scheduled post and will publish
+                # it at its time whatever this row says; marking it posted by
                 # hand would leave it to go out a second time. The unschedule
                 # path is the one that takes it off the queue.
-                if is_queued_at_postbridge(post):
+                if is_queued_at_publisher(post):
+                    label = spec_for(post.publisher).label if spec_for(post.publisher) else "its scheduler"
                     return _err(
-                        "This post is queued at PostBridge and will go out at its scheduled time. "
+                        f"This post is queued at {label} and will go out at its scheduled time. "
                         "Unschedule it first if it was posted by hand, or wait for it to post."
                     )
                 post.status    = "posted"
@@ -2064,8 +2439,6 @@ def build_content_tools_lc(
 
     async def log_metrics(post_id: str) -> str:
         try:
-            from service.post_bridge import PostBridgeAPIError, client_for_user
-
             post_id_raw = post_id
             if not post_id_raw:
                 return _err("post_id is required.")
@@ -2075,59 +2448,37 @@ def build_content_tools_lc(
                 post, err = _require_post(db, project_id, post_id)
                 if err:
                     return err
-                if not post.post_bridge_post_id:
+                if not post.publisher_post_id:
                     return _err("Post hasn't been published yet — run publish_post first.")
-                synced, sync_filter = metrics_sync(post)
-                if not synced:
-                    return _err(no_sync_message(post))
+                spec = spec_for(post.publisher)
+                if not metrics_sync(post, spec):
+                    return _err(no_sync_message(post, spec))
                 proj = db.get(Project, project_id)
                 if proj is None:
                     return _err("Project missing.")
-
                 try:
-                    client = client_for_user(proj.user_id, db)
-                except ValueError as exc:
+                    pub = publisher_for(proj.user_id, spec.id, db)
+                except VendorNotConnected as exc:
                     return _err(str(exc))
-
                 try:
-                    async with client as pb:
-                        # Trigger a sync (best-effort) then chase the chain
-                        # post → post_result → analytics → daily.
-                        await pb.sync_analytics(platform=sync_filter)
-                        results = await pb.list_post_results(post_id=post.post_bridge_post_id, limit=10)
-                        if not results:
-                            return _err("This post hasn't finished publishing yet — try again in a few minutes.")
-                        # Pick the first successful result; fall back to the latest.
-                        chosen = next((r for r in results if r.success), results[0])
-                        analytics_list = await pb.list_analytics(post_result_id=[chosen.id], limit=1)
-                        if not analytics_list:
-                            return _err("Analytics for this post haven't synced yet.")
-                        analytics = analytics_list[0]
-                        daily = await pb.get_analytics_daily(analytics.id)
-                except PostBridgeAPIError as exc:
+                    async with pub:
+                        # The same pull the sync route makes: numbers the
+                        # person typed in stay theirs.
+                        got = await pull_metrics(pub, post)
+                except PublisherError as exc:
                     logger.warning("content: metrics pull failed: %s", exc, exc_info=True)
-                    return _err(f"Couldn't pull metrics just now — {exc.error.message or 'please try again shortly'}.")
-
-                # The same merge the sync route uses: numbers the person typed
-                # in stay theirs, whichever of the two pulled.
-                post.perf = merge_synced_metrics(
-                    post.perf,
-                    analytics.model_dump(mode="json"),
-                    synced_at=(
-                        analytics.last_synced_at.isoformat() if analytics.last_synced_at else None
-                    ),
-                )
-                post.post_bridge_result_id = chosen.id
-                post.daily_perf = [s.model_dump(mode="json") for s in daily.snapshots]
+                    return _err(f"Couldn't pull metrics just now — {exc.message or 'please try again shortly'}.")
+                if got is None:
+                    return _err(not_synced_yet(post, spec))
                 db.add(post)
                 db.commit()
                 db.refresh(post)
 
                 return _ok_model(LogMetricsResult(
                     post_id=str(post.id),
-                    view_count=analytics.view_count,
-                    like_count=analytics.like_count,
-                    snapshots=len(daily.snapshots),
+                    view_count=int(metric_value(post.perf, "views") or 0),
+                    like_count=int(metric_value(post.perf, "likes") or 0),
+                    snapshots=len(got.daily),
                 ))
         except Exception as exc:
             logger.exception("log_metrics failed")
@@ -2384,11 +2735,27 @@ def build_content_tools_lc(
         *memory_tools,
         _bind(
             submit_plan, ContentTool.SUBMIT_PLAN,
-            "Persist the monthly content plan. The argument schema is the contract: "
-            "an ordered list of days, each with a topic and a pillar. Inserts a "
-            "content_plans row scoped to this project and emits PLAN_GENERATED so the "
-            "workspace renders it. Call this AFTER emitting <duct_artifact>{\"type\":\"plan\",...}</duct_artifact>.",
+            "Propose the content plan for the period this session manages. The argument "
+            "schema is the contract: an ordered list of days, one per date in the period, "
+            "each with a topic and a pillar, every platform among the brand's channels. "
+            "Nothing is saved by this call: the plan appears in the viewport with Accept, "
+            "Modify and Reject, and only the person's Accept writes it. On a period that "
+            "already has a plan, Accept keeps the days before today and the days with a "
+            "drafted post (the result lists them as kept_days) and replaces the rest. A "
+            "later call in the same session replaces the proposal. Call this AFTER emitting "
+            "<duct_artifact>{\"type\":\"plan\",...}</duct_artifact>, with the whole plan. To change "
+            "some days of a plan, call revise_plan_days instead.",
             SubmitPlanArgs,
+        ),
+        _bind(
+            revise_plan_days, ContentTool.REVISE_PLAN_DAYS,
+            "Change some days of the plan: one day, a week, any days the person names. Send each "
+            "day's date and ONLY the fields that change; every other field and every other day stays "
+            "exactly as it is. No <duct_artifact> and no whole plan. It changes the proposal waiting "
+            "in the viewport if there is one, otherwise the saved plan, and like submit_plan it only "
+            "proposes: the person sees those days before and after, and Accept writes them alone. A "
+            "day with a drafted post or a day in the past cannot change and is refused by name.",
+            RevisePlanDaysArgs,
         ),
         _bind(
             submit_post_draft, ContentTool.SUBMIT_POST_DRAFT,
@@ -2425,10 +2792,15 @@ def build_content_tools_lc(
         ),
         _bind(
             fetch_format_library, ContentTool.FETCH_FORMAT_LIBRARY,
-            "Return the per-project content formats (name, slug, full JSONB data) "
-            "AND resolved_css — the shared base engine CSS plus the format's linked "
-            "styles, ready to inline verbatim into the slides <style> block. Do not "
-            "write caption/hook/layout CSS yourself; use resolved_css and its classes.",
+            "Return the format library: the built-in recipes plus this project's own, "
+            "each with slug, name, description (what it is for and when to use it), "
+            "the media kinds and channels it applies to, and spec_markdown, the full "
+            "recipe to follow. Filter with media (video|slideshow|image|text|article) "
+            "and channel so you read only what fits the post; an empty filter returns "
+            "all. Put the chosen slug in the day's / post's format_slug. Never write "
+            "caption, hook or layout CSS: the renderer inlines the shared style "
+            "registry and the spec names its classes.",
+            FormatArgs,
         ),
         _bind(
             fetch_avatar_library, ContentTool.FETCH_AVATAR_LIBRARY,
@@ -2440,6 +2812,14 @@ def build_content_tools_lc(
             "to inform hook variation. Fields: post_dir_slug, pillar, topic, "
             "hook_type, status, posted_at, perf.",
             HistoryArgs,
+        ),
+        _bind(
+            fetch_content_analytics, ContentTool.FETCH_CONTENT_ANALYTICS,
+            "The project's published posts' numbers over a window (default 30 days), "
+            "split by platform and by post type, with the best and weakest posts named "
+            "by topic, hook and type. Read it for a review of what worked; "
+            "fetch_content_history is the raw list.",
+            AnalyticsArgs,
         ),
         _bind(
             fetch_content_assets, ContentTool.FETCH_CONTENT_ASSETS,
@@ -2537,34 +2917,40 @@ def build_content_tools_lc(
         ),
         _bind(
             publish_post, ContentTool.PUBLISH_POST,
-            "Publish a saved post via PostBridge to one or more "
-            "social_account_ids (numeric, from list_social_accounts), now or at "
-            "scheduled_at, and record the result on the post. A slideshow "
+            "Publish a saved post through the project's scheduler (the connector "
+            "the user linked the account at), now or at scheduled_at, and "
+            "record the result on the post. It posts from the account the "
+            "project linked for the post's platform unless social_account_ids "
+            "names others; when that is ambiguous the error lists the linked "
+            "accounts to ask the user about. A slideshow "
             "uploads each slide's COMPOSED render (call render_slide first; by "
             "default slides with no render are refused, since their captions "
-            "wouldn't appear). A text post goes out as words alone, its first "
-            "reply as the post's first reply where the channel publishes one, "
-            "and the result counts the replies left for the user to post by "
+            "wouldn't appear). A text post goes out as words alone, with as many "
+            "of its replies as the scheduler publishes on that channel (a "
+            "thread, a first comment), and the result counts the replies left "
+            "for the user to post by "
             "hand. A post the platform would refuse (over its limit, words "
-            "alone where it needs media) is refused here with the reason.",
+            "alone where it needs media) is refused here with the reason. Every "
+            "send waits for the person's yes on a card showing what goes out, "
+            "where and when; call it only when they asked to publish, and a "
+            "'skipped' answer means leave the post as it is.",
             PublishPostArgs,
         ),
         _bind(
             mark_posted, ContentTool.MARK_POSTED,
             "Mark a post as posted (manual flag — use when the user posted "
-            "outside of PostBridge, e.g. a thread they pasted by hand). Sets "
+            "outside of Duct, e.g. a thread they pasted by hand). Sets "
             "status='posted' and posted_at=now, and stores the live post's link "
             "when given.",
             MarkPostedArgs,
         ),
         _bind(
             log_metrics, ContentTool.LOG_METRICS,
-            "Refresh performance metrics for a post from PostBridge. Looks up "
-            "the post_result for this post, fetches lifetime + daily analytics, "
-            "and merges them into post.perf / post.daily_perf. Requires "
-            "post_bridge_post_id set on the row (i.e. publish_post ran first). "
-            "PostBridge reports TikTok, YouTube, Instagram and Facebook only; for "
-            "any other channel it says so and the numbers are typed in by hand.",
+            "Refresh performance metrics for a post from the scheduler that "
+            "published it: lifetime + daily numbers, merged into post.perf / "
+            "post.daily_perf. Requires publish_post to have run first. Where the "
+            "scheduler doesn't report the post's channel it says so, and the "
+            "numbers are typed in by hand.",
             PostIdArgs,
         ),
     ]

@@ -176,6 +176,15 @@ class EventKind(StrEnum):
     # live one drew; before this they vanished on reload for every agent.
     MEMORY_RECALLED = "memory_recalled"
     MEMORY_WRITTEN = "memory_written"
+    # The person's verdict on a plan the agent proposed: {decision (accepted |
+    # rejected), proposal_id, plan_id, name}. Written by the accept and reject
+    # routes, not the stream, and read by memory consolidation, so a plan only
+    # proposed is never remembered as made. The chat draws nothing for it.
+    PLAN_DECISION = "plan_decision"
+    # What a plan from shipped work read: the read step's digest (items as
+    # chips, what was left out, whether it was worth a plan). Stored so a
+    # reopened thread draws the same card, including "nothing new".
+    FEED = "feed"
 
 
 class RunStatus(StrEnum):
@@ -236,6 +245,10 @@ class AgentStep(StrEnum):
     # reference) with its pictures, then the model reading why it worked.
     READ_REFERENCE = "read_reference"
     DIAGNOSE_REFERENCE = "diagnose_reference"
+    # A plan from shipped work: the repository and Duct's record, read and
+    # filtered before the model starts. Its STEP_FINISHED payload is the
+    # digest the app draws (agents/content/feed.FeedDigest.payload).
+    READ_WORK = "read_work"
 
     # Insights
     COLLECT_SOURCE_DATA = "collect_source_data"
@@ -267,6 +280,7 @@ STEP_LABELS: dict[AgentStep, str] = {
     AgentStep.DISPATCH_SUBAGENT: "Sub-agent",
     AgentStep.READ_REFERENCE: "Reading the TikTok",
     AgentStep.DIAGNOSE_REFERENCE: "Working out why it worked",
+    AgentStep.READ_WORK: "Reading what you shipped",
     # Insights
     AgentStep.COLLECT_SOURCE_DATA: "Collecting source data",
     AgentStep.NORMALIZE_CONNECTOR_OUTPUTS: "Normalizing connector outputs",
@@ -369,6 +383,8 @@ AG_UI_EVENT_KIND: dict[EventKind, str] = {
     EventKind.COMPACTED:   "Custom",
     EventKind.MEMORY_RECALLED: "Custom",
     EventKind.MEMORY_WRITTEN:  "Custom",
+    EventKind.PLAN_DECISION:   "Custom",
+    EventKind.FEED:            "Custom",
 }
 
 

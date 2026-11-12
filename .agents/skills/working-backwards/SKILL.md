@@ -2,6 +2,8 @@
 name: working-backwards
 description: Amazon-style PR/FAQ for a user-facing Duct feature. A customer press release and FAQ written on the issue before any code, revised against what actually shipped at merge, then a launch triage that picks the outlet (a changelog line, a blog post through add-blog-post, an integration page, a landing page section) or records why there is none. A backfill mode runs the same triage over a window of merged work. Use for "write the PR/FAQ", "working backwards on #N", "launch this feature", "should this feature get a blog post", "what should the last four weeks become".
 argument-hint: "<issue number> | ship <issue or PR number> | backfill [since YYYY-MM-DD]"
+metadata:
+  internal: "true"
 ---
 
 Every user-facing feature gets a **PR/FAQ**: a one-page press release and a
@@ -166,10 +168,9 @@ Two reads, both free, before any outlet is picked. Skipping them is how
 the first backfill run nearly planned four posts nobody could have measured.
 
 - **The conversion is counted.** The site's one action is the desktop
-  download, which pushes `download_started` to the dataLayer from the
-  `/download` page (`site/assets/duct-download.js`). Through the OpenSEO connector
-  (`get_google_analytics_measurement_health`, then `get_google_analytics_key_events`),
-  confirm GA4 counts it as a key event. If it does not, that is the first
+  download, which sends `download_started` through `ductTrack` from the
+  `/download` page (`site/assets/duct-download.js`). Through the PostHog MCP,
+  confirm the event arrived in the last 30 days. If it did not, that is the first
   finding of the run and goes to the maintainer before any post: an outlet
   whose result cannot be read is a guess, however good its keyword.
 - **The quarter's goals.** `get_project_context` for the getduct.ai project
@@ -297,3 +298,12 @@ the verified claims.
 **Backfill**
 - [ ] Every user-visible change in the range is in one changelog entry, or already was
 - [ ] One table of feature, outlet and reason with its number; the posts filed in cadence order after one approval
+
+## Related
+
+The method here, with every Duct mechanic removed, is the cross-project
+`product-strategy` skill (the maintainer's agent-skill hub at
+`~/.agents/skills/product-strategy/`, not in this repository;
+`references/working-backwards.md`). This file keeps what is Duct's: the issue the PR/FAQ lives on, the outlets
+(changelog, blog, integration page, landing section) and the backfill. A lesson any product could use goes in that skill's
+`references/lessons.md`.

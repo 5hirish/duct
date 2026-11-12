@@ -704,6 +704,7 @@ class DeepSession:
             provider=self.provider,
             model=self.model,
             conversation_id=self.thread_id,
+            user_id=str(getattr(self.session, "user_id", "") or ""),
             on_todo=self._on_todo,
             on_tool_use=self._on_tool_use,
             on_tool_result=self._on_tool_result,

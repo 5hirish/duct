@@ -37,13 +37,19 @@ name: desktop — release (macOS, Windows, Linux)
 #   All platforms (self-update)
 #     TAURI_SIGNING_PRIVATE_KEY    contents of the minisign private key
 #     TAURI_SIGNING_PRIVATE_KEY_PASSWORD
-#   All platforms (crash reporting)
-#     SENTRY_DSN                   same DSN the backend uses. Compiled into the
-#                                  shell by `option_env!`, so like the OAuth
-#                                  secret below it must be on every step that
-#                                  runs `tauri build`. Absent is fine: the shell
-#                                  simply never reports, and the settings toggle
-#                                  hides itself.
+#   All platforms (crash reporting): repository VARIABLES, not secrets
+#     POSTHOG_PROJECT_TOKEN        the project's `phc_` token, the same one
+#                                  posthog-js ships in every page. It writes
+#                                  events and reads nothing back, so it is a
+#                                  `vars.` entry and shows in logs, which is
+#                                  fine.
+#                                  Compiled into the shell by `option_env!`, so
+#                                  like the OAuth secret below it must be on
+#                                  every step that runs `tauri build`. Absent is
+#                                  fine: the shell simply never reports, and the
+#                                  settings toggle hides itself.
+#     POSTHOG_HOST                 optional: the EU cloud or a self-hosted
+#                                  PostHog. Unset means https://us.i.posthog.com.
 #   All platforms (sign-in)
 #     GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET
 #                                  secret of the Google *Desktop app* OAuth client
@@ -158,7 +164,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: '22'
 
@@ -172,7 +178,7 @@ jobs:
           # Added to the pinned toolchain, not to `stable`.
           targets: aarch64-apple-darwin,x86_64-apple-darwin
 
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           workspaces: desktop/src-tauri
 
@@ -254,9 +260,11 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          # Variables, not secrets: the token is public by design (see the header).
+          POSTHOG_PROJECT_TOKEN: ${{ vars.POSTHOG_PROJECT_TOKEN }}
+          POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
           # Ships crash reporting on by default. Set only here, so a
-          # self-host build stays opt-in — see src-tauri/src/telemetry.rs.
+          # self-host build stays opt-in — see src-tauri/src/telemetry/mod.rs.
           DUCT_TELEMETRY_DEFAULT_ON: "1"
         run: npm run tauri -- build --features crash-reporting --target universal-apple-darwin --bundles app,dmg,updater
 
@@ -277,7 +285,7 @@ jobs:
           xcrun stapler validate "$APP"
           codesign --verify --deep --strict --verbose=2 "$APP"
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: bundle-macos
           path: |
@@ -302,7 +310,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: '22'
 
@@ -310,7 +318,7 @@ jobs:
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
 
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           workspaces: desktop/src-tauri
 
@@ -344,13 +352,15 @@ jobs:
           # way around it; installing `fuse` is not enough.
           APPIMAGE_EXTRACT_AND_RUN: '1'
           GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          # Variables, not secrets: the token is public by design (see the header).
+          POSTHOG_PROJECT_TOKEN: ${{ vars.POSTHOG_PROJECT_TOKEN }}
+          POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
           # Ships crash reporting on by default. Set only here, so a
-          # self-host build stays opt-in — see src-tauri/src/telemetry.rs.
+          # self-host build stays opt-in — see src-tauri/src/telemetry/mod.rs.
           DUCT_TELEMETRY_DEFAULT_ON: "1"
         run: npm run tauri -- build --features crash-reporting --bundles deb,appimage,updater
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: bundle-linux
           path: |
@@ -373,7 +383,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: '22'
 
@@ -381,7 +391,7 @@ jobs:
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
 
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           workspaces: desktop/src-tauri
 
@@ -395,9 +405,11 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_DESKTOP_OAUTH_CLIENT_SECRET }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          # Variables, not secrets: the token is public by design (see the header).
+          POSTHOG_PROJECT_TOKEN: ${{ vars.POSTHOG_PROJECT_TOKEN }}
+          POSTHOG_HOST: ${{ vars.POSTHOG_HOST }}
           # Ships crash reporting on by default. Set only here, so a
-          # self-host build stays opt-in — see src-tauri/src/telemetry.rs.
+          # self-host build stays opt-in — see src-tauri/src/telemetry/mod.rs.
           DUCT_TELEMETRY_DEFAULT_ON: "1"
         run: npm run tauri -- build --features crash-reporting --bundles nsis,updater
 
@@ -419,7 +431,7 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: bundle-windows
           path: |
@@ -444,7 +456,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           path: artifacts
 

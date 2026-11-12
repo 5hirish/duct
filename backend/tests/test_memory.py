@@ -452,6 +452,56 @@ async def test_write_notification_reaches_the_ui_without_leaking_to_the_model():
     assert "ui" not in unheard
 
 
+def test_a_run_on_title_is_sent_back_to_be_a_headline():
+    """The service would cut it at 200 characters mid-sentence; the tool refuses
+    it before any write, so the model rewrites it and the detail lands in body."""
+    from agents.core.memory_tools import TITLE_HEADLINE_MAX, _remember_sync
+
+    out = _remember_sync(
+        {"kind": "conclusion", "title": "x" * (TITLE_HEADLINE_MAX + 1)},
+        project_id=uuid4(), user_id=None, conversation_id=None,
+        agent_type="insights", scope="project", source_type="agent",
+    )
+    assert out["status"] == "not_stored"
+    assert "body" in out["message"]
+
+
+@pytest.mark.parametrize("raw, shown", [
+    ("Plan ID: f192d35a657b4dadb2269a16fc35ef7f approved for November", "Plan approved for November"),
+    ("-23% clicks after the redirect [id f192d35a-657b-4dad-b226-9a16fc35ef7f]",
+     "-23% clicks after the redirect"),
+    # Nothing to drop: a 40-character commit hash is not an id cut short.
+    ("Deployed 4f28e6fa0c1b2d3e4f5a6b7c8d9e0f1a2b3c4d5e (Target CPA $45)",
+     "Deployed 4f28e6fa0c1b2d3e4f5a6b7c8d9e0f1a2b3c4d5e (Target CPA $45)"),
+])
+def test_a_title_names_things_not_ids(raw, shown):
+    from service.memory import readable_title
+
+    assert readable_title(raw) == shown
+
+
+def test_an_id_in_a_title_is_dropped_not_sent_back(engine, project, monkeypatch):
+    """The 2026-11-09 title: 99 characters with its id, a headline without it."""
+    import db.session as db_session_module
+    from agents.core.memory_tools import _remember_sync
+
+    def _session():
+        with Session(engine) as session:
+            yield session
+
+    monkeypatch.setattr(db_session_module, "get_session", _session)
+    out = _remember_sync(
+        {"kind": "decision", "title": (
+            "23-day TikTok content plan generated and registered "
+            "(Plan ID: f192d35a-657b-4dad-b226-9a16fc35ef7f)"
+        )},
+        project_id=project.id, user_id=None, conversation_id=None,
+        agent_type="content", scope="project", source_type="agent",
+    )
+    assert out["status"] == "remembered"
+    assert out["memory"]["title"] == "23-day TikTok content plan generated and registered"
+
+
 # ---------------------------------------------------------------------------
 # System writers
 # ---------------------------------------------------------------------------
@@ -694,3 +744,217 @@ def test_routes_404_outside_the_project(client, db, owner, project):
     row = _write(db, project, title="Belongs to A")
     assert client.get(f"/api/user/projects/{other.id}/memory/{row.id}").status_code == 404
     assert client.delete(f"/api/user/projects/{other.id}/memory/{row.id}").status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# Privacy and the page's view of history
+# ---------------------------------------------------------------------------
+
+def test_a_personal_fact_never_lands_on_the_project(db, project, owner):
+    """An agent in a project run that writes how someone likes to work is
+    describing that person: the row goes to their private scope, not the
+    project every member reads."""
+    row = _write(db, project, kind="communication", title="Wants the number first",
+                 user_id=owner.id)
+    assert row.scope == SCOPE_USER
+    assert row.project_id is None
+    assert search(db, project_id=project.id) == []
+
+
+def test_a_personal_fact_with_no_person_is_not_stored(db, project):
+    assert _write(db, project, kind="identity", title="Head of growth") is None
+
+
+def test_skip_feedback_stays_project_memory(db, project, owner):
+    row = _write(db, project, kind="feedback", title="Skipped: too salesy", user_id=owner.id)
+    assert row.scope == SCOPE_PROJECT
+    assert row.project_id == project.id
+
+
+def test_project_readers_never_see_a_private_row(client, db, project, owner):
+    # A private row that carries a project id anyway (a bug elsewhere, or an
+    # old write) must still be invisible to every project route.
+    stray = ProjectMemory(
+        scope=SCOPE_USER, project_id=project.id, user_id=owner.id, kind="method",
+        title="Private habit", source_type=SOURCE_USER, status=STATUS_CONFIRMED,
+        content_hash="stray",
+    )
+    db.add(stray)
+    db.commit()
+    base = f"/api/user/projects/{project.id}/memory"
+    assert client.get(base).json()["items"] == []
+    assert client.get(f"{base}/{stray.id}").status_code == 404
+    assert client.get(f"{base}/export").json()["memories"] == []
+    assert client.delete(f"{base}/{stray.id}").status_code == 404
+
+
+def test_another_member_never_sees_your_memory(db, owner):
+    """Role does not matter: a project owner reads only their own private memory."""
+    teammate = User(email="teammate@example.com")
+    db.add(teammate)
+    db.commit()
+    remember(db, scope=SCOPE_USER, kind="method", title="Always compare year on year",
+             user_id=teammate.id, source_type=SOURCE_USER)
+
+    app = FastAPI()
+    app.include_router(memory_routes.user_router, prefix="/api/user/memory")
+    app.dependency_overrides[get_session_dep] = lambda: db
+    app.dependency_overrides[auth_service.get_current_user] = lambda: owner
+    assert TestClient(app).get("/api/user/memory").json()["items"] == []
+
+
+def test_settings_the_profile_owns_are_not_listed(db, owner):
+    remember(db, scope=SCOPE_USER, kind="communication", title="Report depth: balanced",
+             entity_key="operator:depth", attribute="report_depth", user_id=owner.id,
+             source_type=SOURCE_USER)
+    kept = remember(db, scope=SCOPE_USER, kind="method", title="Optimises for: revenue",
+                    entity_key="operator:outcome", user_id=owner.id, source_type=SOURCE_USER)
+    assert [r.id for r in search(db, user_id=owner.id, scope=SCOPE_USER)] == [kept.id]
+
+
+def test_growth_stage_seeds_its_label_and_supersedes(db, project, owner):
+    project.targets = {"growth_stage_milestone": "0_pre_customer"}
+    db.add(project)
+    db.commit()
+    (first,) = seed_project_profile(db, project, user_id=owner.id)
+    assert first.title == "Growth stage: No customers or active users yet"
+    assert first.kind == "status"
+
+    project.targets = {"growth_stage_milestone": "1_first_users"}
+    db.add(project)
+    db.commit()
+    (second,) = seed_project_profile(db, project, user_id=owner.id)
+    db.refresh(first)
+    assert first.superseded_by == second.id
+
+
+def test_a_current_fact_says_what_it_replaced(client, db, project):
+    _write(db, project, kind="goal", title="Target CPA $60", entity_key="kpi:cpa",
+           attribute="target")
+    _write(db, project, kind="goal", title="Target CPA $45", entity_key="kpi:cpa",
+           attribute="target")
+    items = client.get(
+        f"/api/user/projects/{project.id}/memory?include_superseded=false"
+    ).json()["items"]
+    assert [i["title"] for i in items] == ["Target CPA $45"]
+    assert items[0]["replaced"]["title"] == "Target CPA $60"
+    assert items[0]["replaced"]["until"]
+
+
+# ---------------------------------------------------------------------------
+# Kinds after the 2026-11-08 merge, and private memory bound to one project
+# ---------------------------------------------------------------------------
+
+def test_a_merged_kind_is_written_under_its_new_name(db, project, owner):
+    assert _write(db, project, kind="milestone", title="First 1,000 sessions").kind == "event"
+    tool = remember(db, scope=SCOPE_USER, kind="tooling", title="Trusts GA4 over Ads",
+                    user_id=owner.id, source_type=SOURCE_USER)
+    assert tool.kind == "method"
+    # The old name still finds what was filed under the new one.
+    assert len(search(db, project_id=project.id, kinds=["milestone"])) == 1
+
+
+def test_rules_ride_first_in_the_digest_and_replace_each_other(db, project):
+    from service.memory import SECTION_PINNED
+
+    old = _write(db, project, kind="rule", title="Never bid on competitor brand terms",
+                 entity_key="rule:competitor-bidding")
+    for i in range(6):
+        _write(db, project, kind="goal", title=f"Goal {i}", entity_key=f"kpi:g{i}", attribute="target")
+    new = _write(db, project, kind="rule", title="Bid on competitor terms only in Spain",
+                 entity_key="rule:competitor-bidding")
+    db.refresh(old)
+    assert old.superseded_by == new.id
+
+    digest = render_digest(db, project_id=project.id).text
+    pinned = digest.split(f"## {SECTION_PINNED}", 1)[1].split("\n## ", 1)[0]
+    assert pinned.strip().splitlines()[0].count("only in Spain") == 1
+
+
+def test_an_outcome_is_project_memory_keyed_by_change_and_window(db, project):
+    row = _write(db, project, kind="outcome", title="Title rewrite lifted clicks 18%",
+                 entity_key="change_set:abc", attribute="clicks", period="2026-10-01..14")
+    assert row.scope == SCOPE_PROJECT
+    assert row.state_key == "change_set:abc|clicks|2026-10-01..14"
+
+
+def _private(db, owner, title, project=None, **kw):
+    return remember(db, scope=SCOPE_USER, kind="communication", title=title, user_id=owner.id,
+                    project_id=project.id if project else None,
+                    private_to_project=project is not None, source_type=SOURCE_USER, **kw)
+
+
+def test_private_memory_bound_to_a_project_is_read_only_there(db, project, owner):
+    other = Project(user_id=owner.id, name="Other", slug="other-p")
+    db.add(other)
+    db.commit()
+    everywhere = _private(db, owner, "Number first, then the why")
+    here = _private(db, owner, "Brief me in Spanish for this client", project)
+
+    def titles(**kw):
+        return {r.title for r in search(db, user_id=owner.id, scope=SCOPE_USER, **kw)}
+
+    assert titles(project_id=project.id) == {everywhere.title, here.title}
+    assert titles(project_id=other.id) == {everywhere.title}
+    assert titles() == {everywhere.title}
+    # Never shared with the project, though it carries the project's id.
+    assert search(db, project_id=project.id) == []
+    assert "Spanish" not in build_memory_context(db, project_id=other.id, user_id=owner.id).text
+    assert "Spanish" in build_memory_context(db, project_id=project.id, user_id=owner.id).text
+
+
+def test_a_project_bound_rule_does_not_close_the_general_one(db, project, owner):
+    general = _private(db, owner, "Write in English", entity_key="operator:language", attribute="value")
+    bound = _private(db, owner, "Write in Spanish", project, entity_key="operator:language", attribute="value")
+    db.refresh(general)
+    assert general.status == STATUS_CONFIRMED
+    assert bound.status == STATUS_CONFIRMED
+
+
+def test_two_people_can_bind_the_same_key_to_one_project(db, project, owner):
+    teammate = User(email="mate@example.com")
+    db.add(teammate)
+    db.commit()
+    mine = _private(db, owner, "Spanish", project, entity_key="operator:language", attribute="value")
+    theirs = remember(db, scope=SCOPE_USER, kind="communication", title="German", user_id=teammate.id,
+                      project_id=project.id, private_to_project=True, source_type=SOURCE_USER,
+                      entity_key="operator:language", attribute="value")
+    assert mine is not None and theirs is not None
+    assert {r.title for r in search(db, user_id=owner.id, scope=SCOPE_USER, project_id=project.id)} == {"Spanish"}
+
+
+@pytest.fixture
+def user_client(db, owner):
+    app = FastAPI()
+    app.include_router(memory_routes.user_router, prefix="/api/user/memory")
+    app.dependency_overrides[get_session_dep] = lambda: db
+    app.dependency_overrides[auth_service.get_current_user] = lambda: owner
+    return TestClient(app)
+
+
+def test_private_routes_bind_list_and_move(user_client, db, project, owner):
+    made = user_client.post("/api/user/memory", json={
+        "kind": "communication", "title": "Brief me in Spanish", "project_id": str(project.id),
+    }).json()
+    assert made["project_id"] == str(project.id)
+    assert user_client.get("/api/user/memory").json()["items"] == []
+    listed = user_client.get(f"/api/user/memory?project_id={project.id}").json()["items"]
+    assert [i["title"] for i in listed] == ["Brief me in Spanish"]
+
+    moved = user_client.post(f"/api/user/memory/{made['id']}/move", json={"project_id": ""}).json()
+    assert moved["project_id"] is None
+    assert [i["title"] for i in user_client.get("/api/user/memory").json()["items"]] == ["Brief me in Spanish"]
+
+
+def test_private_memory_cannot_be_bound_to_a_project_you_are_not_in(user_client, db, owner):
+    stranger = User(email="stranger@example.com")
+    db.add(stranger)
+    db.commit()
+    theirs = Project(user_id=stranger.id, name="Not yours", slug="not-yours")
+    db.add(theirs)
+    db.commit()
+    res = user_client.post("/api/user/memory", json={
+        "kind": "method", "title": "x", "project_id": str(theirs.id),
+    })
+    assert res.status_code == 404
+    assert user_client.get(f"/api/user/memory?project_id={theirs.id}").status_code == 404

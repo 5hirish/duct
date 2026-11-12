@@ -34,6 +34,10 @@ from models.auth import McpToken, User
 
 logger = logging.getLogger(__name__)
 
+# Where the server answers. The OAuth metadata names it as the protected
+# resource, so the route and the metadata must not disagree.
+MCP_PATH = "/mcp"
+
 # Newest first. A client asking for one of these gets it back; one asking for
 # anything else gets the newest, and decides for itself whether to continue.
 PROTOCOL_VERSIONS = ("2025-11-25", "2025-06-18", "2025-03-26")
@@ -74,6 +78,9 @@ class Tool:
     args: type[BaseModel]
     run: Callable[[BaseModel, Caller], dict[str, Any]]
     read_only: bool
+    # Replaces what the person set (update_project). Clients read the hint to
+    # confirm the call with the person first.
+    destructive: bool = False
 
     def descriptor(self) -> dict[str, Any]:
         return {
@@ -86,7 +93,7 @@ class Tool:
             "annotations": {
                 "title": self.title,
                 "readOnlyHint": self.read_only,
-                "destructiveHint": False,
+                "destructiveHint": self.destructive,
                 "idempotentHint": True,
                 "openWorldHint": False,
             },

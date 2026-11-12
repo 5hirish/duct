@@ -1,11 +1,26 @@
 "use client";
 
+import { useEffect, useId, useState } from "react";
+import Link from "next/link";
 import { msg } from "@lingui/core/macro";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
-import PlanKanban from "./PlanKanban";
+import { ArrowRight, Check } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import FeedSummary from "./FeedSummary";
+import PlanChanges from "./PlanChanges";
+import PlanList from "./PlanList";
 import PlanStrategy from "./PlanStrategy";
+import { draftDayHref } from "./PlanBoard";
 import PipelineProgress from "../PipelineProgress";
+import { AnalyticsEvent, trackEvent } from "../../lib/analytics";
+import { acceptPlan, rejectPlan } from "../../lib/contentApi";
+import { feedDayCount } from "../../lib/contentFeed";
+import { PlanStatus } from "../../lib/contentEnums";
 import { ContentStep } from "../../lib/contentEvents";
+import { nextOpenDay, planEndOf, planStartOf } from "../../lib/contentSchedule";
+import { formatDateRange } from "../../lib/format";
 
 // Loading ladder mirrors the audit report: the two fixed backend steps
 // (LOAD_PROJECT, ENRICHING) plus a virtual synthesis stage the backend doesn't
@@ -14,35 +29,70 @@ import { ContentStep } from "../../lib/contentEvents";
 const PLAN_STAGES = [
   { id: ContentStep.LOAD_PROJECT,    label: msg`Loading your brand & pillars` },
   { id: ContentStep.ENRICHING,       label: msg`Researching trends & history` },
-  { id: ContentStep.SYNTHESIZE_PLAN, label: msg`Synthesizing your 30-day plan`, virtual: true },
+  { id: ContentStep.SYNTHESIZE_PLAN, label: msg`Synthesizing your plan`, virtual: true },
 ];
 
 const PLAN_LINES = [
   msg`Reviewing your content pillars…`,
   msg`Studying what's worked before…`,
   msg`Scanning trending sounds & hooks…`,
-  msg`Mapping topics across 30 days…`,
+  msg`Mapping topics across your dates…`,
   msg`Balancing pillars and formats…`,
   msg`Casting your narrator…`,
   msg`Sequencing the posting cadence…`,
 ];
 
+// What the chat is told after a Reject, so the agent asks what to plan
+// instead. A prompt to the model, not interface copy: the same register as
+// PostViewport's review request, and English like it. Accept sends nothing:
+// it used to send "Carry on", and the agent went on to draft posts, which
+// swapped the plan in this pane for a post it cannot show. The next message
+// the person sends tells the agent instead (routes/agents.py, plan_decisions).
+const REJECTED_MESSAGE = "I rejected this plan.";
+const REJECTED_CHANGE_MESSAGE = "I rejected these changes to the plan.";
+
 /**
  * Right-pane viewport for plan_month sessions.
  * Re-renders on every PLAN_GENERATED event from the workspace.
  *
- * MVP: Kanban only. PlanCalendar lands in a follow-up phase.
+ * The plan reads as a list, not a status board: while a plan is being
+ * written every post is pending, and a Kanban of that is one full lane and
+ * three empty ones. The Plan tab keeps the board for when posts move.
+ *
+ * A plan the agent submits arrives as a proposal (`status: "proposed"`) and
+ * is saved only when the person accepts it here; the decision bar under the
+ * header is that choice. An event with no status predates proposals and is
+ * a saved plan, so it draws no bar and no chip.
+ *
+ * A proposal that changes some days (`only_days`, from revise_plan_days) is
+ * drawn as those days alone, before and after: Accept writes nothing else.
  *
  * Props:
- *   - payload: { type: "plan", id, name, days[], character, strategy, ... }
+ *   - payload: { type: "plan", id, name, days[], character, strategy, status?, proposal_id?, replaces_plan_id?, ... }
  *   - steps: live pipeline steps from the workspace (drives the loading ladder)
  *   - building: the plan is still being built (no payload yet, run not failed)
- *   - onReviseDay?(dayIndex)
+ *   - onSendMessage?(text): a chat turn into the live session; absent on a read-only pane
+ *   - sessionId?: the session the proposal was made in
+ *   - feed?: a plan from shipped work's read step payload (FeedSummary); with
+ *     nothing worth a post it is the whole pane, with onLookFurther and
+ *     onPlanFromGoals as its two ways on
  */
-export default function PlanViewport({ payload, steps = [], building = false, onReviseDay }) {
+export default function PlanViewport({
+  payload, steps = [], building = false, onSendMessage, sessionId, feed = null, onLookFurther, onPlanFromGoals,
+}) {
   const { t, i18n } = useLingui();
+  // Accept answers with the saved plan. It is shown at once rather than
+  // waiting for the session's own PLAN_GENERATED echo, and dropped the
+  // moment the next payload arrives, which is that echo or a new proposal.
+  const [saved, setSaved] = useState(null);
+  useEffect(() => { setSaved(null); }, [payload]);
+
+  if ((!payload || payload.type !== "plan") && feed && !feed.worth_a_plan) {
+    return <FeedSummary payload={feed} onLookFurther={onLookFurther} onPlanFromGoals={onPlanFromGoals} />;
+  }
+
   if (!payload || payload.type !== "plan") {
-    return (
+    const progress = (
       <PipelineProgress
         stages={PLAN_STAGES.map((s) => ({ ...s, label: i18n._(s.label) }))}
         steps={steps}
@@ -51,34 +101,229 @@ export default function PlanViewport({ payload, steps = [], building = false, on
         virtualWaitsForPrior
         lines={PLAN_LINES.map((m) => i18n._(m))}
         buildingLabel={t`Building your plan`}
-        streamingSubtitle={t`Synthesizing your 30-day plan…`}
+        streamingSubtitle={t`Synthesizing your plan…`}
         idleSubtitle={t`Researching pillars and synthesizing the plan…`}
       />
     );
+    if (!feed) return progress;
+    return (
+      <div className="flex h-full flex-col">
+        <FeedSummary payload={feed} />
+        <div className="min-h-0 flex-1">{progress}</div>
+      </div>
+    );
   }
 
-  const narrator = payload.character?.name;
-  const voice = payload.character?.voice;
-  const dayCount = Array.isArray(payload.days) ? payload.days.length : 0;
+  const plan = saved || payload;
+  const narrator = plan.character?.name;
+  const voice = plan.character?.voice;
+  const dayCount = Array.isArray(plan.days) ? plan.days.length : 0;
+  // The period this plan manages, so a revision reads as "this plan", not "a plan".
+  const period = formatDateRange(planStartOf(plan), planEndOf(plan), { locale: i18n.locale });
 
   return (
     <div className="flex flex-col h-full">
       <div className="border-b border-border/60 px-4 py-2 flex items-center justify-between shrink-0">
         <div className="min-w-0">
-          <p className="text-sm font-medium truncate">{payload.name || <Trans>30-day plan</Trans>}</p>
+          <p className="text-sm font-medium truncate">{plan.name || <Trans>Content plan</Trans>}</p>
           {narrator && (
             <p className="text-xs text-muted-foreground truncate">
               {voice ? <Trans>Narrator: {narrator} · {voice}</Trans> : <Trans>Narrator: {narrator}</Trans>}
             </p>
           )}
         </div>
-        <span className="text-xs text-muted-foreground tabular-nums">
+        <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+          {period && <>{period} · </>}
           <Plural value={dayCount} one="# day" other="# days" />
         </span>
       </div>
 
-      <PlanStrategy strategy={payload.strategy} />
-      <PlanKanban plan={payload} onReviseDay={onReviseDay} />
+      {feed && <FeedSummary payload={feed} />}
+
+      {/* Keyed by the proposal, so a re-submitted plan opens a fresh bar
+          (textarea closed, no stale error) and a decision resets its state. */}
+      <PlanDecision
+        key={plan.proposal_id || plan.id || "plan"}
+        plan={plan}
+        sessionId={sessionId}
+        onSendMessage={onSendMessage}
+        onAccepted={(out) => setSaved({ type: "plan", ...out, status: PlanStatus.ACCEPTED })}
+      />
+
+      {plan.only_days && plan.status !== PlanStatus.ACCEPTED ? (
+        <PlanChanges plan={plan} />
+      ) : (
+        <>
+          <PlanStrategy strategy={plan.strategy} days={plan.days} />
+          {/* No day action on purpose: drafting from a day is the plan board's job, and
+              a route out of the session would end the planning turn. */}
+          <PlanList plan={plan} />
+        </>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// The decision bar
+// ---------------------------------------------------------------------------
+
+/**
+ * One slot under the plan's header, with one of four things in it:
+ *   proposed  → the consequence of Accept in a line, then Accept / Modify / Reject
+ *   accepted  → "Saved as your plan", and a way to draft the next open day
+ *   rejected  → the quiet note that the plan was discarded
+ *   no status → nothing (a plan saved before proposals existed)
+ *
+ * Modify sends the person's words into the chat and leaves the plan proposed;
+ * the agent answers with a new proposal, which remounts this bar.
+ */
+function PlanDecision({ plan, sessionId, onSendMessage, onAccepted }) {
+  const { t } = useLingui();
+  const noteId = useId();
+  const [pending, setPending] = useState(null); // "accept" | "reject" while the call is in flight
+  const [rejected, setRejected] = useState(false);
+  const [modifying, setModifying] = useState(false);
+  const [note, setNote] = useState("");
+  const [error, setError] = useState("");
+
+  if (rejected || plan.status === PlanStatus.REJECTED) {
+    return (
+      <p role="status" className="shrink-0 border-b border-border/60 px-4 py-2.5 text-sm text-muted-foreground">
+        {plan.only_days
+          ? <Trans>Change discarded. Your plan stays as it was; tell Duct what to change instead.</Trans>
+          : <Trans>Plan discarded. Tell Duct what to plan instead, or close this tab.</Trans>}
+      </p>
+    );
+  }
+  if (plan.status === PlanStatus.ACCEPTED) {
+    // The turn is over, so leaving the session for the post workspace ends nothing.
+    const next = plan.id ? nextOpenDay(plan) : null;
+    return (
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border/60 px-4 py-2">
+        <Badge variant="success"><Check aria-hidden="true" /> <Trans>Saved as your plan</Trans></Badge>
+        {next && (
+          <Button asChild size="sm" variant="outline" className="h-7">
+            <Link href={draftDayHref(plan, next.index)} title={next.day?.topic || undefined}>
+              <Trans>Draft the next post</Trans> <ArrowRight className="size-3.5" aria-hidden="true" />
+            </Link>
+          </Button>
+        )}
+      </div>
+    );
+  }
+  if (plan.status !== PlanStatus.PROPOSED) return null;
+
+  const busy = pending !== null;
+  const changed = plan.only_days && Array.isArray(plan.changed_days) ? plan.changed_days.length : 0;
+
+  function track(decision) {
+    const days = Array.isArray(plan.days) ? plan.days : [];
+    const proposed = plan.only_days && Array.isArray(plan.changed_days)
+      ? plan.changed_days.map((i) => days[i]).filter(Boolean)
+      : days;
+    trackEvent(AnalyticsEvent.ContentPlanDecided, {
+      decision,
+      source: plan.strategy?.feed ? "work" : "goals",
+      feed_days: feedDayCount(proposed),
+    });
+  }
+
+  async function accept() {
+    setError("");
+    setPending("accept");
+    try {
+      const out = await acceptPlan(sessionId, plan.proposal_id);
+      track("accepted");
+      onAccepted(out);
+    } catch {
+      setError(t`Couldn't save the plan. Try again.`);
+      setPending(null);
+    }
+  }
+
+  async function reject() {
+    setError("");
+    setPending("reject");
+    try {
+      await rejectPlan(sessionId, plan.proposal_id);
+      track("rejected");
+      setRejected(true);
+      onSendMessage?.(plan.only_days ? REJECTED_CHANGE_MESSAGE : REJECTED_MESSAGE);
+    } catch {
+      setError(t`Couldn't discard the plan. Try again.`);
+      setPending(null);
+    }
+  }
+
+  function sendNote(e) {
+    e.preventDefault();
+    const text = note.trim();
+    if (!text) return;
+    onSendMessage?.(text);
+    setNote("");
+    setModifying(false);
+  }
+
+  return (
+    <div className="shrink-0 border-b border-primary/20 bg-primary/5 px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <p className="min-w-0 text-sm">
+          {changed > 0 ? (
+            <>
+              <span className="font-medium">
+                <Plural value={changed} one="Duct proposes a change to # day." other="Duct proposes changes to # days." />
+              </span>{" "}
+              <span className="text-muted-foreground">
+                <Plural
+                  value={changed}
+                  one="Accept changes only this day; the rest of your plan stays as it is."
+                  other="Accept changes only these days; the rest of your plan stays as it is."
+                />
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="font-medium"><Trans>Duct proposes this plan.</Trans></span>{" "}
+              <span className="text-muted-foreground">
+                {plan.replaces_plan_id
+                  ? <Trans>Accept replaces your plan from today on; posts already drafted stay.</Trans>
+                  : <Trans>Accept saves this as your plan.</Trans>}
+              </span>
+            </>
+          )}
+        </p>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button type="button" onClick={accept} disabled={busy}>
+            {pending === "accept" ? <Trans>Saving…</Trans> : <Trans>Accept</Trans>}
+          </Button>
+          <Button type="button" variant="outline" onClick={() => setModifying((v) => !v)} disabled={busy} aria-expanded={modifying}>
+            <Trans>Modify</Trans>
+          </Button>
+          <Button type="button" variant="ghost" onClick={reject} disabled={busy}>
+            {pending === "reject" ? <Trans>Discarding…</Trans> : <Trans>Reject</Trans>}
+          </Button>
+        </div>
+      </div>
+      {error && <p role="alert" className="mt-2 text-xs text-destructive">{error}</p>}
+      {modifying && (
+        <form onSubmit={sendNote} className="mt-3 flex flex-col gap-2">
+          <label htmlFor={noteId} className="text-xs font-medium text-muted-foreground"><Trans>What should change?</Trans></label>
+          <Textarea
+            id={noteId}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder={t`Fewer videos in week two, and start with the before-and-after…`}
+            className="min-h-16 bg-background"
+            disabled={busy}
+            autoFocus
+          />
+          <div className="flex items-center justify-end gap-2">
+            <Button type="button" variant="ghost" onClick={() => setModifying(false)} disabled={busy}><Trans>Cancel</Trans></Button>
+            <Button type="submit" disabled={busy || !note.trim()}><Trans>Send</Trans></Button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

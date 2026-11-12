@@ -23,6 +23,9 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from agents.core.session import BaseAgentSession
 
 from agents.content.channels import Platform
+from agents.content.feed import DaySource, FeedOptions
+from agents.content.plan_period import MAX_PLAN_DAYS
+from agents.content.voice_rules import VoiceRules
 from agents.models import AspectRatio, ImageModel, Provider
 
 
@@ -62,7 +65,7 @@ class Day(BaseModel):
     status: Literal["pending", "draft", "posted", "discarded"] = "pending"
     post_type: Literal["slideshow", "video", "image", "text"] = "slideshow"
     post_id: UUID | None = None
-    format_slug: str = ""   # which library format to build with (e.g. "format-d")
+    format_slug: str = ""   # which library format to build with (e.g. "ugc-carousel")
     avatar_id: UUID | None = None
     platforms: list[Platform] = Field(default_factory=lambda: [Platform.TIKTOK])
     # The bet this slot makes. Declared rather than left to extra="ignore",
@@ -72,6 +75,20 @@ class Day(BaseModel):
     hook_type: str = Field("", description="The hook family this post bets on, e.g. curiosity_gap.")
     funnel_stage: str = Field("", description="awareness, consideration or conversion.")
     objective: str = Field("", description="The one thing this post should drive, e.g. saves, follows, clicks.")
+    # The prompt asked for these for months and extra="ignore" dropped them on
+    # the way in, so every plan's emotion arc and series were invented by the
+    # model and lost by the schema. Declared, they reach the board and the next
+    # review.
+    hook_emotion: str = Field("", description="The emotion the hook opens on, e.g. curiosity, frustration, relief.")
+    series: str = Field("", description="The micro-series this day belongs to, e.g. 'S2: Capsule reset, 3/4'; empty for a standalone post.")
+    experiment: str = Field("", description="Set when this day is one of the plan's named test slots, e.g. 'image format test'.")
+    # What a day planned from shipped work stands on (agents/content/feed.py):
+    # the refs the feed listed, each filled with its title and link before the
+    # proposal goes out. Empty for a day planned from goals.
+    sources: list[DaySource] = Field(
+        default_factory=list,
+        description="Plans from shipped work only: the feed refs this day's story stands on. Empty otherwise.",
+    )
 
 
 # The post types a plan allocates across, read off Day so there is one list.
@@ -102,7 +119,7 @@ class Avatar(BaseModel):
 
 
 class AppFeature(BaseModel):
-    """Brand feature, e.g. 'face_shape', 'color_aura'."""
+    """A thing the product does that a post can show, e.g. 'onboarding', 'reports'."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -151,8 +168,17 @@ class ContentBrandContext(BaseModel):
     features: list[AppFeature] = Field(default_factory=list)
     pillars: list[ContentPillar] = Field(default_factory=list)
     visual: ContentVisualAssets = Field(default_factory=ContentVisualAssets)
-    # Where the brand already posts, as Platform values (channels.brand_platforms).
+    # Where the brand posts, as Platform values: the person's choice in the
+    # Accounts tab, the crawl's list before they made one
+    # (channel_config.active_platforms).
     active_channels: list[str] = Field(default_factory=list)
+    # What they said about each channel they switched on: handle, bio, notes,
+    # the media they want there (channel_config.ChannelProfile.words()).
+    channel_profiles: dict[str, dict] = Field(default_factory=dict)
+    # The project's own voice (agents/content/voice_rules.py): posts it wrote,
+    # for the writer to match, and the rules a text post keeps.
+    writing_samples: list[str] = Field(default_factory=list)
+    voice_rules: VoiceRules = Field(default_factory=VoiceRules)
 
 
 # ---------------------------------------------------------------------------
@@ -167,7 +193,15 @@ class PlanRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     project_id: UUID
+    # The period the person picked: ``days`` from ``start_date`` (the Plan
+    # tab's week, two weeks or 30 days), or the month from ``start_date``
+    # without a length. Neither plans the month in progress
+    # (plan_period.default_period).
     start_date: date | None = None
+    days: int | None = Field(default=None, ge=1, le=MAX_PLAN_DAYS)
+    # Set: plan from shipped work (#561), with what the setup sheet chose.
+    # Absent: plan from goals, as before.
+    feed: FeedOptions | None = None
 
 
 class DraftPostRequest(BaseModel):
@@ -215,6 +249,36 @@ class ContentSession(BaseAgentSession):
     mode: RunMode
     plan_id: UUID | None = None
     post_id: UUID | None = None
+    # The plan day this draft fills (with plan_id), so submit_post links the
+    # post onto its slot the moment the post exists (plan_period.link_post_to_day).
+    day_index: int | None = None
+    # The plan the agent put forward and nobody has accepted yet
+    # (agents/content/plan_proposal.py). submit_plan sets it; the accept
+    # route writes it and clears it; reject clears it.
+    proposal: Any = None
+    # The brand's channels, read once at the opening so submit_plan can refuse
+    # a day bound for a platform the brand does not post on.
+    active_channels: list[str] = field(default_factory=list)
+    # The channel mix the opening turn was built from (channel_mix.ChannelMix),
+    # so submit_plan stores its facts on the plan for the board to show.
+    channel_mix: Any = None
+    # True while the opening turn is the review of the plan so far, before any
+    # direction was given: a turn that ends without a plan is then correct,
+    # and the recovery nudge asks for a direction instead of a plan.
+    review_opening: bool = False
+    # The dates a plan run manages (agents/content/plan_period.py): set by the
+    # runner before the opening turn, from the plan itself when the session is
+    # bound to one. submit_plan holds every plan to it; 0 days means no run
+    # set it (a test calling the tool directly) and nothing is enforced.
+    period_start: date | None = None
+    period_days: int = 0
+    # A plan from shipped work: what the feed run read (feed.FeedDigest), so
+    # submit_plan and revise_plan_days hold every cited ref to it. None for a
+    # plan from goals, and on a resumed session, which then cites nothing new.
+    feed: Any = None
+    # A run the scheduler started (service/schedules.py): nobody is watching,
+    # so the agent mounts no question tool and decides what a person would.
+    unattended: bool = False
     # Persisted-conversation linkage (session resume / chat history). Set by the
     # route layer when a session is created; the runner re-primes from the DB when
     # resume is True. recorder persists each turn (agents/content/persistence.py).
@@ -342,6 +406,10 @@ class ContentResearchContext(BaseModel):
     trending_hooks:           list[TrendSignal] = Field(default_factory=list)
     trending_styles:          list[TrendSignal] = Field(default_factory=list)
     audience_insights:        list[str] = Field(default_factory=list)
+    # Named competitor or creator accounts: cadence, formats, hooks seen.
+    competitor_notes:         list[str] = Field(default_factory=list)
+    # Dates inside the period worth a post: a launch, a season, an event.
+    seasonal_hooks:           list[str] = Field(default_factory=list)
     enrichment_notes:         list[str] = Field(default_factory=list)
     # Why the research pass did not contribute, when it did not. Shown on the
     # enrichment step and logged; not rendered into the prompt.
@@ -398,6 +466,10 @@ class ContentStatus(StrEnum):
     DRAFT     — user clicked Save; now a real, kept draft.
     SCHEDULED — queued to publish.
     POSTED    — published.
+    FAILED    — its scheduler didn't publish it at its scheduled time. Its reason
+                is the activity log row that recorded the change
+                (routes/content.py, _settle_overdue); publishing again is
+                the way out.
     DISCARDED — rejected.
     """
 
@@ -405,6 +477,7 @@ class ContentStatus(StrEnum):
     DRAFT     = "draft"
     SCHEDULED = "scheduled"
     POSTED    = "posted"
+    FAILED    = "failed"
     DISCARDED = "discarded"
 
 
@@ -422,6 +495,7 @@ class ContentTool(StrEnum):
     SEARCH_MEMORY               = "SearchMemory"
     GET_MEMORY                  = "GetMemory"
     SUBMIT_PLAN                 = "submit_plan"
+    REVISE_PLAN_DAYS            = "revise_plan_days"
     SUBMIT_POST_DRAFT           = "submit_post_draft"
     EDIT_SLIDE                  = "edit_slide"
     FETCH_BRAND_CONTEXT         = "fetch_brand_context"
@@ -429,6 +503,7 @@ class ContentTool(StrEnum):
     FETCH_FORMAT_LIBRARY        = "fetch_format_library"
     FETCH_AVATAR_LIBRARY        = "fetch_avatar_library"
     FETCH_CONTENT_HISTORY       = "fetch_content_history"
+    FETCH_CONTENT_ANALYTICS     = "fetch_content_analytics"
     FETCH_CONTENT_ASSETS        = "fetch_content_assets"
     FETCH_DISCOVERED_REFERENCES = "fetch_discovered_references"
     FETCH_POST                  = "fetch_post"
@@ -637,7 +712,7 @@ class PostDraft(BaseModel):
     topic: str
     topic_id: str | None = None
     post_type: Literal["slideshow", "video", "image", "text"] = "slideshow"
-    format_slug: str = ""   # which library format to build with (e.g. "format-d")
+    format_slug: str = ""   # which library format to build with (e.g. "ugc-carousel")
     layout: SlideLayout = SlideLayout.FULL_BLEED
     avatar_id: UUID | None = None
     slide_count: int = Field(default=7, ge=1, le=20)
@@ -689,6 +764,8 @@ class PlanStrategy(BaseModel):
     explore_evidence: str = Field("", description="Why it needs testing, e.g. 'no image posts yet' or '2 posts, too few to judge'.")
     lesson: str = Field("", description="What past posts' hooks, funnel stages and objectives changed in this plan.")
     best_times: str = Field("", description="The posting windows this plan recommends, from the account's own history.")
+    experiment: str = Field("", description="The one test this plan runs, with its sample and the metric that judges it, e.g. 'four image posts, judged on saves against the video median'.")
+    review_notes: str = Field("", description="What the review of the previous period changed in this plan, in one or two sentences.")
 
     @field_validator("exploit", "explore")
     @classmethod
@@ -716,7 +793,11 @@ class PlanDraft(BaseModel):
     start_date: date | None = None
     character: Character = Field(default_factory=Character)
     strategy: PlanStrategy = Field(default_factory=PlanStrategy)
-    days: list[Day] = Field(min_length=1, description="The posts, in order; each needs a topic and a pillar.")
+    days: list[Day] = Field(
+        min_length=1,
+        max_length=MAX_PLAN_DAYS,
+        description="The posts, in order, one per day of the plan's period; each needs a topic and a pillar.",
+    )
 
     @field_validator("days")
     @classmethod
@@ -725,6 +806,42 @@ class PlanDraft(BaseModel):
         if unplanned:
             raise ValueError(f"every day needs a non-empty topic and pillar; days at index {unplanned} do not")
         return days
+
+
+# The field below is called ``date``, which inside its own class body is the
+# field and not the type, so its annotation names the type by another name.
+PlanDate = date
+
+
+class PlanDayChange(BaseModel):
+    """One day of a plan changed: its date and only the fields that change.
+
+    What revise_plan_days takes. A field left out, or sent as null, keeps the
+    day's value, so "make the 14th a carousel" is a date and a post_type. The
+    whole plan re-sent for a one-day change is how days nobody mentioned got
+    reworded on the way through.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    date: PlanDate = Field(description="The day's date, inside the plan's period.")
+    topic: str | None = None
+    pillar: str | None = None
+    post_type: Literal[POST_TYPES] | None = None
+    format_slug: str | None = None
+    platforms: list[Platform] | None = None
+    hook_type: str | None = None
+    funnel_stage: str | None = None
+    objective: str | None = None
+    hook_emotion: str | None = None
+    series: str | None = None
+    experiment: str | None = None
+    sources: list[DaySource] | None = None
+
+    def fields(self) -> dict[str, Any]:
+        """What this change sets, as stored: the fields sent, without the date."""
+        sent = self.model_dump(mode="json", exclude_unset=True, exclude={"date"})
+        return {k: v for k, v in sent.items() if v is not None}
 
 
 # ---------------------------------------------------------------------------

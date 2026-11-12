@@ -1,11 +1,15 @@
 # Dependabot — security and version updates across the four stacks.
 #
-# Grouped deliberately. Ungrouped, this repo produces roughly a dozen PRs a
-# week across npm, Poetry, Cargo and Actions, which is how Dependabot ends up
-# muted. One grouped PR per ecosystem per week is reviewable; twelve are not.
+# Monthly, one minor-and-patch PR per lockfile. Weekly with three or four
+# groups per directory opened 28 PRs in two weeks (2026-10-29 to 11-11), and
+# the groups of one directory share a lockfile, so merging one left its
+# siblings conflicting until Dependabot rebased them. One group per lockfile
+# cannot conflict with itself. Majors stay out of the groups and arrive one
+# by one, because a breaking bump is its own decision (google-ads 33 → 35
+# switched the API version under us).
 #
-# Security updates ignore the schedule and the group cap, so a real advisory
-# still arrives immediately as its own PR.
+# Security updates ignore the schedule, the groups and the PR limit, so a
+# real advisory still arrives at once as its own PR. Nothing here slows them.
 
 version: 2
 
@@ -14,22 +18,15 @@ updates:
   - package-ecosystem: npm
     directory: /app
     schedule:
-      interval: weekly
-      day: monday
-    open-pull-requests-limit: 5
+      interval: monthly
+    open-pull-requests-limit: 2
     groups:
-      # Next + OpenNext + wrangler move together; splitting them produces PRs
-      # that cannot pass CI alone.
-      next-and-cloudflare:
+      # Everything minor or patch, production and dev alike, in one PR. Next,
+      # OpenNext and wrangler move together inside it, which is what their own
+      # group used to exist for.
+      app-minor-and-patch:
         patterns:
-          - "next"
-          - "@opennextjs/*"
-          - "wrangler"
-          - "@cloudflare/*"
-      dev-dependencies:
-        dependency-type: development
-      production-minor-and-patch:
-        dependency-type: production
+          - "*"
         update-types:
           - minor
           - patch
@@ -71,33 +68,42 @@ updates:
       - site
 
   # --- backend: FastAPI + the agent stack ---------------------------------
-  #
-  # `deepagents` is pinned exactly rather than with a caret because it changes
-  # behaviour in minor releases (task planning became opt-in in 0.7).
-  # tests/test_deepagents_harness.py is the upgrade gate — do not merge a bump
-  # here on green CI alone without reading that suite's output.
   - package-ecosystem: pip
     directory: /backend
     schedule:
-      interval: weekly
-      day: monday
-    open-pull-requests-limit: 5
+      interval: monthly
+    open-pull-requests-limit: 2
     groups:
-      langchain-stack:
+      backend-minor-and-patch:
         patterns:
-          - "langchain*"
-          - "langgraph*"
-          - "deepagents"
-      google-apis:
-        patterns:
-          - "google-*"
-      dev-dependencies:
-        dependency-type: development
-      production-minor-and-patch:
-        dependency-type: production
+          - "*"
         update-types:
           - minor
           - patch
+    # The agent stack is bumped by hand, never from here. The rulebook
+    # (docs/engineering/agent-engineering.md, Maintenance) bumps it alone and
+    # in order: langgraph with its checkpoint packages, then core and
+    # langchain with the provider partners, then `deepagents`, which is
+    # pinned exactly because it changes behaviour in minor releases (task
+    # planning became opt-in in 0.7). tests/test_deepagents_harness.py is the
+    # gate. Every grouped PR Dependabot opened for it was closed unmerged, so
+    # proposing it was only noise. Security advisories still open their own PR.
+    ignore:
+      - dependency-name: "langchain*"
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
+          - version-update:semver-patch
+      - dependency-name: "langgraph*"
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
+          - version-update:semver-patch
+      - dependency-name: "deepagents"
+        update-types:
+          - version-update:semver-major
+          - version-update:semver-minor
+          - version-update:semver-patch
     labels:
       - dependencies
       - backend

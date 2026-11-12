@@ -44,21 +44,21 @@
  * here; DEFAULT_ENGINE is what goes over the wire.
  */
 
-import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Anvil, ArrowRight, Feather, Scale } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import ProviderCard from "@/components/connections/ProviderCard";
+import InstanceProviderCard from "@/components/connections/InstanceProviderCard";
+import EndpointProviderCard from "@/components/connections/EndpointProviderCard";
 import TelemetryCard from "@/components/TelemetryCard.jsx";
 import AdvancedSettings from "@/components/models/AdvancedSettings";
 import TierCard from "@/components/models/TierCard";
 import TierSummary from "@/components/models/TierSummary";
 import UsagePanel from "@/components/models/UsagePanel";
 import { LOGOS } from "@/components/connections/logos";
-import { PROVIDERS } from "@/lib/providerKeys";
+import { ENDPOINT_PROVIDER, INSTANCE_PROVIDERS, PROVIDERS } from "@/lib/providerKeys";
 import {
   MODEL_MAP_CHANGED,
   TIERS,
@@ -72,6 +72,7 @@ import {
 } from "@/lib/modelTiers";
 import { fetchModelSettings, saveModelSettings } from "@/lib/modelSettings";
 import { DEFAULT_ENGINE } from "@/lib/engines";
+import { Page, PageHeader } from "@/components/ui/page";
 
 /**
  * The tab lives in the URL so a refresh lands where you were.
@@ -116,6 +117,18 @@ function ModelSettings() {
   const [saved, setSaved] = useState("");
   const savedTimer = useRef(null);
 
+  // The catalogue reloads with the status: a connected endpoint's models are
+  // the caller's own, so connecting or disconnecting one changes the pickers.
+  const reloadProviders = useCallback(() => {
+    fetchModelCatalogue().then(setCatalogue);
+    fetchProviderStatus().then((status) => {
+      setProviders(status.providers);
+      setImages(status.images);
+      setVideos(status.videos);
+      setChatgptAuthEnabled(Boolean(status.chatgptAuthEnabled));
+    });
+  }, []);
+
   // First paint: everything the page renders is server-owned except the map.
   useEffect(() => {
     setMap(loadModelMap());
@@ -140,14 +153,8 @@ function ModelSettings() {
         return next;
       });
     });
-    fetchModelCatalogue().then(setCatalogue);
-    fetchProviderStatus().then((status) => {
-      setProviders(status.providers);
-      setImages(status.images);
-      setVideos(status.videos);
-      setChatgptAuthEnabled(Boolean(status.chatgptAuthEnabled));
-    });
-  }, []);
+    reloadProviders();
+  }, [reloadProviders]);
 
   const picks = useMemo(() => tierPicks(map), [map]);
   // Depend on the *content* of the picks, not the object identity. Reading
@@ -301,32 +308,18 @@ function ModelSettings() {
   );
 
   return (
-    <section>
-      <div className="page-toolbar-back">
-        <Button variant="ghost" size="icon" className="connection-back-btn shrink-0 rounded-full" asChild>
-          <Link href="/insights/organic-growth" aria-label={t`Back to Insights`} title={t`Back to Insights`}>
-            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                d="M15 18 9 12l6-6"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </Link>
-        </Button>
-        {/* Same words as the menu item that leads here — a menu reading
-            "Models & providers" that lands on a page headed "Models" reads as
-            the wrong page for half a second, every time. */}
-        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">
-          <Trans>Models &amp; providers</Trans>
-        </h1>
-        <span aria-live="polite" className={`mt-saved${saved ? " mt-saved--on" : ""}`}>
-          {saved}
-        </span>
-      </div>
+    <Page>
+      {/* Same words as the menu item that leads here — a menu reading
+          "Models & providers" that lands on a page headed "Models" reads as
+          the wrong page for half a second, every time. */}
+      <PageHeader
+        title={<Trans>Models &amp; providers</Trans>}
+        actions={
+          <span aria-live="polite" className={`mt-saved${saved ? " mt-saved--on" : ""}`}>
+            {saved}
+          </span>
+        }
+      />
 
       <Tabs value={tab} onValueChange={selectTab}>
         <TabsList>
@@ -448,6 +441,28 @@ function ModelSettings() {
                 loading={providers === null}
               />
             ))}
+            {/* A server the reader brings: an address and models, not a key. */}
+            <EndpointProviderCard
+              provider={ENDPOINT_PROVIDER}
+              logo={LOGOS[ENDPOINT_PROVIDER.id]}
+              status={providersById[ENDPOINT_PROVIDER.statusId]}
+              loading={providers === null}
+              onChange={reloadProviders}
+              onOpenTiers={() => {
+                setCustomising(true);
+                selectTab("tiers");
+              }}
+            />
+            {/* Offered by the server, not keyed by the reader; each renders
+                nothing on a deployment that does not offer it. */}
+            {INSTANCE_PROVIDERS.map((provider) => (
+              <InstanceProviderCard
+                key={provider.id}
+                provider={provider}
+                logo={LOGOS[provider.id]}
+                status={providersById[provider.statusId]}
+              />
+            ))}
             {/* Desktop only, and only in a build that can actually report —
                 renders nothing otherwise. It belongs on this page because this
                 is where the other "what leaves my machine" decisions are made. */}
@@ -463,7 +478,7 @@ function ModelSettings() {
           <UsagePanel catalogue={catalogue} />
         </TabsContent>
       </Tabs>
-    </section>
+    </Page>
   );
 }
 
@@ -474,14 +489,10 @@ export default function ModelSettingsPage() {
   return (
     <Suspense
       fallback={
-        <section>
-          <div className="page-toolbar-back">
-            <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">
-              <Trans>Models &amp; providers</Trans>
-            </h1>
-          </div>
-          <p className="app-subtle"><Trans>Loading&hellip;</Trans></p>
-        </section>
+        <Page>
+          <PageHeader title={<Trans>Models &amp; providers</Trans>} />
+          <p className="text-sm text-muted-foreground"><Trans>Loading&hellip;</Trans></p>
+        </Page>
       }
     >
       <ModelSettings />

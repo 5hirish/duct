@@ -54,7 +54,7 @@ msgid ""
 msgstr ""
 "ボード上の計画、カードごとの投稿、それぞれに生成されたスライドと画像、ワンクリックで9つのネットワークに公開。結果はカードに戻ってきて、次の計画は前回の計画から学びます。"
 
-#: about.html compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
+#: about.html compare.html connect-agent.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html skills.html terms.html
 msgid "About"
 msgstr "について"
 
@@ -109,7 +109,7 @@ msgid ""
 msgstr "設計上の決定は公開の場で議論されます。私を見つけるにはGitHubが最適です。"
 
 #. link title
-#: about.html compare.html doctrine.html index.html mcp.html open-source.html
+#: about.html compare.html connect-agent.html doctrine.html index.html mcp.html open-source.html skills.html
 msgid "Duct Blog"
 msgstr "Ductブログ"
 
@@ -166,7 +166,7 @@ msgstr ""
 msgid "FONS. The spring, before anything has run. The app’s front door."
 msgstr "FONS。何も実行される前の泉。アプリの玄関。"
 
-#: about.html compare.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/nav-simple.html privacy.html seo-audit.html terms.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+#: about.html compare.html connect-agent.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/nav-simple.html privacy.html seo-audit.html skills.html terms.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Home"
 msgstr "ホーム"
 
@@ -247,7 +247,7 @@ msgstr ""
 msgid "Principles, not <0>platitudes</0>"
 msgstr "<0>決まり文句</0>ではなく、原則を"
 
-#: about.html compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
+#: about.html compare.html connect-agent.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html skills.html terms.html
 msgid "Privacy Policy"
 msgstr "プライバシーポリシー"
 
@@ -300,7 +300,7 @@ msgstr "GitHubでスターを付ける →"
 msgid "Substance over ceremony"
 msgstr "形式よりも実質を"
 
-#: about.html compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html terms.html
+#: about.html compare.html connect-agent.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/footer-expanded.html privacy.html seo-audit.html skills.html terms.html
 msgid "Terms of Service"
 msgstr "利用規約"
 
@@ -515,9 +515,9 @@ msgstr "ユニバーサル · AppleシリコンおよびIntel"
 #: assets/*.js
 msgctxt "js"
 msgid ""
-"We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same."
+"We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold."
 msgstr ""
-"Google Analyticsを使用して、どのページでサインアップが発生したかを確認しています。これが唯一の用途であり、広告ターゲティング、プロファイル作成、販売は一切行いません。拒否してもサイトの動作はまったく同じです。"
+"PostHogを使用して、どのページでサインアップが発生し、Ductがどこでユーザーの妨げになっているかを確認します。これには、入力されたすべての情報が非表示にされた訪問のリプレイも含まれます。拒否するとPostHogはオフになり、Ductはまったく同じように機能します。Google Analyticsも訪問数をカウントし、どちらを選択しても独自のクッキーを設定します。データを販売することはありません。"
 
 #: assets/*.js
 msgctxt "js"
@@ -749,7 +749,7 @@ msgstr "基準"
 msgid "Docs, email and the web"
 msgstr "ドキュメント、メール、ウェブ"
 
-#: compare.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/cta-blog.html partials/cta-for-pages.html partials/cta-home.html partials/cta-tools.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+#: compare.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html partials/cta-blog.html partials/cta-for-pages.html partials/cta-home.html partials/cta-tools.html skills.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Download Duct ↓"
 msgstr "Ductをダウンロード ↓"
 
@@ -797,7 +797,7 @@ msgstr "Claudeができるその他のこと：ドキュメント、調査、コ
 msgid "Explain why a number moved"
 msgstr "数値が変動した理由を説明"
 
-#: compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html seo-audit.html tools/cac-ltv-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/mrr-growth-calculator.html tools/saas-metrics-calculator.html tools/weekly-brief-template.html
+#: compare.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html seo-audit.html skills.html tools/cac-ltv-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/mrr-growth-calculator.html tools/saas-metrics-calculator.html tools/weekly-brief-template.html
 msgid "FAQ"
 msgstr "FAQ"
 
@@ -954,7 +954,7 @@ msgstr "Ductが優れている点を見る"
 msgid "Self-host, no licence fee"
 msgstr "セルフホスト、ライセンス料なし"
 
-#: compare.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html seo-audit.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
+#: compare.html connect-agent.html doctrine.html download.html for-organic-growth.html for-paid-ads.html for-product-intelligence.html index.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/index.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html mcp.html open-source.html seo-audit.html skills.html tools/cac-ltv-calculator.html tools/cpa-calculator.html tools/cpc-calculator.html tools/cpm-calculator.html tools/ctr-calculator.html tools/engagement-rate-calculator.html tools/index.html tools/marketing-roi-calculator.html tools/mrr-growth-calculator.html tools/roas-calculator.html tools/saas-metrics-calculator.html tools/utm-builder.html tools/weekly-brief-template.html
 msgid "Skip to content"
 msgstr "コンテンツへスキップ"
 
@@ -1080,6 +1080,439 @@ msgstr "それを書き上げる"
 #: compare.html
 msgid "“Why did this move?”"
 msgstr "「なぜこれが移動したのですか？」"
+
+#: connect-agent.html
+msgid "<0></0> Duct's MCP server · Browser sign-in"
+msgstr "<0></0> DuctのMCPサーバー · ブラウザサインイン"
+
+#: connect-agent.html
+msgid "<0>Claude Code</0> wants to use your Duct account"
+msgstr "<0>Claude Code</0>があなたのDuctアカウントの使用を希望しています"
+
+#: connect-agent.html
+msgid ""
+"A draft never overwrites what you typed in Duct. It only fills blank fields or replaces an earlier draft. Check the project page in Duct."
+msgstr ""
+"下書きはDuctで入力した内容を上書きすることはありません。空白のフィールドを埋めるか、以前の下書きを置き換えるだけです。Ductのプロジェクトページをご確認ください。"
+
+#: connect-agent.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
+msgid "Access"
+msgstr "アクセス"
+
+#: connect-agent.html
+msgid "Add Duct to <0>opencode.json</0>:"
+msgstr "<0>opencode.json</0>にDuctを追加します:"
+
+#: connect-agent.html
+msgid "Add Duct to <0>~/.cursor/mcp.json</0>:"
+msgstr "<0>~/.cursor/mcp.json</0>にDuctを追加します:"
+
+#: connect-agent.html
+msgid "Add Duct to your agent"
+msgstr "エージェントにDuctを追加"
+
+#. meta description
+#: connect-agent.html
+msgid ""
+"Add Duct's MCP server to Claude Code, Codex, Cursor, VS Code or ChatGPT. Sign in with your browser, click Allow, and your agent can read and set up projects."
+msgstr ""
+"DuctのMCPサーバーをClaude Code、Codex、Cursor、VS Code、またはChatGPTに追加します。ブラウザでサインインし、「許可」をクリックすると、エージェントがプロジェクトを読み取り、設定できるようになります。"
+
+#: connect-agent.html
+msgid "Add a connector with this address, and choose OAuth for authentication:"
+msgstr "このアドレスでコネクタを追加し、認証にはOAuthを選択します:"
+
+#: connect-agent.html
+msgid "Add it, allow it, <0>ask it.</0>"
+msgstr "追加し、許可し、<0>質問します。</0>"
+
+#: connect-agent.html
+msgid ""
+"Add this address to Claude Code, Codex, Cursor, VS Code, OpenCode, Claude or ChatGPT. Your browser opens on Duct, you click Allow, and your agent can read your projects and draft their details."
+msgstr ""
+"このアドレスをClaude Code、Codex、Cursor、VS Code、OpenCode、Claude、またはChatGPTに追加します。Ductでブラウザが開き、「許可」をクリックすると、エージェントがプロジェクトを読み取り、その詳細を下書きできるようになります。"
+
+#: connect-agent.html
+msgid "Allow"
+msgstr "許可する"
+
+#: connect-agent.html
+msgid ""
+"Another agent? If it can add a remote MCP server by its address, give it the same one. If it can't sign in, <0>use a token</0>."
+msgstr ""
+"他のエージェントですか？アドレスでリモートMCPサーバーを追加できる場合は、同じアドレスを与えてください。サインインできない場合は、<0>トークンを使用してください</0>。"
+
+#: connect-agent.html
+msgid "Approve or apply changes."
+msgstr "変更を承認または適用します。"
+
+#: connect-agent.html
+msgid "Ask it something"
+msgstr "何か質問します"
+
+#: connect-agent.html
+msgid "Cancel"
+msgstr "キャンセル"
+
+#: connect-agent.html
+msgid "ChatGPT"
+msgstr "ChatGPT"
+
+#: connect-agent.html
+msgid "Choose HTTP, paste the address and name it <0>duct</0>:"
+msgstr "HTTPを選択し、アドレスを貼り付け、<0>duct</0>と名付けます:"
+
+#: connect-agent.html
+msgid "Claude"
+msgstr "Claude"
+
+#: connect-agent.html skills.html
+msgid "Claude Code"
+msgstr "Claude Code"
+
+#. meta twitter:description
+#: connect-agent.html
+msgid ""
+"Claude Code, Codex, Cursor, VS Code, OpenCode, Claude and ChatGPT all connect to Duct by one address. No token to copy or paste."
+msgstr ""
+"Claude Code、Codex、Cursor、VS Code、OpenCode、Claude、およびChatGPTはすべて、1つのアドレスでDuctに接続します。コピー＆ペーストするトークンはありません。"
+
+#: connect-agent.html
+msgid "Claude, on claude.ai or Claude Desktop"
+msgstr "Claude (claude.aiまたはClaude Desktop)"
+
+#: connect-agent.html skills.html
+msgid "Codex"
+msgstr "Codex"
+
+#: connect-agent.html
+msgid "Connect tools."
+msgstr "ツールを接続します。"
+
+#: connect-agent.html skills.html
+msgid "Copied"
+msgstr "コピーしました"
+
+#: connect-agent.html skills.html
+msgid "Copy"
+msgstr "コピー"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the Claude Code command"
+msgstr "Claude Codeコマンドをコピー"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the Claude Code command with a token"
+msgstr "トークン付きClaude Codeコマンドをコピー"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the Codex command"
+msgstr "Codexコマンドをコピー"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the Cursor settings"
+msgstr "Cursor設定をコピー"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the OpenCode settings"
+msgstr "OpenCode設定をコピー"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the server address"
+msgstr "サーバーアドレスをコピー"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the sign-in command"
+msgstr "サインインコマンドをコピー"
+
+#: connect-agent.html
+msgid "Cursor"
+msgstr "Cursor"
+
+#: connect-agent.html
+msgid ""
+"Draft a project's description, audience and competitors from your repo or files."
+msgstr "リポジトリまたはファイルから、プロジェクトの説明、オーディエンス、競合を下書きします。"
+
+#: connect-agent.html
+msgid ""
+"Drafted the description, audience and competitors from the repo. They're on the project in Duct."
+msgstr "リポジトリから説明、オーディエンス、競合を下書きしました。それらはDuctのプロジェクトにあります。"
+
+#: connect-agent.html
+msgid ""
+"Duct gives your agent three tools today. Approving, applying and connecting stay with you, in Duct."
+msgstr "Ductは現在、エージェントに3つのツールを提供しています。承認、適用、接続はDuctであなたが行います。"
+
+#: connect-agent.html
+msgid "Duct opens in your browser. Click Allow."
+msgstr "Ductがブラウザで開きます。「許可」をクリックしてください。"
+
+#: connect-agent.html
+msgid "Every agent connects to the same server. Pick yours for the exact steps."
+msgstr "すべてのエージェントは同じサーバーに接続します。正確な手順については、お使いのエージェントを選択してください。"
+
+#: connect-agent.html
+msgid "Every agent is listed. <0>Disconnect any one.</0>"
+msgstr "すべてのエージェントが一覧表示されています。<0>いずれかを切断します。</0>"
+
+#: connect-agent.html
+msgid "Every change shows in the project's activity."
+msgstr "すべての変更はプロジェクトのアクティビティに表示されます。"
+
+#: connect-agent.html
+msgid ""
+"For CI, a remote machine or an agent without sign-in. Create one on the same settings page, under No browser? Use a token. Your agent sends it as a header:"
+msgstr ""
+"CI、リモートマシン、またはサインインなしのエージェント向けです。同じ設定ページの「ブラウザなし？トークンを使用」の下で作成してください。エージェントはこれをヘッダーとして送信します。"
+
+#: connect-agent.html
+msgid ""
+"Give your agent the address above, with one command or one line of settings. The exact steps for each agent are below."
+msgstr "上記のアドレスを、1つのコマンドまたは1行の設定でエージェントに与えてください。各エージェントの正確な手順は以下にあります。"
+
+#: connect-agent.html
+msgid "How to connect your agent"
+msgstr "エージェントの接続方法"
+
+#: connect-agent.html
+msgid "I asked it to set up the project and nothing changed"
+msgstr "プロジェクトの設定を依頼しましたが、何も変更されませんでした"
+
+#: connect-agent.html
+msgid "I host Duct myself"
+msgstr "自分でDuctをホストしています"
+
+#: connect-agent.html
+msgid "In ChatGPT's settings, turn on developer mode."
+msgstr "ChatGPTの設定で、開発者モードをオンにします。"
+
+#: connect-agent.html
+msgid ""
+"In Claude Code, run <0>/mcp</0>, pick <1>duct</1> and choose <2>Authenticate</2>."
+msgstr "Claude Codeで<0>/mcp</0>を実行し、<1>duct</1>を選択して<2>Authenticate</2>を選びます。"
+
+#: connect-agent.html
+msgid "In Claude Code:"
+msgstr "Claude Codeで："
+
+#: connect-agent.html
+msgid "In Cursor's MCP settings, press the login prompt on the duct server."
+msgstr "CursorのMCP設定で、ductサーバーのログインプロンプトを押します。"
+
+#: connect-agent.html
+msgid ""
+"In Duct, open Settings → Connect your AI agent. Every agent you allowed is there, and you can disconnect it. A disconnected agent stops on its next call."
+msgstr ""
+"Ductで「設定」→「AIエージェントを接続」を開きます。許可したすべてのエージェントがここに表示され、切断できます。切断されたエージェントは次回の呼び出しで停止します。"
+
+#: connect-agent.html
+msgid "In your terminal, run:"
+msgstr "ターミナルで実行："
+
+#: connect-agent.html
+msgid "It can never"
+msgstr "決してできません"
+
+#: connect-agent.html
+msgid "It reads and drafts. <0>You decide.</0>"
+msgstr "読み取りと下書きを行います。<0>決定するのはあなたです。</0>"
+
+#: connect-agent.html
+msgid ""
+"It says it couldn't register, or “does not support dynamic client registration”"
+msgstr "登録できなかった、または「動的クライアント登録をサポートしていません」と表示されます"
+
+#: connect-agent.html
+msgid "It worked, and now it gets a 401"
+msgstr "動作しましたが、401エラーが発生します"
+
+#: connect-agent.html
+msgid "List your projects."
+msgstr "プロジェクトを一覧表示します。"
+
+#: connect-agent.html
+msgid "My browser never opened"
+msgstr "ブラウザが開きませんでした"
+
+#: connect-agent.html
+msgid "Name it Duct and paste the address:"
+msgstr "Ductと名付けてアドレスを貼り付けます："
+
+#: connect-agent.html
+msgid "No browser? Use a token."
+msgstr "ブラウザがない場合：トークンを使用します。"
+
+#: connect-agent.html
+msgid ""
+"On claude.ai or in Claude Desktop, open Settings → Connectors and choose Add custom connector."
+msgstr "claude.aiまたはClaude Desktopで、「設定」→「コネクタ」を開き、「カスタムコネクタを追加」を選択します。"
+
+#. meta og:description
+#: connect-agent.html
+msgid ""
+"One address in your agent, one Allow in your browser. It can read your Duct projects and draft their details, never approve a change."
+msgstr "エージェントに1つのアドレス、ブラウザで1つの「許可」。Ductのプロジェクトを読み取り、詳細を下書きできますが、変更を承認することはありません。"
+
+#: connect-agent.html
+msgid "Open the Command Palette and run <0>MCP: Add Server</0>."
+msgstr "コマンドパレットを開き、<0>MCP: Add Server</0>を実行します。"
+
+#: connect-agent.html
+msgid "OpenCode"
+msgstr "OpenCode"
+
+#: connect-agent.html
+msgid ""
+"Overwrite what you typed in Duct. A draft only fills blanks or replaces an earlier draft."
+msgstr "Ductに入力した内容を上書きします。下書きは空白を埋めるか、以前の下書きを置き換えるだけです。"
+
+#: connect-agent.html
+msgid "Press Connect. Duct opens in your browser. Click Allow."
+msgstr "「接続」を押します。Ductがブラウザで開きます。「許可」をクリックします。"
+
+#: connect-agent.html
+msgid "Read one project."
+msgstr "1つのプロジェクトを読み取ります。"
+
+#: connect-agent.html
+msgid "See keys or credentials."
+msgstr "キーまたは認証情報を表示します。"
+
+#: connect-agent.html mcp.html
+msgid "Server address"
+msgstr "サーバーアドレス"
+
+#: connect-agent.html
+msgid "Set up this product in Duct."
+msgstr "Ductでこの製品を設定します。"
+
+#: connect-agent.html
+msgid "Setup by agent"
+msgstr "エージェントによる設定"
+
+#: connect-agent.html
+msgid "Seven agents. <0>One address.</0>"
+msgstr "7つのエージェント。<0>1つのアドレス。</0>"
+
+#: connect-agent.html
+msgid "Sign in and click Allow"
+msgstr "サインインして「許可」をクリック"
+
+#: connect-agent.html
+msgid ""
+"Start the sign-in yourself: run /mcp in Claude Code, codex mcp login duct in Codex, or opencode mcp auth duct in OpenCode."
+msgstr ""
+"自分でサインインを開始します：Claude Codeで/mcp、Codexでcodex mcp login duct、またはOpenCodeでopencode mcp auth ductを実行します。"
+
+#: connect-agent.html
+msgid ""
+"Start the sign-in yourself: run <0>/mcp</0> in Claude Code, <1>codex mcp login duct</1> in Codex, or <2>opencode mcp auth duct</2> in OpenCode."
+msgstr ""
+"自分でサインインを開始します：Claude Codeで<0>/mcp</0>、Codexで<1>codex mcp login duct</1>、またはOpenCodeで<2>opencode mcp auth duct</2>を実行します。"
+
+#: connect-agent.html
+msgid "Stuck? <0>Start here.</0>"
+msgstr "行き詰まりましたか？<0>ここから始めましょう。</0>"
+
+#: connect-agent.html
+msgid "Then sign in:"
+msgstr "次にサインイン："
+
+#: connect-agent.html mcp.html
+msgid "Troubleshooting"
+msgstr "トラブルシューティング"
+
+#: connect-agent.html
+msgid ""
+"Try “Set up this product in Duct.” Your agent reads your repo and drafts the project's description, audience and competitors."
+msgstr "「Ductでこの製品を設定」を試してください。エージェントがリポジトリを読み取り、プロジェクトの説明、ターゲット層、競合他社を下書きします。"
+
+#: connect-agent.html
+msgid ""
+"Update your agent to its latest version and try again. If it still fails, connect with a token instead."
+msgstr "エージェントを最新バージョンに更新して、もう一度お試しください。それでも失敗する場合は、代わりにトークンで接続してください。"
+
+#. meta og:title
+#. meta twitter:title
+#: connect-agent.html
+msgid "Use Duct from Claude Code, Codex or Cursor"
+msgstr "Claude Code、Codex、またはCursorからDuctを使用"
+
+#: connect-agent.html partials/footer-expanded.html
+msgid "Use Duct from your agent"
+msgstr "エージェントからDuctを使用"
+
+#: connect-agent.html
+msgid "Use Duct from your agent.<0/><1>No token to copy.</1>"
+msgstr "エージェントからDuctを使用します。<0/><1>コピーするトークンはありません。</1>"
+
+#: connect-agent.html
+msgid ""
+"Use your own API address followed by /mcp, in place of https://api.getduct.ai/mcp."
+msgstr "https://api.getduct.ai/mcpの代わりに、ご自身のAPIアドレスに/mcpを続けて使用します。"
+
+#: connect-agent.html
+msgid ""
+"Use your own API address followed by <0>/mcp</0>, in place of <1>https://api.getduct.ai/mcp</1>."
+msgstr "<1>https://api.getduct.ai/mcp</1>の代わりに、ご自身のAPIアドレスに<0>/mcp</0>を続けて使用します。"
+
+#: connect-agent.html
+msgid "VS Code"
+msgstr "VS Code"
+
+#: connect-agent.html
+msgid ""
+"VS Code asks you to sign in the first time it uses Duct. Your browser opens on Duct. Click Allow."
+msgstr "VS Codeは、Ductを初めて使用する際にサインインを求めます。ブラウザでDuctが開き、「許可」をクリックします。"
+
+#: connect-agent.html
+msgid ""
+"Want Duct's own agent to call your MCP servers instead? That is the other direction: <0>Your MCP servers in Duct →</0>"
+msgstr "Duct自身のエージェントにMCPサーバーを呼び出させたいですか？それは逆方向です：<0>Duct内のMCPサーバー →</0>"
+
+#: connect-agent.html
+msgid "What your agent can do"
+msgstr "エージェントができること"
+
+#: connect-agent.html
+msgid ""
+"You disconnected it in Duct, or its sign-in lapsed after 90 days without use. Sign in again from your agent."
+msgstr "Ductで接続を切断したか、90日間使用されなかったためサインインが失効しました。エージェントから再度サインインしてください。"
+
+#: connect-agent.html
+msgid "You see every connected agent"
+msgstr "接続されているすべてのエージェントが表示されます"
+
+#. div aria-label
+#: connect-agent.html
+msgid "Your agent"
+msgstr "あなたのエージェント"
+
+#: connect-agent.html
+msgid "Your agent can"
+msgstr "あなたのエージェントは"
+
+#: connect-agent.html
+msgid ""
+"Your browser opens on Duct and asks whether your agent may use your account. Click Allow. There is no token to copy."
+msgstr ""
+"ブラウザでDuctが開かれ、あなたのアカウントをエージェントが使用することを許可するか尋ねられます。「許可」をクリックしてください。コピーするトークンはありません。"
+
+#: connect-agent.html
+msgid "Your browser opens on Duct. Click Allow."
+msgstr "ブラウザでDuctが開きます。「許可」をクリックしてください。"
+
+#: connect-agent.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-seo-audit.html partials/nav-simple.html
+msgid "duct <0></0>"
+msgstr "Duct <0></0>"
 
 #: doctrine.html
 msgid ""
@@ -1571,11 +2004,6 @@ msgid "Targets, decisions and what it learned, on a timeline you can correct."
 msgstr "目標、決定、学習内容が、修正可能なタイムラインで表示されます。"
 
 #. img alt
-#: download.html index.html
-msgid "The Connections page with twelve tools, five of them connected"
-msgstr "12個のツールがあり、そのうち5個が接続済みの接続ページ"
-
-#. img alt
 #: download.html
 msgid ""
 "The Duct desktop app: an insights session with a proposed change waiting for approval on the left, the brief it wrote on the right"
@@ -1586,6 +2014,11 @@ msgstr "Duct デスクトップアプリ：左側には承認待ちの変更セ�
 msgid ""
 "The Memory timeline: a CPA target, a decision, an event, and what the agent learned this week"
 msgstr "メモリタイムライン：CPA目標、決定、イベント、および今週エージェントが学習した内容"
+
+#. img alt
+#: download.html index.html
+msgid "The Toolbox with twelve tools, five of them connected"
+msgstr "12個のツールがあるツールボックス、そのうち5個が接続済み"
 
 #: download.html
 msgid ""
@@ -2698,10 +3131,6 @@ msgid "Does it change my accounts without asking?"
 msgstr "許可なくアカウントを変更しますか？"
 
 #: index.html
-msgid "Download for macOS ↓"
-msgstr "macOS版をダウンロード ↓"
-
-#: index.html
 msgid "Duct AI"
 msgstr "Duct AI"
 
@@ -2717,24 +3146,17 @@ msgid ""
 msgstr ""
 "Duct AIはオープンソースのAIマーケティングエージェントです。プロダクト、マーケティング、収益ツールを接続し、それらを横断する質問に答え、変更を提案し、あなたが承認すると適用します。macOS、Windows、Linuxでデスクトップアプリとして動作します。"
 
-#. meta description
-#: index.html
-msgid ""
-"Duct AI is the open-source AI marketing agent: it reads Google Ads, GA4, Stripe and ten more tools together, proposes the fix and applies it when you approve."
-msgstr ""
-"Duct AIはオープンソースのAIマーケティングエージェントです。Google Ads、GA4、Stripe、その他10以上のツールをまとめて読み取り、修正を提案し、あなたが承認すると適用します。"
-
 #. meta og:title
 #. meta twitter:title
 #: index.html
-msgid "Duct AI — Open-source AI marketing agent for growth teams"
-msgstr "Duct AI — グロースチーム向けオープンソースAIマーケティングエージェント"
+msgid "Duct AI — Open-source AI marketing agent, a growth analyst"
+msgstr "Duct AI — オープンソースAIマーケティングエージェント、グロースアナリスト"
 
 #: index.html
 msgid ""
-"Duct is the open-source AI marketing agent that reads every tool you run together, finds what needs to change, and changes it when you press Apply. No hunting through tools for the answer, no deciding on half of it."
+"Duct is the open-source AI marketing agent: a growth analyst with every login. It reads every tool you run together, finds what needs to change, and changes it when you press Apply."
 msgstr ""
-"Ductは、連携しているすべてのツールを読み込み、変更が必要なものを見つけ、適用するを押すと変更するオープンソースのAIマーケティングエージェントです。答えを探してツールを巡る必要も、半分だけ決定することもありません。"
+"Ductは、あらゆるログイン権限を持つグロースアナリストとして機能するオープンソースのAIマーケティングエージェントです。運用しているすべてのツールを横断して読み取り、変更が必要な点を発見し、「適用する」を押すと変更を実施します。"
 
 #: index.html
 msgid "E-commerce & DTC"
@@ -2854,6 +3276,13 @@ msgstr "ある月曜日の30秒"
 #: index.html
 msgid "Open-source AI marketing agent for product and growth teams."
 msgstr "製品および成長チーム向けのオープンソースAIマーケティングエージェント。"
+
+#. meta description
+#: index.html
+msgid ""
+"Open-source AI marketing agent: a growth analyst with every login. Duct reads Google Ads, GA4, Stripe and nine more tools together and fixes what you approve."
+msgstr ""
+"オープンソースのAIマーケティングエージェント：あらゆるログイン権限を持つグロースアナリスト。DuctはGoogle Ads、GA4、Stripe、その他9つのツールをまとめて読み取り、承認された項目を修正します。"
 
 #: index.html
 msgid "PMs & growth teams"
@@ -3054,10 +3483,6 @@ msgid "API key pair"
 msgstr "APIキーペア"
 
 #: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
-msgid "Access"
-msgstr "アクセス"
-
-#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
 msgid "All integrations"
 msgstr "全ての連携"
 
@@ -3200,8 +3625,8 @@ msgstr "タップから何件のインストールがあり、ビューから何
 
 #: integrations/apple-search-ads.html
 msgid ""
-"In Duct, open Connections, choose Apple Search Ads and paste the three IDs and the private key."
-msgstr "Ductで「接続」を開き、Apple Search Adsを選択し、3つのIDと秘密キーを貼り付けてください。"
+"In Duct, open the Toolbox, choose Apple Search Ads and paste the three IDs and the private key."
+msgstr "Ductでツールボックスを開き、Apple Search Adsを選択し、3つのIDと秘密鍵を貼り付けます。"
 
 #. meta twitter:description
 #: integrations/apple-search-ads.html
@@ -3272,7 +3697,7 @@ msgid ""
 msgstr ""
 "読み取り専用: DuctにはApple Search Adsの変更操作がなく、APIユーザーに読み取り専用ロールを付与することで、キーがキャンペーンを変更することもできません。"
 
-#: integrations/apple-search-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/revenuecat.html integrations/stripe.html
+#: integrations/apple-search-ads.html integrations/ga4.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/revenuecat.html integrations/stripe.html
 msgid "Reads three datasets"
 msgstr "3つのデータセットを読み取ります"
 
@@ -3331,10 +3756,6 @@ msgid ""
 "Yes. Duct is free with your own model keys or the ChatGPT plan you already have, and the core is MIT licensed. A paid plan later bundles the models; nothing open today moves behind it. What will cost money."
 msgstr ""
 "はい。Ductは、お客様ご自身のモデルキーまたは既存のChatGPTプランで無料でご利用いただけ、コアはMITライセンスです。有料プランでは後日モデルがバンドルされますが、現在オープンなものが有料になることはありません。費用がかかるもの。"
-
-#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-seo-audit.html partials/nav-simple.html
-msgid "duct <0></0>"
-msgstr "Duct <0></0>"
 
 #: integrations/chatgpt-ads.html
 msgid ""
@@ -3500,8 +3921,8 @@ msgid ""
 msgstr "すべての広告プラットフォームは、自身に起因するコンバージョンを報告します。DuctはそれらをStripeと照合し、互いに照合することはありません。"
 
 #: integrations/chatgpt-ads.html
-msgid "In Duct, open Connections, choose OpenAI Ads and paste the key."
-msgstr "Ductで「接続」を開き、OpenAI Adsを選択してキーを貼り付けます。"
+msgid "In Duct, open the Toolbox, choose OpenAI Ads and paste the key."
+msgstr "Ductでツールボックスを開き、OpenAI Adsを選択し、キーを貼り付けます。"
 
 #: integrations/chatgpt-ads.html
 msgid ""
@@ -3637,6 +4058,10 @@ msgstr ""
 msgid ""
 "<0>Register sign_up as a key event</0><1>Touches 1 property. Rollback ready.</1>"
 msgstr "<0>sign_upをキーイベントとして登録する</0><1>1つのプロパティに影響します。ロールバック可能です。</1>"
+
+#: integrations/ga4.html
+msgid "<0>iso week</0><1>active users</1>"
+msgstr "<0>ISO週</0><1>アクティブユーザー</1>"
 
 #: integrations/ga4.html
 msgid ""
@@ -3775,6 +4200,10 @@ msgid ""
 msgstr "GA4をSearch Console、広告、Stripeと並行して読み取り：原因を特定し、単なる別のダッシュボードではありません。"
 
 #: integrations/ga4.html
+msgid "GA4 weekly active users"
+msgstr "GA4の週間アクティブユーザー"
+
+#: integrations/ga4.html
 msgid "GA4, <0>answered</0>"
 msgstr "GA4、<0>回答済み</0>"
 
@@ -3789,8 +4218,8 @@ msgstr ""
 "Google Analytics Data API (ga4-data-v1beta) · 2026年9月24日監査済みフィールド · <0>ソースを読む</0>"
 
 #: integrations/ga4.html
-msgid "In Duct, open Connections and choose Google Analytics."
-msgstr "Ductで、接続を開き、Google Analyticsを選択します。"
+msgid "In Duct, open the Toolbox and choose Google Analytics."
+msgstr "Ductでツールボックスを開き、Google Analyticsを選択します。"
 
 #: integrations/ga4.html
 msgid "Link Google Ads account to GA4"
@@ -3832,10 +4261,6 @@ msgstr "このプロジェクトが読み取るGA4プロパティを選択しま
 #: integrations/ga4.html
 msgid "Read the GA4 notes Duct's agent works from <0/>"
 msgstr "Ductのエージェントが作業するGA4メモを読む <0/>"
-
-#: integrations/ga4.html
-msgid "Reads two datasets"
-msgstr "2つのデータセットを読み取ります"
 
 #: integrations/ga4.html
 msgid "Register GA4 key event"
@@ -4115,8 +4540,8 @@ msgid ""
 msgstr "お客様が承認した後に誰かが予算、入札単価、またはステータスを変更した場合、Ductはその変更を適用しません。"
 
 #: integrations/google-ads.html
-msgid "In Duct, open Connections and choose Google Ads."
-msgstr "Ductで、接続を開き、Google Adsを選択します。"
+msgid "In Duct, open the Toolbox and choose Google Ads."
+msgstr "Ductでツールボックスを開き、Google Adsを選択します。"
 
 #: integrations/google-ads.html
 msgid ""
@@ -4327,8 +4752,8 @@ msgstr ""
 "表示回数が増加しているのに、トライアルは横ばいですか？DuctはGA4に加えてSearch Consoleのページ別クエリを読み取り、ランクインしているのにコンバージョンしないクエリを発見します。"
 
 #: integrations/google-search-console.html
-msgid "In Duct, open Connections and choose Google Search Console."
-msgstr "Ductで、接続を開き、Google Search Consoleを選択します。"
+msgid "In Duct, open the Toolbox and choose Google Search Console."
+msgstr "Ductでツールボックスを開き、Google Search Consoleを選択します。"
 
 #: integrations/google-search-console.html
 msgid "Is organic growth real, or bots?"
@@ -4590,8 +5015,8 @@ msgid "How does rollback work?"
 msgstr "ロールバックはどのように機能しますか？"
 
 #: integrations/google-tag-manager.html
-msgid "In Duct, open Connections and choose Google Tag Manager."
-msgstr "Ductで、接続を開き、Google Tag Managerを選択します。"
+msgid "In Duct, open the Toolbox and choose Google Tag Manager."
+msgstr "Ductでツールボックスを開き、Google Tag Managerを選択します。"
 
 #: integrations/google-tag-manager.html
 msgid "Is the tag firing, or firing the wrong thing?"
@@ -4862,8 +5287,8 @@ msgstr ""
 
 #: integrations/growthbook.html
 msgid ""
-"In Duct, open Connections, choose GrowthBook and paste the key and the project ID."
-msgstr "Ductで「接続」を開き、GrowthBookを選択し、キーとプロジェクトIDを貼り付けます。"
+"In Duct, open the Toolbox, choose GrowthBook and paste the key and the project ID."
+msgstr "Ductでツールボックスを開き、GrowthBookを選択し、キーとプロジェクトIDを貼り付けます。"
 
 #: integrations/growthbook.html
 msgid "In GrowthBook, open Settings, then API Keys, and create a read-only key."
@@ -5027,6 +5452,12 @@ msgid ""
 msgstr "<0>HubSpot</0><1>CRMライフサイクルステージ、パイプライン、クローズド収益。</1><2><3>近日公開</3></2>"
 
 #: integrations/index.html
+msgid ""
+"<0>RSS and Atom feeds</0><1>What you published: a blog, a Substack, a changelog page, YouTube uploads.</1><2><3>Feed addresses</3><4>Read-only</4></2>"
+msgstr ""
+"<0>RSS・Atomフィード</0><1>あなたが公開したもの: ブログ、Substack、変更履歴ページ、YouTubeのアップロード。</1><2><3>フィードのアドレス</3><4>読み取り専用</4></2>"
+
+#: integrations/index.html
 msgid "Ads"
 msgstr "広告"
 
@@ -5076,18 +5507,28 @@ msgstr "Duct連携"
 #. meta og:title
 #. meta twitter:title
 #: integrations/index.html
-msgid "Duct integrations: thirteen tools, read as one"
-msgstr "Duct連携: 13のツールを1つとして読み取る"
+msgid "Duct integrations: fourteen tools, read as one"
+msgstr "Duct連携: 14のツールを1つとして読み取る"
+
+#. meta twitter:description
+#: integrations/index.html
+msgid ""
+"Fourteen connectors, read-only by default. Every change waits for your Apply."
+msgstr "14のコネクタ。デフォルトでは読み取り専用です。すべての変更がお客様の適用を待機します。"
+
+#: integrations/index.html
+msgid "Fourteen tools. <0>Read as one.</0>"
+msgstr "14のツール。<0>1つとして読み取ります。</0>"
 
 #: integrations/index.html
 msgid ""
-"Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, GitHub, Stripe and RevenueCat. The four Google tools connect when you sign in with Google; the rest take a key you paste once. HubSpot is next."
+"Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, GitHub, RSS and Atom feeds, Stripe and RevenueCat. The four Google tools connect when you sign in with Google; the rest take a key you paste once. HubSpot is next."
 msgstr ""
-"Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, GitHub, Stripe, RevenueCat。4つのGoogleツールはGoogleでサインインすると接続され、残りは一度キーを貼り付けるだけです。次はHubSpotです。"
+"Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, GitHub, RSS・Atomフィード, Stripe, RevenueCat。4つのGoogleツールはGoogleでサインインすると接続され、残りは一度キーを貼り付けるだけです。次はHubSpotです。"
 
 #: integrations/index.html
-msgid "Integrations: Google Ads, GA4, Stripe and 10 more | Duct"
-msgstr "連携: Google Ads, GA4, Stripeとその他10つ | Duct"
+msgid "Integrations: Google Ads, GA4, Stripe and 11 more | Duct"
+msgstr "連携: Google Ads, GA4, Stripeとその他11つ | Duct"
 
 #: integrations/index.html
 msgid "Missing <0>yours?</0>"
@@ -5122,30 +5563,24 @@ msgid "Product and experiments"
 msgstr "プロダクトと実験"
 
 #: integrations/index.html
+msgid "RSS and Atom feeds"
+msgstr "RSS・Atomフィード"
+
+#: integrations/index.html
 msgid "Revenue"
 msgstr "収益"
 
 #. meta description
 #: integrations/index.html
 msgid ""
-"The 13 tools Duct reads, from Google Ads and Meta to GA4, Mixpanel and Stripe, what each one can change, and how you connect it. Read-only by default."
+"The 14 tools Duct reads, from Google Ads and Meta to GA4, Mixpanel and Stripe, what each one can change, and how you connect it. Read-only by default."
 msgstr ""
-"Google AdsやMetaからGA4、Mixpanel、Stripeまで、Ductが読み取る13のツール、それぞれの変更可能な内容、および接続方法。デフォルトでは読み取り専用です。"
+"Google AdsやMetaからGA4、Mixpanel、Stripeまで、Ductが読み取る14のツール、それぞれの変更可能な内容、および接続方法。デフォルトでは読み取り専用です。"
 
 #: integrations/index.html
 msgid ""
 "The tools Duct reads and the changes it can make in them, generated from its source code."
 msgstr "Ductが読み取るツールと、それらに対して行える変更。ソースコードから生成されます。"
-
-#. meta twitter:description
-#: integrations/index.html
-msgid ""
-"Thirteen connectors, read-only by default. Every change waits for your Apply."
-msgstr "13のコネクタ。デフォルトでは読み取り専用です。すべての変更がお客様の適用を待機します。"
-
-#: integrations/index.html
-msgid "Thirteen tools. <0>Read as one.</0>"
-msgstr "13のツール。<0>1つとして読み取ります。</0>"
 
 #: integrations/index.html
 msgid "Where are my connector credentials stored?"
@@ -5294,8 +5729,8 @@ msgid "How much of Meta's credit comes from views, not clicks?"
 msgstr "Metaのクレジットのどれくらいが、クリックではなく表示から来ていますか？"
 
 #: integrations/meta-ads.html
-msgid "In Duct, open Connections, choose Meta Ads and paste the token."
-msgstr "Ductで、接続を開き、Meta Adsを選択し、トークンを貼り付けます。"
+msgid "In Duct, open the Toolbox, choose Meta Ads and paste the token."
+msgstr "Ductでツールボックスを開き、Meta Adsを選択し、トークンを貼り付けます。"
 
 #: integrations/meta-ads.html
 msgid ""
@@ -5579,8 +6014,8 @@ msgid "In Clarity, open Settings, then Data Export, and generate an API token."
 msgstr "Clarityで、設定を開き、データエクスポートを選択してAPIトークンを生成します。"
 
 #: integrations/microsoft-clarity.html
-msgid "In Duct, open Connections, choose Microsoft Clarity and paste the token."
-msgstr "Ductで、接続を開き、Microsoft Clarityを選択してトークンを貼り付けます。"
+msgid "In Duct, open the Toolbox, choose Microsoft Clarity and paste the token."
+msgstr "Ductでツールボックスを開き、Microsoft Clarityを選択し、トークンを貼り付けます。"
 
 #. meta twitter:description
 #: integrations/microsoft-clarity.html
@@ -5758,8 +6193,8 @@ msgid "How many signups carry no campaign at all?"
 msgstr "キャンペーンタグが全くない登録数はいくつですか？"
 
 #: integrations/mixpanel.html
-msgid "In Duct, open Connections, choose Mixpanel and paste them."
-msgstr "Ductで「接続」を開き、Mixpanelを選択して貼り付けます。"
+msgid "In Duct, open the Toolbox, choose Mixpanel and paste them."
+msgstr "Ductでツールボックスを開き、Mixpanelを選択し、それらを貼り付けます。"
 
 #: integrations/mixpanel.html
 msgid ""
@@ -6036,8 +6471,8 @@ msgid "How many trials are active right now?"
 msgstr "現在、アクティブなトライアルはいくつありますか？"
 
 #: integrations/revenuecat.html
-msgid "In Duct, open Connections, choose RevenueCat and paste the key."
-msgstr "Ductで「接続」を開き、RevenueCatを選択してキーを貼り付けます。"
+msgid "In Duct, open the Toolbox, choose RevenueCat and paste the key."
+msgstr "Ductでツールボックスを開き、RevenueCatを選択し、キーを貼り付けます。"
 
 #: integrations/revenuecat.html
 msgid ""
@@ -6300,8 +6735,8 @@ msgstr "今月、有料広告が獲得した有料顧客の数は？"
 
 #: integrations/stripe.html
 msgid ""
-"In Duct, open Connections, choose Stripe and paste the key. Duct checks each permission and names any that is missing."
-msgstr "Ductで、接続を開き、Stripeを選択してキーを貼り付けます。Ductは各権限を確認し、不足しているものがあればその名前を伝えます。"
+"In Duct, open the Toolbox, choose Stripe and paste the key. Duct checks each permission and names any that is missing."
+msgstr "Ductでツールボックスを開き、Stripeを選択し、キーを貼り付けます。Ductは各権限を確認し、不足しているものを表示します。"
 
 #: integrations/stripe.html
 msgid "In Stripe, open Developers, then API keys, and create a restricted key."
@@ -6567,8 +7002,8 @@ msgstr "サーバーの接続方法"
 
 #: mcp.html
 msgid ""
-"In the Duct app, open Connections. The ready-made servers are listed there, and any other connects by its address."
-msgstr "Ductアプリで「接続」を開きます。既製のサーバーがそこにリストされており、その他のサーバーはアドレスで接続します。"
+"In the Duct app, open the Toolbox. The ready-made servers are listed there, and any other connects by its address."
+msgstr "Ductアプリでツールボックスを開きます。既製のサーバーがそこにリストされており、その他のサーバーはアドレスで接続します。"
 
 #: mcp.html
 msgid "It says “Duct only connects to servers on the public internet”"
@@ -6594,7 +7029,7 @@ msgstr "Linear"
 msgid "Local servers that run over stdio on your own computer."
 msgstr "ご自身のコンピューターでstdio経由で実行されるローカルサーバー。"
 
-#: mcp.html partials/footer-expanded.html
+#: mcp.html
 msgid "MCP servers"
 msgstr "MCPサーバー"
 
@@ -6628,8 +7063,8 @@ msgstr ""
 "サーバーがOAuthディスカバリーを公開し、クライアントメタデータドキュメントを受け入れるか、動的クライアント登録を許可する場合に、ワンクリックでサインインできます。"
 
 #: mcp.html
-msgid "Open Connections"
-msgstr "接続を開く"
+msgid "Open the Toolbox"
+msgstr "ツールボックスを開く"
 
 #: mcp.html
 msgid "OpenSEO"
@@ -6652,8 +7087,8 @@ msgstr "サーバーを選択するか、アドレスを貼り付けてくださ
 
 #: mcp.html
 msgid ""
-"Pick one on Connections and sign in with the account you already have. Each address is here for reference; you never have to type it."
-msgstr "接続から1つ選択し、既存のアカウントでサインインしてください。各アドレスは参照用であり、入力する必要はありません。"
+"Pick one in the Toolbox and sign in with the account you already have. Each address is here for reference; you never have to type it."
+msgstr "ツールボックスで1つ選択し、既存のアカウントでサインインします。各アドレスは参照用にここにあり、入力する必要はありません。"
 
 #. meta og:description
 #: mcp.html
@@ -6661,7 +7096,7 @@ msgid ""
 "Plug the MCP servers you already use into Duct's agent. Read-only tools run straight away; anything else waits for your approval first."
 msgstr "既存のMCPサーバーをDuctのエージェントに接続してください。読み取り専用ツールはすぐに実行されます。それ以外は、まず承認を待ちます。"
 
-#: mcp.html
+#: mcp.html privacy.html
 msgid "PostHog"
 msgstr "PostHog"
 
@@ -6684,10 +7119,6 @@ msgstr "既製"
 #: mcp.html
 msgid "Replies are data, not orders"
 msgstr "応答はデータであり、命令ではありません"
-
-#: mcp.html
-msgid "Server address"
-msgstr "サーバーアドレス"
 
 #: mcp.html
 msgid ""
@@ -6742,13 +7173,13 @@ msgstr "接続するすべてのサーバーに同じルールが適用されま
 
 #: mcp.html
 msgid ""
-"The server offers no sign-in Duct can use. Create an API key in the vendor's settings and paste it on Connections."
-msgstr "サーバーはDuctが使用できるサインインを提供していません。ベンダーの設定でAPIキーを作成し、接続に貼り付けてください。"
+"The server offers no sign-in Duct can use. Create an API key in the vendor's settings and paste it in the Toolbox."
+msgstr "サーバーはDuctが使用できるサインインを提供していません。ベンダーの設定でAPIキーを作成し、ツールボックスに貼り付けます。"
 
 #: mcp.html
 msgid ""
-"The sign-in expired, or was revoked on the vendor's side. Press Reconnect on Connections and sign in again."
-msgstr "サインインの有効期限が切れたか、ベンダー側で取り消されました。接続で「再接続」を押し、再度サインインしてください。"
+"The sign-in expired, or was revoked on the vendor's side. Press Reconnect in the Toolbox and sign in again."
+msgstr "サインインの有効期限が切れたか、ベンダー側で取り消されました。ツールボックスで「再接続」を押し、再度サインインします。"
 
 #: mcp.html
 msgid ""
@@ -6764,10 +7195,6 @@ msgstr "3つのステップ。 <0>その後、質問してください。</0>"
 msgid ""
 "Today, connected servers are used in the insights chat. Scheduled briefs and Content Studio do not call them yet."
 msgstr "現在、接続されたサーバーはインサイトチャットで使用されます。スケジュールされたブリーフとContent Studioはまだそれらを呼び出しません。"
-
-#: mcp.html
-msgid "Troubleshooting"
-msgstr "トラブルシューティング"
 
 #: mcp.html
 msgid "Try: <0>Did yesterday's deploy go out cleanly?</0>"
@@ -6801,6 +7228,11 @@ msgstr "事前に承認されたクライアントのみを受け入れるベン
 #: mcp.html
 msgid "Waiting for you"
 msgstr "あなたを待機中"
+
+#: mcp.html
+msgid ""
+"Want to use Duct from your own agent instead, like Claude Code or Cursor? <0>Use Duct from your agent →</0>"
+msgstr "Claude CodeやCursorのような独自のエージェントからDuctを使用したいですか？<0>エージェントからDuctを使用する →</0>"
 
 #: mcp.html
 msgid ""
@@ -7282,6 +7714,10 @@ msgstr "アプリをインストールし、ツールを接続し、なぜ数字
 msgid "Stop calculating. <0>Start asking.</0>"
 msgstr "計算するのをやめる。<0>質問し始める。</0>"
 
+#: partials/footer-expanded.html skills.html
+msgid "Agent skills"
+msgstr "Agent Skills"
+
 #: partials/footer-expanded.html
 msgid ""
 "An open-source project by Alleviate Lab. An AI agent that reads across your growth stack, acts with your approval, and remembers. MIT licensed."
@@ -7414,6 +7850,10 @@ msgid "X / Twitter"
 msgstr "X / Twitter"
 
 #: partials/footer-expanded.html
+msgid "Your MCP servers in Duct"
+msgstr "Duct内のあなたのMCPサーバー"
+
+#: partials/footer-expanded.html
 msgid "© 2026 Alleviate Lab · Spain · Built in the open by <0>Shirish Kadam</0>."
 msgstr "© 2026 Alleviate Lab · スペイン · <0>Shirish Kadam</0>によってオープンソースで構築。"
 
@@ -7518,6 +7958,10 @@ msgid "How Duct works"
 msgstr "Ductの仕組み"
 
 #: privacy.html
+msgid "1 year"
+msgstr "1年"
+
+#: privacy.html
 msgid "1. Google User Data We Access"
 msgstr "1. アクセスするGoogleユーザーデータ"
 
@@ -7562,16 +8006,16 @@ msgid "19. Contact"
 msgstr "19. お問い合わせ"
 
 #: privacy.html
-msgid "2 years"
-msgstr "2年間"
-
-#: privacy.html
 msgid "2. Changes Duct Makes on Your Behalf"
 msgstr "2. Ductがお客様に代わって行う変更"
 
 #: privacy.html
 msgid "3. How We Use Google User Data"
 msgstr "3. Googleユーザーデータの使用方法"
+
+#: privacy.html
+msgid "30 days"
+msgstr "30日間"
 
 #: privacy.html
 msgid "4. Limited Use of Google User Data"
@@ -7639,9 +8083,9 @@ msgstr ""
 
 #: privacy.html
 msgid ""
-"<0>Crash reports and usage data are on by default in the app we distribute, and one switch in Preferences turns both off.</0> Once you touch it your answer is kept and no default applies again. A crash report contains the error and the stack trace that caused it; usage data is which screens and features you open — never your provider API keys, your data, or anything you generate. If you build Duct yourself both are off by default instead, because then we are not the ones running it."
+"<0>Crash reports and usage data are on by default in the app we distribute, and one switch in Preferences turns both off.</0> Once you touch it your answer is kept and no default applies again. A crash report contains the error and the stack trace that caused it; usage data is which screens and features you open — never your provider API keys, your data, or anything you generate. If you are signed in, both carry your account ID. If you build Duct yourself both are off by default instead, because then we are not the ones running it."
 msgstr ""
-"<0>クラッシュレポートと使用状況データは、配布するアプリではデフォルトでオンになっており、設定の1つのスイッチで両方をオフにできます。</0> 一度設定を変更すると、その設定が保持され、デフォルトは再度適用されません。クラッシュレポートには、エラーとその原因となったスタックトレースが含まれます。使用状況データは、開いた画面と機能に関するものであり、プロバイダーのAPIキー、お客様のデータ、またはお客様が生成したものは一切含まれません。Ductを自分でビルドした場合、これらはデフォルトでオフになります。これは、その場合、当社が実行しているわけではないためです。"
+"<0>配布するアプリでは、クラッシュレポートと使用状況データはデフォルトでオンになっており、設定の1つのスイッチで両方をオフにできます。</0>一度設定すると、その選択が保持され、デフォルト設定が再度適用されることはありません。クラッシュレポートには、エラーとその原因となったスタックトレースが含まれます。使用状況データは、開いた画面や機能に関するものであり、プロバイダーのAPIキー、データ、または生成されたものは一切含まれません。サインインしている場合、両方ともアカウントIDを含みます。Ductを自分でビルドした場合、私たちがそれを実行しているわけではないため、両方ともデフォルトでオフになります。"
 
 #: privacy.html
 msgid ""
@@ -7657,8 +8101,8 @@ msgstr ""
 
 #: privacy.html
 msgid ""
-"<0>Disconnect one source:</0> remove it on the Connections page in Duct. Its stored credentials are deleted at that point."
-msgstr "<0>1つのソースを切断する:</0> Ductの接続ページで削除してください。その時点で保存されている認証情報は削除されます。"
+"<0>Disconnect one source:</0> remove it from the Toolbox in Duct. Its stored credentials are deleted at that point."
+msgstr "<0>ソースを1つ切断する：</0> Ductのツールボックスから削除します。その時点で保存されている認証情報は削除されます。"
 
 #: privacy.html
 msgid "<0>Experimentation:</0> GrowthBook"
@@ -7677,6 +8121,18 @@ msgstr ""
 
 #: privacy.html
 msgid ""
+"<0>Google Analytics is not part of that choice.</0> Its cookies below are set when a page loads, wherever you are and whatever you choose."
+msgstr ""
+"<0>Google Analyticsはこの選択の対象外です。</0>以下のクッキーは、お客様の所在地や選択にかかわらず、ページの読み込み時に設定されます。"
+
+#: privacy.html
+msgid ""
+"<0>Google LLC is a US company and may process what it receives in the United States,</0> under the safeguards in its data processing terms. What Google's advertising services receive is also used as described in <1>Google's privacy policy</1>."
+msgstr ""
+"<0>Google LLCは米国の企業であり、受け取った情報を米国で処理する場合があります。</0>その際は、同社のデータ処理規約に定める保護措置が適用されます。Googleの広告サービスが受け取る情報は、<1>Googleのプライバシーポリシー</1>に記載されているとおりにも使用されます。"
+
+#: privacy.html
+msgid ""
 "<0>In the desktop app,</0> keys are stored in your operating system's keychain. They are sent with a request so that the job you asked for can run, and we never store them; the option to save a key with us is switched off there."
 msgstr ""
 "<0>デスクトップアプリでは、</0> キーはオペレーティングシステムのキーチェーンに保存されます。お客様が要求したジョブを実行できるようにリクエストとともに送信されますが、当社が保存することはありません。キーを当社に保存するオプションはオフになっています。"
@@ -7686,6 +8142,12 @@ msgid ""
 "<0>In the web app,</0> a key you paste is held for that browser session and sent with each request. If you choose to save it so you do not have to paste it again, it is encrypted at rest, decrypted only to make a request on your behalf, never returned by our API, and never written to logs. You can delete it at any time."
 msgstr ""
 "<0>ウェブアプリでは、</0> お客様が貼り付けたキーは、そのブラウザセッション中に保持され、各リクエストとともに送信されます。再度貼り付ける必要がないように保存を選択した場合、キーは保存時に暗号化され、お客様に代わってリクエストを行うためだけに復号化され、当社のAPIによって返されることはなく、ログに書き込まれることもありません。いつでも削除できます。"
+
+#: privacy.html
+msgid ""
+"<0>In the web app,</0> everything you type, and also all text on screen, images, embedded documents, charts and video. A replay of the app shows the layout, your clicks and where you went, never the data on the page. When PostHog counts a click in the app, it records which element was clicked, not the text on it."
+msgstr ""
+"<0>ウェブアプリでは、</0>入力したすべての情報、および画面上のすべてのテキスト、画像、埋め込みドキュメント、グラフ、動画。アプリのリプレイは、レイアウト、クリック、移動先を示しますが、ページ上のデータは一切表示されません。PostHogがアプリ内のクリックをカウントする場合、クリックされた要素を記録し、その上のテキストは記録しません。"
 
 #: privacy.html
 msgid ""
@@ -7700,10 +8162,20 @@ msgstr ""
 "<0>OAuthトークンと保存されたプロバイダーキーは、</0> Fernet対称暗号化を使用して保存時に暗号化され、ユーザーごとにサーバー側に保存され、ブラウザに公開されることはありません。"
 
 #: privacy.html
+msgid "<0>On our website,</0> everything you type into a field."
+msgstr "<0>当社のウェブサイトでは、</0>フィールドに入力したすべての情報。"
+
+#: privacy.html
 msgid ""
 "<0>OpenRouter is a router, not a model provider,</0> and it warrants a specific note. It forwards a request to whichever underlying provider the routing configuration selects, and those providers differ in whether they log or train on what they receive. Where you supply your own OpenRouter key, that routing configuration is yours: the retention and training behaviour of a request is governed by the data policy set on your OpenRouter account, and you should set it to match the commitments you need. We recommend enabling OpenRouter's zero-logging and no-training data policy before connecting a key. Duct does not use your data for training regardless of which route is taken."
 msgstr ""
 "<0>OpenRouterはルーターであり、モデルプロバイダーではありません。</0> これには特別な注意が必要です。OpenRouterは、ルーティング設定が選択する基盤となるプロバイダーにリクエストを転送します。これらのプロバイダーは、受信したデータをログに記録するか、またはトレーニングに使用するかどうかで異なります。お客様が独自のOpenRouterキーを提供する場合、そのルーティング設定はお客様のものです。リクエストの保持およびトレーニングの動作は、お客様のOpenRouterアカウントで設定されたデータポリシーによって管理されます。お客様は、必要なコミットメントに一致するように設定する必要があります。キーを接続する前に、OpenRouterのゼロログおよび非トレーニングデータポリシーを有効にすることをお勧めします。Ductは、どのルートが選択されたかに関わらず、お客様のデータをトレーニングに使用することはありません。"
+
+#: privacy.html
+msgid ""
+"<0>PostHog, Inc. is a US company, and stores what it receives in its US region.</0> Sending it data from the EU relies on the EU Standard Contractual Clauses in PostHog's data processing agreement."
+msgstr ""
+"<0>PostHog, Inc.は米国の企業であり、受信したデータを米国のリージョンに保存します。</0>EUからデータを送信する場合、PostHogのデータ処理契約におけるEU標準契約条項に依拠します。"
 
 #: privacy.html
 msgid "<0>Product and behavioural analytics:</0> Mixpanel, Microsoft Clarity"
@@ -7767,9 +8239,15 @@ msgstr ""
 
 #: privacy.html
 msgid ""
-"<0>The desktop app sets no cookies, and is never going to ask you about them.</0> It reports usage through the same Google Tag Manager container as the rest of Duct, but with storage switched off permanently: Google Analytics receives the event and writes nothing to your machine, so none of the cookies in section 11 exist there and there is nothing to consent to. A consent bar in front of an application you just opened is not a question worth interrupting anyone for."
+"<0>The desktop app never asks you about cookies.</0> Its usage events and crash reports go to PostHog, which in the desktop app holds everything in memory and writes nothing to your machine, so PostHog's cookie does not exist there. A consent bar in front of an application you just opened is not a question worth interrupting anyone for. The app's window does load our web app, so Google Analytics runs there too, sets the Google cookies listed in section 11, and is not affected by the switch below."
 msgstr ""
-"<0>デスクトップアプリはCookieを設定せず、Cookieについて尋ねることもありません。</0> 他のDuctと同様のGoogle Tag Managerコンテナを通じて使用状況を報告しますが、ストレージは永続的にオフになっています。Google Analyticsはイベントを受け取りますが、お客様のマシンには何も書き込まないため、セクション11のCookieは存在せず、同意する必要もありません。開いたばかりのアプリケーションの前に同意バーを表示することは、誰かの邪魔をする価値のある質問ではありません。"
+"<0>デスクトップアプリがクッキーについて尋ねることはありません。</0>その使用状況イベントとクラッシュレポートはPostHogに送信されますが、デスクトップアプリではすべてをメモリに保持し、お使いのデバイスには何も書き込まないため、PostHogのクッキーはそこには存在しません。開いたばかりのアプリケーションの前に同意バーが表示されるのは、誰かの作業を中断する価値のある質問ではありません。ただし、アプリのウィンドウは当社のウェブアプリを読み込むため、Google Analyticsもそこで動作し、セクション11に記載のGoogleのクッキーを設定します。また、以下のスイッチの影響は受けません。"
+
+#: privacy.html
+msgid ""
+"<0>The desktop app never records a replay of your session.</0> Session replay (section 11) exists only on our website and in the web app in a browser."
+msgstr ""
+"<0>デスクトップアプリはセッションのリプレイを記録することはありません。</0>セッションリプレイ（セクション11）は、当社のウェブサイトおよびブラウザ内のウェブアプリでのみ存在します。"
 
 #: privacy.html
 msgid ""
@@ -7798,6 +8276,10 @@ msgstr ""
 #: privacy.html
 msgid "A stable Google account identifier"
 msgstr "安定したGoogleアカウント識別子"
+
+#: privacy.html
+msgid "AI model calls"
+msgstr "AIモデル呼び出し"
 
 #: privacy.html
 msgid ""
@@ -7831,12 +8313,6 @@ msgstr ""
 "特定の事項について明示的な同意を得ている場合、セキュリティ目的または適用される法律を遵守するために必要な場合、またはデータが集計され匿名化されている場合を除き、人間がGoogleユーザーデータを読み取ることを許可する"
 
 #: privacy.html
-msgid ""
-"Analytics cookies are set only after you accept them. If you are in the EEA, the UK or Switzerland we ask before anything is set, and nothing but the strictly necessary entries below exists until you choose. Elsewhere analytics is on by default and you can turn it off at any time — the <0>Cookie settings</0> link in our footer, and in the account menu inside the app, reopens the choice on every page."
-msgstr ""
-"分析Cookieは、お客様が同意した場合にのみ設定されます。EEA、英国、またはスイスにお住まいの場合は、設定される前に確認し、お客様が選択するまで、以下の厳密に必要なエントリ以外は存在しません。その他の地域では、分析はデフォルトでオンになっており、いつでもオフにできます。フッターの<0>Cookie設定</0>リンクと、アプリ内のアカウントメニューで、すべてのページで選択肢を再度開くことができます。"
-
-#: privacy.html
 msgid "Anthropic, OpenAI, Google, OpenRouter"
 msgstr "Anthropic、OpenAI、Google、OpenRouter"
 
@@ -7847,10 +8323,6 @@ msgstr "Apify"
 #: privacy.html
 msgid "Application hosting and the primary database"
 msgstr "アプリケーションホスティングとプライマリデータベース"
-
-#: privacy.html
-msgid "Attributes a signup to the ad or link that led to it"
-msgstr "サインアップを、それに繋がった広告またはリンクに紐付ける"
 
 #: privacy.html
 msgid "Audit tool submissions"
@@ -7876,6 +8348,11 @@ msgstr "リクエストが到着した国をキャッシュし、検索を繰り
 #: privacy.html
 msgid "Connected data sources"
 msgstr "接続されたデータソース"
+
+#: privacy.html
+msgid ""
+"Connects a visit to an ad click, for measuring Google Ads. Not covered by the choice above"
+msgstr "Google Adsの測定のために、訪問を広告クリックと関連付けます。上記の選択の対象外です"
 
 #: privacy.html
 msgid "Cookie"
@@ -7904,9 +8381,9 @@ msgstr "データは、EU標準契約条項を含む転送メカニズムに基�
 
 #: privacy.html
 msgid ""
-"Declining means Google Tag Manager is never loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we delete the cookies below and reload the page."
+"Declining means PostHog is not loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we stop PostHog, delete its cookie and its copy of it in your browser's storage, and reload the page. Google Analytics keeps running either way."
 msgstr ""
-"拒否すると、Google Tag Managerは制限モードで読み込まれるのではなく、まったく読み込まれません。以前に同意した後で拒否した場合、当社は以下のCookieを削除し、ページを再読み込みします。"
+"拒否するということは、PostHogが制限モードで読み込まれるのではなく、まったく読み込まれないことを意味します。以前に承諾した後で拒否した場合、PostHogを停止し、そのクッキーとブラウザのストレージにあるコピーを削除し、ページを再読み込みします。いずれの場合もGoogle Analyticsは動作し続けます。"
 
 #: privacy.html
 msgid ""
@@ -7923,8 +8400,14 @@ msgstr "診断"
 
 #: privacy.html
 msgid ""
-"Distinguishes one visitor from another so a returning visit is not counted twice"
-msgstr "訪問者を区別し、再訪問が二重にカウントされないようにします"
+"Distinguishes one visitor from another, and carries the same visit across <0>getduct.ai</0> and <1>app.getduct.ai</1> so it counts as one person, not two. PostHog may keep the same value in your browser's local storage"
+msgstr ""
+"訪問者を区別し、<0>getduct.ai</0>と<1>app.getduct.ai</1>間で同じ訪問を保持し、2人ではなく1人としてカウントします。PostHogは、ブラウザのローカルストレージに同じ値を保持する場合があります"
+
+#: privacy.html
+msgid ""
+"Distinguishes one visitor from another. Set on <0>getduct.ai</0> and all its subdomains. Not covered by the choice above"
+msgstr "訪問者を互いに区別します。<0>getduct.ai</0>とそのすべてのサブドメインに設定されます。上記の選択の対象外です"
 
 #: privacy.html
 msgid ""
@@ -7997,16 +8480,14 @@ msgid "End of session"
 msgstr "セッション終了"
 
 #: privacy.html
-msgid "Error diagnostics"
-msgstr "エラー診断"
-
-#: privacy.html
-msgid "Error monitoring and crash reporting"
-msgstr "エラー監視とクラッシュレポート"
-
-#: privacy.html
 msgid "Expires"
 msgstr "有効期限"
+
+#: privacy.html
+msgid ""
+"For each call Duct makes to an AI model we record metadata only: the model, the number of tokens, how long it took, what it cost, and any error. Never the prompt or the response text."
+msgstr ""
+"DuctがAIモデルに対して行う各呼び出しについて、メタデータのみを記録します。モデル、トークン数、所要時間、費用、およびエラー。プロンプトや応答テキストは記録しません。"
 
 #: privacy.html
 msgid "For privacy questions, data access or deletion requests:"
@@ -8021,10 +8502,18 @@ msgid "Generative media providers"
 msgstr "生成メディアプロバイダー"
 
 #: privacy.html
+msgid "Google (Analytics and Tag Manager)"
+msgstr "Google（AnalyticsおよびTag Manager）"
+
+#: privacy.html
 msgid ""
 "Google Ads campaigns, ad groups, search terms, and performance metrics (clicks, impressions, cost, conversions, ROAS), plus device and geographic segmentation"
 msgstr ""
 "Google Adsキャンペーン、広告グループ、検索語句、パフォーマンス指標（クリック数、インプレッション数、費用、コンバージョン数、ROAS）、およびデバイスと地域セグメンテーション"
+
+#: privacy.html
+msgid "Google Analytics"
+msgstr "Google Analytics"
 
 #: privacy.html
 msgid "Google Analytics 4 admin settings"
@@ -8037,10 +8526,6 @@ msgstr "Google Analytics 4 レポートデータとプロパティ設定"
 #: privacy.html
 msgid "Google Search Console queries, pages, impressions, clicks and positions"
 msgstr "Google Search Console のクエリ、ページ、インプレッション、クリック、順位"
-
-#: privacy.html
-msgid "Google Tag Manager (Conversion Linker)"
-msgstr "Google Tag Manager (コンバージョンリンカー)"
 
 #: privacy.html
 msgid "Google Tag Manager accounts, containers, tags and triggers"
@@ -8061,10 +8546,6 @@ msgstr ""
 "Googleは、Ductが接続できるいくつかのソースの1つです。それぞれはオプションであり、お客様が個別に接続し、承認した認証情報を使用してプロバイダーの公式APIを通じてアクセスされます。Ductはレポート作成に必要な指標を読み取り、お客様が明示的に承認した変更のみを書き込みます。"
 
 #: privacy.html
-msgid "Holds the state of the current session for our specific property"
-msgstr "特定のプロパティの現在のセッションの状態を保持します"
-
-#: privacy.html
 msgid "If you use Duct's content features:"
 msgstr "Ductのコンテンツ機能を使用する場合："
 
@@ -8077,18 +8558,18 @@ msgid "In transit"
 msgstr "転送中"
 
 #: privacy.html
-msgid "Incidentally, in error context only"
-msgstr "偶発的に、エラーコンテキストのみ"
-
-#: privacy.html
 msgid ""
 "It does not cover an instance of the software that someone else runs. If you use a Duct deployment operated by a third party, or one you run yourself, the operator of that deployment is the data controller and this policy does not apply to it. Publishing the code does not give us access to any data held in a deployment we do not operate."
 msgstr ""
 "このポリシーは、他者が実行するソフトウェアのインスタンスには適用されません。第三者が運営するDuctのデプロイメント、またはお客様自身が実行するデプロイメントを使用する場合、そのデプロイメントの運営者がデータ管理者であり、このポリシーは適用されません。コードを公開しても、当社が運営していないデプロイメントに保持されているデータにアクセスできるわけではありません。"
 
-#: privacy.html terms.html
-msgid "Last updated: September 7, 2026"
-msgstr "最終更新日：2026年9月7日"
+#: privacy.html
+msgid "Keeps track of the current visit. Not covered by the choice above"
+msgstr "現在の訪問を追跡します。上記の選択の対象外です"
+
+#: privacy.html
+msgid "Last updated: November 5, 2026"
+msgstr "最終更新日：2026年11月5日"
 
 #. meta og:description
 #. meta twitter:description
@@ -8109,8 +8590,16 @@ msgid "No"
 msgstr "いいえ"
 
 #: privacy.html
-msgid "No — email address and report content only"
-msgstr "いいえ — メールアドレスとレポートコンテンツのみ"
+msgid ""
+"No — full page addresses, which can contain internal IDs, visit and device data, IP address and cookie identifiers, as described in section 11; never your connected tools' data or your prompts"
+msgstr ""
+"いいえ。完全なページアドレス（内部IDを含む場合があります）、訪問およびデバイスのデータ、IPアドレス、クッキー識別子が対象です（セクション11に記載）。接続したツールのデータやプロンプトが含まれることはありません"
+
+#: privacy.html
+msgid ""
+"No — usage events, session replays masked as described in section 11, error reports, page timing and AI call metadata; never your connected tools' data or your prompts. An error report may incidentally contain an identifier, as described in section 11"
+msgstr ""
+"いいえ — 使用状況イベント、セクション11で説明されているようにマスクされたセッションリプレイ、エラーレポート、ページタイミング、AI呼び出しメタデータ。接続されたツールのデータやプロンプトは記録しません。エラーレポートには、セクション11で説明されているように、偶発的に識別子が含まれる場合があります"
 
 #: privacy.html
 msgid "OAuth refresh tokens and saved provider keys"
@@ -8123,14 +8612,31 @@ msgstr ""
 "当社の公開SEO監査ツールは、お客様が提出したメールアドレスとウェブサイトURLを収集し、そのウェブサイトからページを取得して分析し、結果のレポートをメールで送信します。当社は、再送できるように、またDuctについてお客様に連絡できるように、提出物とレポートを保存します。お客様が所有または監査を許可されているウェブサイトのみを提出してください。提出物を削除するには、<0>hello@getduct.ai</0>までお問い合わせください。"
 
 #: privacy.html
+msgid ""
+"Our servers report their own errors to PostHog the same way, along with a few log lines recording when a server starts and stops. We configure error reporting to avoid capturing Google user data, but a report may incidentally contain an identifier such as a property ID."
+msgstr ""
+"当社のサーバーは、サーバーの起動と停止を記録するいくつかのログ行とともに、同様の方法でPostHogに自身のエラーを報告します。Googleユーザーデータをキャプチャしないようにエラー報告を設定していますが、レポートには偶発的にプロパティIDなどの識別子が含まれる場合があります。"
+
+#: privacy.html
 msgid "PostBridge"
 msgstr "PostBridge"
+
+#: privacy.html
+msgid ""
+"PostHog also records session replays: a reconstruction of the page and where you clicked, so we can watch where a visit went wrong. What a replay hides is hidden in your browser, before anything leaves it:"
+msgstr ""
+"PostHogはセッションリプレイも記録します。ページとクリックした場所を再構築し、訪問がどこでうまくいかなかったかを確認できるようにします。リプレイが隠すものは、データがブラウザから離れる前にブラウザ内で隠されます。"
 
 #. meta og:title
 #. meta twitter:title
 #: privacy.html
 msgid "Privacy Policy — Duct"
 msgstr "プライバシーポリシー — Duct"
+
+#: privacy.html
+msgid ""
+"Product and web analytics, session replay, error and crash reporting, page-speed measurement, AI call metadata"
+msgstr "製品およびウェブ分析、セッションリプレイ、エラーおよびクラッシュ報告、ページ速度測定、AI呼び出しメタデータ"
 
 #: privacy.html
 msgid "Prompts and reference media only"
@@ -8154,13 +8660,14 @@ msgstr "接続されたソースデータを受信しますか？"
 
 #: privacy.html
 msgid ""
-"Remembers your choice, so you are not asked on every page. Set on <0>getduct.ai</0> and all its subdomains, so answering once in your browser also answers for the app. The desktop app never sets it, because it loads no analytics at all. Strictly necessary — it exists whether you accept or decline"
+"Remembers your choice, so you are not asked on every page. Set on <0>getduct.ai</0> and all its subdomains, so answering once in your browser also answers for the app. The desktop app never sets it, because it never asks (section 7). Strictly necessary — it exists whether you accept or decline"
 msgstr ""
-"お客様の選択を記憶し、すべてのページで尋ねられることはありません。<0>getduct.ai</0>とそのすべてのサブドメインで設定されるため、ブラウザで一度回答すると、アプリにも適用されます。デスクトップアプリは分析を一切読み込まないため、これを設定することはありません。厳密に必要です — お客様が承諾するか拒否するかにかかわらず存在します"
+"選択を記憶するため、すべてのページで尋ねられることはありません。<0>getduct.ai</0>とそのすべてのサブドメインに設定されるため、ブラウザで一度回答するとアプリにも適用されます。デスクトップアプリは、尋ねることがないため（セクション7）、これを設定することはありません。厳密に必要 — 承諾するか拒否するかにかかわらず存在します"
 
 #: privacy.html
-msgid "Resend"
-msgstr "再送信"
+msgid ""
+"Replays never include your browser's console logs. We do not record keystrokes or form contents."
+msgstr "リプレイにはブラウザのコンソールログは含まれません。キー入力やフォームの内容は記録しません。"
 
 #: privacy.html
 msgid ""
@@ -8185,8 +8692,14 @@ msgid ""
 msgstr "Googleユーザーデータをデータブローカー、情報再販業者、またはその他の第三者へ独自の目的のために販売、賃貸、または転送すること"
 
 #: privacy.html
-msgid "Sentry"
-msgstr "Sentry"
+msgid "Session replays (PostHog)"
+msgstr "セッションリプレイ (PostHog)"
+
+#: privacy.html
+msgid ""
+"Session replays and click analytics in the web app never record Google user data: all text on screen is masked in your browser before anything is sent (section 11)."
+msgstr ""
+"ウェブアプリでのセッションリプレイとクリック分析は、Googleユーザーデータを記録することはありません。画面上のすべてのテキストは、送信される前にブラウザでマスクされます（セクション11）。"
 
 #: privacy.html
 msgid "Set by"
@@ -8213,6 +8726,12 @@ msgstr "具体的には、当社は<0>行いません</0>:"
 msgid ""
 "The authentication token described under <0>Locally stored data</0> below is also strictly necessary: without it you cannot stay signed in."
 msgstr "下記の<0>ローカルに保存されたデータ</0>で説明されている認証トークンも厳密に必要です。それがなければサインインしたままにすることはできません。"
+
+#: privacy.html
+msgid ""
+"The choice we ask for covers PostHog's analytics cookie. If you are in the EEA, the UK or Switzerland we ask before PostHog sets anything. Elsewhere it is on by default and you can turn it off at any time: the <0>Cookie settings</0> link in our footer, and in the account menu inside the app, reopens the choice on every page."
+msgstr ""
+"お願いしている選択は、PostHogの分析クッキーを対象としています。EEA、英国、またはスイスにお住まいの場合は、PostHogが何かを設定する前に確認します。その他の地域ではデフォルトでオンになっており、いつでもオフにできます。フッターの<0>Cookie設定</0>リンクと、アプリ内のアカウントメニューで、すべてのページで選択肢を再度開くことができます。"
 
 #: privacy.html
 msgid ""
@@ -8270,10 +8789,6 @@ msgid "To report on traffic, conversion and retention alongside your other tools
 msgstr "他のツールと合わせて、トラフィック、コンバージョン、およびリテンションを報告するため"
 
 #: privacy.html
-msgid "Transactional email (report delivery, project invitations)"
-msgstr "トランザクションメール（レポート配信、プロジェクト招待）"
-
-#: privacy.html
 msgid "Until you ask us to delete them"
 msgstr "お客様が削除を依頼するまで"
 
@@ -8283,8 +8798,24 @@ msgid ""
 msgstr "ソースを切断するか、キーを削除するか、アカウントを削除するか、またはプロバイダーでアクセスを取り消すまで — いずれか早い方"
 
 #: privacy.html
+msgid "Up to 14 months"
+msgstr "最長14か月"
+
+#: privacy.html
+msgid "Up to 2 years"
+msgstr "最長2年"
+
+#: privacy.html
+msgid "Up to 7 years, the retention of our PostHog plan"
+msgstr "最大7年間、当社のPostHogプランの保持期間"
+
+#: privacy.html
 msgid "Usage data"
 msgstr "利用データ"
+
+#: privacy.html
+msgid "Usage events, error reports and AI call metadata (PostHog)"
+msgstr "使用状況イベント、エラーレポート、AI呼び出しメタデータ (PostHog)"
 
 #: privacy.html
 msgid "Use Google user data to build or enrich independent databases or profiles"
@@ -8306,22 +8837,32 @@ msgstr ""
 "Googleユーザーデータを使用または転送し、ターゲット広告、パーソナライズ広告、リターゲティング広告、インタレストベース広告を含むあらゆる種類の広告配信のために利用すること"
 
 #: privacy.html
-msgid ""
-"We are based in Spain and process personal data under the EU GDPR. You have the right to access, correct, export, restrict the processing of, or delete your personal data, and to object to processing. Our legal basis is the performance of our contract with you for operating the product, and legitimate interest for security and diagnostics. Exercise any of these rights at <0>hello@getduct.ai</0>; you also have the right to lodge a complaint with your local supervisory authority (in Spain, the AEPD)."
-msgstr ""
-"当社はスペインに拠点を置き、EU GDPRに基づき個人データを処理します。お客様には、ご自身の個人データにアクセスし、修正し、エクスポートし、処理を制限し、または削除する権利、および処理に異議を唱える権利があります。当社の法的根拠は、製品運用のためのお客様との契約履行、およびセキュリティと診断のための正当な利益です。これらの権利を行使するには、<0>hello@getduct.ai</0>までご連絡ください。また、お客様には現地の監督機関（スペインではAEPD）に苦情を申し立てる権利もあります。"
+msgid "Visit data in Google Analytics"
+msgstr "Google Analyticsの訪問データ"
 
 #: privacy.html
 msgid ""
-"We collect basic product analytics — pages visited, features used, general interaction patterns — to understand how Duct is used. This runs through Google Tag Manager, which loads Google Analytics 4. We do not record keystrokes or form contents."
+"We also use Google Analytics, loaded through Google Tag Manager, to count visits and see where they come from. It runs on our website, in the web app and in the desktop app's window. <0>It does not follow the cookie choice described below:</0> it loads on every page, before you answer and after you decline. Google receives the full address of the page, where you came from, your browser and device, your IP address, which it uses to estimate your location, and an identifier from the cookies listed below. These tags also send visit data to Google's advertising services, including the one that builds ad audiences. We are not running Google Ads at the moment. If you do not want this, Google offers a <1>browser add-on that opts you out of Google Analytics</1>."
 msgstr ""
-"Ductがどのように使用されているかを理解するため、当社は基本的な製品分析データ（訪問ページ、使用機能、一般的な操作パターンなど）を収集します。これはGoogle Tag Managerを通じて実行され、Google Analytics 4をロードします。キー入力やフォームの内容は記録しません。"
+"また、訪問数をカウントし、流入元を確認するために、Google Tag Managerを通じて読み込まれるGoogle Analyticsを使用しています。当社のウェブサイト、ウェブアプリ、デスクトップアプリのウィンドウで動作します。<0>以下で説明するクッキーの選択には従いません。</0>回答前でも拒否後でも、すべてのページで読み込まれます。Googleは、ページの完全なアドレス、流入元、ブラウザとデバイス、IPアドレス（おおよその位置の推定に使用されます）、および以下のクッキーの識別子を受け取ります。これらのタグは、広告オーディエンスを作成するサービスを含むGoogleの広告サービスにも訪問データを送信します。現在、Google Adsは運用していません。これを望まない場合は、Googleが提供する<1>Google Analyticsをオプトアウトするブラウザアドオン</1>をご利用いただけます。"
 
 #: privacy.html
 msgid ""
-"We do not sell your data. We share it only with the service providers below, only as needed to operate Duct, and only under terms that restrict them to that purpose:"
+"We are based in Spain and process personal data under the EU GDPR. You have the right to access, correct, export, restrict the processing of, or delete your personal data, and to object to processing. Our legal basis is the performance of our contract with you for operating the product; legitimate interest for security and diagnostics, including the error reports and server-side events in section 11; and your consent for analytics cookies and session replays where we ask for it. Exercise any of these rights at <0>hello@getduct.ai</0>; you also have the right to lodge a complaint with your local supervisory authority (in Spain, the AEPD)."
 msgstr ""
-"お客様のデータを販売することはありません。Ductの運用に必要な場合に限り、以下のサービスプロバイダーと共有し、その目的に限定する条件の下でのみ共有します。"
+"当社はスペインに拠点を置き、EU GDPRに基づき個人データを処理します。お客様には、個人データへのアクセス、訂正、エクスポート、処理の制限、または削除、および処理への異議申し立ての権利があります。当社の法的根拠は、製品を運用するためのお客様との契約の履行、セクション11のエラーレポートやサーバーサイドイベントを含むセキュリティおよび診断のための正当な利益、そして、要求する分析クッキーおよびセッションリプレイに対するお客様の同意です。これらの権利を行使するには、<0>hello@getduct.ai</0>までご連絡ください。また、お客様の地域の監督機関（スペインではAEPD）に苦情を申し立てる権利もあります。"
+
+#: privacy.html
+msgid ""
+"We collect product analytics — pages visited, features used, what you click, how fast pages load — to see which pages earn a signup and where Duct gets in your way. On our website and in the web app in a browser this runs through PostHog, which follows the cookie choice described below."
+msgstr ""
+"当社は、プロダクトアナリティクス（訪問したページ、使用した機能、クリックした内容、ページの読み込み速度など）を収集し、どのページがサインアップにつながり、Ductがどこでユーザーの妨げになっているかを確認しています。当社のウェブサイトおよびブラウザのウェブアプリでは、これはPostHogを通じて実行され、以下に記載されているクッキーの選択に従います。"
+
+#: privacy.html
+msgid ""
+"We do not sell your data. We share it only with the service providers below, only as needed to operate Duct, and, apart from what Google's advertising services receive, only under terms that restrict them to that purpose:"
+msgstr ""
+"お客様のデータを販売することはありません。Ductの運用に必要な場合に限り、以下のサービスプロバイダーと共有し、Googleの広告サービスが受け取るものを除き、その目的に限定する条件の下でのみ共有します。"
 
 #: privacy.html
 msgid "We follow the principle of least privilege for internal data access"
@@ -8344,6 +8885,10 @@ msgid ""
 "We use Google user data only to provide and improve these user-facing features. We do not use it for any other purpose."
 msgstr "Googleユーザーデータは、これらのユーザー向け機能を提供および改善するためにのみ使用します。その他の目的で使用することはありません。"
 
+#: privacy.html
+msgid "Website and app analytics, and advertising measurement"
+msgstr "ウェブサイトとアプリの分析、および広告の測定"
+
 #: privacy.html terms.html
 msgid "Website: <0>getduct.ai</0>"
 msgstr "ウェブサイト: <0>getduct.ai</0>"
@@ -8354,9 +8899,15 @@ msgstr "アクセスするもの"
 
 #: privacy.html
 msgid ""
-"When something breaks, we collect error reports containing the technical context of the failure (stack trace, browser, the operation attempted). We configure our error monitoring to avoid capturing Google user data, but a report may incidentally contain an identifier such as a property ID."
+"When something breaks in the web app, it sends PostHog an error report: the stack trace, your browser, the page's path without its query string, and, if you are signed in, your account ID. The web app also sends how long each page took to load and respond (web vitals), which is timing and nothing else. <0>Error reports and page timing in the web app are sent whether or not you accept analytics cookies,</0> because they store nothing on your device: they are held in memory for that page and gone when you leave it. On our website, both are part of analytics and follow your cookie choice."
 msgstr ""
-"何らかの障害が発生した場合、障害の技術的コンテキスト（スタックトレース、ブラウザ、試行された操作）を含むエラーレポートを収集します。エラー監視はGoogleユーザーデータをキャプチャしないように設定していますが、レポートにプロパティIDなどの識別子が偶発的に含まれる場合があります。"
+"ウェブアプリで何らかの障害が発生した場合、PostHogにエラーレポートを送信します。これには、スタックトレース、お使いのブラウザ、クエリ文字列を含まないページのパス、そしてサインインしている場合はアカウントIDが含まれます。ウェブアプリはまた、各ページの読み込みと応答にかかった時間（ウェブバイタル）も送信します。これは時間情報のみであり、それ以外の情報はありません。<0>ウェブアプリでのエラーレポートとページタイミングは、アナリティクスクッキーを受け入れるかどうかにかかわらず送信されます。</0>これは、デバイスに何も保存せず、そのページの間メモリに保持され、ページを離れると消去されるためです。当社のウェブサイトでは、これら両方ともアナリティクスの一部であり、クッキーの選択に従います。"
+
+#: privacy.html
+msgid ""
+"When you are signed in, our servers also record the actions you take in Duct, such as starting a content plan or approving or applying a change, with your account ID. Your PostHog profile keeps your email address and name, so we can contact you about a problem you hit."
+msgstr ""
+"サインインしている場合、当社のサーバーは、コンテンツプランの開始、変更の承認または適用など、Ductで行うアクションをアカウントIDとともに記録します。お客様のPostHogプロファイルには、メールアドレスと名前が保持されており、発生した問題について当社から連絡できるようになっています。"
 
 #: privacy.html
 msgid ""
@@ -8434,6 +8985,10 @@ msgstr "duct_consent_region"
 #: privacy.html
 msgid "openid"
 msgstr "openid"
+
+#: privacy.html
+msgid "ph_phc_…_posthog"
+msgstr "ph_phc_…_posthog"
 
 #: privacy.html
 msgid "tagmanager.edit.containers"
@@ -8729,6 +9284,494 @@ msgstr "you@company.com"
 msgid "your-site.com"
 msgstr "your-site.com"
 
+#: skills.html
+msgid "<0>55–69</0> Needs work"
+msgstr "<0>55–69</0> 要改善"
+
+#: skills.html
+msgid "<0>70–84</0> Ready after fixes"
+msgstr "<0>70–84</0> 修正後に準備完了"
+
+#: skills.html
+msgid "<0>85–100</0> Ready"
+msgstr "<0>85–100</0> 準備完了"
+
+#: skills.html
+msgid ""
+"<0>96/100, Ready</0> · 10 pages read · repo: 5hirish/duct<1/>The action: download the desktop app, tracked as <2>download_started</2>"
+msgstr ""
+"<0>96/100、準備完了</0> · 10ページ読み込み済み · repo: 5hirish/duct<1/>アクション：デスクトップアプリのダウンロード（<2>download_started</2>として記録）"
+
+#: skills.html
+msgid "<0></0> Agent skills · MIT · No account"
+msgstr "<0></0> Agent Skills · MIT · アカウント不要"
+
+#: skills.html
+msgid "<0>Below 55</0> Not ready"
+msgstr "<0>55未満</0> 準備未完了"
+
+#: skills.html
+msgid ""
+"<0>npx skills update</0> brings it to the latest version, and <1>npx skills remove launch-check</1> takes it out. The install goes into the project you run it in; add <2>-g</2> to make it available in every project. The CLI needs Node.js 22.20 or later."
+msgstr ""
+"<0>npx skills update</0>を実行すると最新バージョンに更新され、<1>npx skills remove launch-check</1>で削除されます。インストールは実行したプロジェクト内に行われます。すべてのプロジェクトで利用可能にするには<2>-g</2>を追加してください。CLIにはNode.js 22.20以降が必要です。"
+
+#: skills.html
+msgid ""
+"A launch nobody can measure teaches you nothing, so measurement weighs most. A claim the code contradicts is the top comment on launch day, so claims come next."
+msgstr ""
+"誰にも計測できないローンチからは何も学べないため、計測が最も重要視されます。コードと矛盾する主張はローンチ日に真っ先に指摘されるため、次に主張が重視されます。"
+
+#: skills.html
+msgid "A real run"
+msgstr "実際の実行"
+
+#: skills.html
+msgid ""
+"An SEO audit reads the HTML. launch-check also reads the code behind it and checks what the page promises against what the product does. Search is one area of six. For a full crawl with keyword clusters and competitors, run <0>Duct's free SEO audit</0>."
+msgstr ""
+"SEO監査はHTMLを読み取ります。launch-checkはその背景にあるコードも読み取り、ページが約束している内容とプロダクトの実際の機能を照合します。検索は6つの領域の1つです。キーワードクラスタや競合他社を含む完全なクロールを行うには、<0>Ductの無料SEO監査</0>を実行してください。"
+
+#: skills.html
+msgid ""
+"An SEO audit reads the HTML. launch-check also reads the code behind it and checks what the page promises against what the product does. Search is one area of six. For a full crawl with keyword clusters and competitors, run Duct's free SEO audit."
+msgstr ""
+"SEO監査はHTMLを読み取ります。launch-checkはその背景にあるコードも読み取り、ページが約束している内容とプロダクトの実際の機能を照合します。検索は6つの領域の1つです。キーワードクラスタや競合他社を含む完全なクロールを行うには、Ductの無料SEO監査を実行してください。"
+
+#: skills.html
+msgid "Answer engines"
+msgstr "回答エンジン"
+
+#: skills.html
+msgid ""
+"Any agent the open skills CLI installs into: Claude Code, Codex, Cursor, OpenCode, Gemini CLI, GitHub Copilot, Windsurf and Zed among them. The skill is one SKILL.md folder in the Agent Skills format, so an agent that reads that format can use it without the installer. Claude Code and Codex can also install it as a plugin from Duct's own catalogue, with the commands under the install box."
+msgstr ""
+"open skills CLI がインストールするあらゆるエージェント（Claude Code、Codex、Cursor、OpenCode、Gemini CLI、GitHub Copilot、Windsurf、Zed など）。スキルは Agent Skills フォーマットの1つの SKILL.md フォルダであるため、このフォーマットを読み込めるエージェントであればインストーラーなしで使用できます。Claude Code と Codex は、インストールボックスの下にあるコマンドを使用して、Duct の独自カタログからプラグインとしてインストールすることもできます。"
+
+#: skills.html
+msgid "Apply fix 1? (yes / no / skip all)"
+msgstr "修正1を適用しますか？ (はい / いいえ / すべてスキップ)"
+
+#: skills.html
+msgid "Before you <0>install it.</0>"
+msgstr "<0>インストールする</0>前に。"
+
+#: skills.html
+msgid "Can ChatGPT, Perplexity and Claude read and cite it?"
+msgstr "ChatGPT、Perplexity、Claudeがそれを読み取って引用できますか？"
+
+#: skills.html
+msgid "Can search engines index and describe every key page?"
+msgstr "検索エンジンはすべての主要ページをインデックス登録し、説明できますか？"
+
+#: skills.html
+msgid "Claims"
+msgstr "主張"
+
+#. meta og:title
+#. meta twitter:title
+#: skills.html
+msgid "Claude Code marketing skills: launch-check, by Duct"
+msgstr "Claude Codeマーケティングスキル：launch-check（Duct提供）"
+
+#: skills.html
+msgid "Connect Duct to the same agent"
+msgstr "Ductを同じエージェントに接続する"
+
+#. button aria-label
+#: skills.html
+msgid "Copy the Claude Code plugin command"
+msgstr "Claude Code プラグインのコマンドをコピー"
+
+#. button aria-label
+#: skills.html
+msgid "Copy the Codex plugin command"
+msgstr "Codex プラグインのコマンドをコピー"
+
+#. button aria-label
+#: skills.html
+msgid "Copy the install command"
+msgstr "インストールコマンドをコピー"
+
+#: skills.html
+msgid "Count the downloads consent never sees."
+msgstr "同意ツールでは把握できないダウンロード数をカウントします。"
+
+#: skills.html
+msgid "Do I need a repository open?"
+msgstr "リポジトリを開いておく必要がありますか？"
+
+#: skills.html
+msgid "Does a shared link show a title, a description and an image?"
+msgstr "共有リンクにタイトル、説明文、画像が表示されますか？"
+
+#: skills.html
+msgid "Does it send my site or my code to Duct?"
+msgstr "サイトやコードがDuctに送信されますか？"
+
+#: skills.html
+msgid "Does the first screen say who it is for and what to do?"
+msgstr "最初の画面に対象者と行うべき操作が表示されていますか？"
+
+#: skills.html
+msgid "Does the installer track anything?"
+msgstr "インストーラーは何らかのデータをトラッキングしますか？"
+
+#: skills.html
+msgid "Does the product do what the page and the release notes say?"
+msgstr "プロダクトはページやリリースノートに書かれている通りの動作をしますか？"
+
+#: skills.html
+msgid ""
+"Duct's MCP server lets the agent you just used list and read your Duct projects, and set one up from this repository. One address, one Allow in your browser. It can never approve a change."
+msgstr ""
+"DuctのMCPサーバーを使用すると、使用したばかりのエージェントがDuctプロジェクトの一覧表示や読み取りを行い、このリポジトリからセットアップできるようになります。アドレス1つとブラウザでの「許可」1回で設定完了します。変更を承認することは一切できません。"
+
+#: skills.html
+msgid ""
+"Each area starts at 100. A FAIL costs 25 points and a WARN 10. Something it could not check costs nothing and is listed as unverified, so a missing repository lowers the confidence, not the score."
+msgstr ""
+"各領域は100点から始まります。FAILは-25点、WARNは-10点です。チェックできなかった項目は減点されず「未検証」として表示されるため、リポジトリが存在しない場合はスコアではなく信頼度が下がります。"
+
+#: skills.html
+msgid ""
+"Every finding names the URL or the file and line it came from. What it could not see is marked unverified, never failed."
+msgstr ""
+"各指摘事項には、検出元のURLまたはファイル名と行番号が記載されます。確認できなかった項目は「未検証」とマークされ、失敗として処理されることはありません。"
+
+#: skills.html
+msgid "First impression"
+msgstr "ファーストインプレッション"
+
+#: skills.html
+msgid ""
+"Fix: no code. Read the release's download count from GitHub on launch day as the floor, and compare it with <0>download_started</0>."
+msgstr "修正：コードなし。ローンチ当日にGitHubのリリースダウンロード数を下限として読み取り、<0>download_started</0>と比較します。"
+
+#: skills.html
+msgid "How do I update or remove it?"
+msgstr "更新または削除を行うにはどうすればよいですか？"
+
+#: skills.html
+msgid "How is it different from an SEO audit?"
+msgstr "SEO監査とはどのように異なりますか？"
+
+#: skills.html
+msgid "Impact 2 · Effort 1 · Found by: both · <0>site/index.html:308</0>"
+msgstr "影響度 2 · 工数 1 · 検出元：両方 · <0>site/index.html:308</0>"
+
+#: skills.html
+msgid "Impact 2 · Effort 1 · Found by: repository · <0>site/assets/duct.js:364</0>"
+msgstr "インパクト 2 · 工数 1 · 発見場所: リポジトリ · <0>site/assets/duct.js:364</0>"
+
+#: skills.html
+msgid ""
+"In the EEA, UK and Switzerland, analytics load only after Accept, and <0>download_started</0> waits in a queue that is never sent for a visitor who ignores the banner. Launch-day downloads from Europe will read low."
+msgstr ""
+"EEA、英国、スイスでは、アナリティクスはAcceptの後にのみ読み込まれ、バナーを無視した訪問者の<0>download_started</0>は送信されないキューで待機します。ヨーロッパからのローンチ当日のダウンロード数は少なく記録されます。"
+
+#: skills.html
+msgid "Install"
+msgstr "インストール"
+
+#. meta twitter:description
+#: skills.html
+msgid ""
+"Is your site ready to launch? Ask your agent. It checks what the page promises against what the code does. No account, MIT."
+msgstr "サイトのローンチ準備はできていますか？エージェントに尋ねてみましょう。ページが謳っている内容とコードの動作を照合します。アカウント不要、MIT。"
+
+#: skills.html
+msgid "It reads the page. <0>Then it reads the code.</0>"
+msgstr "ページを読み込みます。<0>次にコードを読み込みます。</0>"
+
+#: skills.html
+msgid ""
+"It writes one file, its report. Every fix is a diff it shows first and applies only when you say yes. It never commits, pushes or deploys."
+msgstr ""
+"1つのファイル（レポート）のみを書き出します。すべての修正は事前に差分として表示され、許可した場合にのみ適用されます。コミット、プッシュ、デプロイは一切行いません。"
+
+#: skills.html
+msgid "Launch check: getduct.ai"
+msgstr "ローンチチェック: getduct.ai"
+
+#: skills.html
+msgid "Marketing skills for your coding agent.<0/><1>It already has the repo.</1>"
+msgstr "コーディングエージェント用のマーケティングスキル。<0/><1>リポジトリはすでに所有しています。</1>"
+
+#: skills.html
+msgid "Measurement"
+msgstr "計測"
+
+#: skills.html
+msgid "Needs work"
+msgstr "要改善"
+
+#: skills.html
+msgid "No account"
+msgstr "アカウント不要"
+
+#: skills.html
+msgid "No account. No upload. <0>No change without a yes.</0>"
+msgstr "アカウント不要。アップロード不要。<0>許可なしの変更なし。</0>"
+
+#: skills.html
+msgid "No change without a yes"
+msgstr "許可なしの変更なし"
+
+#: skills.html
+msgid ""
+"No sign-up, no API key, no Duct login. It uses your agent's own web and shell tools, and never signs up, logs in or submits a form anywhere."
+msgstr ""
+"サインアップ不要、APIキー不要、Ductへのログイン不要。エージェント自身のWebおよびシェルツールを使用し、どこにおいてもサインアップ、ログイン、フォーム送信を行いません。"
+
+#: skills.html
+msgid ""
+"No, but it is better with one. Without the code it checks the live pages only, and most of the measurement area comes back unverified rather than failed. The findings a page audit cannot give, like a download that sends no event, come from the repository."
+msgstr ""
+"いいえ、ただしリポジトリがある方が優れています。コードなしでは公開ページのみをチェックし、計測領域の大部分は失敗ではなく未検証として返されます。イベントを送信しないダウンロードのように、ページの監査では提示できない指摘事項は、リポジトリから得られます。"
+
+#: skills.html
+msgid ""
+"No. The skill is a set of instructions your agent follows with its own web and shell tools. There is no Duct server in the loop, no account and no API key. What your agent reads goes only where your agent's requests always go: to the model you already use."
+msgstr ""
+"いいえ。このスキルは、エージェントが自身のWebおよびシェルツールを使用して従う一連の指示です。経路にDuctのサーバーは存在せず、アカウントもAPIキーもありません。エージェントが読み込んだデータは、エージェントの要求が常に送信される場所、つまり既に使用しているモデルにのみ送信されます。"
+
+#: skills.html
+msgid ""
+"Not without a yes. The one file it writes on its own is its report, <0>duct-launch-check.md</0>. Each fix comes as a diff and a question, one at a time. It never commits, pushes or deploys, and it never opens <1>.env</1> or key files."
+msgstr ""
+"許可なしでは行いません。単独で書き出すファイルはレポートである<0>duct-launch-check.md</0>のみです。各修正は差分と確認として1つずつ提示されます。コミット、プッシュ、デプロイは一切行わず、<1>.env</1>やキーファイルを開くこともありません。"
+
+#: skills.html
+msgid ""
+"Not without a yes. The one file it writes on its own is its report, duct-launch-check.md. Each fix comes as a diff and a question, one at a time. It never commits, pushes or deploys, and it never opens .env or key files."
+msgstr ""
+"許可なしでは行いません。単独で書き出すファイルはレポートであるduct-launch-check.mdのみです。各修正は差分と確認として1つずつ提示されます。コミット、プッシュ、デプロイは一切行わず、.envやキーファイルを開くこともありません。"
+
+#: skills.html
+msgid "Nothing sent to Duct"
+msgstr "Ductへの送信なし"
+
+#. meta og:description
+#: skills.html
+msgid ""
+"One command gives your coding agent a launch check: it reads the page and the code, scores six areas and fixes only on a yes."
+msgstr ""
+"1つのコマンドでコーディングエージェントにローンチチェックを実行させることができます。ページとコードを読み込み、6つの領域をスコア化し、許可を得た場合のみ修正を行います。"
+
+#: skills.html
+msgid "Only two findings cleared the bar. The rest is polish."
+msgstr "基準をクリアした指摘事項は2点のみです。残りはブラッシュアップです。"
+
+#. meta description
+#: skills.html
+msgid ""
+"Open-source marketing skills for Claude Code, Codex and Cursor. launch-check reads your live site and your repo, scores the launch and ranks three fixes."
+msgstr ""
+"Claude Code、Codex、Cursor向けのオープンソースマーケティングスキル。launch-checkは公開サイトとリポジトリを読み込み、ローンチをスコア化して3つの修正に順位を付けます。"
+
+#: skills.html
+msgid ""
+"Open-source skills for Claude Code, Codex, Cursor and any agent that reads SKILL.md. The first, launch-check, reads your live site and the code behind it, scores the launch out of 100 and ranks three fixes."
+msgstr ""
+"Claude Code、Codex、Cursor、およびSKILL.mdを読み込むあらゆるエージェント向けのオープンソーススキル。最初のスキルであるlaunch-checkは、公開サイトとその背景にあるコードを読み込み、ローンチを100点満点でスコア化し、3つの修正に順位を付けます。"
+
+#: skills.html
+msgid "Or as a plugin"
+msgstr "またはプラグインとして"
+
+#: skills.html
+msgid "Post this"
+msgstr "これを投稿"
+
+#: skills.html
+msgid ""
+"Ran a launch check on getduct.ai with my coding agent: 96/100. It found that downloads from Europe would undercount behind the cookie banner, which no page audit could have told me."
+msgstr ""
+"コーディングエージェントでgetduct.aiのローンチチェックを実行しました: 96/100。クッキーバナーの裏でヨーロッパからのダウンロード数が過少計測されることが判明しました。これはページの監査では分からなかったことです。"
+
+#: skills.html
+msgid "Ranks three fixes, applies one on a yes"
+msgstr "3つの修正に順位を付け、許可を得て1つを適用します"
+
+#: skills.html
+msgid "Reads the site and the repo"
+msgstr "サイトとリポジトリを読み込みます"
+
+#: skills.html
+msgid "Run it on yours"
+msgstr "お使いの環境で実行"
+
+#. article aria-label
+#: skills.html
+msgid "Sample report: launch check of getduct.ai"
+msgstr "サンプルレポート: getduct.aiのローンチチェック"
+
+#: skills.html
+msgid "Scores six areas out of 100"
+msgstr "6つの領域を100点満点でスコア化"
+
+#: skills.html
+msgid "Search"
+msgstr "検索"
+
+#: skills.html
+msgid "See what the launch did"
+msgstr "ローンチの結果を確認"
+
+#: skills.html
+msgid "Six areas, <0>weighted by what a launch loses.</0>"
+msgstr "6つの領域、<0>ローンチ時の損失に応じて重み付け。</0>"
+
+#: skills.html
+msgid "Social card"
+msgstr "ソーシャルカード"
+
+#: skills.html
+msgid "Stop telling every visitor the download is for macOS."
+msgstr "すべての訪問者にダウンロードがmacOS向けであると伝えるのをやめましょう。"
+
+#: skills.html
+msgid "The check is one moment. <0>Duct reads the weeks after.</0>"
+msgstr "チェックは一瞬です。<0>Ductはその後の数週間を読み込みます。</0>"
+
+#: skills.html
+msgid ""
+"The desktop app reads GA4, Search Console, your ads and Stripe together, answers why signups moved, and proposes the change, applied when you press Apply."
+msgstr ""
+"デスクトップアプリはGA4、Search Console、広告、Stripeを統合して読み込み、登録数の変動理由に回答し、変更を提案します。「適用する」を押すと適用されます。"
+
+#: skills.html
+msgid "The first skill: launch-check"
+msgstr "最初のスキル: launch-check"
+
+#: skills.html
+msgid ""
+"The home page button says “Download for macOS” to Windows, Linux and phone visitors alike, because the per-platform label runs only on <0>/download</0>."
+msgstr ""
+"プラットフォーム別のラベル表示は<0>/download</0>でのみ動作するため、ホームページのボタンはWindows、Linux、スマートフォンの訪問者にも一律で「macOS版をダウンロード」と表示されます。"
+
+#: skills.html
+msgid ""
+"The ones people ask for. Tell us the marketing job you would hand your agent in <0>GitHub Discussions</0>."
+msgstr "リクエストの多いものです。<0>GitHub Discussions</0>で、エージェントに任せたいマーケティングタスクを教えてください。"
+
+#: skills.html
+msgid ""
+"The ones people ask for. Tell us the marketing job you would hand your agent in GitHub Discussions."
+msgstr "要望の多いものです。エージェントに任せたいマーケティング業務をGitHub Discussionsで教えてください。"
+
+#: skills.html
+msgid ""
+"The skill is free and MIT licensed. It runs on your agent's own model, so a check costs what your agent spends reading ten pages and part of a repository. It stops at ten pages and aims to finish in ten minutes."
+msgstr ""
+"このスキルは無料で、MITライセンスです。お使いのエージェント自身のモデルで実行されるため、チェックにかかるコストはエージェントが10ページとリポジトリの一部を読み取る費用のみです。10ページで停止し、10分以内での完了を目指します。"
+
+#: skills.html
+msgid ""
+"The skill is instructions, not a service. Your site and your code are read by your agent and go nowhere else. It never opens <0>.env</0> or key files."
+msgstr ""
+"このスキルは指示であり、サービスではありません。サイトとコードはお使いのエージェントによって読み取られ、外部に送信されることはありません。<0>.env</0>やキーファイルを開くこともありません。"
+
+#: skills.html
+msgid ""
+"The skills CLI, which is open source and not ours, counts installs anonymously for the skills.sh leaderboard. Set <0>DISABLE_TELEMETRY=1</0> or <1>DO_NOT_TRACK=1</1> before you run it to turn that off. The skill itself sends nothing anywhere."
+msgstr ""
+"オープンソースであり当社の管轄外であるskills CLIは、skills.shリーダーボード向けにインストール数を匿名でカウントします。無効化するには、実行前に<0>DISABLE_TELEMETRY=1</0>または<1>DO_NOT_TRACK=1</1>を設定してください。スキル自体は一切データを送信しません。"
+
+#: skills.html
+msgid ""
+"The skills CLI, which is open source and not ours, counts installs anonymously for the skills.sh leaderboard. Set DISABLE_TELEMETRY=1 or DO_NOT_TRACK=1 before you run it to turn that off. The skill itself sends nothing anywhere."
+msgstr ""
+"オープンソースであり当社の管轄外であるskills CLIは、skills.shリーダーボード向けにインストール数を匿名でカウントします。無効化するには、実行前にDISABLE_TELEMETRY=1またはDO_NOT_TRACK=1を設定してください。スキル自体は一切データを送信しません。"
+
+#: skills.html
+msgid ""
+"The three that matter most for launch day, each as a diff. It asks before every one and never commits, pushes or deploys."
+msgstr "ローンチ日に最も重要な3つの修正をdiff形式で提示します。必ず事前に確認を求め、コミット、プッシュ、デプロイを行うことはありません。"
+
+#: skills.html
+msgid ""
+"Then ask your agent “Is my site ready to launch?”, or type <0>/launch-check</0> in Claude Code."
+msgstr ""
+"その後、エージェントに「サイトのローンチ準備はできている？」と尋ねるか、Claude Codeで<0>/launch-check</0>と入力してください。"
+
+#: skills.html
+msgid "Three fixes"
+msgstr "3つの修正点"
+
+#: skills.html
+msgid ""
+"Up to ten live pages, the sitemap and every card image, then the code behind them: the analytics tag, the signup or download event, where the head comes from, and the claims the page makes."
+msgstr ""
+"最大10件の公開ページ、サイトマップ、すべてのカード画像、そしてその背後にあるコード（アナリティクスタグ、登録やダウンロードのイベント、headの生成元、ページ内の主張）をチェックします。"
+
+#: skills.html
+msgid "Use Duct from your agent →"
+msgstr "エージェントからDuctを使用 →"
+
+#: skills.html
+msgid "We ran it on getduct.ai. <0>96 out of 100.</0>"
+msgstr "getduct.aiで実行しました。<0>100点中96点。</0>"
+
+#: skills.html
+msgid "What does it cost, and how long does it take?"
+msgstr "費用と所要時間は？"
+
+#: skills.html
+msgid "What it checks"
+msgstr "チェック対象"
+
+#: skills.html
+msgid "What it never does"
+msgstr "絶対に行わないこと"
+
+#: skills.html
+msgid "Where Duct comes in"
+msgstr "Ductの役割"
+
+#: skills.html
+msgid "Which agents does it work with?"
+msgstr "対応しているエージェントは？"
+
+#: skills.html
+msgid "Which skills come next?"
+msgstr "次に追加されるスキルは？"
+
+#: skills.html
+msgid "Will it change my code?"
+msgstr "コードは変更されますか？"
+
+#: skills.html
+msgid "Will the launch be recorded, down to the one action?"
+msgstr "ローンチの単一アクションまで記録されますか？"
+
+#: skills.html
+msgid "duct-launch-check.md"
+msgstr "duct-launch-check.md"
+
+#: skills.html
+msgid ""
+"getduct.ai and its repository, on November 10, 2026. Only two findings cleared the bar for a fix, and the first one exists only in the code: downloads from Europe would read low, with nothing on the page to show it."
+msgstr ""
+"2026年11月10日時点のgetduct.aiとそのリポジトリ。修正基準を満たした指摘事項は2件のみで、1件目はコード内にのみ存在していました。ヨーロッパからのダウンロード数が過小集計される可能性があり、ページ上にはそれが表示されていませんでした。"
+
+#: skills.html
+msgid ""
+"launch-check tells you whether the launch will be counted. Duct, the open-source AI marketing agent this shelf comes from, tells you what the count means."
+msgstr ""
+"launch-checkは、ローンチが正しく計測されるかどうかを伝えます。この機能のベースであるオープンソースのAIマーケティングエージェント、Ductは、その数値が何を意味するのかを伝えます。"
+
+#: skills.html
+msgid ""
+"npx skills update brings it to the latest version, and npx skills remove launch-check takes it out. The install goes into the project you run it in; add -g to make it available in every project. The CLI needs Node.js 22.20 or later."
+msgstr ""
+"npx skills updateで最新バージョンに更新され、npx skills remove launch-checkで削除されます。インストールは実行したプロジェクト内に行われます。すべてのプロジェクトで使用可能にするには-gを追加してください。CLIにはNode.js 22.20以降が必要です。"
+
+#: skills.html
+msgid "yes"
+msgstr "はい"
+
 #: terms.html
 msgid "1. What These Terms Cover"
 msgstr "1. 本規約の対象"
@@ -8829,12 +9872,14 @@ msgstr "<0>承認は個別です。</0>1つの変更セットを承認しても�
 
 #: terms.html
 msgid ""
-"<0>Creating and publishing content</0> — drafts, images and video you review before anything is published (see section 8)"
-msgstr "<0>コンテンツの作成と公開</0> — 公開前にレビューする下書き、画像、動画（セクション8を参照）"
+"<0>Crash reports and usage data are on by default</0> in the app we distribute, and one switch in Preferences turns both off. In a build you compile yourself they are off by default. The <1>Privacy Policy</1> says what each contains"
+msgstr ""
+"配布するアプリでは<0>クラッシュレポートと使用状況データはデフォルトでオンになっています</0>。設定の1つのスイッチで両方をオフにできます。ご自身でコンパイルしたビルドでは、これらはデフォルトでオフになっています。各内容については<1>プライバシーポリシー</1>に記載されています。"
 
 #: terms.html
-msgid "<0>Diagnostics are opt-in</0> and off by default"
-msgstr "<0>診断はオプトイン</0>で、デフォルトではオフです"
+msgid ""
+"<0>Creating and publishing content</0> — drafts, images and video you review before anything is published (see section 8)"
+msgstr "<0>コンテンツの作成と公開</0> — 公開前にレビューする下書き、画像、動画（セクション8を参照）"
 
 #: terms.html
 msgid ""
@@ -9004,6 +10049,10 @@ msgstr "Ductを使用してコンテンツを下書き、生成、または公�
 msgid ""
 "Interfere with or disrupt the service or servers, including by circumventing rate limits"
 msgstr "サービスまたはサーバーを妨害または中断する（レート制限を回避することを含む）"
+
+#: terms.html
+msgid "Last updated: October 29, 2026"
+msgstr "最終更新日：2026年10月29日"
 
 #: terms.html
 msgid ""
@@ -11632,6 +12681,275 @@ msgstr "← 戻る"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← 最初からやり直す"
+
+#~ msgid ""
+#~ "Any agent the open skills CLI installs into: Claude Code, Codex, Cursor, OpenCode, Gemini CLI, GitHub Copilot, Windsurf and Zed among them. The skill is one SKILL.md folder in the Agent Skills format, so an agent that reads that format can use it without the installer."
+#~ msgstr ""
+#~ "オープンskills CLIがインストール可能なすべてのエージェント（Claude Code、Codex、Cursor、OpenCode、Gemini CLI、GitHub Copilot、Windsurf、Zedなど）。このスキルはAgent Skillsフォーマットの1つのSKILL.mdフォルダであるため、そのフォーマットを読み取れるエージェントであればインストーラーなしで使用できます。"
+
+#~ msgid "Reads two datasets"
+#~ msgstr "2つのデータセットを読み取ります"
+
+#. meta og:title
+#. meta twitter:title
+#~ msgid "Duct integrations: thirteen tools, read as one"
+#~ msgstr "Duct連携: 13のツールを1つとして読み取る"
+
+#~ msgid ""
+#~ "Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, GitHub, Stripe and RevenueCat. The four Google tools connect when you sign in with Google; the rest take a key you paste once. HubSpot is next."
+#~ msgstr ""
+#~ "Google Ads, Meta Ads, Apple Search Ads, ChatGPT Ads, Google Analytics 4, Google Search Console, Google Tag Manager, Mixpanel, Microsoft Clarity, GrowthBook, GitHub, Stripe, RevenueCat。4つのGoogleツールはGoogleでサインインすると接続され、残りは一度キーを貼り付けるだけです。次はHubSpotです。"
+
+#~ msgid "Integrations: Google Ads, GA4, Stripe and 10 more | Duct"
+#~ msgstr "連携: Google Ads, GA4, Stripeとその他10つ | Duct"
+
+#. meta description
+#~ msgid ""
+#~ "The 13 tools Duct reads, from Google Ads and Meta to GA4, Mixpanel and Stripe, what each one can change, and how you connect it. Read-only by default."
+#~ msgstr ""
+#~ "Google AdsやMetaからGA4、Mixpanel、Stripeまで、Ductが読み取る13のツール、それぞれの変更可能な内容、および接続方法。デフォルトでは読み取り専用です。"
+
+#. meta twitter:description
+#~ msgid ""
+#~ "Thirteen connectors, read-only by default. Every change waits for your Apply."
+#~ msgstr "13のコネクタ。デフォルトでは読み取り専用です。すべての変更がお客様の適用を待機します。"
+
+#~ msgid "Thirteen tools. <0>Read as one.</0>"
+#~ msgstr "13のツール。<0>1つとして読み取ります。</0>"
+
+#~ msgid "Download for macOS ↓"
+#~ msgstr "macOS版をダウンロード ↓"
+
+#. meta description
+#~ msgid ""
+#~ "Duct AI is the open-source AI marketing agent: it reads Google Ads, GA4, Stripe and ten more tools together, proposes the fix and applies it when you approve."
+#~ msgstr ""
+#~ "Duct AIはオープンソースのAIマーケティングエージェントです。Google Ads、GA4、Stripe、その他10以上のツールをまとめて読み取り、修正を提案し、あなたが承認すると適用します。"
+
+#. meta og:title
+#. meta twitter:title
+#~ msgid "Duct AI — Open-source AI marketing agent for growth teams"
+#~ msgstr "Duct AI — グロースチーム向けオープンソースAIマーケティングエージェント"
+
+#~ msgid ""
+#~ "Duct is the open-source AI marketing agent that reads every tool you run together, finds what needs to change, and changes it when you press Apply. No hunting through tools for the answer, no deciding on half of it."
+#~ msgstr ""
+#~ "Ductは、連携しているすべてのツールを読み込み、変更が必要なものを見つけ、適用するを押すと変更するオープンソースのAIマーケティングエージェントです。答えを探してツールを巡る必要も、半分だけ決定することもありません。"
+
+#~ msgctxt "js"
+#~ msgid ""
+#~ "We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same."
+#~ msgstr ""
+#~ "PostHogを使用して、どのページでサインアップが発生し、Ductがどこでユーザーの妨げになっているかを確認します。これには、入力されたすべての情報が非表示にされた訪問のリプレイも含まれます。これが唯一の用途であり、広告ターゲティングや販売目的ではありません。拒否した場合でも、Ductはまったく同じように機能します。"
+
+#~ msgid ""
+#~ "<0>The desktop app sets no cookies, and is never going to ask you about them.</0> Its usage events and crash reports go to PostHog, which in the desktop app holds everything in memory and writes nothing to your machine, so none of the cookies in section 11 exist there and there is nothing to consent to. A consent bar in front of an application you just opened is not a question worth interrupting anyone for."
+#~ msgstr ""
+#~ "<0>デスクトップアプリはクッキーを設定せず、クッキーについて尋ねることもありません。</0>その使用状況イベントとクラッシュレポートはPostHogに送信されますが、デスクトップアプリではすべてをメモリに保持し、お使いのデバイスには何も書き込まないため、セクション11のクッキーは存在せず、同意する必要もありません。開いたばかりのアプリケーションの前に同意バーが表示されるのは、誰かの作業を中断する価値のある質問ではありません。"
+
+#~ msgid ""
+#~ "Analytics cookies are set only after you accept them. If you are in the EEA, the UK or Switzerland we ask before anything is set, and nothing but the strictly necessary entries below exists until you choose. Elsewhere analytics is on by default and you can turn it off at any time — the <0>Cookie settings</0> link in our footer, and in the account menu inside the app, reopens the choice on every page."
+#~ msgstr ""
+#~ "分析Cookieは、お客様が同意した場合にのみ設定されます。EEA、英国、またはスイスにお住まいの場合は、設定される前に確認し、お客様が選択するまで、以下の厳密に必要なエントリ以外は存在しません。その他の地域では、分析はデフォルトでオンになっており、いつでもオフにできます。フッターの<0>Cookie設定</0>リンクと、アプリ内のアカウントメニューで、すべてのページで選択肢を再度開くことができます。"
+
+#~ msgid ""
+#~ "Declining means PostHog is not loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we stop PostHog, delete the cookies below and PostHog's copy of them in your browser's storage, and reload the page."
+#~ msgstr ""
+#~ "拒否するということは、PostHogが制限モードで読み込まれるのではなく、まったく読み込まれないことを意味します。以前に承諾した後で拒否した場合、PostHogを停止し、以下のクッキーとブラウザのストレージにあるPostHogのコピーを削除し、ページを再読み込みします。"
+
+#~ msgid ""
+#~ "We do not sell your data. We share it only with the service providers below, only as needed to operate Duct, and only under terms that restrict them to that purpose:"
+#~ msgstr ""
+#~ "お客様のデータを販売することはありません。Ductの運用に必要な場合に限り、以下のサービスプロバイダーと共有し、その目的に限定する条件の下でのみ共有します。"
+
+#~ msgid ""
+#~ "We do not use Google Analytics, Google Tag Manager or any other tag manager. We stopped in October 2026, and our website deletes the cookies they set before then (<0>_ga</0>, <1>_gcl_au</1>) on your next visit."
+#~ msgstr ""
+#~ "当社はGoogle Analytics、Google Tag Manager、その他のタグマネージャーを使用していません。2026年10月に使用を停止し、それ以前に設定されたクッキー（<0>_ga</0>、<1>_gcl_au</1>）は、次回の訪問時に当社のウェブサイトが削除します。"
+
+#. img alt
+#~ msgid "The Connections page with twelve tools, five of them connected"
+#~ msgstr "12個のツールがあり、そのうち5個が接続済みの接続ページ"
+
+#~ msgid ""
+#~ "In Duct, open Connections, choose Apple Search Ads and paste the three IDs and the private key."
+#~ msgstr "Ductで「接続」を開き、Apple Search Adsを選択し、3つのIDと秘密キーを貼り付けてください。"
+
+#~ msgid "In Duct, open Connections, choose OpenAI Ads and paste the key."
+#~ msgstr "Ductで「接続」を開き、OpenAI Adsを選択してキーを貼り付けます。"
+
+#~ msgid "In Duct, open Connections and choose Google Analytics."
+#~ msgstr "Ductで、接続を開き、Google Analyticsを選択します。"
+
+#~ msgid "In Duct, open Connections and choose Google Ads."
+#~ msgstr "Ductで、接続を開き、Google Adsを選択します。"
+
+#~ msgid "In Duct, open Connections and choose Google Search Console."
+#~ msgstr "Ductで、接続を開き、Google Search Consoleを選択します。"
+
+#~ msgid "In Duct, open Connections and choose Google Tag Manager."
+#~ msgstr "Ductで、接続を開き、Google Tag Managerを選択します。"
+
+#~ msgid ""
+#~ "In Duct, open Connections, choose GrowthBook and paste the key and the project ID."
+#~ msgstr "Ductで「接続」を開き、GrowthBookを選択し、キーとプロジェクトIDを貼り付けます。"
+
+#~ msgid "In Duct, open Connections, choose Meta Ads and paste the token."
+#~ msgstr "Ductで、接続を開き、Meta Adsを選択し、トークンを貼り付けます。"
+
+#~ msgid "In Duct, open Connections, choose Microsoft Clarity and paste the token."
+#~ msgstr "Ductで、接続を開き、Microsoft Clarityを選択してトークンを貼り付けます。"
+
+#~ msgid "In Duct, open Connections, choose Mixpanel and paste them."
+#~ msgstr "Ductで「接続」を開き、Mixpanelを選択して貼り付けます。"
+
+#~ msgid "In Duct, open Connections, choose RevenueCat and paste the key."
+#~ msgstr "Ductで「接続」を開き、RevenueCatを選択してキーを貼り付けます。"
+
+#~ msgid ""
+#~ "In Duct, open Connections, choose Stripe and paste the key. Duct checks each permission and names any that is missing."
+#~ msgstr "Ductで、接続を開き、Stripeを選択してキーを貼り付けます。Ductは各権限を確認し、不足しているものがあればその名前を伝えます。"
+
+#~ msgid ""
+#~ "In the Duct app, open Connections. The ready-made servers are listed there, and any other connects by its address."
+#~ msgstr "Ductアプリで「接続」を開きます。既製のサーバーがそこにリストされており、その他のサーバーはアドレスで接続します。"
+
+#~ msgid "Open Connections"
+#~ msgstr "接続を開く"
+
+#~ msgid ""
+#~ "Pick one on Connections and sign in with the account you already have. Each address is here for reference; you never have to type it."
+#~ msgstr "接続から1つ選択し、既存のアカウントでサインインしてください。各アドレスは参照用であり、入力する必要はありません。"
+
+#~ msgid ""
+#~ "The server offers no sign-in Duct can use. Create an API key in the vendor's settings and paste it on Connections."
+#~ msgstr "サーバーはDuctが使用できるサインインを提供していません。ベンダーの設定でAPIキーを作成し、接続に貼り付けてください。"
+
+#~ msgid ""
+#~ "The sign-in expired, or was revoked on the vendor's side. Press Reconnect on Connections and sign in again."
+#~ msgstr "サインインの有効期限が切れたか、ベンダー側で取り消されました。接続で「再接続」を押し、再度サインインしてください。"
+
+#~ msgid ""
+#~ "<0>Disconnect one source:</0> remove it on the Connections page in Duct. Its stored credentials are deleted at that point."
+#~ msgstr "<0>1つのソースを切断する:</0> Ductの接続ページで削除してください。その時点で保存されている認証情報は削除されます。"
+
+#~ msgid ""
+#~ "For CI, a remote machine or an agent without sign-in. On the same settings page, open Use a token instead and create one. Your agent sends it as a header:"
+#~ msgstr ""
+#~ "CI、リモートマシン、またはサインインなしのエージェント向け。同じ設定ページで、「代わりにトークンを使用」を開いて作成します。エージェントはそれをヘッダーとして送信します:"
+
+#~ msgid "No — email address and report content only"
+#~ msgstr "いいえ — メールアドレスとレポートコンテンツのみ"
+
+#~ msgid "Resend"
+#~ msgstr "再送信"
+
+#~ msgid "Transactional email (report delivery, project invitations)"
+#~ msgstr "トランザクションメール（レポート配信、プロジェクト招待）"
+
+#~ msgctxt "js"
+#~ msgid ""
+#~ "We use PostHog and Google Analytics to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. That is the whole use — no ad targeting, nothing sold. Decline and Duct works exactly the same."
+#~ msgstr ""
+#~ "PostHogとGoogle Analyticsを使用して、どのページでサインアップが発生し、Ductがどこでユーザーの妨げになっているかを確認します。これには、入力されたすべての情報が非表示にされた訪問のリプレイも含まれます。これが唯一の用途であり、広告ターゲティングや販売目的ではありません。拒否した場合でも、Ductはまったく同じように機能します。"
+
+#~ msgid "2 years"
+#~ msgstr "2年間"
+
+#~ msgid ""
+#~ "<0>The desktop app sets no cookies, and is never going to ask you about them.</0> It loads no Google Tag Manager and no Google Analytics at all. Its usage events and crash reports go to PostHog, which in the desktop app holds everything in memory and writes nothing to your machine, so none of the cookies in section 11 exist there and there is nothing to consent to. A consent bar in front of an application you just opened is not a question worth interrupting anyone for."
+#~ msgstr ""
+#~ "<0>デスクトップアプリはクッキーを設定せず、クッキーについて尋ねることもありません。</0>Google Tag ManagerもGoogle Analyticsも一切読み込みません。その使用状況イベントとクラッシュレポートはPostHogに送信されますが、デスクトップアプリではすべてをメモリに保持し、お使いのデバイスには何も書き込まないため、セクション11のクッキーは存在せず、同意する必要もありません。開いたばかりのアプリケーションの前に同意バーが表示されるのは、誰かの作業を中断する価値のある質問ではありません。"
+
+#~ msgid "Attributes a signup to the ad or link that led to it"
+#~ msgstr "サインアップを、それに繋がった広告またはリンクに紐付ける"
+
+#~ msgid ""
+#~ "Declining means neither Google Tag Manager nor PostHog is loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we stop PostHog, delete the cookies below and PostHog's copy of them in your browser's storage, and reload the page."
+#~ msgstr ""
+#~ "拒否するということは、Google Tag ManagerもPostHogも制限モードで読み込まれるのではなく、まったく読み込まれないことを意味します。以前に承諾した後で拒否した場合、PostHogを停止し、以下のクッキーとブラウザのストレージにあるPostHogのコピーを削除し、ページを再読み込みします。"
+
+#~ msgid ""
+#~ "Distinguishes one visitor from another so a returning visit is not counted twice"
+#~ msgstr "訪問者を区別し、再訪問が二重にカウントされないようにします"
+
+#~ msgid "Google Tag Manager (Conversion Linker)"
+#~ msgstr "Google Tag Manager (コンバージョンリンカー)"
+
+#~ msgid "Holds the state of the current session for our specific property"
+#~ msgstr "特定のプロパティの現在のセッションの状態を保持します"
+
+#~ msgid ""
+#~ "We collect product analytics — pages visited, features used, what you click, how fast pages load — to see which pages earn a signup and where Duct gets in your way. On our website and in the web app in a browser this runs through two tools: Google Analytics 4, loaded by Google Tag Manager, and PostHog. Both follow the cookie choice described below."
+#~ msgstr ""
+#~ "当社は、プロダクトアナリティクス（訪問したページ、使用した機能、クリックした内容、ページの読み込み速度など）を収集し、どのページがサインアップにつながり、Ductがどこでユーザーの妨げになっているかを確認しています。当社のウェブサイトおよびブラウザのウェブアプリでは、これはGoogle Tag Managerによって読み込まれるGoogle Analytics 4とPostHogの2つのツールを通じて実行されます。どちらも以下に記載されているクッキーの選択に従います。"
+
+#~ msgid "3 months"
+#~ msgstr "3ヶ月"
+
+#~ msgid ""
+#~ "When something breaks in the web app, it sends PostHog an error report: the stack trace, your browser, the page's path without its query string, and, if you are signed in, your account ID. <0>Error reports in the web app are sent whether or not you accept analytics cookies,</0> because they store nothing on your device: they are held in memory for that page and gone when you leave it. On our website, error reports are part of analytics and follow your cookie choice."
+#~ msgstr ""
+#~ "ウェブアプリで問題が発生した場合、PostHogにエラーレポートが送信されます。これには、スタックトレース、お使いのブラウザ、クエリ文字列を含まないページのパス、およびサインインしている場合はアカウントIDが含まれます。<0>ウェブアプリのエラーレポートは、アナリティクスクッキーを受け入れるかどうかにかかわらず送信されます</0>。これは、デバイスに何も保存されないためです。それらはそのページの間メモリに保持され、ページを離れると消去されます。当社のウェブサイトでは、エラーレポートはアナリティクスの一部であり、お客様のクッキーの選択に従います。"
+
+#~ msgctxt "js"
+#~ msgid ""
+#~ "We use Google Analytics to see which pages earn a signup. That is the whole use — no ad targeting, no profiles, nothing sold. Decline and the site behaves exactly the same."
+#~ msgstr ""
+#~ "Google Analyticsを使用して、どのページでサインアップが発生したかを確認しています。これが唯一の用途であり、広告ターゲティング、プロファイル作成、販売は一切行いません。拒否してもサイトの動作はまったく同じです。"
+
+#~ msgid ""
+#~ "<0>Crash reports and usage data are on by default in the app we distribute, and one switch in Preferences turns both off.</0> Once you touch it your answer is kept and no default applies again. A crash report contains the error and the stack trace that caused it; usage data is which screens and features you open — never your provider API keys, your data, or anything you generate. If you build Duct yourself both are off by default instead, because then we are not the ones running it."
+#~ msgstr ""
+#~ "<0>クラッシュレポートと使用状況データは、配布するアプリではデフォルトでオンになっており、設定の1つのスイッチで両方をオフにできます。</0> 一度設定を変更すると、その設定が保持され、デフォルトは再度適用されません。クラッシュレポートには、エラーとその原因となったスタックトレースが含まれます。使用状況データは、開いた画面と機能に関するものであり、プロバイダーのAPIキー、お客様のデータ、またはお客様が生成したものは一切含まれません。Ductを自分でビルドした場合、これらはデフォルトでオフになります。これは、その場合、当社が実行しているわけではないためです。"
+
+#~ msgid ""
+#~ "<0>The desktop app sets no cookies, and is never going to ask you about them.</0> It reports usage through the same Google Tag Manager container as the rest of Duct, but with storage switched off permanently: Google Analytics receives the event and writes nothing to your machine, so none of the cookies in section 11 exist there and there is nothing to consent to. A consent bar in front of an application you just opened is not a question worth interrupting anyone for."
+#~ msgstr ""
+#~ "<0>デスクトップアプリはCookieを設定せず、Cookieについて尋ねることもありません。</0> 他のDuctと同様のGoogle Tag Managerコンテナを通じて使用状況を報告しますが、ストレージは永続的にオフになっています。Google Analyticsはイベントを受け取りますが、お客様のマシンには何も書き込まないため、セクション11のCookieは存在せず、同意する必要もありません。開いたばかりのアプリケーションの前に同意バーを表示することは、誰かの邪魔をする価値のある質問ではありません。"
+
+#~ msgid ""
+#~ "Declining means Google Tag Manager is never loaded at all, rather than loaded in a restricted mode. If you decline after previously accepting, we delete the cookies below and reload the page."
+#~ msgstr ""
+#~ "拒否すると、Google Tag Managerは制限モードで読み込まれるのではなく、まったく読み込まれません。以前に同意した後で拒否した場合、当社は以下のCookieを削除し、ページを再読み込みします。"
+
+#~ msgid "Error diagnostics"
+#~ msgstr "エラー診断"
+
+#~ msgid "Error monitoring and crash reporting"
+#~ msgstr "エラー監視とクラッシュレポート"
+
+#~ msgid "Incidentally, in error context only"
+#~ msgstr "偶発的に、エラーコンテキストのみ"
+
+#~ msgid "Last updated: September 7, 2026"
+#~ msgstr "最終更新日：2026年9月7日"
+
+#~ msgid ""
+#~ "Remembers your choice, so you are not asked on every page. Set on <0>getduct.ai</0> and all its subdomains, so answering once in your browser also answers for the app. The desktop app never sets it, because it loads no analytics at all. Strictly necessary — it exists whether you accept or decline"
+#~ msgstr ""
+#~ "お客様の選択を記憶し、すべてのページで尋ねられることはありません。<0>getduct.ai</0>とそのすべてのサブドメインで設定されるため、ブラウザで一度回答すると、アプリにも適用されます。デスクトップアプリは分析を一切読み込まないため、これを設定することはありません。厳密に必要です — お客様が承諾するか拒否するかにかかわらず存在します"
+
+#~ msgid "Sentry"
+#~ msgstr "Sentry"
+
+#~ msgid ""
+#~ "We are based in Spain and process personal data under the EU GDPR. You have the right to access, correct, export, restrict the processing of, or delete your personal data, and to object to processing. Our legal basis is the performance of our contract with you for operating the product, and legitimate interest for security and diagnostics. Exercise any of these rights at <0>hello@getduct.ai</0>; you also have the right to lodge a complaint with your local supervisory authority (in Spain, the AEPD)."
+#~ msgstr ""
+#~ "当社はスペインに拠点を置き、EU GDPRに基づき個人データを処理します。お客様には、ご自身の個人データにアクセスし、修正し、エクスポートし、処理を制限し、または削除する権利、および処理に異議を唱える権利があります。当社の法的根拠は、製品運用のためのお客様との契約履行、およびセキュリティと診断のための正当な利益です。これらの権利を行使するには、<0>hello@getduct.ai</0>までご連絡ください。また、お客様には現地の監督機関（スペインではAEPD）に苦情を申し立てる権利もあります。"
+
+#~ msgid ""
+#~ "We collect basic product analytics — pages visited, features used, general interaction patterns — to understand how Duct is used. This runs through Google Tag Manager, which loads Google Analytics 4. We do not record keystrokes or form contents."
+#~ msgstr ""
+#~ "Ductがどのように使用されているかを理解するため、当社は基本的な製品分析データ（訪問ページ、使用機能、一般的な操作パターンなど）を収集します。これはGoogle Tag Managerを通じて実行され、Google Analytics 4をロードします。キー入力やフォームの内容は記録しません。"
+
+#~ msgid ""
+#~ "When something breaks, we collect error reports containing the technical context of the failure (stack trace, browser, the operation attempted). We configure our error monitoring to avoid capturing Google user data, but a report may incidentally contain an identifier such as a property ID."
+#~ msgstr ""
+#~ "何らかの障害が発生した場合、障害の技術的コンテキスト（スタックトレース、ブラウザ、試行された操作）を含むエラーレポートを収集します。エラー監視はGoogleユーザーデータをキャプチャしないように設定していますが、レポートにプロパティIDなどの識別子が偶発的に含まれる場合があります。"
+
+#~ msgid "<0>Diagnostics are opt-in</0> and off by default"
+#~ msgstr "<0>診断はオプトイン</0>で、デフォルトではオフです"
 
 #~ msgid "<0/>Most tools ask first"
 #~ msgstr "<0/>ほとんどのツールが最初に尋ねます"

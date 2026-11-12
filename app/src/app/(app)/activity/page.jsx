@@ -17,10 +17,12 @@ import { hasAuthToken, isSessionExpired } from "../../../lib/authFetch";
 import LoadError from "@/components/LoadError";
 import EmptyState from "@/components/ui/empty-state";
 import { relativeTime } from "@/lib/format";
-import { listActivity } from "../../../lib/activityApi";
+import { ACTION_PROJECT_EDITED, listActivity, undoProjectEdit } from "../../../lib/activityApi";
 import { Button } from "@/components/ui/button";
 import { SkeletonList } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card } from "@/components/ui/card";
+import { Page, PageHeader } from "@/components/ui/page";
 
 const CATEGORY_TABS = [
   { value: "", label: msg`All` },
@@ -47,6 +49,49 @@ function targetHref(row) {
   if (row.target_type === "change_set") return "/execute";
   if (row.target_type === "project" && row.target_id) return `/project/${row.target_id}`;
   return null;
+}
+
+/** Undo on an agent's edit to the project, which the consent page promises:
+ *  "every edit can be undone in Duct". After the click the row says what came
+ *  back and what was left because it changed again since. */
+function UndoEdit({ row }) {
+  const { t } = useLingui();
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState("");
+  const undone = Boolean(row.data?.undone_at) || Boolean(result);
+
+  async function undo() {
+    setBusy(true);
+    setError("");
+    try {
+      const out = await undoProjectEdit(row.target_id, row.id);
+      // No reload: the row keeps what came back and what was skipped, which
+      // a refetch would lose. The undo's own row is there on the next visit.
+      setResult(out);
+    } catch (err) {
+      setError(err?.message || t`That didn't go through. Try again in a moment.`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (undone) {
+    const skipped = (result?.skipped || []).join(", ");
+    return (
+      <span className="text-xs text-muted-foreground">
+        {skipped ? <Trans>Undone, except {skipped}, which changed again since</Trans> : <Trans>Undone</Trans>}
+      </span>
+    );
+  }
+  return (
+    <span className="flex items-center gap-2">
+      <Button type="button" variant="outline" size="sm" onClick={undo} disabled={busy}>
+        {busy ? <Trans>Undoing…</Trans> : <Trans>Undo</Trans>}
+      </Button>
+      {error && <span role="alert" className="text-xs text-destructive">{error}</span>}
+    </span>
+  );
 }
 
 function ActivityRow({ row }) {
@@ -85,6 +130,11 @@ function ActivityRow({ row }) {
           )}
         </p>
       </div>
+      {row.action === ACTION_PROJECT_EDITED && row.target_id && (
+        <div className="shrink-0 self-center">
+          <UndoEdit row={row} />
+        </div>
+      )}
     </li>
   );
 }
@@ -156,43 +206,36 @@ function ActivityFeed() {
   const projectName = project?.name || t`this project`;
 
   return (
-    <section>
-      <div className="page-toolbar-back">
-        <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight"><Trans>Activity</Trans></h1>
-      </div>
-
-      <p className="app-subtle" style={{ marginTop: 0, marginBottom: 14 }}>
-        <Trans>
-          Everything that changed on <strong>{projectName}</strong> — who
-          proposed it, who approved it, what was applied or rolled back.
-        </Trans>
-      </p>
-
-      {conversationId && (
-        <p style={{ marginBottom: 12 }}>
-          <span className="status-pill grey">
+    <Page>
+      <PageHeader
+        title={<Trans>Activity</Trans>}
+        status={
+          conversationId ? (
             <Trans>
-              Filtered to one conversation ·{" "}
+              One conversation ·{" "}
               <Link href="/activity" className="underline underline-offset-2">
                 show all
               </Link>
             </Trans>
-          </span>
-        </p>
-      )}
-
-      <Tabs value={category} onValueChange={setCategory}>
-        <TabsList>
-          {CATEGORY_TABS.map((tab) => (
-            <TabsTrigger key={tab.value || "all"} value={tab.value}>
-              {i18n._(tab.label)}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+          ) : (
+            <Trans>What changed on {projectName}, and who did it</Trans>
+          )
+        }
+        actions={
+          <Tabs value={category} onValueChange={setCategory}>
+            <TabsList>
+              {CATEGORY_TABS.map((tab) => (
+                <TabsTrigger key={tab.value || "all"} value={tab.value}>
+                  {i18n._(tab.label)}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        }
+      />
 
       {!signedIn && (
-        <div style={{ marginTop: 18 }}>
+        <div>
           <EmptyState
             icon={LockKeyhole}
             title={t`Sign in to see project activity`}
@@ -211,7 +254,7 @@ function ActivityFeed() {
       )}
 
       {signedIn && items === null && (
-        <SkeletonList rows={5} label={t`Loading activity`} style={{ marginTop: 18 }} />
+        <SkeletonList rows={5} label={t`Loading activity`} />
       )}
 
       {signedIn && error && (
@@ -219,7 +262,7 @@ function ActivityFeed() {
       )}
 
       {signedIn && !error && items && items.length === 0 && (
-        <div style={{ marginTop: 18 }}>
+        <div>
           <EmptyState
             icon={History}
             title={t`No activity yet`}
@@ -234,32 +277,27 @@ function ActivityFeed() {
               </Button>
             }
           >
-            <Trans>
-              Proposals, approvals, rollbacks and artifact versions land here, each with who
-              did it.
-            </Trans>
+            <Trans>Proposals, approvals and rollbacks land here.</Trans>
           </EmptyState>
         </div>
       )}
 
       {signedIn && items && items.length > 0 && (
-        <div className="rounded-lg border border-border/60" style={{ marginTop: 18 }}>
+        <Card className="gap-0 overflow-hidden p-0">
           <ul>
             {items.map((row) => (
               <ActivityRow key={row.id} row={row} />
             ))}
           </ul>
-        </div>
+        </Card>
       )}
 
       {signedIn && nextBefore && (
-        <div style={{ marginTop: 12 }}>
-          <Button variant="outline" size="sm" onClick={loadMore} disabled={loadingMore}>
-            {loadingMore ? <Trans>Loading…</Trans> : <Trans>Load older activity</Trans>}
-          </Button>
-        </div>
+        <Button variant="outline" size="sm" className="self-start" onClick={loadMore} disabled={loadingMore}>
+          {loadingMore ? <Trans>Loading…</Trans> : <Trans>Load older activity</Trans>}
+        </Button>
       )}
-    </section>
+    </Page>
   );
 }
 
@@ -270,15 +308,10 @@ export default function ActivityPage() {
   return (
     <Suspense
       fallback={
-        <section>
-          <div className="page-toolbar-back">
-            <h1 className="page-toolbar-title text-2xl font-semibold tracking-tight">
-              <History size={20} className="inline-block mr-2 align-[-3px]" aria-hidden="true" />
-              <Trans>Activity</Trans>
-            </h1>
-          </div>
-          <SkeletonList rows={5} label={t`Loading activity`} style={{ marginTop: 18 }} />
-        </section>
+        <Page>
+          <PageHeader title={<Trans>Activity</Trans>} />
+          <SkeletonList rows={5} label={t`Loading activity`} />
+        </Page>
       }
     >
       <ActivityFeed />

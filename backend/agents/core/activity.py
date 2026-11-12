@@ -34,6 +34,7 @@ JSON would put attacker-authored text in the UI and in every client's memory.
 from __future__ import annotations
 
 import json
+import re
 import logging
 from collections.abc import Awaitable, Callable
 from enum import StrEnum
@@ -128,12 +129,36 @@ def _host(url: str) -> str:
         return ""
 
 
+# "proposed" is submit_plan's verdict since plans became proposals (2026-11-08,
+# agents/content/plan_proposal.py): the tool did what it was asked, and the
+# person decides in the viewport. Without it the row painted red.
+_OK_STATUSES = frozenset({"ok", "received", "success", "proposed"})
+# What _err() and its siblings write. Any other value of ``status`` is the
+# thing's own state, not the call's verdict: fetch_post returns the post with
+# its ``status`` ("draft", "posted"), and on 2026-11-08 "Opened the post" was
+# painted red for every saved post because "draft" was read as a failure.
+_FAIL_STATUSES = frozenset({"error", "failed", "failure"})
+
+_UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.I)
+
+
 def _ok(env: dict[str, Any], is_error: bool) -> bool:
     """A tool's verdict. Tools that return an envelope say so in ``status``;
-    the rest are judged by the harness's own error flag."""
-    if env and "status" in env:
-        return env.get("status") in ("ok", "received", "success")
+    the rest, and an envelope whose ``status`` is a domain state rather than a
+    verdict, are judged by the harness's own error flag."""
+    status = env.get("status") if env else None
+    if status in _OK_STATUSES:
+        return True
+    if status in _FAIL_STATUSES:
+        return False
     return not is_error
+
+
+def _words(text: Any) -> str:
+    """A title the person can read: the text unless it is a row id, which
+    names nothing to them and belongs in the detail of a developer tool."""
+    text = _text(text)
+    return "" if _UUID_RE.match(text) else text
 
 
 def _list_len(env: dict[str, Any]) -> int | None:
@@ -375,7 +400,7 @@ def _memory_get_finish(args: dict[str, Any], result: Any, is_error: bool) -> dic
 def _read_start(args: dict[str, Any]) -> dict[str, Any]:
     """A read of something the project already holds — brand context, the
     topic bank, connected sources. The tool name says which; the app words it."""
-    return {"kind": ActivityKind.CONTEXT, "title": _text(args.get("post_id") or args.get("slide_id") or args.get("query"))}
+    return {"kind": ActivityKind.CONTEXT, "title": _words(args.get("post_id") or args.get("slide_id") or args.get("query"))}
 
 
 def _read_finish(args: dict[str, Any], result: Any, is_error: bool) -> dict[str, Any]:
@@ -385,7 +410,10 @@ def _read_finish(args: dict[str, Any], result: Any, is_error: bool) -> dict[str,
     return {
         "kind": ActivityKind.CONTEXT,
         "status": StepStatus.SUCCESS if ok else StepStatus.ERROR,
-        "title": _text(args.get("post_id") or args.get("slide_id") or args.get("query")),
+        # What was read, by its words once they are known: a post by its
+        # topic, never by the id the model addressed it with.
+        "title": _words(env.get("topic") or env.get("headline") or env.get("title"))
+        or _words(args.get("post_id") or args.get("slide_id") or args.get("query")),
         "meta": {"count": count} if count is not None else {},
         "error": "" if ok else _text(env.get("message")),
     }
@@ -437,12 +465,18 @@ def _action_start(args: dict[str, Any]) -> dict[str, Any]:
 
 def _action_finish(args: dict[str, Any], result: Any, is_error: bool) -> dict[str, Any]:
     env = _envelope(result)
-    ok = _ok(env, is_error)
     meta = {k: _text(env.get(k)) for k in ("post_id", "slide_id", "status", "scheduled_at") if env.get(k)}
+    title = _text(env.get("topic") or env.get("headline")) or _action_start(args)["title"]
+    status = _text(env.get("status"))
+    if status in _DECISIONS:
+        # A publish the person said no to on the card: their answer, not a
+        # failure, and not "Published the post" either.
+        return {"kind": ActivityKind.ACTION, "status": StepStatus.ERROR, "title": title, "meta": meta, "error": "", "reason": status}
+    ok = _ok(env, is_error)
     return {
         "kind": ActivityKind.ACTION,
         "status": StepStatus.SUCCESS if ok else StepStatus.ERROR,
-        "title": _text(env.get("topic") or env.get("headline")) or _action_start(args)["title"],
+        "title": title,
         "meta": meta,
         "error": "" if ok else _text(env.get("message") or env.get("error")),
     }
@@ -452,9 +486,10 @@ def _action_finish(args: dict[str, Any], result: Any, is_error: bool) -> dict[st
 # is an instruction to the model, not news for the person; a protocol or tool error
 # carries the server's own words, and a card never holds bytes a third party
 # wrote. The reason alone tells the app which sentence to show.
-_CONNECTED_QUIET = frozenset(
-    {"skipped", "needs_approval", "arguments_too_long", "protocol_error", "tool_error"}
-)
+# The person's answers on an approval card (and the run that had nobody to
+# ask). The app mirrors them as CONNECTED_DECISIONS and never paints them red.
+_DECISIONS = frozenset({"skipped", "needs_approval", "arguments_too_long"})
+_CONNECTED_QUIET = _DECISIONS | {"protocol_error", "tool_error"}
 
 
 def _connected(args: dict[str, Any], *, listing: bool) -> dict[str, Any]:
@@ -499,6 +534,30 @@ def _call_start(args: dict[str, Any]) -> dict[str, Any]:
 
 def _call_finish(args: dict[str, Any], result: Any, is_error: bool) -> dict[str, Any]:
     return _connected_done(_call_start(args), result, is_error)
+
+
+def _tiktok_start(args: dict[str, Any]) -> dict[str, Any]:
+    """A TikTok search (agents/content/discover.py), by its hashtags; the
+    trending feed has none, and the app's verb says the rest."""
+    tags = args.get("hashtags") if isinstance(args.get("hashtags"), list) else []
+    title = " ".join(f"#{_text(t).lstrip('#')}" for t in tags if _text(t).lstrip("#"))
+    return {"kind": ActivityKind.CONTEXT, "title": title[:TITLE_CHARS]}
+
+
+def _tiktok_finish(args: dict[str, Any], result: Any, is_error: bool) -> dict[str, Any]:
+    env = _envelope(result)
+    status = _text(env.get("status"))
+    ok = not is_error and status == "ok"
+    posts = env.get("posts") if isinstance(env.get("posts"), list) else []
+    return {
+        **_tiktok_start(args),
+        "status": StepStatus.SUCCESS if ok else StepStatus.ERROR,
+        "meta": {"count": len(posts)} if ok else {},
+        # A skipped search is the person's answer on the card above, not a
+        # failure to explain again.
+        "error": "" if ok or status in _CONNECTED_QUIET else _text(env.get("message")),
+        "reason": "" if ok else status,
+    }
 
 
 def _context_fields(record: dict[str, Any], *_rest: Any) -> dict[str, Any]:
@@ -557,10 +616,12 @@ ACTIVITY_TOOLS: dict[str, tuple[Callable[..., dict], Callable[..., dict]]] = {
     "fetch_content_history": (_read_start, _read_finish),
     "fetch_content_assets": (_read_start, _read_finish),
     "fetch_discovered_references": (_read_start, _read_finish),
+    "discover_tiktok": (_tiktok_start, _tiktok_finish),
     "fetch_post": (_read_start, _read_finish),
     "fetch_slide_context": (_read_start, _read_finish),
     # … and what it does on the person's behalf.
     "submit_plan": (_action_start, _action_finish),
+    "revise_plan_days": (_action_start, _action_finish),
     "submit_post_draft": (_action_start, _action_finish),
     "edit_slide": (_action_start, _action_finish),
     "submit_assessment": (_action_start, _action_finish),

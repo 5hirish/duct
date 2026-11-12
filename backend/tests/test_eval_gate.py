@@ -39,6 +39,7 @@ from tests.eval.gate import (
     report,
     run_trial,
     trial_record,
+    wilson_interval,
 )
 from tests.fakes import ToolCallingFake
 
@@ -166,6 +167,53 @@ def test_a_baseline_from_another_model_judges_nothing():
                   model="deepseek/deepseek-v4-pro")[0] == PASS
 
 
+# ---------------------------------------------------------------------------
+# What a brief costs (#532)
+# ---------------------------------------------------------------------------
+
+def test_cost_per_pass_charges_the_failed_trials_to_the_briefs_that_passed():
+    """Two good briefs out of three cost what all three cost, split two ways:
+    the failed trial was paid for too."""
+    trials = [Trial("c", 1, passed=True, cost_usd=0.10), Trial("c", 2, passed=True, cost_usd=0.20),
+              Trial("c", 3, passed=False, cost_usd=0.30)]
+    assert CaseResult("c", PASS, "", trials).cost_per_pass == pytest.approx(0.30)
+    assert CaseResult("c", FAIL, "", _trials(False, False)).cost_per_pass is None
+
+
+def test_the_cache_share_is_over_all_input_and_unknown_without_usage():
+    trials = [Trial("c", 1, input_tokens=1_000, cache_read_tokens=900),
+              Trial("c", 2, input_tokens=3_000, cache_read_tokens=100)]
+    assert CaseResult("c", PASS, "", trials).cache_share == pytest.approx(0.25)
+    assert CaseResult("c", PASS, "", [Trial("c", 1)]).cache_share is None
+
+
+@pytest.mark.parametrize("passes, n, low, high", [
+    (3, 3, 0.438, 1.0),     # three for three still allows a 44% case
+    (0, 3, 0.0, 0.562),
+    (2, 3, 0.208, 0.939),
+    (18, 20, 0.699, 0.972),  # what twenty trials buy over three
+])
+def test_the_pass_rate_interval_is_wilsons(passes, n, low, high):
+    lo, hi = wilson_interval(passes, n)
+    assert lo == pytest.approx(low, abs=1e-3) and hi == pytest.approx(high, abs=1e-3)
+
+
+def test_the_report_shows_cost_per_pass_tokens_and_the_cache():
+    trials = [Trial("c", 1, passed=True, cost_usd=0.02, model_calls=4,
+                    input_tokens=40_000, output_tokens=2_000, cache_read_tokens=30_000)]
+    text = report([CaseResult("c", PASS, "", trials)], provider="p", model="m", spent=0.02)
+
+    assert "Cost per pass" in text and "Cache read" in text
+    assert "| 21% to 100% | $0.020 |" in text
+    assert "| 40,000 / 2,000 | 75% |" in text
+
+
+def test_a_trial_without_a_pass_or_usage_reports_unknown_not_zero():
+    text = report([CaseResult("c", FAIL, "", [Trial("c", 1)])], provider="p", model="m", spent=0)
+    assert "| 0% to 79% | n/a |" in text
+    assert "| 0 / 0 | n/a |" in text
+
+
 def test_every_case_is_synthetic_and_registered():
     assert cases_for("insights") and all(c.agent == "insights" for c in cases_for("insights"))
     assert set(CASES) == {c.id for c in cases_for()}
@@ -219,6 +267,28 @@ def test_a_trial_runs_the_real_harness_on_the_world(monkeypatch):
     assert trial.passed, trial.failures
     assert sorted(f[0] for f in trial.fetches) == ["ga4_landing_pages", "gsc_page_performance"]
     assert trial.figures_traced == trial.figures == 1
+
+
+def test_a_trial_sums_the_usage_the_harness_reports(monkeypatch):
+    """The token columns come from the harness's own TOKEN_USAGE events, the
+    same ones the browser's gauge reads, not from a count the eval keeps."""
+    import db.session as session_module
+
+    monkeypatch.setattr(session_module, "get_engine", lambda: make_sqlite_engine())
+    organic = _organic(SoloWorld().ga4_landing_pages(*resolve_window("", "")))
+
+    def billed(message: AIMessage, read: int) -> AIMessage:
+        return message.model_copy(update={"usage_metadata": {
+            "input_tokens": 1_000, "output_tokens": 50, "total_tokens": 1_050,
+            "input_token_details": {"cache_read": read},
+        }})
+
+    llm = ToolCallingFake(responses=[billed(_PULL_BOTH, 0), billed(_brief(organic), 800)])
+    trial = run_trial(ORGANIC, 1, provider=Provider.OPENROUTER, model="x", api_key="unused",
+                      llm=llm, judge=False)
+
+    assert trial.passed, trial.failures
+    assert (trial.input_tokens, trial.output_tokens, trial.cache_read_tokens) == (2_000, 100, 800)
 
 
 def test_a_brief_that_added_the_rows_itself_is_caught(monkeypatch):

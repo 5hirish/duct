@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from datetime import date
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -90,6 +91,8 @@ FIXTURE_DATA_SOURCES = (
 )
 
 FIXTURE_REQUEST = "Why did CPA jump last week?"
+# A fixed day, so the dump stays byte-identical whatever day it is run.
+FIXTURE_TODAY = date(2026, 10, 30)
 
 # A reference post for the clone prompts: a carousel that outran its
 # creator's following, snake_case as a saved reference stores it. Invented.
@@ -198,10 +201,39 @@ def render_insights() -> str:
         user_context=user_context_block(_profile()),
         memory=FIXTURE_MEMORY,
         data_sources=FIXTURE_DATA_SOURCES,
+        today=FIXTURE_TODAY,
     )
     out.append(section(
         f"Opening user turn · ~{approx_tokens(turn):,} tokens",
         fenced(turn),
+    ))
+    out.append(render_insights_report())
+    return "\n".join(out)
+
+
+def render_insights_report() -> str:
+    """The Analytics tab's report (agents/insights/report.py) runs the same
+    agent with the report contract in place of the brief's, and the template
+    plan in the user turn."""
+    from agents.insights.prompts.autonomous import REPORT_CONTRACT, report_plan_block
+    from agents.insights.report_templates import SOURCES, STATUS_READY, SourceState, template
+
+    out = [section(
+        f"Report contract · ~{approx_tokens(REPORT_CONTRACT):,} tokens",
+        "Replaces \"Writing the brief\" when the run writes the Analytics tab's report.\n\n"
+        + fenced(REPORT_CONTRACT),
+    )]
+    tmpl = template("growth_overview")
+    chosen = [
+        SourceState(SOURCES["gsc"], STATUS_READY, "northwind.example"),
+        SourceState(SOURCES["publishers"], STATUS_READY, "Zernio"),
+        SourceState(SOURCES["posthog"], STATUS_READY, "PostHog"),
+    ]
+    plan = report_plan_block(tmpl, chosen, date_from="2026-10-01", date_to="2026-10-30")
+    out.append(section(
+        f"Report plan block · ~{approx_tokens(plan):,} tokens",
+        "Per project, in the user turn: the template, the sources the person ticked and the blocks to fill.\n\n"
+        + fenced(plan),
     ))
     return "\n".join(out)
 
@@ -275,7 +307,58 @@ def render_content() -> str:
             fenced(system),
         ))
     out.append(render_content_clone())
+    out.append(render_content_feed())
     return "\n".join(out)
+
+
+def render_content_feed() -> str:
+    """A plan from shipped work (#561) runs on plan_month's system prompt;
+    what differs is the opening turn, built on a feed Duct already filtered.
+    Synthetic events, so the render is deterministic."""
+    from datetime import date
+
+    from agents.content.feed import FeedOptions, build_digest, render_digest
+    from agents.content.plan_period import requested_period
+    from agents.content.prompts import build_feed_plan_prompt
+    from agents.content.schema import ContentBrandContext
+
+    rows = [
+        {"kind": "release", "ref": "v1.4.0", "title": "v1.4.0: invoices in two clicks", "state": "release",
+         "author": "maker", "url": "https://github.com/acme/app/releases/tag/v1.4.0", "at": "2026-10-06T09:00:00Z"},
+        {"kind": "pull_request", "ref": "#412", "title": "feat(invoices): send from the job card",
+         "state": "merged", "author": "maker", "url": "https://github.com/acme/app/pull/412",
+         "at": "2026-10-05T15:00:00Z"},
+        {"kind": "pull_request", "ref": "#413", "title": "chore(ci): cache dependencies", "state": "merged",
+         "author": "maker", "url": "https://github.com/acme/app/pull/413", "at": "2026-10-05T12:00:00Z"},
+        {"kind": "commit", "ref": "9f1c2d3e4", "title": "Bump httpx from 0.27 to 0.28",
+         "author": "dependabot[bot]", "url": "", "at": "2026-10-04T08:00:00Z"},
+    ]
+    window = (date(2026, 9, 24), date(2026, 10, 7))
+    digest = build_digest(FeedOptions(), window, github_rows=rows, duct=[], already=set())
+    brand = ContentBrandContext(
+        project_id="00000000-0000-0000-0000-000000000000",
+        project_name=FIXTURE_BUSINESS["business_name"],
+        audience=FIXTURE_BUSINESS["audience_segment"],
+    )
+    turn = build_feed_plan_prompt(
+        brand, feed=render_digest(digest), max_days=2, performance=None,
+        period=requested_period(date(2026, 10, 8), 7),
+    )
+    unattended = build_feed_plan_prompt(
+        brand, feed=render_digest(digest), max_days=2, performance=None,
+        period=requested_period(date(2026, 10, 8), 7), unattended=True,
+    )
+    return "\n".join([
+        section(
+            f"Plan from shipped work: opening user turn (system prompt is mode=plan_month) · "
+            f"~{approx_tokens(turn):,} tokens",
+            fenced(turn),
+        ),
+        section(
+            f"Plan from shipped work, scheduled (nobody to ask) · ~{approx_tokens(unattended):,} tokens",
+            fenced(unattended),
+        ),
+    ])
 
 
 def render_content_clone() -> str:
