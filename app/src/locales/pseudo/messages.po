@@ -4839,6 +4839,10 @@ msgstr ""
 msgid "Faster, lighter"
 msgstr ""
 
+#: src/app/(app)/connections/page.jsx
+msgid "Feed addresses"
+msgstr ""
+
 #: src/lib/memoryApi.js
 msgid "Feedback"
 msgstr ""
@@ -6662,6 +6666,10 @@ msgstr ""
 msgid "Mid-market"
 msgstr ""
 
+#: src/lib/contentFeedLabels.js
+msgid "Milestones"
+msgstr ""
+
 #: src/components/content/PlanList.jsx
 #: src/components/content/PostMiniCard.jsx
 msgid "Missed"
@@ -7870,6 +7878,10 @@ msgstr ""
 msgid "One or two sentences. The agent reads this to pick between formats, so say what it does and when to use it."
 msgstr ""
 
+#: src/app/(app)/connections/page.jsx
+msgid "One per line, up to ten: a blog, a Substack (/feed), a YouTube channel (videos.xml), a repository's releases.atom. Duct reads each once to check it."
+msgstr ""
+
 #: src/components/content/PlanQuickActions.jsx
 msgid "One planned post was missed. Fit its topic into the days ahead if it is still worth making, without crowding any channel or moving the days I've drafted."
 msgstr ""
@@ -8646,6 +8658,10 @@ msgstr ""
 
 #: src/lib/breadcrumbs.js
 msgid "Posts"
+msgstr ""
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Posts from the feeds you added in the Toolbox"
 msgstr ""
 
 #: src/components/content/AccountsTab.jsx
@@ -9742,6 +9758,15 @@ msgstr ""
 
 #: src/components/execution/ChangeSetCard.jsx
 msgid "Rolling back…"
+msgstr ""
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Round GitHub star counts and your best week in GA4"
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+#: src/components/connections/logos.jsx
+msgid "RSS and Atom feeds"
 msgstr ""
 
 #: src/app/(app)/execute/page.jsx
@@ -12926,6 +12951,10 @@ msgstr ""
 msgid "What you get"
 msgstr ""
 
+#: src/app/(app)/connections/page.jsx
+msgid "What you published: a blog, a Substack, a changelog page, YouTube uploads."
+msgstr ""
+
 #: src/components/content/BrandContextForm.jsx
 msgid "What you uniquely offer."
 msgstr ""
@@ -13463,6 +13492,10 @@ msgstr ""
 
 #: src/components/audit/ExecutionOffer.jsx
 msgid "your email"
+msgstr ""
+
+#: src/lib/contentFeedLabels.js
+msgid "Your feeds"
 msgstr ""
 
 #: src/components/models/UsagePanel.jsx

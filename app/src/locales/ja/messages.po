@@ -4845,6 +4845,10 @@ msgstr "送信に失敗しました"
 msgid "Faster, lighter"
 msgstr "より速く、より軽く"
 
+#: src/app/(app)/connections/page.jsx
+msgid "Feed addresses"
+msgstr "フィードのアドレス"
+
 #: src/lib/memoryApi.js
 msgid "Feedback"
 msgstr "フィードバック"
@@ -6668,6 +6672,10 @@ msgstr "Microsoft Clarity"
 msgid "Mid-market"
 msgstr "ミッドマーケット"
 
+#: src/lib/contentFeedLabels.js
+msgid "Milestones"
+msgstr "マイルストーン"
+
 #: src/components/content/PlanList.jsx
 #: src/components/content/PostMiniCard.jsx
 msgid "Missed"
@@ -7876,6 +7884,10 @@ msgstr "{foundAt} に 1 個のモデル"
 msgid "One or two sentences. The agent reads this to pick between formats, so say what it does and when to use it."
 msgstr "1、2文で記述してください。エージェントはこれを読んでフォーマットを選択するため、何をするものか、いつ使用するかを記述してください。"
 
+#: src/app/(app)/connections/page.jsx
+msgid "One per line, up to ten: a blog, a Substack (/feed), a YouTube channel (videos.xml), a repository's releases.atom. Duct reads each once to check it."
+msgstr "1行に1つ、最大10個まで: ブログ、Substack(/feed)、YouTubeチャンネル(videos.xml)、リポジトリのreleases.atom。Duct は確認のためにそれぞれを一度読み込みます。"
+
 #: src/components/content/PlanQuickActions.jsx
 msgid "One planned post was missed. Fit its topic into the days ahead if it is still worth making, without crowding any channel or moving the days I've drafted."
 msgstr "1 件の計画された投稿が見逃されました。まだ作成する価値がある場合は、そのトピックを今後の日程に組み込み、どのチャネルも混雑させず、私が下書きした日程は変更しないでください。"
@@ -8653,6 +8665,10 @@ msgstr "投稿"
 #: src/lib/breadcrumbs.js
 msgid "Posts"
 msgstr "投稿"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Posts from the feeds you added in the Toolbox"
+msgstr "Toolbox で追加したフィードの投稿"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Posts go out through {primaryLabel}."
@@ -9749,6 +9765,15 @@ msgstr "ロールバック済み"
 #: src/components/execution/ChangeSetCard.jsx
 msgid "Rolling back…"
 msgstr "ロールバック中…"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Round GitHub star counts and your best week in GA4"
+msgstr "GitHub スター数の節目と GA4 の過去最高の週"
+
+#: src/app/(app)/connections/page.jsx
+#: src/components/connections/logos.jsx
+msgid "RSS and Atom feeds"
+msgstr "RSS・Atomフィード"
 
 #: src/app/(app)/execute/page.jsx
 #~ msgid "Rule, e.g. “Never pause the Brand campaign”"
@@ -12932,6 +12957,10 @@ msgstr "記憶する内容"
 msgid "What you get"
 msgstr "得られるもの"
 
+#: src/app/(app)/connections/page.jsx
+msgid "What you published: a blog, a Substack, a changelog page, YouTube uploads."
+msgstr "あなたが公開したもの: ブログ、Substack、変更履歴ページ、YouTubeのアップロード。"
+
 #: src/components/content/BrandContextForm.jsx
 msgid "What you uniquely offer."
 msgstr "あなたが独自に提供するもの。"
@@ -13470,6 +13499,10 @@ msgstr "あなたの編集はまだここにありますが、保存されませ
 #: src/components/audit/ExecutionOffer.jsx
 msgid "your email"
 msgstr "メールアドレス"
+
+#: src/lib/contentFeedLabels.js
+msgid "Your feeds"
+msgstr "あなたのフィード"
 
 #: src/components/models/UsagePanel.jsx
 msgid "Your first agent run fills this in. Below is a normal month."

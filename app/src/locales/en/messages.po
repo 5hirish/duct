@@ -4845,6 +4845,10 @@ msgstr "Failed to send"
 msgid "Faster, lighter"
 msgstr "Faster, lighter"
 
+#: src/app/(app)/connections/page.jsx
+msgid "Feed addresses"
+msgstr "Feed addresses"
+
 #: src/lib/memoryApi.js
 msgid "Feedback"
 msgstr "Feedback"
@@ -6668,6 +6672,10 @@ msgstr "Microsoft Clarity"
 msgid "Mid-market"
 msgstr "Mid-market"
 
+#: src/lib/contentFeedLabels.js
+msgid "Milestones"
+msgstr "Milestones"
+
 #: src/components/content/PlanList.jsx
 #: src/components/content/PostMiniCard.jsx
 msgid "Missed"
@@ -7876,6 +7884,10 @@ msgstr "One model at {foundAt}"
 msgid "One or two sentences. The agent reads this to pick between formats, so say what it does and when to use it."
 msgstr "One or two sentences. The agent reads this to pick between formats, so say what it does and when to use it."
 
+#: src/app/(app)/connections/page.jsx
+msgid "One per line, up to ten: a blog, a Substack (/feed), a YouTube channel (videos.xml), a repository's releases.atom. Duct reads each once to check it."
+msgstr "One per line, up to ten: a blog, a Substack (/feed), a YouTube channel (videos.xml), a repository's releases.atom. Duct reads each once to check it."
+
 #: src/components/content/PlanQuickActions.jsx
 msgid "One planned post was missed. Fit its topic into the days ahead if it is still worth making, without crowding any channel or moving the days I've drafted."
 msgstr "One planned post was missed. Fit its topic into the days ahead if it is still worth making, without crowding any channel or moving the days I've drafted."
@@ -8653,6 +8665,10 @@ msgstr "posts"
 #: src/lib/breadcrumbs.js
 msgid "Posts"
 msgstr "Posts"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Posts from the feeds you added in the Toolbox"
+msgstr "Posts from the feeds you added in the Toolbox"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Posts go out through {primaryLabel}."
@@ -9749,6 +9765,15 @@ msgstr "Rolled back"
 #: src/components/execution/ChangeSetCard.jsx
 msgid "Rolling back…"
 msgstr "Rolling back…"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Round GitHub star counts and your best week in GA4"
+msgstr "Round GitHub star counts and your best week in GA4"
+
+#: src/app/(app)/connections/page.jsx
+#: src/components/connections/logos.jsx
+msgid "RSS and Atom feeds"
+msgstr "RSS and Atom feeds"
 
 #: src/app/(app)/execute/page.jsx
 #~ msgid "Rule, e.g. “Never pause the Brand campaign”"
@@ -12932,6 +12957,10 @@ msgstr "What to remember"
 msgid "What you get"
 msgstr "What you get"
 
+#: src/app/(app)/connections/page.jsx
+msgid "What you published: a blog, a Substack, a changelog page, YouTube uploads."
+msgstr "What you published: a blog, a Substack, a changelog page, YouTube uploads."
+
 #: src/components/content/BrandContextForm.jsx
 msgid "What you uniquely offer."
 msgstr "What you uniquely offer."
@@ -13470,6 +13499,10 @@ msgstr "Your edits are still here, but they didn't save. Try again."
 #: src/components/audit/ExecutionOffer.jsx
 msgid "your email"
 msgstr "your email"
+
+#: src/lib/contentFeedLabels.js
+msgid "Your feeds"
+msgstr "Your feeds"
 
 #: src/components/models/UsagePanel.jsx
 msgid "Your first agent run fills this in. Below is a normal month."

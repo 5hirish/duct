@@ -1,7 +1,8 @@
 "use client";
 
 import {
-  BookOpen, Brain, CircleCheckBig, CircleDot, FileText, GitCommitHorizontal, GitPullRequest, NotebookText, ShieldCheck, Tag,
+  BookOpen, Brain, CircleCheckBig, CircleDot, FileText, GitCommitHorizontal, GitPullRequest, NotebookText, Rss,
+  ShieldCheck, Tag, Trophy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,8 @@ export const KIND_ICONS = {
   memory: Brain,
   linear_issue: CircleCheckBig,
   notion_page: NotebookText,
+  post: Rss,
+  milestone: Trophy,
 };
 
 const SIZES = {

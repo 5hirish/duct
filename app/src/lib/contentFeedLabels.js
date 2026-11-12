@@ -12,6 +12,8 @@ export const SOURCE_LABELS = {
   [FeedSource.DUCT]: msg`What Duct did`,
   [FeedSource.LINEAR]: msg`Linear`,
   [FeedSource.NOTION]: msg`Notion`,
+  [FeedSource.RSS]: msg`Your feeds`,
+  [FeedSource.MILESTONES]: msg`Milestones`,
 };
 
 export const DISCLOSURE_LABELS = {

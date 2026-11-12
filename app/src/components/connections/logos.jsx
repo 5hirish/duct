@@ -43,6 +43,7 @@ export const CONNECTOR_NAMES = {
   clarity: msg`Microsoft Clarity`,
   growthbook: msg`GrowthBook`,
   github: msg`GitHub`,
+  rss: msg`RSS and Atom feeds`,
   anthropic: msg`Anthropic`,
   openai: msg`OpenAI`,
   gemini: msg`Google Gemini`,
@@ -189,6 +190,7 @@ export const LOGOS = {
   clarity: <Img src="/icons/clarity.svg" alt={CONNECTOR_NAMES.clarity} />,
   growthbook: <Img src="/icons/growthbook.svg" alt={CONNECTOR_NAMES.growthbook} />,
   github: <GitHubMark />,
+  rss: <Img src="/icons/rss.svg" alt={CONNECTOR_NAMES.rss} />,
 
   // Model providers
   anthropic: <Img src="/icons/anthropic.svg" alt={CONNECTOR_NAMES.anthropic} />,

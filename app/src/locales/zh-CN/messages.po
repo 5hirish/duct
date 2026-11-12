@@ -4187,6 +4187,10 @@ msgstr "发送失败"
 msgid "Faster, lighter"
 msgstr "更快、更轻"
 
+#: src/app/(app)/connections/page.jsx
+msgid "Feed addresses"
+msgstr "订阅源地址"
+
 #: src/lib/memoryApi.js
 msgid "Feedback"
 msgstr "反馈"
@@ -5804,6 +5808,10 @@ msgstr "Microsoft Clarity"
 msgid "Mid-market"
 msgstr "中端市场"
 
+#: src/lib/contentFeedLabels.js
+msgid "Milestones"
+msgstr "里程碑"
+
 #: src/components/content/PlanList.jsx
 #: src/components/content/PostMiniCard.jsx
 msgid "Missed"
@@ -6862,6 +6870,10 @@ msgstr "一个模型位于 {foundAt}"
 msgid "One or two sentences. The agent reads this to pick between formats, so say what it does and when to use it."
 msgstr "一到两句话。智能体会阅读此内容以选择格式，因此请说明其功能和使用时机。"
 
+#: src/app/(app)/connections/page.jsx
+msgid "One per line, up to ten: a blog, a Substack (/feed), a YouTube channel (videos.xml), a repository's releases.atom. Duct reads each once to check it."
+msgstr "每行一个，最多十个：博客、Substack（/feed）、YouTube 频道（videos.xml）、仓库的 releases.atom。Duct 会各读取一次以进行检查。"
+
 #: src/components/content/PlanQuickActions.jsx
 msgid "One planned post was missed. Fit its topic into the days ahead if it is still worth making, without crowding any channel or moving the days I've drafted."
 msgstr "一篇计划中的帖子被遗漏了。如果仍值得制作，请将其主题安排到接下来的几天，避免占用任何渠道或移动已起草的日期。"
@@ -7559,6 +7571,10 @@ msgstr "帖子"
 #: src/lib/breadcrumbs.js
 msgid "Posts"
 msgstr "帖子"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Posts from the feeds you added in the Toolbox"
+msgstr "你在 Toolbox 中添加的订阅源里的文章"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Posts go out through {primaryLabel}."
@@ -8568,6 +8584,15 @@ msgstr "已回滚"
 #: src/components/execution/ChangeSetCard.jsx
 msgid "Rolling back…"
 msgstr "正在回滚…"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Round GitHub star counts and your best week in GA4"
+msgstr "GitHub 星标的整数里程碑，以及你在 GA4 中的最佳一周"
+
+#: src/app/(app)/connections/page.jsx
+#: src/components/connections/logos.jsx
+msgid "RSS and Atom feeds"
+msgstr "RSS 和 Atom 订阅源"
 
 #: src/lib/memoryApi.js
 msgid "Rules"
@@ -11423,6 +11448,10 @@ msgstr "记住什么"
 msgid "What you get"
 msgstr "你将获得什么"
 
+#: src/app/(app)/connections/page.jsx
+msgid "What you published: a blog, a Substack, a changelog page, YouTube uploads."
+msgstr "你发布的内容：博客、Substack、更新日志页面、YouTube 上传。"
+
 #: src/components/content/BrandContextForm.jsx
 msgid "What you uniquely offer."
 msgstr "你的独特之处。"
@@ -11901,6 +11930,10 @@ msgstr "你的编辑仍在，但未保存。请重试。"
 #: src/components/audit/ExecutionOffer.jsx
 msgid "your email"
 msgstr "你的邮箱"
+
+#: src/lib/contentFeedLabels.js
+msgid "Your feeds"
+msgstr "你的订阅源"
 
 #: src/components/models/UsagePanel.jsx
 msgid "Your first agent run fills this in. Below is a normal month."

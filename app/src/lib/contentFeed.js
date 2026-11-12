@@ -13,7 +13,12 @@ import { dayKey } from "./format.js";
 
 // Linear and Notion are the user's own trusted MCP connections (#565),
 // offered only when connected; their preset ids are these same values.
-export const FeedSource = Object.freeze({ GITHUB: "github", DUCT: "duct", LINEAR: "linear", NOTION: "notion" });
+export const FeedSource = Object.freeze({
+  GITHUB: "github", DUCT: "duct", LINEAR: "linear", NOTION: "notion",
+  // The project's own feeds and its milestones (#564), always offered: a
+  // source with nothing connected leaves a note, never a failed read.
+  RSS: "rss", MILESTONES: "milestones",
+});
 export const MCP_FEED_SOURCES = Object.freeze([FeedSource.LINEAR, FeedSource.NOTION]);
 
 export const Disclosure = Object.freeze({
@@ -91,7 +96,10 @@ export function feedRequest(options) {
  */
 export function offeredSources(connected) {
   const have = new Set(Array.isArray(connected) ? connected : []);
-  return [FeedSource.GITHUB, FeedSource.DUCT, ...MCP_FEED_SOURCES.filter((s) => have.has(s))];
+  return [
+    FeedSource.GITHUB, FeedSource.DUCT, FeedSource.RSS, FeedSource.MILESTONES,
+    ...MCP_FEED_SOURCES.filter((s) => have.has(s)),
+  ];
 }
 
 /** Why the sheet cannot start yet, as a code, or null. */

@@ -19,14 +19,16 @@
   color: color-mix(in oklch, var(--kind) 45%, var(--foreground));
 }
 
-.feed-kind[data-kind="release"] { --kind: var(--tessera-terracotta); }
+.feed-kind[data-kind="release"],
+.feed-kind[data-kind="milestone"] { --kind: var(--tessera-terracotta); }
 .feed-kind[data-kind="pull_request"],
 .feed-kind[data-kind="issue"],
 .feed-kind[data-kind="linear_issue"] { --kind: var(--tessera-ochre); }
 .feed-kind[data-kind="commit"] { --kind: var(--tessera-grey); }
 .feed-kind[data-kind="docs_change"],
 .feed-kind[data-kind="artifact"],
-.feed-kind[data-kind="notion_page"] { --kind: var(--tessera-cream); }
+.feed-kind[data-kind="notion_page"],
+.feed-kind[data-kind="post"] { --kind: var(--tessera-cream); }
 /* Basalt itself is near-black: heavy as a stone among stones, so slate. */
 .feed-kind[data-kind="change_set"],
 .feed-kind[data-kind="memory"] { --kind: oklch(0.52 0.03 260); }
@@ -34,7 +36,8 @@
 /* Cream is near the card in light, so its stone takes an edge to stay a stone. */
 .feed-kind[data-kind="docs_change"],
 .feed-kind[data-kind="artifact"],
-.feed-kind[data-kind="notion_page"] {
+.feed-kind[data-kind="notion_page"],
+.feed-kind[data-kind="post"] {
   box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--tessera-grey) 45%, transparent);
 }
 

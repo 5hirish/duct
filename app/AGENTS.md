@@ -172,6 +172,9 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
     A search runs out in that order, then to adding by address. While browsing
     the whole list, `BringAnyTool` is that way in, beside the starters: the same
     offer as the last tile in the list went unseen.
+    RSS and Atom feeds are a native card (#564): one multiline field of feed
+    URLs, saved as one row, read by the From your work sheet's "Your feeds"
+    source and by FetchData (`rss_items`).
     A connected server that needs attention says why on its tile, from the
     `problem` the server recorded (`lib/mcpServers.js`, `PROBLEM_SHORT`).
     It was called Connections until November 2026; the route kept the old

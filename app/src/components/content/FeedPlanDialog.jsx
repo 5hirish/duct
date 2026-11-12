@@ -2,7 +2,7 @@
 
 import { useId, useRef, useState } from "react";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
-import { ArrowRight, CalendarClock, Check, ChevronDown, Eye, PackageCheck, Tag } from "lucide-react";
+import { ArrowRight, CalendarClock, Check, ChevronDown, Eye, PackageCheck, Tag, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -132,6 +132,24 @@ export default function FeedPlanDialog({
                 )}
                 name={i18n._(SOURCE_LABELS[FeedSource.DUCT])}
                 line={t`Briefs, approved changes and what they did`}
+              />
+              <SourceTile
+                checked={options.sources.includes(FeedSource.RSS)}
+                onToggle={() => toggleSource(FeedSource.RSS)}
+                mark={<BrandStone src="/icons/rss.svg" />}
+                name={i18n._(SOURCE_LABELS[FeedSource.RSS])}
+                line={t`Posts from the feeds you added in the Toolbox`}
+              />
+              <SourceTile
+                checked={options.sources.includes(FeedSource.MILESTONES)}
+                onToggle={() => toggleSource(FeedSource.MILESTONES)}
+                mark={(
+                  <span className="flex size-8 items-center justify-center rounded-lg bg-primary/15 text-brand">
+                    <Trophy className="size-4" aria-hidden />
+                  </span>
+                )}
+                name={i18n._(SOURCE_LABELS[FeedSource.MILESTONES])}
+                line={t`Round GitHub star counts and your best week in GA4`}
               />
               {offered.includes(FeedSource.LINEAR) && (
                 <SourceTile

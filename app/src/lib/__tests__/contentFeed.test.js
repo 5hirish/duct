@@ -98,8 +98,8 @@ describe("the setup sheet's drawing and the sieve", () => {
 describe("Linear and Notion as sources", () => {
   it("offers them only when connected and needs a Notion database before it starts", async () => {
     const { offeredSources, feedBlocker, feedRequest, feedSessionHref, feedFromParams, DEFAULT_FEED } = await import("../contentFeed.js");
-    expect(offeredSources([])).toEqual(["github", "duct"]);
-    expect(offeredSources(["notion", "railway", "linear"])).toEqual(["github", "duct", "linear", "notion"]);
+    expect(offeredSources([])).toEqual(["github", "duct", "rss", "milestones"]);
+    expect(offeredSources(["notion", "railway", "linear"])).toEqual(["github", "duct", "rss", "milestones", "linear", "notion"]);
     expect(feedBlocker({ sources: [] })).toBe("no_source");
     expect(feedBlocker({ sources: ["notion"] })).toBe("no_notion_database");
     expect(feedBlocker({ sources: ["notion"], notionDatabase: "https://www.notion.so/x" })).toBe(null);
