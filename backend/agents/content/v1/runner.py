@@ -988,8 +988,16 @@ class ContentRunner:
                 user_id, options.sources, window, disclosure=options.disclosure, already=already,
                 notion_database=options.notion_database, today=today,
             )
+        more = None
+        if user_id is not None and ({FeedSource.RSS, FeedSource.MILESTONES} & set(options.sources)):
+            from agents.content.feed_more import read_published_and_milestones
+
+            # The project's own feeds and its milestones (#564), read by code too.
+            more = await read_published_and_milestones(
+                user_id, project_id, options.sources, window, already=already,
+            )
         digest = build_digest(options, window, github_rows=rows, github_note_text=note, duct=duct,
-                              already=already, extra=extra)
+                              already=already, extra=[e for e in (extra, more) if e is not None])
         await emit({
             "event": ContentEvent.STEP_FINISHED,
             "step_id": ContentStep.READ_WORK,

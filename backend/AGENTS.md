@@ -678,6 +678,15 @@ Postgres `DATABASE_URL` names.
     call that asks first pauses on `TOOL_APPROVAL_REQUIRED`. Interactive
     insights and content sessions only, and only when the user has a server,
     so every other prompt keeps its cached prefix.
+- `service/rss/fetch.py` — RSS and Atom feeds as a manual connector (#564):
+  one credential row holds every feed URL a project reads (one per line, at
+  most ten) and one binding carries them all, so the one-binding-per-type
+  rule never bites. Every URL is user input aimed at the network: public
+  https only, each request and redirect through `compatible._PinnedTransport`
+  (resolved once, judged, connected to the address that passed), a size cap,
+  and a feed content type or a body that plainly is one. `feedparser` is
+  handed bytes Duct fetched, never a URL. Saving reads each feed once
+  (`list_accounts`), so a page pasted instead of its feed is refused on the card.
 - `service/discovery.py` — saved TikTok references. `ingest_reference(db,
   project_id, post)` is the one way a `ScrapedPost` becomes a
   `discovered_reference` row (one per post per project); `capture_reference_media`
@@ -887,7 +896,12 @@ agents/
     │                     feed_mcp.py adds Linear and Notion (#565) on the user's own
     │                     trusted presets, read by code like GitHub (ln: and nt: refs):
     │                     no stable tool contract exists, so it sends only the arguments
-    │                     a tool's schema declares and judges the window in code
+    │                     a tool's schema declares and judges the window in code.
+    │                     feed_more.py adds the project's own feeds (RSS, rs: refs, through
+    │                     FetchData's rss_items) and milestones.py the moments no commit
+    │                     records (#564): a round GitHub star count crossed in the window,
+    │                     from the newest stargazers' dates with no stored state, and GA4's
+    │                     best complete week; both claim only what the data proves
     ├── plan_proposal.py — a plan is proposed, then accepted: what Accept writes, merged
     │                     against the plan as it stands at Accept. The proposal is held
     │                     on the conversation (meta.plan_proposal) so a deploy does not

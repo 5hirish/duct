@@ -82,6 +82,10 @@ WEIGHTS: dict[str, int] = {
     # a page in the database someone keeps launch notes in is a story's.
     "linear_issue": 1,
     "notion_page": 2,
+    # RSS and milestones (#564): a published article is a story to amplify; a
+    # milestone (a round star count, a best week) is one by itself, like a release.
+    "post": 2,
+    "milestone": 3,
 }
 
 # Conventional-commit types that describe how the work was done, not what a
@@ -100,7 +104,7 @@ _CONVENTIONAL = re.compile(r"^(?P<type>[a-zA-Z]+)(?:\([^)]*\))?!?:\s")
 _DEPENDENCY = re.compile(r"^(?:build\(deps[^)]*\):\s*)?(?:bump|update|upgrade)\s+\S+.*\bfrom\s+\S+\s+to\s+\S+", re.IGNORECASE)
 _SQUASHED_PR = re.compile(r"\(#(\d+)\)\s*$")
 _MERGE_COMMIT = re.compile(r"^Merge (?:pull request|branch)\b", re.IGNORECASE)
-_REF = re.compile(r"^(?:gh|art|cs|mem|ln|nt):[A-Za-z0-9._#/-]+$")
+_REF = re.compile(r"^(?:gh|art|cs|mem|ln|nt|rs|ms):[A-Za-z0-9._#/-]+$")
 
 
 class Disclosure(StrEnum):
@@ -148,6 +152,9 @@ class FeedSource(StrEnum):
     # The user's own trusted read-only MCP connections (#565).
     LINEAR = "linear"
     NOTION = "notion"
+    # What the project published (its feeds) and its milestones (#564).
+    RSS = "rss"
+    MILESTONES = "milestones"
 
 
 class FeedOptions(BaseModel):
@@ -495,12 +502,13 @@ def build_digest(
         digest.notes.append(github_note_text)
     if duct is not None:
         items += duct
-    if extra is not None:  # feed_mcp.McpFeed: Linear and Notion
-        items += extra.items
-        digest.left_out.update(extra.left_out)
-        digest.notes += extra.notes
-    order = {"release": 0, "change_set": 1, "notion_page": 2, "pull_request": 3, "linear_issue": 3,
-             "artifact": 4, "commit": 5, "docs_change": 6, "issue": 7, "memory": 8}
+    for more in (extra if isinstance(extra, list) else [extra] if extra is not None else []):
+        # feed_mcp.McpFeed: Linear and Notion; feed_more: RSS and milestones
+        items += more.items
+        digest.left_out.update(more.left_out)
+        digest.notes += more.notes
+    order = {"release": 0, "milestone": 0, "change_set": 1, "post": 2, "notion_page": 2, "pull_request": 3,
+             "linear_issue": 3, "artifact": 4, "commit": 5, "docs_change": 6, "issue": 7, "memory": 8}
     # Newest first inside a kind.
     items.sort(key=lambda i: (order.get(i.kind, 9), _neg_date(i.at)))
     if len(items) > MAX_ITEMS:

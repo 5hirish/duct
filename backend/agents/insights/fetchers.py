@@ -211,7 +211,7 @@ def _build_specs() -> dict[str, FetchSpec]:
         fetch_geo_performance,
         fetch_search_terms,
     )
-    from service.google.ga4 import fetch_ga4_conversion_paths, fetch_ga4_landing_pages
+    from service.google.ga4 import fetch_ga4_conversion_paths, fetch_ga4_landing_pages, fetch_ga4_weekly_users
     from service.google.gsc import (
         fetch_gsc_page_performance,
         fetch_gsc_query_page,
@@ -221,6 +221,7 @@ def _build_specs() -> dict[str, FetchSpec]:
     from service.github.fetch import fetch_github
     from service.growthbook.fetch import fetch_growthbook
     from service.mixpanel.fetch import fetch_mixpanel
+    from service.rss.fetch import fetch_rss
 
     by_tool: dict[str, Callable[[str, str, str, dict], dict]] = {
         "fetch_campaign_performance": _campaigns,
@@ -230,6 +231,7 @@ def _build_specs() -> dict[str, FetchSpec]:
         "fetch_ad_group_performance": _google_ads(fetch_ad_group_performance),
         "fetch_ga4_landing_pages": _google_oauth(fetch_ga4_landing_pages),
         "fetch_ga4_conversion_paths": _google_oauth(fetch_ga4_conversion_paths),
+        "fetch_ga4_weekly_users": _google_oauth(fetch_ga4_weekly_users),
         "fetch_gsc_query_performance": _google_oauth(fetch_gsc_query_performance),
         "fetch_gsc_page_performance": _google_oauth(fetch_gsc_page_performance),
         "fetch_gsc_query_page": _google_oauth(fetch_gsc_query_page),
@@ -237,6 +239,7 @@ def _build_specs() -> dict[str, FetchSpec]:
         "fetch_clarity": _manual(fetch_clarity),
         "fetch_growthbook": _manual(fetch_growthbook, "project_id"),
         "fetch_github": _manual_dated(fetch_github, "repo"),
+        "fetch_rss": _manual_dated(fetch_rss, "account_id"),
         "fetch_social_post_metrics": _publishers_unreachable,
     }
 

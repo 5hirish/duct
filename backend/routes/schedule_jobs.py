@@ -26,7 +26,6 @@ from utils.dates import utcnow
 
 logger = logging.getLogger(__name__)
 
-GITHUB = "github"
 # The cursor of a repository with no published release yet: its first release
 # is then new, where an empty cursor means "never checked" and only records.
 NO_RELEASE = "-"
@@ -113,20 +112,13 @@ def _latest_tag(user_id, project_id) -> str | None:
     """The newest release tag, NO_RELEASE when the repository has none, or None
     when no repository is bound for this project. GitHub refusing raises, and
     the loop counts that as a quiet hour."""
-    from db.session import get_session as db_session
-    from service.connector_access import STATUS_BOUND, get_data_source, resolve_read_credentials
+    from service.github.access import bound_read_credentials
     from service.github.fetch import latest_release_tag
 
-    with next(db_session()) as db:
-        source = get_data_source(db, GITHUB, user_id=user_id, project_id=project_id)
-        if source is None or source.status != STATUS_BOUND or not source.account_id:
-            return None
-        creds = resolve_read_credentials(
-            db, user_id=user_id, project_id=project_id, connector_type=GITHUB, account_id=source.account_id,
-        )
-    if not creds:
+    creds = bound_read_credentials(user_id, project_id)
+    if creds is None:
         return None
-    return latest_release_tag({**creds, "repo": source.account_id}) or NO_RELEASE
+    return latest_release_tag(creds) or NO_RELEASE
 
 
 def _supersede(schedule_id, conversation_id) -> None:

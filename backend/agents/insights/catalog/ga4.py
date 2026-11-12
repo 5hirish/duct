@@ -31,6 +31,22 @@ ENTITY_CATALOG = {
             "sortable_by": ["sessions", "bounce_rate", "conversions", "total_revenue"],
         },
         {
+            "entity_id": "ga4_weekly_users",
+            "label": "GA4 Weekly Active Users",
+            "fetch_fn": "fetch_ga4_weekly_users",
+            "description": (
+                "Active users per ISO week (isoYearIsoWeek, e.g. 202645), oldest first. Users "
+                "are not additive: never sum weeks into a total, and compare a week with weeks, "
+                "not with a day or a month. The newest week is partial unless the window ends "
+                "on a Sunday."
+            ),
+            "fields": {
+                "iso_week": {"type": "dimension"},
+                "active_users": {"type": "metric", "unit": "count"},
+            },
+            "sortable_by": ["iso_week", "active_users"],
+        },
+        {
             "entity_id": "ga4_conversion_paths",
             "label": "GA4 Conversion Paths",
             "fetch_fn": "fetch_ga4_conversion_paths",

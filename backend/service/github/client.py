@@ -170,6 +170,12 @@ def api(path: str, creds: dict[str, str], params: dict | None = None) -> Any:
     return _ENDPOINT.request(path, headers=_headers(creds), params=params)
 
 
+def api_accept(path: str, creds: dict[str, str], accept: str, params: dict | None = None) -> Any:
+    """One GET with a media type of its own, e.g. the stargazers list with
+    ``application/vnd.github.star+json`` so each row carries ``starred_at``."""
+    return _ENDPOINT.request(path, headers={**_headers(creds), "Accept": accept}, params=params)
+
+
 def get_pages(
     path: str,
     creds: dict[str, str],

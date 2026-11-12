@@ -487,3 +487,37 @@ GITHUB_META = ConnectorMeta(
 )
 
 register_connector(GITHUB_META, GitHubConnector())
+
+
+STAR_MEDIA_TYPE = "application/vnd.github.star+json"
+STAR_PAGE = 100
+# Pages read from the newest end of the stargazers list: enough for a window of
+# a few hundred new stars, and a bound on a repository that went viral.
+MAX_STAR_PAGES = 5
+
+
+def recent_stars(creds: dict[str, str], since: str) -> tuple[int, list[str], bool]:
+    """The repository's star count now, the ``starred_at`` dates of its stars
+    newest first back to ``since`` (ISO date), and whether the read reached
+    ``since`` (False when ``MAX_STAR_PAGES`` ran out first). The stargazers
+    list is oldest first, so the read starts at its last page and walks back."""
+    creds = _read_credentials(creds)
+    owner, name = gh.require_repo(creds)
+    repo = gh.api(f"repos/{owner}/{name}", creds)
+    total = int((repo or {}).get("stargazers_count") or 0) if isinstance(repo, dict) else 0
+    dates: list[str] = []
+    page = -(-total // STAR_PAGE)  # ceil
+    reached = total == 0
+    for _ in range(MAX_STAR_PAGES):
+        if page < 1:
+            reached = True
+            break
+        rows = gh.api_accept(f"repos/{owner}/{name}/stargazers", creds, STAR_MEDIA_TYPE,
+                             {"per_page": STAR_PAGE, "page": page})
+        stamps = [str(r.get("starred_at") or "")[:10] for r in (rows if isinstance(rows, list) else [])]
+        for stamp in reversed(stamps):
+            if stamp and stamp < since:
+                return total, dates, True
+            dates.append(stamp)
+        page -= 1
+    return total, dates, reached
