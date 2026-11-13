@@ -79,12 +79,13 @@
       "postDebugTask": "Backend: stop uvicorn (8002)"
     },
     {
-      "//": "Opens the traces UI in a Simple Browser tab once the server is actually listening, which is the whole reason you picked a Phoenix launch. Not the Live Preview extension: every livePreview command is `.atFile` and serves static workspace files from its own server, so it cannot front a running Python app. `openIntegratedBrowser` is the built-in equivalent — debug-server-ready matches this terminal by shell pid and opens the captured URL. The pattern reads the URL out of the banner's last line instead of capturing a port, because the banner prints 127.0.0.1 when the host is 0.0.0.0 and a hardcoded localhost would be a second place to fix. Zed ignores all of this: it reads .zed/debug.json, and serverReadyAction is VS Code only.",
+      "//": "Opens the traces UI in a Simple Browser tab once the server is actually listening, which is the whole reason you picked a Phoenix launch. Not the Live Preview extension: every livePreview command is `.atFile` and serves static workspace files from its own server, so it cannot front a running Python app. `openIntegratedBrowser` is the built-in equivalent — debug-server-ready matches this terminal by shell pid and opens the captured URL. The pattern reads the URL out of the banner's last line instead of capturing a port, because the banner prints 127.0.0.1 when the host is 0.0.0.0 and a hardcoded localhost would be a second place to fix. Zed ignores all of this: it reads .zed/debug.json, and serverReadyAction is VS Code only. The env: loopback only, and no server-side bash for Phoenix's assistant. Phoenix runs with auth off and binds 0.0.0.0 by default, and the firewall admits Homebrew's Python, so on shared Wi-Fi anyone could read every stored prompt and tool payload, and the assistant would run shell commands for them. Everything that talks to it (the API's exporter, .mcp.json) uses localhost. The gRPC port 4317 is hardcoded to all interfaces in Phoenix 20.3 and only takes spans in; Duct exports over HTTP and never uses it. Mirrored in .zed/tasks.json.",
       "name": "Phoenix: OTEL traces UI (:6006)",
       "type": "node-terminal",
       "request": "launch",
       "command": "poetry run python -m phoenix.server.main serve",
       "cwd": "${workspaceFolder}/backend",
+      "env": { "PHOENIX_HOST": "127.0.0.1", "PHOENIX_AGENTS_DISABLE_BASH": "true" },
       "serverReadyAction": {
         "action": "openIntegratedBrowser",
         "pattern": "open (https?://\\S+) to get started",
