@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 720" width="1000" height="720" role="img" aria-labelledby="t d">
+  <title id="t">Where your data goes, three ways</title>
+  <desc id="d">Your tools, Google Ads, GA4, Search Console and Stripe, already live in their vendors' clouds. Three columns show what a cloud agent, a local app with a cloud model under your own key, and a fully local agent each do with the copy: where the agent runs, where the copy is stored, which model reads it and whose key pays, and who can see the data. The keychain holding your key is marked in orange in the middle column.</desc>
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#4b5068"/></marker>
+    <style>
+      .serif { font-family: Georgia, 'Times New Roman', serif; }
+      .sans { font-family: -apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+      .h { font-size: 23px; font-weight: bold; fill: #0d0f1a; }
+      .l { font-size: 19px; fill: #4b5068; }
+      .b { font-size: 19px; fill: #0d0f1a; font-weight: bold; }
+      .row { font-size: 16px; font-weight: bold; letter-spacing: 2px; fill: #6b7086; }
+      .k { font-size: 16px; font-weight: bold; letter-spacing: 2px; fill: #ff5c00; }
+      .card { fill: #ffffff; stroke: #d9dbe3; stroke-width: 2; }
+      .flow { stroke: #4b5068; stroke-width: 2.5; fill: none; }
+    </style>
+  </defs>
+  <rect width="1000" height="720" fill="#ffffff"/>
+  <text x="20" y="44" class="serif" font-size="32" fill="#0d0f1a">Where your data goes, three ways</text>
+  <text x="20" y="76" class="sans l">The source of truth is already in a vendor's cloud. "Local" only ever describes the copy.</text>
+
+  <!-- the tools -->
+  <rect x="20" y="98" width="960" height="56" rx="12" fill="#eef0f5"/>
+  <text x="40" y="133" class="sans b">Your tools<tspan class="l" font-weight="normal" dx="14">Google Ads · GA4 · Search Console · Stripe, each in its own vendor's cloud</tspan></text>
+
+  <!-- arrows down into columns -->
+  <g class="flow" marker-end="url(#ah)">
+    <line x1="185" y1="154" x2="185" y2="196"/>
+    <line x1="500" y1="154" x2="500" y2="196"/>
+    <line x1="815" y1="154" x2="815" y2="196"/>
+  </g>
+
+  <!-- column headers -->
+  <text x="185" y="226" text-anchor="middle" class="serif h">Cloud agent</text>
+  <text x="500" y="226" text-anchor="middle" class="serif h">Local app, cloud model</text>
+  <text x="815" y="226" text-anchor="middle" class="serif h">Fully local</text>
+
+  <!-- row labels, left margin inside each card as a kicker -->
+  <!-- Row 1: where the agent runs -->
+  <g>
+    <rect class="card" x="40" y="246" width="290" height="78" rx="12"/>
+    <text x="58" y="272" class="sans row">AGENT RUNS ON</text>
+    <text x="58" y="304" class="sans b">The vendor's servers</text>
+    <rect class="card" x="355" y="246" width="290" height="78" rx="12"/>
+    <text x="373" y="272" class="sans row">AGENT RUNS ON</text>
+    <text x="373" y="304" class="sans b">Your machine</text>
+    <rect class="card" x="670" y="246" width="290" height="78" rx="12"/>
+    <text x="688" y="272" class="sans row">AGENT RUNS ON</text>
+    <text x="688" y="304" class="sans b">Your machine</text>
+  </g>
+  <!-- Row 2: the copy -->
+  <g>
+    <rect class="card" x="40" y="340" width="290" height="78" rx="12"/>
+    <text x="58" y="366" class="sans row">THE COPY IS STORED IN</text>
+    <text x="58" y="398" class="sans b">The vendor's database</text>
+    <rect class="card" x="355" y="340" width="290" height="78" rx="12"/>
+    <text x="373" y="366" class="sans row">THE COPY IS STORED IN</text>
+    <text x="373" y="398" class="sans b">A file on your disk</text>
+    <rect class="card" x="670" y="340" width="290" height="78" rx="12"/>
+    <text x="688" y="366" class="sans row">THE COPY IS STORED IN</text>
+    <text x="688" y="398" class="sans b">A file on your disk</text>
+  </g>
+  <!-- Row 3: the model and the key -->
+  <g>
+    <rect class="card" x="40" y="434" width="290" height="100" rx="12"/>
+    <text x="58" y="460" class="sans row">MODEL, AND WHOSE KEY</text>
+    <text x="58" y="492" class="sans b">A cloud model</text>
+    <text x="58" y="518" class="sans l">on the vendor's key and bill</text>
+    <rect x="355" y="434" width="290" height="100" rx="12" fill="#fff4ec" stroke="#ff5c00" stroke-width="2.5"/>
+    <text x="373" y="460" class="sans k">MODEL, AND WHOSE KEY</text>
+    <text x="373" y="492" class="sans b">A cloud model, your key</text>
+    <text x="373" y="518" class="sans l">in your keychain, on your bill</text>
+    <rect class="card" x="670" y="434" width="290" height="100" rx="12"/>
+    <text x="688" y="460" class="sans row">MODEL, AND WHOSE KEY</text>
+    <text x="688" y="492" class="sans b">A model on your hardware</text>
+    <text x="688" y="518" class="sans l">no key, your electricity</text>
+  </g>
+  <!-- Row 4: who sees it -->
+  <g>
+    <rect class="card" x="40" y="550" width="290" height="100" rx="12"/>
+    <text x="58" y="576" class="sans row">WHO CAN READ THE COPY</text>
+    <text x="58" y="608" class="sans b">The vendor</text>
+    <text x="58" y="634" class="sans l">and the model provider</text>
+    <rect class="card" x="355" y="550" width="290" height="100" rx="12"/>
+    <text x="373" y="576" class="sans row">WHO CAN READ THE COPY</text>
+    <text x="373" y="608" class="sans b">The model provider</text>
+    <text x="373" y="634" class="sans l">under your account's terms</text>
+    <rect class="card" x="670" y="550" width="290" height="100" rx="12"/>
+    <text x="688" y="576" class="sans row">WHO CAN READ THE COPY</text>
+    <text x="688" y="608" class="sans b">Nobody else</text>
+    <text x="688" y="634" class="sans l">if the machine itself is secure</text>
+  </g>
+
+  <text x="20" y="684" class="sans" font-size="16" fill="#6b7086">Duct's download: left column for the agent and the copy, the orange box for the key.</text>
+  <text x="20" y="706" class="sans" font-size="16" fill="#6b7086">Duct's self-host build: the middle column as drawn.</text>
+</svg>

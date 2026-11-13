@@ -1519,6 +1519,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://getduct.ai/blog/local-ai-agents</loc>
+    <lastmod>2026-11-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://getduct.ai/blog/what-is-harness-engineering</loc>
     <lastmod>2026-09-28</lastmod>
     <changefreq>monthly</changefreq>
