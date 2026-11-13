@@ -23,6 +23,9 @@ export const AgentEvent = Object.freeze({
   CONNECTION_REQUIRED:        "connection_required",
   ACCOUNT_SELECTION_REQUIRED: "account_selection_required",
   SLIDE_RENDER_REQUESTED:     "slide_render_requested",
+  // Not a pause: the browser runs the agent's Python and posts the output
+  // back on its own route (lib/pythonRunner.js). No card, only the activity row.
+  PYTHON_RUN_REQUESTED:       "python_run_requested",
 
   TODO_UPDATE:         "todo_update",
 
@@ -82,6 +85,7 @@ export const ActivityKind = Object.freeze({
   CONTEXT:    "context",
   ARTIFACT:   "artifact",
   ACTION:     "action",
+  CODE:       "code",
 });
 
 /** The events that park a run. `pending` in the session state is one of these. */

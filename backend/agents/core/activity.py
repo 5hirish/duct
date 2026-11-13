@@ -59,6 +59,7 @@ class ActivityKind(StrEnum):
     CONTEXT = "context"        # project context read: business, brand, library, the run's own blocks
     ARTIFACT = "artifact"      # an existing document opened or listed
     ACTION = "action"          # something saved, published or logged on the person's behalf
+    CODE = "code"              # Python the agent ran in the person's app, over fetched rows
 
 
 # Tool names. The core ones are PascalCase (the model reads them in its
@@ -67,6 +68,11 @@ FETCH_DATA_TOOL = "FetchData"
 GENERATE_IMAGE_TOOL = "generate_image"
 EDIT_IMAGE_TOOL = "edit_image"
 RENDER_SLIDE_TOOL = "render_slide"
+RUN_PYTHON_TOOL = "RunPython"
+# The script is the card's detail: it is what the agent computed, and the
+# reason a figure in the brief can be trusted without re-deriving it. Capped
+# so a long script does not ride in every client's memory twice.
+CODE_PREVIEW_CHARS = 4_000
 # Not a tool the model calls: the runner's own "I read the project context"
 # notice, emitted where the run's CONTEXT row is recorded, so the person sees
 # the enriched turn — business, profile, memory, connectors — was in play.
@@ -267,6 +273,43 @@ def _slide_finish(args: dict[str, Any], result: Any, is_error: bool) -> dict[str
     }
 
 
+def _code_meta(args: dict[str, Any]) -> dict[str, Any]:
+    code = _text(args.get("code"))
+    tables = args.get("tables") or []
+    return {
+        "code": code[:CODE_PREVIEW_CHARS],
+        "lines": code.count("\n") + 1 if code else 0,
+        "tables": [_text(t) for t in tables if _text(t)],
+    }
+
+
+def _code_start(args: dict[str, Any]) -> dict[str, Any]:
+    return {"kind": ActivityKind.CODE, "title": "", "meta": _code_meta(args)}
+
+
+def _code_finish(args: dict[str, Any], result: Any, is_error: bool) -> dict[str, Any]:
+    # The output never rides on the card: it is computed from customer rows,
+    # and the transcript already holds it. Only its shape does.
+    env = _envelope(result)
+    status = _text(env.get("status"))
+    tables = env.get("tables") if isinstance(env.get("tables"), dict) else {}
+    meta = {
+        **_code_meta(args),
+        "rows": sum(v for v in tables.values() if isinstance(v, int)),
+        "duration_ms": env.get("duration_ms") if isinstance(env.get("duration_ms"), int) else None,
+        "unavailable": status == "unavailable",
+        "rows_cut": bool(env.get("rows_cut")),
+    }
+    ok = not is_error and status == "ok"
+    return {
+        "kind": ActivityKind.CODE,
+        "status": StepStatus.SUCCESS if ok else StepStatus.ERROR,
+        "title": "",
+        "meta": meta,
+        "error": "" if ok else _text(env.get("error"))[:TITLE_CHARS],
+    }
+
+
 def _subagent_start(args: dict[str, Any]) -> dict[str, Any]:
     return {
         "kind": ActivityKind.SUBAGENT,
@@ -455,6 +498,7 @@ ACTIVITY_TOOLS: dict[str, tuple[Callable[..., dict], Callable[..., dict]]] = {
     GENERATE_IMAGE_TOOL: (_image_start, _image_finish),
     EDIT_IMAGE_TOOL: (_image_start, _image_finish),
     RENDER_SLIDE_TOOL: (_slide_start, _slide_finish),
+    RUN_PYTHON_TOOL: (_code_start, _code_finish),
     "task": (_subagent_start, _subagent_finish),
     "SearchMemory": (_memory_search_start, _memory_search_finish),
     "GetMemory": (_memory_get_start, _memory_get_finish),

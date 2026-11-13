@@ -1284,6 +1284,39 @@ export const SCENES = [
     ),
   },
   {
+    id: "activity-code",
+    state: "ran · open",
+    group: "AgentChat",
+    title: "Python the agent ran",
+    note: "RunPython's row. The line says which fetched tables it computed over and how many rows; the chevron holds the script, because that is what someone checking a figure in the brief goes to read. The output never rides on the card: it is computed from customer rows and the transcript already holds it.",
+    render: () => (
+      <div className="max-w-xl space-y-2">
+        <ActivityRow
+          defaultOpen
+          activity={{ id: "c1", kind: "code", tool: "RunPython", status: "success", title: "", meta: { tables: ["ga4_landing_pages"], rows: 100, duration_ms: 412, lines: 6, code: "segments = data['ga4_landing_pages'].assign(\n    kind=lambda d: d.page_path.str.match(r'^/(render/\\d|settings/|welcome)').map({True: 'app', False: 'marketing'})\n)\nby_kind = segments.groupby('kind')[['sessions', 'conversions']].sum()\nby_kind['cvr'] = by_kind.conversions / by_kind.sessions\nprint(by_kind)\nprint('total', segments.sessions.sum())" } }}
+        />
+      </div>
+    ),
+  },
+  {
+    id: "activity-code-states",
+    state: "running · cut · unavailable",
+    group: "AgentChat",
+    title: "Python: the other states",
+    note: "Running shows the spinner like any call. A run whose tables were cut to the person's row limit says so under the script. \"Unavailable\" is the app not being open to run the code: the backend gave up waiting and the agent was told which figures went uncomputed.",
+    render: () => (
+      <div className="max-w-xl space-y-2">
+        <ActivityGroup
+          activities={[
+            { id: "c2", kind: "code", tool: "RunPython", status: "running", title: "", meta: { tables: ["gsc_queries"], lines: 3, code: "print(data['gsc_queries'].clicks.describe())" } },
+            { id: "c3", kind: "code", tool: "RunPython", status: "success", title: "", meta: { tables: ["google_ads_search_terms"], rows: 50000, rows_cut: true, lines: 2, code: "top = data['google_ads_search_terms'].nlargest(10, 'cost')\nresult = top" } },
+            { id: "c4", kind: "code", tool: "RunPython", status: "error", title: "", error: "The person's app did not run the code in time.", meta: { unavailable: true, lines: 1, code: "print(1)" } },
+          ]}
+        />
+      </div>
+    ),
+  },
+  {
     id: "activity-running",
     state: "mid-call",
     group: "AgentChat",

@@ -59,6 +59,10 @@ class AgentEvent(StrEnum):
     # property or site. Payload carries the candidates.
     ACCOUNT_SELECTION_REQUIRED = "account_selection_required"
     SLIDE_RENDER_REQUESTED = "slide_render_requested"  # agent asks the browser to rasterize a slide
+    # Agent asks the browser to run Python over fetched rows (agents/insights/
+    # python_run.py). Not a pause: the browser answers on its own route, inside
+    # the turn, and nothing is drawn for it beyond the tool's activity row.
+    PYTHON_RUN_REQUESTED = "python_run_requested"
 
     # Progress / todos
     TODO_UPDATE = "todo_update"
@@ -314,6 +318,7 @@ AG_UI_EVENT: dict[AgentEvent, str] = {
     AgentEvent.CONNECTION_REQUIRED:   "Custom",
     AgentEvent.ACCOUNT_SELECTION_REQUIRED: "Custom",
     AgentEvent.SLIDE_RENDER_REQUESTED: "Custom",
+    AgentEvent.PYTHON_RUN_REQUESTED: "Custom",
     AgentEvent.ARTIFACT_CHUNK:        "Custom",
     AgentEvent.ARTIFACT_VERSION:      "Custom",
     AgentEvent.ARTIFACT_UPDATED:      "Custom",

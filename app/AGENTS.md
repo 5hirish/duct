@@ -231,8 +231,21 @@ it is a claim about the code, not a way to quiet the check.
   follows the project's output language when it has one.
 - `lib/userPreferences.js` — what is left after the profile moved to the
   server: the per-run dials the composer writes (`thinking`, `tier`,
-  `preferred_artifact_format`, `context_compression`), plus the three fields an agent request still carries
+  `preferred_artifact_format`, `context_compression`, and the RunPython
+  switch and limits), plus the three fields an agent request still carries
   for signed-out runs, mirrored from the profile rather than edited here
+- `lib/pythonRunner.js` + `public/python-worker.js` — where the insights
+  agent's `RunPython` code runs: Pyodide with pandas in one warm Web Worker
+  per tab, answering `python_run_requested` over
+  `POST .../python-result`. The worker is locked in two layers, and **both
+  are load-bearing**: its own `Content-Security-Policy` (in `next.config.mjs`
+  **and** `public/_headers`, which is what Cloudflare serves static files
+  with) allows scripts and connections to one pinned Pyodide release and
+  nowhere else, and after boot it narrows `fetch` to GET on that prefix and
+  removes every other way out. The CSP is also what blocks `eval` and
+  dynamic `import()` from Python. Bumping Pyodide means changing the version
+  in all three files. The allowlist is not a setting: any host that accepts a
+  write is an exfiltration channel for a prompt injection in the rows.
 - `lib/analytics-client.js` — how to load GTM and push events (never whether)
 - `lib/consent.js` — the consent *rule* and the stored decision. Names no vendor.
 - `lib/analytics/` — the seam. `index.js` selects a provider from
@@ -522,8 +535,9 @@ Rules that follow:
     The backend sends fields, never a sentence: a tool whose card has no
     sentence of its own (a read of the brand context, a post published) gets
     its verb from `TOOL_WORDS` in `ActivityRow`, so it is translated with the
-    rest. Ten kinds now — the six tool families plus memory, context,
-    artifact and action — and the run's own "Read project context" row
+    rest. Eleven kinds now — the six tool families plus memory, context,
+    artifact, action and code (the insights agent's `RunPython`, whose
+    script sits behind the chevron) — and the run's own "Read project context" row
     (`contextActivity`, from the stored CONTEXT row on replay) says which
     blocks the opening turn was enriched with. Memory's "Recalled" and
     "Remembered" rows come back from their stored rows the same way.

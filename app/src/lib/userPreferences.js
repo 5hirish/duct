@@ -36,6 +36,13 @@ export const PREFS_DEFAULTS = {
   // tables) or "auto" (the agent picks per brief). The backend reads it as
   // `preferred_artifact_format` (backend/agents/preferences.py).
   preferred_artifact_format: "html",
+  // RunPython (backend/agents/insights/python_run.py): whether the insights
+  // agent computes its figures with Python in this app, and the limits of one
+  // run. Per device because they are about this machine's browser. The
+  // backend clamps both numbers to its own ceilings.
+  run_python: true,
+  run_python_max_rows: 50000,
+  run_python_timeout_seconds: 60,
 };
 
 export function loadPreferences() {

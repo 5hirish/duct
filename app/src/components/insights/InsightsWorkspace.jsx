@@ -43,6 +43,9 @@ import { ArtifactGallery } from "@/components/artifacts/ArtifactCards";
 import { useAgentSession } from "../../hooks/useAgentSession";
 import { getArtifactContent, listArtifacts, listArtifactVersions } from "../../lib/artifactsApi";
 import { InsightsEvent } from "../../lib/insightsEvents";
+import { AgentEvent } from "../../lib/agentEvents";
+import { postPythonResult } from "../../lib/api";
+import { runPython } from "../../lib/pythonRunner";
 import { briefFile, frontMatterTitle, sniffFormat, stripFrontMatter } from "../../lib/brief";
 import { Row } from "../../lib/agentSession";
 import { dataSourceRollup } from "../../lib/toolActivity";
@@ -111,8 +114,21 @@ export default function InsightsWorkspace({
     [projectId, initialPrompt, conversationId],
   );
 
-  const onEvent = useCallback((event) => {
+  const onEvent = useCallback((event, { sessionId } = {}) => {
     switch (event.event) {
+      case AgentEvent.PYTHON_RUN_REQUESTED:
+        // The agent's arithmetic, run here (lib/pythonRunner.js). Nothing to
+        // draw: the activity row already shows the script. A failed post is
+        // left to the backend's timeout, which tells the model the run was
+        // unavailable rather than leaving it waiting.
+        runPython({
+          code: event.code,
+          tables: event.tables,
+          timeoutSeconds: event.timeout_seconds,
+        })
+          .then((result) => postPythonResult(AGENT_TYPE, event.session_id || sessionId, event.run_id, result))
+          .catch(() => {});
+        break;
       case InsightsEvent.ARTIFACT_CHUNK:
         // The brief, arriving. Show it being written rather than waiting for
         // the closing tag — a long brief is a long silence otherwise.

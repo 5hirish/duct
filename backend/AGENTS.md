@@ -777,6 +777,19 @@ don't fit.
   of the human-in-the-loop port. Extracted from `agents/audit/v1/runner.py` when
   insights became the second V1 runner. A V1 runner should not talk to
   `init_chat_model` or drive `astream` itself.
+- `agents/insights/python_run.py` — `RunPython`, the insights agent's
+  arithmetic, run in the person's app (Pyodide in a Web Worker) and never
+  in this process: model-written code shaped by attacker-authored rows must
+  not run beside every customer's OAuth tokens. The transport is
+  `render_slide`'s in-turn Future (the browser posts to
+  `POST /api/agents/{type}/sessions/{id}/python-result`), not the
+  checkpointed pause, which would end the streamed turn on every call.
+  `FetchedTables` holds each pull's raw rows via FetchData's `on_fetch`, by
+  `<entity>` (latest) and `<entity>:<from>:<to>` (each window), so a
+  comparison keeps both. Mounted only for an interactive session with a
+  stream; a scheduled brief has no app to answer and computes nothing in
+  code. Nobody answering is `unavailable`, never a hang. Limits ride on
+  `UserPreferences` per device and are clamped, not refused.
 - `agents/core/compaction.py` — lossless payload compaction, applied to a
   connector result before it reaches the model. Folds a homogeneous row array
   to typed CSV; **verifies the result structurally and discards a fold that

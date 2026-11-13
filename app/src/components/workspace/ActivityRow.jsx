@@ -28,6 +28,7 @@ import {
   Brain,
   CheckCircle2,
   ChevronRight,
+  Code,
   Database,
   FileText,
   Globe,
@@ -42,9 +43,10 @@ import { ActivityKind } from "@/lib/agentEvents";
 import { StepStatus } from "@/lib/agentSteps";
 import { Spinner } from "@/components/ui/spinner";
 import { Lightbox } from "@/components/ui/lightbox";
+import { CodeBlock } from "@/components/workspace/CodeBlock";
 import { CONNECTOR_NAMES, LOGOS } from "@/components/connections/logos";
 import { faviconUrl, safeHostname } from "@/lib/favicon";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatNumber } from "@/lib/format";
 
 // A pull that failed for one of these is fixed on the Connections page, and
 // nowhere else. Any other failure is the agent's problem to route around, so
@@ -62,6 +64,7 @@ const KIND_ICONS = {
   [ActivityKind.CONTEXT]: BookOpen,
   [ActivityKind.ARTIFACT]: FileText,
   [ActivityKind.ACTION]: CheckCircle2,
+  [ActivityKind.CODE]: Code,
 };
 
 // The verb for each tool whose card carries no sentence of its own — the
@@ -196,6 +199,19 @@ function useSummary(activity, named) {
       // When it goes out is the one fact a publish has that the verb does not.
       return { lead: word, detail: activity.title, aside: meta.scheduled_at ? formatDate(meta.scheduled_at, { locale: i18n.locale }) : "" };
     }
+    case ActivityKind.CODE: {
+      // Which rows it computed over is the line's fact; the script itself is
+      // behind the chevron, where someone checking a figure goes to read it.
+      const tables = Array.isArray(meta.tables) && meta.tables.length ? meta.tables.join(", ") : "";
+      const rows = typeof meta.rows === "number" && meta.rows > 0 ? formatNumber(meta.rows, { locale: i18n.locale }) : "";
+      const seconds = typeof meta.duration_ms === "number" ? (meta.duration_ms / 1000).toFixed(1) : "";
+      if (meta.unavailable) return { lead: t`Couldn’t run Python`, detail: t`the app wasn’t open`, aside: "" };
+      return {
+        lead: t`Ran Python`,
+        detail: tables,
+        aside: rows ? t`${rows} rows` : seconds ? t`${seconds} s` : "",
+      };
+    }
     default:
       return { lead: t`Asked ${activity.title}`, detail: meta.brief || "", aside: "" };
   }
@@ -312,6 +328,17 @@ function ActivityDetail({ activity }) {
 
       {images.length > 0 && <ImageStrip images={images} alt={activity.title} />}
 
+      {activity.kind === ActivityKind.CODE && meta.code && (
+        <div className="space-y-1.5">
+          <CodeBlock language="python" compact>{meta.code}</CodeBlock>
+          {meta.rows_cut && (
+            <p className="text-2xs">
+              <Trans>Some rows were left out to stay under the row limit in Settings, so figures from this run cover part of the data.</Trans>
+            </p>
+          )}
+        </div>
+      )}
+
       {activity.kind === ActivityKind.SUBAGENT && meta.summary && (
         // What it came back with. The brief is already on the line above, so
         // repeating it here would make the chevron a no-op.
@@ -360,6 +387,8 @@ function hasDetail(activity) {
       return activity.tool === "ProjectContext";
     case ActivityKind.ARTIFACT:
       return Boolean(meta.artifact_id) && !meta.listing;
+    case ActivityKind.CODE:
+      return Boolean(meta.code);
     default:
       return false;
   }

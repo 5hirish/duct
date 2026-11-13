@@ -81,7 +81,8 @@ from agents.core.memory_tools import build_memory_tools_lc
 from agents.core.quota import credential_identity
 from agents.core.session import BaseAgentSession
 from agents.insights.brief import DEFAULT_FORMAT, parse_brief
-from agents.insights.data_tools import build_data_tools_lc
+from agents.insights.data_tools import build_data_tools_lc, build_run_python_tool_lc
+from agents.insights.python_run import FetchedTables, PythonLimits
 from agents.insights.subagents import build_verify_subagent
 from agents.insights.prompts.autonomous import (
     CAPABILITIES_PHASE_3,
@@ -207,6 +208,7 @@ class AutonomousInsightsRunner:
         system_prompt: str = "",
         on_system_prompt: Callable[[str], None] | None = None,
         replay: dict[tuple[str, str, str], str] | None = None,
+        python: PythonLimits | None = None,
     ) -> Any:
         """Assemble the agent: memory tools, mid-run questions, planning.
 
@@ -234,6 +236,11 @@ class AutonomousInsightsRunner:
         ``replay`` seeds FetchData with a stored session's tool bodies and
         closes the connectors (see ``build_data_tools_lc``); the replay script
         is its one caller.
+
+        ``python`` is the person's RunPython limits. The tool runs in their
+        app, so it is mounted only where there is an app to answer: an
+        interactive session with a live stream, and the limits not switched
+        off. A scheduled brief has neither and computes nothing in code.
 
         ``on_system_prompt`` receives the prompt text the agent was built with.
         The prompt depends on what got mounted (execution tools, the
@@ -303,11 +310,15 @@ class AutonomousInsightsRunner:
         # card in the transcript, where the reader is already looking, and the
         # ladder's copy of it was the same line said twice — once as a step
         # whose label was English built in Python, once in the pane beside it.
+        # What RunPython computes over: every successful pull, as rows, taken
+        # before the fold for the model so the browser gets real columns.
+        fetched = FetchedTables()
         data_tools = build_data_tools_lc(
             project_id,
             user_id=user_id,
             compress=compress,
             log_prefix="insights-v1",
+            on_fetch=fetched.record,
             replay=replay,
         )
         tools += data_tools
@@ -345,6 +356,18 @@ class AutonomousInsightsRunner:
                 )
             )
 
+        run_python_mounted = (
+            interactive
+            and emit is not None
+            and python is not None
+            and python.enabled
+            and hasattr(session, "python_futures")
+        )
+        if run_python_mounted:
+            tools.append(
+                build_run_python_tool_lc(session=session, emit=emit, store=fetched, limits=python)
+            )
+
         # Provider outages and 429/529s end an autonomous run that may already
         # have spent several minutes fetching; one same-provider step down
         # keeps it alive (agents/core/deep_session.fallback_chain). Skipped
@@ -361,6 +384,7 @@ class AutonomousInsightsRunner:
                 CAPABILITIES_PHASE_3 if interactive else CAPABILITIES_UNATTENDED
             ),
             can_execute=bool(execution_tools),
+            can_run_python=run_python_mounted,
         )
         if on_system_prompt is not None:
             on_system_prompt(prompt_text)
@@ -414,6 +438,7 @@ class AutonomousInsightsRunner:
         replay: dict[tuple[str, str, str], str] | None = None,
         interactive: bool = True,
         execute: bool = True,
+        python: PythonLimits | None = None,
     ) -> None:
         """Run the opening turn, then stay open for follow-ups until idle.
 
@@ -457,6 +482,7 @@ class AutonomousInsightsRunner:
             replay=replay,
             interactive=interactive,
             execute=execute,
+            python=python,
         )
 
         # Three jobs, one pair of hooks, wrapped outermost first: the recorder

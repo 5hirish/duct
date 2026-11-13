@@ -386,6 +386,31 @@ export async function sendAgentMessage(agentType, sessionId, message) {
   return res.json();
 }
 
+/**
+ * Hand a RunPython result back to the agent waiting on it. `result` is what
+ * `lib/pythonRunner.js` returned; the backend clips and forwards it.
+ */
+export async function postPythonResult(agentType, sessionId, runId, result) {
+  const res = await fetch(
+    `${BASE}/api/agents/${encodeURIComponent(agentType)}/sessions/${encodeURIComponent(sessionId)}/python-result`,
+    {
+      method: "POST",
+      headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({
+        run_id: runId,
+        ok: Boolean(result.ok),
+        stdout: result.stdout || "",
+        result: result.result || "",
+        error: result.error || "",
+        ...(Number.isInteger(result.duration_ms) ? { duration_ms: result.duration_ms } : {}),
+      }),
+      signal: controlCallSignal(),
+    }
+  );
+  if (!res.ok) throw new Error(`Python result failed: ${res.status}`);
+  return res.json();
+}
+
 /** A live session's state: { pending: [...pauses], has_pending_question, report_versions }.
  * Read after reattaching to a session whose stream had already delivered the
  * pause — the card has to be put back from somewhere. */

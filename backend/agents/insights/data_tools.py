@@ -33,12 +33,18 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from agents.core.activity import RUN_PYTHON_TOOL
 from agents.core.compaction import compact
 from agents.core.telemetry import tool_span
 from agents.insights.fetchers import (
     MAX_RESPONSE_CHARS,
     fetch_entity,
     known_entities,
+)
+from agents.insights.python_run import (
+    FetchedTables,
+    PythonLimits,
+    run_python,
 )
 from agents.knowledge import load_knowledge_pack
 
@@ -281,6 +287,58 @@ def build_data_tools_lc(
         )
     )
     return tools
+
+
+class RunPythonArgs(BaseModel):
+    code: str = Field(
+        description=(
+            "A Python 3 script. `pd`, `np` and `data` are already defined: `data` maps "
+            "table names to pandas DataFrames. print() what you want to read, or assign "
+            "`result` (a DataFrame comes back as CSV, first 200 rows)."
+        )
+    )
+    tables: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Which fetched tables to load, by name: `<entity_id>` for its latest pull, or "
+            "`<entity_id>:<date_from>:<date_to>` for one window when you pulled several. "
+            "Empty loads the latest pull of every entity fetched so far."
+        ),
+    )
+
+
+RUN_PYTHON_DESCRIPTION = (
+    "Run Python (pandas, numpy, scipy) over rows you have already fetched, on the "
+    "person's own device. Use it for every derived figure: totals, shares, medians, "
+    "tails, concentration, weekly shape, classification rules and their coverage. No "
+    "network and no files: it cannot fetch anything. Put a whole step's computation in "
+    "one script. 'unavailable' means the person's app is not open to run it: say which "
+    "figures are uncomputed and carry on."
+)
+
+
+def build_run_python_tool_lc(
+    *,
+    session: Any,
+    emit: Callable[[dict], Any],
+    store: FetchedTables,
+    limits: PythonLimits,
+) -> Any:
+    """RunPython as a LangChain tool. The body is ``python_run.run_python``."""
+    from langchain_core.tools import StructuredTool
+
+    async def run(code: str, tables: list[str] | None = None) -> str:
+        with tool_span(tool_name=RUN_PYTHON_TOOL, agent_name="insights-v1"):
+            return await run_python(
+                session=session, emit=emit, store=store, limits=limits, code=code, tables=tables
+            )
+
+    return StructuredTool.from_function(
+        coroutine=run,
+        name=RUN_PYTHON_TOOL,
+        description=RUN_PYTHON_DESCRIPTION,
+        args_schema=RunPythonArgs,
+    )
 
 
 def knowledge_index_block() -> str:

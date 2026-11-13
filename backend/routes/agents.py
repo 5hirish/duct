@@ -35,7 +35,7 @@ from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 from sqlmodel import Session
 
 from uuid import UUID
@@ -56,6 +56,7 @@ from agents.content.persistence import (
 )
 from agents.content.schema import DraftPostRequest, PlanRequest
 from agents.content.v1.runner import create_draft_session, create_plan_session
+from agents.insights.python_run import MAX_ERROR_CHARS, MAX_OUTPUT_CHARS, PythonLimits, resolve_run
 from agents.insights.schema import InsightsRequest, create_insights_session
 from agents.insights.setup import (
     InsightsSetupError,
@@ -514,6 +515,47 @@ class AgentMessage(BaseModel):
     # mid-conversation reaches the agent at this message rather than the next
     # session. Optional: the session's own preference stands when absent.
     artifact_format: str | None = None
+
+
+class PythonRunResult(BaseModel):
+    """What the browser's worker returns for one RunPython call.
+
+    Bounded here as well as in the worker: the worker is ours, but the request
+    is the caller's, and an unbounded string field on an authenticated route
+    is still an unbounded string field. Twice the model's cap, so a result the
+    worker already clipped is never refused for a few bytes of JSON escaping.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    run_id: str = Field(max_length=64)
+    ok: bool
+    stdout: str = Field(default="", max_length=2 * MAX_OUTPUT_CHARS)
+    result: str = Field(default="", max_length=2 * MAX_OUTPUT_CHARS)
+    error: str = Field(default="", max_length=2 * MAX_ERROR_CHARS)
+    duration_ms: int | None = Field(default=None, ge=0)
+
+
+@router.post("/{agent_type}/sessions/{session_id}/python-result")
+async def submit_python_result(
+    agent_type: str,
+    session_id: str,
+    body: PythonRunResult,
+    user: User = Depends(get_current_user),
+) -> dict:
+    """Resolve a waiting RunPython call with what the browser computed.
+
+    Signed in, unlike the messages route: RunPython is mounted only on an
+    insights session, which always has an owner, so there is no anonymous
+    caller to serve and no reason to widen the ungated list for one. Then the
+    same ownership rule. A result for a run that is not waiting (answered
+    already, or given up on) is a 409 rather than a silent drop, so a client
+    bug shows up as one.
+    """
+    session = _owned_session(session_id, agent_type, user)
+    if not resolve_run(session, body.run_id, body.model_dump(exclude={"run_id"})):
+        raise HTTPException(409, "No code run is waiting for that result.")
+    return {"status": "ok"}
 
 
 @router.post("/{agent_type}/sessions/{session_id}/messages")
@@ -1761,6 +1803,11 @@ async def _start_insights(
                 compress=req.user_preferences.context_compression,
                 start_version=start_version,
                 resume=is_resume,
+                python=PythonLimits.of(
+                    req.user_preferences.run_python,
+                    req.user_preferences.run_python_max_rows,
+                    req.user_preferences.run_python_timeout_seconds,
+                ),
             )
         except Exception as exc:
             logger.exception("insights pipeline error for session %s", session_id)

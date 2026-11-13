@@ -1,2 +1,7 @@
 /_next/static/*
   Cache-Control: public,max-age=31536000,immutable
+
+# RunPython's worker: scripts and connections to one pinned Pyodide release,
+# nowhere else. Keep in step with next.config.mjs and public/python-worker.js.
+/python-worker.js
+  Content-Security-Policy: default-src 'none'; script-src https://cdn.jsdelivr.net/pyodide/v314.0.7/full/ 'wasm-unsafe-eval'; connect-src https://cdn.jsdelivr.net/pyodide/v314.0.7/full/

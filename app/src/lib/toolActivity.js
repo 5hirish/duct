@@ -41,6 +41,7 @@ export const ACTIVITY_TOOLS = Object.freeze({
   generate_image: ActivityKind.IMAGE,
   edit_image: ActivityKind.IMAGE,
   render_slide: ActivityKind.SLIDE,
+  RunPython: ActivityKind.CODE,
   task: ActivityKind.SUBAGENT,
   SearchMemory: ActivityKind.MEMORY,
   GetMemory: ActivityKind.MEMORY,

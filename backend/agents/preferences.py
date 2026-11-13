@@ -12,6 +12,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
+from agents.insights.python_run import DEFAULT_MAX_INPUT_ROWS, DEFAULT_TIMEOUT_SECONDS
+
 
 class UserPreferences(BaseModel):
     model_config = ConfigDict(extra="ignore")  # forward-compatible — ignore unknown keys
@@ -57,6 +59,15 @@ class UserPreferences(BaseModel):
     # lossless, so this changes how the rows are written, never which numbers
     # they carry. It stays a preference rather than a constant only so someone
     # who suspects the shape can rule it out in one click.
+
+    run_python: bool = True
+    run_python_max_rows: int = DEFAULT_MAX_INPUT_ROWS
+    run_python_timeout_seconds: int = DEFAULT_TIMEOUT_SECONDS
+    # RunPython's limits (agents/insights/python_run.py). Per device, not per
+    # user: the code runs in this app, and what an 8 GB laptop's tab survives
+    # is not what a 32 GB desktop's does, so the browser sends what its own
+    # settings say. Out-of-range values are clamped by PythonLimits.of rather
+    # than refused here: a stale setting must not fail the session it rides on.
 
     preferred_artifact_format: Literal["markdown", "html", "auto"] = "html"
     # html     — a self-contained styled page with its own charts (default):

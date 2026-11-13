@@ -139,6 +139,8 @@ def render_insights() -> str:
     from agents.core.voice import user_context_block
     from agents.core.context import format_business_context
     from agents.insights.prompts.autonomous import (
+        EXECUTION_CAPABILITY,
+        RUN_PYTHON_CAPABILITY,
         build_insights_system_prompt,
         build_insights_user_prompt,
     )
@@ -150,6 +152,15 @@ def render_insights() -> str:
         "Cache-stable: identical for every account, so it is the shared prefix.\n\n"
         + fenced(system),
     ))
+    # Appended to the prompt above only when their tools are mounted, so the
+    # default render never shows them. Rendered here so a change to either is
+    # still a diff a reviewer reads as prose.
+    for flag, stanza in (("can_execute", EXECUTION_CAPABILITY), ("can_run_python", RUN_PYTHON_CAPABILITY)):
+        out.append(section(
+            f"Mounted-only stanza · `{flag}` · ~{approx_tokens(stanza):,} tokens",
+            "Appended when its tools are mounted; one more cached prefix per flag, not one per account.\n\n"
+            + fenced(stanza),
+        ))
     turn = build_insights_user_prompt(
         prompt=FIXTURE_REQUEST,
         business_context=format_business_context(_business()),

@@ -434,8 +434,16 @@ msgstr ""
 msgid "{robotsLines} lines"
 msgstr ""
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "{rows} rows"
+msgstr ""
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "{score}/100 — {label}. Weighted average across all 9 SEO categories."
+msgstr ""
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "{seconds} s"
 msgstr ""
 
 #: src/components/workspace/ContextRing.jsx
@@ -727,6 +735,10 @@ msgstr ""
 
 #: src/components/content/FormatLibrary.jsx
 msgid "A reusable recipe — slide structure, caption styles, image prompt rules — that the drafting agent follows."
+msgstr ""
+
+#: src/components/RunPythonCard.jsx
+msgid "A run that takes longer is stopped."
 msgstr ""
 
 #: src/components/connections/ProviderCard.jsx
@@ -1824,6 +1836,10 @@ msgstr ""
 msgid "Compress connector data before it reaches the model"
 msgstr ""
 
+#: src/components/RunPythonCard.jsx
+msgid "Compute with Python"
+msgstr ""
+
 #: src/components/GoogleAdsReport.js
 msgid "Confidence"
 msgstr ""
@@ -2098,6 +2114,10 @@ msgstr ""
 
 #: src/app/(auth)/desktop-auth/page.js
 msgid "Couldn't read your Google account"
+msgstr ""
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Couldn’t run Python"
 msgstr ""
 
 #: src/components/content/BrandContextForm.jsx
@@ -3623,6 +3643,10 @@ msgstr ""
 msgid "Let Duct decide"
 msgstr ""
 
+#: src/components/RunPythonCard.jsx
+msgid "Let the insights agent compute its figures with Python in this app"
+msgstr ""
+
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Lets the AI reason internally before responding. Improves accuracy on complex sites."
 msgstr ""
@@ -3871,6 +3895,10 @@ msgstr ""
 
 #: src/components/audit/AuditReportV1.jsx
 msgid "Lower impact · More effort"
+msgstr ""
+
+#: src/components/RunPythonCard.jsx
+msgid "Lower it if this device runs short of memory."
 msgstr ""
 
 #: src/components/content/FormatLibrary.jsx
@@ -5337,7 +5365,11 @@ msgid "Quit and reopen Duct. If it keeps happening, the app bundle may be incomp
 msgstr ""
 
 #: src/components/models/AdvancedSettings.jsx
-msgid "Quota fallback and context compression"
+#~ msgid "Quota fallback and context compression"
+#~ msgstr ""
+
+#: src/components/models/AdvancedSettings.jsx
+msgid "Quota fallback, context compression and Python"
 msgstr ""
 
 #: src/app/(app)/connections/page.jsx
@@ -5346,6 +5378,10 @@ msgstr ""
 
 #: src/components/insights/desk/DeskActivity.jsx
 msgid "ran on its own"
+msgstr ""
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Ran Python"
 msgstr ""
 
 #: src/components/workspace/ActivityRow.jsx
@@ -5808,6 +5844,10 @@ msgstr ""
 
 #: src/components/execution/ChangeSetCard.jsx
 msgid "Rolling back…"
+msgstr ""
+
+#: src/components/RunPythonCard.jsx
+msgid "Rows per run"
 msgstr ""
 
 #: src/app/(app)/execute/page.jsx
@@ -6566,6 +6606,10 @@ msgstr ""
 msgid "Some accounts need verification or a higher usage tier first. Try another provider, or come back once the account is verified."
 msgstr ""
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Some rows were left out to stay under the row limit in Settings, so figures from this run cover part of the data."
+msgstr ""
+
 #: src/components/audit/ShareReport.jsx
 msgid "Someone new? Invite them and send the link."
 msgstr ""
@@ -6892,6 +6936,14 @@ msgstr ""
 msgid "That's us — continue"
 msgstr ""
 
+#: src/components/RunPythonCard.jsx
+msgid "The agent works figures out without running code, and says which ones it could not compute."
+msgstr ""
+
+#: src/components/RunPythonCard.jsx
+msgid "The agent works out totals, shares and trends with Python that runs here, on this device, with no internet access. Figures in a brief are computed, not estimated."
+msgstr ""
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "The agents lose every fact on this timeline from their next turn. This cannot be undone."
 msgstr ""
@@ -6906,6 +6958,10 @@ msgstr ""
 
 #: src/components/ConnectionBanner.jsx
 msgid "The app is online but Duct's servers are not responding. This is usually brief."
+msgstr ""
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "the app wasn’t open"
 msgstr ""
 
 #: src/app/(start)/start/page.jsx
@@ -7210,6 +7266,10 @@ msgstr ""
 
 #: src/app/(app)/settings/models/page.jsx
 msgid "Tiers"
+msgstr ""
+
+#: src/components/RunPythonCard.jsx
+msgid "Time limit (seconds)"
 msgstr ""
 
 #: src/components/insight-blocks/TimeSeriesBlock.jsx

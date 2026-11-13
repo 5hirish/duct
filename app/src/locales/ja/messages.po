@@ -440,9 +440,17 @@ msgstr "{resultCount, plural, one {# コマンド} other {# コマンド}}"
 msgid "{robotsLines} lines"
 msgstr "{robotsLines} 行"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "{rows} rows"
+msgstr "{rows} 行"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "{score}/100 — {label}. Weighted average across all 9 SEO categories."
 msgstr "{score}/100 — {label}。9つのSEOカテゴリ全体の加重平均です。"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "{seconds} s"
+msgstr "{seconds} 秒"
 
 #: src/components/workspace/ContextRing.jsx
 msgid "{share}% from cache"
@@ -741,6 +749,10 @@ msgstr "プロジェクトはサイトから始まります。Ductがそれを�
 msgid ""
 "A reusable recipe — slide structure, caption styles, image prompt rules — that the drafting agent follows."
 msgstr "下書きエージェントが従う、再利用可能なレシピ — スライド構造、キャプションスタイル、画像プロンプトルールなど。"
+
+#: src/components/RunPythonCard.jsx
+msgid "A run that takes longer is stopped."
+msgstr "実行時間が長すぎる場合は停止されます。"
 
 #: src/components/connections/ProviderCard.jsx
 msgid ""
@@ -1805,6 +1817,10 @@ msgstr "構成"
 msgid "Compress connector data before it reaches the model"
 msgstr "コネクタデータをモデルに到達する前に圧縮する"
 
+#: src/components/RunPythonCard.jsx
+msgid "Compute with Python"
+msgstr "Pythonで計算"
+
 #: src/components/GoogleAdsReport.js
 msgid "Confidence"
 msgstr "信頼度"
@@ -2073,6 +2089,10 @@ msgstr "そのサイトを読み取れませんでした。"
 #: src/app/(auth)/desktop-auth/page.js
 msgid "Couldn't read your Google account"
 msgstr "Googleアカウントを読み取れませんでした"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Couldn’t run Python"
+msgstr "Pythonを実行できませんでした"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Couldn't save. Please try again."
@@ -3633,6 +3653,10 @@ msgstr "このプロジェクトを離れますか？"
 msgid "Let Duct decide"
 msgstr "Ductに任せる"
 
+#: src/components/RunPythonCard.jsx
+msgid "Let the insights agent compute its figures with Python in this app"
+msgstr "インサイトエージェントがこのアプリでPythonを使って数値を計算できるようにします"
+
 #: src/app/(app)/audit/seo/page.jsx
 msgid ""
 "Lets the AI reason internally before responding. Improves accuracy on complex sites."
@@ -3877,6 +3901,10 @@ msgstr "低影響 · 低労力"
 #: src/components/audit/AuditReportV1.jsx
 msgid "Lower impact · More effort"
 msgstr "低影響 · 高労力"
+
+#: src/components/RunPythonCard.jsx
+msgid "Lower it if this device runs short of memory."
+msgstr "このデバイスのメモリが不足する場合は、値を下げてください。"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Lowercase, numbers, hyphens only"
@@ -5340,8 +5368,12 @@ msgid ""
 msgstr "Ductを終了して再起動してください。問題が続く場合は、アプリバンドルが不完全な可能性があります。再インストールしてください。"
 
 #: src/components/models/AdvancedSettings.jsx
-msgid "Quota fallback and context compression"
-msgstr "クォータフォールバックとコンテキスト圧縮"
+#~ msgid "Quota fallback and context compression"
+#~ msgstr "クォータフォールバックとコンテキスト圧縮"
+
+#: src/components/models/AdvancedSettings.jsx
+msgid "Quota fallback, context compression and Python"
+msgstr "クォータフォールバック、コンテキスト圧縮、Python"
 
 #: src/app/(app)/connections/page.jsx
 msgid "Rage clicks, dead clicks, quick-backs and script errors, per page."
@@ -5350,6 +5382,10 @@ msgstr "レイジクリック、デッドクリック、クイックバック、
 #: src/components/insights/desk/DeskActivity.jsx
 msgid "ran on its own"
 msgstr "自動実行されました"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Ran Python"
+msgstr "Pythonを実行しました"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read"
@@ -5801,6 +5837,10 @@ msgstr "ロールバック済み"
 #: src/components/execution/ChangeSetCard.jsx
 msgid "Rolling back…"
 msgstr "ロールバック中…"
+
+#: src/components/RunPythonCard.jsx
+msgid "Rows per run"
+msgstr "実行あたりの行数"
 
 #: src/app/(app)/execute/page.jsx
 msgid "Rule, e.g. “Never pause the Brand campaign”"
@@ -6553,6 +6593,11 @@ msgid ""
 "Some accounts need verification or a higher usage tier first. Try another provider, or come back once the account is verified."
 msgstr "一部のアカウントでは、まず認証または上位の使用ティアが必要です。別プロバイダーをお試しいただくか、アカウントが認証されてから再度お越しください。"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid ""
+"Some rows were left out to stay under the row limit in Settings, so figures from this run cover part of the data."
+msgstr "設定の行数制限を超えるため一部の行が除外されました。この実行の数値はデータの一部をカバーしています。"
+
 #: src/components/audit/ShareReport.jsx
 msgid "Someone new? Invite them and send the link."
 msgstr "新しい方ですか？招待してリンクを送信してください。"
@@ -6879,6 +6924,17 @@ msgstr "そのターンは失敗しました"
 msgid "That's us — continue"
 msgstr "私たちです — 続行"
 
+#: src/components/RunPythonCard.jsx
+msgid ""
+"The agent works figures out without running code, and says which ones it could not compute."
+msgstr "エージェントはコードを実行せずに数値を算出し、計算できなかったものを報告します。"
+
+#: src/components/RunPythonCard.jsx
+msgid ""
+"The agent works out totals, shares and trends with Python that runs here, on this device, with no internet access. Figures in a brief are computed, not estimated."
+msgstr ""
+"エージェントは、インターネットアクセスなしでこのデバイス上で実行されるPythonを使用して、合計、シェア、トレンドを算出します。ブリーフ内の数値は計算されたものであり、推定ではありません。"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid ""
 "The agents lose every fact on this timeline from their next turn. This cannot be undone."
@@ -6896,6 +6952,10 @@ msgstr "API"
 msgid ""
 "The app is online but Duct's servers are not responding. This is usually brief."
 msgstr "アプリはオンラインですが、Ductのサーバーが応答していません。通常、これは一時的なものです。"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "the app wasn’t open"
+msgstr "アプリが開いていませんでした"
 
 #: src/app/(start)/start/page.jsx
 msgid "The audit"
@@ -7226,6 +7286,10 @@ msgstr "スレッド"
 #: src/app/(app)/settings/models/page.jsx
 msgid "Tiers"
 msgstr "ティア"
+
+#: src/components/RunPythonCard.jsx
+msgid "Time limit (seconds)"
+msgstr "時間制限（秒）"
 
 #: src/components/insight-blocks/TimeSeriesBlock.jsx
 msgid "Time series"

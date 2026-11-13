@@ -14,7 +14,7 @@ session agent (``agents/insights/v1/runner.py``) and mirror audit's
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Literal
 from uuid import UUID
 
@@ -238,6 +238,10 @@ class InsightsSession(BaseAgentSession):
     # means the thread has been told nothing this session.
     artifact_format: str = ""
     artifact_format_stated: str = ""
+
+    # RunPython calls waiting on the browser, by run id. The browser resolves
+    # one over POST .../python-result (agents/insights/python_run.py).
+    python_futures: dict = field(default_factory=dict)
 
 
 def create_insights_session(session_id: str, agent_type: str = "insights") -> InsightsSession:
