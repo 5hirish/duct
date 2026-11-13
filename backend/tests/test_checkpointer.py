@@ -25,6 +25,7 @@ from langchain_core.messages import AIMessage
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import START, StateGraph
 
+from agents.core import checkpoint
 from agents.core.checkpoint import (
     backend_name,
     get_checkpointer,
@@ -128,10 +129,74 @@ async def test_no_database_falls_back_instead_of_failing_to_boot(tmp_path):
         assert isinstance(saver, InMemorySaver)
 
 
-async def test_an_unusable_url_degrades_rather_than_raising():
+async def test_an_unusable_url_degrades_rather_than_raising(monkeypatch):
     """A crash-looping deploy is worse than a non-durable one."""
+    # The pool keeps retrying an unreachable host until its open timeout; a
+    # second is plenty to prove the point without slowing the suite.
+    monkeypatch.setattr(checkpoint, "_POOL_OPEN_TIMEOUT_SECONDS", 1.0)
     async with open_checkpointer("postgresql://nobody@127.0.0.1:1/nope") as saver:
         assert isinstance(saver, InMemorySaver)
+
+
+class _FakePool:
+    """Records how the saver's pool is built, opened and closed."""
+
+    instances: list["_FakePool"] = []
+
+    def __init__(self, conninfo, **kwargs):
+        self.conninfo = conninfo
+        self.kwargs = kwargs
+        self.opened = None
+        self.closed = False
+        _FakePool.instances.append(self)
+
+    async def open(self, *, wait=False, timeout=None):
+        self.opened = {"wait": wait, "timeout": timeout}
+
+    async def close(self):
+        self.closed = True
+
+    @staticmethod
+    async def check_connection(conn):  # the real one is a staticmethod too
+        raise AssertionError("not called at build time")
+
+
+class _FakeSaver:
+    def __init__(self, conn):
+        self.conn = conn
+
+    async def setup(self):
+        pass
+
+
+async def test_postgres_connections_are_pooled_and_checked(monkeypatch):
+    """One unchecked connection for the process's life is how 2026-11-08 went:
+    the proxy dropped it after four idle hours and every agent run after that
+    failed in ``aget_tuple`` until a restart. The pool must probe a connection
+    before lending it out, retire idle ones itself, and ask the OS for TCP
+    keepalives, so a dropped socket costs one reconnect rather than the day."""
+    import psycopg_pool
+    from langgraph.checkpoint.postgres import aio as saver_module
+
+    _FakePool.instances.clear()
+    monkeypatch.setattr(psycopg_pool, "AsyncConnectionPool", _FakePool)
+    monkeypatch.setattr(saver_module, "AsyncPostgresSaver", _FakeSaver)
+
+    async with open_checkpointer("postgresql+psycopg://u:p@db.example/duct") as saver:
+        assert isinstance(saver, _FakeSaver)
+        (pool,) = _FakePool.instances
+        assert saver.conn is pool
+        assert pool.kwargs["check"] is _FakePool.check_connection
+        assert pool.kwargs["open"] is False
+        assert pool.kwargs["max_idle"] < 600, "must retire before a proxy's idle timeout"
+        assert pool.opened == {"wait": True, "timeout": checkpoint._POOL_OPEN_TIMEOUT_SECONDS}
+        # What from_conn_string set, and what the saver's SQL relies on.
+        assert pool.kwargs["kwargs"]["autocommit"] is True
+        assert pool.kwargs["kwargs"]["prepare_threshold"] == 0
+        assert "keepalives=1" in pool.conninfo
+        assert "+psycopg" not in pool.conninfo, "libpq does not know SQLAlchemy's driver suffix"
+        assert not pool.closed
+    assert pool.closed, "the lifespan's exit must close the pool"
 
 
 # ---------------------------------------------------------------------------
