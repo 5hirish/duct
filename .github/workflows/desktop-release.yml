@@ -299,14 +299,31 @@ jobs:
         run: security delete-keychain "$RUNNER_TEMP/devid-signing.keychain-db" || true
 
   # ---------------------------------------------------------------------------
-  # Linux — deb + AppImage
+  # Linux — deb + AppImage, x86_64 and aarch64
   # ---------------------------------------------------------------------------
+  #
+  # aarch64 builds natively on GitHub's ARM runner rather than cross-compiling:
+  # linuxdeploy, which Tauri's AppImage bundler runs, cannot produce an ARM
+  # AppImage from an x86 host. It reaches ARM laptops, Asahi Macs, Raspberry Pi
+  # and Linux VMs on Apple silicon, none of which can start the x86_64 build.
+  #
+  # Tauri names the outputs per arch — `_amd64`/`_aarch64` for the AppImage,
+  # `_amd64`/`_arm64` for the .deb — and the publish job and both manifest
+  # scripts key on those suffixes, so the two legs cannot overwrite each other.
   linux:
-    name: Linux (deb + AppImage)
-    # Pinned, not `-latest`: the glibc the runner links against sets the oldest
-    # distro the AppImage will start on, so moving up silently drops users.
+    name: Linux ${{ matrix.arch }} (deb + AppImage)
     needs: preflight
-    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        include:
+          # Both pinned, not `-latest`: the glibc the runner links against sets
+          # the oldest distro the AppImage will start on, so moving up silently
+          # drops users.
+          - arch: x86_64
+            runner: ubuntu-22.04
+          - arch: aarch64
+            runner: ubuntu-22.04-arm
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -321,6 +338,9 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         with:
           workspaces: desktop/src-tauri
+          # Both legs share this job's id; without the arch in the key, one
+          # restores the other's target dir and rebuilds it from scratch.
+          key: ${{ matrix.arch }}
 
       # libwebkit2gtk-4.1 is Tauri v2's webview. libsoup-3.0 comes with it.
       # libdbus-1 is what the `keyring` crate's secret-service backend talks to,
@@ -362,7 +382,7 @@ jobs:
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: bundle-linux
+          name: bundle-linux-${{ matrix.arch }}
           path: |
             desktop/src-tauri/target/release/bundle/deb/*.deb
             desktop/src-tauri/target/release/bundle/appimage/*.AppImage
@@ -548,7 +568,7 @@ jobs:
       # release calls <name> — but only if the name is stable, and Tauri puts the
       # version in every filename. So each installer is published a second time
       # under a version-independent name, and getduct.ai/download can hardcode
-      # four permanent URLs: no JavaScript, no API call, no rate limit, and
+      # one permanent URL per installer: no JavaScript, no API call, no rate limit, and
       # nothing to change when a version ships.
       #
       # Copies rather than renames: the versioned name is what someone who has
@@ -569,10 +589,14 @@ jobs:
             cp "$src" "stable/$dest"
             echo "  $dest  <-  $(basename "$src")"
           }
-          copy_one '*_universal.dmg'  'Duct-macOS-universal.dmg'
-          copy_one '*-setup.exe'      'Duct-Windows-x64-setup.exe'
-          copy_one '*.AppImage'       'Duct-Linux-x86_64.AppImage'
-          copy_one '*.deb'            'Duct-Linux-amd64.deb'
+          # Linux patterns name the arch: a bare `*.AppImage` now matches both
+          # builds, and `head -1` would pick one by directory order.
+          copy_one '*_universal.dmg'    'Duct-macOS-universal.dmg'
+          copy_one '*-setup.exe'        'Duct-Windows-x64-setup.exe'
+          copy_one '*_amd64.AppImage'   'Duct-Linux-x86_64.AppImage'
+          copy_one '*_amd64.deb'        'Duct-Linux-amd64.deb'
+          copy_one '*_aarch64.AppImage' 'Duct-Linux-aarch64.AppImage'
+          copy_one '*_arm64.deb'        'Duct-Linux-arm64.deb'
 
       - name: Create or update the release
         env:

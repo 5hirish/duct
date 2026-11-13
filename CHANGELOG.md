@@ -56,6 +56,11 @@ published without one. The same script, with no arguments, holds
   us". At most twice ever, 60 days apart, never again after a star; any other
   notice takes the corner first. The account menu always has "Star Duct on
   GitHub" (#539).
+- **Duct Desktop runs on ARM64 Linux.** Each release now ships an `aarch64`
+  AppImage and an `arm64` .deb next to the x86_64 ones, built natively on an
+  ARM runner, and they update themselves like every other install. That covers
+  ARM laptops, Raspberry Pi and Linux VMs on Apple silicon, none of which could
+  start the x86_64 build.
 
 ### Changed
 
