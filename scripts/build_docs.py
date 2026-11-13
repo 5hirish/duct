@@ -394,7 +394,8 @@ PAGE_STYLE = """<style>
 .doc-toc { max-width: 760px; margin: 28px auto 0; padding: 20px 24px; }
 .doc-toc-inner { border: 1px solid var(--border); border-radius: var(--r-lg); padding: 18px 22px; background: var(--off); }
 .doc-toc-title { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--navy-3); margin-bottom: 10px; }
-.doc-toc ol { margin: 0; padding-left: 20px; columns: 2; column-gap: 32px; }
+.doc-toc ol, .doc-toc ul { margin: 0; padding-left: 20px; columns: 2; column-gap: 32px; }
+.doc-toc ul { list-style: none; padding-left: 0; }
 .doc-toc li { font-size: 14px; line-height: 1.6; margin: 0 0 4px; break-inside: avoid; }
 .doc-toc a { color: var(--navy-2); text-decoration: none; }
 .doc-toc a:hover { color: var(--orange); }
@@ -427,7 +428,7 @@ PAGE_STYLE = """<style>
 .doc-item p { font-size: 15px; font-weight: 300; line-height: 1.65; color: var(--navy-3); margin: 0 0 10px; }
 .doc-item-meta { font-size: 12px; color: var(--navy-3); display: flex; gap: 16px; }
 @media (max-width: 640px) {
-  .doc-toc ol { columns: 1; }
+  .doc-toc ol, .doc-toc ul { columns: 1; }
   .doc-nav { flex-direction: column; gap: 12px; }
   .doc-nav a { max-width: 100%; }
   .doc-nav-next { margin-left: 0; text-align: left; }
@@ -549,8 +550,11 @@ def contents(blocks: list[dict]) -> str:
     if len(sections) < 2:
         return ""
     items = "\n".join(f'<li><a href="#{b["id"]}">{esc(b["text"])}</a></li>' for b in sections)
+    # A doc that numbers its own headings ("1. Why a seam") would read "1. 1. Why
+    # a seam" in a numbered list, so its contents list carries no markers.
+    tag = "ul" if all(_ORDERED.match(b["text"]) for b in sections) else "ol"
     return (f'<nav class="doc-toc" aria-label="On this page">\n<div class="doc-toc-inner">\n'
-            f'<p class="doc-toc-title">On this page</p>\n<ol>\n{items}\n</ol>\n</div>\n</nav>\n')
+            f'<p class="doc-toc-title">On this page</p>\n<{tag}>\n{items}\n</{tag}>\n</div>\n</nav>\n')
 
 
 def render_markdown_page(page: dict, pages: list[dict], idx: int) -> str:
