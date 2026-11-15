@@ -24,7 +24,8 @@ import { fileURLToPath } from "node:url";
 
 // FIXTURES_DIR swaps the recorded streams for another set with the same
 // filenames (scripts/shots builds one from a story); ROUTES_FILE answers the
-// non-agent routes the app calls, keyed "METHOD /path", instead of the empty
+// non-agent routes the app calls, keyed "METHOD /path" (or "METHOD /path?query"
+// for one question of several on a path), instead of the empty
 // list below, so a whole page can render with data; MEDIA_DIR serves
 // /uploads/story/* from a folder, which is how a post gets a cover image.
 const FIX = process.env.FIXTURES_DIR || fileURLToPath(new URL("../src/lib/__fixtures__", import.meta.url));
@@ -195,7 +196,15 @@ const server = http.createServer(async (req, res) => {
       ],
     });
   }
-  const canned = ROUTES[`${req.method} ${path}`];
+  // A route keyed with its query wins over the bare path: one path is often
+  // asked several questions (a plan's posts, the drafts, every post).
+  const canned = ROUTES[`${req.method} ${path}${url.search}`] ?? ROUTES[`${req.method} ${path}`];
+  // `{ __raw__, type }` is a body that is not JSON: a document's stored bytes.
+  if (canned?.__raw__ !== undefined) {
+    cors(res);
+    res.writeHead(200, { "Content-Type": canned.type || "text/plain" });
+    return res.end(canned.__raw__);
+  }
   if (canned !== undefined) return json(res, 200, canned);
   if (MEDIA_DIR && path.startsWith("/uploads/story/") && req.method === "GET") {
     // basename: the path came off the wire, and this folder is the only one it may read.

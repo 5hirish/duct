@@ -8,6 +8,13 @@ reading as generated defaults. The deep reasoning behind the layout system
 lives in `docs/engineering/2026-09-01-desktop-adaptive-ui-review.html`; this file does
 not repeat it.
 
+Screens are designed before they are built, on the Duct Prototype canvas: every
+screen as it ships, at a phone, the desktop app's window and a laptop, plus an
+editable board per screen captured from this app's own markup. Its companion,
+the Duct Design System, carries these tokens and this file's canon as a
+reference for design agents. This file stays the source both are judged by;
+the loop and the links are in [`design/README.md`](../design/README.md).
+
 Rules cite their source where they came from research (NN/g, Apple HIG,
 Material, Refactoring UI, WCAG 2.2, Emil Kowalski, Rauno Freiberg, Linear,
 Slack/Mailchimp/Microsoft voice guides). Rules without a citation come from

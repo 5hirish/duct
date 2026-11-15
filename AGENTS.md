@@ -102,7 +102,7 @@ the area you are editing; site conventions do not apply to `backend/`.
 | `cli/` | `getduct` npm CLI: the launch check's live checks and score card (Node 20+, no dependencies) | [`cli/AGENTS.md`](cli/AGENTS.md) |
 | `docs/` | Engineering plans and reference material | [`docs/README.md`](docs/README.md) |
 | `scripts/` | Deploy/env plumbing and repo hygiene | below |
-| `design/` | Storyboards (Claude Design) and the Remotion film | [`design/motion/README.md`](design/motion/README.md) |
+| `design/` | The app's canvas and design system (and the tools that capture them from the code), storyboards, the Remotion film | [`design/README.md`](design/README.md), [`design/motion/README.md`](design/motion/README.md) |
 
 Product strategy, GTM and deployment runbooks live in a separate private
 repository. Documents here occasionally cite them; those citations state their
@@ -417,6 +417,11 @@ strings, error handling, comments, readability, design patterns — plus a
 close-on-touch list of the places the tree currently falls short. Read it
 before writing in an area you have not written in before.
 
+- **A UI change is designed on the canvas first, then built.** The Duct
+  Prototype canvas holds every screen as it ships and an editable board per
+  screen, captured from the app itself; design on a copy of the board, build
+  from it, link it in the PR, and refresh the canvas after the change ships.
+  The loop, the links and the tools are in [`design/README.md`](design/README.md).
 - One concern per change. Explain *why* in the commit body; the diff shows what.
 - A PR that finishes an issue says `Closes #N` in its body (the template
   prompts for it); `Refs #N` is for partial work. GitHub only auto-closes on

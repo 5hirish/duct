@@ -246,7 +246,10 @@ function measure() {
     const r = el.getBoundingClientRect();
     return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== "hidden";
   };
-  const h1s = [...main.querySelectorAll("h1")].filter(visible);
+  // A heading inside an aria-hidden subtree is not in the page's outline: a
+  // document thumbnail (ArtifactCards' DocumentThumbnail) draws the top of a
+  // markdown document, its own "# Title" included, as a picture of it.
+  const h1s = [...main.querySelectorAll("h1")].filter((el) => visible(el) && !el.closest('[aria-hidden="true"]'));
   const headerEl = main.querySelector('[data-slot="page-header"]');
   const pageEl = main.querySelector('[data-slot="page"]');
   let header = null;
