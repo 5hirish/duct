@@ -200,13 +200,17 @@ async function capture(page, screen) {
     });
     return out;
   });
+  // Each picture's file name travels into serialize() as an argument, never
+  // through the page's DOM: a src built from an attribute is page text turned
+  // into a URL, which CodeQL rightly refuses (js/xss-through-dom).
+  const shots = {};
   for (const s of swaps) {
     const name = `${screen.id}-frame-${s.i}.png`;
-    await page.locator(`[data-cap-shot="${s.i}"]`).screenshot({ path: join(OUT, "boards/img", name) }).catch(() => {});
-    await page.evaluate(({ i, name }) => document.querySelector(`[data-cap-shot="${i}"]`)?.setAttribute("data-cap-shot", name), { i: s.i, name });
+    const shot = await page.locator(`[data-cap-shot="${s.i}"]`).screenshot({ path: join(OUT, "boards/img", name) }).then(() => true, () => false);
+    if (shot) shots[s.i] = name;
   }
 
-  const snap = await page.evaluate(serialize, { routeToBoard: ROUTE_TO_BOARD });
+  const snap = await page.evaluate(serialize, { routeToBoard: ROUTE_TO_BOARD, shots });
   for (const href of snap.sheets) if (!sheets.has(href)) sheets.set(href, null);
   let html = snap.html;
   html = html.replace(/__IMG\[(.+?)\]__/g, (_, url) => `img/${imageName(url)}`);
@@ -233,7 +237,7 @@ async function capture(page, screen) {
 // hold goes (scripts, the dev overlay, comments), every image and link is
 // marked for the rewrite in Node, and text that would read as a {{hole}} is
 // broken with a zero-width space.
-function serialize({ routeToBoard }) {
+function serialize({ routeToBoard, shots }) {
   const sheets = [...document.querySelectorAll('link[rel="stylesheet"]')].map((l) => l.href);
   const inline = [...document.querySelectorAll("style")].map((s) => s.textContent).filter((t) => t && t.length < 200000);
   // A pane scrolled to the answer stays there: a board has no scroll position.
@@ -262,13 +266,16 @@ function serialize({ routeToBoard }) {
   dead.forEach((n) => n.remove());
 
   root.querySelectorAll("[data-cap-shot]").forEach((el) => {
-    const name = el.getAttribute("data-cap-shot");
-    if (!/\.png$/.test(name)) return el.remove();
+    // The attribute only says which frame this was; its picture's name is
+    // capture()'s, and a frame whose screenshot failed is left out.
+    const i = el.getAttribute("data-cap-shot");
+    const name = Object.hasOwn(shots, i) ? shots[i] : null;
+    if (!name) return el.remove();
     // The picture takes the frame's layout box, not its painted one: a
     // thumbnail is a full-size frame scaled down by a transform, and the
     // picture inherits that transform with the frame's class and style, so
     // sizing it to the painted box scaled it down twice.
-    const live = document.querySelector(`[data-cap-shot="${name}"]`);
+    const live = document.querySelector(`[data-cap-shot="${CSS.escape(i)}"]`);
     const w = live?.offsetWidth ?? 0;
     const h = live?.offsetHeight ?? 0;
     const scaled = live && getComputedStyle(live).transform !== "none";
