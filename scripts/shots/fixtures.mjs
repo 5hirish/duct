@@ -4,7 +4,13 @@
 // hatches the mock understands — `{ __answer__ }` answers the pending
 // question, `{ __send__ }` is the user typing the next message.
 import { readFileSync } from "node:fs";
-import { ANSWERS, BRIEF_HTML, CHANGE_SET, CHANGE_SET_HISTORY, CONNECTOR_SESSIONS, DRAFT_POST, MEMORIES, PAID_BRIEF_HTML, PLAN, PRODUCT_BRIEF_HTML, PRODUCT_CHANGE_SET, STORY } from "../../app/src/lib/__fixtures__/solo-story.mjs";
+import * as story from "../../app/src/lib/__fixtures__/solo-story.mjs";
+import * as content from "./routes/content.mjs";
+import * as library from "./routes/library.mjs";
+import * as onboarding from "./routes/onboarding.mjs";
+import * as settings from "./routes/settings.mjs";
+import * as toolbox from "./routes/toolbox.mjs";
+import { ANSWERS, AUDIT_REPORT, BRIEF_HTML, CHANGE_SET, CHANGE_SET_HISTORY, CONNECTOR_SESSIONS, DRAFT_POST, MEMORIES, PAID_BRIEF_HTML, PLAN, PRODUCT_BRIEF_HTML, PRODUCT_CHANGE_SET, STORY } from "../../app/src/lib/__fixtures__/solo-story.mjs";
 
 // The backend's slide CSS, rendered once from agents/content/templates.py
 // (see assets/slides-head.html for how). The live slide preview reads its
@@ -249,9 +255,31 @@ export function contentFrames() {
   ];
 }
 
+// A recorded run's frames, from app/src/lib/__fixtures__.
+const recorded = (name) => JSON.parse(readFileSync(new URL(`../../app/src/lib/__fixtures__/${name}`, import.meta.url), "utf8"));
+
+// The recorded audit run with the story's report as its first version, in
+// the shape the backend emits (agents/audit/v1/runner.py: AuditReport's
+// model_dump). The recording's version carries only the URL, so without the
+// swap the report pane says "Working on your report" forever.
 export function auditFrames() {
-  // Not captured today; the mock still wants a file for the audit agent.
-  return [{ event: "pipeline_started", status: "running" }, { event: "pipeline_finished", status: "success" }];
+  const report = {
+    url: AUDIT_REPORT.url,
+    generated_at: AUDIT_REPORT.generated_at,
+    update_label: "Initial audit",
+    executive_summary: AUDIT_REPORT.key_signals.join(" · "),
+    report_mode: "template",
+    structured_data: AUDIT_REPORT,
+  };
+  return recorded("audit-run.json").map((frame) => (frame.event === "artifact_version" ? { ...frame, payload: report } : frame));
+}
+
+// A plan session (mode plan_month) over the story's plan: the recorded run,
+// whose plan_generated carries an empty September, with the plan the board
+// shows in its place, so the session and the board are the same week.
+export function planFrames() {
+  const plan = content.routes(story)[`GET /api/content/plans/${PLAN.id}`];
+  return recorded("content-plan.json").map((frame) => (frame.event === "plan_generated" ? { ...frame, payload: plan } : frame));
 }
 
 // A change set as GET /api/execute/{id} returns it. ChangeSetCard re-reads
@@ -273,10 +301,32 @@ function memoryList(rows) {
   return { items, kinds: [...new Set(items.map((m) => m.kind))], memory_paused: false };
 }
 
-// What the app asks the backend for around a session, answered from the
-// story so the shell around the workspace is not empty.
+// The project as the app keeps it in localStorage (lib/projects.js), every
+// section filled; a signed-in capture stores this, or Project context draws
+// empty fields.
+export function project() {
+  return settings.projectProfile(story);
+}
+
+// Ids the story does not name but a screen opens: the design canvas's
+// document and post pages (design/tools/screens.mjs).
+export const SHOWCASE = Object.freeze({
+  artifactId: library.SHOWCASE_ARTIFACT_ID,
+  // Posted, with synced numbers and a review score (routes/content.mjs).
+  postedPostId: "post_1",
+});
+
+// What the app asks the backend for, answered from the story so every screen
+// draws Solo's week rather than an empty state. Each area's routes live in
+// routes/<area>.mjs with the backend handler each shape follows; the few
+// below are the ones the session screenshots needed first.
 export function routes() {
   return {
+    ...content.routes(story),
+    ...library.routes(story),
+    ...onboarding.routes(story),
+    ...settings.routes(story),
+    ...toolbox.routes(story),
     ...Object.fromEntries(PROPOSED.map((cs) => [`GET /api/execute/${cs.id}`, apiRow(cs)])),
     "GET /api/providers/status": {
       chatgpt_auth_enabled: true,
@@ -288,12 +338,14 @@ export function routes() {
     "GET /api/user/projects": [
       { id: STORY.project.id, name: STORY.project.name, url: `https://${STORY.company.site}`, profile: { company: { name: STORY.company.name, industry: STORY.company.industry } } },
     ],
+    // The inventory's vocabulary (lib/dataSources.js): "bound" is a source this
+    // project reads. "connected" is not a status, and read as none connected.
     [`GET /api/user/projects/${STORY.project.id}/data-sources`]: [
-      { connector_type: "google_ads", status: "connected", account_name: STORY.ads.accountName },
-      { connector_type: "ga4", status: "connected", account_name: "Solo web + app" },
-      { connector_type: "search_console", status: "connected", account_name: STORY.company.site },
-      { connector_type: "stripe", status: "connected", account_name: "Solo" },
-      { connector_type: "clarity", status: "connected", account_name: "Solo Android" },
+      { connector_id: "google_ads", connector_type: "google_ads", status: "bound", account_name: STORY.ads.accountName },
+      { connector_id: "ga4", connector_type: "ga4", status: "bound", account_name: "Solo web + app" },
+      { connector_id: "gsc", connector_type: "gsc", status: "bound", account_name: STORY.company.site },
+      { connector_id: "stripe", connector_type: "stripe", status: "bound", account_name: "Solo" },
+      { connector_id: "clarity", connector_type: "clarity", status: "bound", account_name: "Solo Android" },
     ],
     "GET /api/content/plans": [{ id: PLAN.id, name: PLAN.name, start_date: PLAN.start_date }],
     // Both memory tabs, so check:layout measures them with rows on screen.
