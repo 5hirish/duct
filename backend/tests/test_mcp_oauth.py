@@ -253,6 +253,20 @@ async def test_a_secret_the_server_issued_goes_in_basic_auth(monkeypatch, cfg):
     assert header == "Basic " + base64.b64encode(b"c:s").decode()
 
 
+async def test_a_secret_in_the_body_goes_in_the_form_not_a_header(monkeypatch, cfg):
+    vendor = Vendor().install(monkeypatch)
+    await oauth.refresh(
+        token_endpoint=f"{AUTH}/token",
+        registration=oauth.ClientRegistration(client_id="c", client_secret="s", auth_method="client_secret_post"),
+        refresh_token="rt-1", resource=SERVER,
+    )
+    request = vendor.sent("/token")
+    assert "Authorization" not in request.headers
+    form = parse_qs(request.content.decode())
+    assert form["client_id"] == ["c"]
+    assert form["client_secret"] == ["s"]
+
+
 async def test_a_refused_token_request_never_echoes_the_body(monkeypatch, cfg):
     transport = httpx2.MockTransport(lambda r: httpx2.Response(400, json={"error": "invalid_grant", "code": "the-code"}))
     monkeypatch.setattr(mcp_http, "guarded_client", lambda headers=None: httpx2.AsyncClient(transport=transport))

@@ -14,6 +14,7 @@ import time
 import pytest
 from mcp.types import ToolAnnotations
 
+from config import Configs
 from service.mcp import client as mcp_client
 from service.mcp import oauth
 from service.mcp.store import (
@@ -34,6 +35,17 @@ from service.mcp.store import (
 from tests.fakes import FakeMcpServer
 
 URL = "https://mcp.vendor.test/mcp"
+HUBSPOT = "https://mcp.hubspot.com"
+
+
+@pytest.fixture
+def cfg(monkeypatch):
+    config = Configs(
+        hubspot_mcp_client_id="hubspot-client",
+        hubspot_mcp_client_secret="hubspot-secret",
+    )
+    monkeypatch.setattr("service.mcp.store.get_configs", lambda: config)
+    return config
 
 
 def _server(token: str | None = None) -> FakeMcpServer:
@@ -68,6 +80,27 @@ def _oauth(access_token: str, *, refresh_token: str = "rt", expires_at: float | 
         token_endpoint="https://auth.vendor.test/token",
         resource=URL,
         issuer="https://auth.vendor.test",
+    )
+
+
+def _hubspot_access(access_token: str, *, expires_at: float | None = None) -> ServerAccess:
+    return ServerAccess(
+        row_id=None,
+        key="hubspot",
+        url=HUBSPOT,
+        name="HubSpot",
+        credentials=oauth_credentials(
+            tokens=oauth.Tokens(access_token=access_token, refresh_token="rt", expires_at=expires_at),
+            registration=oauth.ClientRegistration(
+                client_id="hubspot-client",
+                client_secret="",
+                auth_method="client_secret_post",
+            ),
+            token_endpoint="https://api.hubapi.com/oauth/v3/token",
+            resource=HUBSPOT,
+            issuer="https://api.hubapi.com",
+            store_client_secret=False,
+        ),
     )
 
 
@@ -157,6 +190,46 @@ async def test_a_refused_refresh_flags_the_server_for_reconnecting(monkeypatch):
 
     assert caught.value.code == mcp_client.CODE_REAUTH
     assert saved and saved[-1][NEEDS_REAUTH] is True
+
+
+async def test_a_hubspot_refresh_uses_the_setting_not_the_stored_blob(cfg, monkeypatch):
+    captured: list[oauth.ClientRegistration] = []
+
+    async def fake_refresh(**kwargs):
+        captured.append(kwargs["registration"])
+        return oauth.Tokens(access_token="fresh", refresh_token="rt", expires_at=None)
+
+    monkeypatch.setattr(mcp_client.oauth, "refresh", fake_refresh)
+    await mcp_client._refresh(_hubspot_access("stale"), None)
+
+    assert captured[0].client_secret == "hubspot-secret"
+    assert captured[0].client_id == "hubspot-client"
+    assert captured[0].auth_method == "client_secret_post"
+
+
+async def test_a_dcr_refresh_still_reads_the_stored_secret(monkeypatch):
+    captured: list[oauth.ClientRegistration] = []
+
+    async def fake_refresh(**kwargs):
+        captured.append(kwargs["registration"])
+        return oauth.Tokens(access_token="fresh", refresh_token="rt", expires_at=None)
+
+    monkeypatch.setattr(mcp_client.oauth, "refresh", fake_refresh)
+    access = _access(oauth_credentials(
+        tokens=oauth.Tokens(access_token="stale", refresh_token="rt"),
+        registration=oauth.ClientRegistration(
+            client_id="dcr-client",
+            client_secret="per-reg-secret",
+            auth_method="client_secret_basic"
+        ),
+        token_endpoint="https://auth.vendor.test/token",
+        resource=URL,
+        issuer="https://auth.vendor.test"
+    ))
+    await mcp_client._refresh(access, None)
+
+    assert captured[0].client_secret == "per-reg-secret"
+    assert captured[0].auth_method == "client_secret_basic"
 
 
 async def test_a_server_flagged_for_reconnecting_is_not_called_at_all(monkeypatch):
