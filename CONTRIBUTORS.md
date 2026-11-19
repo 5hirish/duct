@@ -20,7 +20,8 @@ listed for. (The maintainer isn't listed here — that's already in
 
 ## Code
 
-[Danny Ward](https://github.com/dannyward630) — isolated project selection between browser tabs (2026-10).
+- [Danny Ward](https://github.com/dannyward630) — isolated project selection between browser tabs (2026-10).
+- [Vridhi Brahmbhatt](https://github.com/vridhib) — the HubSpot MCP preset and its shared client sign-in (2026-11).
 
 <!-- Name (link) — one line on what you touched, and when -->
 

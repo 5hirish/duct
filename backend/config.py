@@ -180,6 +180,15 @@ class Configs(BaseSettings):
     ga4_property_id: str = ""
     gsc_site_url: str = ""
 
+    # HubSpot MCP (service/mcp/presets.py). Both or neither: with either
+    # missing, the tile is absent because there is no key path (HubSpot limits
+    # Service Keys to REST) and dynamic client registration to fall back on.
+    # One client is shared by every install, so the secret is read from here at
+    # token time rather than stored on the connection. Rotating it here reaches
+    # every install at its next refresh, without anyone reconnecting.
+    hubspot_mcp_client_id: str = ""
+    hubspot_mcp_client_secret: str = ""
+
     # GitHub App — the one-click GitHub connection (service/github/app.py).
     # All four or none: with any one missing the Connections page offers only
     # the pasted fine-grained token, which is what a self-hosted install runs,
