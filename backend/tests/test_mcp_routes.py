@@ -27,7 +27,16 @@ from models.auth import User
 from models.connector import ConnectorCredential
 from service.mcp import oauth
 from service.mcp.client import CODE_REAUTH, CODE_UNREACHABLE, McpCallError
-from service.mcp.store import ACCESS_TOKEN, API_KEY, AUTH, MCP_CONNECTOR_TYPE, servers_for_user
+from service.mcp.store import (
+    ACCESS_TOKEN,
+    API_KEY,
+    AUTH,
+    MCP_CONNECTOR_TYPE,
+    CLIENT_SECRET,
+    CLIENT_ID,
+    AUTH_METHOD,
+    servers_for_user,
+)
 from tests.conftest import make_sqlite_engine
 from tests.fakes import FakeMcpServer
 
@@ -46,16 +55,31 @@ PLAN = oauth.AuthPlan(
 )
 
 
-@pytest.fixture
-def cfg(monkeypatch):
+def _install_config(monkeypatch, **overrides):
+    """Point the routes, oath, and credentials modules at one Configs object, with optional overrides."""
     config = Configs(
         api_public_url=API,
         frontend_origin=APP,
         credentials_encryption_key=Fernet.generate_key().decode(),
+        **overrides,
     )
     for module in (mcp_routes, oauth, credentials_service):
         monkeypatch.setattr(module, "get_configs", lambda: config)
     return config
+
+
+@pytest.fixture
+def cfg(monkeypatch):
+    return _install_config(monkeypatch)
+
+
+@pytest.fixture
+def hubspot_cfg(monkeypatch):
+    return _install_config(
+        monkeypatch,
+        hubspot_mcp_client_id="hubspot-client",
+        hubspot_mcp_client_secret="hubspot-secret",
+    )
 
 
 @pytest.fixture
@@ -86,7 +110,7 @@ def mallory(db):
 def vendor(monkeypatch):
     """The vendor's side, stubbed at the service seam: what discovery found,
     what the code exchanged for, and which credentials a probe accepted."""
-    state = {"plan": PLAN, "probed": [], "refuse": False, "down": False}
+    state = {"plan": PLAN, "probed": [], "refuse": False, "down": False, "registered": []}
 
     async def discover(url):
         if isinstance(state["plan"], Exception):
@@ -94,7 +118,12 @@ def vendor(monkeypatch):
         return state["plan"]
 
     async def register(plan):
-        return oauth.ClientRegistration(client_id="dcr-client")
+        state["registered"].append(plan)
+        return oauth.ClientRegistration(
+            client_id="dcr-client",
+            client_secret="dcr-secret",
+            auth_method="client_secret_basic",
+        )
 
     async def exchange_code(**kwargs):
         state["exchanged"] = kwargs
@@ -143,9 +172,10 @@ def _rows(db) -> list[ConnectorCredential]:
     return list(db.execute(select(ConnectorCredential)).scalars())
 
 
-def _signed_in(browser, user, *, client: str = "") -> str:
-    """Start a sign-in as ``user`` and come back from the vendor; returns the grant code."""
-    started = browser.as_(user).post("/api/user/mcp/servers", json={"preset": "openseo", "client": client}).json()
+def _signed_in(browser, user, *, preset: str = "openseo", client: str = "") -> str:
+    """Start a sign-in for ``preset`` and come back from the vendor; returns
+    the location the callback redirected to."""
+    started = browser.as_(user).post("/api/user/mcp/servers", json={"preset": preset, "client": client}).json()
     assert started["status"] == "authorize"
     state = _query(started["authorize_url"])["state"]
     back = browser.http.get(f"/auth/mcp/callback?code=the-code&state={state}")
@@ -272,6 +302,79 @@ def test_an_open_server_connects_without_a_sign_in(browser, db, alice, vendor):
     assert answer.json()["status"] == "connected"
     assert answer.json()["server"]["auth"] == "none"
     assert answer.json()["server"]["name"] == "Docs"
+
+
+def test_connect_hubspot_uses_the_shared_client_and_skips_registration(browser, db, alice, hubspot_cfg, vendor):
+    answer = browser.as_(alice).post("/api/user/mcp/servers", json={"preset": "hubspot", "name": "HubSpot"})
+    assert answer.json()["status"] == "authorize"
+    assert "client_id=hubspot-client" in answer.json()["authorize_url"]
+    assert vendor["registered"] == []  # DCR was not attempted
+
+
+@pytest.mark.parametrize("client_id, client_secret", [
+    ("", ""),
+    ("hubspot-client", ""),
+    ("", "hubspot-secret"),
+])
+def test_connect_hubspot_with_incomplete_settings_is_unavailable(browser, monkeypatch, alice, client_id, client_secret):
+    _install_config(
+        monkeypatch,
+        hubspot_mcp_client_id=client_id,
+        hubspot_mcp_client_secret=client_secret,
+    )
+    refused = browser.as_(alice).post("/api/user/mcp/servers", json={"preset": "hubspot"})
+    assert refused.status_code == 503
+
+
+def test_a_dcr_preset_still_registers_a_client(browser, db, alice, cfg, vendor):
+    started = browser.as_(alice).post("/api/user/mcp/servers", json={"preset": "openseo"}).json()
+    assert started["status"] == "authorize"
+    assert len(vendor["registered"]) == 1
+
+
+@pytest.mark.parametrize("client_id, client_secret", [
+    ("", ""),
+    ("hubspot-client", ""),
+    ("", "hubspot-secret"),
+])
+def test_a_shared_client_preset_needs_both_settings(browser, monkeypatch, alice, client_id, client_secret):
+    _install_config(
+        monkeypatch,
+        hubspot_mcp_client_id=client_id,
+        hubspot_mcp_client_secret=client_secret,
+    )
+    listed = browser.as_(alice).get("/api/user/mcp/presets").json()["presets"]
+    assert "hubspot" not in {p["id"] for p in listed}
+
+
+def test_a_configured_shared_client_preset_is_offered(browser, alice, hubspot_cfg):
+    listed = browser.as_(alice).get("/api/user/mcp/presets").json()["presets"]
+    assert "hubspot" in {p["id"] for p in listed}
+
+
+def test_a_hubspot_sign_in_stores_no_client_secret(browser, db, alice, hubspot_cfg, vendor):
+    location = _signed_in(browser, alice, preset="hubspot")
+    code = _query(location)["auth_code"]
+
+    claimed = browser.as_(alice).post("/api/user/mcp/claim", json={"code": code})
+    assert claimed.status_code == 200
+
+    (row,) = _rows(db)
+    stored = credentials_service.decrypt_credentials(row.credentials_enc)
+    assert stored[CLIENT_SECRET] == ""
+    assert stored[CLIENT_ID] == "hubspot-client"
+    assert stored[AUTH_METHOD] == "client_secret_post"
+
+
+def test_a_dcr_sign_in_stores_its_per_registration_secret(browser, db, alice, cfg, vendor):
+    location = _signed_in(browser, alice, preset="openseo")
+    code = _query(location)["auth_code"]
+    browser.as_(alice).post("/api/user/mcp/claim", json={"code": code})
+
+    (row,) = _rows(db)
+    stored = credentials_service.decrypt_credentials(row.credentials_enc)
+    assert stored[CLIENT_SECRET] == "dcr-secret"
+    assert stored[AUTH_METHOD] == "client_secret_basic"
 
 
 @pytest.mark.parametrize("url", ["http://mcp.vendor.test/mcp", "https://localhost/mcp", "https://10.0.0.4/mcp"])
