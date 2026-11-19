@@ -98,6 +98,7 @@ const PRESET_COPY = {
   linear: msg`Look up issues and projects, or file a new issue.`,
   railway: msg`Your Railway projects: services, deployments, logs and variables.`,
   cloudflare: msg`Your Cloudflare account through its API: Workers, DNS, zones and analytics.`,
+  hubspot: msg`Contacts, deals and pipeline stages from your HubSpot account. Grant read-only permissions during sign-in. Until Duct's connector is listed, HubSpot will ask you to type "I accept the risk" to continue.`,
 };
 
 const RETURN_ERRORS = {
