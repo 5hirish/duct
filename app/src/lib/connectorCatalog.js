@@ -114,6 +114,7 @@ export const MCP_CATEGORY = {
   linear: Category.PRODUCTIVITY,
   railway: Category.DEVELOPER,
   cloudflare: Category.DEVELOPER,
+  hubspot: Category.REVENUE,
 };
 
 /**

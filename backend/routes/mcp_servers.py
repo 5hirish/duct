@@ -34,7 +34,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 from pydantic import BaseModel
 from sqlmodel import Session
-from starlette.status import HTTP_404_NOT_FOUND, HTTP_502_BAD_GATEWAY
+from starlette.status import HTTP_404_NOT_FOUND, HTTP_502_BAD_GATEWAY, HTTP_503_SERVICE_UNAVAILABLE
 
 from config import get_configs
 from db.session import get_session
@@ -50,7 +50,7 @@ from service.mcp import client as mcp_client
 from service.mcp import oauth, registry
 from service.mcp import store as mcp_store
 from service.mcp.http import UnsafeServerUrl, canonical_url
-from service.mcp.presets import PRESETS, preset
+from service.mcp.presets import PRESETS, preset, is_shared_client, McpPreset
 from service.ratelimit import RateLimit, client_address
 
 logger = logging.getLogger(__name__)
@@ -132,9 +132,19 @@ async def _probe(*, url: str, name: str, credentials: dict) -> None:
     await mcp_client.probe(access)
 
 
+def _visible_presets() -> tuple[McpPreset, ...]:
+    config = get_configs()
+    out = []
+    for p in PRESETS:
+        if p.pre_registered and not (config.hubspot_mcp_client_id and config.hubspot_mcp_client_secret):
+            continue
+        out.append(p)
+    return tuple(out)
+
+
 @router.get("/presets")
 def list_presets(user: User = Depends(get_current_user)) -> dict:
-    return {"presets": [p.as_dict() for p in PRESETS]}
+    return {"presets": [p.as_dict() for p in _visible_presets()]}
 
 
 @router.get("/registry")
@@ -171,6 +181,7 @@ async def connect_server(
 ) -> dict:
     _limit(request, user)
     url, name = _resolve_url(body)
+    shared = is_shared_client(url)
 
     if body.api_key.strip():
         credentials = mcp_store.key_credentials(body.api_key.strip())
@@ -182,6 +193,15 @@ async def connect_server(
             raise HTTPException(status_code=HTTP_502_BAD_GATEWAY, detail=exc.message) from exc
         server = _save(db, user, url=url, name=name, credentials=credentials, validated=True)
         return {"status": STATUS_CONNECTED, "server": server}
+
+    if shared:
+        config = get_configs()
+        if not (config.hubspot_mcp_client_id and config.hubspot_mcp_client_secret):
+            raise HTTPException(
+                status_code=HTTP_503_SERVICE_UNAVAILABLE,
+                detail="This server's shared client is not configured on this deployment "
+                       "(HUBSPOT_MCP_CLIENT_ID and HUBSPOT_MCP_CLIENT_SECRET).",
+            )
 
     try:
         plan = await oauth.discover(url)
@@ -197,7 +217,16 @@ async def connect_server(
                 raise HTTPException(status_code=HTTP_502_BAD_GATEWAY, detail=exc.message) from exc
             server = _save(db, user, url=url, name=name, credentials=credentials, validated=True)
             return {"status": STATUS_CONNECTED, "server": server}
-        registration = await oauth.register(plan)
+
+        if shared:
+            config = get_configs()
+            registration = oauth.ClientRegistration(
+                client_id=config.hubspot_mcp_client_id,
+                client_secret=config.hubspot_mcp_client_secret,
+                auth_method="client_secret_post",
+            )
+        else:
+            registration = await oauth.register(plan)
     except oauth.OAuthUnavailable as exc:
         logger.info("mcp connect: %s needs a key (%s)", url, exc)
         return {"status": STATUS_NEEDS_KEY, "message": str(exc)}
@@ -212,7 +241,7 @@ async def connect_server(
         "desktop": body.client == CLIENT_DESKTOP,
         "verifier": verifier,
         "client_id": registration.client_id,
-        "client_secret": registration.client_secret,
+        "client_secret": "" if shared else registration.client_secret,
         "auth_method": registration.auth_method,
         "token_endpoint": plan.token_endpoint,
         "resource": plan.resource,
@@ -342,10 +371,15 @@ async def oauth_callback(
         logger.warning("mcp callback: issuer mismatch for %s", flow.get("url"))
         return _fail(ERROR_EXCHANGE, desktop=desktop)
 
-    registration = oauth.ClientRegistration(
-        client_id=flow["client_id"],
-        client_secret=flow.get("client_secret") or "",
-        auth_method=flow.get("auth_method") or "none",
+    url = flow.get("url", "")
+    shared = is_shared_client(url)
+    registration = mcp_store.registration_for(
+        url,
+        oauth.ClientRegistration(
+            client_id=flow["client_id"],
+            client_secret=flow.get("client_secret") or "",
+            auth_method=flow.get("auth_method") or "none",
+        ),
     )
     try:
         tokens = await oauth.exchange_code(
@@ -370,6 +404,7 @@ async def oauth_callback(
                 token_endpoint=flow["token_endpoint"],
                 resource=flow["resource"],
                 issuer=flow.get("issuer") or "",
+                store_client_secret=not shared,
             ),
         },
     )

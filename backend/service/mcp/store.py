@@ -18,7 +18,8 @@ sees a server's data and answers its approval card is always its owner.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from config import get_configs
 from urllib.parse import urlsplit
 from uuid import UUID
 
@@ -29,7 +30,7 @@ from models.connector import ConnectorCredential
 from service.connector_store import upsert_credential
 from service.credentials import decrypt_credentials, encrypt_credentials
 from service.mcp.oauth import AUTH_KEY, AUTH_NONE, AUTH_OAUTH, ClientRegistration, Tokens
-from service.mcp.presets import preset_for_url
+from service.mcp.presets import preset_for_url, is_shared_client
 from utils.dates import now_iso, utcnow
 from utils.strings import slugify
 
@@ -121,9 +122,36 @@ class ServerAccess:
         )
 
 
+def registration_for(url: str, registration: ClientRegistration) -> ClientRegistration:
+    """The registration to authenticate with at the token endpoint.
+
+    A shared-client preset keeps its secret in settings, not on the connection,
+    so it is read here and substituted in. ``ClientRegistration`` is frozen, so
+    the substitution returns a new instance; ``client_id`` and ``auth_method``
+    are copied unchanged.
+
+    The setting is HubSpot's because it is the only pre-registered preset
+    today; a second one will need a per-preset lookup rather than the single
+    value read here.
+    """
+    if not is_shared_client(url):
+        return registration
+    return replace(registration, client_secret=get_configs().hubspot_mcp_client_secret)
+
+
 def oauth_credentials(
-    *, tokens: Tokens, registration: ClientRegistration, token_endpoint: str, resource: str, issuer: str
+    *,
+    tokens: Tokens,
+    registration: ClientRegistration,
+    token_endpoint: str,
+    resource: str,
+    issuer: str,
+    store_client_secret: bool = True
 ) -> dict:
+    """Credentials to persist on a connection. ```store_client_secret``` is
+    false for a preset whose client is shared across installs: the secret lives
+    in settings, not on the connection, so rotating it in settings fixes every
+    connection rather than orphaning them."""
     return {
         AUTH: AUTH_OAUTH,
         ACCESS_TOKEN: tokens.access_token,
@@ -132,7 +160,7 @@ def oauth_credentials(
         SCOPE: tokens.scope,
         TOKEN_ENDPOINT: token_endpoint,
         CLIENT_ID: registration.client_id,
-        CLIENT_SECRET: registration.client_secret,
+        CLIENT_SECRET: registration.client_secret if store_client_secret else "",
         AUTH_METHOD: registration.auth_method,
         RESOURCE: resource,
         ISSUER: issuer,
