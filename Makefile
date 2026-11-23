@@ -144,8 +144,20 @@ i18n: ## Extract, translate what is missing, compile and render (app + site)
 fmt: ## Auto-fix what ruff can fix
 	cd backend && poetry run ruff check --fix server.py agents routes service tests utils
 
-serve-backend: ## FastAPI on :8002
-	cd backend && poetry run uvicorn server:app --reload --port 8002
+# Reload on source edits only, and calmly. A branch switch or a merge rewrites
+# hundreds of files at once; uvicorn checks every BACKEND_RELOAD_DELAY seconds
+# and restarts once for the whole batch rather than once per file. Tests,
+# migrations, scripts, data and build output never change what is served, so
+# saving one does not drop in-flight requests.
+BACKEND_RELOAD_DELAY ?= 3
+BACKEND_RELOAD = --reload --reload-delay $(BACKEND_RELOAD_DELAY) \
+	--reload-exclude .venv --reload-exclude data --reload-exclude alembic \
+	--reload-exclude tests --reload-exclude scripts --reload-exclude dist \
+	--reload-exclude build
+
+serve-backend: ## FastAPI on :8002, reloading on source edits (BACKEND_RELOAD= to turn off)
+	cd backend && poetry run uvicorn server:app $(BACKEND_RELOAD) \
+		--timeout-graceful-shutdown 10 --host 127.0.0.1 --port 8002
 
 serve-app: ## Next.js on :3003
 	cd app && npm run dev
