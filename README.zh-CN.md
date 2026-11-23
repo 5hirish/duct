@@ -10,7 +10,7 @@
 
 **开源 AI 营销智能体：一个能登录你所有工具的增长分析师。**
 
-Duct 为产品和增长团队而做。它连接 Google Ads、GA4、Search Console、Mixpanel、Stripe 以及另外七个工具，像一个握有所有账号的分析师那样同时读取所有数据，记住它对你的业务了解到的一切，并在你批准后替你修改这些工具里的设置。模型能调用的工具列表里根本没有“批准”这一项：按下按钮的是你。
+Duct 为营销人员、独自经营的老板和小团队而做。它连接 Google Ads、GA4、Search Console、Mixpanel、Stripe 以及另外七个工具，像一个握有所有账号的分析师那样同时读取所有数据，记住它对你的业务了解到的一切，并在你批准后替你修改这些工具里的设置。模型能调用的工具列表里根本没有“批准”这一项：按下按钮的是你。
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 [![Backend CI](https://img.shields.io/github/actions/workflow/status/5hirish/duct/backend.yml?branch=main&label=backend&style=flat-square)](.github/workflows/backend.yml)
@@ -44,7 +44,7 @@ Duct 为产品和增长团队而做。它连接 Google Ads、GA4、Search Consol
   <img src="docs/assets/readme/content-session.webp" alt="内容智能体正在起草一组轮播图，第一张幻灯片显示在右侧面板中" width="450">
 </p>
 
-**目前适合谁：** 产品经理和增长团队、SEO 和内容团队，以及在追查归因缺口、预算调整和创意疲劳的效果营销人员。
+**目前适合谁：** 独自或在小团队里做营销的人，以及自己操持营销的企业主：广告不再回本、流量下滑、发的内容没人看，身边也没有分析师可以问为什么。
 
 **🚧 接下来：** 销售与营收运营（从 CRM、通话和产品使用数据中发现管线风险和转化信号）、电商与 DTC（跨 Meta Ads、Stripe 和 RevenueCat 找出 LTV 与 ROAS 之间的盲区），以及客户成功（从 NPS、使用情况和支持信号中找出有流失风险的账户）。进展请关注 [Issues](https://github.com/5hirish/duct/issues) 和 [getduct.ai](https://getduct.ai/zh-cn/)。
 
