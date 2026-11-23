@@ -2394,7 +2394,7 @@ export const SCENES = [
     state: "GitHub App available, not connected and connected",
     group: "ManualConnectorCard",
     title: "A sign-in above the token form",
-    note: "Open each tile. With a GitHub App on the server the dialog leads with Connect GitHub and folds the token form behind \u201cUse a token instead\u201d. Connected, the button becomes Refresh from GitHub with the repository link beside it, and \u201cAdd another account\u201d is gone: more repositories come from GitHub\u2019s own page, not a second token. Press Connect: the preview answers the way the desktop hand-off does, so the waiting line appears under the button.",
+    note: "Open each tile. With a GitHub App on the server the dialog leads with Connect GitHub and folds the token form behind \u201cUse a token instead\u201d. Connected, the dialog reads like every other connector: the owner and how many repositories, the App\u2019s four read permissions, one Repository picker for the project (each stored row is a repository, so there is no Account picker above it), and Disconnect. More repositories come from GitHub\u2019s own page, not a second token. Press Connect: the preview answers the way the desktop hand-off does, so the waiting line appears under the button.",
     render: () => <OneClickCardScene />,
   },
   {
@@ -4792,6 +4792,14 @@ function OneClickCardScene() {
       hint: "Choose \u201cOnly select repositories\u201d, then read-only access to Contents, Pull requests, Issues and Metadata.",
     },
   ];
+  // The rows as GET /api/user/connectors answers them for an App grant: one
+  // per repository, grouped by owner, each granted the App's four permissions.
+  const APP_SCOPES = [
+    ["github:contents:read", "Code and commits", "Reads commits and changed docs, to see what shipped. Read-only."],
+    ["github:issues:read", "Issues", "Reads closed issues, for what got fixed. Read-only."],
+    ["github:metadata:read", "Repository details", "Names, descriptions and visibility, which GitHub grants every app."],
+    ["github:pull_requests:read", "Pull requests", "Reads merged pull requests, the main record of shipped work. Read-only."],
+  ].map(([scope, label, why]) => ({ scope, label, why, access: "read", required: true, granted: true }));
   const row = (id, name) => ({
     id,
     connector_type: "github",
@@ -4799,6 +4807,13 @@ function OneClickCardScene() {
     account_name: name,
     storage: "cloud",
     residency: "server",
+    entity_noun: "repository",
+    entity_noun_plural: "repositories",
+    entity_per_row: true,
+    entity_group: name.split("/")[0],
+    scopes: APP_SCOPES,
+    scope_status: "complete",
+    missing_scopes: [],
   });
   const common = {
     type: "github",
@@ -4813,6 +4828,9 @@ function OneClickCardScene() {
     oneClick,
     onSaved: async () => {},
     onRemoveRow: async () => {},
+    onDisconnect: async () => {},
+    projectName: "Solo",
+    onEntityChange: () => {},
   };
   return (
     <div className="conn-grid">
@@ -4820,6 +4838,7 @@ function OneClickCardScene() {
       <ManualConnectorCard
         {...common}
         serverRowList={[row("r1", "acme/app"), row("r2", "acme/site")]}
+        binding={{ connector_credential_id: "r1", entity_id: "acme/app", entity_name: "acme/app" }}
       />
     </div>
   );

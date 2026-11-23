@@ -111,6 +111,31 @@ SCOPE_CATALOG: dict[str, ScopeInfo] = {
         access=WRITE,
         required=False,
     ),
+    # The GitHub App's permissions. GitHub calls them permissions, not scopes,
+    # and fixes them at registration, so they are not OAuth strings: Duct names
+    # them ``github:<permission>:<level>`` (``service/github/app.APP_SCOPES``)
+    # and records them as granted on every App row, so the dialog can show what
+    # the App reads in the same block as a Google connector's scopes.
+    "github:contents:read": ScopeInfo(
+        label="Code and commits",
+        why="Reads commits and changed docs, to see what shipped. Read-only.",
+        access=READ,
+    ),
+    "github:pull_requests:read": ScopeInfo(
+        label="Pull requests",
+        why="Reads merged pull requests, the main record of shipped work. Read-only.",
+        access=READ,
+    ),
+    "github:issues:read": ScopeInfo(
+        label="Issues",
+        why="Reads closed issues, for what got fixed. Read-only.",
+        access=READ,
+    ),
+    "github:metadata:read": ScopeInfo(
+        label="Repository details",
+        why="Names, descriptions and visibility, which GitHub grants every app.",
+        access=READ,
+    ),
 }
 
 

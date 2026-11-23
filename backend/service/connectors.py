@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from typing import Any, Protocol, runtime_checkable
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +58,22 @@ class ConnectorMeta:
     #: row's ``repo`` is what GitHub granted, and renaming it would read a
     #: repository the grant never covered.
     settings_keys: frozenset[str] = frozenset()
+    #: True when each stored row already IS the thing a project reads: a GitHub
+    #: row is one repository, so a project picks a row and there is nothing
+    #: inside it to pick. The browser then shows one picker over the rows
+    #: instead of an account picker over repositories with a repository picker
+    #: under it that changed nothing a read used (the bound row decides).
+    entity_per_row: bool = False
+    #: The account a per-row entity belongs to, from its id: GitHub's owner in
+    #: ``owner/name``. Lets the dialog say "5hirish · 2 repositories" rather
+    #: than list a row per repository that grows with every grant.
+    entity_group_of: Callable[[str], str] | None = None
+    #: A provider-side grant with fixed permissions: a row whose blob holds
+    #: ``grant_key`` was granted exactly ``grant_scopes``. The GitHub App asks
+    #: for four read permissions and nothing else, so its rows can show them
+    #: in the same permission block as an OAuth connector's scopes.
+    grant_key: str | None = None
+    grant_scopes: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

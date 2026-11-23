@@ -415,6 +415,33 @@ def test_a_reconnect_drops_app_rows_github_no_longer_grants_and_keeps_pasted_tok
     }
 
 
+def test_the_dialog_reads_app_rows_as_one_owner_with_the_apps_four_read_permissions(cfg, db, alice):
+    """A row per repository is storage, not presentation: the dialog groups
+    them under their owner and shows the App's fixed permissions, granted. A
+    pasted token's row is a repository too, but nothing says what its token
+    may do, so it claims no permissions."""
+    for account_id, blob in (
+        ("acme/app", {"installation_id": "42", "repo": "acme/app"}),
+        ("acme/site", {"installation_id": "42", "repo": "acme/site"}),
+        ("solo/mine", {"token": "github_pat_x", "repo": "solo/mine"}),
+    ):
+        db.add(ConnectorCredential(
+            user_id=alice.id, connector_type="github", account_id=account_id,
+            account_name=account_id, credentials_enc=credentials_service.encrypt_credentials(blob),
+        ))
+    db.commit()
+
+    rows = {r["account_id"]: r for r in _Browser(db).as_(alice).get("/api/user/connectors").json()}
+
+    assert {r["entity_group"] for r in rows.values()} == {"acme", "solo"}
+    assert all(r["entity_per_row"] and r["entity_noun"] == "repository" for r in rows.values())
+    app = rows["acme/app"]
+    assert app["scope_status"] == "complete" and app["missing_scopes"] == []
+    assert sorted(s["scope"] for s in app["scopes"]) == sorted(gh_app.APP_SCOPES)
+    assert {s["access"] for s in app["scopes"]} == {"read"} and all(s["granted"] for s in app["scopes"])
+    assert rows["solo/mine"]["scopes"] == [] and rows["solo/mine"]["scope_status"] == "n/a"
+
+
 # ---------------------------------------------------------------------------
 # Reading with a grant
 # ---------------------------------------------------------------------------

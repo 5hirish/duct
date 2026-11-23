@@ -835,6 +835,7 @@ export default function ConnectionsPage() {
           serverRowList={serverRowsAll.github || []}
           onSaved={refreshServerRows}
           onRemoveRow={removeServerRowById}
+          onDisconnect={() => disconnect("github")}
           {...mappingProps("github")}
         />
     ),

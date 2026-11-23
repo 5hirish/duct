@@ -498,6 +498,15 @@
   white-space: nowrap;
 }
 
+/* An owner line (GitHub's user or organisation): its mark beside the name,
+   the count on the right. */
+.conn-account-owner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
 /* The action half. Two buttons now (Disconnect + Reconnect), so they need a
    gap of their own and keep their intrinsic width. */
 .conn-account-actions {
