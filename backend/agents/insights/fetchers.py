@@ -477,7 +477,7 @@ def fetch_publishers(
 ) -> dict[str, Any]:
     """Every post the project's schedulers report, inside the window by
     posting date. Never raises; the statuses mirror a connector's so the
-    agent reacts the same way ("not_connected" names Content → Accounts)."""
+    agent reacts the same way ("not_connected" names Toolbox → Publishing)."""
     import asyncio
 
     from db.session import get_session as db_session
@@ -491,7 +491,7 @@ def fetch_publishers(
         "connector_id": spec.connector_id,
         "message": (
             "No scheduler is connected to this project. The owner connects PostBridge or "
-            "Zernio in Content → Accounts; until then there are no post numbers to read."
+            "Zernio in Toolbox → Publishing; until then there are no post numbers to read."
         ),
     }
     with next(db_session()) as db:

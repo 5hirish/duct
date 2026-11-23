@@ -589,6 +589,10 @@ msgstr "{name} ist fertig"
 msgid "{name} needs your input"
 msgstr "{name} braucht deine Eingabe"
 
+#: src/components/connections/VendorKeyConnectorCard.jsx
+msgid "{name} no longer accepts the saved API key, so nothing goes through it. Paste a new key from {name}."
+msgstr "{name} akzeptiert den gespeicherten API-Schlüssel nicht mehr, daher läuft nichts darüber. Füge einen neuen Schlüssel von {name} ein."
+
 #: src/components/settings/AgentAccess.jsx
 msgid "{name} opens Duct in your browser. Check the name it shows, then choose Allow."
 msgstr "{name} öffnet Duct in deinem Browser. Prüfe den angezeigten Namen und wähle dann Erlauben."
@@ -1918,6 +1922,10 @@ msgstr "Etwas Spezifisches? (optional)"
 #: src/components/connections/ProviderCard.jsx
 msgid "API key"
 msgstr "API-Schlüssel"
+
+#: src/components/connections/logos.jsx
+msgid "Apify"
+msgstr "Apify"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Apify is connected. Posts you save in Discover shape the plan's topics."
@@ -6069,6 +6077,10 @@ msgstr "Schlüssel-ID"
 msgid "Key refused"
 msgstr "Schlüssel abgelehnt"
 
+#: src/components/connections/VendorKeyConnectorCard.jsx
+msgid "Key rejected"
+msgstr "Schlüssel abgelehnt"
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Keys start with the prefix shown in the field. Copy it again from the console — most consoles show a key only once."
 msgstr "Schlüssel beginnen mit dem im Feld angezeigten Präfix. Kopiere ihn erneut aus der Konsole — die meisten Konsolen zeigen einen Schlüssel nur einmal an."
@@ -8694,6 +8706,10 @@ msgstr "Beitrag geplant"
 #: src/components/content/AccountsTab.jsx
 msgid "Post to all your accounts from one place"
 msgstr "Poste von einem Ort aus auf all deine Konten"
+
+#: src/components/connections/logos.jsx
+msgid "PostBridge"
+msgstr "PostBridge"
 
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "PostBridge API key"
@@ -13758,6 +13774,10 @@ msgstr "Deine Website reicht für den Anfang. Duct liest sie jetzt und liest wei
 #: src/components/connections/BringAnyTool.jsx
 msgid "Yours"
 msgstr "Deins"
+
+#: src/components/connections/logos.jsx
+msgid "Zernio"
+msgstr "Zernio"
 
 #: src/lib/userProfile.js
 msgid "हिन्दी"

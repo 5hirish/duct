@@ -589,6 +589,10 @@ msgstr "{name} ha terminado"
 msgid "{name} needs your input"
 msgstr "{name} necesita tu aportación"
 
+#: src/components/connections/VendorKeyConnectorCard.jsx
+msgid "{name} no longer accepts the saved API key, so nothing goes through it. Paste a new key from {name}."
+msgstr "{name} ya no acepta la clave API guardada, así que nada pasa a través de ella. Pega una nueva clave de {name}."
+
 #: src/components/settings/AgentAccess.jsx
 msgid "{name} opens Duct in your browser. Check the name it shows, then choose Allow."
 msgstr "{name} abre Duct en tu navegador. Comprueba el nombre que muestra y elige Permitir."
@@ -1918,6 +1922,10 @@ msgstr "¿Algo específico? (opcional)"
 #: src/components/connections/ProviderCard.jsx
 msgid "API key"
 msgstr "Clave API"
+
+#: src/components/connections/logos.jsx
+msgid "Apify"
+msgstr "Apify"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Apify is connected. Posts you save in Discover shape the plan's topics."
@@ -6069,6 +6077,10 @@ msgstr "ID de clave"
 msgid "Key refused"
 msgstr "Clave rechazada"
 
+#: src/components/connections/VendorKeyConnectorCard.jsx
+msgid "Key rejected"
+msgstr "Clave rechazada"
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Keys start with the prefix shown in the field. Copy it again from the console — most consoles show a key only once."
 msgstr "Las claves comienzan con el prefijo que se muestra en el campo. Cópiala de nuevo desde la consola; la mayoría de las consolas muestran una clave solo una vez."
@@ -8694,6 +8706,10 @@ msgstr "Publicación programada"
 #: src/components/content/AccountsTab.jsx
 msgid "Post to all your accounts from one place"
 msgstr "Publica en todas tus cuentas desde un solo lugar"
+
+#: src/components/connections/logos.jsx
+msgid "PostBridge"
+msgstr "PostBridge"
 
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "PostBridge API key"
@@ -13758,6 +13774,10 @@ msgstr "Tu sitio web es suficiente para empezar. Duct lo lee ahora y sigue leyé
 #: src/components/connections/BringAnyTool.jsx
 msgid "Yours"
 msgstr "El tuyo"
+
+#: src/components/connections/logos.jsx
+msgid "Zernio"
+msgstr "Zernio"
 
 #: src/lib/userProfile.js
 msgid "हिन्दी"

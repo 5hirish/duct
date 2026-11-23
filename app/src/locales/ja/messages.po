@@ -589,6 +589,10 @@ msgstr "{name} が完了しました"
 msgid "{name} needs your input"
 msgstr "{name} に入力が必要です"
 
+#: src/components/connections/VendorKeyConnectorCard.jsx
+msgid "{name} no longer accepts the saved API key, so nothing goes through it. Paste a new key from {name}."
+msgstr "{name} は保存された API キーを受け付けなくなったため、何も処理されません。{name} から新しいキーを貼り付けてください。"
+
 #: src/components/settings/AgentAccess.jsx
 msgid "{name} opens Duct in your browser. Check the name it shows, then choose Allow."
 msgstr "{name} がブラウザで Duct を開きます。表示される名前を確認してから、[許可する] を選んでください。"
@@ -1918,6 +1922,10 @@ msgstr "具体的な内容はありますか？（任意）"
 #: src/components/connections/ProviderCard.jsx
 msgid "API key"
 msgstr "APIキー"
+
+#: src/components/connections/logos.jsx
+msgid "Apify"
+msgstr "Apify"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Apify is connected. Posts you save in Discover shape the plan's topics."
@@ -6069,6 +6077,10 @@ msgstr "キーID"
 msgid "Key refused"
 msgstr "キーが拒否されました"
 
+#: src/components/connections/VendorKeyConnectorCard.jsx
+msgid "Key rejected"
+msgstr "キーが拒否されました"
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Keys start with the prefix shown in the field. Copy it again from the console — most consoles show a key only once."
 msgstr "キーはフィールドに表示されているプレフィックスで始まります。コンソールから再度コピーしてください — ほとんどのコンソールではキーは一度しか表示されません。"
@@ -8695,6 +8707,10 @@ msgstr "投稿スケジュール済み"
 #: src/components/content/AccountsTab.jsx
 msgid "Post to all your accounts from one place"
 msgstr "すべてのアカウントに 1 か所から投稿"
+
+#: src/components/connections/logos.jsx
+msgid "PostBridge"
+msgstr "PostBridge"
 
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "PostBridge API key"
@@ -13759,6 +13775,10 @@ msgstr "あなたのウェブサイトがあれば開始できます。Ductは�
 #: src/components/connections/BringAnyTool.jsx
 msgid "Yours"
 msgstr "自分のツール"
+
+#: src/components/connections/logos.jsx
+msgid "Zernio"
+msgstr "Zernio"
 
 #: src/lib/userProfile.js
 msgid "हिन्दी"

@@ -501,6 +501,10 @@ msgstr "{name} 已完成"
 msgid "{name} needs your input"
 msgstr "{name} 需要你的输入"
 
+#: src/components/connections/VendorKeyConnectorCard.jsx
+msgid "{name} no longer accepts the saved API key, so nothing goes through it. Paste a new key from {name}."
+msgstr "{name} 不再接受已保存的 API 密钥，因此无法通过其处理任何请求。请粘贴来自 {name} 的新密钥。"
+
 #: src/components/settings/AgentAccess.jsx
 msgid "{name} opens Duct in your browser. Check the name it shows, then choose Allow."
 msgstr "{name} 在你的浏览器中打开 Duct。检查它显示的名称，然后选择允许。"
@@ -1628,6 +1632,10 @@ msgstr "具体内容？（可选）"
 #: src/components/connections/ProviderCard.jsx
 msgid "API key"
 msgstr "API 密钥"
+
+#: src/components/connections/logos.jsx
+msgid "Apify"
+msgstr "Apify"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Apify is connected. Posts you save in Discover shape the plan's topics."
@@ -5294,6 +5302,10 @@ msgstr "密钥 ID"
 msgid "Key refused"
 msgstr "密钥被拒绝"
 
+#: src/components/connections/VendorKeyConnectorCard.jsx
+msgid "Key rejected"
+msgstr "密钥被拒绝"
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Keys start with the prefix shown in the field. Copy it again from the console — most consoles show a key only once."
 msgstr "密钥以字段中显示的前缀开头。请从控制台再次复制——大多数控制台只显示一次密钥。"
@@ -7613,6 +7625,10 @@ msgstr "帖子已安排"
 #: src/components/content/AccountsTab.jsx
 msgid "Post to all your accounts from one place"
 msgstr "从一处发布到所有账户"
+
+#: src/components/connections/logos.jsx
+msgid "PostBridge"
+msgstr "PostBridge"
 
 #: src/app/(app)/content/page.jsx
 msgid "posted"
@@ -12178,6 +12194,10 @@ msgstr "你的网站足以开始。Duct 现在会读取它，并在你设置其�
 #: src/components/connections/BringAnyTool.jsx
 msgid "Yours"
 msgstr "你的"
+
+#: src/components/connections/logos.jsx
+msgid "Zernio"
+msgstr "Zernio"
 
 #: src/lib/userProfile.js
 msgid "हिन्दी"

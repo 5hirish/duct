@@ -69,7 +69,6 @@ import ConnectorPermissions from "@/components/connections/ConnectorPermissions"
 import ConnectorTile from "@/components/connections/ConnectorTile";
 import ManualConnectorCard from "@/components/connections/ManualConnectorCard";
 import VendorKeyConnectorCard from "@/components/connections/VendorKeyConnectorCard";
-import { Search as SearchGlyph, Send as SendGlyph } from "lucide-react";
 import OAuthConnectorCard from "@/components/connections/OAuthConnectorCard";
 import McpConnectDialog from "@/components/connections/McpConnectDialog";
 import McpConnectors, { useMcpConnectors } from "@/components/connections/McpConnectors";
@@ -2353,17 +2352,17 @@ export const SCENES = [
   },
   {
     id: "tile-vendor-keys",
-    state: "Zernio connected, PostBridge and Apify not",
+    state: "Zernio connected, PostBridge's key rejected, Apify not connected",
     group: "ConnectorTile",
     title: "Schedulers and Apify in the Toolbox",
-    note: "Vendors Content Studio works through on the owner's own key are connected here like every other tool: schedulers on the Publishing shelf, Apify on Research. Content Studio only links here, and keeps the choices that are its own (Accounts picks which scheduler posts go out through). Open PostBridge or Apify for the key field, Zernio for the platforms it reports and Disconnect. None ships a brand mark, so each tile carries a glyph for what it does rather than a redrawn logo.",
+    note: "Vendors Content Studio works through on the owner's own key are connected here like every other tool: schedulers on the Publishing shelf, Apify on Research. Content Studio only links here, and keeps the choices that are its own (Accounts picks which scheduler posts go out through). The Toolbox asks each vendor whether the saved key still works: PostBridge here answers 401, so its tile says \"Key rejected\" and its dialog asks for a new key, where it used to say Connected while every call failed. Open Apify for the key field, Zernio for the platforms it reports and Disconnect. Each tile carries the vendor's own app icon, as its site serves it.",
     render: () => (
       <div className="conn-grid">
         {[SCHEDULERS_NONE[1], SCHEDULERS_NONE[0]].map((p, i) => (
           <VendorKeyConnectorCard
             key={p.id}
-            vendor={i === 0 ? { ...p, connected: true, own_key: true } : p}
-            logo={<SendGlyph className="text-muted-foreground" />}
+            vendor={i === 0 ? { ...p, connected: true, own_key: true, key_status: "ok" } : { ...p, connected: true, own_key: true, key_status: "rejected" }}
+            logo={LOGOS[p.id]}
             description="Publishes approved posts to your social accounts, on schedule."
             usage="Pick it as the scheduler a project posts through in Content Studio, under Accounts."
             forget="Duct forgets your API key and stops publishing through this account."
@@ -2373,7 +2372,7 @@ export const SCENES = [
         ))}
         <VendorKeyConnectorCard
           vendor={{ id: "apify", label: "Apify", dashboard_url: "https://console.apify.com", connected: false, own_key: false, is_owner: true }}
-          logo={<SearchGlyph className="text-muted-foreground" />}
+          logo={LOGOS.apify}
           description="Searches TikTok by hashtag or a region's trending feed, on your own Apify account."
           usage="Search TikTok in Content Studio, under Discover."
           forget="Duct forgets your Apify token."
@@ -4211,7 +4210,7 @@ export const SCENES = [
     state: "both connected, Zernio primary, one account linked",
     group: "AccountsTab",
     title: "Accounts at two schedulers",
-    note: "Two schedulers can be connected (in the Toolbox); the picker says which one posts go out through, and the linked count counts only its accounts. Each channel row says in one line how it is posted: via the primary scheduler, an account there not linked yet (X here), by hand, or off.",
+    note: "Two schedulers can be connected (in the Toolbox); the picker says which one posts go out through, and the linked count counts only its accounts. Each channel row says in one line how it is posted: via the primary scheduler, by hand, or off. X is on with one account at Zernio and none linked, so the tab links it as it opens (a channel switched on is \"post here\"): watch its row turn from \"In Zernio, not linked yet\" to \"1 account via Zernio\".",
     render: () => (
       <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_BOTH} save={PREVIEW_SAVE} /></div>
     ),

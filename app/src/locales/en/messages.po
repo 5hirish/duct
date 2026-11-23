@@ -589,6 +589,10 @@ msgstr "{name} is done"
 msgid "{name} needs your input"
 msgstr "{name} needs your input"
 
+#: src/components/connections/VendorKeyConnectorCard.jsx
+msgid "{name} no longer accepts the saved API key, so nothing goes through it. Paste a new key from {name}."
+msgstr "{name} no longer accepts the saved API key, so nothing goes through it. Paste a new key from {name}."
+
 #: src/components/settings/AgentAccess.jsx
 msgid "{name} opens Duct in your browser. Check the name it shows, then choose Allow."
 msgstr "{name} opens Duct in your browser. Check the name it shows, then choose Allow."
@@ -1918,6 +1922,10 @@ msgstr "Anything specific? (optional)"
 #: src/components/connections/ProviderCard.jsx
 msgid "API key"
 msgstr "API key"
+
+#: src/components/connections/logos.jsx
+msgid "Apify"
+msgstr "Apify"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Apify is connected. Posts you save in Discover shape the plan's topics."
@@ -6069,6 +6077,10 @@ msgstr "Key ID"
 msgid "Key refused"
 msgstr "Key refused"
 
+#: src/components/connections/VendorKeyConnectorCard.jsx
+msgid "Key rejected"
+msgstr "Key rejected"
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Keys start with the prefix shown in the field. Copy it again from the console — most consoles show a key only once."
 msgstr "Keys start with the prefix shown in the field. Copy it again from the console — most consoles show a key only once."
@@ -8695,6 +8707,10 @@ msgstr "Post scheduled"
 #: src/components/content/AccountsTab.jsx
 msgid "Post to all your accounts from one place"
 msgstr "Post to all your accounts from one place"
+
+#: src/components/connections/logos.jsx
+msgid "PostBridge"
+msgstr "PostBridge"
 
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "PostBridge API key"
@@ -13759,6 +13775,10 @@ msgstr "Your website is enough to start. Duct reads it now and keeps reading whi
 #: src/components/connections/BringAnyTool.jsx
 msgid "Yours"
 msgstr "Yours"
+
+#: src/components/connections/logos.jsx
+msgid "Zernio"
+msgstr "Zernio"
 
 #: src/lib/userProfile.js
 msgid "हिन्दी"

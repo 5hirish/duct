@@ -33,7 +33,7 @@ _SPECS: dict[str, tuple[PublisherSpec, type]] = {
 NO_SCHEDULER = (
     "No scheduler is connected yet. Connect "
     + " or ".join(spec.label for spec, _ in _SPECS.values())
-    + " in Content → Accounts and link the account to post from."
+    + " in Toolbox → Publishing, then link the account to post from in Content → Accounts."
 )
 
 

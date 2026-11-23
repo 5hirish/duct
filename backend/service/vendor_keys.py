@@ -17,6 +17,7 @@ with a ``check``: the cheapest authenticated read that proves a pasted key works
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from uuid import UUID
@@ -33,6 +34,16 @@ from service.credentials import decrypt_credentials
 # Where a request's key came from, for the status route.
 KEY_OWN = "own"
 KEY_SERVER = "server"
+
+# What the vendor says about the stored key, when asked (``VendorKey.health``).
+# "Connected" used to mean only "a key is stored": a PostBridge key revoked on
+# PostBridge's side stayed "Connected" in the Toolbox while every call 401'd.
+KEY_OK = "ok"
+KEY_REJECTED = "rejected"
+KEY_UNCHECKED = "unchecked"
+# A Toolbox render waits on this, so a slow vendor reads as unchecked, not as
+# a page that never loads.
+HEALTH_TIMEOUT_S = 8.0
 
 
 class VendorNotConnected(ValueError):
@@ -102,6 +113,21 @@ class VendorKey:
         if project is None:
             return ""
         return self.saved(project.user_id, db) or self.server()
+
+    async def health(self, user_id: UUID, db: Session) -> str:
+        """Ask the vendor about the key ``user_id``'s requests spend: KEY_OK,
+        KEY_REJECTED (its 401/403), KEY_UNCHECKED (unreachable or slow), or
+        "" when there is no key to ask about."""
+        key = self.saved(user_id, db) or self.server()
+        if not key:
+            return ""
+        try:
+            await asyncio.wait_for(self.check(key), timeout=HEALTH_TIMEOUT_S)
+        except VendorKeyRejected:
+            return KEY_REJECTED
+        except (VendorKeyUnchecked, TimeoutError):
+            return KEY_UNCHECKED
+        return KEY_OK
 
     def save(self, user_id: UUID, api_key: str, db: Session) -> None:
         """Store a key ``check`` accepted, replacing the user's last. The caller commits."""

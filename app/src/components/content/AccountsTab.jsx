@@ -34,6 +34,8 @@ import {
 import { MediaKind, MEDIA_KIND_LABELS } from "@/lib/contentEnums";
 import { cn } from "@/lib/utils";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
+import { LOGOS } from "@/components/connections/logos";
+import { accountKey, accountsToAutoLink, soleAccount } from "@/lib/channelLinks";
 import ConnectorGate, { SchedulerGateAction } from "./ConnectorGate";
 import { TOOLBOX_PUBLISHING_HREF } from "@/lib/connectorCatalog";
 import LoadError from "@/components/LoadError";
@@ -48,7 +50,6 @@ function avatarUrl(account) {
 
 // Accounts are unique per scheduler, not overall: two schedulers can number
 // theirs the same.
-const accountKey = (a) => `${a.publisher || ""}:${a.id ?? a.account_id}`;
 
 // The save-state key for the primary-scheduler choice, beside the channel ids.
 const PRIMARY_SAVE = "__primary";
@@ -220,11 +221,24 @@ export default function AccountsTab({
   // through it, and the Plans checklist said "Your accounts" was not done.
   // Two or more is a real choice, left to the row's Link buttons.
   function enableChannel(channelId, enabled) {
-    const candidates = accounts.filter((a) => a.platform === channelId && a.publisher === primary);
-    const sole = candidates.length === 1 ? candidates[0] : null;
+    const sole = soleAccount(accounts, channelId, primary);
     if (enabled && sole && !linkedKeys.has(accountKey(sole))) return toggleAccount(sole);
     setProfile(channelId, { enabled });
   }
+
+  // The same rule for channels already on: one switched on before the rule
+  // existed, or before the primary scheduler held the account, is linked the
+  // first time the tab sees both. Once per load and primary, so unlinking by
+  // hand afterwards sticks.
+  const reconciledFor = useRef("");
+  useEffect(() => {
+    const at = `${reloadKey}:${primary}`;
+    if (loading || loadError || !primary || reconciledFor.current === at) return;
+    reconciledFor.current = at;
+    const add = accountsToAutoLink({ profiles: config.profiles, accounts, primary, linked: linkedKeys });
+    if (add.length) setLinked(new Set([...linkedKeys, ...add.map(accountKey)]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, loadError, primary, reloadKey]);
 
   function choosePrimary(publisherId) {
     if (publisherId === primary) return;
@@ -421,6 +435,11 @@ function PrimaryPicker({ schedulers, primary, saving, onChoose }) {
               )}
             >
               {on ? <CircleDot className="size-4" aria-hidden /> : <Circle className="size-4" aria-hidden />}
+              {LOGOS[p.id] && (
+                <span className="flex size-5 shrink-0 items-center justify-center overflow-hidden rounded [&_img]:size-5" aria-hidden>
+                  {LOGOS[p.id]}
+                </span>
+              )}
               {p.label}
             </button>
           );

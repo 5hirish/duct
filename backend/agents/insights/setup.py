@@ -215,7 +215,7 @@ def render_data_sources(sources: list[dict]) -> str:
         status = str(src.get("status") or "")
         line = f"- {src.get('connector_id', '')}: {status}"
         # A row may bring its own hint: the schedulers are connected in
-        # Content → Accounts, and "RequestConnection" would send the agent
+        # Toolbox → Publishing, and "RequestConnection" would send the agent
         # down a tool that cannot do it.
         hint = str(src.get("hint") or _SOURCE_STATUS_HINTS.get(status, ""))
         if status == "bound" and (src.get("account_id") or src.get("account_name")):
@@ -342,5 +342,5 @@ def _publishers_source(db, project_id: UUID) -> dict:
     return {
         "connector_id": PUBLISHERS_SOURCE,
         "status": "not_connected",
-        "hint": "no scheduler connected — the owner connects PostBridge or Zernio in Content → Accounts",
+        "hint": "no scheduler connected — the owner connects PostBridge or Zernio in Toolbox → Publishing",
     }

@@ -193,6 +193,6 @@ ZERNIO_KEY = VendorKey(
     connector_type="zernio",
     setting="zernio_api_key",
     label="Zernio",
-    where="Content → Accounts",
+    where="Toolbox → Publishing",
     check=check_api_key,
 )

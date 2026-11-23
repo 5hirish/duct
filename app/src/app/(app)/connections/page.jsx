@@ -24,7 +24,7 @@ import {
 } from "../../../lib/connectorAuth";
 import { trackEvent, AnalyticsEvent } from "../../../lib/analytics";
 import { connectVendorKey, disconnectVendorKey, getVendorKeyStatus, listPublishers, VENDOR, VENDOR_HOME } from "../../../lib/contentApi";
-import { Search, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import { getActiveProject } from "../../../lib/projects";
 import { MCP_GUIDE_URL } from "../../../lib/mcpServers";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,7 @@ import ManualConnectorCard from "../../../components/connections/ManualConnector
 import { McpPhase, useMcpConnectors } from "../../../components/connections/McpConnectors";
 import FirstSourceCelebration from "../../../components/connections/FirstSourceCelebration";
 import OAuthConnectorCard from "../../../components/connections/OAuthConnectorCard";
-import VendorKeyConnectorCard from "../../../components/connections/VendorKeyConnectorCard";
+import VendorKeyConnectorCard, { KEY_REJECTED } from "../../../components/connections/VendorKeyConnectorCard";
 import { DEFAULT_VALUE } from "../../../components/connections/ProjectAccountSelect";
 import { LOGOS } from "../../../components/connections/logos";
 import {
@@ -288,8 +288,8 @@ export default function ConnectionsPage() {
     }
     // Each on its own: one failing leaves the other's tiles in place.
     const [schedulers, research] = await Promise.all([
-      listPublishers(projectId).catch(() => null),
-      getVendorKeyStatus(VENDOR.APIFY, projectId).catch(() => null),
+      listPublishers(projectId, { check: true }).catch(() => null),
+      getVendorKeyStatus(VENDOR.APIFY, projectId, { check: true }).catch(() => null),
     ]);
     if (schedulers) setPublishers(schedulers);
     setApify(research ? { ...research, id: VENDOR.APIFY, label: "Apify", dashboard_url: VENDOR_HOME[VENDOR.APIFY] } : null);
@@ -908,7 +908,7 @@ export default function ConnectionsPage() {
     ...publishers.map((p) => ({
       vendor: p,
       category: Category.PUBLISHING,
-      logo: <Send className="text-muted-foreground" />,
+      logo: LOGOS[p.id] || <Send className="text-muted-foreground" />,
       description: t`Publishes approved posts to your social accounts, on schedule.`,
       usage: t`Pick it as the scheduler a project posts through in Content Studio, under Accounts.`,
       forget: t`Duct forgets your API key and stops publishing through your ${p.label} account. Your accounts stay connected in ${p.label}, and posts already scheduled there still go out.`,
@@ -918,7 +918,7 @@ export default function ConnectionsPage() {
       ? [{
           vendor: apify,
           category: Category.RESEARCH,
-          logo: <Search className="text-muted-foreground" />,
+          logo: LOGOS.apify,
           description: t`Searches TikTok by hashtag or a region's trending feed, on your own Apify account.`,
           usage: t`Search TikTok in Content Studio, under Discover. Searches are billed to your Apify account.`,
           forget: t`Duct forgets your Apify token and stops searching through your account. References you saved stay saved.`,
@@ -946,7 +946,11 @@ export default function ConnectionsPage() {
       title: vendor.label,
       description: card.description,
       category: card.category,
-      status: vendor.connected ? ConnectionStatus.CONNECTED : ConnectionStatus.AVAILABLE,
+      status: !vendor.connected
+        ? ConnectionStatus.AVAILABLE
+        : vendor.key_status === KEY_REJECTED
+          ? ConnectionStatus.ATTENTION
+          : ConnectionStatus.CONNECTED,
       origin: Origin.DUCT,
       publisher: DUCT_PUBLISHER,
       keywords: card.keywords,

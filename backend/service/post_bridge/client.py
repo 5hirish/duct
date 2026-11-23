@@ -365,7 +365,7 @@ POSTBRIDGE_KEY = VendorKey(
     connector_type="post_bridge",
     setting="postbridge_api_key",
     label="PostBridge",
-    where="Content → Accounts",
+    where="Toolbox → Publishing",
     check=check_api_key,
 )
 

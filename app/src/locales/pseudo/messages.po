@@ -589,6 +589,10 @@ msgstr ""
 msgid "{name} needs your input"
 msgstr ""
 
+#: src/components/connections/VendorKeyConnectorCard.jsx
+msgid "{name} no longer accepts the saved API key, so nothing goes through it. Paste a new key from {name}."
+msgstr ""
+
 #: src/components/settings/AgentAccess.jsx
 msgid "{name} opens Duct in your browser. Check the name it shows, then choose Allow."
 msgstr ""
@@ -1911,6 +1915,10 @@ msgstr ""
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/ProviderCard.jsx
 msgid "API key"
+msgstr ""
+
+#: src/components/connections/logos.jsx
+msgid "Apify"
 msgstr ""
 
 #: src/components/content/PlanDayOne.jsx
@@ -6063,6 +6071,10 @@ msgstr ""
 msgid "Key refused"
 msgstr ""
 
+#: src/components/connections/VendorKeyConnectorCard.jsx
+msgid "Key rejected"
+msgstr ""
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Keys start with the prefix shown in the field. Copy it again from the console — most consoles show a key only once."
 msgstr ""
@@ -8688,6 +8700,10 @@ msgstr ""
 
 #: src/components/content/AccountsTab.jsx
 msgid "Post to all your accounts from one place"
+msgstr ""
+
+#: src/components/connections/logos.jsx
+msgid "PostBridge"
 msgstr ""
 
 #: src/components/content/PostBridgeKeyForm.jsx
@@ -13752,6 +13768,10 @@ msgstr ""
 
 #: src/components/connections/BringAnyTool.jsx
 msgid "Yours"
+msgstr ""
+
+#: src/components/connections/logos.jsx
+msgid "Zernio"
 msgstr ""
 
 #: src/lib/userProfile.js
