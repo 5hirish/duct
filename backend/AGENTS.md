@@ -567,7 +567,11 @@ Postgres `DATABASE_URL` names.
   `get_project`, `draft_project`, `update_project`. A draft goes through
   `service/project_writes.apply_draft`, labelled `document` (or `inferred`
   for what the agent guessed), so it never replaces the person or their
-  site. An edit (`update_project`, #512) is the person asking in so many
+  site. The draftable fields cover the Content Studio's Brand tab too
+  (tagline, description, tone, value proposition, content goal, words to use
+  and avoid, colours, visual style; `project_draft.BRAND_FIELDS`), so an MCP
+  setup fills it; saving the Brand tab labels them the person's. An edit
+  (`update_project`, #512) is the person asking in so many
   words: it can replace anything, carries `destructiveHint` so the client
   confirms it, and is undoable from the activity feed. Each write leaves an
   `activity_logs` row (`category="project"`). No tool calls a model on

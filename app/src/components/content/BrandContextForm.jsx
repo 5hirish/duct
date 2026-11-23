@@ -206,11 +206,16 @@ export default function BrandContextForm({ projectId, onSaved }) {
             </Button>
           </header>
           <dl className="grid grid-cols-1 gap-3 @lg:grid-cols-2">
-            <ReadOnly label={t`Company`} value={project?.company?.name} />
+            {/* The product's own name when no separate company is set: most
+                projects are both, and "Not set" read as a gap to fill. */}
+            <ReadOnly label={t`Company`} value={project?.company?.name || project?.name} />
             <ReadOnly label={t`Industry`} value={project?.company?.industry} />
             <ReadOnly label={t`Website`} value={project?.company?.website_url} />
             <ReadOnly label={t`Brand voice`} value={project?.brand_channels?.brand_voice} />
-            <ReadOnly label={t`Audience`} value={project?.audience?.primary_segment} className="@lg:col-span-2" />
+            {/* Personas are where setup (and an MCP draft) puts the audience;
+                primary_segment is the older single field, read as a fallback.
+                Reading only it said "Not set" over two drafted personas. */}
+            <ReadOnly label={t`Audience`} value={audienceLine(project?.audience)} className="@lg:col-span-2" />
           </dl>
         </div>
       </Card>
@@ -357,6 +362,14 @@ export default function BrandContextForm({ projectId, onSaved }) {
 // ---------------------------------------------------------------------------
 // Form primitives
 // ---------------------------------------------------------------------------
+
+/** Who the project is for, in one line: its personas by name, primary first. */
+function audienceLine(audience) {
+  const names = (Array.isArray(audience?.personas) ? audience.personas : [])
+    .map((p) => String(p?.name || "").trim())
+    .filter(Boolean);
+  return names.length ? names.join(" · ") : audience?.primary_segment || "";
+}
 
 /** Two-column settings section: label + description on the left, fields on the right. */
 function Section({ icon: Icon, title, hint, children }) {

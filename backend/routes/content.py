@@ -139,7 +139,7 @@ from service.publishers.metrics import collect_reported_posts
 from service.publishers.registry import NO_SCHEDULER, all_specs, publisher_for, spec_for
 from service.vendor_keys import VendorNotConnected
 from service.membership import get_project_for_user, get_project_row_for_user
-from service.project_draft import edit_fields
+from service.project_draft import BRAND_FIELDS, edit_fields, get_value
 from service.provider_keys import stored_keys_for
 from utils.dates import now_iso, utcnow
 
@@ -941,6 +941,10 @@ def put_brand_context(
         proj.tagline = body.tagline
     if body.description is not None:
         proj.description = body.description
+    # What the form sent, labelled as the person's: a field an outside agent
+    # drafted (service/mcp_server/tools.py) is the person's once they save it
+    # here, so a later draft never replaces it.
+    edit_fields(proj, {name: get_value(proj, name) for name in BRAND_FIELDS})
     proj.updated_at = datetime.now(timezone.utc)
     db.add(proj)
     db.commit()
