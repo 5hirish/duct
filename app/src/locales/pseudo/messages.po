@@ -312,6 +312,10 @@ msgstr ""
 msgid "{count, plural, one {GitHub connected: # repository.} other {GitHub connected: # repositories.}}"
 msgstr ""
 
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "{count} {noun}"
+msgstr ""
+
 #: src/app/(app)/scheduled/page.jsx
 msgid "{count} scheduled"
 msgstr ""
@@ -3155,6 +3159,10 @@ msgstr ""
 msgid "Connected — {firstAccountName}"
 msgstr ""
 
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Connected — {owner}"
+msgstr ""
+
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Connected · {host}"
 msgstr ""
@@ -3906,6 +3914,7 @@ msgid "Discarding…"
 msgstr ""
 
 #: src/components/connections/EndpointProviderCard.jsx
+#: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/McpConnectors.jsx
 #: src/components/connections/OAuthConnectorCard.jsx
@@ -3924,6 +3933,7 @@ msgstr ""
 msgid "Disconnect “{rowName}”?"
 msgstr ""
 
+#: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/OAuthConnectorCard.jsx
 msgid "Disconnect “{title}”?"
 msgstr ""
@@ -4188,6 +4198,10 @@ msgstr ""
 
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Duct filled in what it learned from your site. Anything you had entered yourself was left alone, and every drafted field is marked."
+msgstr ""
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Duct forgets the {count} {many} it can read, and projects that read one stop until you connect again. To remove Duct's access on {title} itself, uninstall it there."
 msgstr ""
 
 #: src/components/connections/ProviderCard.jsx

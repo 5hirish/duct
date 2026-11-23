@@ -120,6 +120,11 @@ class ConnectorOut(BaseModel):
     # opened, because the nouns only arrived with the lazy entity listing.
     entity_noun: str = "account"
     entity_noun_plural: str = "accounts"
+    # This row is itself the thing a project reads (a GitHub repository), so the
+    # project picks a row and the dialog groups rows under `entity_group` (the
+    # owner) instead of listing one per repository. See ConnectorMeta.
+    entity_per_row: bool = False
+    entity_group: str = ""
     # The connector's editable, non-secret keys as stored (`settings_keys`):
     # the Google Ads manager (MCC) id. The page shows what the server will
     # use rather than a copy it once typed into one tab.
@@ -141,9 +146,15 @@ def _settings_of(c: ConnectorCredential, keys: frozenset[str]) -> dict[str, str]
 
 def _to_out(c: ConnectorCredential) -> ConnectorOut:
     entry = registry().get(c.connector_type)
-    declared = parse_scopes(entry[0].oauth_scope) if entry else []
+    meta = entry[0] if entry else None
+    declared = parse_scopes(meta.oauth_scope) if meta else []
     granted = parse_scopes(c.granted_scopes)
-    is_oauth = bool(entry and entry[0].oauth_scope)
+    is_oauth = bool(meta and meta.oauth_scope)
+    if meta and meta.grant_key and not is_oauth and meta.grant_key in decrypt_row(c):
+        # A provider-side grant with fixed permissions (the GitHub App): the
+        # row was granted exactly those, so they read like an OAuth grant.
+        declared = granted = list(meta.grant_scopes)
+        is_oauth = True
     return ConnectorOut(
         id=c.id,
         connector_type=c.connector_type,
@@ -158,9 +169,11 @@ def _to_out(c: ConnectorCredential) -> ConnectorOut:
         scopes=scope_rows(declared, granted) if is_oauth else [],
         storage=storage_location(),
         residency=c.residency or RESIDENCY_SERVER,
-        entity_noun=entry[0].entity_noun if entry else "account",
-        entity_noun_plural=entry[0].entity_noun_plural if entry else "accounts",
-        settings=_settings_of(c, entry[0].settings_keys) if entry else {},
+        entity_noun=meta.entity_noun if meta else "account",
+        entity_noun_plural=meta.entity_noun_plural if meta else "accounts",
+        entity_per_row=bool(meta and meta.entity_per_row),
+        entity_group=meta.entity_group_of(c.account_id) if meta and meta.entity_group_of else "",
+        settings=_settings_of(c, meta.settings_keys) if meta else {},
     )
 
 

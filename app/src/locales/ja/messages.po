@@ -312,6 +312,10 @@ msgstr "{count, plural, other {# 投稿}}"
 msgid "{count, plural, one {GitHub connected: # repository.} other {GitHub connected: # repositories.}}"
 msgstr "{count, plural, one {GitHubに接続しました: リポジトリ # 件。} other {GitHubに接続しました: リポジトリ # 件。}}"
 
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "{count} {noun}"
+msgstr "{count} {noun}"
+
 #: src/app/(app)/scheduled/page.jsx
 msgid "{count} scheduled"
 msgstr "{count} 件のスケジュール"
@@ -3161,6 +3165,10 @@ msgstr "接続済み — {accountCount}アカウント"
 msgid "Connected — {firstAccountName}"
 msgstr "接続済み — {firstAccountName}"
 
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Connected — {owner}"
+msgstr "接続済み — {owner}"
+
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Connected · {host}"
 msgstr "接続済み · {host}"
@@ -3912,6 +3920,7 @@ msgid "Discarding…"
 msgstr "破棄中…"
 
 #: src/components/connections/EndpointProviderCard.jsx
+#: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/McpConnectors.jsx
 #: src/components/connections/OAuthConnectorCard.jsx
@@ -3930,6 +3939,7 @@ msgstr "「{name}」を切断しますか？"
 msgid "Disconnect “{rowName}”?"
 msgstr "「{rowName}」の接続を切断しますか？"
 
+#: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/OAuthConnectorCard.jsx
 msgid "Disconnect “{title}”?"
 msgstr "「{title}」の接続を解除しますか？"
@@ -4195,6 +4205,10 @@ msgstr "Duct はこのリクエストを読み取れませんでした。しば�
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Duct filled in what it learned from your site. Anything you had entered yourself was left alone, and every drafted field is marked."
 msgstr "Ductはあなたのサイトから学習した内容を記入しました。ご自身で入力された内容はそのまま残り、下書きされたすべてのフィールドにはマークが付いています。"
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Duct forgets the {count} {many} it can read, and projects that read one stop until you connect again. To remove Duct's access on {title} itself, uninstall it there."
+msgstr "Duct は読み取り可能な {count} 個の {many} の情報を削除し、それを読み取っているプロジェクトは再度接続するまで停止します。{title} 自体で Duct のアクセス権を削除するには、そちらでアンインストールしてください。"
 
 #: src/components/connections/ProviderCard.jsx
 msgid "Duct forgets the key {storageSentence}. Runs that need {providerName} fall back to your ChatGPT plan. Duct cannot show you this key again, so make sure you have it somewhere else if you still need it."

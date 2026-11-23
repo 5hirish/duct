@@ -26,6 +26,7 @@ import { useState } from "react";
 import { ExternalLink } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -38,6 +39,8 @@ import ConnectorDialog from "./ConnectorDialog";
 import ConnectorTile from "./ConnectorTile";
 import StorageBadge from "./StorageBadge";
 import ProjectBinding from "./ProjectBinding";
+import ConnectorPermissions from "./ConnectorPermissions";
+import EntityAvatar from "./EntityAvatar";
 import { trackEvent, AnalyticsEvent } from "@/lib/analytics";
 import { NATIVE_SOURCE } from "../../lib/connectorSource";
 import { Textarea } from "@/components/ui/textarea";
@@ -55,6 +58,7 @@ export default function ManualConnectorCard({
   serverRowList = [], // ALL stored rows for this connector_type (one per account)
   onSaved,         // async () => void — refresh the stored-rows map
   onRemoveRow,     // async (rowId) => void — remove one stored account row
+  onDisconnect,    // async () => void — forget every row (entity-per-row connectors)
   // Optional provider sign-in, offered above the paste form:
   // { label, againLabel, blurb, waiting, onStart, manageUrl, manageLabel, tokenLabel }
   // onStart resolves "browser" when the desktop shell handed off to the system
@@ -83,7 +87,16 @@ export default function ManualConnectorCard({
   const [adding, setAdding] = useState(false);
   const [tokenOpen, setTokenOpen] = useState(false);
 
+  const { confirm, dialog: confirmDialog } = useConfirm();
   const connected = serverRowList.length > 0;
+  // Each row is one repository (`entity_per_row`): the dialog speaks of the
+  // owner and a count, like every other connector's account line, rather than
+  // a row and a Remove per repository that grows with every grant. Which
+  // repositories are granted is decided on GitHub, through the manage link.
+  const perRow = serverRowList[0]?.entity_per_row === true;
+  const groups = perRow ? groupRows(serverRowList) : [];
+  // A provider-side grant reports its fixed permissions on the row.
+  const grantRow = serverRowList.find((row) => row.scopes?.length);
   // There is no session-only mode here: saving requires being signed in and
   // writes the row server-side, which is the point of pasting a key at all.
   const storage = connected
@@ -202,9 +215,26 @@ export default function ManualConnectorCard({
     }
   }
 
+  async function disconnectAll() {
+    const count = serverRowList.length;
+    const many = serverRowList[0]?.entity_noun_plural || "accounts";
+    const ok = await confirm({
+      title: t`Disconnect “${title}”?`,
+      description: t`Duct forgets the ${count} ${many} it can read, and projects that read one stop until you connect again. To remove Duct's access on ${title} itself, uninstall it there.`,
+      action: t`Disconnect`,
+      destructive: true,
+    });
+    if (ok) await onDisconnect?.();
+  }
+
   const accountCount = serverRowList.length;
   const firstAccountName = connected ? serverRowList[0].account_name : "";
-  const status = connected
+  const owner = groups[0]?.name || "";
+  const status = connected && perRow
+    ? groups.length === 1
+      ? t`Connected — ${owner}`
+      : t`Connected — ${accountCount} accounts`
+    : connected
     ? accountCount > 1
       ? t`Connected — ${accountCount} accounts`
       : firstAccountName
@@ -234,6 +264,13 @@ export default function ManualConnectorCard({
         title={title}
         description={description}
         source={NATIVE_SOURCE}
+        footer={
+          perRow && connected && onDisconnect ? (
+            <Button type="button" size="sm" variant="destructive" onClick={disconnectAll}>
+              <Trans>Disconnect</Trans>
+            </Button>
+          ) : undefined
+        }
         // The same status row the OAuth dialogs carry. It was missing here —
         // the import for it had been sitting unused — so a pasted credential
         // gave no answer to "is this live, and where does it live?" once the
@@ -251,7 +288,29 @@ export default function ManualConnectorCard({
           </span>
         }
       >
-        {connected && (
+        {connected && perRow && (
+          <div className="conn-dialog-section">
+            {groups.map((group) => {
+              const count = group.rows.length;
+              const noun = count === 1 ? group.noun : group.nounPlural;
+              return (
+                <div key={group.name} className="conn-account-row">
+                  <span className="conn-account-text conn-account-owner">
+                    <EntityAvatar name={group.name} />
+                    <span>{group.name}</span>
+                  </span>
+                  <span className="conn-hint">
+                    <Trans>
+                      {count} {noun}
+                    </Trans>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {connected && !perRow && (
           <div className="conn-dialog-section">
             {serverRowList.map((row) => (
               <div key={row.id} className="conn-account-row">
@@ -405,6 +464,10 @@ export default function ManualConnectorCard({
           <p className="conn-hint" style={{ marginTop: 12 }}>{notice}</p>
         )}
 
+        {perRow && grantRow && (
+          <ConnectorPermissions scopes={grantRow.scopes} scopeStatus={grantRow.scope_status} />
+        )}
+
         <ProjectBinding
           projectName={projectName}
           rows={serverRowList}
@@ -414,6 +477,20 @@ export default function ManualConnectorCard({
           busy={mappingBusy}
         />
       </ConnectorDialog>
+      {confirmDialog}
     </>
   );
+}
+
+/** Rows under the account each belongs to, in first-seen order. */
+function groupRows(rows) {
+  const groups = new Map();
+  for (const row of rows) {
+    const name = row.entity_group || row.account_name || row.account_id;
+    if (!groups.has(name)) {
+      groups.set(name, { name, noun: row.entity_noun, nounPlural: row.entity_noun_plural, rows: [] });
+    }
+    groups.get(name).rows.push(row);
+  }
+  return [...groups.values()];
 }

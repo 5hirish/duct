@@ -76,6 +76,11 @@ APP_PERMISSIONS = {
     "pull_requests": "read",
 }
 
+#: The same four, as the scope strings ``service/connector_scopes`` describes.
+#: Every App row was granted exactly these, so the connector dialog lists them
+#: as granted (``ConnectorMeta.grant_scopes``).
+APP_SCOPES = tuple(f"github:{name}:{level}" for name, level in APP_PERMISSIONS.items())
+
 # GitHub refuses a JWT whose `exp` is more than ten minutes out, and advises
 # backdating `iat` a minute against clock drift.
 JWT_BACKDATE_SECONDS = 60

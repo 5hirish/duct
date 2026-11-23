@@ -264,6 +264,10 @@ msgstr "{count, plural, other {# 帖子}}"
 msgid "{count, plural, one {GitHub connected: # repository.} other {GitHub connected: # repositories.}}"
 msgstr "{count, plural, other {GitHub 已连接：# 个仓库。}}"
 
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "{count} {noun}"
+msgstr "{count} {noun}"
+
 #: src/app/(app)/scheduled/page.jsx
 msgid "{count} scheduled"
 msgstr "已计划 {count} 个"
@@ -2726,6 +2730,10 @@ msgstr "已连接——{accountCount} 个账户"
 msgid "Connected — {firstAccountName}"
 msgstr "已连接——{firstAccountName}"
 
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Connected — {owner}"
+msgstr "已连接 — {owner}"
+
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Connected · {host}"
 msgstr "已连接 · {host}"
@@ -3367,6 +3375,7 @@ msgid "Discarding…"
 msgstr "正在放弃…"
 
 #: src/components/connections/EndpointProviderCard.jsx
+#: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/McpConnectors.jsx
 #: src/components/connections/OAuthConnectorCard.jsx
@@ -3385,6 +3394,7 @@ msgstr "断开“{name}”的连接？"
 msgid "Disconnect “{rowName}”?"
 msgstr "断开“{rowName}”的连接？"
 
+#: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/OAuthConnectorCard.jsx
 msgid "Disconnect “{title}”?"
 msgstr "断开“{title}”的连接？"
@@ -3626,6 +3636,10 @@ msgstr "Duct 无法读取此请求。请稍后重试。"
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Duct filled in what it learned from your site. Anything you had entered yourself was left alone, and every drafted field is marked."
 msgstr "Duct 填写了从你的网站学到的内容。你自行输入的任何内容都未被触动，并且每个草拟的字段都已标记。"
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Duct forgets the {count} {many} it can read, and projects that read one stop until you connect again. To remove Duct's access on {title} itself, uninstall it there."
+msgstr "Duct 会遗忘其可读取的 {count} 个 {many}，读取该连接的项目将暂停，直到你重新连接。要移除 Duct 在 {title} 自身的访问权限，请直接在该平台上卸载。"
 
 #: src/components/connections/ProviderCard.jsx
 msgid "Duct forgets the key {storageSentence}. Runs that need {providerName} fall back to your ChatGPT plan. Duct cannot show you this key again, so make sure you have it somewhere else if you still need it."

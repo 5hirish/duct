@@ -312,6 +312,10 @@ msgstr "{count, plural, one {# Beitrag} other {# Beiträge}}"
 msgid "{count, plural, one {GitHub connected: # repository.} other {GitHub connected: # repositories.}}"
 msgstr "{count, plural, one {GitHub verbunden: # Repository.} other {GitHub verbunden: # Repositorys.}}"
 
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "{count} {noun}"
+msgstr "{count} {noun}"
+
 #: src/app/(app)/scheduled/page.jsx
 msgid "{count} scheduled"
 msgstr "{count} geplant"
@@ -3161,6 +3165,10 @@ msgstr "Verbunden — {accountCount} Konten"
 msgid "Connected — {firstAccountName}"
 msgstr "Verbunden — {firstAccountName}"
 
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Connected — {owner}"
+msgstr "Verbunden — {owner}"
+
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Connected · {host}"
 msgstr "Verbunden · {host}"
@@ -3912,6 +3920,7 @@ msgid "Discarding…"
 msgstr "Verwerfe…"
 
 #: src/components/connections/EndpointProviderCard.jsx
+#: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/McpConnectors.jsx
 #: src/components/connections/OAuthConnectorCard.jsx
@@ -3930,6 +3939,7 @@ msgstr "Verbindung von „{name}“ trennen?"
 msgid "Disconnect “{rowName}”?"
 msgstr "„{rowName}“ trennen?"
 
+#: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/OAuthConnectorCard.jsx
 msgid "Disconnect “{title}”?"
 msgstr "„{title}“ trennen?"
@@ -4195,6 +4205,10 @@ msgstr "Duct konnte diese Anfrage nicht lesen. Versuche es in einem Moment erneu
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Duct filled in what it learned from your site. Anything you had entered yourself was left alone, and every drafted field is marked."
 msgstr "Duct hat ausgefüllt, was es von deiner Website gelernt hat. Alles, was du selbst eingegeben hattest, wurde belassen, und jedes entworfene Feld ist markiert."
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Duct forgets the {count} {many} it can read, and projects that read one stop until you connect again. To remove Duct's access on {title} itself, uninstall it there."
+msgstr "Duct vergisst die {count} {many}, die es lesen kann, und Projekte, die eine davon lesen, halten an, bis du dich erneut verbindest. Um den Zugriff von Duct auf {title} selbst zu entfernen, deinstalliere es dort."
 
 #: src/components/connections/ProviderCard.jsx
 msgid "Duct forgets the key {storageSentence}. Runs that need {providerName} fall back to your ChatGPT plan. Duct cannot show you this key again, so make sure you have it somewhere else if you still need it."

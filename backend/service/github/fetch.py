@@ -484,6 +484,12 @@ GITHUB_META = ConnectorMeta(
     entity_noun="repository",
     entity_noun_plural="repositories",
     server_only_keys=frozenset({gh_app.INSTALLATION_ID_KEY}),
+    # A stored row is one repository, App or token alike: the project picks a
+    # row, and a read goes to the bound row's ``account_id``.
+    entity_per_row=True,
+    entity_group_of=lambda repo: repo.split("/", 1)[0],
+    grant_key=gh_app.INSTALLATION_ID_KEY,
+    grant_scopes=gh_app.APP_SCOPES,
 )
 
 register_connector(GITHUB_META, GitHubConnector())
