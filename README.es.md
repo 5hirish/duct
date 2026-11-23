@@ -10,7 +10,7 @@
 
 **Agente de marketing con IA de código abierto: un analista de crecimiento con cada acceso.**
 
-Duct es para equipos de producto y de crecimiento. Conecta Google Ads, GA4,
+Duct es para profesionales del marketing, dueños de negocio que lo hacen todo solos y equipos pequeños. Conecta Google Ads, GA4,
 Search Console, Mixpanel, Stripe y siete herramientas más, las lee todas a la
 vez como lo haría un analista con todos los accesos, recuerda lo que aprende
 sobre tu negocio y, con tu aprobación, cambia cosas en esas herramientas por
@@ -65,9 +65,10 @@ aprende del anterior.
   <img src="docs/assets/readme/content-session.webp" alt="El agente de contenido redactando un carrusel, con su primera diapositiva en el panel derecho" width="450">
 </p>
 
-**Para quién es hoy:** PMs y equipos de crecimiento, equipos de SEO y
-contenido, y especialistas en marketing de rendimiento que persiguen huecos de
-atribución, cambios de presupuesto y fatiga creativa.
+**Para quién es hoy:** profesionales del marketing que trabajan solos o en un
+equipo pequeño, y dueños de negocio que llevan su propio marketing: anuncios
+que dejaron de rendir, tráfico que cayó, publicaciones que nadie lee y ningún
+analista a quien preguntar por qué.
 
 **🚧 Lo próximo:** Ventas y RevOps (riesgo en el pipeline y señales de
 conversión a partir del CRM, las llamadas y el uso del producto), E-commerce y

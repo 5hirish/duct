@@ -8,7 +8,7 @@
 
 **Open-source AI marketing agent: a growth analyst with every login.**
 
-Duct is for product and growth teams. It connects Google Ads, GA4, Search
+Duct is for marketers, solo business owners and small teams. It connects Google Ads, GA4, Search
 Console, Mixpanel, Stripe and seven more, reads across all of them at once the
 way an analyst holding every login would, remembers what it learns about your
 business, and, with your approval, changes things in those tools for you. The approve tool does
@@ -58,9 +58,9 @@ card, so the next plan learns from the last one.
   <img src="docs/assets/readme/content-session.webp" alt="The content agent drafting a carousel, its first slide rendered in the right pane" width="450">
 </p>
 
-**Who it is for today:** PMs and growth teams, SEO and content teams, and
-performance marketers chasing attribution gaps, budget shifts and creative
-fatigue.
+**Who it is for today:** marketers working alone or on a small team, and
+business owners doing their own marketing: ads that stopped paying back,
+traffic that dropped, posts nobody reads, and no analyst to ask why.
 
 **🚧 Coming next:** Sales & RevOps (pipeline risk and conversion signals from
 CRM, calls and product usage), E-commerce & DTC (LTV-versus-ROAS blind spots
