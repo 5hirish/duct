@@ -630,6 +630,10 @@ msgid "{onCount} on · {linkedCount} linked via {primaryLabel}"
 msgstr "{onCount}件オン · {linkedCount}件リンク済み（{primaryLabel}経由）"
 
 #: src/components/content/AccountsTab.jsx
+msgid "{onCount} on · pick a scheduler above to post from your accounts"
+msgstr "{onCount}件オン · アカウントから投稿するには上のスケジューラーを選択してください"
+
+#: src/components/content/AccountsTab.jsx
 msgid "{onCount} on, all posted by hand"
 msgstr "{onCount}件オン、すべて手動で投稿済み"
 
@@ -1509,9 +1513,9 @@ msgstr "タグを追加、Enterキーを押してください…"
 msgid "Add a thought — it goes in at the next step"
 msgstr "思考を追加 — 次のステップで反映されます"
 
-#: src/components/content/AccountsTab.jsx
-msgid "Add accounts in {scheduler}"
-msgstr "{scheduler} でアカウントを追加"
+#: src/components/connections/SchedulerConnectorCard.jsx
+#~ msgid "Add accounts in {scheduler}"
+#~ msgstr "{scheduler} でアカウントを追加"
 
 #: src/components/connections/BringAnyTool.jsx
 #: src/components/connections/McpConnectDialog.jsx
@@ -3019,7 +3023,6 @@ msgstr "{title}を設定"
 
 #: src/components/connections/ConnectorTile.jsx
 #: src/components/connections/McpConnectDialog.jsx
-#: src/components/content/AccountsTab.jsx
 #: src/components/content/VendorKeyForm.jsx
 msgid "Connect"
 msgstr "接続"
@@ -3050,7 +3053,6 @@ msgid "Connect a repository"
 msgstr "リポジトリを接続"
 
 #: src/components/content/AnalyticsReport.jsx
-#: src/components/content/PlanDayOne.jsx
 msgid "Connect a scheduler"
 msgstr "スケジューラーを接続"
 
@@ -3062,10 +3064,14 @@ msgstr "スケジューラーを接続すると、Duct が代わりに投稿し�
 msgid "Connect a scheduler and Duct reads each post's numbers back: per post, per account, per pillar."
 msgstr "スケジューラーを接続すると、Duct が各投稿の数値を読み取ります。投稿ごと、アカウントごと、柱ごとに。"
 
-#: src/components/content/AccountsTab.jsx
+#: src/components/content/ConnectorGate.jsx
+#: src/components/content/PlanDayOne.jsx
+msgid "Connect a scheduler in Toolbox"
+msgstr "ツールボックスでスケジューラーを接続"
+
 #: src/components/content/AnalyticsView.jsx
-msgid "Connect a scheduler to start"
-msgstr "まずスケジューラーを接続してください"
+#~ msgid "Connect a scheduler to start"
+#~ msgstr "まずスケジューラーを接続してください"
 
 #: src/components/insights/desk/DeskCards.jsx
 #: src/components/insights/desk/DeskDayOne.jsx
@@ -3099,6 +3105,11 @@ msgstr "このまま接続"
 #: src/components/content/DiscoverPage.jsx
 msgid "Connect Apify and Duct searches TikTok for you, by hashtag or a region's trending feed, so your plan starts from posts that are already landing."
 msgstr "Apify を接続すると、Duct がハッシュタグや地域のトレンドフィードで TikTok を検索し、すでに反応を得ている投稿からプランを始められます。"
+
+#: src/components/content/ConnectorGate.jsx
+#: src/components/content/PlanDayOne.jsx
+msgid "Connect Apify in Toolbox"
+msgstr "ツールボックスでApifyを接続"
 
 #: src/app/(app)/connections/page.jsx
 #: src/components/content/FeedSummary.jsx
@@ -3152,7 +3163,7 @@ msgstr "最初のソースを接続"
 #: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/McpConnectors.jsx
-#: src/components/content/AccountsTab.jsx
+#: src/components/connections/VendorKeyConnectorCard.jsx
 #: src/components/settings/AgentAccess.jsx
 msgid "Connected"
 msgstr "接続済み"
@@ -3929,8 +3940,7 @@ msgstr "破棄中…"
 #: src/components/connections/McpConnectors.jsx
 #: src/components/connections/OAuthConnectorCard.jsx
 #: src/components/connections/ProviderCard.jsx
-#: src/components/content/AccountsTab.jsx
-#: src/components/content/DiscoverPage.jsx
+#: src/components/connections/VendorKeyConnectorCard.jsx
 #: src/components/settings/AgentAccess.jsx
 msgid "Disconnect"
 msgstr "接続解除"
@@ -3952,21 +3962,25 @@ msgstr "「{title}」の接続を解除しますか？"
 msgid "Disconnect {host}?"
 msgstr "{host} を切断しますか？"
 
+#: src/components/connections/VendorKeyConnectorCard.jsx
+msgid "Disconnect {name}?"
+msgstr "{name}の接続を解除しますか？"
+
 #: src/components/settings/AgentAccess.jsx
 msgid "Disconnect {rowName}"
 msgstr "{rowName} の接続を切断"
 
-#: src/components/content/AccountsTab.jsx
-msgid "Disconnect {scheduler}?"
-msgstr "{scheduler} の接続を解除しますか？"
+#: src/components/connections/SchedulerConnectorCard.jsx
+#~ msgid "Disconnect {scheduler}?"
+#~ msgstr "{scheduler} の接続を解除しますか？"
 
 #: src/components/content/DiscoverPage.jsx
-msgid "Disconnect Apify"
-msgstr "Apifyの接続を解除"
+#~ msgid "Disconnect Apify"
+#~ msgstr "Apifyの接続を解除"
 
 #: src/components/content/DiscoverPage.jsx
-msgid "Disconnect Apify?"
-msgstr "Apifyの接続を解除しますか？"
+#~ msgid "Disconnect Apify?"
+#~ msgstr "Apifyの接続を解除しますか？"
 
 #: src/components/content/AccountsTab.jsx
 #~ msgid "Disconnect PostBridge"
@@ -4234,15 +4248,21 @@ msgstr "Ductはこれらの認証情報を忘れます。{title}から読み取�
 msgid "Duct forgets this endpoint and its key. Tiers set to one of its models fall back to another provider you’ve connected."
 msgstr "Duct はこのエンドポイントとそのキーを削除します。そのモデルを使っているティアは、接続済みの別のプロバイダーに切り替わります。"
 
-#: src/components/content/AccountsTab.jsx
-msgid "Duct forgets your API key and stops publishing through your {scheduler} account. Your accounts stay connected in {scheduler}, and posts already scheduled there still go out."
-msgstr "Duct は API キーを削除し、{scheduler} アカウント経由での投稿を停止します。アカウントは {scheduler} に接続されたままで、そこで予約済みの投稿はそのまま公開されます。"
+#. placeholder {0}: p.label
+#. placeholder {1}: p.label
+#: src/app/(app)/connections/page.jsx
+msgid "Duct forgets your API key and stops publishing through your {0} account. Your accounts stay connected in {1}, and posts already scheduled there still go out."
+msgstr "DuctはAPIキーを削除し、{0}アカウント経由の公開を停止します。アカウントは{1}で接続されたままになり、そこで既に予約済みの投稿は引き続き公開されます。"
+
+#: src/components/connections/SchedulerConnectorCard.jsx
+#~ msgid "Duct forgets your API key and stops publishing through your {scheduler} account. Your accounts stay connected in {scheduler}, and posts already scheduled there still go out."
+#~ msgstr "Duct は API キーを削除し、{scheduler} アカウント経由での投稿を停止します。アカウントは {scheduler} に接続されたままで、そこで予約済みの投稿はそのまま公開されます。"
 
 #: src/components/content/AccountsTab.jsx
 #~ msgid "Duct forgets your API key and stops publishing through your PostBridge account. Your accounts stay connected in PostBridge."
 #~ msgstr "DuctはAPIキーを削除し、PostBridgeアカウント経由での公開を停止します。アカウントはPostBridgeに接続されたままです。"
 
-#: src/components/content/DiscoverPage.jsx
+#: src/app/(app)/connections/page.jsx
 msgid "Duct forgets your Apify token and stops searching through your account. References you saved stay saved."
 msgstr "DuctはApifyトークンを削除し、あなたのアカウント経由での検索を停止します。保存した参考投稿はそのまま残ります。"
 
@@ -5766,6 +5786,18 @@ msgstr "インパクトと収益を最優先、少ないアクション、専門
 msgid "Impressions, clicks and spend. Conversions stay in Ads Manager."
 msgstr "インプレッション、クリック、費用。コンバージョンはAds Managerに残ります。"
 
+#: src/components/content/AccountsTab.jsx
+msgid "In {elsewhereLabel}, posts go out through {primaryLabel}"
+msgstr "{elsewhereLabel}では、投稿は{primaryLabel}経由で公開されます"
+
+#: src/components/content/AccountsTab.jsx
+msgid "In {elsewhereLabel}: pick the scheduler posts go out through"
+msgstr "{elsewhereLabel}：投稿に使用するスケジューラーを選択してください"
+
+#: src/components/content/AccountsTab.jsx
+msgid "In {primaryLabel}, not linked yet"
+msgstr "{primaryLabel}では未リンク"
+
 #: src/components/settings/AgentConsent.jsx
 msgid "In Claude Code, run <0>/mcp</0> and choose Authenticate. In Codex, run <1>codex mcp login duct</1>."
 msgstr "Claude Code では、<0>/mcp</0> を実行し、Authenticate を選択します。Codex では、<1>codex mcp login duct</1> を実行します。"
@@ -6505,10 +6537,18 @@ msgstr "作成"
 msgid "Making a video clip"
 msgstr "動画クリップを作成中"
 
+#: src/components/content/DiscoverPage.jsx
+msgid "Manage Apify in Toolbox"
+msgstr "ツールボックスでApifyを管理"
+
 #: src/components/AppSidebar.jsx
 #: src/components/commands/AppCommands.jsx
 msgid "Manage projects"
 msgstr "プロジェクトを管理"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Manage schedulers in Toolbox"
+msgstr "ツールボックスでスケジューラーを管理"
 
 #: src/app/(app)/connections/page.jsx
 msgid "Manager account ID (MCC, optional)"
@@ -7399,7 +7439,7 @@ msgstr "未確認"
 #: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/McpConnectors.jsx
-#: src/components/content/AccountsTab.jsx
+#: src/components/connections/VendorKeyConnectorCard.jsx
 #: src/components/content/AnalyticsReport.jsx
 msgid "Not connected"
 msgstr "未接続"
@@ -7995,6 +8035,10 @@ msgstr "ブロックする操作タイプ、カンマ区切り（オプション
 msgid "Open"
 msgstr "開く"
 
+#: src/components/connections/VendorKeyConnectorCard.jsx
+msgid "Open {name}"
+msgstr "{name}を開く"
+
 #: src/components/content/AccountsTab.jsx
 #~ msgid "Open {scheduler} →"
 #~ msgstr "{scheduler} を開く →"
@@ -8461,6 +8505,10 @@ msgstr "少なくとも1つのアカウントを選択してください。"
 msgid "Pick at least one thing to read."
 msgstr "読み込む対象を少なくとも 1 つ選んでください。"
 
+#: src/app/(app)/connections/page.jsx
+msgid "Pick it as the scheduler a project posts through in Content Studio, under Accounts."
+msgstr "Content Studioの「アカウント」で、プロジェクトの投稿に使用するスケジューラーとして選択してください。"
+
 #: src/components/connections/InstanceProviderCard.jsx
 msgid "Pick one of its models for a tier on the Tiers tab. Only models that can call tools are listed, because every Duct agent works by calling them."
 msgstr "「ティア」タブで、そのモデルのひとつをティアに選んでください。Ductのエージェントはすべてツールを呼び出して動作するため、ツールを呼び出せるモデルだけが表示されます。"
@@ -8743,8 +8791,8 @@ msgid "Previous week"
 msgstr "前週"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Primary"
-msgstr "プライマリ"
+#~ msgid "Primary"
+#~ msgstr "プライマリ"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Primary color"
@@ -8940,9 +8988,17 @@ msgstr "公開済み {publishedOn}"
 msgid "Published the post"
 msgstr "投稿を公開しました"
 
+#: src/app/(app)/connections/page.jsx
+msgid "Publishes approved posts to your social accounts, on schedule."
+msgstr "承認された投稿をスケジュール通りにソーシャルアカウントへ公開します。"
+
 #: src/components/content/TextPostEditor.jsx
 msgid "Publishes as the post's first reply."
 msgstr "投稿への最初の返信として公開されます。"
+
+#: src/lib/connectorCatalog.js
+msgid "Publishing"
+msgstr "公開"
 
 #: src/lib/agentSession.js
 msgid "Publishing isn't connected. Ask your admin to set it up."
@@ -9524,6 +9580,10 @@ msgstr "リクエストに失敗しました（{status}）。"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "research"
+msgstr "リサーチ"
+
+#: src/lib/connectorCatalog.js
+msgid "Research"
 msgstr "リサーチ"
 
 #: src/components/workspace/ActivityRow.jsx
@@ -10124,12 +10184,12 @@ msgid "Scheduled runs happen with no app open, so they always need a key."
 msgstr "スケジュールされた実行はアプリが開いていなくても行われるため、常にキーが必要です。"
 
 #: src/components/content/AccountsTab.jsx
-#~ msgid "Scheduler"
-#~ msgstr "スケジューラー"
+msgid "Scheduler"
+msgstr "スケジューラー"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Schedulers"
-msgstr "スケジューラ"
+#~ msgid "Schedulers"
+#~ msgstr "スケジューラ"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Schema"
@@ -10223,6 +10283,10 @@ msgstr "クエリ、クリック数、表示回数、平均掲載順位を検索
 msgid "Search sources"
 msgstr "ソースを検索"
 
+#: src/app/(app)/connections/page.jsx
+msgid "Search TikTok in Content Studio, under Discover. Searches are billed to your Apify account."
+msgstr "Content Studioの「Discover」でTikTokを検索します。検索費用はご自身のApifyアカウントに請求されます。"
+
 #: src/components/insights/ToolApproval.jsx
 msgid "Search TikTok with {serverName}?"
 msgstr "{serverName}でTikTokを検索しますか？"
@@ -10246,6 +10310,10 @@ msgstr "TikTokを検索しました"
 #: src/components/content/DiscoverPage.jsx
 msgid "Searches run on your own Apify account, so the scraping is billed to you. The same search again within 30 minutes costs nothing."
 msgstr "検索はあなた自身の Apify アカウントで実行されるため、スクレイピング費用はあなたに請求されます。30 分以内の同じ検索は無料です。"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Searches TikTok by hashtag or a region's trending feed, on your own Apify account."
+msgstr "ご自身のApifyアカウントを使用して、ハッシュタグや地域のトレンドフィードからTikTokを検索します。"
 
 #: src/components/connections/McpConnectors.jsx
 msgid "Searching the MCP Registry"
@@ -11444,7 +11512,7 @@ msgstr "接続できませんでした。キーを確認して、もう一度お
 msgid "That didn't connect. Try again in a moment."
 msgstr "接続できませんでした。しばらくしてからもう一度お試しください。"
 
-#: src/components/content/AccountsTab.jsx
+#: src/app/(app)/connections/page.jsx
 msgid "That didn't disconnect. Try again."
 msgstr "接続を解除できませんでした。もう一度お試しください。"
 
@@ -11705,6 +11773,10 @@ msgstr "下書きができ次第、文字数とあわせてここに投稿が表
 #: src/components/content/PublishReviewPanel.jsx
 msgid "The post changed after this score."
 msgstr "このスコアの後、投稿が変更されました。"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "The project's owner connects Apify in Toolbox."
+msgstr "プロジェクトのオーナーがツールボックスでApifyを接続します。"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "The provider is rate-limiting right now"
@@ -12030,6 +12102,14 @@ msgstr "このプロジェクト"
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "This project posts through its owner's PostBridge account. Ask them to connect it here, and the accounts will show up for you too."
 #~ msgstr "このプロジェクトはオーナーのPostBridgeアカウントで投稿します。オーナーにここで接続してもらうと、あなたにもアカウントが表示されます。"
+
+#: src/components/content/ConnectorGate.jsx
+msgid "This project publishes through its owner's scheduler. Ask them to connect one in Toolbox."
+msgstr "このプロジェクトは所有者のスケジューラー経由で公開されます。ツールボックスで接続するよう依頼してください。"
+
+#: src/components/content/ConnectorGate.jsx
+msgid "This project searches through its owner's Apify account. Ask them to connect it in Toolbox."
+msgstr "このプロジェクトはオーナーのApifyアカウントを使用して検索します。ツールボックスで接続するよう依頼してください。"
 
 #: src/components/content/VendorKeyForm.jsx
 msgid "This project uses its owner's {vendor} account. Ask them to connect it here, and it will work for you too."

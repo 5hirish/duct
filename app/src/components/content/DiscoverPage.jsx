@@ -27,15 +27,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import {
   VENDOR,
-  VENDOR_HOME,
-  connectVendorKey,
-  disconnectVendorKey,
   getVendorKeyStatus,
   recaptureReferenceMedia,
   saveDiscoveredReference,
 } from "../../lib/contentApi";
-import { useConfirm } from "@/components/ui/confirm-dialog";
-import ConnectorGate from "./ConnectorGate";
+import Link from "next/link";
+import ConnectorGate, { ApifyGateAction } from "./ConnectorGate";
+import { TOOLBOX_RESEARCH_HREF } from "@/lib/connectorCatalog";
 import { useScraperRun } from "../../hooks/useScraperRun";
 import { engagement } from "@/lib/discoverSynthesis";
 import SynthesisPanel from "./SynthesisPanel";
@@ -79,7 +77,6 @@ const RUNNING = new Set(["running", "polling", "fetching"]);
 // and a sweep on every tab switch (or twice under StrictMode) buys nothing.
 const backfilled = new Set();
 
-const APIFY_URL = VENDOR_HOME[VENDOR.APIFY];
 
 function DiscoverHeader({ aside }) {
   return (
@@ -106,8 +103,6 @@ export default function DiscoverPage({ projectId }) {
   // and left null when the check fails: the page then works as before and a
   // search says why it could not run.
   const [apify, setApify] = useState(null);
-  const [apifyCheck, setApifyCheck] = useState(0);
-  const { confirm, dialog } = useConfirm();
   const [actorId, setActorId]       = useState(ACTORS[0].id);
   const [tags, setTags]             = useState(["faceshape", "colorseason"]);
   const [tagDraft, setTagDraft]     = useState("");
@@ -135,28 +130,7 @@ export default function DiscoverPage({ projectId }) {
       .then((status) => { if (!cancelled) setApify(status); })
       .catch(() => { if (!cancelled) setApify(null); });
     return () => { cancelled = true; };
-  }, [projectId, apifyCheck]);
-
-  async function connectApify(apiKey) {
-    await connectVendorKey(VENDOR.APIFY, apiKey);
-    setApifyCheck((n) => n + 1);
-  }
-
-  async function disconnectApify() {
-    const ok = await confirm({
-      title: t`Disconnect Apify?`,
-      description: t`Duct forgets your Apify token and stops searching through your account. References you saved stay saved.`,
-      action: t`Disconnect`,
-      destructive: true,
-    });
-    if (!ok) return;
-    try {
-      await disconnectVendorKey(VENDOR.APIFY);
-      reset();
-    } finally {
-      setApifyCheck((n) => n + 1); // re-read either way: the status says what is true now
-    }
-  }
+  }, [projectId]);
 
   const buildInput = useCallback(() => {
     if (actorId === HASHTAG_ACTOR) {
@@ -210,19 +184,19 @@ export default function DiscoverPage({ projectId }) {
   ].filter(Boolean).join(" · ");
 
   if (apify && !apify.connected) {
-    return <DiscoverGate isOwner={apify.is_owner} onConnect={connectApify} />;
+    return <DiscoverGate isOwner={apify.is_owner} />;
   }
 
   return (
     <div className="space-y-5">
       <DiscoverHeader
-        aside={apify?.own_key && apify?.is_owner && (
-          <Button variant="link" size="sm" className="h-auto p-0 text-xs text-muted-foreground" onClick={disconnectApify}>
-            <Trans>Disconnect Apify</Trans>
+        aside={apify?.is_owner && (
+          // Connecting and disconnecting Apify live in the Toolbox.
+          <Button variant="link" size="sm" className="h-auto p-0 text-xs text-muted-foreground" asChild>
+            <Link href={TOOLBOX_RESEARCH_HREF}><Trans>Manage Apify in Toolbox</Trans></Link>
           </Button>
         )}
       />
-      {dialog}
 
       {/* Control panel */}
       <section className="rounded-xl border border-border/70 bg-card p-4">
@@ -376,7 +350,7 @@ export default function DiscoverPage({ projectId }) {
 
 /** Discover before Apify is connected: what a search finds, and the
  *  connector that runs it. Exported for /preview. */
-export function DiscoverGate({ isOwner, onConnect }) {
+export function DiscoverGate({ isOwner = true }) {
   const { t } = useLingui();
   return (
     <ConnectorGate
@@ -387,7 +361,7 @@ export function DiscoverGate({ isOwner, onConnect }) {
         { icon: Bookmark, title: t`Save what's worth studying`, text: t`A saved post keeps its slides and numbers, so they're there when you plan.` },
         { icon: Sparkles, title: t`Topics from real winners`, text: t`The research agent cites what you saved when it proposes topics.` },
       ]}
-      connectors={[{ id: VENDOR.APIFY, label: "Apify", homeUrl: APIFY_URL, isOwner, onConnect }]}
+      action={<ApifyGateAction isOwner={isOwner} />}
       footnote={t`Searches run on your own Apify account, so the scraping is billed to you. The same search again within 30 minutes costs nothing.`}
       example={<DiscoverExample />}
     />

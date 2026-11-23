@@ -6,7 +6,6 @@ import { LayoutGrid, CalendarDays, CalendarCheck, CalendarPlus, GitBranch, List,
 import { Trans, useLingui } from "@lingui/react/macro";
 import {
   VENDOR,
-  connectVendorKey,
   getBrandContext,
   getPlan,
   getVendorKeyStatus,
@@ -249,14 +248,6 @@ export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab, fi
     />
   );
 
-  // A key pasted into the first-run checklist. The save answers with the new
-  // status, so the row turns over without a second read; a refusal throws
-  // and the field shows the vendor's reason.
-  const connectVendor = useCallback(async (vendor, apiKey) => {
-    const status = await connectVendorKey(vendor, apiKey);
-    setSources((prev) => ({ ...prev, vendors: { ...prev.vendors, [vendor]: status } }));
-  }, []);
-
   // Pending card → open the creation split-view, carrying the day's primary channel.
   const reviseDay = useCallback(
     (index) => router.push(draftDayHref({ ...plan, id: activeId }, index)),
@@ -284,7 +275,6 @@ export default function PlanBoard({ projectId, initialPlanId = "", onOpenTab, fi
         accounts={sources.accounts}
         scheduler={sources.scheduler}
         vendors={sources.vendors}
-        onConnectVendor={connectVendor}
         onStart={startPlan}
         onPlanFromWork={openFeed}
         onOpenTab={onOpenTab || ((tab) => router.push(`/content?tab=${tab}`))}

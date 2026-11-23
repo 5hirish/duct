@@ -630,6 +630,10 @@ msgid "{onCount} on · {linkedCount} linked via {primaryLabel}"
 msgstr ""
 
 #: src/components/content/AccountsTab.jsx
+msgid "{onCount} on · pick a scheduler above to post from your accounts"
+msgstr ""
+
+#: src/components/content/AccountsTab.jsx
 msgid "{onCount} on, all posted by hand"
 msgstr ""
 
@@ -1503,9 +1507,9 @@ msgstr ""
 msgid "Add a thought — it goes in at the next step"
 msgstr ""
 
-#: src/components/content/AccountsTab.jsx
-msgid "Add accounts in {scheduler}"
-msgstr ""
+#: src/components/connections/SchedulerConnectorCard.jsx
+#~ msgid "Add accounts in {scheduler}"
+#~ msgstr ""
 
 #: src/components/connections/BringAnyTool.jsx
 #: src/components/connections/McpConnectDialog.jsx
@@ -3013,7 +3017,6 @@ msgstr ""
 
 #: src/components/connections/ConnectorTile.jsx
 #: src/components/connections/McpConnectDialog.jsx
-#: src/components/content/AccountsTab.jsx
 #: src/components/content/VendorKeyForm.jsx
 msgid "Connect"
 msgstr ""
@@ -3044,7 +3047,6 @@ msgid "Connect a repository"
 msgstr ""
 
 #: src/components/content/AnalyticsReport.jsx
-#: src/components/content/PlanDayOne.jsx
 msgid "Connect a scheduler"
 msgstr ""
 
@@ -3056,10 +3058,14 @@ msgstr ""
 msgid "Connect a scheduler and Duct reads each post's numbers back: per post, per account, per pillar."
 msgstr ""
 
-#: src/components/content/AccountsTab.jsx
-#: src/components/content/AnalyticsView.jsx
-msgid "Connect a scheduler to start"
+#: src/components/content/ConnectorGate.jsx
+#: src/components/content/PlanDayOne.jsx
+msgid "Connect a scheduler in Toolbox"
 msgstr ""
+
+#: src/components/content/AnalyticsView.jsx
+#~ msgid "Connect a scheduler to start"
+#~ msgstr ""
 
 #: src/components/insights/desk/DeskCards.jsx
 #: src/components/insights/desk/DeskDayOne.jsx
@@ -3092,6 +3098,11 @@ msgstr ""
 
 #: src/components/content/DiscoverPage.jsx
 msgid "Connect Apify and Duct searches TikTok for you, by hashtag or a region's trending feed, so your plan starts from posts that are already landing."
+msgstr ""
+
+#: src/components/content/ConnectorGate.jsx
+#: src/components/content/PlanDayOne.jsx
+msgid "Connect Apify in Toolbox"
 msgstr ""
 
 #: src/app/(app)/connections/page.jsx
@@ -3146,7 +3157,7 @@ msgstr ""
 #: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/McpConnectors.jsx
-#: src/components/content/AccountsTab.jsx
+#: src/components/connections/VendorKeyConnectorCard.jsx
 #: src/components/settings/AgentAccess.jsx
 msgid "Connected"
 msgstr ""
@@ -3923,8 +3934,7 @@ msgstr ""
 #: src/components/connections/McpConnectors.jsx
 #: src/components/connections/OAuthConnectorCard.jsx
 #: src/components/connections/ProviderCard.jsx
-#: src/components/content/AccountsTab.jsx
-#: src/components/content/DiscoverPage.jsx
+#: src/components/connections/VendorKeyConnectorCard.jsx
 #: src/components/settings/AgentAccess.jsx
 msgid "Disconnect"
 msgstr ""
@@ -3946,21 +3956,25 @@ msgstr ""
 msgid "Disconnect {host}?"
 msgstr ""
 
+#: src/components/connections/VendorKeyConnectorCard.jsx
+msgid "Disconnect {name}?"
+msgstr ""
+
 #: src/components/settings/AgentAccess.jsx
 msgid "Disconnect {rowName}"
 msgstr ""
 
-#: src/components/content/AccountsTab.jsx
-msgid "Disconnect {scheduler}?"
-msgstr ""
+#: src/components/connections/SchedulerConnectorCard.jsx
+#~ msgid "Disconnect {scheduler}?"
+#~ msgstr ""
 
 #: src/components/content/DiscoverPage.jsx
-msgid "Disconnect Apify"
-msgstr ""
+#~ msgid "Disconnect Apify"
+#~ msgstr ""
 
 #: src/components/content/DiscoverPage.jsx
-msgid "Disconnect Apify?"
-msgstr ""
+#~ msgid "Disconnect Apify?"
+#~ msgstr ""
 
 #: src/components/content/AccountsTab.jsx
 #~ msgid "Disconnect PostBridge"
@@ -4228,15 +4242,21 @@ msgstr ""
 msgid "Duct forgets this endpoint and its key. Tiers set to one of its models fall back to another provider you’ve connected."
 msgstr ""
 
-#: src/components/content/AccountsTab.jsx
-msgid "Duct forgets your API key and stops publishing through your {scheduler} account. Your accounts stay connected in {scheduler}, and posts already scheduled there still go out."
+#. placeholder {0}: p.label
+#. placeholder {1}: p.label
+#: src/app/(app)/connections/page.jsx
+msgid "Duct forgets your API key and stops publishing through your {0} account. Your accounts stay connected in {1}, and posts already scheduled there still go out."
 msgstr ""
+
+#: src/components/connections/SchedulerConnectorCard.jsx
+#~ msgid "Duct forgets your API key and stops publishing through your {scheduler} account. Your accounts stay connected in {scheduler}, and posts already scheduled there still go out."
+#~ msgstr ""
 
 #: src/components/content/AccountsTab.jsx
 #~ msgid "Duct forgets your API key and stops publishing through your PostBridge account. Your accounts stay connected in PostBridge."
 #~ msgstr ""
 
-#: src/components/content/DiscoverPage.jsx
+#: src/app/(app)/connections/page.jsx
 msgid "Duct forgets your Apify token and stops searching through your account. References you saved stay saved."
 msgstr ""
 
@@ -5760,6 +5780,18 @@ msgstr ""
 msgid "Impressions, clicks and spend. Conversions stay in Ads Manager."
 msgstr ""
 
+#: src/components/content/AccountsTab.jsx
+msgid "In {elsewhereLabel}, posts go out through {primaryLabel}"
+msgstr ""
+
+#: src/components/content/AccountsTab.jsx
+msgid "In {elsewhereLabel}: pick the scheduler posts go out through"
+msgstr ""
+
+#: src/components/content/AccountsTab.jsx
+msgid "In {primaryLabel}, not linked yet"
+msgstr ""
+
 #: src/components/settings/AgentConsent.jsx
 msgid "In Claude Code, run <0>/mcp</0> and choose Authenticate. In Codex, run <1>codex mcp login duct</1>."
 msgstr ""
@@ -6499,9 +6531,17 @@ msgstr ""
 msgid "Making a video clip"
 msgstr ""
 
+#: src/components/content/DiscoverPage.jsx
+msgid "Manage Apify in Toolbox"
+msgstr ""
+
 #: src/components/AppSidebar.jsx
 #: src/components/commands/AppCommands.jsx
 msgid "Manage projects"
+msgstr ""
+
+#: src/components/content/AccountsTab.jsx
+msgid "Manage schedulers in Toolbox"
 msgstr ""
 
 #: src/app/(app)/connections/page.jsx
@@ -7393,7 +7433,7 @@ msgstr ""
 #: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/McpConnectors.jsx
-#: src/components/content/AccountsTab.jsx
+#: src/components/connections/VendorKeyConnectorCard.jsx
 #: src/components/content/AnalyticsReport.jsx
 msgid "Not connected"
 msgstr ""
@@ -7989,6 +8029,10 @@ msgstr ""
 msgid "Open"
 msgstr ""
 
+#: src/components/connections/VendorKeyConnectorCard.jsx
+msgid "Open {name}"
+msgstr ""
+
 #: src/components/content/AccountsTab.jsx
 #~ msgid "Open {scheduler} →"
 #~ msgstr ""
@@ -8455,6 +8499,10 @@ msgstr ""
 msgid "Pick at least one thing to read."
 msgstr ""
 
+#: src/app/(app)/connections/page.jsx
+msgid "Pick it as the scheduler a project posts through in Content Studio, under Accounts."
+msgstr ""
+
 #: src/components/connections/InstanceProviderCard.jsx
 msgid "Pick one of its models for a tier on the Tiers tab. Only models that can call tools are listed, because every Duct agent works by calling them."
 msgstr ""
@@ -8737,8 +8785,8 @@ msgid "Previous week"
 msgstr ""
 
 #: src/components/content/AccountsTab.jsx
-msgid "Primary"
-msgstr ""
+#~ msgid "Primary"
+#~ msgstr ""
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Primary color"
@@ -8934,8 +8982,16 @@ msgstr ""
 msgid "Published the post"
 msgstr ""
 
+#: src/app/(app)/connections/page.jsx
+msgid "Publishes approved posts to your social accounts, on schedule."
+msgstr ""
+
 #: src/components/content/TextPostEditor.jsx
 msgid "Publishes as the post's first reply."
+msgstr ""
+
+#: src/lib/connectorCatalog.js
+msgid "Publishing"
 msgstr ""
 
 #: src/lib/agentSession.js
@@ -9518,6 +9574,10 @@ msgstr ""
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "research"
+msgstr ""
+
+#: src/lib/connectorCatalog.js
+msgid "Research"
 msgstr ""
 
 #: src/components/workspace/ActivityRow.jsx
@@ -10118,12 +10178,12 @@ msgid "Scheduled runs happen with no app open, so they always need a key."
 msgstr ""
 
 #: src/components/content/AccountsTab.jsx
-#~ msgid "Scheduler"
-#~ msgstr ""
+msgid "Scheduler"
+msgstr ""
 
 #: src/components/content/AccountsTab.jsx
-msgid "Schedulers"
-msgstr ""
+#~ msgid "Schedulers"
+#~ msgstr ""
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Schema"
@@ -10217,6 +10277,10 @@ msgstr ""
 msgid "Search sources"
 msgstr ""
 
+#: src/app/(app)/connections/page.jsx
+msgid "Search TikTok in Content Studio, under Discover. Searches are billed to your Apify account."
+msgstr ""
+
 #: src/components/insights/ToolApproval.jsx
 msgid "Search TikTok with {serverName}?"
 msgstr ""
@@ -10239,6 +10303,10 @@ msgstr ""
 
 #: src/components/content/DiscoverPage.jsx
 msgid "Searches run on your own Apify account, so the scraping is billed to you. The same search again within 30 minutes costs nothing."
+msgstr ""
+
+#: src/app/(app)/connections/page.jsx
+msgid "Searches TikTok by hashtag or a region's trending feed, on your own Apify account."
 msgstr ""
 
 #: src/components/connections/McpConnectors.jsx
@@ -11438,7 +11506,7 @@ msgstr ""
 msgid "That didn't connect. Try again in a moment."
 msgstr ""
 
-#: src/components/content/AccountsTab.jsx
+#: src/app/(app)/connections/page.jsx
 msgid "That didn't disconnect. Try again."
 msgstr ""
 
@@ -11698,6 +11766,10 @@ msgstr ""
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "The post changed after this score."
+msgstr ""
+
+#: src/components/content/PlanDayOne.jsx
+msgid "The project's owner connects Apify in Toolbox."
 msgstr ""
 
 #: src/components/onboarding/ProviderStep.jsx
@@ -12024,6 +12096,14 @@ msgstr ""
 #: src/components/content/PostBridgeKeyForm.jsx
 #~ msgid "This project posts through its owner's PostBridge account. Ask them to connect it here, and the accounts will show up for you too."
 #~ msgstr ""
+
+#: src/components/content/ConnectorGate.jsx
+msgid "This project publishes through its owner's scheduler. Ask them to connect one in Toolbox."
+msgstr ""
+
+#: src/components/content/ConnectorGate.jsx
+msgid "This project searches through its owner's Apify account. Ask them to connect it in Toolbox."
+msgstr ""
 
 #: src/components/content/VendorKeyForm.jsx
 msgid "This project uses its owner's {vendor} account. Ask them to connect it here, and it will work for you too."

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { Trans } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { Card, CardFooter } from "@/components/ui/card";
 import { ExampleFrame } from "@/components/ui/empty-state";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
 import VendorKeyForm from "./VendorKeyForm";
+import { TOOLBOX_PUBLISHING_HREF, TOOLBOX_RESEARCH_HREF } from "@/lib/connectorCatalog";
 
 // A choice of more than three is a research project, not a first step.
 const MAX_CONNECTORS = 3;
@@ -29,11 +31,13 @@ const MAX_CONNECTORS = 3;
  *   - connectors: [{ id, label, homeUrl, isOwner, platforms?, onConnect }] —
  *     the first three are offered; `platforms` draws "Numbers from" glyphs,
  *     which is the difference between two schedulers worth choosing on
+ *   - action: one element in place of the connectors, for a surface whose
+ *     connecting happens elsewhere (Accounts sends people to the Toolbox)
  *   - connectLabel: the line above the connectors
  *   - footnote: whose account and who pays, in one line
  *   - example: the real component over sample props, framed as an example
  */
-export default function ConnectorGate({ title, lead, benefits = [], connectors = [], connectLabel, footnote, example }) {
+export default function ConnectorGate({ title, lead, benefits = [], connectors = [], action, connectLabel, footnote, example }) {
   const offered = connectors.slice(0, MAX_CONNECTORS);
   return (
     <section className="grid items-start gap-8 @4xl:grid-cols-2">
@@ -59,7 +63,14 @@ export default function ConnectorGate({ title, lead, benefits = [], connectors =
           </ul>
         )}
 
-        {offered.length > 0 && (
+        {action && (
+          <div className="space-y-2.5">
+            {action}
+            {footnote && <p className="text-2xs leading-relaxed text-muted-foreground">{footnote}</p>}
+          </div>
+        )}
+
+        {!action && offered.length > 0 && (
           <div className="space-y-2.5">
             {connectLabel && <p className="text-xs font-medium text-muted-foreground">{connectLabel}</p>}
             <div className={`grid gap-3 ${offered.length > 1 ? "@lg:grid-cols-2" : ""}`}>
@@ -105,6 +116,43 @@ function ConnectorOption({ connector }) {
   );
 }
 
+/**
+ * The gate's one action for a vendor connected in the Toolbox: the owner is
+ * sent to its shelf, and anyone else is told who connects it (a project
+ * spends its owner's key, so their own would never be used).
+ */
+function ToolboxGateAction({ href, label, notOwner, isOwner = true }) {
+  return isOwner ? (
+    <Button asChild>
+      <Link href={href}>{label}</Link>
+    </Button>
+  ) : (
+    <p className="text-sm text-muted-foreground">{notOwner}</p>
+  );
+}
+
+export function SchedulerGateAction({ isOwner = true }) {
+  return (
+    <ToolboxGateAction
+      href={TOOLBOX_PUBLISHING_HREF}
+      isOwner={isOwner}
+      label={<Trans>Connect a scheduler in Toolbox</Trans>}
+      notOwner={<Trans>This project publishes through its owner&apos;s scheduler. Ask them to connect one in Toolbox.</Trans>}
+    />
+  );
+}
+
+export function ApifyGateAction({ isOwner = true }) {
+  return (
+    <ToolboxGateAction
+      href={TOOLBOX_RESEARCH_HREF}
+      isOwner={isOwner}
+      label={<Trans>Connect Apify in Toolbox</Trans>}
+      notOwner={<Trans>This project searches through its owner&apos;s Apify account. Ask them to connect it in Toolbox.</Trans>}
+    />
+  );
+}
+
 // The channels people choose a scheduler for, in one order so two cards
 // line up glyph for glyph; anything else is counted after them.
 const REPORT_ORDER = ["linkedin", "twitter", "tiktok", "instagram", "youtube", "facebook", "pinterest"];
@@ -131,16 +179,4 @@ export function ReportedPlatforms({ platforms }) {
       )}
     </div>
   );
-}
-
-/** The schedulers from GET /content/publishers as connector options. */
-export function schedulerOptions(publishers, onConnect) {
-  return (publishers || []).map((p) => ({
-    id: p.id,
-    label: p.label,
-    homeUrl: p.dashboard_url,
-    isOwner: p.is_owner,
-    platforms: p.reports,
-    onConnect: (apiKey) => onConnect(p, apiKey),
-  }));
 }

@@ -19,6 +19,7 @@
 // The sample on the right is the real PlanList over a labelled example week,
 // so what someone is promised is drawn by the component they will get.
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { CalendarPlus, Check, GitBranch } from "lucide-react";
 import { msg } from "@lingui/core/macro";
@@ -26,7 +27,8 @@ import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import { ClampText } from "@/components/ui/clamp-text";
 import { ExampleFrame } from "@/components/ui/empty-state";
-import { VENDOR, VENDOR_HOME } from "@/lib/contentApi";
+import { VENDOR } from "@/lib/contentApi";
+import { TOOLBOX_PUBLISHING_HREF, TOOLBOX_RESEARCH_HREF } from "@/lib/connectorCatalog";
 import { PostStatus, PostType } from "@/lib/contentEnums";
 import { planPeriodOptions } from "@/lib/contentSchedule";
 import { formatDateRange } from "@/lib/format";
@@ -34,7 +36,6 @@ import { cn } from "@/lib/utils";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
 import PlanList from "./PlanList";
 import { PlanPeriodToggle } from "./PlanPeriodPicker";
-import VendorKeyForm from "./VendorKeyForm";
 
 // Where each missing source is fixed: the Content Studio tab ids.
 export const PlanSourceTab = Object.freeze({ BRAND: "brand", ACCOUNTS: "accounts", DISCOVER: "discover" });
@@ -70,10 +71,8 @@ const SAMPLE_DAYS_AGO = 2;
  *   - onStart({ start, days }): open a plan session for the period picked
  *   - onPlanFromWork?(): open the setup sheet for a plan from shipped work
  *   - onOpenTab(tab): go to the Content Studio tab that fixes a source
- *   - onConnectVendor(vendor, apiKey): save a key; rejects with the vendor's
- *     reason, which the row shows under the field
  */
-export default function PlanDayOne({ brand, accounts, scheduler, vendors, onStart, onOpenTab, onConnectVendor, onPlanFromWork }) {
+export default function PlanDayOne({ brand, accounts, scheduler, vendors, onStart, onOpenTab, onPlanFromWork }) {
   const { t, i18n } = useLingui();
   // The month in progress first, the run's own default; the rest are the
   // shorter horizons someone may plan instead.
@@ -136,7 +135,6 @@ export default function PlanDayOne({ brand, accounts, scheduler, vendors, onStar
             scheduler={scheduler}
             vendors={vendors}
             onOpenTab={onOpenTab}
-            onConnectVendor={onConnectVendor}
           />
         )}
 
@@ -161,7 +159,7 @@ export default function PlanDayOne({ brand, accounts, scheduler, vendors, onStar
   );
 }
 
-function Sources({ brand, accounts, scheduler, vendors, onOpenTab, onConnectVendor }) {
+function Sources({ brand, accounts, scheduler, vendors, onOpenTab }) {
   const cb = brand.content_brand || {};
   const voice = [cb.tone, cb.value_prop, brand.description].find((v) => typeof v === "string" && v.trim()) || "";
   const pillars = (Array.isArray(brand.content_pillars?.items) ? brand.content_pillars.items : [])
@@ -176,7 +174,6 @@ function Sources({ brand, accounts, scheduler, vendors, onOpenTab, onConnectVend
   const checks = [Boolean(voice), pillars.length > 0, linked.length > 0, ...(apify ? [apify.connected] : [])];
   const ready = checks.filter(Boolean).length;
   const total = checks.length;
-  const connect = (vendor) => (apiKey) => onConnectVendor(vendor, apiKey);
 
   return (
     <section className="flex flex-col rounded-xl border bg-card p-5">
@@ -253,8 +250,8 @@ function Sources({ brand, accounts, scheduler, vendors, onOpenTab, onConnectVend
               )}
             </div>
           ) : scheduler && !scheduler.connected ? (
-            // Accounts are linked at a scheduler, so without one "Link an
-            // account" opens a tab that asks which scheduler first, and says so.
+            // Accounts are linked at a scheduler, and schedulers are connected
+            // in the Toolbox, so without one the step goes there first.
             <Detail
               text={
                 <Trans>
@@ -262,9 +259,11 @@ function Sources({ brand, accounts, scheduler, vendors, onOpenTab, onConnectVend
                   results and posting times.
                 </Trans>
               }
-              action={<Trans>Connect a scheduler</Trans>}
-              onClick={() => onOpenTab?.(PlanSourceTab.ACCOUNTS)}
-            />
+            >
+              <Button size="xs" variant="outline" asChild>
+                <Link href={TOOLBOX_PUBLISHING_HREF}><Trans>Connect a scheduler in Toolbox</Trans></Link>
+              </Button>
+            </Detail>
           ) : (
             <Detail
               text={<Trans>Optional. Link one and the plan learns from your own results and posting times.</Trans>}
@@ -291,13 +290,16 @@ function Sources({ brand, accounts, scheduler, vendors, onOpenTab, onConnectVend
                   </Trans>
                 }
               >
-                <VendorKeyForm
-                  layout="inline"
-                  vendor="Apify"
-                  homeUrl={VENDOR_HOME[VENDOR.APIFY]}
-                  isOwner={apify.is_owner}
-                  onConnect={connect(VENDOR.APIFY)}
-                />
+                {/* Connected in the Toolbox, like every vendor on the owner's key. */}
+                {apify.is_owner !== false ? (
+                  <Button size="xs" variant="outline" asChild>
+                    <Link href={TOOLBOX_RESEARCH_HREF}><Trans>Connect Apify in Toolbox</Trans></Link>
+                  </Button>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    <Trans>The project&apos;s owner connects Apify in Toolbox.</Trans>
+                  </p>
+                )}
               </Detail>
             )}
           </Source>
