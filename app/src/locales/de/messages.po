@@ -3158,16 +3158,20 @@ msgid "Connected"
 msgstr "Verbunden"
 
 #: src/components/connections/ManualConnectorCard.jsx
-msgid "Connected — {accountCount} accounts"
-msgstr "Verbunden — {accountCount} Konten"
+#~ msgid "Connected — {accountCount} accounts"
+#~ msgstr "Verbunden — {accountCount} Konten"
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Connected — {count} {units}"
+msgstr "Verbunden — {count} {units}"
 
 #: src/components/connections/ManualConnectorCard.jsx
 msgid "Connected — {firstAccountName}"
 msgstr "Verbunden — {firstAccountName}"
 
 #: src/components/connections/ManualConnectorCard.jsx
-msgid "Connected — {owner}"
-msgstr "Verbunden — {owner}"
+#~ msgid "Connected — {owner}"
+#~ msgstr "Verbunden — {owner}"
 
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Connected · {host}"

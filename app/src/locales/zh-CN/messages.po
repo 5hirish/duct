@@ -2723,16 +2723,20 @@ msgid "Connected"
 msgstr "已连接"
 
 #: src/components/connections/ManualConnectorCard.jsx
-msgid "Connected — {accountCount} accounts"
-msgstr "已连接——{accountCount} 个账户"
+#~ msgid "Connected — {accountCount} accounts"
+#~ msgstr "已连接——{accountCount} 个账户"
+
+#: src/components/connections/ManualConnectorCard.jsx
+msgid "Connected — {count} {units}"
+msgstr "已连接 — {count} {units}"
 
 #: src/components/connections/ManualConnectorCard.jsx
 msgid "Connected — {firstAccountName}"
 msgstr "已连接——{firstAccountName}"
 
 #: src/components/connections/ManualConnectorCard.jsx
-msgid "Connected — {owner}"
-msgstr "已连接 — {owner}"
+#~ msgid "Connected — {owner}"
+#~ msgstr "已连接 — {owner}"
 
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Connected · {host}"

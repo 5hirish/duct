@@ -227,20 +227,19 @@ export default function ManualConnectorCard({
     if (ok) await onDisconnect?.();
   }
 
-  const accountCount = serverRowList.length;
+  // Counted in the connector's own unit (`entity_noun_plural`, declared once
+  // per connector in the backend): "2 repositories", "3 properties". "2
+  // accounts" on GitHub read as two GitHub logins when it was two repos.
+  const count = serverRowList.length;
+  const units = serverRowList[0]?.entity_noun_plural || "accounts";
   const firstAccountName = connected ? serverRowList[0].account_name : "";
-  const owner = groups[0]?.name || "";
-  const status = connected && perRow
-    ? groups.length === 1
-      ? t`Connected — ${owner}`
-      : t`Connected — ${accountCount} accounts`
-    : connected
-    ? accountCount > 1
-      ? t`Connected — ${accountCount} accounts`
+  const status = !connected
+    ? t`Not connected`
+    : count > 1
+      ? t`Connected — ${count} ${units}`
       : firstAccountName
         ? t`Connected — ${firstAccountName}`
-        : t`Connected`
-    : t`Not connected`;
+        : t`Connected`;
 
   return (
     <>
