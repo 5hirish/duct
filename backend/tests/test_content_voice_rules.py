@@ -230,6 +230,24 @@ def test_pillars_saved_on_the_brand_tab_are_marked_as_the_persons(db, project, o
     assert project.provenance["content_pillars"] == "user"
 
 
+def test_brand_fields_an_agent_drafted_are_the_persons_once_saved_on_the_brand_tab(db, project, owner):
+    """An MCP draft fills the Brand tab labelled as the person's files; saving
+    the tab confirms them, so the next draft keeps what is there."""
+    project.tagline, project.provenance = "From the README", {"tagline": "document"}
+    db.add(project)
+    db.commit()
+    api = _api(db, owner)
+
+    api.put(f"/api/content/brand?project_id={project.id}", json={
+        "tagline": "My own line", "description": "", "content_brand": {"tone": "dry"},
+    })
+
+    db.refresh(project)
+    assert project.tagline == "My own line"
+    assert project.provenance["tagline"] == "user" and project.provenance["tone"] == "user"
+    assert "description" not in project.provenance, "a blank field is not something the person set"
+
+
 def test_the_brand_route_holds_the_caps(db, project, owner):
     api = _api(db, owner)
 

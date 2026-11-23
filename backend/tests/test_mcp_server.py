@@ -308,6 +308,35 @@ def test_a_draft_never_replaces_the_person_or_their_site(env):
     assert project.company_name == "Acme Labs"
 
 
+def test_a_draft_fills_the_content_brand_and_never_what_the_person_wrote(env):
+    # Only the project fields could be drafted, so an MCP setup left the
+    # Content Studio's Brand tab empty: the person typed the tagline, tone and
+    # colours their own README and stylesheet already held.
+    ana = env.user("ana@acme.example")
+    project = env.project(ana, name="Acme", content_brand={"tone": "What I typed"})
+    out = env.call(env.token(ana), "draft_project", {
+        "project_id": str(project.id),
+        "fields": {
+            "tagline": "Dinners, planned.", "description": "Plans a week of dinners from what is in the fridge.",
+            "tone": "From the README", "value_prop": "Recipes from your fridge, not a store.",
+            "content_goal": "App installs", "do_say": "fridge, fifteen minutes", "do_not_say": "diet, guilt",
+            "primary_color": "#e85d2a", "visual_style": "warm, flat, hand-drawn",
+        },
+    })["structuredContent"]
+    assert "tone" not in out["changed"] and "never replaces" in {k["field"]: k["reason"] for k in out["kept"]}["tone"]
+    env.session.refresh(project)
+    assert project.tagline == "Dinners, planned."
+    assert project.content_brand == {
+        "tone": "What I typed", "value_prop": "Recipes from your fridge, not a store.",
+        "content_goal": "App installs", "do_say": "fridge, fifteen minutes", "do_not_say": "diet, guilt",
+    }
+    assert project.content_visual_assets == {"primary_color": "#E85D2A", "style": "warm, flat, hand-drawn"}
+    assert project.provenance["tagline"] == PROVENANCE_DOCUMENT
+
+    bad = env.call(env.token(ana), "draft_project", {"project_id": str(project.id), "fields": {"primary_color": "orange"}})
+    assert bad["isError"]
+
+
 def test_running_the_same_draft_again_changes_nothing(env):
     ana = env.user("ana@acme.example")
     token = env.token(ana)

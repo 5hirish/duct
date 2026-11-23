@@ -149,7 +149,29 @@ FIELDS: dict[str, DraftField] = {
     # read, so pillars written through the MCP never reached a plan (folded
     # into this column by migration 7f3b9c1d2e4a).
     "content_pillars": DraftField("content_pillars", "items", list, shape=pillar_rows, saved=False),
+    # The Content Studio's Brand tab: what posts say and how they look. An
+    # agent reading the repo has all of it (the README's tagline, the landing
+    # copy, the CSS colours), yet only the project fields above could be
+    # drafted, so the Brand tab stayed empty after an MCP setup and the person
+    # typed again what their files already said. Not in the project page's
+    # save (the Brand tab saves them, labelled as the person's).
+    "tagline": DraftField("tagline", saved=False),
+    "description": DraftField("description", saved=False),
+    "tone": DraftField("content_brand", "tone", saved=False),
+    "value_prop": DraftField("content_brand", "value_prop", saved=False),
+    "content_goal": DraftField("content_brand", "content_goal", saved=False),
+    "do_say": DraftField("content_brand", "do_say", saved=False),
+    "do_not_say": DraftField("content_brand", "do_not_say", saved=False),
+    "primary_color": DraftField("content_visual_assets", "primary_color", saved=False),
+    "secondary_color": DraftField("content_visual_assets", "secondary_color", saved=False),
+    "visual_style": DraftField("content_visual_assets", "style", saved=False),
 }
+
+# The Brand tab's fields among them, which its save labels as the person's.
+BRAND_FIELDS = (
+    "tagline", "description", "tone", "value_prop", "content_goal", "do_say", "do_not_say",
+    "primary_color", "secondary_color", "visual_style",
+)
 
 # A whole-project save writes these and no others.
 SAVED_FIELDS = tuple(name for name, spec in FIELDS.items() if spec.saved)
