@@ -191,7 +191,7 @@ def test_a_refused_key_says_where_to_fix_it():
     out = search(Apify([], status=401), Pause(approved=True), hashtags=["glassskin"])
 
     assert out["status"] == "error"
-    assert "Content → Discover" in out["message"]
+    assert "Toolbox → Research" in out["message"]
 
 
 def test_a_run_past_the_wait_says_it_is_still_going():

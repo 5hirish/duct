@@ -2529,27 +2529,43 @@ class PublisherOut(BaseModel):
     connected:     bool   # the project's owner can publish through it
     own_key:       bool   # through a key the owner saved (not the local env one)
     is_owner:      bool   # the caller can connect or replace it
+    # What the scheduler says about the key, asked only with ?check=true:
+    # "ok" | "rejected" | "unchecked", or "" when not asked or not connected.
+    key_status:    str = ""
 
 
 @router.get("/content/publishers")
-def list_publishers(
+async def list_publishers(
     project_id: UUID,
+    check: bool = False,
     user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> list[PublisherOut]:
     """Every scheduler Duct can publish through, and whether this project's
     owner connected it. The Accounts tab draws its connectors from this, so
-    adding a scheduler adds no list to the app."""
+    adding a scheduler adds no list to the app. ``check`` asks each connected
+    scheduler whether the key still works (the Toolbox does; it costs one
+    authenticated read per scheduler)."""
     from service.vendor_keys import KEY_OWN
     proj = _project_for_user(db, user, project_id)
-    out: list[PublisherOut] = []
-    for spec in all_specs():
-        source = spec.key.source(proj.user_id, db)
-        out.append(PublisherOut(
+    specs = all_specs()
+    sources = [spec.key.source(proj.user_id, db) for spec in specs]
+    health = (
+        await asyncio.gather(*(spec.key.health(proj.user_id, db) if source else _no_health() for spec, source in zip(specs, sources)))
+        if check else [""] * len(specs)
+    )
+    return [
+        PublisherOut(
             id=spec.id, label=spec.label, dashboard_url=spec.dashboard_url,
             reports=sorted(spec.metrics), connected=source is not None, own_key=source == KEY_OWN, is_owner=proj.user_id == user.id,
-        ))
-    return out
+            key_status=status,
+        )
+        for spec, source, status in zip(specs, sources, health)
+    ]
+
+
+async def _no_health() -> str:
+    return ""
 
 
 @router.get("/content/social-accounts")
@@ -2609,6 +2625,7 @@ class VendorKeyStatusOut(BaseModel):
     connected: bool   # the project can use this vendor
     own_key:   bool   # through a key the owner saved (not the local env one)
     is_owner:  bool   # the caller can connect or replace it
+    key_status: str = ""  # as PublisherOut.key_status: asked only with ?check=true
 
 
 class VendorKeyIn(BaseModel):
@@ -2620,9 +2637,10 @@ class VendorKeyIn(BaseModel):
 
 
 @router.get("/content/vendor-keys/{vendor}")
-def vendor_key_status(
+async def vendor_key_status(
     vendor: str,
     project_id: UUID,
+    check: bool = False,
     user: User = Depends(get_current_user),
     db: Session = Depends(db_session),
 ) -> VendorKeyStatusOut:
@@ -2634,6 +2652,7 @@ def vendor_key_status(
         connected=source is not None,
         own_key=source == KEY_OWN,
         is_owner=proj.user_id == user.id,
+        key_status=await key.health(proj.user_id, db) if check and source else "",
     )
 
 
@@ -3192,7 +3211,7 @@ def _friendly_publisher_error(exc: PublisherError, spec: PublisherSpec | None) -
     user can do next."""
     label = spec.label if spec else "The scheduler"
     if exc.key_rejected:
-        return f"{label} didn't accept the saved API key. Paste a fresh one in Content → Accounts."
+        return f"{label} didn't accept the saved API key. Paste a fresh one in Toolbox → Publishing."
     if exc.status_code == 429:
         return "Hit the publishing rate limit — wait a minute and try again."
     if exc.status_code == 0:
@@ -3289,7 +3308,7 @@ def _apify_http_error(exc) -> HTTPException:
     Apify key, and the app signs the user out on a 401 (see _publisher_http_error)."""
     code = exc.status_code or 0
     if code in (401, 403):
-        return HTTPException(502, "Apify didn't accept the saved API key. Paste a fresh one in Content → Discover.")
+        return HTTPException(502, "Apify didn't accept the saved API key. Paste a fresh one in Toolbox → Research.")
     return HTTPException(502 if code == 0 or code >= 500 else code, exc.message)
 
 

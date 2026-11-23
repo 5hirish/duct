@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   BarChart3,
@@ -8,7 +9,6 @@ import {
   ChevronDown,
   Circle,
   CircleDot,
-  ExternalLink,
   RefreshCw,
   Users,
 } from "lucide-react";
@@ -23,10 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { HelpTip } from "@/components/ui/page";
 import { SkeletonList } from "@/components/ui/skeleton";
-import { useConfirm } from "@/components/ui/confirm-dialog";
 import {
-  connectVendorKey,
-  disconnectVendorKey,
   getChannels,
   listLinkedAccounts,
   listPublishers,
@@ -37,8 +34,10 @@ import {
 import { MediaKind, MEDIA_KIND_LABELS } from "@/lib/contentEnums";
 import { cn } from "@/lib/utils";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
-import VendorKeyForm from "./VendorKeyForm";
-import ConnectorGate, { ReportedPlatforms, schedulerOptions } from "./ConnectorGate";
+import { LOGOS } from "@/components/connections/logos";
+import { accountKey, accountsToAutoLink, soleAccount } from "@/lib/channelLinks";
+import ConnectorGate, { SchedulerGateAction } from "./ConnectorGate";
+import { TOOLBOX_PUBLISHING_HREF } from "@/lib/connectorCatalog";
 import LoadError from "@/components/LoadError";
 
 // A scheduler's own picture when it has one (Zernio does), else one resolved
@@ -51,7 +50,6 @@ function avatarUrl(account) {
 
 // Accounts are unique per scheduler, not overall: two schedulers can number
 // theirs the same.
-const accountKey = (a) => `${a.publisher || ""}:${a.id ?? a.account_id}`;
 
 // The save-state key for the primary-scheduler choice, beside the channel ids.
 const PRIMARY_SAVE = "__primary";
@@ -112,7 +110,6 @@ export default function AccountsTab({
   // someone whose request simply failed that they have nothing connected.
   const [loadError, setLoadError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
-  const { confirm, dialog } = useConfirm();
 
   useEffect(() => {
     let cancelled = false;
@@ -148,6 +145,8 @@ export default function AccountsTab({
     ? config.primary
     : connected.length === 1 ? connected[0].id : "";
   const primaryLabel = publishers.find((p) => p.id === primary)?.label || "";
+  // Whose key a project spends: only its owner can connect a scheduler.
+  const isOwner = publishers.every((p) => p.is_owner !== false);
 
   const linkedAtPrimary = useMemo(
     () => accounts.filter((a) => a.publisher === primary && linkedKeys.has(accountKey(a))),
@@ -216,6 +215,31 @@ export default function AccountsTab({
     commitChannels({ primary, profiles: { ...cur.profiles, [channelId]: profile } }, channelId);
   }
 
+  // Switching a channel on is "post here", so with exactly one account for it
+  // at the primary scheduler, that account is linked too. Switching on alone
+  // used to leave it unlinked: the row read as connected, nothing could post
+  // through it, and the Plans checklist said "Your accounts" was not done.
+  // Two or more is a real choice, left to the row's Link buttons.
+  function enableChannel(channelId, enabled) {
+    const sole = soleAccount(accounts, channelId, primary);
+    if (enabled && sole && !linkedKeys.has(accountKey(sole))) return toggleAccount(sole);
+    setProfile(channelId, { enabled });
+  }
+
+  // The same rule for channels already on: one switched on before the rule
+  // existed, or before the primary scheduler held the account, is linked the
+  // first time the tab sees both. Once per load and primary, so unlinking by
+  // hand afterwards sticks.
+  const reconciledFor = useRef("");
+  useEffect(() => {
+    const at = `${reloadKey}:${primary}`;
+    if (loading || loadError || !primary || reconciledFor.current === at) return;
+    reconciledFor.current = at;
+    const add = accountsToAutoLink({ profiles: config.profiles, accounts, primary, linked: linkedKeys });
+    if (add.length) setLinked(new Set([...linkedKeys, ...add.map(accountKey)]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, loadError, primary, reloadKey]);
+
   function choosePrimary(publisherId) {
     if (publisherId === primary) return;
     commitChannels({ ...configRef.current, primary: publisherId }, PRIMARY_SAVE);
@@ -243,28 +267,6 @@ export default function AccountsTab({
     });
   }
 
-  async function connect(publisher, apiKey) {
-    await connectVendorKey(publisher.id, apiKey);
-    setReloadKey((k) => k + 1);
-  }
-
-  async function disconnect(publisher) {
-    const scheduler = publisher.label;
-    const ok = await confirm({
-      title: t`Disconnect ${scheduler}?`,
-      description: t`Duct forgets your API key and stops publishing through your ${scheduler} account. Your accounts stay connected in ${scheduler}, and posts already scheduled there still go out.`,
-      action: t`Disconnect`,
-      destructive: true,
-    });
-    if (!ok) return;
-    try {
-      await disconnectVendorKey(publisher.id);
-      setReloadKey((k) => k + 1);
-    } catch (e) {
-      setError(e.message || t`That didn't disconnect. Try again.`);
-    }
-  }
-
   if (loading) {
     return <SkeletonList rows={5} label={t`Loading accounts`} className="max-w-4xl" />;
   }
@@ -287,11 +289,15 @@ export default function AccountsTab({
       <section className="space-y-4">
         {/* The gate carries its own title, so the section heading would be a second one over it. */}
         {connected.length > 0 && (
-          <SectionHead title={<Trans>Schedulers</Trans>}>
+          <SectionHead title={<Trans>Scheduler</Trans>}>
             {primary ? <Trans>Posts go out through {primaryLabel}.</Trans> : <Trans>Pick the one posts go out through.</Trans>}
           </SectionHead>
         )}
 
+        {/* Connecting is the Toolbox's job, as for every other tool; this tab
+            only says which connected scheduler a post goes out through. The
+            next publishers may come by OAuth or MCP, and the Toolbox already
+            draws those. */}
         {connected.length === 0 ? (
           <ConnectorGate
             title={t`Post to all your accounts from one place`}
@@ -301,19 +307,16 @@ export default function AccountsTab({
               { icon: CalendarClock, title: t`Scheduled for you`, text: t`Approve a draft and it goes out at its best time. No copying and pasting.` },
               { icon: BarChart3, title: t`Numbers come back`, text: t`Views, likes and shares land on each post, and the next plan learns from them.` },
             ]}
-            connectLabel={t`Connect a scheduler to start`}
-            connectors={schedulerOptions(publishers, connect)}
+            action={<SchedulerGateAction isOwner={isOwner} />}
             footnote={t`Your own account and API key, stored encrypted. Duct posts only when you ask it to.`}
             example={<AccountsExample />}
           />
         ) : (
-          <Schedulers
-            publishers={publishers}
+          <PrimaryPicker
+            schedulers={connected}
             primary={primary}
-            primarySaving={saveState[PRIMARY_SAVE] === "saving"}
-            onChoosePrimary={choosePrimary}
-            onConnect={connect}
-            onDisconnect={disconnect}
+            saving={saveState[PRIMARY_SAVE] === "saving"}
+            onChoose={choosePrimary}
           />
         )}
 
@@ -334,7 +337,9 @@ export default function AccountsTab({
               ? <Trans>None on yet. Switch on where this brand posts.</Trans>
               : primary
                 ? <Trans>{onCount} on · {linkedCount} linked via {primaryLabel}</Trans>
-                : <Trans>{onCount} on, all posted by hand</Trans>}
+                : accounts.length > 0
+                  ? <Trans>{onCount} on · pick a scheduler above to post from your accounts</Trans>
+                  : <Trans>{onCount} on, all posted by hand</Trans>}
           </SectionHead>
           <SaveState saving={saving} saved={savedFlash} />
         </div>
@@ -357,14 +362,13 @@ export default function AccountsTab({
               first={i === 0}
               defaultOpen={defaultOpen.includes(channel.id)}
               defaultGuideOpen={defaultGuideOpen.includes(channel.id)}
-              onEnable={(enabled) => setProfile(channel.id, { enabled })}
+              onEnable={(enabled) => enableChannel(channel.id, enabled)}
               onSaveProfile={(patch) => setProfile(channel.id, patch)}
               onToggleAccount={toggleAccount}
             />
           ))}
         </Card>
       </section>
-      {dialog}
     </div>
   );
 }
@@ -406,100 +410,45 @@ async function loadAccounts(projectId) {
   return { publishers, accounts: Array.isArray(accounts) ? accounts : [], linked: linked || [], channels };
 }
 
-/** Every scheduler, connected or not, and which one is primary. */
-function Schedulers({ publishers, primary, primarySaving, onChoosePrimary, onConnect, onDisconnect }) {
+/**
+ * Which connected scheduler posts go out through, as one row of choices.
+ * Connecting and disconnecting live in the Toolbox (`TOOLBOX_PUBLISHING_HREF`).
+ */
+function PrimaryPicker({ schedulers, primary, saving, onChoose }) {
   const { t } = useLingui();
-  // The one posts go out through reads first, then the rest of the connected
-  // ones, then those still to connect; choosing a new primary reorders.
-  const rank = (p) => (p.id === primary ? 0 : p.connected ? 1 : 2);
-  const ordered = [...publishers].sort((a, b) => rank(a) - rank(b));
   return (
-    <div role="radiogroup" aria-label={t`Primary scheduler`} className="grid grid-cols-1 gap-3 @2xl:grid-cols-2">
-      {ordered.map((p) => (
-        <SchedulerCard
-          key={p.id}
-          publisher={p}
-          isPrimary={p.id === primary}
-          primarySaving={primarySaving}
-          onChoosePrimary={() => onChoosePrimary(p.id)}
-          onConnect={onConnect}
-          onDisconnect={onDisconnect}
-        />
-      ))}
-    </div>
-  );
-}
-
-function SchedulerCard({ publisher, isPrimary, primarySaving, onChoosePrimary, onConnect, onDisconnect }) {
-  const [open, setOpen] = useState(false);
-  const scheduler = publisher.label;
-  return (
-    <Card size="sm" variant={isPrimary ? "hero" : "default"}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="text-sm font-semibold">{scheduler}</h3>
-          <p className="mt-0.5 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-            {publisher.connected ? (
-              <><Check className="size-3.5 text-success" aria-hidden /> <Trans>Connected</Trans></>
-            ) : (
-              <Trans>Not connected</Trans>
-            )}
-          </p>
-        </div>
-        {publisher.connected ? (
-          // A card that is not connected cannot be primary, so it has no radio.
-          <button
-            type="button"
-            role="radio"
-            aria-checked={isPrimary}
-            disabled={primarySaving}
-            onClick={onChoosePrimary}
-            className={cn(
-              "inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-2 text-xs font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-70",
-              isPrimary ? "text-brand" : "text-muted-foreground hover:bg-muted hover:text-foreground",
-            )}
-          >
-            {isPrimary
-              ? <CircleDot className="size-4" aria-hidden />
-              : <Circle className="size-4" aria-hidden />}
-            <Trans>Primary</Trans>
-          </button>
-        ) : (
-          !open && <Button size="sm" onClick={() => setOpen(true)}><Trans>Connect</Trans></Button>
-        )}
+    <div className="flex flex-wrap items-center gap-2">
+      <div role="radiogroup" aria-label={t`Primary scheduler`} className="flex flex-wrap gap-2">
+        {schedulers.map((p) => {
+          const on = p.id === primary;
+          return (
+            <button
+              key={p.id}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              disabled={saving}
+              onClick={() => onChoose(p.id)}
+              className={cn(
+                "inline-flex h-9 items-center gap-2 rounded-lg border px-3 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-70",
+                on ? "border-brand/60 bg-primary/10 text-brand" : "text-muted-foreground hover:bg-muted hover:text-foreground",
+              )}
+            >
+              {on ? <CircleDot className="size-4" aria-hidden /> : <Circle className="size-4" aria-hidden />}
+              {LOGOS[p.id] && (
+                <span className="flex size-5 shrink-0 items-center justify-center overflow-hidden rounded [&_img]:size-5" aria-hidden>
+                  {LOGOS[p.id]}
+                </span>
+              )}
+              {p.label}
+            </button>
+          );
+        })}
       </div>
-
-      {publisher.reports?.length > 0 && <ReportedPlatforms platforms={publisher.reports} />}
-
-      {open && !publisher.connected && (
-        <VendorKeyForm
-          layout="inline"
-          vendor={scheduler}
-          homeUrl={publisher.dashboard_url}
-          isOwner={publisher.is_owner}
-          onConnect={(apiKey) => onConnect(publisher, apiKey)}
-        />
-      )}
-
-      {publisher.connected && (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-          <a
-            href={publisher.dashboard_url}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex min-h-6 items-center gap-1 text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-          >
-            <Trans>Add accounts in {scheduler}</Trans>
-            <ExternalLink className="size-3" aria-hidden />
-          </a>
-          {publisher.own_key && publisher.is_owner && (
-            <Button variant="link" size="sm" className="h-auto min-h-6 p-0 text-xs text-muted-foreground" onClick={() => onDisconnect(publisher)}>
-              <Trans>Disconnect</Trans>
-            </Button>
-          )}
-        </div>
-      )}
-    </Card>
+      <Button variant="link" size="sm" className="text-muted-foreground" asChild>
+        <Link href={TOOLBOX_PUBLISHING_HREF}><Trans>Manage schedulers in Toolbox</Trans></Link>
+      </Button>
+    </div>
   );
 }
 
@@ -520,6 +469,7 @@ function ChannelRow({
   const elsewhere = accounts.filter((a) => a.publisher !== primary);
   const linkedAt = atPrimary.filter((a) => linkedKeys.has(accountKey(a)));
   const linkedHere = linkedAt.length;
+  const elsewhereLabel = elsewhere[0]?.publisher_label || "";
   // What the scheduler knows about the linked account stands in for a field
   // the person has not typed: the form is never empty over a linked account.
   const seed = linkedAt[0];
@@ -552,8 +502,15 @@ function ChannelRow({
           <span className="min-w-0 flex-1">
             <span className="block truncate text-sm font-medium">{label}</span>
             <span className="block truncate text-xs text-muted-foreground">
+              {/* "By hand" only when there is truly no account to post through.
+                  An account the scheduler holds but this project has not
+                  linked said "Posting by hand" too, which read as Duct not
+                  seeing a LinkedIn that was plainly connected. */}
               {!profile.enabled ? <Trans>Off</Trans>
                 : linkedHere > 0 ? <Trans><Plural value={linkedHere} one="# account" other="# accounts" /> via {primaryLabel}</Trans>
+                : atPrimary.length > 0 ? <Trans>In {primaryLabel}, not linked yet</Trans>
+                : elsewhere.length > 0 && !primary ? <Trans>In {elsewhereLabel}: pick the scheduler posts go out through</Trans>
+                : elsewhere.length > 0 ? <Trans>In {elsewhereLabel}, posts go out through {primaryLabel}</Trans>
                 : <Trans>Posting by hand</Trans>}
             </span>
           </span>

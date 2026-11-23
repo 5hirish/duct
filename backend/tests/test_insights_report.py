@@ -587,7 +587,7 @@ def test_social_post_metrics_without_a_scheduler_says_where_to_connect_one(monke
     result = fetch_entity("social_post_metrics", user_id=uuid.uuid4(), project_id=uuid.uuid4())
 
     assert result["status"] == "not_connected"
-    assert "Content → Accounts" in result["message"]
+    assert "Toolbox → Publishing" in result["message"]
 
 
 def test_the_data_sources_block_names_the_schedulers():

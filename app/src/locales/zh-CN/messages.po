@@ -501,6 +501,10 @@ msgstr "{name} 已完成"
 msgid "{name} needs your input"
 msgstr "{name} 需要你的输入"
 
+#: src/components/connections/VendorKeyConnectorCard.jsx
+msgid "{name} no longer accepts the saved API key, so nothing goes through it. Paste a new key from {name}."
+msgstr "{name} 不再接受已保存的 API 密钥，因此无法通过其处理任何请求。请粘贴来自 {name} 的新密钥。"
+
 #: src/components/settings/AgentAccess.jsx
 msgid "{name} opens Duct in your browser. Check the name it shows, then choose Allow."
 msgstr "{name} 在你的浏览器中打开 Duct。检查它显示的名称，然后选择允许。"
@@ -536,6 +540,10 @@ msgstr "{omitted, plural, other {还有 # 项被省略；请在 GitHub 上选择
 #: src/components/content/AccountsTab.jsx
 msgid "{onCount} on · {linkedCount} linked via {primaryLabel}"
 msgstr "{onCount} 个已开启 · {linkedCount} 个通过 {primaryLabel} 链接"
+
+#: src/components/content/AccountsTab.jsx
+msgid "{onCount} on · pick a scheduler above to post from your accounts"
+msgstr "{onCount} 个已启用 · 在上方选择一个调度器以通过你的账号发布帖子"
 
 #: src/components/content/AccountsTab.jsx
 msgid "{onCount} on, all posted by hand"
@@ -1280,9 +1288,9 @@ msgstr "添加标签，按 Enter 键…"
 msgid "Add a thought — it goes in at the next step"
 msgstr "添加想法——下一步会用到"
 
-#: src/components/content/AccountsTab.jsx
-msgid "Add accounts in {scheduler}"
-msgstr "在 {scheduler} 中添加账户"
+#: src/components/connections/SchedulerConnectorCard.jsx
+#~ msgid "Add accounts in {scheduler}"
+#~ msgstr "在 {scheduler} 中添加账户"
 
 #: src/components/connections/BringAnyTool.jsx
 #: src/components/connections/McpConnectDialog.jsx
@@ -1624,6 +1632,10 @@ msgstr "具体内容？（可选）"
 #: src/components/connections/ProviderCard.jsx
 msgid "API key"
 msgstr "API 密钥"
+
+#: src/components/connections/logos.jsx
+msgid "Apify"
+msgstr "Apify"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "Apify is connected. Posts you save in Discover shape the plan's topics."
@@ -2608,7 +2620,6 @@ msgstr "配置 {title}"
 
 #: src/components/connections/ConnectorTile.jsx
 #: src/components/connections/McpConnectDialog.jsx
-#: src/components/content/AccountsTab.jsx
 #: src/components/content/VendorKeyForm.jsx
 msgid "Connect"
 msgstr "连接"
@@ -2639,7 +2650,6 @@ msgid "Connect a repository"
 msgstr "连接仓库"
 
 #: src/components/content/AnalyticsReport.jsx
-#: src/components/content/PlanDayOne.jsx
 msgid "Connect a scheduler"
 msgstr "连接调度器"
 
@@ -2651,10 +2661,14 @@ msgstr "连接调度器后，Duct 会为你发布：关联多个账户，在最�
 msgid "Connect a scheduler and Duct reads each post's numbers back: per post, per account, per pillar."
 msgstr "连接调度器后，Duct 会读取每篇帖子的数据：按帖子、按账户、按支柱。"
 
-#: src/components/content/AccountsTab.jsx
+#: src/components/content/ConnectorGate.jsx
+#: src/components/content/PlanDayOne.jsx
+msgid "Connect a scheduler in Toolbox"
+msgstr "在工具箱中连接调度器"
+
 #: src/components/content/AnalyticsView.jsx
-msgid "Connect a scheduler to start"
-msgstr "连接调度器以开始"
+#~ msgid "Connect a scheduler to start"
+#~ msgstr "连接调度器以开始"
 
 #: src/components/insights/desk/DeskCards.jsx
 #: src/components/insights/desk/DeskDayOne.jsx
@@ -2680,6 +2694,11 @@ msgstr "仍然连接"
 #: src/components/content/DiscoverPage.jsx
 msgid "Connect Apify and Duct searches TikTok for you, by hashtag or a region's trending feed, so your plan starts from posts that are already landing."
 msgstr "连接 Apify 后，Duct 会为你搜索 TikTok，通过话题标签或区域热门动态，让你的计划从已受欢迎的帖子开始。"
+
+#: src/components/content/ConnectorGate.jsx
+#: src/components/content/PlanDayOne.jsx
+msgid "Connect Apify in Toolbox"
+msgstr "在工具箱中连接 Apify"
 
 #: src/app/(app)/connections/page.jsx
 #: src/components/content/FeedSummary.jsx
@@ -2717,7 +2736,7 @@ msgstr "连接你的第一个来源"
 #: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/McpConnectors.jsx
-#: src/components/content/AccountsTab.jsx
+#: src/components/connections/VendorKeyConnectorCard.jsx
 #: src/components/settings/AgentAccess.jsx
 msgid "Connected"
 msgstr "已连接"
@@ -3384,8 +3403,7 @@ msgstr "正在放弃…"
 #: src/components/connections/McpConnectors.jsx
 #: src/components/connections/OAuthConnectorCard.jsx
 #: src/components/connections/ProviderCard.jsx
-#: src/components/content/AccountsTab.jsx
-#: src/components/content/DiscoverPage.jsx
+#: src/components/connections/VendorKeyConnectorCard.jsx
 #: src/components/settings/AgentAccess.jsx
 msgid "Disconnect"
 msgstr "断开连接"
@@ -3407,21 +3425,25 @@ msgstr "断开“{title}”的连接？"
 msgid "Disconnect {host}?"
 msgstr "断开 {host} 的连接？"
 
+#: src/components/connections/VendorKeyConnectorCard.jsx
+msgid "Disconnect {name}?"
+msgstr "断开 {name} 的连接？"
+
 #: src/components/settings/AgentAccess.jsx
 msgid "Disconnect {rowName}"
 msgstr "断开 {rowName} 的连接"
 
-#: src/components/content/AccountsTab.jsx
-msgid "Disconnect {scheduler}?"
-msgstr "断开 {scheduler} 的连接？"
+#: src/components/connections/SchedulerConnectorCard.jsx
+#~ msgid "Disconnect {scheduler}?"
+#~ msgstr "断开 {scheduler} 的连接？"
 
 #: src/components/content/DiscoverPage.jsx
-msgid "Disconnect Apify"
-msgstr "断开 Apify 的连接"
+#~ msgid "Disconnect Apify"
+#~ msgstr "断开 Apify 的连接"
 
 #: src/components/content/DiscoverPage.jsx
-msgid "Disconnect Apify?"
-msgstr "断开 Apify 的连接？"
+#~ msgid "Disconnect Apify?"
+#~ msgstr "断开 Apify 的连接？"
 
 #: src/components/connections/ProviderCard.jsx
 msgid "Disconnect your ChatGPT plan?"
@@ -3665,11 +3687,17 @@ msgstr "Duct 忘记了这些凭据。读取 {title} 的报告和计划运行将�
 msgid "Duct forgets this endpoint and its key. Tiers set to one of its models fall back to another provider you’ve connected."
 msgstr "Duct 忘记了此端点及其密钥。设置为其模型的层级将回退到你已连接的另一个提供商。"
 
-#: src/components/content/AccountsTab.jsx
-msgid "Duct forgets your API key and stops publishing through your {scheduler} account. Your accounts stay connected in {scheduler}, and posts already scheduled there still go out."
-msgstr "Duct 忘记了你的 API 密钥，并停止通过你的 {scheduler} 账户发布。你的账户在 {scheduler} 中保持连接，已在那里安排的帖子仍会发布。"
+#. placeholder {0}: p.label
+#. placeholder {1}: p.label
+#: src/app/(app)/connections/page.jsx
+msgid "Duct forgets your API key and stops publishing through your {0} account. Your accounts stay connected in {1}, and posts already scheduled there still go out."
+msgstr "Duct 会清除你的 API 密钥，并停止通过你的 {0} 账号发布。你的账号在 {1} 中仍保持连接，已排期的帖子仍会正常发送。"
 
-#: src/components/content/DiscoverPage.jsx
+#: src/components/connections/SchedulerConnectorCard.jsx
+#~ msgid "Duct forgets your API key and stops publishing through your {scheduler} account. Your accounts stay connected in {scheduler}, and posts already scheduled there still go out."
+#~ msgstr "Duct 忘记了你的 API 密钥，并停止通过你的 {scheduler} 账户发布。你的账户在 {scheduler} 中保持连接，已在那里安排的帖子仍会发布。"
+
+#: src/app/(app)/connections/page.jsx
 msgid "Duct forgets your Apify token and stops searching through your account. References you saved stay saved."
 msgstr "Duct 忘记了你的 Apify 令牌，并停止通过你的账户搜索。你保存的引用保持不变。"
 
@@ -5007,6 +5035,18 @@ msgstr "影响和收益优先，行动少，无行话"
 msgid "Impressions, clicks and spend. Conversions stay in Ads Manager."
 msgstr "展示次数、点击次数和花费。转化次数保留在 Ads Manager 中。"
 
+#: src/components/content/AccountsTab.jsx
+msgid "In {elsewhereLabel}, posts go out through {primaryLabel}"
+msgstr "在 {elsewhereLabel} 中，帖子通过 {primaryLabel} 发布"
+
+#: src/components/content/AccountsTab.jsx
+msgid "In {elsewhereLabel}: pick the scheduler posts go out through"
+msgstr "在 {elsewhereLabel} 中：选择帖子发布所使用的调度器"
+
+#: src/components/content/AccountsTab.jsx
+msgid "In {primaryLabel}, not linked yet"
+msgstr "在 {primaryLabel} 中，尚未关联"
+
 #: src/components/settings/AgentConsent.jsx
 msgid "In Claude Code, run <0>/mcp</0> and choose Authenticate. In Codex, run <1>codex mcp login duct</1>."
 msgstr "在 Claude Code 中，运行 <0>/mcp</0> 并选择 Authenticate。在 Codex 中，运行 <1>codex mcp login duct</1>。"
@@ -5260,6 +5300,10 @@ msgstr "密钥 ID"
 
 #: src/lib/mcpServers.js
 msgid "Key refused"
+msgstr "密钥被拒绝"
+
+#: src/components/connections/VendorKeyConnectorCard.jsx
+msgid "Key rejected"
 msgstr "密钥被拒绝"
 
 #: src/components/onboarding/ProviderStep.jsx
@@ -5670,10 +5714,18 @@ msgstr "制作"
 msgid "Making a video clip"
 msgstr "正在制作视频片段"
 
+#: src/components/content/DiscoverPage.jsx
+msgid "Manage Apify in Toolbox"
+msgstr "在工具箱中管理 Apify"
+
 #: src/components/AppSidebar.jsx
 #: src/components/commands/AppCommands.jsx
 msgid "Manage projects"
 msgstr "管理项目"
+
+#: src/components/content/AccountsTab.jsx
+msgid "Manage schedulers in Toolbox"
+msgstr "在工具箱中管理调度器"
 
 #: src/app/(app)/connections/page.jsx
 msgid "Manager account ID (MCC, optional)"
@@ -6466,7 +6518,7 @@ msgstr "尚未确认"
 #: src/components/connections/ManualConnectorCard.jsx
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/McpConnectors.jsx
-#: src/components/content/AccountsTab.jsx
+#: src/components/connections/VendorKeyConnectorCard.jsx
 #: src/components/content/AnalyticsReport.jsx
 msgid "Not connected"
 msgstr "未连接"
@@ -6965,6 +7017,10 @@ msgstr "要阻止的操作类型，逗号分隔（可选）"
 msgid "Open"
 msgstr "打开"
 
+#: src/components/connections/VendorKeyConnectorCard.jsx
+msgid "Open {name}"
+msgstr "打开 {name}"
+
 #: src/components/content/VendorKeyForm.jsx
 msgid "Open {vendor}"
 msgstr "打开 {vendor}"
@@ -7391,6 +7447,10 @@ msgstr "至少选择一个账户。"
 msgid "Pick at least one thing to read."
 msgstr "请至少选择一个读取来源。"
 
+#: src/app/(app)/connections/page.jsx
+msgid "Pick it as the scheduler a project posts through in Content Studio, under Accounts."
+msgstr "在 Content Studio 的“账号”下，将其选为项目发布帖子所使用的调度器。"
+
 #: src/components/connections/InstanceProviderCard.jsx
 msgid "Pick one of its models for a tier on the Tiers tab. Only models that can call tools are listed, because every Duct agent works by calling them."
 msgstr "在“层级”选项卡上为其层级选择一个模型。只列出可调用工具的模型，因为每个 Duct 智能体都通过调用工具来工作。"
@@ -7566,6 +7626,10 @@ msgstr "帖子已安排"
 msgid "Post to all your accounts from one place"
 msgstr "从一处发布到所有账户"
 
+#: src/components/connections/logos.jsx
+msgid "PostBridge"
+msgstr "PostBridge"
+
 #: src/app/(app)/content/page.jsx
 msgid "posted"
 msgstr "已发布"
@@ -7641,8 +7705,8 @@ msgid "Previous week"
 msgstr "上一周"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Primary"
-msgstr "主要"
+#~ msgid "Primary"
+#~ msgstr "主要"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Primary color"
@@ -7822,9 +7886,17 @@ msgstr "已发布 {publishedOn}"
 msgid "Published the post"
 msgstr "发布了帖子"
 
+#: src/app/(app)/connections/page.jsx
+msgid "Publishes approved posts to your social accounts, on schedule."
+msgstr "按计划将已批准的帖子发布到你的社交账号。"
+
 #: src/components/content/TextPostEditor.jsx
 msgid "Publishes as the post's first reply."
 msgstr "作为帖子的第一个回复发布。"
+
+#: src/lib/connectorCatalog.js
+msgid "Publishing"
+msgstr "发布"
 
 #: src/lib/agentSession.js
 msgid "Publishing isn't connected. Ask your admin to set it up."
@@ -8356,6 +8428,10 @@ msgstr "请求失败 ({status})。"
 #: src/components/workspace/ActivityRow.jsx
 msgid "research"
 msgstr "研究"
+
+#: src/lib/connectorCatalog.js
+msgid "Research"
+msgstr "调研"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Researched a pillar"
@@ -8919,8 +8995,12 @@ msgid "Scheduled runs happen with no app open, so they always need a key."
 msgstr "预定运行在应用未打开时进行，因此它们始终需要密钥。"
 
 #: src/components/content/AccountsTab.jsx
-msgid "Schedulers"
+msgid "Scheduler"
 msgstr "调度器"
+
+#: src/components/content/AccountsTab.jsx
+#~ msgid "Schedulers"
+#~ msgstr "调度器"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Schema"
@@ -9010,6 +9090,10 @@ msgstr "搜索查询、点击、展示次数和平均排名。"
 msgid "Search sources"
 msgstr "搜索来源"
 
+#: src/app/(app)/connections/page.jsx
+msgid "Search TikTok in Content Studio, under Discover. Searches are billed to your Apify account."
+msgstr "在 Content Studio 的 Discover 下搜索 TikTok。搜索费用从你的 Apify 账号扣除。"
+
 #: src/components/insights/ToolApproval.jsx
 msgid "Search TikTok with {serverName}?"
 msgstr "使用 {serverName} 搜索 TikTok？"
@@ -9033,6 +9117,10 @@ msgstr "已搜索 TikTok"
 #: src/components/content/DiscoverPage.jsx
 msgid "Searches run on your own Apify account, so the scraping is billed to you. The same search again within 30 minutes costs nothing."
 msgstr "搜索运行在你的 Apify 账户上，因此抓取费用由你承担。30 分钟内再次进行相同搜索不收费。"
+
+#: src/app/(app)/connections/page.jsx
+msgid "Searches TikTok by hashtag or a region's trending feed, on your own Apify account."
+msgstr "使用你自己的 Apify 账号，按话题标签或地区趋势 Feed 搜索 TikTok。"
 
 #: src/components/connections/McpConnectors.jsx
 msgid "Searching the MCP Registry"
@@ -10075,7 +10163,7 @@ msgstr "未连接成功。请检查密钥并重试。"
 msgid "That didn't connect. Try again in a moment."
 msgstr "未连接成功。请稍后重试。"
 
-#: src/components/content/AccountsTab.jsx
+#: src/app/(app)/connections/page.jsx
 msgid "That didn't disconnect. Try again."
 msgstr "未断开连接。请重试。"
 
@@ -10316,6 +10404,10 @@ msgstr "草稿准备好后，帖子将立即显示在此处，并附带字符数
 #: src/components/content/PublishReviewPanel.jsx
 msgid "The post changed after this score."
 msgstr "帖子在此评分后已更改。"
+
+#: src/components/content/PlanDayOne.jsx
+msgid "The project's owner connects Apify in Toolbox."
+msgstr "项目所有者在工具箱中连接 Apify。"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "The provider is rate-limiting right now"
@@ -10621,6 +10713,14 @@ msgstr "此项目"
 #: src/components/insights/desk/DeskComposer.jsx
 msgid "This project"
 msgstr "此项目"
+
+#: src/components/content/ConnectorGate.jsx
+msgid "This project publishes through its owner's scheduler. Ask them to connect one in Toolbox."
+msgstr "此项目通过其所有者的调度器发布。请让其在工具箱中连接一个。"
+
+#: src/components/content/ConnectorGate.jsx
+msgid "This project searches through its owner's Apify account. Ask them to connect it in Toolbox."
+msgstr "此项目通过其所有者的 Apify 账号进行搜索。请联系对方在工具箱中进行连接。"
 
 #: src/components/content/VendorKeyForm.jsx
 msgid "This project uses its owner's {vendor} account. Ask them to connect it here, and it will work for you too."
@@ -12094,6 +12194,10 @@ msgstr "你的网站足以开始。Duct 现在会读取它，并在你设置其�
 #: src/components/connections/BringAnyTool.jsx
 msgid "Yours"
 msgstr "你的"
+
+#: src/components/connections/logos.jsx
+msgid "Zernio"
+msgstr "Zernio"
 
 #: src/lib/userProfile.js
 msgid "हिन्दी"

@@ -141,9 +141,9 @@ def test_a_hosted_signup_cannot_spend_the_operators_keys(db, hosted, vendors):
     for vendor in VENDORS:
         assert api.get(f"/api/content/vendor-keys/{vendor}?project_id={project.id}").json()["connected"] is False
     listed = api.get(f"/api/content/social-accounts?project_id={project.id}")
-    assert listed.status_code == 400 and "Content → Accounts" in listed.json()["detail"]
+    assert listed.status_code == 400 and "Toolbox → Publishing" in listed.json()["detail"]
     searched = _discover(api, project)
-    assert searched.status_code == 400 and "Content → Discover" in searched.json()["detail"]
+    assert searched.status_code == 400 and "Toolbox → Research" in searched.json()["detail"]
 
 
 def test_local_dev_still_runs_on_the_env_keys(db, local):
@@ -154,7 +154,7 @@ def test_local_dev_still_runs_on_the_env_keys(db, local):
     assert client_for_user(me.id, db)._api_key == OPERATOR_KEY
     for vendor in VENDORS:
         status = api.get(f"/api/content/vendor-keys/{vendor}?project_id={project.id}").json()
-        assert status == {"connected": True, "own_key": False, "is_owner": True}
+        assert status == {"connected": True, "own_key": False, "is_owner": True, "key_status": ""}
 
 
 @pytest.mark.parametrize("vendor", sorted(VENDORS))
@@ -175,7 +175,7 @@ def test_a_key_is_kept_only_once_the_vendor_accepts_it(db, hosted, vendors, vend
     assert GOOD_KEY not in row.credentials_enc  # stored encrypted
     assert VENDORS[vendor].resolve(me.id, db) == GOOD_KEY
     status = api.get(f"{url}?project_id={project.id}").json()
-    assert status == {"connected": True, "own_key": True, "is_owner": True}
+    assert status == {"connected": True, "own_key": True, "is_owner": True, "key_status": ""}
 
     assert api.delete(url).status_code == 204
     assert api.get(f"{url}?project_id={project.id}").json()["connected"] is False
@@ -199,7 +199,7 @@ def test_a_project_spends_its_owners_key_not_a_collaborators(db, hosted, vendors
     for vendor in VENDORS:
         assert api.put(f"/api/content/vendor-keys/{vendor}", json={"api_key": GOOD_KEY}).status_code == 200
         status = api.get(f"/api/content/vendor-keys/{vendor}?project_id={project.id}").json()
-        assert status == {"connected": False, "own_key": False, "is_owner": False}
+        assert status == {"connected": False, "own_key": False, "is_owner": False, "key_status": ""}
     assert api.get(f"/api/content/social-accounts?project_id={project.id}").status_code == 400
     assert _discover(api, project).status_code == 400
 
@@ -213,12 +213,30 @@ def test_a_key_the_vendor_stops_accepting_never_signs_the_user_out(db, hosted, v
     api = _client(db, me)
 
     listed = api.get(f"/api/content/social-accounts?project_id={project.id}")
-    assert listed.status_code == 502 and "Content → Accounts" in listed.json()["detail"]
+    assert listed.status_code == 502 and "Toolbox → Publishing" in listed.json()["detail"]
     searched = _discover(api, project)
-    assert searched.status_code == 502 and "Content → Discover" in searched.json()["detail"]
+    assert searched.status_code == 502 and "Toolbox → Research" in searched.json()["detail"]
 
 
 def test_an_unknown_vendor_is_not_a_route(db, hosted):
     me = _user(db, "me@example.com")
     project = _project(db, me)
     assert _client(db, me).get(f"/api/content/vendor-keys/stripe?project_id={project.id}").status_code == 404
+
+
+def test_the_toolbox_hears_when_a_vendor_stops_accepting_a_saved_key(db, hosted, vendors):
+    # "Connected" meant only "a key is stored": a PostBridge key revoked on
+    # PostBridge's side stayed Connected while every call 401'd. ?check=true
+    # asks the vendor, and only then, since it costs a call per vendor.
+    me = _user(db, "me@example.com")
+    project = _project(db, me)
+    POSTBRIDGE_KEY.save(me.id, "revoked-since", db)
+    APIFY_KEY.save(me.id, GOOD_KEY, db)
+    db.commit()
+    api = _client(db, me)
+
+    by_id = {p["id"]: p for p in api.get(f"/api/content/publishers?project_id={project.id}&check=true").json()}
+    assert by_id["post_bridge"]["connected"] is True
+    assert by_id["post_bridge"]["key_status"] == "rejected"
+    assert api.get(f"/api/content/vendor-keys/apify?project_id={project.id}&check=true").json()["key_status"] == "ok"
+    assert api.get(f"/api/content/publishers?project_id={project.id}").json()[0]["key_status"] == ""

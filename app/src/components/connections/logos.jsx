@@ -44,6 +44,9 @@ export const CONNECTOR_NAMES = {
   growthbook: msg`GrowthBook`,
   github: msg`GitHub`,
   rss: msg`RSS and Atom feeds`,
+  zernio: msg`Zernio`,
+  post_bridge: msg`PostBridge`,
+  apify: msg`Apify`,
   anthropic: msg`Anthropic`,
   openai: msg`OpenAI`,
   gemini: msg`Google Gemini`,
@@ -53,9 +56,9 @@ export const CONNECTOR_NAMES = {
   compatible: msg`Bring your own provider`,
 };
 
-function Img({ src, alt }) {
+function Img({ src, alt, className }) {
   const { i18n } = useLingui();
-  return <img src={src} alt={i18n._(alt)} width="24" height="24" loading="lazy" decoding="async" />;
+  return <img src={src} alt={i18n._(alt)} width="24" height="24" loading="lazy" decoding="async" className={className} />;
 }
 
 export function OpenAiMark() {
@@ -191,6 +194,13 @@ export const LOGOS = {
   growthbook: <Img src="/icons/growthbook.svg" alt={CONNECTOR_NAMES.growthbook} />,
   github: <GitHubMark />,
   rss: <Img src="/icons/rss.svg" alt={CONNECTOR_NAMES.rss} />,
+  // Content Studio's vendors on the owner's key, each the app icon its own
+  // site serves (zernio.com, post-bridge.com, apify.com), unedited.
+  zernio: <Img src="/icons/zernio.svg" alt={CONNECTOR_NAMES.zernio} />,
+  // A one-colour black mark in a file, so it cannot follow currentColor like
+  // GitHub's; inverted on the dark theme, where black on the tile vanishes.
+  post_bridge: <Img src="/icons/post-bridge.png" alt={CONNECTOR_NAMES.post_bridge} className="dark:invert" />,
+  apify: <Img src="/icons/apify.svg" alt={CONNECTOR_NAMES.apify} />,
 
   // Model providers
   anthropic: <Img src="/icons/anthropic.svg" alt={CONNECTOR_NAMES.anthropic} />,

@@ -24,11 +24,17 @@ import { msg } from "@lingui/core/macro";
 /** Every filter's "no filter" value. */
 export const ALL = "all";
 
+/** The Toolbox opened on one shelf (`?category=`). Content Studio links here
+ *  from every place that needs a vendor connected. */
+export const toolboxHref = (category) => `/connections?category=${category}`;
+
 /** What a source is for. Marketing first, because that is what Duct is. */
 export const Category = Object.freeze({
   SEARCH: "search",
   ANALYTICS: "analytics",
   ADVERTISING: "advertising",
+  PUBLISHING: "publishing",
+  RESEARCH: "research",
   PRODUCT: "product",
   REVENUE: "revenue",
   PRODUCTIVITY: "productivity",
@@ -37,11 +43,17 @@ export const Category = Object.freeze({
   OTHER: "other",
 });
 
+/** Where Content Studio sends people to connect a scheduler, and Apify. */
+export const TOOLBOX_PUBLISHING_HREF = toolboxHref(Category.PUBLISHING);
+export const TOOLBOX_RESEARCH_HREF = toolboxHref(Category.RESEARCH);
+
 /** The order categories are offered and browsed in. */
 export const CATEGORY_ORDER = [
   Category.SEARCH,
   Category.ANALYTICS,
   Category.ADVERTISING,
+  Category.PUBLISHING,
+  Category.RESEARCH,
   Category.PRODUCT,
   Category.REVENUE,
   Category.PRODUCTIVITY,
@@ -54,6 +66,8 @@ export const CATEGORY_LABELS = {
   [Category.SEARCH]: msg`Search & SEO`,
   [Category.ANALYTICS]: msg`Analytics`,
   [Category.ADVERTISING]: msg`Advertising`,
+  [Category.PUBLISHING]: msg`Publishing`,
+  [Category.RESEARCH]: msg`Research`,
   [Category.PRODUCT]: msg`Product`,
   [Category.REVENUE]: msg`Revenue`,
   [Category.PRODUCTIVITY]: msg`Productivity`,

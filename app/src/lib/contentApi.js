@@ -477,16 +477,20 @@ export const VENDOR_HOME = Object.freeze({
  * connected it: [{ id, label, dashboard_url, reports, connected, own_key,
  * is_owner }]. Nothing is a default; with none connected nothing publishes.
  */
-export async function listPublishers(projectId) {
+export async function listPublishers(projectId, { check = false } = {}) {
   const url = new URL(`${BASE}/api/content/publishers`);
   url.searchParams.set("project_id", projectId);
+  // `check` asks each scheduler whether the stored key still works
+  // (`key_status`); one vendor call each, so only the Toolbox asks.
+  if (check) url.searchParams.set("check", "true");
   const res = await fetch(url.toString(), { headers: backendAuthedHeaders() });
   return jsonOrThrow(res);
 }
 
-export async function getVendorKeyStatus(vendor, projectId) {
+export async function getVendorKeyStatus(vendor, projectId, { check = false } = {}) {
   const url = new URL(`${BASE}/api/content/vendor-keys/${vendor}`);
   url.searchParams.set("project_id", projectId);
+  if (check) url.searchParams.set("check", "true");
   const res = await fetch(url.toString(), { headers: backendAuthedHeaders() });
   return jsonOrThrow(res);
 }

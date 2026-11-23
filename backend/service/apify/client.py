@@ -201,7 +201,7 @@ APIFY_KEY = VendorKey(
     connector_type="apify",
     setting="apify_api_key",
     label="Apify",
-    where="Content → Discover",
+    where="Toolbox → Research",
     check=check_api_key,
 )
 

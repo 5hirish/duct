@@ -29,8 +29,8 @@ import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import EmptyState from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { connectVendorKey, getContentAnalytics, listLinkedAccounts, listPublishers } from "@/lib/contentApi";
-import ConnectorGate, { schedulerOptions } from "./ConnectorGate";
+import { getContentAnalytics, listLinkedAccounts, listPublishers } from "@/lib/contentApi";
+import ConnectorGate, { SchedulerGateAction } from "./ConnectorGate";
 import { PlatformGlyph, platformMeta } from "./platformGlyphs";
 import { compactNumber, dayKey, formatDate, formatNumber, titleCase, toDate } from "@/lib/format";
 
@@ -170,13 +170,8 @@ export default function AnalyticsView({ projectId, onLinkAccounts, reads = API_R
     return copy;
   }, [rows, sortKey]);
 
-  async function connect(publisher, apiKey) {
-    await connectVendorKey(publisher.id, apiKey);
-    load(false);
-  }
-
   if (!loading && noScheduler) {
-    return <AnalyticsGate publishers={publishers} onConnect={connect} />;
+    return <AnalyticsGate publishers={publishers} />;
   }
 
   return (
@@ -420,7 +415,7 @@ function LinkedSummary({ linked, publishers }) {
 }
 
 
-export function AnalyticsGate({ publishers, onConnect }) {
+export function AnalyticsGate({ publishers = [] }) {
   const { t } = useLingui();
   return (
     <div className="max-w-6xl">
@@ -432,8 +427,7 @@ export function AnalyticsGate({ publishers, onConnect }) {
           { icon: TrendingUp, title: t`What's working`, text: t`Pillars and formats ranked by what they earned, not by guesswork.` },
           { icon: CalendarRange, title: t`Plans that learn`, text: t`The next plan leans on your own best posts and posting times.` },
         ]}
-        connectLabel={t`Connect a scheduler to start`}
-        connectors={schedulerOptions(publishers, onConnect)}
+        action={<SchedulerGateAction isOwner={publishers.every((p) => p.is_owner !== false)} />}
         footnote={t`Your own account and API key, stored encrypted. Numbers sync from the posts Duct publishes and the ones you post yourself.`}
         example={<AnalyticsExample />}
       />

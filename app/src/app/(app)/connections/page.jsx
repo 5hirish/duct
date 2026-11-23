@@ -23,6 +23,8 @@ import {
   startConnectorOAuth,
 } from "../../../lib/connectorAuth";
 import { trackEvent, AnalyticsEvent } from "../../../lib/analytics";
+import { connectVendorKey, disconnectVendorKey, getVendorKeyStatus, listPublishers, VENDOR, VENDOR_HOME } from "../../../lib/contentApi";
+import { Send } from "lucide-react";
 import { getActiveProject } from "../../../lib/projects";
 import { MCP_GUIDE_URL } from "../../../lib/mcpServers";
 import { Button } from "@/components/ui/button";
@@ -35,10 +37,12 @@ import ManualConnectorCard from "../../../components/connections/ManualConnector
 import { McpPhase, useMcpConnectors } from "../../../components/connections/McpConnectors";
 import FirstSourceCelebration from "../../../components/connections/FirstSourceCelebration";
 import OAuthConnectorCard from "../../../components/connections/OAuthConnectorCard";
+import VendorKeyConnectorCard, { KEY_REJECTED } from "../../../components/connections/VendorKeyConnectorCard";
 import { DEFAULT_VALUE } from "../../../components/connections/ProjectAccountSelect";
 import { LOGOS } from "../../../components/connections/logos";
 import {
   ALL,
+  Category,
   ConnectionStatus,
   NATIVE_CATEGORY,
   NATIVE_KEYWORDS,
@@ -85,6 +89,18 @@ export default function ConnectionsPage() {
   // The catalogue's search and filters. Held here because the status tabs sit
   // in the page header and the rest under it.
   const [filters, setFilters] = useState(NO_FILTERS);
+  // `?category=publishing` opens the catalogue on one shelf: the Content
+  // Studio links here to connect a scheduler.
+  useEffect(() => {
+    const category = new URLSearchParams(window.location.search).get("category");
+    if (category && Object.values(Category).includes(category)) setFilters((f) => ({ ...f, category }));
+  }, []);
+  // Vendors Content Studio works through, on the owner's own key: the
+  // schedulers it publishes through (GET /content/publishers) and Apify for
+  // TikTok research. Their keys are the project owner's, so both are read
+  // per project.
+  const [publishers, setPublishers] = useState([]);
+  const [apify, setApify] = useState(null);
 
   async function refreshServerRows() {
     if (!hasAuthToken()) return;
@@ -263,6 +279,39 @@ export default function ConnectionsPage() {
   }, []);
 
   const projectId = project?.id || "";
+
+  async function refreshVendors() {
+    if (!signedIn || !projectId) {
+      setPublishers([]);
+      setApify(null);
+      return;
+    }
+    // Each on its own: one failing leaves the other's tiles in place.
+    const [schedulers, research] = await Promise.all([
+      listPublishers(projectId, { check: true }).catch(() => null),
+      getVendorKeyStatus(VENDOR.APIFY, projectId, { check: true }).catch(() => null),
+    ]);
+    if (schedulers) setPublishers(schedulers);
+    setApify(research ? { ...research, id: VENDOR.APIFY, label: "Apify", dashboard_url: VENDOR_HOME[VENDOR.APIFY] } : null);
+  }
+  useEffect(() => {
+    refreshVendors();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signedIn, projectId]);
+
+  async function connectVendor(vendor, apiKey) {
+    await connectVendorKey(vendor.id, apiKey);
+    trackEvent(AnalyticsEvent.ConnectorConnected, { provider: vendor.id });
+    await refreshVendors();
+  }
+  async function disconnectVendor(vendor) {
+    try {
+      await disconnectVendorKey(vendor.id);
+    } catch (e) {
+      setConnectError(e.message || t`That didn't disconnect. Try again.`);
+    }
+    await refreshVendors();
+  }
 
   useEffect(() => {
     if (!signedIn || !projectId) {
@@ -855,6 +904,29 @@ export default function ConnectionsPage() {
       : serverRows[type]?.scope_status === "partial"
         ? ConnectionStatus.ATTENTION
         : ConnectionStatus.CONNECTED;
+  const vendorEntries = [
+    ...publishers.map((p) => ({
+      vendor: p,
+      category: Category.PUBLISHING,
+      logo: LOGOS[p.id] || <Send className="text-muted-foreground" />,
+      description: t`Publishes approved posts to your social accounts, on schedule.`,
+      usage: t`Pick it as the scheduler a project posts through in Content Studio, under Accounts.`,
+      forget: t`Duct forgets your API key and stops publishing through your ${p.label} account. Your accounts stay connected in ${p.label}, and posts already scheduled there still go out.`,
+      keywords: ["scheduler", "social", "post", ...(p.reports || [])],
+    })),
+    ...(apify
+      ? [{
+          vendor: apify,
+          category: Category.RESEARCH,
+          logo: LOGOS.apify,
+          description: t`Searches TikTok by hashtag or a region's trending feed, on your own Apify account.`,
+          usage: t`Search TikTok in Content Studio, under Discover. Searches are billed to your Apify account.`,
+          forget: t`Duct forgets your Apify token and stops searching through your account. References you saved stay saved.`,
+          keywords: ["tiktok", "scraper", "trends", "research"],
+        }]
+      : []),
+  ];
+
   const catalog = [
     ...available.map((type) => ({
       id: type,
@@ -865,6 +937,35 @@ export default function ConnectionsPage() {
       publisher: DUCT_PUBLISHER,
       keywords: NATIVE_KEYWORDS[type] || [],
       render: () => <Fragment key={type}>{CONNECTORS[type]({})}</Fragment>,
+    })),
+    // Vendors on the owner's own key sit beside the native connectors: the
+    // schedulers under Publishing, Apify under Research. A key today; OAuth
+    // or MCP vendors later are entries here too.
+    ...vendorEntries.map(({ vendor, ...card }) => ({
+      id: `vendor:${vendor.id}`,
+      title: vendor.label,
+      description: card.description,
+      category: card.category,
+      status: !vendor.connected
+        ? ConnectionStatus.AVAILABLE
+        : vendor.key_status === KEY_REJECTED
+          ? ConnectionStatus.ATTENTION
+          : ConnectionStatus.CONNECTED,
+      origin: Origin.DUCT,
+      publisher: DUCT_PUBLISHER,
+      keywords: card.keywords,
+      render: () => (
+        <VendorKeyConnectorCard
+          key={`vendor:${vendor.id}`}
+          vendor={vendor}
+          logo={card.logo}
+          description={card.description}
+          usage={card.usage}
+          forget={card.forget}
+          onConnect={connectVendor}
+          onDisconnect={disconnectVendor}
+        />
+      ),
     })),
     ...mcp.entries,
   ];

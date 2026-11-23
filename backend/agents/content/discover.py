@@ -182,7 +182,7 @@ async def search_tiktok(
             "status": "not_connected",
             "message": (
                 "Apify isn't connected for this project, so TikTok can't be searched. The owner "
-                "can add a key in Content → Discover. Carry on from the saved references and web search."
+                "can add a key in Toolbox → Research. Carry on from the saved references and web search."
             ),
         }
 
@@ -237,7 +237,7 @@ async def search_tiktok(
     except ApifyAPIError as exc:
         logger.warning("discover_tiktok: Apify said %s for project %s", exc.status_code, project_id)
         if exc.status_code in (401, 403):
-            message = "Apify didn't accept the project's key. The owner can paste a fresh one in Content → Discover."
+            message = "Apify didn't accept the project's key. The owner can paste a fresh one in Toolbox → Research."
         else:
             message = "Apify couldn't run the search just now. Carry on without it and say so."
         return {"status": "error", "message": message}

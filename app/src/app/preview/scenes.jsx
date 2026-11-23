@@ -68,6 +68,7 @@ import ConnectorDialog from "@/components/connections/ConnectorDialog";
 import ConnectorPermissions from "@/components/connections/ConnectorPermissions";
 import ConnectorTile from "@/components/connections/ConnectorTile";
 import ManualConnectorCard from "@/components/connections/ManualConnectorCard";
+import VendorKeyConnectorCard from "@/components/connections/VendorKeyConnectorCard";
 import OAuthConnectorCard from "@/components/connections/OAuthConnectorCard";
 import McpConnectDialog from "@/components/connections/McpConnectDialog";
 import McpConnectors, { useMcpConnectors } from "@/components/connections/McpConnectors";
@@ -1621,6 +1622,12 @@ const ACCOUNTS_BOTH = loadsAccounts(
   SCHEDULERS_BOTH, SCHEDULER_ACCOUNTS, LINKED_LI,
   channelsFixture({ primary: "zernio", profiles: { linkedin: { enabled: true }, twitter: { enabled: true } }, linked: LINKED_LI }),
 );
+// Both connected and Primary never picked: the accounts exist, nothing can
+// post through them yet, and the rows say so instead of "by hand".
+const ACCOUNTS_NO_PRIMARY = loadsAccounts(
+  SCHEDULERS_BOTH, SCHEDULER_ACCOUNTS, [],
+  channelsFixture({ profiles: { linkedin: { enabled: true }, twitter: { enabled: true } } }),
+);
 const ACCOUNTS_COLLABORATOR = loadsAccounts(SCHEDULERS_NONE.map((p) => ({ ...p, is_owner: false })));
 const ACCOUNTS_BY_HAND = loadsAccounts(SCHEDULERS_NONE, [], [], channelsFixture({
   profiles: {
@@ -2339,6 +2346,38 @@ export const SCENES = [
           tone="off"
           status="Coming soon"
           disabled
+        />
+      </div>
+    ),
+  },
+  {
+    id: "tile-vendor-keys",
+    state: "Zernio connected, PostBridge's key rejected, Apify not connected",
+    group: "ConnectorTile",
+    title: "Schedulers and Apify in the Toolbox",
+    note: "Vendors Content Studio works through on the owner's own key are connected here like every other tool: schedulers on the Publishing shelf, Apify on Research. Content Studio only links here, and keeps the choices that are its own (Accounts picks which scheduler posts go out through). The Toolbox asks each vendor whether the saved key still works: PostBridge here answers 401, so its tile says \"Key rejected\" and its dialog asks for a new key, where it used to say Connected while every call failed. Open Apify for the key field, Zernio for the platforms it reports and Disconnect. Each tile carries the vendor's own app icon, as its site serves it.",
+    render: () => (
+      <div className="conn-grid">
+        {[SCHEDULERS_NONE[1], SCHEDULERS_NONE[0]].map((p, i) => (
+          <VendorKeyConnectorCard
+            key={p.id}
+            vendor={i === 0 ? { ...p, connected: true, own_key: true, key_status: "ok" } : { ...p, connected: true, own_key: true, key_status: "rejected" }}
+            logo={LOGOS[p.id]}
+            description="Publishes approved posts to your social accounts, on schedule."
+            usage="Pick it as the scheduler a project posts through in Content Studio, under Accounts."
+            forget="Duct forgets your API key and stops publishing through this account."
+            onConnect={() => acceptKey()}
+            onDisconnect={() => acceptKey()}
+          />
+        ))}
+        <VendorKeyConnectorCard
+          vendor={{ id: "apify", label: "Apify", dashboard_url: "https://console.apify.com", connected: false, own_key: false, is_owner: true }}
+          logo={LOGOS.apify}
+          description="Searches TikTok by hashtag or a region's trending feed, on your own Apify account."
+          usage="Search TikTok in Content Studio, under Discover."
+          forget="Duct forgets your Apify token."
+          onConnect={() => refuseKey("apify")}
+          onDisconnect={() => acceptKey()}
         />
       </div>
     ),
@@ -4014,7 +4053,7 @@ export const SCENES = [
     note: "The first screen of Content Studio for a new project, and the usual case after the audit: the voice and pillars it drafted, neither connector's key saved. It used to be a dashed \"No plan yet\" box. Now it says what a plan is, reads back what Duct will plan from, takes the PostBridge and Apify keys right in their rows, asks how far ahead to plan (the month in progress, or 1 week, 2 weeks, 30 days, each naming its dates), and shows a sample week in the same list the plan workspace uses. Paste anything into a key field and press Enter: the preview refuses it the way a wrong key is refused. What to check: the button is the heaviest thing on the screen; the checklist sits beside the sample from @3xl and above it below that; the sample is dimmed, labelled and cannot be tabbed into.",
     render: () => (
       <div className="p-5">
-        <PlanDayOne brand={PLAN_BRAND_READY} accounts={[]} scheduler={NO_SCHEDULER} vendors={PLAN_VENDORS_MISSING} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={refuseKey} />
+        <PlanDayOne brand={PLAN_BRAND_READY} accounts={[]} scheduler={NO_SCHEDULER} vendors={PLAN_VENDORS_MISSING} onStart={() => {}} onOpenTab={() => {}} />
       </div>
     ),
   },
@@ -4023,10 +4062,10 @@ export const SCENES = [
     state: "nothing set yet",
     group: "PlanDayOne",
     title: "A project with no brand context",
-    note: "Every source missing. Voice and pillars say what Duct does about them (it asks) and offer the tab that fixes them; the two connectors take their key in place. The button still works: the agent asks for what is missing before it plans. A pasted key is accepted after a beat here and the field stays busy, since the preview has no state to turn the row over with.",
+    note: "Every source missing. Voice and pillars say what Duct does about them (it asks) and offer the tab that fixes them; the scheduler and Apify rows link to the Toolbox shelf that connects them. The button still works: the agent asks for what is missing before it plans.",
     render: () => (
       <div className="p-5">
-        <PlanDayOne brand={PLAN_BRAND_EMPTY} accounts={[]} scheduler={NO_SCHEDULER} vendors={PLAN_VENDORS_MISSING} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
+        <PlanDayOne brand={PLAN_BRAND_EMPTY} accounts={[]} scheduler={NO_SCHEDULER} vendors={PLAN_VENDORS_MISSING} onStart={() => {}} onOpenTab={() => {}} />
       </div>
     ),
   },
@@ -4038,7 +4077,7 @@ export const SCENES = [
     note: "Voice, four pillars, two linked accounts and Apify connected. The plan learns from those accounts' own results, which is what the strategy band on a finished plan reports; the research row points at Discover, because only posts saved there reach the plan.",
     render: () => (
       <div className="p-5">
-        <PlanDayOne brand={PLAN_BRAND_READY} accounts={PLAN_ACCOUNTS} scheduler={A_SCHEDULER} vendors={PLAN_VENDORS_CONNECTED} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
+        <PlanDayOne brand={PLAN_BRAND_READY} accounts={PLAN_ACCOUNTS} scheduler={A_SCHEDULER} vendors={PLAN_VENDORS_CONNECTED} onStart={() => {}} onOpenTab={() => {}} />
       </div>
     ),
   },
@@ -4050,7 +4089,7 @@ export const SCENES = [
     note: "A project spends its owner's PostBridge and Apify keys, so a collaborator gets no field, only who to ask.",
     render: () => (
       <div className="p-5">
-        <PlanDayOne brand={PLAN_BRAND_READY} accounts={[]} scheduler={NO_SCHEDULER} vendors={PLAN_VENDORS_COLLABORATOR} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
+        <PlanDayOne brand={PLAN_BRAND_READY} accounts={[]} scheduler={NO_SCHEDULER} vendors={PLAN_VENDORS_COLLABORATOR} onStart={() => {}} onOpenTab={() => {}} />
       </div>
     ),
   },
@@ -4109,9 +4148,9 @@ export const SCENES = [
     state: "no scheduler connected",
     group: "ConnectorGate",
     title: "Analytics, before any scheduler",
-    note: "What the tab does, what unlocks it, and the stat row it fills in, drawn by the real cards over invented numbers. The schedulers are the server's list, at most three.",
+    note: "What the tab does, what unlocks it, and the stat row it fills in, drawn by the real cards over invented numbers. Its one button opens the Toolbox on Publishing, where schedulers are connected.",
     render: () => (
-      <div className="p-5"><AnalyticsGate publishers={SCHEDULERS_NONE} onConnect={acceptKey} /></div>
+      <div className="p-5"><AnalyticsGate publishers={SCHEDULERS_NONE} /></div>
     ),
   },
   {
@@ -4141,9 +4180,9 @@ export const SCENES = [
     state: "Apify not connected",
     group: "ConnectorGate",
     title: "Discover, before Apify",
-    note: "One connector, so one card; who pays for the scraping is said under it. The example is two real result cards over invented posts.",
+    note: "One button, to the Toolbox's Research shelf where Apify is connected; who pays for the scraping is said under it. The example is two real result cards over invented posts.",
     render: () => (
-      <div className="p-5"><DiscoverGate isOwner onConnect={acceptKey} /></div>
+      <div className="p-5"><DiscoverGate isOwner /></div>
     ),
   },
   {
@@ -4151,9 +4190,9 @@ export const SCENES = [
     state: "a collaborator, owner hasn't connected Apify",
     group: "ConnectorGate",
     title: "Discover, when the key is the owner's",
-    note: "No Connect button: the project spends its owner's key, so anyone else is told who connects it.",
+    note: "No Toolbox button: the project spends its owner's key, so anyone else is told who connects it.",
     render: () => (
-      <div className="p-5"><DiscoverGate isOwner={false} onConnect={acceptKey} /></div>
+      <div className="p-5"><DiscoverGate isOwner={false} /></div>
     ),
   },
   {
@@ -4161,7 +4200,7 @@ export const SCENES = [
     state: "nothing connected, every channel off",
     group: "AccountsTab",
     title: "Accounts, before any scheduler",
-    note: "The schedulers section opens on its pitch: what the tab does once one is connected, each scheduler with the platforms it reports numbers for, and the accounts list it fills in. The channels list stays usable under it, because a channel can be on with no scheduler at all.",
+    note: "The schedulers section opens on its pitch: what the tab does once one is connected, and the accounts list it fills in. Its one button opens the Toolbox on Publishing, where schedulers are connected. The channels list stays usable under it, because a channel can be on with no scheduler at all.",
     render: () => (
       <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_NONE} save={PREVIEW_SAVE} /></div>
     ),
@@ -4171,9 +4210,19 @@ export const SCENES = [
     state: "both connected, Zernio primary, one account linked",
     group: "AccountsTab",
     title: "Accounts at two schedulers",
-    note: "Two schedulers can be connected; the Primary radio says which one posts go out through, and the linked count counts only its accounts. Each channel row says in one line how it is posted: via the primary scheduler, by hand, or off.",
+    note: "Two schedulers can be connected (in the Toolbox); the picker says which one posts go out through, and the linked count counts only its accounts. Each channel row says in one line how it is posted: via the primary scheduler, by hand, or off. X is on with one account at Zernio and none linked, so the tab links it as it opens (a channel switched on is \"post here\"): watch its row turn from \"In Zernio, not linked yet\" to \"1 account via Zernio\".",
     render: () => (
       <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_BOTH} save={PREVIEW_SAVE} /></div>
+    ),
+  },
+  {
+    id: "accounts-no-primary",
+    state: "both connected, no Primary picked, nothing linked",
+    group: "AccountsTab",
+    title: "Accounts waiting on a Primary",
+    note: "LinkedIn and X are on and the schedulers hold accounts for both, but no Primary is picked, so nothing can post through them yet. The rows name the scheduler holding the account and the header says what to do; \"by hand\" is kept for a channel with no account anywhere.",
+    render: () => (
+      <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_NO_PRIMARY} save={PREVIEW_SAVE} /></div>
     ),
   },
   {
@@ -4181,7 +4230,7 @@ export const SCENES = [
     state: "a collaborator, owner hasn't connected one",
     group: "AccountsTab",
     title: "When the scheduler is the owner's to connect",
-    note: "A project publishes through its owner's scheduler, so Connect tells anyone else who sets it up rather than offering a key that would never be used.",
+    note: "A project publishes through its owner's scheduler, so the gate tells anyone else who sets it up rather than sending them to a Toolbox shelf whose key would never be used here.",
     render: () => (
       <div className="p-5"><AccountsTab projectId="preview" load={ACCOUNTS_COLLABORATOR} save={PREVIEW_SAVE} /></div>
     ),
@@ -4234,7 +4283,7 @@ export const SCENES = [
     note: "The checklist is left out rather than reporting every source as missing: a failed read and an empty brand are different facts. The same goes for one connector whose status could not be read: its row and its share of the count drop out.",
     render: () => (
       <div className="p-5">
-        <PlanDayOne brand={null} accounts={null} vendors={{}} onStart={() => {}} onOpenTab={() => {}} onConnectVendor={acceptKey} />
+        <PlanDayOne brand={null} accounts={null} vendors={{}} onStart={() => {}} onOpenTab={() => {}} />
       </div>
     ),
   },

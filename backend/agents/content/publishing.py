@@ -389,7 +389,7 @@ def chosen_publisher(db: Session, project_id: UUID, account_ids: list[str], publ
         return None, "Those accounts are at different schedulers; publish to one scheduler's accounts at a time."
     if ids and (spec := spec_for(ids.pop())) is not None:
         if spec.id not in {s.id for s in publishing.connected}:
-            return None, f"{spec.label} isn't connected any more. Connect it again in Content → Accounts."
+            return None, f"{spec.label} isn't connected any more. Connect it again in Toolbox → Publishing."
         return spec, ""
     if publishing.only is not None:
         return publishing.only, ""
