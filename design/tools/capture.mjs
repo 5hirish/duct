@@ -40,9 +40,12 @@ const OUT = resolve(process.env.OUT || join(tmpdir(), "duct-design"));
 const STORY_NOW = new Date(`${STORY.week.end}T09:30:00+02:00`);
 // A page longer than this is cut: the picture is for recognising the screen,
 // and a 9000px strip shrinks to a sliver on the canvas.
-const MAX_HEIGHT = { desktop: 2600, phone: 3600 };
+const MAX_HEIGHT = { desktop: 2600, phone: 3600, wide: 2160 };
 
 const only = process.argv.slice(2);
+// SIZES=820,1180 shoots only those sizes and keeps every other size's picture
+// from the last run: adding a size is one pass, not a full recapture.
+const sizes = process.env.SIZES ? process.env.SIZES.split(",").map((s) => s.trim()) : null;
 const wanted = SCREENS.filter((s) => !only.length || only.includes(s.id));
 if (!wanted.length) {
   console.error("no such screen; known:", SCREENS.map((s) => s.id).join(", "));
@@ -91,9 +94,11 @@ try {
   const browser = await chromium.launch({ headless: true });
   try {
     for (const screen of wanted) {
-      const entry = { id: screen.id, title: screen.title, group: screen.group, route: screen.route, shots: {} };
+      const kept = sizes ? manifest.screens[screen.id] : null;
+      const entry = { id: screen.id, title: screen.title, group: screen.group, route: screen.route, shots: { ...(kept?.shots || {}) }, ...(kept?.board ? { board: kept.board } : {}) };
       for (const variant of VARIANTS) {
         if (screen.variants && !screen.variants.includes(variant.id)) continue;
+        if (sizes && !sizes.includes(variant.id)) continue;
         const t0 = Date.now();
         const context = await browser.newContext({
           viewport: { width: variant.width, height: variant.height },
@@ -128,7 +133,7 @@ try {
           await screen.open({ page, app: APP, story: STORY, plan: PLAN, variant, fixtures });
           await settle(page);
           const file = `${screen.id}@${variant.id}.webp`;
-          const kind = variant.width < 640 ? "phone" : "desktop";
+          const kind = variant.width < 640 ? "phone" : variant.width > 2000 ? "wide" : "desktop";
           const size = await shoot(page, join(OUT, "asbuilt", file), screen.workspace ? variant.height : MAX_HEIGHT[kind], variant);
           entry.shots[variant.id] = { file, ...size, theme: variant.theme, label: variant.label };
           rmSync(join(OUT, "asbuilt", `${screen.id}@${variant.id}.failed.png`), { force: true });
@@ -164,6 +169,10 @@ process.exit(failed ? 1 : 0);
 // --- shooting ------------------------------------------------------------------
 
 async function settle(page) {
+  // The pointer is parked where the last click left it, which keeps that
+  // row's hover-only controls (a reply's time and copy) showing: a picture
+  // of a hover nobody is making. A corner of the top bar hovers nothing.
+  await page.mouse.move(1, 1).catch(() => {});
   await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
   // Skeletons give way to content, and Reveal fades it in over 200ms.
   await page.waitForFunction(() => !document.querySelector('[data-slot="skeleton"]'), null, { timeout: 8000 }).catch(() => {});
@@ -254,7 +263,18 @@ function serialize({ routeToBoard, shots }) {
   const addStyle = (el, css) => el.setAttribute("style", `${el.getAttribute("style") || ""}; ${css}`.replace(/^; /, ""));
   root.querySelectorAll("[data-cap-scroll]").forEach((el) => {
     const at = el.getAttribute("data-cap-scroll");
-    if (at === "end") addStyle(el, "display: flex; flex-direction: column; justify-content: flex-end");
+    // Pinned to its end only while it overflows: on a taller screen than the
+    // one it was shot at (2560, 3840) the whole transcript fits, and the app
+    // draws it from the top, so a plain flex-end left a hole above it. With
+    // one child, column-reverse starts the pane at its end and overflows
+    // upward, and the child's auto bottom margin takes any spare room, which
+    // puts a transcript that fits at the top.
+    if (at === "end" && el.children.length === 1) {
+      addStyle(el, "display: flex; flex-direction: column-reverse");
+      addStyle(el.firstElementChild, "margin-bottom: auto; flex-shrink: 0");
+    } else if (at === "end") {
+      addStyle(el, "display: flex; flex-direction: column; justify-content: flex-end");
+    }
     else addStyle(el.firstElementChild, `margin-top: -${at}px`);
     el.removeAttribute("data-cap-scroll");
   });
@@ -264,6 +284,28 @@ function serialize({ routeToBoard, shots }) {
   const dead = [];
   while (comments.nextNode()) dead.push(comments.currentNode);
   dead.forEach((n) => n.remove());
+
+  // A chart is drawn by script at the width it was given (Recharts sets
+  // pixel widths on its wrapper and its svg), so on a board it stayed 1440
+  // wide while the page around it reflowed: at 1100 the bars ran out of
+  // their cards. The app redraws it to the card's width at the same height;
+  // a board cannot redraw, so the svg keeps its box's height and scales
+  // inside it (its own viewBox, `meet`), and the page keeps the app's height.
+  root.querySelectorAll("svg.recharts-surface").forEach((svg) => {
+    const w = parseFloat(svg.getAttribute("width"));
+    const h = parseFloat(svg.getAttribute("height"));
+    if (!w || !h) return;
+    if (!svg.getAttribute("viewBox")) svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    svg.removeAttribute("width");
+    svg.removeAttribute("height");
+    addStyle(svg, "width: 100%; height: 100%; display: block");
+    // Every box between the svg and its responsive container goes fluid,
+    // the zero-width measuring div Recharts puts in between included.
+    const responsive = svg.closest(".recharts-responsive-container");
+    for (let box = svg.parentElement; box && box !== responsive; box = box.parentElement) {
+      addStyle(box, `width: 100%; height: ${responsive ? "100%" : `${h}px`}`);
+    }
+  });
 
   root.querySelectorAll("[data-cap-shot]").forEach((el) => {
     // The attribute only says which frame this was; its picture's name is
@@ -433,7 +475,9 @@ function imageName(url) {
 
 async function fetchImages() {
   for (const [url, name] of images) {
-    const res = await fetch(url).catch(() => null);
+    // A picture the story's backend serves (/uploads/story/…) is the mock's:
+    // the page asked the API host, which the capture rerouted to it.
+    const res = await fetch(url.startsWith(`${API}/`) ? url.replace(API, MOCK) : url).catch(() => null);
     // Google's favicon service answers an unknown site with 404 and its
     // default globe, which is what the app shows, so an image body counts.
     if (!res?.ok && !res?.headers.get("content-type")?.startsWith("image/")) {

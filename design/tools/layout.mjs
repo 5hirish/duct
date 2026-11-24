@@ -38,7 +38,7 @@ mkdirSync(join(PROJECT, "img"), { recursive: true });
 const GAP_X = 80; // between frames in a row
 const GAP_Y = 120; // between rows
 const TITLE_ROOM = 300; // a row's title1 note sits this far above it
-const BUILT_PER_ROW = 3;
+const BUILT_PER_ROW = 2; // a screen at eight sizes is ~5,500px across
 
 const boards = {};
 const order = [];
@@ -83,7 +83,9 @@ notes.coreWhat = {
 };
 
 // --- As built: pictures of every screen ------------------------------------------------
-const shown = (v) => (v.width >= 640 ? 0.5 : 1); // desktop at half size (the file is full size), phone 1:1
+// How big each picture is drawn: a phone 1:1, a tablet or laptop at half,
+// a wide screen at 960 across so a 4K shot does not take a row to itself.
+const shown = (v) => (v.width > 2000 ? 960 / v.width : v.width >= 640 ? 0.5 : 1);
 const PHONE_MAX = 2400;
 let by = 0;
 let builtRight = 0;
@@ -171,7 +173,8 @@ function noteId(page, group) {
 function builtBoard(screen, entry) {
   const PAD = 48;
   const GAP = 40;
-  const figures = VARIANTS.filter((v) => entry.shots[v.id]).map((v) => {
+  // Smallest to widest, so a row reads as the screen growing.
+  const figures = [...VARIANTS].sort((a, b) => a.width - b.width || (a.theme === "dark") - (b.theme === "dark")).filter((v) => entry.shots[v.id]).map((v) => {
     const shot = entry.shots[v.id];
     const k = shown(v);
     const w = Math.round(shot.width * k);

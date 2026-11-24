@@ -417,11 +417,13 @@ strings, error handling, comments, readability, design patterns — plus a
 close-on-touch list of the places the tree currently falls short. Read it
 before writing in an area you have not written in before.
 
-- **A UI change is designed on the canvas first, then built.** The Duct
-  Prototype canvas holds every screen as it ships and an editable board per
-  screen, captured from the app itself; design on a copy of the board, build
-  from it, link it in the PR, and refresh the canvas after the change ships.
-  The loop, the links and the tools are in [`design/README.md`](design/README.md).
+- **A UI change starts from the screen as it ships, at every size.**
+  `node design/tools/capture.mjs <screen>` shoots it at all eight sizes with
+  only Playwright and the dev server; the PR shows before and after. The
+  maintainer also designs on the Duct Prototype canvas, an editable board per
+  screen built from the same captures, which needs Claude and access, so no
+  step a contributor has to take depends on it. The loop and the tools are in
+  [`design/README.md`](design/README.md).
 - One concern per change. Explain *why* in the commit body; the diff shows what.
 - A PR that finishes an issue says `Closes #N` in its body (the template
   prompts for it); `Refs #N` is for partial work. GitHub only auto-closes on

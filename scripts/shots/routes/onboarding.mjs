@@ -38,5 +38,9 @@ export function routes(story) {
     "POST /auth/guest": { token: guest, created: true },
     "POST /api/audit/prefetch": status,
     "GET /api/audit/prefetch/crawl-solo": status,
+    // The free audit's emailed link (routes/lead_magnet.py ValidateTokenResponse):
+    // a live token for Solo's site, no cached report, so the audit runs.
+    "POST /api/lead-magnet/validate": { website_url: url, email: STORY.user.email, cached_report: null, cached_at: null },
+    "POST /api/lead-magnet/report": { saved: true },
   };
 }

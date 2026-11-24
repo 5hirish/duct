@@ -228,8 +228,8 @@ msgid "{agent} wasn't connected"
 msgstr "{agent} は接続されませんでした"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "{back} days back"
-msgstr "{back} 日前まで"
+#~ msgid "{back} days back"
+#~ msgstr "{back} 日前まで"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{blogPosts, plural, one {# blog post} other {# blog posts}}"
@@ -412,6 +412,10 @@ msgstr "{granted} / {total} 許可済み"
 msgid "{hidden, plural, one {# character sits behind the fold.} other {# characters sit behind the fold.}}"
 msgstr "{hidden, plural, other {#文字が「もっと見る」の後ろに隠れます。}}"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "{hostName} · releases and finished work"
+msgstr "{hostName} · リリースと完了した作業"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{hreflangCount, plural, one {# lang} other {# langs}}"
 msgstr "{hreflangCount, plural, other {# 言語}}"
@@ -545,6 +549,10 @@ msgstr "{linkedHere, plural, other {# アカウント}}（{primaryLabel}経由�
 msgid "{llmsLines} lines"
 msgstr "{llmsLines} 行"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "{maxDays, plural, one {Up to # post} other {Up to # posts}}"
+msgstr "{maxDays, plural, one {最大#件の投稿} other {最大#件の投稿}}"
+
 #: src/components/insights/desk/DeskLists.jsx
 msgid "{messageCount, plural, one {# message} other {# messages}}"
 msgstr "{messageCount, plural, other {# メッセージ}}"
@@ -568,6 +576,10 @@ msgstr "{n} 文字"
 #: src/components/content/FeedPlanDialog.jsx
 msgid "{n} days"
 msgstr "{n} 日"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "{n} days back"
+msgstr "{n}日前まで"
 
 #: src/app/(app)/project/[projectId]/members/page.jsx
 #~ msgid "{name} · Members"
@@ -755,8 +767,8 @@ msgstr "{read}, 一部既読"
 #~ msgstr "{read}、最初の部分を読む"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "{readLabel} to read, {aheadLabel} to plan"
-msgstr "読む範囲: {readLabel}、計画する範囲: {aheadLabel}"
+#~ msgid "{readLabel} to read, {aheadLabel} to plan"
+#~ msgstr "読む範囲: {readLabel}、計画する範囲: {aheadLabel}"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "{ready} of {total} ready"
@@ -860,8 +872,8 @@ msgid "{sourceCount, plural, one {# source connected} other {# sources connected
 msgstr "{sourceCount, plural, other {# 件のソースが接続済み}}"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "{stories, plural, one {up to # story} other {up to # stories}}"
-msgstr "{stories, plural, other {最大 # 件のストーリー}}"
+#~ msgid "{stories, plural, one {up to # story} other {up to # stories}}"
+#~ msgstr "{stories, plural, other {最大 # 件のストーリー}}"
 
 #: src/components/GoogleAdsReport.js
 msgid "{summary} Operator takeaway: {takeaway}"
@@ -1208,8 +1220,8 @@ msgid "A change that matches a guardrail arrives blocked and can never apply on 
 msgstr "ガードレールに一致する変更はブロックされ、単独で適用されることはありません。エージェントはルールを認識し、それに沿って提案します。マッチング条件のないルールはガイダンスのみです。"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "A changelog or launch notes database. Duct reads its rows once a run, nothing else in the workspace."
-msgstr "変更履歴やリリースノートのデータベース。Duct は実行ごとにその行を一度読むだけで、ワークスペースのほかの部分は読みません。"
+#~ msgid "A changelog or launch notes database. Duct reads its rows once a run, nothing else in the workspace."
+#~ msgstr "変更履歴やリリースノートのデータベース。Duct は実行ごとにその行を一度読むだけで、ワークスペースのほかの部分は読みません。"
 
 #: src/components/content/ContentWorkspace.jsx
 #~ msgid "A clearer brief produces sharper content. Skip if you'd rather Duct decide."
@@ -1808,8 +1820,12 @@ msgstr "既に言及済み"
 #~ msgstr "すでにDuctをご利用ですか？"
 
 #: src/lib/contentFeedLabels.js
-msgid "Also closed issues and changes under docs/."
-msgstr "クローズされた Issue と docs/ 以下の変更も含めます。"
+#~ msgid "Also closed issues and changes under docs/."
+#~ msgstr "クローズされた Issue と docs/ 以下の変更も含めます。"
+
+#: src/lib/contentFeedLabels.js
+msgid "Also closed issues and documentation changes."
+msgstr "完了した Issue やドキュメントの変更も含みます。"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "alt ×{missingAlt}"
@@ -2412,6 +2428,10 @@ msgstr "ブロック: {blockedOps}"
 msgid "Blog / Articles"
 msgstr "ブログ / 記事"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Blog and newsletter posts from your Toolbox"
+msgstr "ツールボックスのブログおよびニュースレターの投稿"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Bold"
 msgstr "太字"
@@ -2456,8 +2476,8 @@ msgstr "ブリーフ"
 #~ msgstr "作成したブリーフ、あなたが承認した変更、そしてその結果。"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Briefs, approved changes and what they did"
-msgstr "ブリーフ、承認した変更とその効果"
+#~ msgid "Briefs, approved changes and what they did"
+#~ msgstr "ブリーフ、承認した変更とその効果"
 
 #: src/components/connections/BringAnyTool.jsx
 msgid "Bring any tool"
@@ -3719,8 +3739,12 @@ msgid "Date"
 msgstr "日付"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Dated pages in one database you pick"
-msgstr "選んだデータベース内の日付付きページ"
+msgid "Dated pages from one database"
+msgstr "1つのデータベースの日付付きページ"
+
+#: src/components/content/FeedPlanDialog.jsx
+#~ msgid "Dated pages in one database you pick"
+#~ msgstr "選んだデータベース内の日付付きページ"
 
 #: src/components/memory/MemoryTimeline.jsx
 #~ msgid "Dates"
@@ -3739,8 +3763,8 @@ msgid "Day {dayNumber}"
 msgstr "日 {dayNumber}"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Days it may change"
-msgstr "変更してよい日数"
+#~ msgid "Days it may change"
+#~ msgstr "変更してよい日数"
 
 #: src/lib/memoryApi.js
 msgid "Decisions"
@@ -4307,8 +4331,8 @@ msgid "Duct is waiting on your answer"
 msgstr "Duct はあなたの回答を待っています"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Duct keeps what a reader would notice and asks which stories to tell. Your plan changes only when you accept."
-msgstr "Duct は読者の目に留まるものだけを残し、どのストーリーを伝えるか尋ねます。承認するまでプランは変わりません。"
+#~ msgid "Duct keeps what a reader would notice and asks which stories to tell. Your plan changes only when you accept."
+#~ msgstr "Duct は読者の目に留まるものだけを残し、どのストーリーを伝えるか尋ねます。承認するまでプランは変わりません。"
 
 #: src/components/insights/desk/DeskCards.jsx
 msgid "Duct last looked {lastChecked} and found nothing worth your time. Enjoy the quiet."
@@ -5106,8 +5130,8 @@ msgid "From"
 msgstr "から"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "From a private repository, talk about"
-msgstr "非公開リポジトリについて触れてよい範囲"
+#~ msgid "From a private repository, talk about"
+#~ msgstr "非公開リポジトリについて触れてよい範囲"
 
 #: src/app/(app)/connections/page.jsx
 msgid "From Ads Manager → Settings → API keys"
@@ -5121,6 +5145,10 @@ msgstr "Clarity → 設定 → データエクスポートから"
 msgid "From date"
 msgstr "開始日"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "From private code, mention"
+msgstr "プライベートコードからの場合はメンション"
+
 #: src/components/content/BrandContextForm.jsx
 msgid "From project context"
 msgstr "プロジェクトのコンテキストから"
@@ -5130,8 +5158,8 @@ msgid "From the MCP Registry"
 msgstr "MCP Registryから"
 
 #: src/components/content/PlanDayOne.jsx
-msgid "From what you shipped"
-msgstr "リリースしたものから"
+#~ msgid "From what you shipped"
+#~ msgstr "リリースしたものから"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "From your files"
@@ -5143,6 +5171,7 @@ msgstr "あなたのサイトから"
 
 #: src/components/content/FeedSummary.jsx
 #: src/components/content/PlanBoard.jsx
+#: src/components/content/PlanDayOne.jsx
 msgid "From your work"
 msgstr "あなたの作業から"
 
@@ -5932,8 +5961,12 @@ msgid "Issues"
 msgstr "Issue"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Issues completed in the window"
-msgstr "期間内に完了した Issue"
+#~ msgid "Issues completed in the window"
+#~ msgstr "期間内に完了した Issue"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Issues finished in that time"
+msgstr "その期間内に完了した Issue"
 
 #: src/lib/mcpServers.js
 msgid "It answered with an error the last time Duct called it. The next chat tries again, or check it now."
@@ -6743,8 +6776,8 @@ msgid "Mid-market"
 msgstr "ミッドマーケット"
 
 #: src/lib/contentFeedLabels.js
-msgid "Milestones"
-msgstr "マイルストーン"
+#~ msgid "Milestones"
+#~ msgstr "マイルストーン"
 
 #: src/components/content/PlanList.jsx
 #: src/components/content/PostMiniCard.jsx
@@ -7991,8 +8024,8 @@ msgid "Only a sample of your sitemap was scanned."
 msgstr "サイトマップの一部のみがスキャンされました。"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Only days with no draft yet."
-msgstr "下書きがまだない日のみ。"
+#~ msgid "Only days with no draft yet."
+#~ msgstr "下書きがまだない日のみ。"
 
 #: src/components/content/FeedPlanDialog.jsx
 #~ msgid "Only days with no draft yet. The rest of your plan stays as it is."
@@ -8014,6 +8047,10 @@ msgstr "{bindingName}のみ"
 msgid "only on {projectName}"
 msgstr "{projectName}のみ"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Only on days with no draft yet."
+msgstr "まだ下書きがない日のみ。"
+
 #: src/components/workspace/ActivityRow.jsx
 #~ msgid "Only the project owner can approve {tool} on {server}"
 #~ msgstr ""
@@ -8021,6 +8058,10 @@ msgstr "{projectName}のみ"
 #: src/app/(app)/execute/page.jsx
 msgid "Only the project owner can change autonomy."
 msgstr "プロジェクトオーナーのみが自律性を変更できます。"
+
+#: src/lib/contentFeedLabels.js
+msgid "Only what you published as a release."
+msgstr "リリースとして公開したもののみ。"
 
 #: src/components/schedules/ScheduleCard.jsx
 msgid "Only when you run it"
@@ -8275,6 +8316,10 @@ msgstr "オプション。Apifyを接続してDiscoverでTikTokを検索しま�
 #: src/components/content/PlanDayOne.jsx
 msgid "Optional. Link one and the plan learns from your own results and posting times."
 msgstr "オプション。1つリンクすると、プランはあなたの結果と投稿時間から学習します。"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Options"
+msgstr "オプション"
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Or add it by hand"
@@ -8608,13 +8653,14 @@ msgid "Plan discarded. Tell Duct what to plan instead, or close this tab."
 msgstr "プランを破棄しました。代わりにDuctに何を計画するか伝えるか、このタブを閉じてください。"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Plan from what you shipped"
-msgstr "リリースしたものから計画する"
+#~ msgid "Plan from what you shipped"
+#~ msgstr "リリースしたものから計画する"
 
 #: src/components/content/FeedSummary.jsx
 msgid "Plan from your goals"
 msgstr "目標から計画する"
 
+#: src/components/content/FeedPlanDialog.jsx
 #: src/components/schedules/ScheduleCard.jsx
 msgid "Plan from your work"
 msgstr "作業から計画"
@@ -8749,12 +8795,16 @@ msgid "Posts"
 msgstr "投稿"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Posts from the feeds you added in the Toolbox"
-msgstr "Toolbox で追加したフィードの投稿"
+#~ msgid "Posts from the feeds you added in the Toolbox"
+#~ msgstr "Toolbox で追加したフィードの投稿"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Posts go out through {primaryLabel}."
 msgstr "投稿は{primaryLabel}を通じて公開されます。"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Posts, at most"
+msgstr "最大投稿数"
 
 #: src/lib/userProfile.js
 msgid "Practitioner"
@@ -9080,7 +9130,6 @@ msgstr "リーチ"
 msgid "read"
 msgstr "読み込み済み"
 
-#: src/components/content/FeedPlanDialog.jsx
 #: src/components/onboarding/DocumentPicker.jsx
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read"
@@ -9097,6 +9146,10 @@ msgstr "メモリを読み込みました"
 #: src/components/connections/McpConnectors.jsx
 msgid "Read and write pages in your Notion workspace."
 msgstr "あなたのNotionワークスペースでページを読み書きします。"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Read code from"
+msgstr "コードの読み込み元"
 
 #: src/components/content/AnalyticsReport.jsx
 msgid "Read from"
@@ -9391,20 +9444,24 @@ msgstr "リリース"
 #~ msgstr ""
 
 #: src/lib/contentFeedLabels.js
-msgid "Releases and their notes."
-msgstr "リリースとそのノート。"
+msgid "Releases and finished work, never work in progress."
+msgstr "リリースと完了した作業のみ（進行中の作業は含めません）。"
+
+#: src/lib/contentFeedLabels.js
+#~ msgid "Releases and their notes."
+#~ msgstr "リリースとそのノート。"
 
 #: src/lib/contentFeedLabels.js
 msgid "Releases only"
 msgstr "リリースのみ"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Releases, merged pull requests, changelog edits"
-msgstr "リリース、マージ済みのプルリクエスト、変更履歴の編集"
+#~ msgid "Releases, merged pull requests, changelog edits"
+#~ msgstr "リリース、マージ済みのプルリクエスト、変更履歴の編集"
 
 #: src/lib/contentFeedLabels.js
-msgid "Releases, merged pull requests, commits to your main branch, README and changelog edits."
-msgstr "リリース、マージされたプルリクエスト、メインブランチへのコミット、README と変更履歴の更新。"
+#~ msgid "Releases, merged pull requests, commits to your main branch, README and changelog edits."
+#~ msgstr "リリース、マージされたプルリクエスト、メインブランチへのコミット、README と変更履歴の更新。"
 
 #: src/components/ReloadToast.jsx
 msgid "Reload"
@@ -9577,6 +9634,10 @@ msgstr "このプロジェクトのレポートとエージェントの実行に
 #: src/components/connections/ProjectEntitySelect.jsx
 msgid "Reports and agent runs use this {one}."
 msgstr "レポートとエージェントの実行にはこの{one}が使用されます。"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Reports and the changes you approved"
+msgstr "レポートと承認した変更"
 
 #: src/app/(app)/artifacts/page.jsx
 msgid "Reports are stored against your account, so they survive the tab that made them."
@@ -9861,8 +9922,8 @@ msgid "Rolling back…"
 msgstr "ロールバック中…"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Round GitHub star counts and your best week in GA4"
-msgstr "GitHub スター数の節目と GA4 の過去最高の週"
+#~ msgid "Round GitHub star counts and your best week in GA4"
+#~ msgstr "GitHub スター数の節目と GA4 の過去最高の週"
 
 #: src/app/(app)/connections/page.jsx
 #: src/components/connections/logos.jsx
@@ -11093,6 +11154,10 @@ msgstr "問題が発生しました"
 msgid "Source"
 msgstr "ソース"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Source code"
+msgstr "ソースコード"
+
 #: src/components/GoogleAdsReport.js
 msgid "Source: {source}"
 msgstr "ソース: {source}"
@@ -12268,8 +12333,8 @@ msgid "To date"
 msgstr "現在まで"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Today"
-msgstr "現状"
+#~ msgid "Today"
+#~ msgstr "現状"
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Token name"
@@ -13058,6 +13123,10 @@ msgstr "このプランが検証するもの"
 #: src/components/content/AccountsTab.jsx
 msgid "What to know about this channel"
 msgstr "このチャネルについて知っておくべきこと"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "What to read"
+msgstr "読み込む内容"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "What to remember"

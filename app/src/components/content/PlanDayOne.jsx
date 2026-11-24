@@ -117,7 +117,7 @@ export default function PlanDayOne({ brand, accounts, scheduler, vendors, onStar
             </Button>
             {onPlanFromWork && (
               <Button size="lg" variant="outline" onClick={onPlanFromWork}>
-                <GitBranch aria-hidden /> <Trans>From what you shipped</Trans>
+                <GitBranch aria-hidden /> <Trans>From your work</Trans>
               </Button>
             )}
             <span className="text-xs text-muted-foreground tabular-nums">

@@ -25,6 +25,7 @@ export const COMPONENTS = [
   { name: "Page", group: "Layout", scene: "ui-page", canon: ["Page frame"], source: ["app/src/components/ui/page.jsx"], summary: "The page frame every routed screen is built from: Page, PageHeader (the one h1, one line of status, actions, help behind a \"?\") and Section." },
   { name: "TileGrid", group: "Layout", scene: "canon-grid-of-cards", canon: ["Grid of cards"], source: ["app/src/components/ui/page.jsx"], summary: "Every grid of cards: columns from the container, so a known set of four lands 2×2, never three and an orphan." },
   { name: "Card", group: "Layout", scene: "ui-card", canon: ["Card"], source: ["app/src/components/ui/card.tsx"], summary: "The one bordered group: rounded-xl, 24px padding, a footer pinned to the bottom so a row of cards shares a baseline." },
+  { name: "ResponsiveLayout", group: "Layout", scene: "canon-responsive-layout", canon: ["Responsive layout"], source: ["app/src/app/styles/base.css", "app/src/app/styles/app-shell.css", "app/src/components/workspace/SplitWorkspace.jsx", "design/tools/screens.mjs"], summary: "One layout from a phone to a 4K screen: a drawer below 48rem, rows and grids sized by their own container, a centred 81rem column past a laptop, and a bigger root on 4K at 100%." },
   { name: "Table", group: "Layout", scene: "ui-table", source: ["app/src/components/ui/table.tsx"], summary: "For comparing: tabular figures, right-aligned numbers, a sticky header inside its own scroll box." },
 
   // Overlays

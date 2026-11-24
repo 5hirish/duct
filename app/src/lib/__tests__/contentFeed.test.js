@@ -74,16 +74,7 @@ describe("feed days", () => {
   });
 });
 
-describe("the setup sheet's drawing and the sieve", () => {
-  it("draws the window as cells, with the story days spread across what is ahead", async () => {
-    const { feedRibbon, SINCE_LAST, SINCE_LAST_CELLS } = await import("../contentFeed.js");
-    const r = feedRibbon({ lookBack: 14, horizon: 7, maxDays: 2 });
-    expect(r.past).toHaveLength(14);
-    expect(r.ahead.map((d) => d.story)).toEqual([false, true, false, false, false, true, false]);
-    expect(feedRibbon({ lookBack: SINCE_LAST, horizon: 14, maxDays: 4 }).past).toHaveLength(SINCE_LAST_CELLS);
-    expect(r.past.some((d) => d.work === "release")).toBe(false);
-  });
-
+describe("the sieve", () => {
   it("keeps every kept stone and cuts the noise first past the cap", async () => {
     const { sieveStones, SIEVE_MAX } = await import("../contentFeed.js");
     const items = [{ ref: "a", kind: "release" }, { ref: "b", kind: "commit" }];
@@ -98,8 +89,8 @@ describe("the setup sheet's drawing and the sieve", () => {
 describe("Linear and Notion as sources", () => {
   it("offers them only when connected and needs a Notion database before it starts", async () => {
     const { offeredSources, feedBlocker, feedRequest, feedSessionHref, feedFromParams, DEFAULT_FEED } = await import("../contentFeed.js");
-    expect(offeredSources([])).toEqual(["github", "duct", "rss", "milestones"]);
-    expect(offeredSources(["notion", "railway", "linear"])).toEqual(["github", "duct", "rss", "milestones", "linear", "notion"]);
+    expect(offeredSources([])).toEqual(["github", "duct", "rss"]);
+    expect(offeredSources(["notion", "railway", "linear"])).toEqual(["github", "duct", "rss", "linear", "notion"]);
     expect(feedBlocker({ sources: [] })).toBe("no_source");
     expect(feedBlocker({ sources: ["notion"] })).toBe("no_notion_database");
     expect(feedBlocker({ sources: ["notion"], notionDatabase: "https://www.notion.so/x" })).toBe(null);
@@ -110,5 +101,16 @@ describe("Linear and Notion as sources", () => {
     const back = feedFromParams(new URL(`https://x${href}`).searchParams);
     expect(back.sources).toEqual(["linear", "notion"]);
     expect(back.notionDatabase).toBe("https://www.notion.so/x");
+  });
+});
+
+describe("Source code", () => {
+  it("names the ticked host and no longer offers milestones", async () => {
+    const { codeHostOf, offeredSources, feedFromParams } = await import("../contentFeed.js");
+    expect(codeHostOf(["duct", "github"])).toBe("github");
+    expect(codeHostOf(["duct"])).toBe(null);
+    expect(offeredSources([])).not.toContain("milestones");
+    // A link made before milestones went keeps working, without them.
+    expect(feedFromParams(new URLSearchParams("source=work&sources=github,milestones")).sources).toEqual(["github"]);
   });
 });

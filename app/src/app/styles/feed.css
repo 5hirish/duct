@@ -59,6 +59,30 @@
   height: 1.25rem;
 }
 
+/* Duct's own mark, which carries its colours in the letter: a stone in the
+   theme's ground rather than the pale one, the same size. */
+.feed-quiet-stone {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  background: var(--muted);
+}
+
+/* A host's mark beside its name in the source-code picker. */
+.feed-host-mark {
+  display: inline-flex;
+}
+
+.feed-host-mark img,
+.feed-host-mark svg {
+  width: 1rem;
+  height: 1rem;
+}
+
 /* ---- The sieve: everything read, kept stones lit, the rest left grey. ---- */
 
 .feed-sieve {
@@ -102,65 +126,6 @@
 [data-sieve-lit] .feed-sieve-stone[data-lit] {
   opacity: 1;
   background: color-mix(in oklch, var(--foreground) 32%, transparent);
-}
-
-/* ---- The window: read this far back, plan this far ahead. ---- */
-
-.feed-ribbon {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, var(--past, 1fr)) auto minmax(0, var(--ahead, 1fr));
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.feed-ribbon-days {
-  position: relative;
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 1fr);
-  gap: 3px;
-  align-items: center;
-}
-
-/* The stream under the days: water from the work read to the days planned. */
-.feed-ribbon-days::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: 3px;
-  transform: translateY(-50%);
-  background: var(--tessera-glass);
-  border-radius: 1px;
-}
-
-.feed-ribbon-day {
-  position: relative;
-  height: 1rem;
-  border-radius: 3px;
-  background: var(--card);
-  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--tessera-grey) 50%, transparent);
-  transition: opacity 150ms ease-out, background-color 150ms ease-out;
-}
-
-.feed-ribbon-day.feed-kind {
-  background: var(--kind);
-  box-shadow: none;
-}
-
-.feed-ribbon-day[data-story] {
-  background: var(--primary);
-  box-shadow: none;
-}
-
-.feed-ribbon-today {
-  position: relative;
-  width: 2px;
-  height: 2rem;
-  border-radius: 1px;
-  background: var(--foreground);
 }
 
 /* ---- A schedule's next run, as a calendar leaf. ---- */

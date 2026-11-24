@@ -173,7 +173,9 @@ Knowing what the review checks saves a round trip.
   below it, a change outside the seam the issue named.
 - **The branch is read, not run.** Review happens on the diff and in CI,
   never by running your branch on the maintainer's machine. If a behaviour
-  needs seeing, attach the screenshot or the test that shows it.
+  needs seeing, attach the screenshot or the test that shows it. For a UI
+  change, `node design/tools/capture.mjs <screen>` shoots the screen at all
+  eight sizes ([`design/README.md`](design/README.md)); attach before and after.
 - **Fork PRs are squash-merged.** `main` requires signed commits and a fork's
   commits usually are not. The squash keeps you as the author. If you sign
   your commits (SSH or GPG, verified on GitHub), say so in the PR and a merge

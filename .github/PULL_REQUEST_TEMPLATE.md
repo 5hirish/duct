@@ -44,6 +44,11 @@ Launch: changelog only | post #<n> | integration page | for-<page> section, beca
 - [ ] I read the `AGENTS.md` for each directory I edited
 - [ ] I read my own diff back looking for the reason to reject it, and read it
       against the code around it ([STYLE.md](../STYLE.md))
+- [ ] UI: ran the [screen review checklist](../app/DESIGN.md#screen-review-checklist)
+      on the **whole** screen (not just the part I touched), and attached
+      before and after shots at 390, 1100 and 1440
+      (`node design/tools/capture.mjs <screen>` shoots every size;
+      `npm run check:layout` measures them in Chromium and WebKit)
 
 ## Things that need a second look
 

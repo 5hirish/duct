@@ -92,6 +92,11 @@ function PinButton({ pinned, onToggle, label }) {
   );
 }
 
+// A row asks its own list how wide it is, not the page: on a tablet the desk
+// puts this list in a column half the page wide, and the page's width said
+// "five columns" while the row had 520px, crushing every title to two
+// letters (check:layout at 820 and 1180, 2026-11-23). The four columns past
+// the title need ~490px of their own, so they appear from 42rem of list.
 function Row({ children, onClick }) {
   return (
     <div
@@ -104,7 +109,7 @@ function Row({ children, onClick }) {
           onClick();
         }
       }}
-      className="group grid cursor-pointer grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-4 py-3 outline-none transition-colors last:border-0 hover:bg-accent/50 focus-visible:bg-accent/50 @lg:grid-cols-[20px_minmax(0,1fr)_130px_110px_150px]"
+      className="group grid cursor-pointer grid-cols-[20px_minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-4 py-3 outline-none transition-colors last:border-0 hover:bg-accent/50 focus-visible:bg-accent/50 @2xl/rows:grid-cols-[20px_minmax(0,1fr)_130px_110px_150px]"
     >
       {children}
     </div>
@@ -157,7 +162,7 @@ export default function DeskLists({ conversations, artifacts, onPinThread, onPin
             <Trans>No conversations yet.</Trans>
           </p>
         ) : (
-          <Card className="gap-0 overflow-hidden p-0">
+          <Card className="@container/rows gap-0 overflow-hidden p-0">
             {(allThreads ? threads : threads.slice(0, RECENT_LIMIT)).map((conv) => {
               const state = threadState(conv, i18n);
               const title = conv.title || t`Untitled thread`;
@@ -175,13 +180,13 @@ export default function DeskLists({ conversations, artifacts, onPinThread, onPin
                   <span className="truncate text-sm font-medium" title={title}>
                     {title}
                   </span>
-                  <span className={cn("hidden text-xs @lg:block", state.className)}>
+                  <span className={cn("hidden text-xs @2xl/rows:block", state.className)}>
                     {state.label}
                   </span>
-                  <span className="hidden text-xs text-muted-foreground @lg:block">
+                  <span className="hidden text-xs text-muted-foreground @2xl/rows:block">
                     {ago(conv.last_active_at || conv.created_at)}
                   </span>
-                  <span className="hidden text-xs text-muted-foreground @lg:block">
+                  <span className="hidden text-xs text-muted-foreground @2xl/rows:block">
                     {messageCount ? <Plural value={messageCount} one="# message" other="# messages" /> : "—"}
                   </span>
                 </Row>
@@ -198,7 +203,7 @@ export default function DeskLists({ conversations, artifacts, onPinThread, onPin
             <Trans>No documents yet.</Trans>
           </p>
         ) : (
-          <Card className="gap-0 overflow-hidden p-0">
+          <Card className="@container/rows gap-0 overflow-hidden p-0">
             {(allDocs ? docs : docs.slice(0, RECENT_LIMIT)).map((doc) => {
               const look = artifactLook(doc);
               const { Icon, className } = LOOKS[look.tone] || LOOKS.data;
@@ -235,13 +240,13 @@ export default function DeskLists({ conversations, artifacts, onPinThread, onPin
                       {title}
                     </span>
                   </span>
-                  <span className="hidden text-xs text-muted-foreground @lg:block">
+                  <span className="hidden text-xs text-muted-foreground @2xl/rows:block">
                     {lookLabel(look, i18n)}
                   </span>
-                  <span className="hidden text-xs text-muted-foreground @lg:block">
+                  <span className="hidden text-xs text-muted-foreground @2xl/rows:block">
                     {versionCount > 1 ? t`v${version} of ${versionCount}` : t`v${version}`}
                   </span>
-                  <span className="hidden text-xs text-muted-foreground @lg:block">
+                  <span className="hidden text-xs text-muted-foreground @2xl/rows:block">
                     {ago(doc.created_at)}
                   </span>
                 </Row>

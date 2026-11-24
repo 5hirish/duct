@@ -15,11 +15,25 @@ import { dayKey } from "./format.js";
 // offered only when connected; their preset ids are these same values.
 export const FeedSource = Object.freeze({
   GITHUB: "github", DUCT: "duct", LINEAR: "linear", NOTION: "notion",
-  // The project's own feeds and its milestones (#564), always offered: a
-  // source with nothing connected leaves a note, never a failed read.
-  RSS: "rss", MILESTONES: "milestones",
+  // The project's own feeds (#564), always offered: a source with nothing
+  // connected leaves a note, never a failed read. Milestones (round star
+  // counts, a best GA4 week) are no longer offered: a "we hit 1,000 stars"
+  // post is not what a marketer or a shop owner plans from. A schedule saved
+  // with it still runs, because the backend still reads it.
+  RSS: "rss",
 });
 export const MCP_FEED_SOURCES = Object.freeze([FeedSource.LINEAR, FeedSource.NOTION]);
+
+// Where a project's code lives, each its own source on the wire because the
+// backend reads each host differently. The sheet shows them as one "Source
+// code" tile with a picker, so a second host is an entry here and a reader in
+// agents/content/feed.py, not another tile.
+export const SOURCE_CODE_HOSTS = Object.freeze([FeedSource.GITHUB]);
+
+/** The source-code host among `sources`, or null when none is ticked. */
+export function codeHostOf(sources) {
+  return SOURCE_CODE_HOSTS.find((h) => (sources || []).includes(h)) || null;
+}
 
 export const Disclosure = Object.freeze({
   RELEASES: "releases",
@@ -97,7 +111,7 @@ export function feedRequest(options) {
 export function offeredSources(connected) {
   const have = new Set(Array.isArray(connected) ? connected : []);
   return [
-    FeedSource.GITHUB, FeedSource.DUCT, FeedSource.RSS, FeedSource.MILESTONES,
+    ...SOURCE_CODE_HOSTS, FeedSource.DUCT, FeedSource.RSS,
     ...MCP_FEED_SOURCES.filter((s) => have.has(s)),
   ];
 }
@@ -146,36 +160,6 @@ export function feedFromHistory(events) {
   const row = [...(events || [])].reverse().find((e) => e?.kind === "feed");
   return row?.data || null;
 }
-
-// The setup sheet's window drawing: how many day cells "since last time" is
-// drawn as, since it has no fixed length (the label says which it is).
-export const SINCE_LAST_CELLS = 7;
-
-/**
- * The setup sheet's window as cells, for the drawing beside the answers:
- * the days read (each a day of work), today, and the days ahead, with the
- * ones a story may land on spread across them. Codes only; the sheet draws.
- */
-export function feedRibbon({ lookBack, horizon, maxDays } = {}) {
-  const past = lookBack === SINCE_LAST || !lookBack ? SINCE_LAST_CELLS : Math.max(1, Number(lookBack));
-  const ahead = Math.max(1, Number(horizon) || 7);
-  const stories = Math.min(ahead, Math.max(0, Number(maxDays) || 0));
-  const lit = new Set(Array.from({ length: stories }, (_, i) => Math.floor(((i + 0.5) * ahead) / stories)));
-  return {
-    past: Array.from({ length: past }, (_, i) => ({ i, work: workAt(i, past) })),
-    ahead: Array.from({ length: ahead }, (_, i) => ({ i, story: lit.has(i) })),
-  };
-}
-
-// A fixed scatter of "days with work" on the read side: the same picture on
-// every render, about two days in five, weighted to the recent end.
-function workAt(i, n) {
-  const fromToday = n - 1 - i;
-  return (fromToday * 7 + 3) % 5 < 2 ? KIND_SCATTER[fromToday % KIND_SCATTER.length] : null;
-}
-// No release here: terracotta is the story days' colour on this drawing, and a
-// read day drawn in it would look like a day already planned.
-const KIND_SCATTER = ["pull_request", "commit", "change_set", "pull_request", "docs_change", "commit"];
 
 // More stones than this stop reading as items and start reading as texture.
 export const SIEVE_MAX = 60;

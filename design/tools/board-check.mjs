@@ -12,8 +12,9 @@
 // reflows the way the app does, rather than only matching where it was shot.
 //
 // A framed document (a brief, a slide, a thumbnail) is a picture on the board,
-// fixed at its 1440 size, while the app reflows the frame's content: those
-// regions are left out of the number and drawn grey in the difference image,
+// fixed at its 1440 size, and a chart is marks a script drew at 1440; the app
+// redraws both for every width. Those regions are left out of the number and
+// drawn grey in the difference image,
 // so a failure means the board's own markup is off.
 //
 // Writes <OUT>/check/<id>[@size].compare.png and prints the mean difference. Read the
@@ -82,8 +83,11 @@ try {
     // another width the page reflows to a height of its own.
     const tall = variant.id === "1440" ? height : await page.evaluate(() => document.documentElement.scrollHeight);
     const boardPng = await page.screenshot({ fullPage: true, clip: { x: 0, y: 0, width, height: tall } });
-    // capture.mjs names a frame's picture <id>-frame-<n>.png.
-    const pictures = await page.evaluate(() => [...document.querySelectorAll('img[src*="-frame-"]')]
+    // capture.mjs names a frame's picture <id>-frame-<n>.png. A chart is left
+    // out the same way: the app redraws it for every width and a board can
+    // only scale the one it was given (capture.mjs, "A chart is drawn by
+    // script"), so its card is judged, not the marks inside it.
+    const pictures = await page.evaluate(() => [...document.querySelectorAll('img[src*="-frame-"], svg.recharts-surface')]
       .map((el) => el.getBoundingClientRect())
       .filter((r) => r.width > 0 && r.height > 0)
       .map((r) => ({ x: r.left + scrollX, y: r.top + scrollY, w: r.width, h: r.height })));
@@ -133,7 +137,7 @@ try {
       .toBuffer();
     await sharp(strip).resize({ width: Math.min(2400, px * 3 + gap * 2) }).png().toFile(join(OUT, "check", `${id}${suffix}.compare.png`));
     const tallNote = Math.abs(mb.height - mr.height) > 8 * variant.scale ? `  (board ${mb.height / variant.scale}px tall, app ${mr.height / variant.scale}px)` : "";
-    const pictureNote = pictures.length ? `  (${pictures.length} framed ${pictures.length === 1 ? "picture" : "pictures"} left out)` : "";
+    const pictureNote = pictures.length ? `  (${pictures.length} framed ${pictures.length === 1 ? "picture or chart" : "pictures and charts"} left out)` : "";
     console.log(`${mean < 3 ? "✓" : "✗"} ${id}${suffix}  mean difference ${mean.toFixed(2)}${tallNote}${pictureNote}`);
   }
 } finally {

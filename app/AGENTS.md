@@ -113,9 +113,13 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
     for the month in progress). The board's Revise plan is the first;
     New plan and Plan ahead ask how far ahead (`PlanPeriodPicker.jsx`: the
     month, 1 or 2 weeks, 30 days) and are the second. **From your work** is
-    the third way in (#561): `FeedPlanDialog.jsx` asks what to read, how far
-    back, how many days it may change and how much of a private repository it
-    may talk about, and opens `?source=work&…`. Linear and Notion appear as
+    the third way in (#561): `FeedPlanDialog.jsx` asks what to read and, folded
+    behind one Options line that states the defaults, how far back, how far
+    ahead, how many posts and how much of private code a post may mention,
+    then opens `?source=work&…`. Source code is one row whatever hosts it
+    (`SOURCE_CODE_HOSTS`), with a host picker only once there are two.
+    Milestones is no longer offered (the backend still reads it for a
+    schedule saved with it). Linear and Notion appear as
     sources only when connected (`offeredSources`, from the MCP server rows'
     `preset`), and Notion needs the one database to read (`feedBlocker`)
     (`lib/contentFeed.js` holds the
@@ -157,9 +161,8 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
     in brand ink (`hooks/useScheduledWaiting.js`, asked on focus, a project
     switch and a route change, never polled). This page and the
     feed surfaces share `styles/feed.css`: a source is a stone in its kind's
-    mosaic colour (`FeedKind.jsx`), a read is a sieve of kept against
-    left-out stones, and the setup sheet's window is a ribbon of days with
-    blue as the stream under them, the mosaic rule that blue is water
+    mosaic colour (`FeedKind.jsx`) and a read is a sieve of kept against
+    left-out stones
   - `connections/` — the **Toolbox**: one searchable catalogue of native
     connectors and MCP servers
     (`components/connections/ConnectorBrowser.jsx` over
@@ -488,7 +491,16 @@ they are placed.
   adds them again, and an element that is `fixed` pads itself, because the
   body's padding does not reach it. Left and right are separate values on
   purpose: iPhone Duo's are asymmetric.
-- No hand-picked pixel breakpoints. There are currently zero; keep it that way.
+- No hand-picked pixel breakpoints for layout. There is one breakpoint by
+  number, and it is about the device: `styles/base.css` grows the root font
+  size by 1.25 past 187.5rem (3000px) and 1.5 past 225rem (3600px), so a 4K
+  screen at 100% scaling reads like one at 150%. Everything in rem follows.
+- **Sizes a screen is judged at** are the eight that `design/tools/capture.mjs`
+  shoots (`design/tools/screens.mjs` `VARIANTS`): phone 390, iPad 820 and 1180,
+  the desktop app's 1100, laptop 1440 light and dark, 2560 (4K at 150%) and
+  3840 (4K at 100%). `check:layout` measures seven of the widths, the first
+  four in WebKit too. Past the 81rem cap a framed page centres its column and
+  a full-width tool surface keeps the window's edge.
 - Before adding `container-type` anywhere new: it implies `contain: layout`, which
   makes that element the containing block for `position: fixed` descendants.
   Overlays must be portalled (they are — see below) or they will shrink to it.
@@ -903,6 +915,16 @@ Rules that follow:
 - `html { scroll-padding-top: 4rem }` in `styles/base.css` keeps a focused
   element out from under the sticky header (WCAG 2.2 AA 2.4.11).
 - Decorative icons take `aria-hidden`; an icon-only button takes an `aria-label`.
+
+**Review the whole screen, not the part you touched.** Before changing any
+part of a screen, run DESIGN.md's "Screen review checklist" on all of it
+(an agent with the maintainer's `design-sense` skill runs its pre-ship
+checklist too; nobody else needs it), and name its reader: a marketer, a
+solo business owner or a small team, never developers. A surface that grows
+one feature per PR passes every per-PR check and still fails as a whole: the
+plan-from-work sheet reached five questions under a paragraph, a drawing of invented data
+as its heaviest element, a one-option picker and developer words before the
+2026-11-23 review. Fix what the checklist finds in the same change.
 
 **Look at it before you call it done.** CSS written and never rendered is a
 guess, and guesses compound: three plausible-sounding rules in a row produce a

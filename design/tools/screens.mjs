@@ -12,14 +12,23 @@
 // `open` gets { page, app, story, plan, variant, fixtures }: ids the story
 // does not name (a document, a post) come from fixtures.SHOWCASE.
 
-// The four sizes every screen is judged at. Phone, the desktop app's window
-// and a laptop are check:layout's three; the laptop again in dark is the
-// theme people actually leave on.
+// The sizes every screen is judged at, the same set check:layout measures.
+// Phone, the desktop app's window and a laptop came first; the laptop again in
+// dark is the theme people actually leave on. Tablets and wide screens were
+// added on 2026-11-23, when the canvas had nothing between a phone and a
+// laptop and nothing past one: an iPad Air either way up (the band where the
+// sidebar and a split pane fight for room), a 4K screen at 150% scaling
+// (2560, also every 27" QHD), and a 4K screen at 100% (3840), where text is
+// smallest and a capped column leaves the most empty room.
 export const VARIANTS = [
   { id: "1440", label: "Laptop · 1440 · light", width: 1440, height: 900, theme: "light", scale: 1, board: true },
   { id: "1440-dark", label: "Laptop · 1440 · dark", width: 1440, height: 900, theme: "dark", scale: 1 },
   { id: "1100", label: "Desktop app · 1100 · light", width: 1100, height: 760, theme: "light", scale: 1 },
   { id: "390", label: "Phone · 390 · light", width: 390, height: 844, theme: "light", scale: 2 },
+  { id: "820", label: "Tablet · 820 · portrait", width: 820, height: 1180, theme: "light", scale: 2 },
+  { id: "1180", label: "Tablet · 1180 · landscape", width: 1180, height: 820, theme: "light", scale: 2 },
+  { id: "2560", label: "Wide · 2560 · 4K at 150%", width: 2560, height: 1440, theme: "light", scale: 1 },
+  { id: "3840", label: "4K · 3840 · at 100%", width: 3840, height: 2160, theme: "light", scale: 1 },
 ];
 
 const framed = (route) => async ({ page, app }) => {
@@ -31,6 +40,17 @@ const project = (story, path = "") => `/project/${story.project.id}${path}`;
 
 // An overlay is opened on top of its page and shot with the page under it.
 const dialog = (page) => page.getByRole("dialog").first().waitFor({ timeout: 20000 });
+// A confirmation is an alertdialog, not a dialog (ui/alert-dialog).
+const alert = (page) => page.getByRole("alertdialog").first().waitFor({ timeout: 20000 });
+// Opened at its top, as a person sees it: focus can scroll a sheet, and a
+// scroll kept from 1440 is wrong at any other width.
+// The page goes back to its top too: a tile clicked below the fold scrolls
+// the window, and a full-page shot of a scrolled page draws the overlay and
+// the sidebar where the scroll left them, over the wrong part of the page.
+const toTop = (page) => page.evaluate(() => {
+  window.scrollTo(0, 0);
+  document.querySelectorAll('[role="dialog"], [role="dialog"] *, [role="alertdialog"], [role="alertdialog"] *').forEach((el) => { el.scrollTop = 0; });
+});
 
 export const SCREENS = [
   // --- Front door ---------------------------------------------------------------
@@ -64,6 +84,14 @@ export const SCREENS = [
     open: async ({ page, app }) => {
       await page.goto(`${app}/invite/tok1`, { waitUntil: "domcontentloaded" });
       await page.getByRole("button").first().waitFor({ timeout: 20000 });
+    },
+  },
+  {
+    id: "lead-audit", group: "Front door", title: "Free SEO audit · from the emailed link", route: "/lead/seo-audit", signedOut: true, workspace: true,
+    open: async ({ page, app, story }) => {
+      await page.goto(`${app}/lead/seo-audit?${new URLSearchParams({ token: "lead-solo", url: `https://${story.company.site}` })}`);
+      await page.getByText("Your report is on the right").waitFor({ timeout: 45000 }).catch(() => {});
+      await page.waitForTimeout(1500);
     },
   },
   {
@@ -113,6 +141,18 @@ export const SCREENS = [
       await page.getByText("The Legacy brand campaign stays untouched").first().scrollIntoViewIfNeeded().catch(() => {});
     },
   },
+  {
+    // A phone or an iPad in portrait shows one pane at a time, so no
+    // document pane beside the chat and no full-screen button on it.
+    id: "insights-focus", group: "Work", title: "Insights workspace · reading full screen", route: "/insights/session#focus", workspace: true,
+    variants: ["1440", "1440-dark", "1100", "1180", "2560", "3840"],
+    open: async (ctx) => {
+      await SCREEN.get("insights-session").open(ctx);
+      await ctx.page.getByRole("button", { name: "Read full screen" }).first().click();
+      await dialog(ctx.page);
+      await ctx.page.waitForTimeout(800);
+    },
+  },
   { id: "seo-audit", group: "Work", title: "SEO Audit", route: "/audit/seo", open: framed("/audit/seo") },
   {
     id: "audit-workspace", group: "Work", title: "SEO Audit workspace · a report", route: "/audit/seo/session", workspace: true,
@@ -126,18 +166,65 @@ export const SCREENS = [
       await page.waitForTimeout(1500);
     },
   },
+  {
+    // Share sits in the report pane's bar, which a phone or an iPad in
+    // portrait shows only as a tab.
+    id: "audit-share", group: "Work", title: "SEO Audit workspace · share", route: "/audit/seo/session#share", workspace: true,
+    variants: ["1440", "1440-dark", "1100", "1180", "2560", "3840"],
+    open: async (ctx) => {
+      await SCREEN.get("audit-workspace").open(ctx);
+      await ctx.page.getByRole("button", { name: "Share", exact: true }).first().click();
+      await dialog(ctx.page);
+    },
+  },
   { id: "changes", group: "Work", title: "Changes", route: "/execute", open: framed("/execute") },
+  {
+    id: "change-set", group: "Work", title: "Changes · reviewing a change set", route: "/execute#review",
+    open: async (ctx) => {
+      await framed("/execute")(ctx);
+      await ctx.page.getByRole("button", { name: "Review" }).first().click();
+      await dialog(ctx.page);
+      await toTop(ctx.page);
+    },
+  },
   { id: "scheduled", group: "Work", title: "Scheduled", route: "/scheduled", open: framed("/scheduled") },
   { id: "toolbox", group: "Work", title: "Toolbox", route: "/connections", open: framed("/connections") },
+  {
+    id: "toolbox-oauth", group: "Work", title: "Toolbox · a connected tool", route: "/connections#ga4",
+    open: async (ctx) => {
+      await framed("/connections")(ctx);
+      await ctx.page.getByRole("button", { name: /Google Analytics/ }).first().click();
+      await dialog(ctx.page);
+      await toTop(ctx.page);
+    },
+  },
+  {
+    id: "toolbox-key", group: "Work", title: "Toolbox · connecting with an API key", route: "/connections#apify",
+    open: async (ctx) => {
+      await framed("/connections")(ctx);
+      await ctx.page.getByRole("button", { name: /Apify/ }).first().click();
+      await dialog(ctx.page);
+      await toTop(ctx.page);
+    },
+  },
+  {
+    id: "toolbox-mcp", group: "Work", title: "Toolbox · adding an MCP server", route: "/connections#mcp",
+    open: async (ctx) => {
+      await framed("/connections")(ctx);
+      await ctx.page.getByRole("button", { name: "Add an MCP server" }).first().click();
+      await dialog(ctx.page);
+      await toTop(ctx.page);
+    },
+  },
 
   // --- Content Studio ---------------------------------------------------------------
   { id: "content", group: "Content Studio", title: "Content Studio · Plans", route: "/content", open: framed("/content") },
-  { id: "content-posts", group: "Content Studio", title: "Content Studio · Posts", route: "/content?tab=posts", board: false, open: framed("/content?tab=posts") },
-  { id: "content-analytics", group: "Content Studio", title: "Content Studio · Analytics", route: "/content?tab=analytics", board: false, open: framed("/content?tab=analytics") },
-  { id: "content-discover", group: "Content Studio", title: "Content Studio · Discover", route: "/content?tab=discover", board: false, open: framed("/content?tab=discover") },
-  { id: "content-library", group: "Content Studio", title: "Content Studio · Library", route: "/content?tab=library", board: false, open: framed("/content?tab=library") },
-  { id: "content-brand", group: "Content Studio", title: "Content Studio · Brand", route: "/content?tab=brand", board: false, open: framed("/content?tab=brand") },
-  { id: "content-accounts", group: "Content Studio", title: "Content Studio · Accounts", route: "/content?tab=accounts", board: false, open: framed("/content?tab=accounts") },
+  { id: "content-posts", group: "Content Studio", title: "Content Studio · Posts", route: "/content?tab=posts", open: framed("/content?tab=posts") },
+  { id: "content-analytics", group: "Content Studio", title: "Content Studio · Analytics", route: "/content?tab=analytics", open: framed("/content?tab=analytics") },
+  { id: "content-discover", group: "Content Studio", title: "Content Studio · Discover", route: "/content?tab=discover", open: framed("/content?tab=discover") },
+  { id: "content-library", group: "Content Studio", title: "Content Studio · Library", route: "/content?tab=library", open: framed("/content?tab=library") },
+  { id: "content-brand", group: "Content Studio", title: "Content Studio · Brand", route: "/content?tab=brand", open: framed("/content?tab=brand") },
+  { id: "content-accounts", group: "Content Studio", title: "Content Studio · Accounts", route: "/content?tab=accounts", open: framed("/content?tab=accounts") },
   {
     id: "content-session", group: "Content Studio", title: "Content workspace · a post", route: "/content/posts/new", workspace: true,
     open: async ({ page, app, plan }) => {
@@ -178,9 +265,34 @@ export const SCREENS = [
     open: async (ctx) => {
       await framed("/content?tab=plans&from=work")(ctx);
       await dialog(ctx.page);
-      // Opened at its top, as a person sees it: focus can scroll the sheet,
-      // and a scroll kept from 1440 is wrong at any other width.
-      await ctx.page.evaluate(() => document.querySelectorAll('[role="dialog"], [role="dialog"] *').forEach((el) => { el.scrollTop = 0; }));
+      await toTop(ctx.page);
+    },
+  },
+  {
+    id: "publish-post", group: "Content Studio", title: "Publishing a post", route: "/content?tab=posts#publish",
+    open: async (ctx) => {
+      await framed("/content?tab=posts")(ctx);
+      await ctx.page.getByRole("button", { name: "Approve" }).first().click();
+      await dialog(ctx.page);
+      await toTop(ctx.page);
+    },
+  },
+  {
+    id: "clone-tiktok", group: "Content Studio", title: "Cloning a TikTok", route: "/content?tab=posts#clone",
+    open: async (ctx) => {
+      await framed("/content?tab=posts")(ctx);
+      await ctx.page.getByRole("button", { name: "Clone a TikTok" }).first().click();
+      await dialog(ctx.page);
+      await toTop(ctx.page);
+    },
+  },
+  {
+    id: "format-sheet", group: "Content Studio", title: "Library · a format", route: "/content?tab=library#format",
+    open: async (ctx) => {
+      await framed("/content?tab=library")(ctx);
+      await ctx.page.getByRole("button", { name: "Carousel" }).first().click();
+      await dialog(ctx.page);
+      await toTop(ctx.page);
     },
   },
 
@@ -197,7 +309,7 @@ export const SCREENS = [
   { id: "activity", group: "Library", title: "Activity", route: "/activity", open: framed("/activity") },
   { id: "memory", group: "Library", title: "Memory · only you", route: "/memory", open: framed("/memory") },
   {
-    id: "project-memory", group: "Library", title: "Memory · project", route: "/project/:id/memory", board: false,
+    id: "project-memory", group: "Library", title: "Memory · project", route: "/project/:id/memory",
     open: async (ctx) => framed(project(ctx.story, "/memory"))(ctx),
   },
 
@@ -207,13 +319,26 @@ export const SCREENS = [
   { id: "agents", group: "Settings", title: "Connect your AI agent", route: "/settings/agents", open: framed("/settings/agents") },
   { id: "projects", group: "Settings", title: "Projects", route: "/projects", open: framed("/projects") },
   {
+    // The one destructive confirmation on the canvas, standing for all of
+    // them: ui/alert-dialog, the object named in the title, a tinted action.
+    id: "delete-project", group: "Settings", title: "Projects · deleting one", route: "/projects#delete",
+    open: async (ctx) => {
+      await framed("/projects")(ctx);
+      await ctx.page.getByRole("button", { name: /^Delete / }).first().click();
+      await alert(ctx.page);
+    },
+  },
+  {
     id: "project", group: "Settings", title: "Project context", route: "/project/:id",
     open: async (ctx) => framed(project(ctx.story))(ctx),
   },
   {
-    id: "members", group: "Settings", title: "Project members", route: "/project/:id/members", board: false,
+    id: "members", group: "Settings", title: "Project members", route: "/project/:id/members",
     open: async (ctx) => framed(project(ctx.story, "/members"))(ctx),
   },
   { id: "usage", group: "Settings", title: "Usage", route: "/usage", open: framed("/usage") },
 ];
 
+
+// An overlay opens its page the way that page's own entry does.
+const SCREEN = new Map(SCREENS.map((s) => [s.id, s]));
