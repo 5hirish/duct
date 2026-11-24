@@ -4369,7 +4369,7 @@ export const SCENES = [
     state: "two days planned from shipped work",
     group: "PlanList",
     title: "Feed days in the agenda",
-    note: "A day from shipped work carries its sources under its title, at most two chips and +N. The other days are unchanged.",
+    note: "A day from shipped work carries the idea it teaches and its sources under its title, at most two chips and +N. The other days are unchanged.",
     render: () => (
       <div style={{ height: 520, display: "flex" }} className="bg-background">
         <PlanList plan={PLAN_WITH_FEED_DAYS} onReviseDay={() => {}} />
@@ -4713,7 +4713,9 @@ const FEED_QUIET = {
 const PLAN_WITH_FEED_DAYS = {
   ...PLAN_MONTH,
   days: PLAN_MONTH.days.slice(0, 7).map((d, i) =>
-    i === 1 ? { ...d, topic: "Invoices in two clicks, from the job card", sources: FEED_ITEMS.slice(0, 3) }
+    i === 1 ? { ...d, topic: "Invoices in two clicks, from the job card", sources: FEED_ITEMS.slice(0, 3),
+      brief: { idea: "Send the invoice before you leave the driveway, not on Sunday night.",
+        evidence: ["invoices go out from the job card [gh:pr-412]"] } }
       : i === 4 ? { ...d, topic: "What the invoice launch did to signups", sources: [FEED_ITEMS[3]] }
         : d,
   ),

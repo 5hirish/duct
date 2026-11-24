@@ -901,6 +901,27 @@ agents/
     │                     trusted presets, read by code like GitHub (ln: and nt: refs):
     │                     no stable tool contract exists, so it sends only the arguments
     │                     a tool's schema declares and judges the window in code.
+    │                     Ranked, not newest-first: what a change taught beats when it
+    │                     merged (significance), the first MAX_ITEMS get their detail and
+    │                     the next MAX_MORE stay citable by title. A pull request's detail
+    │                     is its why plus its Launch line (service/github/prose.py); one
+    │                     whose Launch line says to wait is shown [launch held] and a day
+    │                     may not cite it. Commits a merge brought in are dropped beside
+    │                     their pull request (fetch.mark_branch_commits). A public
+    │                     repository adds its changelog's new entries and its open "help
+    │                     wanted" issues (service/github/work.repository_facts); a private
+    │                     one's paths and diffs never reach the prompt. read_shipped_work
+    │                     (feed_read.py) opens one item of this run's feed whole, a pull
+    │                     request's changed file too in a public repository, at most
+    │                     MAX_READS a run. A day citing the feed must carry a DayBrief
+    │                     (reader, idea, evidence with refs, quotable line, ask): the draft
+    │                     runs later in its own session and reads the story from
+    │                     prompts._story_stanza; runner._day_story rebuilds the day's
+    │                     sources as session.story (feed.story_digest) so read_shipped_work
+    │                     opens them again. What a plan left out rides on
+    │                     strategy.feed.set_aside and comes back marked [set aside before]
+    │                     (feed.set_aside_refs). A day renamed outside a feed run drops its
+    │                     sources and brief (feed.story_moved).
     │                     feed_more.py adds the project's own feeds (RSS, rs: refs, through
     │                     FetchData's rss_items) and milestones.py the moments no commit
     │                     records (#564): a round GitHub star count crossed in the window,

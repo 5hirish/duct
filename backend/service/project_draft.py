@@ -70,8 +70,11 @@ RANK = {
 # UNTITLED_PROJECT). Nobody chose it, so it is not content.
 UNTITLED_PROJECT = "Untitled project"
 
-# A draft fills the primary persona the project page edits, and one more.
-MAX_DRAFT_PERSONAS = 2
+# A draft fills the primary persona the project page edits, and up to two
+# more. Two dropped a real audience: a product for solo founders, small teams
+# and marketers (Duct's own, docs/personas/) lost the third on every update,
+# though every persona stored reaches the content prompts.
+MAX_DRAFT_PERSONAS = 3
 
 
 @dataclass(frozen=True)
@@ -162,6 +165,7 @@ FIELDS: dict[str, DraftField] = {
     "content_goal": DraftField("content_brand", "content_goal", saved=False),
     "do_say": DraftField("content_brand", "do_say", saved=False),
     "do_not_say": DraftField("content_brand", "do_not_say", saved=False),
+    "content_language": DraftField("content_brand", "content_language", saved=False),
     "primary_color": DraftField("content_visual_assets", "primary_color", saved=False),
     "secondary_color": DraftField("content_visual_assets", "secondary_color", saved=False),
     "visual_style": DraftField("content_visual_assets", "style", saved=False),
@@ -169,7 +173,7 @@ FIELDS: dict[str, DraftField] = {
 
 # The Brand tab's fields among them, which its save labels as the person's.
 BRAND_FIELDS = (
-    "tagline", "description", "tone", "value_prop", "content_goal", "do_say", "do_not_say",
+    "tagline", "description", "tone", "value_prop", "content_goal", "do_say", "do_not_say", "content_language",
     "primary_color", "secondary_color", "visual_style",
 )
 

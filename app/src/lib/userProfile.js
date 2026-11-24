@@ -97,6 +97,18 @@ export const LANGUAGES = [
 ];
 
 /**
+ * The languages a brand's content can be written in (the Brand tab). The
+ * same names as LANGUAGES, because both go into a prompt and the backend
+ * holds this list too (service/project_config.CONTENT_LANGUAGES); only the
+ * empty choice differs: content follows the brand's own description, not
+ * whoever is typing.
+ */
+export const CONTENT_LANGUAGES = [
+  { value: "", label: msg`Match the brand description` },
+  ...LANGUAGES.slice(1),
+];
+
+/**
  * Every IANA zone the browser knows, newest tzdata included, grouped by region.
  *
  * From `Intl.supportedValuesOf` rather than a list kept here or a package:

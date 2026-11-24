@@ -23,7 +23,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from agents.core.session import BaseAgentSession
 
 from agents.content.channels import Platform
-from agents.content.feed import DaySource, FeedOptions
+from agents.content.feed import DayBrief, DaySource, FeedOptions, SetAside
 from agents.content.plan_period import MAX_PLAN_DAYS
 from agents.content.voice_rules import VoiceRules
 from agents.models import AspectRatio, ImageModel, Provider
@@ -88,6 +88,12 @@ class Day(BaseModel):
     sources: list[DaySource] = Field(
         default_factory=list,
         description="Plans from shipped work only: the feed refs this day's story stands on. Empty otherwise.",
+    )
+    # What the draft run gets of the story: the plan read the pull requests,
+    # the writer cannot, so the day carries what was read (feed.DayBrief).
+    brief: DayBrief = Field(
+        default_factory=DayBrief,
+        description="Plans from shipped work only: the story its writer needs. Empty otherwise.",
     )
 
 
@@ -165,6 +171,9 @@ class ContentBrandContext(BaseModel):
     content_goal: str = ""
     do_say: str = ""
     do_not_say: str = ""
+    # The language every plan, brief and post is written in (Brand tab); empty
+    # follows the language of the brand's own description, as before.
+    content_language: str = ""
     features: list[AppFeature] = Field(default_factory=list)
     pillars: list[ContentPillar] = Field(default_factory=list)
     visual: ContentVisualAssets = Field(default_factory=ContentVisualAssets)
@@ -276,6 +285,9 @@ class ContentSession(BaseAgentSession):
     # submit_plan and revise_plan_days hold every cited ref to it. None for a
     # plan from goals, and on a resumed session, which then cites nothing new.
     feed: Any = None
+    # A draft of a day planned from shipped work: that day's own sources as a
+    # feed (feed.story_digest), so read_shipped_work opens what the plan read.
+    story: Any = None
     # A run the scheduler started (service/schedules.py): nobody is watching,
     # so the agent mounts no question tool and decides what a person would.
     unattended: bool = False
@@ -508,6 +520,7 @@ class ContentTool(StrEnum):
     FETCH_DISCOVERED_REFERENCES = "fetch_discovered_references"
     FETCH_POST                  = "fetch_post"
     FETCH_SLIDE_CONTEXT         = "fetch_slide_context"
+    READ_SHIPPED_WORK           = "read_shipped_work"
     RENDER_SLIDE                = "render_slide"
     GENERATE_IMAGE              = "generate_image"
     EDIT_IMAGE                  = "edit_image"
@@ -798,6 +811,10 @@ class PlanDraft(BaseModel):
         max_length=MAX_PLAN_DAYS,
         description="The posts, in order, one per day of the plan's period; each needs a topic and a pillar.",
     )
+    set_aside: list[SetAside] = Field(
+        default_factory=list,
+        description="Plans from shipped work only: the items you looked at and left out, each with why.",
+    )
 
     @field_validator("days")
     @classmethod
@@ -837,6 +854,7 @@ class PlanDayChange(BaseModel):
     series: str | None = None
     experiment: str | None = None
     sources: list[DaySource] | None = None
+    brief: DayBrief | None = None
 
     def fields(self) -> dict[str, Any]:
         """What this change sets, as stored: the fields sent, without the date."""

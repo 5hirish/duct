@@ -18,6 +18,8 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CONTENT_LANGUAGES } from "@/lib/userProfile";
 import { getBrandContext, putBrandContext } from "@/lib/contentApi";
 import { RULES_KEY, SAMPLES_KEY, cleanSamples } from "@/lib/voiceRules";
 import WritingSamples from "@/components/content/WritingSamples";
@@ -60,6 +62,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
   const [contentGoal, setContentGoal] = useState("");
   const [doSay, setDoSay]       = useState("");
   const [doNotSay, setDoNotSay] = useState("");
+  const [contentLanguage, setContentLanguage] = useState("");
   // Everything content_brand held when it loaded, so a save keeps the keys
   // this form has no field for (features, anything newer) instead of
   // replacing the whole object with the five it knows.
@@ -92,6 +95,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
         setContentGoal(b.content_brand?.content_goal || "");
         setDoSay(b.content_brand?.do_say || "");
         setDoNotSay(b.content_brand?.do_not_say || "");
+        setContentLanguage(b.content_brand?.content_language || "");
         setBrandBlob(b.content_brand || {});
         setSamples(Array.isArray(b.content_brand?.[SAMPLES_KEY]) ? b.content_brand[SAMPLES_KEY] : []);
         setRules(b.voice_rules || null);
@@ -143,6 +147,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
         content_goal: contentGoal.trim(),
         do_say:       doSay.trim(),
         do_not_say:   doNotSay.trim(),
+        content_language: contentLanguage,
         [SAMPLES_KEY]: cleanSamples(samples),
         ...(rulesCustomised && rules ? { [RULES_KEY]: rules } : {}),
       };
@@ -231,9 +236,25 @@ export default function BrandContextForm({ projectId, onSaved }) {
       </Section>
 
       <Section icon={Megaphone} title={t`Voice & messaging`} hint={t`How posts sound and what they must (or must not) say.`}>
-        <Field label={t`Tone`} hint={t`Brand voice is inherited; tone fine-tunes it for content.`}>
-          <Input value={tone} onChange={e => setTone(e.target.value)} placeholder={t`casual, punchy`} />
-        </Field>
+        <div className="grid grid-cols-1 gap-4 @lg:grid-cols-2">
+          <Field label={t`Tone`} hint={t`Brand voice is inherited; tone fine-tunes it for content.`}>
+            <Input value={tone} onChange={e => setTone(e.target.value)} placeholder={t`casual, punchy`} />
+          </Field>
+          <Field label={t`Content language`} hint={t`Plans, briefs and every post are written in it.`}>
+            <Select value={contentLanguage || "auto"} onValueChange={(v) => setContentLanguage(v === "auto" ? "" : v)}>
+              <SelectTrigger aria-label={t`Content language`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CONTENT_LANGUAGES.map((option) => (
+                  <SelectItem key={option.value || "auto"} value={option.value || "auto"}>
+                    {i18n._(option.label)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+        </div>
         <Field label={t`Value proposition`} hint={t`What you uniquely offer.`}>
           <Textarea value={valueProp} onChange={e => setValueProp(e.target.value)}
             rows={2} placeholder={t`e.g. Real-time AI analysis of YOUR actual selfie — not a static quiz.`} />

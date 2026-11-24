@@ -3292,6 +3292,10 @@ msgid "Content goal"
 msgstr "Meta de conteúdo"
 
 #: src/components/content/BrandContextForm.jsx
+msgid "Content language"
+msgstr "Idioma do conteúdo"
+
+#: src/components/content/BrandContextForm.jsx
 #: src/components/content/PlanDayOne.jsx
 msgid "Content pillars"
 msgstr "Pilares de conteúdo"
@@ -6631,6 +6635,10 @@ msgstr "Gerentes de marketing em startups SaaS"
 msgid "Match my messages"
 msgstr "Corresponder às minhas mensagens"
 
+#: src/lib/userProfile.js
+msgid "Match the brand description"
+msgstr "Igual à descrição da marca"
+
 #: src/components/connections/ConnectorSource.jsx
 #: src/components/connections/ConnectorTile.jsx
 msgid "MCP"
@@ -8701,6 +8709,10 @@ msgstr "Planos"
 msgid "Plans that learn"
 msgstr "Planos que aprendem"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Plans, briefs and every post are written in it."
+msgstr "Planos, briefings e cada post são escritos neste idioma."
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Playful"
 msgstr "Divertido"
@@ -9198,6 +9210,10 @@ msgstr "Leu o slide"
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read the topic bank"
 msgstr "Leu o banco de tópicos"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read what shipped"
+msgstr "Leu o que foi lançado"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read what was posted before"

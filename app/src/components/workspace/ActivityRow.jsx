@@ -87,6 +87,7 @@ const TOOL_WORDS = {
   discover_tiktok: msg`Searched TikTok`,
   fetch_post: msg`Opened the post`,
   fetch_slide_context: msg`Read the slide`,
+  read_shipped_work: msg`Read what shipped`,
   submit_plan: msg`Proposed a plan`,
   revise_plan_days: msg`Proposed changes to the plan`,
   submit_post_draft: msg`Saved the draft`,

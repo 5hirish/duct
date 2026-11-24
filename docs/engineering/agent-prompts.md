@@ -2778,7 +2778,7 @@ Answer in the fields you were given:
 
 ```
 
-### Clone: opening user turn (system prompt is mode=draft_post) · ~1,711 tokens
+### Clone: opening user turn (system prompt is mode=draft_post) · ~1,730 tokens
 
 ```text
 ## BRAND CONTEXT (project_id=00000000-0000-0000-0000-000000000000)
@@ -2796,6 +2796,7 @@ Answer in the fields you were given:
 - Never say:    (none specified)
 - Visual style: (unspecified), primary —, secondary —
 - Posts on:     (unknown — TikTok unless the user says otherwise)
+- Language:     (not set: the language of the brand's description)
 
 Features:
   (none)
@@ -2902,7 +2903,7 @@ Now — WRITE PHASE (copy + image prompts only; NO images yet):
 
 ```
 
-### Plan from shipped work: opening user turn (system prompt is mode=plan_month) · ~741 tokens
+### Plan from shipped work: opening user turn (system prompt is mode=plan_month) · ~1,299 tokens
 
 ```text
 ## BRAND CONTEXT (project_id=00000000-0000-0000-0000-000000000000)
@@ -2920,6 +2921,7 @@ Now — WRITE PHASE (copy + image prompts only; NO images yet):
 - Never say:    (none specified)
 - Visual style: (unspecified), primary —, secondary —
 - Posts on:     (unknown — TikTok unless the user says otherwise)
+- Language:     (not set: the language of the brand's description)
 
 Features:
   (none)
@@ -2936,7 +2938,7 @@ Pillars:
 </account_performance>
 
 <shipped_work>
-Window: 2026-09-24 to 2026-10-07. Left out by Duct before you: chores, CI and tests: 1; bots: 1.
+Window: 2026-09-24 to 2026-10-07. Repository: private or unknown. Left out by Duct before you: chores, CI and tests: 1; bots: 1.
 - gh:r-v1.4.0 · release [release] 2026-10-06 · v1.4.0: invoices in two clicks
 - gh:pr-412 · pull_request [merged] 2026-10-05 · feat(invoices): send from the job card
 </shipped_work>
@@ -2944,35 +2946,65 @@ Window: 2026-09-24 to 2026-10-07. Left out by Duct before you: chores, CI and te
 You manage Northwind Tools's content plan for 2026-10-08 to 2026-10-14 (7 days). The person asked
 for a plan FROM WHAT THEY SHIPPED. Duct has read the repository and its own
 record of the project and already left out the noise; <shipped_work> is
-what is left, one line each, its ref first.
+what is left, one line each, its ref first, ranked by how much of a story
+each is likely to be, not by date. Items past the first forty are listed by
+title only.
+
+A post from shipped work is a lesson that happens to be true because it
+shipped. The work is the evidence, never the subject: "we shipped X" is a
+changelog line, and a reader of Northwind Tools (the audience above)
+scrolls past it.
 
 Now:
 
-1. Group <shipped_work> into one to five stories, each worth one post: a
-   release, a feature built across several items, a change Duct applied and
-   what it did. A story stands on at least one ref. A brief or a memory
-   supports a story and is never one on its own. Prefer what a reader of
-   Northwind Tools would notice or use. Never name a file path, branch,
-   open issue, code or internal name that is not in a title above, and use
-   a number only where a line above carries it.
-2. Ask which to tell with ONE AskUserQuestion, multiSelect true, one option
-   per story. The label is the story in two to six words; the description is
-   its angle in under twelve words, then its refs in brackets, e.g.
-   "Onboarding stopped dropping GA4 connections [gh:pr-412, cs:3f2a9c1d]".
-   Do not research and do not plan on this turn.
+1. Read before you choose. Open the strongest candidates with
+   read_shipped_work (at most twelve reads): a pull request's whole
+   description, its Launch line, and in a public repository the files it
+   changed, where a dated comment often records what broke, when and by
+   how much. That is the story; the title is not.
+2. Group what you read into one to five stories, each worth one post, each
+   standing on at least one ref. A story is one of these, for the reader
+   above: something they can now do, a mistake it saves them, a decision and
+   the option it beat, a failure owned and what changed, the project's own
+   numbers, or (only from an open issue marked help wanted) one call for
+   contributors. The test: take Northwind Tools's name out of the story;
+   if nothing worth reading is left, it is an announcement, so fold the
+   announcements into one "what's new" story at most, or leave them out.
+   A line marked [launch held] is the maintainer's own decision to wait:
+   never tell it now, and say so. A line marked [set aside before] was left
+   out by an earlier plan for the reason given: tell it only if that reason
+   no longer holds. A brief or a memory supports a story and
+   is never one on its own. Never name a file path, branch, code or internal
+   name the person would not recognise, and use a number only where
+   something you read carries it.
+3. Ask which to tell with ONE AskUserQuestion, multiSelect true, one option
+   per story. The label is what the reader gets, in their words, two to six
+   words, never the feature's name ("Find why Google won't index you", not
+   "Launch check plugin"). The description is the angle in under twelve
+   words, then its refs in brackets, e.g.
+   "Ads keyword changes now wait for you [gh:pr-468]".
+   Do not call research_trends and do not plan on this turn.
 
 When they answer:
 
-3. Place the stories they kept, on channels <account_performance> favours:
+4. Place the stories they kept, on channels <account_performance> favours:
    There is no plan for this period yet. Use submit_plan for the whole
    period: the kept stories on at most 2 days, each with `sources`
-   set to every ref it stands on, and the other days planned from the
-   brand's pillars as an ordinary plan, with no sources. Do not call
-   research_trends for this plan.
-4. Say in two lines which days changed and what each now tells.
+   set to every ref it stands on and with its `brief`, and the other days
+   planned from the brand's pillars as an ordinary plan, with no sources.
+   Do not call research_trends for this plan.
+   A day's `brief` is all its writer will know of the story, so write it
+   from what you read: `reader` (who, and what this costs them now),
+   `idea` (what they can do or know after reading; the post is this),
+   `evidence` (up to six facts, each ending in its ref, the only numbers
+   and claims the writer may use), `pasteable` (the one line someone would
+   quote) and `ask` (the one thing the post ends on). Pass `set_aside`
+   too: every item you looked at and did not tell, with why in a few
+   words, so the next plan knows.
+5. Say in two lines which days changed and what each now tells.
 ```
 
-### Plan from shipped work, scheduled (nobody to ask) · ~695 tokens
+### Plan from shipped work, scheduled (nobody to ask) · ~1,238 tokens
 
 ```text
 ## BRAND CONTEXT (project_id=00000000-0000-0000-0000-000000000000)
@@ -2990,6 +3022,7 @@ When they answer:
 - Never say:    (none specified)
 - Visual style: (unspecified), primary —, secondary —
 - Posts on:     (unknown — TikTok unless the user says otherwise)
+- Language:     (not set: the language of the brand's description)
 
 Features:
   (none)
@@ -3006,7 +3039,7 @@ Pillars:
 </account_performance>
 
 <shipped_work>
-Window: 2026-09-24 to 2026-10-07. Left out by Duct before you: chores, CI and tests: 1; bots: 1.
+Window: 2026-09-24 to 2026-10-07. Repository: private or unknown. Left out by Duct before you: chores, CI and tests: 1; bots: 1.
 - gh:r-v1.4.0 · release [release] 2026-10-06 · v1.4.0: invoices in two clicks
 - gh:pr-412 · pull_request [merged] 2026-10-05 · feat(invoices): send from the job card
 </shipped_work>
@@ -3014,25 +3047,54 @@ Window: 2026-09-24 to 2026-10-07. Left out by Duct before you: chores, CI and te
 You manage Northwind Tools's content plan for 2026-10-08 to 2026-10-14 (7 days). The person asked
 for a plan FROM WHAT THEY SHIPPED. Duct has read the repository and its own
 record of the project and already left out the noise; <shipped_work> is
-what is left, one line each, its ref first.
+what is left, one line each, its ref first, ranked by how much of a story
+each is likely to be, not by date. Items past the first forty are listed by
+title only.
+
+A post from shipped work is a lesson that happens to be true because it
+shipped. The work is the evidence, never the subject: "we shipped X" is a
+changelog line, and a reader of Northwind Tools (the audience above)
+scrolls past it.
 
 Now:
 
-1. Group <shipped_work> into one to five stories, each worth one post: a
-   release, a feature built across several items, a change Duct applied and
-   what it did. A story stands on at least one ref. A brief or a memory
-   supports a story and is never one on its own. Prefer what a reader of
-   Northwind Tools would notice or use. Never name a file path, branch,
-   open issue, code or internal name that is not in a title above, and use
-   a number only where a line above carries it.
-2. Nobody is watching this run: the schedule started it, and the person
+1. Read before you choose. Open the strongest candidates with
+   read_shipped_work (at most twelve reads): a pull request's whole
+   description, its Launch line, and in a public repository the files it
+   changed, where a dated comment often records what broke, when and by
+   how much. That is the story; the title is not.
+2. Group what you read into one to five stories, each worth one post, each
+   standing on at least one ref. A story is one of these, for the reader
+   above: something they can now do, a mistake it saves them, a decision and
+   the option it beat, a failure owned and what changed, the project's own
+   numbers, or (only from an open issue marked help wanted) one call for
+   contributors. The test: take Northwind Tools's name out of the story;
+   if nothing worth reading is left, it is an announcement, so fold the
+   announcements into one "what's new" story at most, or leave them out.
+   A line marked [launch held] is the maintainer's own decision to wait:
+   never tell it now, and say so. A line marked [set aside before] was left
+   out by an earlier plan for the reason given: tell it only if that reason
+   no longer holds. A brief or a memory supports a story and
+   is never one on its own. Never name a file path, branch, code or internal
+   name the person would not recognise, and use a number only where
+   something you read carries it.
+3. Nobody is watching this run: the schedule started it, and the person
    will accept or reject the proposal later. Keep the 2 strongest
-   stories yourself, the ones a reader would most notice, and do not ask.
-3. Place them, on channels <account_performance> favours:
+   stories yourself, by the test in step 2, and do not ask.
+4. Place them, on channels <account_performance> favours:
    There is no plan for this period yet. Use submit_plan for the whole
    period: the kept stories on at most 2 days, each with `sources`
-   set to every ref it stands on, and the other days planned from the
-   brand's pillars as an ordinary plan, with no sources. Do not call
-   research_trends for this plan.
-4. Say in two lines which stories you kept, which you left, and why.
+   set to every ref it stands on and with its `brief`, and the other days
+   planned from the brand's pillars as an ordinary plan, with no sources.
+   Do not call research_trends for this plan.
+   A day's `brief` is all its writer will know of the story, so write it
+   from what you read: `reader` (who, and what this costs them now),
+   `idea` (what they can do or know after reading; the post is this),
+   `evidence` (up to six facts, each ending in its ref, the only numbers
+   and claims the writer may use), `pasteable` (the one line someone would
+   quote) and `ask` (the one thing the post ends on). Pass `set_aside`
+   too: every item you looked at and did not tell, with why in a few
+   words, so the next plan knows.
+5. Say in two lines which stories you kept, which you left out, and why
+   (held by its Launch line, an announcement only, already told).
 ```

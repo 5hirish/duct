@@ -64,6 +64,29 @@ published without one. The same script, with no arguments, holds
 
 ### Changed
 
+- **A plan from what you shipped reads the story, not just the title.** It
+  opens a pull request whole before choosing (its description, its Launch
+  line and, in a public repository, the files it changed), ranks the month by
+  what each change is likely to teach rather than by date, keeps everything
+  past the first forty items citable by title, leaves out a change whose own
+  Launch line says to wait, tells a merged pull request once instead of once
+  per commit, keeps releases a workflow published, reads a public changelog's
+  new entries, and can offer one open "help wanted" issue as a call for
+  contributors. Its stories now lead with what the reader gets, not the
+  feature's name, and each planned day carries its story to the post's
+  writer: who it is for, the idea, the facts read from the work and the one
+  ask, so a draft no longer guesses the story back from its title. The plan
+  shows that idea under each story day, the writer can open the day's pull
+  requests itself, and what a plan chose to leave out is remembered with its
+  reason, so the next plan does not offer it again as new.
+- **Choose the language your content is written in.** The Brand tab has a
+  content language: plans, briefs and every post are written in it, while
+  Duct keeps talking to you in yours. Agents setting up a project through
+  Duct's MCP server can fill it too.
+- **A draft sees your recent posts.** Its brief listed "no recent posts"
+  every time; it now gets the last five, so it does not repeat a topic or a
+  hook you just used.
+
 - **The cookie bar and the privacy policy name Google Analytics.** Cloudflare's
   Google tag gateway kept adding Google Tag Manager and GA4 at the edge after
   they left this repository, on the site, in the web app and in the desktop

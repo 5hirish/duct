@@ -867,6 +867,19 @@ class BrandContextIn(BaseModel):
 
     @field_validator("content_brand", mode="after")
     @classmethod
+    def _check_language(cls, v: dict | None) -> dict | None:
+        # It goes into every content prompt as "Write all content in …", so it
+        # is a name from the list or nothing: a typo would be posts in the
+        # wrong language, and free text would be an instruction.
+        from service.project_config import CONTENT_LANGUAGES
+
+        language = (v or {}).get("content_language")
+        if language not in (None, "", *CONTENT_LANGUAGES):
+            raise ValueError(f"content_language must be one of {list(CONTENT_LANGUAGES)} or empty.")
+        return v
+
+    @field_validator("content_brand", mode="after")
+    @classmethod
     def _check_voice(cls, v: dict | None) -> dict | None:
         # The voice fields are read into every text draft, so their caps are
         # held here too, not only by the Brand tab that normally sends them.

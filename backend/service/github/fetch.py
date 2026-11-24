@@ -52,6 +52,7 @@ from service.connectors import (
 from service.github import GITHUB_CONNECTOR_ID, WorkEventKind
 from service.github import app as gh_app
 from service.github import client as gh
+from service.github.prose import brief_body, launch_line
 from utils.dates import parse_iso
 
 logger = logging.getLogger(__name__)
@@ -200,6 +201,53 @@ def commit_event(raw: dict) -> dict[str, Any]:
     )
 
 
+_PR_MERGE = re.compile(r"^Merge pull request #\d+")
+
+
+def mark_branch_commits(raw: list[dict], events: list[dict]) -> None:
+    """Set ``state`` to ``branch`` on every commit a merge brought in.
+
+    The commits list is every commit reachable from the default branch, so a
+    repository that merges pull requests with merge commits lists each
+    branch's commits beside the pull request that carried them: one story
+    told ten times, and on a busy month enough of them to crowd the pull
+    requests out of a plan's read (#561). The default branch's own history is
+    the first-parent chain from its newest commit; anything off it arrived
+    through a merge. Only a pull request's merge marks what it brought in: a
+    branch merged by hand ("Merge branch 'feat/x'") has no pull request to
+    tell its story, so its commits stay. A squash or rebase repository has no
+    such commits, and a list without parents (an old fake, a trimmed
+    response) is left alone."""
+    if not raw or not isinstance(raw[0].get("parents"), list):
+        return
+    by_sha = {str(c.get("sha") or ""): c for c in raw}
+
+    def parent_shas(sha: str) -> list[str]:
+        return [str((p or {}).get("sha") or "") for p in by_sha[sha].get("parents") or []]
+
+    mainline: list[str] = []
+    sha = str(raw[0].get("sha") or "")
+    while sha in by_sha and sha not in mainline:
+        mainline.append(sha)
+        parents = parent_shas(sha)
+        sha = parents[0] if parents else ""
+    on_main = set(mainline)
+    carried: set[str] = set()
+    for merge in mainline:
+        message = str((by_sha[merge].get("commit") or {}).get("message") or "")
+        if not _PR_MERGE.match(message):
+            continue
+        stack = parent_shas(merge)[1:]
+        while stack:
+            sha = stack.pop()
+            if sha in by_sha and sha not in on_main and sha not in carried:
+                carried.add(sha)
+                stack.extend(parent_shas(sha))
+    for commit, event in zip(raw, events):
+        if str(commit.get("sha") or "") in carried:
+            event["state"] = "branch"
+
+
 def add_file_stats(event: dict[str, Any], detail: dict) -> None:
     """Stats from one commit's detail call. ``files`` pages at 300 on GitHub's
     side, so a larger commit counts 300 files; its line stats are whole."""
@@ -209,13 +257,23 @@ def add_file_stats(event: dict[str, Any], detail: dict) -> None:
     event["deletions"] = int(stats.get("deletions") or 0)
 
 
+def pr_body(text: Any) -> str:
+    """A pull request's why, without its template, and its ``Launch:`` line
+    kept whole at the end: the maintainer's own call on whether the change is
+    a story, which the first 500 raw characters of a templated body never
+    reach (service/github/prose.py)."""
+    launch = launch_line(str(text or ""))
+    tail = f" Launch: {launch}" if launch else ""
+    return brief_body(str(text or ""), MAX_BODY_CHARS - len(tail)) + tail
+
+
 def pull_request_event(raw: dict) -> dict[str, Any]:
     return _event(
         WorkEventKind.PULL_REQUEST,
         at=raw.get("merged_at"),
         ref=f"#{raw.get('number')}",
         title=str(raw.get("title") or ""),
-        body=_clip(raw.get("body"), MAX_BODY_CHARS),
+        body=pr_body(raw.get("body")),
         author=_login(raw.get("user")),
         url=raw.get("html_url"),
         state="merged",
@@ -228,7 +286,7 @@ def issue_event(raw: dict) -> dict[str, Any]:
         at=raw.get("closed_at"),
         ref=f"#{raw.get('number')}",
         title=str(raw.get("title") or ""),
-        body=_clip(raw.get("body"), MAX_BODY_CHARS),
+        body=brief_body(str(raw.get("body") or ""), MAX_BODY_CHARS),
         author=_login(raw.get("user")),
         url=raw.get("html_url"),
         # completed, not_planned, duplicate — "closed" for issues from before
@@ -243,7 +301,7 @@ def release_event(raw: dict) -> dict[str, Any]:
         at=raw.get("published_at"),
         ref=raw.get("tag_name"),
         title=str(raw.get("name") or raw.get("tag_name") or ""),
-        body=_clip(raw.get("body"), MAX_BODY_CHARS),
+        body=brief_body(str(raw.get("body") or ""), MAX_BODY_CHARS),
         author=_login(raw.get("author")),
         url=raw.get("html_url"),
         state="prerelease" if raw.get("prerelease") else "release",
@@ -315,6 +373,10 @@ def _read_credentials(creds: dict[str, str]) -> dict[str, str]:
     return {**creds, "token": gh_app.installation_token(installation_id, name)}
 
 
+# The reads outside FetchData (service/github/work.py) mint the same narrowed token.
+read_credentials = _read_credentials
+
+
 def latest_release_tag(creds: dict[str, str]) -> str | None:
     """The tag of the repository's newest published release, or None when it
     has none. One request: the cheap check an on-release schedule makes each
@@ -344,6 +406,7 @@ def fetch_github(creds: dict[str, str], date_from: str, date_to: str) -> dict[st
         ([], False),
     )
     commits = [commit_event(c) for c in raw_commits]
+    mark_branch_commits(raw_commits, commits)
     window_days = (end.date() - start.date()).days + 1
     cap = len(commits) if window_days <= FULL_DETAIL_WINDOW_DAYS else MAX_COMMIT_DETAILS
     _section(errors, "commit_details", lambda: _add_details(repo_path, creds, raw_commits, commits, cap), None)
