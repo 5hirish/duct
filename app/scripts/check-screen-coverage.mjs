@@ -70,7 +70,9 @@ for (const file of pages) {
     .split("/").filter((seg) => seg && !/^\(.*\)$/.test(seg)).join("/");
   const path = route === "/." ? "/" : route.replace(/\/\.$/, "");
   if (ROUTE_EXEMPT[path]) continue;
-  const pattern = new RegExp(`^${path.replace(/\[[^\]]+\]/g, "[^/]+").replace(/[.]/g, "\\.")}$`);
+  // Each literal piece escaped in full, then a dynamic segment ([slug]) matches one path segment.
+  const escape = (text) => text.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&");
+  const pattern = new RegExp(`^${path.split(/\[[^\]]+\]/).map(escape).join("[^/]+")}$`);
   if (!screenPaths.some((p) => pattern.test(p))) {
     failures.push(`page ${path} (${relative(SRC, file)}) has no entry in design/tools/screens.mjs`);
   }
