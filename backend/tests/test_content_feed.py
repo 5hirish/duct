@@ -11,6 +11,7 @@ import pytest
 
 from agents.content.feed import (
     GATE_SCORE,
+    DayBrief,
     DaySource,
     Disclosure,
     FeedItem,
@@ -124,8 +125,11 @@ def test_releases_and_applied_changes_lead_and_the_payload_has_no_bodies():
     assert digest.strategy()["window_to"] == TODAY.isoformat()
 
 
-def _day(*refs: str):
-    return SimpleNamespace(sources=[DaySource(ref=r) for r in refs])
+_BRIEF = DayBrief(idea="Retry a dropped GA4 connection yourself", evidence=["it retries three times [gh:pr-412]"])
+
+
+def _day(*refs: str, brief: DayBrief = _BRIEF):
+    return SimpleNamespace(sources=[DaySource(ref=r) for r in refs], brief=brief)
 
 
 def test_a_feed_day_must_cite_what_the_run_was_shown_and_stay_under_the_cap():
@@ -137,6 +141,23 @@ def test_a_feed_day_must_cite_what_the_run_was_shown_and_stay_under_the_cap():
     assert "is not a ref" in problems[1]
     over = source_problems([_day("gh:pr-412")] * 3, known, max_days=2)
     assert over and "at most 2" in over[-1]
+
+
+def test_a_feed_day_carries_its_story_for_the_writer_and_cites_only_the_feed():
+    """The draft runs later and sees only the day: a sourced day without the
+    idea and evidence it was planned on is refused, as is evidence citing a
+    ref the run was not shown."""
+    known = {"gh:pr-412": FeedItem(ref="gh:pr-412", kind="pull_request", title="Retry the GA4 handshake")}
+    (bare,) = source_problems([_day("gh:pr-412", brief=DayBrief())], known, max_days=2)
+    assert "`brief`" in bare
+    stray = DayBrief(idea="x", evidence=["9 of 23 days on one hook [gh:pr-529]"])
+    (problem,) = source_problems([_day("gh:pr-412", brief=stray)], known, max_days=2)
+    assert "gh:pr-529" in problem
+
+
+def test_a_brief_is_bounded_whatever_the_model_writes():
+    brief = DayBrief(idea="x" * 2_000, evidence=[f"fact {n}" for n in range(20)] + ["", "  "])
+    assert len(brief.idea) <= 400 and len(brief.evidence) == 6
 
 
 def test_a_cited_source_takes_the_feed_s_title_and_link():

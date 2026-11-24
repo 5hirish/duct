@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_FEED,
+  dayIdea,
   daySources,
   feedDayCount,
   feedFromHistory,
@@ -112,5 +113,14 @@ describe("Source code", () => {
     expect(offeredSources([])).not.toContain("milestones");
     // A link made before milestones went keeps working, without them.
     expect(feedFromParams(new URLSearchParams("source=work&sources=github,milestones")).sources).toEqual(["github"]);
+  });
+});
+
+describe("dayIdea", () => {
+  it("is the idea a day planned from shipped work carries, and nothing for any other day", () => {
+    expect(dayIdea({ brief: { idea: "  Send the invoice from the driveway. " } })).toBe("Send the invoice from the driveway.");
+    expect(dayIdea({ brief: { idea: 42 } })).toBe("");
+    expect(dayIdea({ topic: "t" })).toBe("");
+    expect(dayIdea(null)).toBe("");
   });
 });

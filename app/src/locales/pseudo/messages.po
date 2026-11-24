@@ -9194,6 +9194,10 @@ msgid "Read the topic bank"
 msgstr ""
 
 #: src/components/workspace/ActivityRow.jsx
+msgid "Read what shipped"
+msgstr ""
+
+#: src/components/workspace/ActivityRow.jsx
 msgid "Read what was posted before"
 msgstr ""
 

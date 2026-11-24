@@ -582,6 +582,71 @@ async def _memory_block(session: ContentSession, *, query: str = "", emit: EmitF
 # ---------------------------------------------------------------------------
 
 
+
+def _recent_posts(project_id: Any, limit: int = 5) -> list[dict]:
+    """The project's last saved posts, oldest first, for a draft's kickoff:
+    the line "Recent posts (last 5)" read "(no recent posts)" on every draft
+    because the caller passed an empty list."""
+    from sqlmodel import Session, select
+
+    from db.session import get_engine
+    from agents.content.schema import ContentStatus
+    from models.content import ContentPost
+
+    try:
+        with Session(get_engine()) as db:
+            rows = db.exec(
+                select(ContentPost)
+                .where(ContentPost.project_id == project_id, ContentPost.status != ContentStatus.PENDING)
+                .order_by(ContentPost.updated_at.desc())  # type: ignore[union-attr]
+                .limit(limit)
+            ).all()
+    except Exception:  # noqa: BLE001 — the draft runs without them, as it always did
+        logger.warning("content: recent posts unavailable", exc_info=True)
+        return []
+    return [{"topic": r.topic, "pillar": r.pillar, "hook_type": r.hook_type} for r in reversed(rows)]
+
+
+def _day_story(user_id: Any, project_id: Any, day: Any) -> Any:
+    """A day planned from shipped work, as a feed of its own sources, so its
+    writer can open what the plan read. None for any other day, or when the
+    repository is not connected for this person."""
+    from agents.content.feed import story_digest
+    from service.github.access import bound_read_credentials
+    from service.github.work import repository_visibility
+
+    sources = list(getattr(day, "sources", None) or [])
+    if not sources or user_id is None:
+        return None
+    digest = story_digest(sources)
+    if digest is None:
+        return None
+    creds = bound_read_credentials(user_id, project_id)
+    if creds is None:
+        return None
+    try:
+        digest.visibility = repository_visibility(creds)
+    except Exception:  # noqa: BLE001 — unknown reads as private, which shows less
+        logger.warning("content: repository visibility unavailable", exc_info=True)
+    return digest
+
+
+def _github_repository_facts(user_id: Any, project_id: Any) -> dict | None:
+    """Whether the bound repository is public, and its open asks for help
+    (service/github/work.py). None when either cannot be read: the feed then
+    treats the repository as private, which only ever shows less."""
+    from service.github.access import bound_read_credentials
+    from service.github.work import repository_facts
+
+    creds = bound_read_credentials(user_id, project_id)
+    if creds is None:
+        return None
+    try:
+        return repository_facts(creds)
+    except Exception:  # noqa: BLE001 — the window's events are read; this is extra
+        logger.warning("content: repository facts unavailable", exc_info=True)
+        return None
+
 class ContentRunner:
     """Content Studio as a live session: plan or draft, then chat, on any provider.
 
@@ -939,6 +1004,7 @@ class ContentRunner:
 
         from agents.content.feed import (
             GITHUB_ENTITY, FeedSource, build_digest, duct_items, feed_window, github_note, planned_refs,
+            set_aside_refs,
         )
         from agents.insights.fetchers import fetch_entity
         from db.session import get_engine
@@ -964,6 +1030,7 @@ class ContentRunner:
         window = feed_window(options, plans, today=today)
         already = planned_refs(plans)
         rows, note = None, ""
+        repo_facts: dict | None = None
         if FeedSource.GITHUB in options.sources:
             # A connector read is on someone's credentials; a run with no
             # user (a legacy stream route) reads Duct's record alone.
@@ -972,6 +1039,8 @@ class ContentRunner:
                 date_from=window[0].isoformat(), date_to=window[1].isoformat(),
             ) if user_id is not None else {"status": "not_connected", "message": "No signed-in user."}
             rows, note = github_note(fetched)
+            if rows is not None and fetched.get("status") == "ok":
+                repo_facts = await asyncio.to_thread(_github_repository_facts, user_id, project_id)
 
         def _duct() -> list:
             with Session(get_engine()) as db:
@@ -997,7 +1066,8 @@ class ContentRunner:
                 user_id, project_id, options.sources, window, already=already,
             )
         digest = build_digest(options, window, github_rows=rows, github_note_text=note, duct=duct,
-                              already=already, extra=[e for e in (extra, more) if e is not None])
+                              already=already, extra=[e for e in (extra, more) if e is not None],
+                              github_repo=repo_facts, set_aside=set_aside_refs(plans))
         await emit({
             "event": ContentEvent.STEP_FINISHED,
             "step_id": ContentStep.READ_WORK,
@@ -1037,13 +1107,19 @@ class ContentRunner:
             session.post_id = existing_post_id
         revising = session.post_id is not None
 
+        if day is not None and getattr(day, "sources", None):
+            session.story = await asyncio.to_thread(
+                _day_story, getattr(session, "user_id", None), project_id, day,
+            )
+
         async def _opening(brand: ContentBrandContext) -> str:
             if revising:
                 return build_post_revise_prompt(brand, day, channel=ch)
+            recent = await asyncio.to_thread(_recent_posts, project_id)
             return build_post_user_prompt(
                 brand, day,
                 topic=topic, pillar=pillar, format_slug=format_slug,
-                avatar=None, recent_posts=[], channel=ch,
+                avatar=None, recent_posts=recent, channel=ch,
             )
 
         await self._run_mode(

@@ -400,7 +400,8 @@ def _memory_get_finish(args: dict[str, Any], result: Any, is_error: bool) -> dic
 def _read_start(args: dict[str, Any]) -> dict[str, Any]:
     """A read of something the project already holds — brand context, the
     topic bank, connected sources. The tool name says which; the app words it."""
-    return {"kind": ActivityKind.CONTEXT, "title": _words(args.get("post_id") or args.get("slide_id") or args.get("query"))}
+    return {"kind": ActivityKind.CONTEXT, "title": _words(
+        args.get("post_id") or args.get("slide_id") or args.get("query") or args.get("ref"))}
 
 
 def _read_finish(args: dict[str, Any], result: Any, is_error: bool) -> dict[str, Any]:
@@ -413,7 +414,7 @@ def _read_finish(args: dict[str, Any], result: Any, is_error: bool) -> dict[str,
         # What was read, by its words once they are known: a post by its
         # topic, never by the id the model addressed it with.
         "title": _words(env.get("topic") or env.get("headline") or env.get("title"))
-        or _words(args.get("post_id") or args.get("slide_id") or args.get("query")),
+        or _words(args.get("post_id") or args.get("slide_id") or args.get("query") or args.get("ref")),
         "meta": {"count": count} if count is not None else {},
         "error": "" if ok else _text(env.get("message")),
     }
@@ -619,6 +620,8 @@ ACTIVITY_TOOLS: dict[str, tuple[Callable[..., dict], Callable[..., dict]]] = {
     "discover_tiktok": (_tiktok_start, _tiktok_finish),
     "fetch_post": (_read_start, _read_finish),
     "fetch_slide_context": (_read_start, _read_finish),
+    # One item of a plan's shipped-work list, opened whole (agents/content/feed_read.py).
+    "read_shipped_work": (_read_start, _read_finish),
     # … and what it does on the person's behalf.
     "submit_plan": (_action_start, _action_finish),
     "revise_plan_days": (_action_start, _action_finish),

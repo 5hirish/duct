@@ -49,6 +49,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from service.github.prose import added_lines, closes, launch_held, launch_line, launch_names_outlet
+
 # The GitHub connector's one entity (agents/insights/catalog/github.py).
 GITHUB_ENTITY = "github_work_events"
 
@@ -62,8 +64,19 @@ MAX_FEED_DAYS = 7
 # How much reaches the prompt. A busy fortnight is hundreds of commits; the
 # model needs the stories, and every ref it cites must be one it was shown.
 MAX_ITEMS = 40
+# Past the cap, the rest stay citable as one line each (ref and title), so a
+# busy month loses its detail, never its stories: the model can open any of
+# them with read_shipped_work. Before this the 41st item simply vanished, and
+# the newest forty pull requests won whatever they were worth (#561).
+MAX_MORE = 60
 MAX_RECORD_ITEMS = 15
 MAX_DETAIL_CHARS = 240
+# A pull request's detail is its why and its Launch line (service/github/prose.py),
+# and a changelog's is the entries it added; both earn more than a commit body.
+PR_DETAIL_CHARS = 500
+CHANGELOG_DETAIL_CHARS = 600
+# How many items, or files, one run may open with read_shipped_work.
+MAX_READS = 12
 
 # The gate. A release alone is worth a post; three merged changes are; a
 # change Duct applied, with its result, is. Memories support a story and
@@ -100,10 +113,23 @@ CHANGE_STATUSES = frozenset({"applied", "partial", "rolled_back"})
 # Memory kinds that say what happened or what it taught.
 MEMORY_KINDS = frozenset({"outcome", "conclusion", "event", "decision"})
 
+# A pull request whose Launch line says to wait. It stays visible, so the model
+# can say why it was left out, and a plan day may not cite it.
+HELD = "launch held"
+# An open issue a public repository labelled for outside help: a story for
+# contributors, never shipped work, so it scores nothing at the gate.
+ASK = "help wanted"
+# A commit a merge brought in from a pull request's branch (fetch.mark_branch_commits).
+BRANCH = "branch"
+# What kind of change a conventional type names, for ranking: what a user got
+# first, how it was done last. Untyped work ranks as a fix: unknown, kept.
+TYPE_WEIGHT = {"feat": 3, "perf": 2, "fix": 2, "": 2, "security": 2}
+
 _CONVENTIONAL = re.compile(r"^(?P<type>[a-zA-Z]+)(?:\([^)]*\))?!?:\s")
 _DEPENDENCY = re.compile(r"^(?:build\(deps[^)]*\):\s*)?(?:bump|update|upgrade)\s+\S+.*\bfrom\s+\S+\s+to\s+\S+", re.IGNORECASE)
 _SQUASHED_PR = re.compile(r"\(#(\d+)\)\s*$")
 _MERGE_COMMIT = re.compile(r"^Merge (?:pull request|branch)\b", re.IGNORECASE)
+_REVERT = re.compile(r"^Revert\b", re.IGNORECASE)
 _REF = re.compile(r"^(?:gh|art|cs|mem|ln|nt|rs|ms):[A-Za-z0-9._#/-]+$")
 
 
@@ -181,6 +207,60 @@ class DaySource(BaseModel):
     kind: str = ""
     title: str = ""
     url: str = ""
+    # The source's own reference (``#412``, a tag, a sha), filled from the feed
+    # by resolve_sources, so the day's writer can open it again (story_digest).
+    raw: str = ""
+
+
+class SetAside(BaseModel):
+    """A feed item a plan looked at and chose not to tell, and why."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    ref: str = Field(description="The ref exactly as the feed listed it.")
+    why: str = Field("", description="Why it was left out, in a few words: 'announcement only', 'launch held', 'told in March'.")
+
+
+MAX_SET_ASIDE = 40
+
+
+MAX_EVIDENCE = 6
+BRIEF_CHARS = 400
+_CITED = re.compile(r"\[([a-z]{2,3}:[A-Za-z0-9._#/-]+)\]")
+
+
+class DayBrief(BaseModel):
+    """What a day planned from shipped work hands the agent that writes it.
+
+    The plan run reads the pull requests; the draft run, days later, used to
+    get one line (``topic=… · pillar=…``) and had to guess the story back,
+    with no way to open what the plan had read. On 2026-11-24 the plan the
+    build-in-public skill wrote for the same window carried, per post, the
+    reader, the idea, the proof, the quotable line and the one ask; this is
+    that handoff, on the day itself.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    reader: str = Field("", description="Who this post is for and what the problem costs them now, in their words.")
+    idea: str = Field("", description="What the reader can do or know after reading, without clicking. The post is this, not the feature.")
+    evidence: list[str] = Field(
+        default_factory=list,
+        description=(
+            f"Up to {MAX_EVIDENCE} facts the writer may use, each from what you read and ending in its ref, "
+            "e.g. 'a plan put 9 of 23 days on one hook [gh:pr-529]'. The writer uses no number or claim not here."
+        ),
+    )
+    pasteable: str = Field("", description="The one sentence someone else would quote.")
+    ask: str = Field("", description="The one thing the post ends on: a try path, or for a contributor story the issue.")
+
+    def model_post_init(self, _context: Any) -> None:
+        for name in ("reader", "idea", "pasteable", "ask"):
+            setattr(self, name, _clip(getattr(self, name), BRIEF_CHARS))
+        self.evidence = [_clip(e, BRIEF_CHARS) for e in self.evidence if str(e or "").strip()][:MAX_EVIDENCE]
+
+    def empty(self) -> bool:
+        return not (self.idea or self.evidence)
 
 
 @dataclass
@@ -192,6 +272,11 @@ class FeedItem:
     url: str = ""
     at: str = ""
     state: str = ""
+    # The source's own reference (``#412``, ``v1.4.0``, a path, a sha), for
+    # read_shipped_work; the ref above is sanitised and shortened.
+    raw: str = ""
+    # Why an earlier plan from shipped work left this out (SetAside).
+    aside: str = ""
 
     def chip(self) -> dict[str, str]:
         return {"ref": self.ref, "kind": self.kind, "title": self.title, "url": self.url}
@@ -207,17 +292,30 @@ class FeedDigest:
     items: list[FeedItem] = field(default_factory=list)
     left_out: Counter = field(default_factory=Counter)
     notes: list[str] = field(default_factory=list)
+    # Past MAX_ITEMS: listed by title, still citable, opened on request.
+    more: list[FeedItem] = field(default_factory=list)
+    # The repository's visibility as GitHub reported it; "" is unknown, read as private.
+    visibility: str = ""
+    reads: int = 0
+
+    @property
+    def all_items(self) -> list[FeedItem]:
+        return [*self.items, *self.more]
 
     @property
     def score(self) -> int:
-        return sum(WEIGHTS.get(i.kind, 0) for i in self.items)
+        return sum(WEIGHTS.get(i.kind, 0) for i in self.all_items if i.state != ASK)
 
     @property
     def worth_a_plan(self) -> bool:
         return self.score >= GATE_SCORE
 
     def refs(self) -> dict[str, FeedItem]:
-        return {i.ref: i for i in self.items}
+        return {i.ref: i for i in self.all_items}
+
+    @property
+    def public(self) -> bool:
+        return self.visibility == "public"
 
     def payload(self) -> dict[str, Any]:
         """What the read step carries to the app: the chips, the left-out line
@@ -227,7 +325,7 @@ class FeedDigest:
             "worth_a_plan": self.worth_a_plan,
             "score": self.score,
             "gate": GATE_SCORE,
-            "items": [i.chip() for i in self.items],
+            "items": [i.chip() for i in self.all_items],
             "left_out": {str(k): n for k, n in self.left_out.items()},
             "notes": list(self.notes),
             "max_days": self.options.max_days,
@@ -269,6 +367,79 @@ def feed_window(options: FeedOptions, plans: Iterable[Any], *, today: date) -> t
         return today - timedelta(days=DEFAULT_LOOK_BACK_DAYS - 1), today
     start = max(last + timedelta(days=1), today - timedelta(days=MAX_LOOK_BACK_DAYS - 1))
     return start, today
+
+
+def set_aside_refs(plans: Iterable[Any]) -> dict[str, str]:
+    """Every ref an earlier plan from shipped work looked at and left out,
+    with its reason. Shown again marked, never hidden: a Launch line that
+    said "not yet" may say "post it" now, and only a read can tell."""
+    aside: dict[str, str] = {}
+    for plan in plans:
+        feed = (getattr(plan, "strategy", None) or {}).get("feed") or {}
+        for entry in feed.get("set_aside") or []:
+            if isinstance(entry, dict) and entry.get("ref"):
+                aside.setdefault(str(entry["ref"]), str(entry.get("why") or ""))
+    return aside
+
+
+def clean_set_aside(entries: Iterable[Any], known: dict[str, "FeedItem"]) -> list[dict[str, str]]:
+    """What a plan records as left out: refs this run was shown, once each."""
+    kept: dict[str, str] = {}
+    for entry in entries or []:
+        ref = str(getattr(entry, "ref", None) or (entry.get("ref") if isinstance(entry, dict) else "") or "")
+        why = getattr(entry, "why", None) if not isinstance(entry, dict) else entry.get("why")
+        if ref in known and ref not in kept:
+            kept[ref] = _clip(why or "", 200)
+    return [{"ref": r, "why": w} for r, w in list(kept.items())[:MAX_SET_ASIDE]]
+
+
+def story_moved(before: dict, fields: dict) -> bool:
+    """A change outside a plan from shipped work gave a sourced day a new
+    topic: its brief and sources describe a story it no longer tells."""
+    if not isinstance(before, dict):
+        return False
+    topic = fields.get("topic")
+    return (
+        bool(before.get("sources"))
+        and topic is not None
+        and str(topic).strip() != str(before.get("topic") or "").strip()
+    )
+
+
+def _raw_from_ref(ref: str) -> str:
+    """The source reference of a day saved before DaySource kept ``raw``."""
+    match = re.match(r"^gh:(pr|i|r|c)-(.+)$", ref or "")
+    if not match:
+        return ""
+    kind, rest = match.groups()
+    return f"#{rest}" if kind in ("pr", "i") else rest
+
+
+_KIND_OF_PREFIX = {"pr": "pull_request", "i": "issue", "r": "release", "c": "commit", "doc": "docs_change"}
+
+
+def story_digest(sources: Iterable[Any], visibility: str = "") -> "FeedDigest | None":
+    """The day's own sources as a feed of their own, so the agent writing a
+    day planned from shipped work can open what the plan read (feed_read).
+    Only GitHub sources open again; None when the day has none."""
+    items: list[FeedItem] = []
+    for src in sources or []:
+        data = src if isinstance(src, dict) else (src.model_dump() if isinstance(src, BaseModel) else {})
+        ref = str(data.get("ref") or "")
+        if not ref.startswith("gh:"):
+            continue
+        prefix = ref[3:].split("-", 1)[0]
+        kind = str(data.get("kind") or _KIND_OF_PREFIX.get(prefix, ""))
+        raw = str(data.get("raw") or _raw_from_ref(ref))
+        if kind and raw:
+            items.append(FeedItem(ref=ref, kind=kind, title=str(data.get("title") or ""),
+                                  url=str(data.get("url") or ""), raw=raw))
+    if not items:
+        return None
+    today = date.today()
+    digest = FeedDigest(window_from=today, window_to=today, options=FeedOptions(), items=items)
+    digest.visibility = visibility
+    return digest
 
 
 def planned_refs(plans: Iterable[Any]) -> set[str]:
@@ -329,9 +500,12 @@ def github_items(
     disclosure: Disclosure,
     *,
     already: set[str],
+    public: bool = False,
 ) -> tuple[list[FeedItem], Counter]:
     """The repository's events that could carry a post, and why the rest did
-    not. ``rows`` is ``fetch_github``'s list, newest first."""
+    not. ``rows`` is ``fetch_github``'s list, newest first. ``public`` lets a
+    changelog's new entries through as text; a private repository's diffs
+    never reach the prompt."""
     left: Counter = Counter()
     merged_prs = {
         str(r.get("ref") or "").lstrip("#")
@@ -352,18 +526,25 @@ def github_items(
         if kind == "release" and row.get("state") == "prerelease" and disclosure is not Disclosure.EVERYTHING:
             left[LeftOut.PRERELEASE] += 1
             continue
-        if is_bot(row.get("author")):
+        # A release is published by whoever runs the release workflow, which is
+        # usually a bot: Duct's own desktop releases are github-actions[bot]'s,
+        # and the feed dropped every one of them as noise until 2026-11-24.
+        if kind != "release" and is_bot(row.get("author")):
             left[LeftOut.BOT] += 1
             continue
         if _DEPENDENCY.match(title):
             left[LeftOut.DEPENDENCY] += 1
             continue
-        if kind in ("commit", "pull_request") and conventional_type(title) in NOISE_TYPES:
+        if kind in ("commit", "pull_request") and (
+            conventional_type(title) in NOISE_TYPES or _REVERT.match(title)
+        ):
             left[LeftOut.CHORE] += 1
             continue
+        state = str(row.get("state") or "")
         if kind == "commit":
             squashed = _SQUASHED_PR.search(title)
-            if _MERGE_COMMIT.match(title) or (squashed and squashed.group(1) in merged_prs):
+            if (_MERGE_COMMIT.match(title) or (squashed and squashed.group(1) in merged_prs)
+                    or (state == BRANCH and merged_prs)):
                 left[LeftOut.SQUASHED] += 1
                 continue
         if kind == "docs_change":
@@ -371,8 +552,15 @@ def github_items(
             if not _docs_visible(path, disclosure):
                 left[LeftOut.INTERNAL_DOCS] += 1
                 continue
-            # The patch is the file's text; a plan needs to know it changed.
-            detail = ""
+            # The patch is the file's text: a private repository's never reaches
+            # the prompt. A public changelog's new entries are written for readers.
+            changelog = path.split(".", 1)[0].upper() == "CHANGELOG" and "/" not in path
+            detail = added_lines(str(row.get("body") or ""), CHANGELOG_DETAIL_CHARS) if public and changelog else ""
+        elif kind == "pull_request":
+            body = str(row.get("body") or "")
+            detail = _clip(body, PR_DETAIL_CHARS)
+            if launch_held(launch_line(body)):
+                state = HELD
         else:
             detail = _clip(row.get("body"))
         ref = _github_ref(kind, str(row.get("ref") or ""))
@@ -382,9 +570,52 @@ def github_items(
         kept.append(FeedItem(
             ref=ref, kind=kind, title=_clip(title, 200), detail=detail,
             url=str(row.get("url") or ""), at=str(row.get("at") or "")[:10],
-            state=str(row.get("state") or ""),
+            state=state, raw=str(row.get("ref") or ""),
         ))
     return kept, left
+
+
+def ask_items(asks: list[dict], disclosure: Disclosure, *, already: set[str]) -> list[FeedItem]:
+    """Open issues a public repository labelled for outside help
+    (``service/github/work.repository_facts``): a contributor story, cited
+    like any other. An assigned one is someone's already."""
+    if disclosure is Disclosure.RELEASES:
+        return []
+    out: list[FeedItem] = []
+    for ask in asks:
+        ref = _github_ref("issue", str(ask.get("ref") or ""))
+        if ask.get("assigned") or ref in already or not ask.get("title"):
+            continue
+        labels = ", ".join(ask.get("labels") or [])
+        out.append(FeedItem(
+            ref=ref, kind="issue", title=_clip(ask.get("title"), 200),
+            detail=_clip(f"{ask.get('body') or ''} (labels: {labels})" if labels else ask.get("body")),
+            url=str(ask.get("url") or ""), at=str(ask.get("at") or "")[:10], state=ASK,
+            raw=str(ask.get("ref") or ""),
+        ))
+    return out
+
+
+def significance(item: FeedItem) -> int:
+    """How much of a story an item is likely to be, for the cap. Not the
+    gate's score: that asks whether a window is worth a plan at all; this asks
+    which items get their detail when there are more than MAX_ITEMS.
+
+    A pull request is ranked by what it did (a feature over a fix over
+    plumbing), whether its maintainer named an outlet for it, whether it
+    closes an issue someone filed, and whether its body says why. Recency
+    only breaks ties: the best story in a month is often its oldest."""
+    if item.state == HELD:
+        return -1
+    if item.kind not in ("pull_request", "commit"):
+        return 0
+    value = TYPE_WEIGHT.get(conventional_type(item.title), 1)
+    if item.kind == "pull_request":
+        launch = launch_line(item.detail)
+        value += 2 if launch_names_outlet(launch) else 0
+        value += 1 if closes(item.detail) else 0
+        value += 1 if len(item.detail) >= 200 else 0
+    return value
 
 
 def github_note(fetched: dict) -> tuple[list[dict], str]:
@@ -489,15 +720,23 @@ def build_digest(
     duct: list[FeedItem] | None,
     already: set[str],
     extra: Any = None,
+    github_repo: dict | None = None,
+    set_aside: dict[str, str] | None = None,
 ) -> FeedDigest:
-    """Filter, cap and score. Releases and Duct's applied changes go first,
-    because when the cap bites those are the stories to keep."""
+    """Filter, rank and cap. Releases and Duct's applied changes go first,
+    because when the cap bites those are the stories to keep; inside a kind,
+    the more significant item first, then the newer. ``github_repo`` is
+    ``service/github/work.repository_facts``: the visibility, and the open
+    issues asking for help."""
     digest = FeedDigest(window_from=window[0], window_to=window[1], options=options)
+    digest.visibility = str((github_repo or {}).get("visibility") or "")
     items: list[FeedItem] = []
     if github_rows is not None:
-        kept, left = github_items(github_rows, options.disclosure, already=already)
+        kept, left = github_items(github_rows, options.disclosure, already=already, public=digest.public)
         items += kept
         digest.left_out.update(left)
+    if digest.public:
+        items += ask_items(list((github_repo or {}).get("asks") or []), options.disclosure, already=already)
     if github_note_text:
         digest.notes.append(github_note_text)
     if duct is not None:
@@ -509,12 +748,15 @@ def build_digest(
         digest.notes += more.notes
     order = {"release": 0, "milestone": 0, "change_set": 1, "post": 2, "notion_page": 2, "pull_request": 3,
              "linear_issue": 3, "artifact": 4, "commit": 5, "docs_change": 6, "issue": 7, "memory": 8}
-    # Newest first inside a kind.
-    items.sort(key=lambda i: (order.get(i.kind, 9), _neg_date(i.at)))
-    if len(items) > MAX_ITEMS:
-        digest.left_out[LeftOut.OVER_CAP] += len(items) - MAX_ITEMS
-        items = items[:MAX_ITEMS]
-    digest.items = items
+    # An open ask sorts after the shipped work it might sit beside.
+    items.sort(key=lambda i: (order.get(i.kind, 9) + (1 if i.state == ASK else 0), -significance(i), _neg_date(i.at)))
+    for item in items:
+        if set_aside and item.ref in set_aside:
+            item.aside = set_aside[item.ref] or "no reason given"
+    digest.items = items[:MAX_ITEMS]
+    digest.more = items[MAX_ITEMS:MAX_ITEMS + MAX_MORE]
+    if len(items) > MAX_ITEMS + MAX_MORE:
+        digest.left_out[LeftOut.OVER_CAP] += len(items) - MAX_ITEMS - MAX_MORE
     return digest
 
 
@@ -530,15 +772,26 @@ def render_digest(digest: FeedDigest) -> str:
     lines = []
     for item in digest.items:
         state = f" [{item.state}]" if item.state else ""
+        state += f" [set aside before: {item.aside}]" if item.aside else ""
         when = f" {item.at}" if item.at else ""
         detail = f": {item.detail}" if item.detail else ""
         lines.append(f"- {item.ref} · {item.kind}{state}{when} · {item.title}{detail}")
     left = "; ".join(f"{LEFT_OUT_WORDS.get(why, why)}: {n}" for why, n in digest.left_out.most_common()) or "nothing"
     notes = "".join(f"\nNote: {n}" for n in digest.notes)
+    more = ""
+    if digest.more:
+        rest = "\n".join(
+            f"- {i.ref} · {i.kind}{f' [{i.state}]' if i.state else ''}"
+            f"{f' [set aside before: {i.aside}]' if i.aside else ''} · {i.title}"
+            for i in digest.more
+        )
+        more = f"\n\nAlso in the window, by title only (open one with read_shipped_work before telling it):\n{rest}"
+    repo = "public" if digest.public else "private or unknown"
     return (
         f"Window: {digest.window_from.isoformat()} to {digest.window_to.isoformat()}. "
-        f"Left out by Duct before you: {left}.{notes}\n"
+        f"Repository: {repo}. Left out by Duct before you: {left}.{notes}\n"
         + ("\n".join(lines) or "(nothing)")
+        + more
     )
 
 
@@ -563,6 +816,24 @@ def source_problems(
                 problems.append(f"Day {index + 1}: {ref!r} is not a ref. Cite refs exactly as listed, e.g. gh:pr-412.")
             elif ref not in known:
                 problems.append(f"Day {index + 1}: {ref} is not in this run's feed. Cite only refs you were shown.")
+            elif known[ref].state == HELD:
+                problems.append(
+                    f"Day {index + 1}: {ref}'s own Launch line holds it back ({known[ref].detail[-120:]}). "
+                    "Leave it for later and tell another story."
+                )
+        brief = getattr(day, "brief", None)
+        if brief is None or not brief.idea or not brief.evidence:
+            problems.append(
+                f"Day {index + 1}: its writer only sees what the day carries. Set `brief` with the idea "
+                "and at least one evidence line from what you read, each ending in its ref."
+            )
+        else:
+            stray = sorted({r for line in brief.evidence for r in _CITED.findall(line) if r not in known})
+            if stray:
+                problems.append(
+                    f"Day {index + 1}: its evidence cites {', '.join(stray)}, not in this run's feed. "
+                    "Cite only refs you were shown."
+                )
     if feed_days > max_days:
         problems.append(
             f"{feed_days} days cite the feed; this plan may give it at most {max_days}. "
@@ -578,15 +849,24 @@ def resolve_sources(days: list[Any], known: dict[str, FeedItem]) -> None:
         for src in getattr(day, "sources", None) or []:
             item = known.get(getattr(src, "ref", ""))
             if item is not None:
-                src.kind, src.title, src.url = item.kind, item.title, item.url
+                src.kind, src.title, src.url, src.raw = item.kind, item.title, item.url, item.raw
 
 
 __all__ = [
     "DEFAULT_LOOK_BACK_DAYS",
+    "ASK",
     "DEFAULT_MAX_FEED_DAYS",
+    "HELD",
+    "MAX_READS",
     "GATE_SCORE",
     "GITHUB_ENTITY",
+    "DayBrief",
     "DaySource",
+    "SetAside",
+    "clean_set_aside",
+    "set_aside_refs",
+    "story_digest",
+    "story_moved",
     "Disclosure",
     "FeedDigest",
     "FeedItem",
@@ -594,6 +874,7 @@ __all__ = [
     "FeedSource",
     "LEFT_OUT_WORDS",
     "LeftOut",
+    "ask_items",
     "build_digest",
     "conventional_type",
     "duct_items",
@@ -604,5 +885,6 @@ __all__ = [
     "planned_refs",
     "render_digest",
     "resolve_sources",
+    "significance",
     "source_problems",
 ]

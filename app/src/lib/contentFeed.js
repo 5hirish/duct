@@ -150,6 +150,16 @@ export function daySources(day) {
   return Array.isArray(day?.sources) ? day.sources.filter((s) => s && s.ref) : [];
 }
 
+/**
+ * What a day planned from shipped work teaches its reader: the idea its
+ * brief carries, written by the plan in the brand's content language, so it
+ * is shown as written and never translated. "" for any other day.
+ */
+export function dayIdea(day) {
+  const idea = day?.brief?.idea;
+  return typeof idea === "string" ? idea.trim() : "";
+}
+
 /** How many of a plan's days were planned from shipped work. */
 export function feedDayCount(days) {
   return (Array.isArray(days) ? days : []).filter((d) => daySources(d).length > 0).length;

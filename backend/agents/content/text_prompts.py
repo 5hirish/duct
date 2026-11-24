@@ -254,8 +254,20 @@ def text_system_prompt(playbook: str) -> str:
     return f"{TEXT_ORCHESTRATOR_BASE_PROMPT}\n\n{PLAYBOOKS[playbook]}\n\n{TEXT_POSTDRAFT_SHAPE}"
 
 
-def text_post_user_prompt(*, brand_stanza: str, project_name: str, channel, target: str, recent_lines: str) -> str:
-    """Kickoff for a text draft. Words only: no layout, no image prompts."""
+def text_post_user_prompt(
+    *, brand_stanza: str, project_name: str, channel, target: str, recent_lines: str, story: str = "",
+) -> str:
+    """Kickoff for a text draft. Words only: no layout, no image prompts.
+    ``story`` is a shipped-work day's brief (prompts._story_stanza): its idea
+    is the angle, so the search step only checks it."""
+    angle = (
+        "3. The angle is the brief's idea. Look for one current source that\n"
+        "   confirms or sharpens it only if the brief leaves a claim unsupported\n"
+        "   (web_search, at most 2 queries)."
+        if story else
+        "3. Pick the one angle worth a post, then look for one current source that\n"
+        "   confirms, quantifies or contradicts it (web_search, at most 3 queries)."
+    )
     return f"""\
 {brand_stanza}
 
@@ -264,7 +276,7 @@ Draft one {channel.label} post for {project_name}.
 TARGET CHANNEL: {channel.label} — apply the {channel.label} playbook.
 
 Target: {target}
-
+{story}
 Recent posts (last 5):
 {recent_lines}
 
@@ -273,8 +285,7 @@ Now:
 1. Call write_todos with your checklist so the user can follow along.
 2. Read what has already been said: fetch_content_history, and search memory
    for this brand's voice rules, past feedback and lessons already posted.
-3. Pick the one angle worth a post, then look for one current source that
-   confirms, quantifies or contradicts it (web_search, at most 3 queries).
+{angle}
 4. Write the post to the {channel.label} playbook. Emit it inside
    <duct_artifact>{{ "type": "post", "post_type": "text", ... }}</duct_artifact>,
    then call submit_post_draft.

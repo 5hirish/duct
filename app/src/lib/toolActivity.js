@@ -61,6 +61,7 @@ export const ACTIVITY_TOOLS = Object.freeze({
   discover_tiktok: ActivityKind.CONTEXT,
   fetch_post: ActivityKind.CONTEXT,
   fetch_slide_context: ActivityKind.CONTEXT,
+  read_shipped_work: ActivityKind.CONTEXT,
   submit_plan: ActivityKind.ACTION,
   revise_plan_days: ActivityKind.ACTION,
   submit_post_draft: ActivityKind.ACTION,

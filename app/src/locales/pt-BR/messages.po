@@ -9200,6 +9200,10 @@ msgid "Read the topic bank"
 msgstr "Leu o banco de tópicos"
 
 #: src/components/workspace/ActivityRow.jsx
+msgid "Read what shipped"
+msgstr "Leu o que foi lançado"
+
+#: src/components/workspace/ActivityRow.jsx
 msgid "Read what was posted before"
 msgstr "Leu o que foi postado antes"
 
