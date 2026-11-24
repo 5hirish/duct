@@ -114,9 +114,16 @@ export default function ProjectEntitySelect({
       // nothing to do with Duct — an expired grant, a revoked property, an
       // outage. Say which, and leave any existing choice untouched: a failed
       // lookup is not evidence the stored selection is wrong.
-      setState({ status: "error", entities: [], error: err?.message || String(err) });
+      // A sign-in the provider refused comes back as a code (409
+      // `connector_expired`), worded here rather than by the server.
+      const refused = err?.status === 409 && err?.message === "connector_expired";
+      setState({
+        status: "error",
+        entities: [],
+        error: refused ? t`This sign-in no longer works. Reconnect, then choose again.` : err?.message || String(err),
+      });
     }
-  }, [credentialId, loadEntities]);
+  }, [credentialId, loadEntities, t]);
 
   // Load on first open only. Reopening keeps what we have; Refresh re-fetches.
   useEffect(() => {

@@ -451,13 +451,21 @@ export default function ConnectionsPage() {
     return { scopes: row.scopes || [], scopeStatus: row.scope_status || "" };
   }
 
+  // Stored is not the same as working, either: Google can refuse a sign-in
+  // it issued (revoked, expired, or minted for another of Duct's clients), and
+  // the server marks the row when a read meets that. A green "Connected"
+  // over a sign-in every read fails on is the card lying.
+  const needsReconnect = (type) => !!serverRows[type]?.needs_reconnect;
+
   function toneFor(authorized, type) {
     if (!authorized) return "off";
+    if (needsReconnect(type)) return "partial";
     return serverRows[type]?.scope_status === "partial" ? "partial" : "on";
   }
 
   function connectionStatusFor(authorized, type) {
     if (!authorized) return t`Not connected`;
+    if (needsReconnect(type)) return t`Reconnect`;
     const missing = serverRows[type]?.missing_scopes?.length || 0;
     if (!missing) return t`Connected`;
     return plural(missing, {
@@ -506,7 +514,7 @@ export default function ConnectionsPage() {
           {...extra}
           {...copy.google_ads}
           logo={LOGOS.google_ads}
-          connected={gadsAuthorized}
+          connected={gadsAuthorized && !needsReconnect("google_ads")}
           oauthConnected={gadsAuthorized}
           tone={toneFor(gadsAuthorized, "google_ads")}
           {...scopeProps("google_ads")}
@@ -546,7 +554,7 @@ export default function ConnectionsPage() {
           {...extra}
           {...copy.gsc}
           logo={LOGOS.gsc}
-          connected={gscAuthorized}
+          connected={gscAuthorized && !needsReconnect("gsc")}
           oauthConnected={gscAuthorized}
           tone={toneFor(gscAuthorized, "gsc")}
           status={connectionStatusFor(gscAuthorized, "gsc")}
@@ -562,7 +570,7 @@ export default function ConnectionsPage() {
           {...extra}
           {...copy.ga4}
           logo={LOGOS.ga4}
-          connected={ga4Authorized}
+          connected={ga4Authorized && !needsReconnect("ga4")}
           oauthConnected={ga4Authorized}
           tone={toneFor(ga4Authorized, "ga4")}
           status={connectionStatusFor(ga4Authorized, "ga4")}
@@ -578,7 +586,7 @@ export default function ConnectionsPage() {
           {...extra}
           {...copy.gtm}
           logo={LOGOS.gtm}
-          connected={gtmAuthorized}
+          connected={gtmAuthorized && !needsReconnect("gtm")}
           oauthConnected={gtmAuthorized}
           tone={toneFor(gtmAuthorized, "gtm")}
           status={connectionStatusFor(gtmAuthorized, "gtm")}

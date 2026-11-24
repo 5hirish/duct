@@ -38,6 +38,7 @@ from uuid import UUID
 from agents.core.errors import ErrorCode, classify_error, safe_excerpt
 from agents.insights.catalog.base import _CATALOGS
 from agents.insights.catalog.publishers import PUBLISHERS_SOURCE
+from service.connector_health import is_refused_grant, record_read
 from utils.dates import last_n_days
 
 logger = logging.getLogger(__name__)
@@ -294,6 +295,16 @@ def resolve_window(date_from: str, date_to: str) -> tuple[str, str]:
     return last_n_days(DEFAULT_WINDOW_DAYS)
 
 
+def _record_read(row_id: UUID, *, refused: bool) -> None:
+    from db.session import get_session as db_session
+
+    try:
+        with next(db_session()) as db:
+            record_read(db, row_id, refused=refused)
+    except Exception:  # noqa: BLE001 - fetch_entity never raises
+        logger.warning("insights: could not record a read on %s", row_id, exc_info=True)
+
+
 def fetch_entity(
     entity_id: str,
     *,
@@ -320,6 +331,7 @@ def fetch_entity(
     from service.connector_access import (
         STATUS_BOUND,
         get_data_source,
+        read_credential_row,
         resolve_read_credentials,
     )
 
@@ -340,6 +352,16 @@ def fetch_entity(
             connector_type=spec.connector_id,
             account_id=account_id,
         )
+        # Which sign-in this read spends, so the Toolbox card can follow what
+        # Google said about it (service/connector_health.py). Bookkeeping:
+        # failing to find the row costs the card a colour, never the read.
+        try:
+            cred_row = read_credential_row(db, user_id, spec.connector_id, account_id, project_id)
+        except Exception:  # noqa: BLE001
+            logger.warning("insights: no credential row for %s", spec.connector_id, exc_info=True)
+            cred_row = None
+        cred_row_id = cred_row.id if cred_row is not None else None
+        cred_flagged = bool(cred_row and cred_row.needs_reconnect_at)
 
     # Google-shaped connectors need a refresh token; manual-credential
     # connectors hand back their own blob, so "anything stored" is the test.
@@ -375,6 +397,8 @@ def fetch_entity(
         }
     except Exception as exc:  # noqa: BLE001 — reported to the agent, never raised
         logger.warning("insights: fetch %s failed", entity_id, exc_info=True)
+        if cred_row_id is not None and is_refused_grant(exc):
+            _record_read(cred_row_id, refused=True)
         if classify_error(exc) is ErrorCode.CONNECTOR_EXPIRED:
             # A revoked or expired grant is not a fetch that failed; it is a
             # source that is gone until a human reconnects it. Said as such,
@@ -404,6 +428,9 @@ def fetch_entity(
                 "same call — say what you could not fetch and carry on."
             ),
         }
+
+    if cred_flagged:
+        _record_read(cred_row_id, refused=False)
 
     from agents.insights.totals import summarise
 

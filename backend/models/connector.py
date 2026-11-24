@@ -141,6 +141,16 @@ class ConnectorCredential(SQLModel, table=True):
     last_validated_at: datetime | None = Field(
         default=None, sa_column=Column(utc_datetime(), nullable=True)
     )
+    # When the provider last refused this sign-in outright (Google's
+    # `invalid_grant` or `unauthorized_client`), so the card can say Reconnect
+    # instead of Connected. Set by whichever read hit the refusal, cleared by
+    # the next read that works and by any fresh credential write. A column,
+    # not a key in the blob, for two reasons: the Toolbox reads it on every
+    # load, and a failing read rewriting the blob could land after a
+    # reconnect and put the dead token back.
+    needs_reconnect_at: datetime | None = Field(
+        default=None, sa_column=Column(utc_datetime(), nullable=True)
+    )
     created_at: datetime = Field(
         default_factory=utcnow,
         sa_column=Column(utc_datetime(), nullable=False),

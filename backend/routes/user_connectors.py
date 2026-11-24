@@ -8,6 +8,7 @@ user claims it — GitHub's App and the four Google connectors alike.
 
 from __future__ import annotations
 
+import logging
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -38,6 +39,7 @@ from service.auth_exchange import (
     consume_github_grant,
     store_connect_link_code,
 )
+from service.connector_health import is_refused_grant, record_read
 from service.connector_store import merge_settings, store_oauth_grant, upsert_credential
 from service.connectors import (
     CAP_ACCOUNTS,
@@ -52,7 +54,13 @@ from service.github import GITHUB_CONNECTOR_ID
 from service.github import app as gh_app
 from service.provider_keys import CONNECTOR_TYPE as PROVIDER_KEY_TYPE
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(tags=["user-connectors"])
+
+# The entities route's 409 detail: a code the app words, never provider prose.
+# Same string as ErrorCode.CONNECTOR_EXPIRED, which the agents' failures carry.
+CONNECTOR_EXPIRED = "connector_expired"
 
 ALLOWED_CONNECTOR_TYPES = {
     "google_ads", "ga4", "gsc", "gtm",
@@ -129,6 +137,9 @@ class ConnectorOut(BaseModel):
     # the Google Ads manager (MCC) id. The page shows what the server will
     # use rather than a copy it once typed into one tab.
     settings: dict[str, str] = {}
+    # The provider refused this sign-in on its last read: the card says
+    # Reconnect rather than Connected (service/connector_health.py).
+    needs_reconnect: bool = False
 
 
 def _settings_of(c: ConnectorCredential, keys: frozenset[str]) -> dict[str, str]:
@@ -174,6 +185,7 @@ def _to_out(c: ConnectorCredential) -> ConnectorOut:
         entity_per_row=bool(meta and meta.entity_per_row),
         entity_group=meta.entity_group_of(c.account_id) if meta and meta.entity_group_of else "",
         settings=_settings_of(c, meta.settings_keys) if meta else {},
+        needs_reconnect=c.needs_reconnect_at is not None,
     )
 
 
@@ -250,7 +262,17 @@ def list_connector_entities(
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except RuntimeError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
+    except Exception as exc:
+        # The Google clients raise their own types (RefreshError, HttpError),
+        # and one escaping here is a 500 that leaves before the CORS headers
+        # are added: the browser sees a network failure, not a refused sign-in.
+        if is_refused_grant(exc):
+            record_read(session, row.id, refused=True)
+            raise HTTPException(status_code=409, detail=CONNECTOR_EXPIRED) from exc
+        logger.warning("connector %s: listing failed", row.connector_type, exc_info=True)
+        raise HTTPException(status_code=502, detail="The provider did not answer the listing.") from exc
 
+    record_read(session, row.id, refused=False)
     return {"entities": entities, "supported": True, **_entity_nouns(meta)}
 
 

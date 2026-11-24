@@ -9319,6 +9319,7 @@ msgstr ""
 #~ msgid "recomputed at the next call"
 #~ msgstr ""
 
+#: src/app/(app)/connections/page.jsx
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/OAuthConnectorCard.jsx
 #: src/components/connections/ProviderCard.jsx
@@ -12244,6 +12245,10 @@ msgstr ""
 
 #: src/components/settings/AgentConsent.jsx
 msgid "This sign-in link doesn't work"
+msgstr ""
+
+#: src/components/connections/ProjectEntitySelect.jsx
+msgid "This sign-in no longer works. Reconnect, then choose again."
 msgstr ""
 
 #: src/components/content/PostViewport.jsx
