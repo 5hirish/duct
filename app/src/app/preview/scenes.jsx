@@ -673,6 +673,16 @@ const REVIEW_SCORED = {
   markers: REVIEW_MARKERS,
   checks: failing({ images_fresh: ["slide-04"], hashtags_unique: ["#colouranalysis"] }),
 };
+// The project's audience personas, role-played by the reviewer: words first,
+// then what each says it would do. A persona the post is not for says no.
+const REVIEW_WITH_PERSONAS = {
+  ...REVIEW_SCORED,
+  personas: [
+    { persona: "Maya, guest at three weddings this year", reaction: "Wait, that grey dress was my undertone, not the dress? I'm keeping the vein test for Saturday.", stop: "yes", save: "yes", click: "maybe", fix: "Show the before and after in one frame on slide 1." },
+    { persona: "Tess, stylist with a waiting list", reaction: "Nice for my clients, but I'd want to know the app's accuracy before I send it on.", stop: "yes", save: "maybe", click: "maybe", fix: "Say how the app reads colour, in one line on slide 5." },
+    { persona: "Jo, sceptical of beauty filters", reaction: "Another app telling me my season. Scrolling.", stop: "no", save: "no", click: "no", fix: "Open on the $300 appointment it replaced, not the app." },
+  ],
+};
 const REVIEW_STALE = {
   ...REVIEW_SCORED, overall: 67, stale: true, checks: REVIEW_CHECKS,
   scored_at: new Date(Date.now() - 3 * 3600_000).toISOString(),
@@ -3768,6 +3778,18 @@ export const SCENES = [
     render: () => (
       <div style={{ maxWidth: 672, padding: 20 }}>
         <PublishReviewPanel assessment={REVIEW_SCORED} onReview={() => {}} />
+      </div>
+    ),
+  },
+  {
+    id: "publish-review-personas",
+    state: "scored · three audience personas react · one would scroll past",
+    group: "PublishReviewPanel",
+    title: "How the audience reacts",
+    note: "The reviewer role-plays each persona saved in Brand settings: a first-person reaction, then stop, save and click as yes, maybe or no, and the one fix that would win them. Advice beside the score, never part of it. Check that a long persona name wraps above its chips rather than squeezing them, that no reads quiet (grey) rather than as an error, and that the line under the heading says this is role-play, not a measurement.",
+    render: () => (
+      <div style={{ maxWidth: 672, padding: 20 }}>
+        <PublishReviewPanel assessment={REVIEW_WITH_PERSONAS} onReview={() => {}} />
       </div>
     ),
   },

@@ -139,7 +139,9 @@ from agents.content.schema import (
     ContentStatus,
     ContentTool,
     Day,
+    MAX_PERSONA_REACTIONS,
     MarkerScore,
+    PersonaReaction,
     PlanDayChange,
     PlanDraft,
     PostDraft,
@@ -989,6 +991,10 @@ def build_content_tools_lc(
             description="One score per marker, all six, as the review_post sub-agent returned them.",
         )
         notes: str = Field("", description="Optional one-sentence overall summary.")
+        personas: list[PersonaReaction] = Field(
+            default_factory=list,
+            description="review_post's persona reactions, one per audience persona, as it returned them. Empty when the project has none.",
+        )
 
     # ----------------------- Writers -----------------------
 
@@ -2539,9 +2545,15 @@ def build_content_tools_lc(
             logger.exception("log_metrics failed")
             return _err(f"log_metrics failed: {exc}")
 
-    async def submit_assessment(markers: list, notes: str = "") -> str:
+    async def submit_assessment(markers: list, notes: str = "", personas: list | None = None) -> str:
         try:
             scores = [m if isinstance(m, MarkerScore) else MarkerScore.model_validate(m) for m in markers or []]
+            # Reactions are advisory, so an over-long list is cut to the
+            # personas a project keeps rather than refused with the scores.
+            reactions = [
+                r if isinstance(r, PersonaReaction) else PersonaReaction.model_validate(r)
+                for r in (personas or [])[:MAX_PERSONA_REACTIONS]
+            ]
             # All six or nothing: a subset would still produce a 0-100 figure,
             # and the owner could not tell it was judged on half the post.
             missing = [m.value for m in ReviewMarker if m not in {s.id for s in scores}]
@@ -2556,7 +2568,7 @@ def build_content_tools_lc(
                 result = assess(
                     row.slides or [], row.caption or "", row.hashtags or [], scores,
                     replies=row.replies or [], channel=primary_channel(row.platforms),
-                    notes=(notes or "").strip(), scored_at=now_iso(),
+                    notes=(notes or "").strip(), personas=reactions, scored_at=now_iso(),
                 )
                 # Only this column is written, so an image attach racing the
                 # review cannot be undone by it; no post lock needed.
@@ -2583,6 +2595,10 @@ def build_content_tools_lc(
                         for c in result.checks if not c.passed
                     ],
                     "weakest":       [m.model_dump(mode="json", include={"id", "score", "fix"}) for m in weakest],
+                    "personas":      [
+                        r.model_dump(mode="json", include={"persona", "stop", "save", "click", "fix"})
+                        for r in result.personas
+                    ],
                 })
         except ValidationError as exc:
             return _err(f"markers are invalid — fix and call again:\n{exc}")
@@ -2988,7 +3004,8 @@ def build_content_tools_lc(
         _bind(
             submit_assessment, ContentTool.SUBMIT_ASSESSMENT,
             "Save the pre-publish review of the current post and show it to the user. "
-            "Pass the six marker scores the review_post sub-agent returned (all six). "
+            "Pass the six marker scores the review_post sub-agent returned (all six), "
+            "and its persona reactions when it returned any. "
             "The server adds the completeness checks, weighs the markers and computes "
             "the overall; the result names the failed checks and the weakest markers "
             "for you to relay. Advice only — it never blocks publishing.",

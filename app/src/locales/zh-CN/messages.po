@@ -183,6 +183,10 @@ msgstr "{0} 行"
 msgid "{0} sources"
 msgstr "{0} 个来源"
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "{action}: {verdict}"
+msgstr "{action}: {verdict}"
+
 #: src/components/settings/AgentConsent.jsx
 msgid "{agent} is connected"
 msgstr "{agent} 已连接"
@@ -1342,6 +1346,10 @@ msgid "Add one or more names, separated by commas."
 msgstr "添加一个或多个名称，用逗号分隔。"
 
 #: src/components/content/BrandContextForm.jsx
+msgid "Add persona"
+msgstr "添加受众画像"
+
+#: src/components/content/BrandContextForm.jsx
 msgid "Add pillar"
 msgstr "添加支柱"
 
@@ -1910,9 +1918,12 @@ msgid "Attachment"
 msgstr "附件"
 
 #: src/app/(app)/project/[projectId]/page.jsx
-#: src/components/content/BrandContextForm.jsx
 msgid "Audience"
 msgstr "受众"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Audience personas"
+msgstr "目标受众画像"
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Audience, competitors, positioning"
@@ -2483,6 +2494,7 @@ msgid "Clear filters"
 msgstr "清除筛选器"
 
 #: src/components/content/PlanDayOne.jsx
+#: src/lib/contentReview.js
 msgid "Clicks"
 msgstr "点击量"
 
@@ -3821,6 +3833,10 @@ msgstr "Duct 再次读取你的来源，并告诉你自 {since} 以来发生了�
 #~ msgid "Duct reads your work, leaves out the noise and shows you the stories it found. You pick which to tell, and nothing changes in your plan until you accept it."
 #~ msgstr "Duct 会读取你的工作，过滤掉无关内容，并展示它找到的故事。由你决定讲哪些，在你接受之前，计划不会有任何改动。"
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Duct role-plays the personas in your Brand settings. Advice, not a measurement."
+msgstr "Duct 会模拟你品牌设置中的受众画像。仅供参考，并非测量指标。"
+
 #: src/app/(start)/start/page.jsx
 msgid "Duct runs on your own account, so an audit costs you cents — and Duct never sees your data twice."
 msgstr "Duct 在你的账户上运行，因此一次审计只需你几美分——而且 Duct 绝不会两次看到你的数据。"
@@ -4966,6 +4982,10 @@ msgstr "帖子听起来如何，以及它们必须（或不得）说什么。"
 msgid "How this was computed"
 msgstr "计算方式"
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "How your audience reacts"
+msgstr "受众的反应"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Hreflang"
 msgstr "Hreflang"
@@ -5796,6 +5816,10 @@ msgstr "匹配我的消息"
 msgid "Match the brand description"
 msgstr "与品牌描述一致"
 
+#: src/lib/contentReview.js
+msgid "Maybe"
+msgstr "可能"
+
 #: src/components/connections/ConnectorSource.jsx
 #: src/components/connections/ConnectorTile.jsx
 msgid "MCP"
@@ -6047,6 +6071,10 @@ msgstr "名称——例如 Face Shape Analysis"
 msgid "Name (optional)"
 msgstr "名称（可选）"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Name and role, e.g. Priya, solo founder"
+msgstr "名称与角色，例如 Priya，独立创始人"
+
 #: src/components/settings/AgentAccess.jsx
 msgid "Name it, e.g. CI on GitHub Actions"
 msgstr "命名，例如 CI on GitHub Actions"
@@ -6211,6 +6239,10 @@ msgstr "下周"
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Nightly check"
 msgstr "夜间检查"
+
+#: src/lib/contentReview.js
+msgid "No"
+msgstr "否"
 
 #: src/app/(app)/content/page.jsx
 msgid "No {filterLabel} posts."
@@ -7476,9 +7508,17 @@ msgstr "表现"
 msgid "Permissions"
 msgstr "权限"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Persona"
+msgstr "受众画像"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Persona description"
 msgstr "角色描述"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Persona name"
+msgstr "画像名称"
 
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "Photo carousels and videos both work. The clone is always a carousel."
@@ -7781,6 +7821,10 @@ msgstr "主要内容类型"
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Primary growth motions"
 msgstr "主要增长策略"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Primary persona"
+msgstr "主要受众画像"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Primary persona name"
@@ -8407,6 +8451,10 @@ msgid "Remove reply {n}"
 msgstr "移除回复 {n}"
 
 #: src/components/content/BrandContextForm.jsx
+msgid "Remove this persona"
+msgstr "移除此受众画像"
+
+#: src/components/content/BrandContextForm.jsx
 msgid "Remove this pillar"
 msgstr "移除此支柱"
 
@@ -9001,6 +9049,7 @@ msgstr "已保存到你的 Duct 账户"
 
 #: src/components/content/PlanDayOne.jsx
 #: src/components/content/PostMetricsForm.jsx
+#: src/lib/contentReview.js
 msgid "Saves"
 msgstr "保存数"
 
@@ -10012,6 +10061,10 @@ msgstr "在此停止——回合被中断了。"
 msgid "Stopped."
 msgstr "已停止。"
 
+#: src/lib/contentReview.js
+msgid "Stops"
+msgstr "停留"
+
 #: src/components/content/VendorKeyForm.jsx
 msgid "Stored encrypted, and used only for projects you own."
 msgstr "已加密存储，仅用于你拥有的项目。"
@@ -10521,6 +10574,10 @@ msgstr "其他所有数字都应以此收入为基准。"
 #: src/lib/agentSession.js
 msgid "The run stopped without saying why. Try again."
 msgstr "运行停止了，但没有说明原因。请重试。"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "The same personas as in project setup: an edit here shows there too."
+msgstr "与项目设置中的受众画像相同：在此处的修改也会显示在那里。"
 
 #: src/components/audit/AuditWorkspace.jsx
 msgid "The SEO audit"
@@ -11764,6 +11821,18 @@ msgstr "哪些测试正在运行，它们是否仍在分组，以及每项指标
 msgid "Who do customers compare you against most often?"
 msgstr "客户最常将你与谁进行比较？"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Who they are, what they want, what gets in their way, and the words they use."
+msgstr "他们是谁、有何需求、面临什么阻碍，以及习惯使用的措辞。"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Who this persona is"
+msgstr "此受众画像是谁"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Who your posts are for. The pre-publish review plays each one and says whether they'd stop, save or click."
+msgstr "明确你的帖子面向哪些受众。发布前审查会模拟各个画像，评估他们是否会停留、保存或点击。"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Why it matters"
 msgstr "重要性"
@@ -11938,6 +12007,10 @@ msgstr "xAI"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "yes"
+msgstr "是"
+
+#: src/lib/contentReview.js
+msgid "Yes"
 msgstr "是"
 
 #: src/app/(app)/activity/page.jsx

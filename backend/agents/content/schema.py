@@ -934,6 +934,39 @@ class ContentMarker(MarkerScore):
     weight: float = 0.0
 
 
+# The project's audience personas the reviewer role-plays: as many as the
+# project keeps (service.project_draft.MAX_DRAFT_PERSONAS).
+MAX_PERSONA_REACTIONS = 3
+
+
+class PersonaVerdict(StrEnum):
+    """What a persona says it would do. Three words, not a number: a model
+    asked for a score hedges toward the middle, and these are read off the
+    persona's own reaction rather than asked for cold."""
+
+    YES   = "yes"
+    MAYBE = "maybe"
+    NO    = "no"
+
+
+class PersonaReaction(BaseModel):
+    """One audience persona's reaction to the post, in its own words.
+
+    The reaction comes first and is the evidence; ``stop``/``save``/``click``
+    are the persona's own reading of it. Advisory only: it never moves the
+    overall, which stays the six markers and the checks.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+
+    persona: str = Field(min_length=1, max_length=80, description="The persona's name, as the brand context lists it.")
+    reaction: str = Field(min_length=1, max_length=400, description="First person, in the persona's own words: what they think seeing this in their feed. One or two sentences.")
+    stop: PersonaVerdict = Field(description="Would they stop scrolling for it?")
+    save: PersonaVerdict = Field(description="Would they save it?")
+    click: PersonaVerdict = Field(description="Would they click through, or follow?")
+    fix: str = Field("", max_length=240, description="The one change that would win this persona.")
+
+
 class SanityCheck(BaseModel):
     """One deterministic check. Advisory: a failure is shown and costs points;
     it never disables Publish. ``offenders`` names what failed — slide ids,
@@ -965,6 +998,9 @@ class PublishAssessment(BaseModel):
     markers: list[ContentMarker] = Field(default_factory=list)
     checks: list[SanityCheck] = Field(default_factory=list)
     notes: str = ""
+    # The audience personas' reactions, when the project has personas.
+    # They go stale with the markers: both are judgements of the same post.
+    personas: list[PersonaReaction] = Field(default_factory=list)
     scored_at: str = ""
     # Digest of the slides, caption and hashtags that were scored.
     fingerprint: str = ""

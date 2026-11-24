@@ -139,7 +139,15 @@ from service.publishers.metrics import collect_reported_posts
 from service.publishers.registry import NO_SCHEDULER, all_specs, publisher_for, spec_for
 from service.vendor_keys import VendorNotConnected
 from service.membership import get_project_for_user, get_project_row_for_user
-from service.project_draft import BRAND_FIELDS, edit_fields, get_value
+from service.project_draft import (
+    BRAND_FIELDS,
+    MAX_DRAFT_PERSONAS,
+    PERSONA_DESCRIPTION_MAX,
+    PERSONA_NAME_MAX,
+    edit_fields,
+    get_value,
+    persona_rows,
+)
 from service.provider_keys import stored_keys_for
 from utils.dates import now_iso, utcnow
 
@@ -846,10 +854,22 @@ async def close_content_session(
 _JSONB_MAX_BYTES = 256_000
 
 
+class BrandPersonaIn(BaseModel):
+    """One audience persona as the Brand tab sends it."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name:        str = Field(max_length=PERSONA_NAME_MAX)
+    description: str = Field("", max_length=PERSONA_DESCRIPTION_MAX)
+
+
 class BrandContextIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     content_brand:         dict | None = None
+    # The project's audience personas (projects.audience.personas), the same
+    # list project setup and an MCP draft fill: one list, edited in two places.
+    audience_personas: list[BrandPersonaIn] | None = Field(None, max_length=MAX_DRAFT_PERSONAS)
     content_pillars:       dict | None = None
     content_visual_assets: dict | None = None
     slug:    str | None = None
@@ -899,6 +919,7 @@ class BrandContextOut(BaseModel):
     content_brand:         dict
     content_pillars:       dict
     content_visual_assets: dict
+    audience_personas:     list[dict]
     # The text writer's rules as they apply (content_brand.voice_rules with
     # the defaults filled in), and the defaults themselves, so the Brand tab
     # shows a project that never set them what it runs on and can go back.
@@ -917,6 +938,7 @@ def _brand_out(p: Project) -> BrandContextOut:
         content_brand=p.content_brand or {},
         content_pillars=p.content_pillars or {},
         content_visual_assets=p.content_visual_assets or {},
+        audience_personas=list(get_value(p, "personas") or []),
         voice_rules=voice_rules_of(p.content_brand).model_dump(),
         voice_rules_default=VoiceRules().model_dump(),
     )
@@ -946,6 +968,9 @@ def put_brand_context(
         # agent's draft never replaces it (service/project_draft.py rule 1).
         sent = body.content_pillars
         edit_fields(proj, {"content_pillars": (sent.get("items") if isinstance(sent, dict) else sent) or []})
+    if body.audience_personas is not None:
+        # The person's, like the pillars: a later draft never replaces them.
+        edit_fields(proj, {"personas": persona_rows((p.name, p.description) for p in body.audience_personas)})
     if body.content_visual_assets is not None:
         proj.content_visual_assets = body.content_visual_assets
     if body.slug is not None:

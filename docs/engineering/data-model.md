@@ -46,7 +46,7 @@ this list: LangGraph creates and migrates its own tables outside Alembic
 | `auth_identities` | how a user signs in: Google, guest install, or a linked ChatGPT account (a merge key, never a login alone) |
 | `oauth_states` | short-lived OAuth `state` values, single-use, with an expiry |
 | `mcp_tokens` | what an outside agent sends to Duct's MCP server: a pasted personal token, or an agent that signed in through the browser (its client id and a refresh token); hashes and a four-character hint, never a token, and accepted on `/mcp` only |
-| `projects` | the unit everything else hangs off: settings, `autonomy_level`, `memory_paused`, `provenance` (where each drafted field came from), and the brand the content agent writes from (`content_brand`, including `content_language`) |
+| `projects` | the unit everything else hangs off: settings, `autonomy_level`, `memory_paused`, `provenance` (where each drafted field came from), the brand the content agent writes from (`content_brand`, including `content_language`), and up to three audience personas (`audience.personas`) that setup and the Brand tab both edit and the pre-publish review role-plays |
 | `project_members` | who can see a project. Authorization is membership, not `projects.user_id` |
 | `project_invitations` | pending email invites into a project |
 | `user_profile` | who the operator is and how they want to be written to |
@@ -89,7 +89,7 @@ this list: LangGraph creates and migrates its own tables outside Alembic
 | Table | Holds |
 |---|---|
 | `content_plans` | a content plan and its strategy (`strategy.feed`: the window a plan from shipped work read, where the next one starts, and `set_aside`, what it left out and why). A day planned from shipped work carries its `sources` and the `brief` its writer drafts from |
-| `content_posts` | one post, whatever platform it is bound for: type (slideshow, video, image, text), its words (`caption`), its own follow-ups under it (`replies`: an X reply, a LinkedIn first comment), slides (none for a text post), a video post's chosen clip (`video`), status, performance counts (`perf`: keys per `service/content_metrics.py`; typed-in ones listed in `manual_keys`, which no sync overwrites), its last pre-publish review, and the TikTok it was cloned from (`clone_source`), and once sent, the scheduler holding it (`publisher`) with its ids there. What differs by platform is rules, not columns: `agents/content/channels.RULES` |
+| `content_posts` | one post, whatever platform it is bound for: type (slideshow, video, image, text), its words (`caption`), its own follow-ups under it (`replies`: an X reply, a LinkedIn first comment), slides (none for a text post), a video post's chosen clip (`video`), status, performance counts (`perf`: keys per `service/content_metrics.py`; typed-in ones listed in `manual_keys`, which no sync overwrites), its last pre-publish review (with each audience persona's reaction), and the TikTok it was cloned from (`clone_source`), and once sent, the scheduler holding it (`publisher`) with its ids there. What differs by platform is rules, not columns: `agents/content/channels.RULES` |
 | `content_assets` | generated images and video clips (every take), uploads and references |
 | `content_formats` | a project's library of post formats |
 | `content_avatars` | a project's library of avatars |

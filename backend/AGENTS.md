@@ -542,6 +542,12 @@ Postgres `DATABASE_URL` names.
   there through `pillar_rows`. Drafts used to write
   `brand_channels.content_pillars`, which nothing read, so MCP-written pillars
   never reached a plan; a save drops that key if an old device sends it.
+  Personas are one list too, `projects.audience.personas` (at most
+  `MAX_DRAFT_PERSONAS`, shaped by `persona_rows`): project setup and the
+  Brand tab (`audience_personas` on `PUT /content/brand`, labelled `user`)
+  edit the same rows, and the review_post sub-agent role-plays each one into
+  `last_assessment.personas` (words, then stop/save/click as yes, maybe or
+  no), advice that never moves the overall score.
 - `routes/mcp_server.py` + `service/mcp_server/` — Duct as an MCP server at
   `POST /mcp`, for the person's own agent (Claude Code, Codex, Cursor,
   OpenCode). Stateless JSON-RPC with no SDK: five methods, no sessions, no

@@ -37,7 +37,9 @@ from agents.content.channels import primary_channel, resolve as resolve_channel
 from agents.content.schema import (
     CheckSeverity,
     ContentMarker,
+    MAX_PERSONA_REACTIONS,
     MarkerScore,
+    PersonaReaction,
     PublishAssessment,
     ReviewBand,
     ReviewMarker,
@@ -248,6 +250,7 @@ def assess(
     replies: list | None = None,
     channel: str | None = None,
     notes: str = "",
+    personas: Iterable[PersonaReaction] = (),
     scored_at: str = "",
     scored_fingerprint: str = "",
 ) -> PublishAssessment:
@@ -267,6 +270,7 @@ def assess(
         markers=markers,
         checks=checks,
         notes=notes,
+        personas=list(personas)[:MAX_PERSONA_REACTIONS],
         scored_at=scored_at,
         fingerprint=scored_fingerprint or current,
         stale=bool(markers) and bool(scored_fingerprint) and scored_fingerprint != current,
@@ -292,6 +296,12 @@ def reassess(
             scores.append(MarkerScore.model_validate(raw))
         except ValidationError:
             continue  # a marker retired since it was scored; the rest still stand
+    reactions: list[PersonaReaction] = []
+    for raw in stored.get("personas") or []:
+        try:
+            reactions.append(PersonaReaction.model_validate(raw))
+        except ValidationError:
+            continue  # one unreadable reaction never costs the review the others
     return assess(
         slides,
         caption,
@@ -300,6 +310,7 @@ def reassess(
         replies=replies,
         channel=channel,
         notes=str(stored.get("notes") or ""),
+        personas=reactions,
         scored_at=str(stored.get("scored_at") or ""),
         scored_fingerprint=str(stored.get("fingerprint") or ""),
     )

@@ -1,6 +1,7 @@
 /**
  * The pre-publish review's vocabulary, mirrored from
- * backend/agents/content/schema.py (ReviewMarker, SanityCheckId, ReviewBand).
+ * backend/agents/content/schema.py (ReviewMarker, SanityCheckId, ReviewBand,
+ * PersonaVerdict).
  *
  * The backend sends ids and never words, so every label a reader sees lives
  * here in a `msg` table and is translated. The marker weights are deliberately
@@ -35,6 +36,27 @@ export const ReviewBand = Object.freeze({
   GOOD:       "good",
   NEEDS_WORK: "needs_work",
   NOT_READY:  "not_ready",
+});
+
+// What an audience persona says it would do with the post. Three words, not a
+// score: the reviewer reads them off the persona's own reaction.
+export const PersonaVerdict = Object.freeze({
+  YES:   "yes",
+  MAYBE: "maybe",
+  NO:    "no",
+});
+
+// The three things a persona is asked, in the order a feed meets a post.
+export const PERSONA_ACTIONS = Object.freeze([
+  { key: "stop",  label: msg`Stops` },
+  { key: "save",  label: msg`Saves` },
+  { key: "click", label: msg`Clicks` },
+]);
+
+export const VERDICT_META = Object.freeze({
+  [PersonaVerdict.YES]:   { label: msg`Yes`,   tone: "yes" },
+  [PersonaVerdict.MAYBE]: { label: msg`Maybe`, tone: "maybe" },
+  [PersonaVerdict.NO]:    { label: msg`No`,    tone: "no" },
 });
 
 // Front-loaded and short: these sit in a narrow column beside a score bar.

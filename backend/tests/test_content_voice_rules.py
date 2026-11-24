@@ -230,6 +230,50 @@ def test_pillars_saved_on_the_brand_tab_are_marked_as_the_persons(db, project, o
     assert project.provenance["content_pillars"] == "user"
 
 
+def test_personas_edited_on_the_brand_tab_are_the_projects_one_list(db, project, owner):
+    """The Brand tab edits projects.audience.personas, the list setup and an
+    MCP draft fill, labelled the person's; the older segment field is kept."""
+    project.audience = {"primary_segment": "founders", "personas": [{"name": "Old", "description": "", "priority": "primary"}]}
+    db.add(project)
+    db.commit()
+    api = _api(db, owner)
+
+    saved = api.put(f"/api/content/brand?project_id={project.id}", json={"audience_personas": [
+        {"name": "  Priya ", "description": "Solo founder, does marketing alone."},
+        {"name": "", "description": "a row left blank"},
+        {"name": "Sam", "description": "Fractional marketer, five clients."},
+    ]}).json()
+
+    assert saved["audience_personas"] == [
+        {"name": "Priya", "description": "Solo founder, does marketing alone.", "priority": "primary"},
+        {"name": "Sam", "description": "Fractional marketer, five clients.", "priority": "secondary"},
+    ]
+    db.refresh(project)
+    assert project.audience["primary_segment"] == "founders"
+    assert [p["name"] for p in project.audience["personas"]] == ["Priya", "Sam"]
+    assert project.provenance["personas"] == "user"
+    assert api.get(f"/api/content/brand?project_id={project.id}").json()["audience_personas"] == saved["audience_personas"]
+
+    # A save that leaves them out leaves them alone; an empty list clears them.
+    api.put(f"/api/content/brand?project_id={project.id}", json={"tagline": "x"})
+    db.refresh(project)
+    assert len(project.audience["personas"]) == 2
+    api.put(f"/api/content/brand?project_id={project.id}", json={"audience_personas": []})
+    db.refresh(project)
+    assert project.audience["personas"] == []
+
+
+def test_the_brand_route_holds_the_persona_caps(db, project, owner):
+    api = _api(db, owner)
+    person = {"name": "P", "description": "d"}
+
+    too_many = api.put(f"/api/content/brand?project_id={project.id}", json={"audience_personas": [person] * 4})
+    too_long = api.put(f"/api/content/brand?project_id={project.id}",
+                       json={"audience_personas": [{"name": "P", "description": "x" * 401}]})
+
+    assert too_many.status_code == 422 and too_long.status_code == 422
+
+
 def test_brand_fields_an_agent_drafted_are_the_persons_once_saved_on_the_brand_tab(db, project, owner):
     """An MCP draft fills the Brand tab labelled as the person's files; saving
     the tab confirms them, so the next draft keeps what is there."""
