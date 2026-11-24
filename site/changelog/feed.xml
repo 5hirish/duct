@@ -6,8 +6,15 @@
     <atom:link href="https://getduct.ai/changelog/feed.xml" rel="self" type="application/rss+xml"/>
     <description>What shipped in Duct — new connectors, agent and model upgrades, execution controls, and desktop builds.</description>
     <language>en</language>
-    <lastBuildDate>Thu, 05 Nov 2026 09:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 24 Nov 2026 09:00:00 GMT</lastBuildDate>
 
+    <item>
+      <title>Plans that read your work</title>
+      <link>https://getduct.ai/changelog/#2026-11-24</link>
+      <guid isPermaLink="false">duct-changelog-2026-11-24</guid>
+      <pubDate>Tue, 24 Nov 2026 09:00:00 GMT</pubDate>
+      <description>Content Studio now reviews what went out before it plans, plans each channel on its own results against your content goal, turns your GitHub releases and merged pull requests into stories on the plan, and publishes nothing without your yes on the approval card. A launch check installs into Claude Code, Codex or Cursor and scores your analytics setup out of 100, npx getduct runs the same checks with no account, and Duct now speaks Simplified Chinese. Desktop 0.7.4 adds ARM64 Linux builds that update themselves.</description>
+    </item>
     <item>
       <title>Bring any tool</title>
       <link>https://getduct.ai/changelog/#2026-11-05</link>

@@ -24,6 +24,14 @@ published without one. The same script, with no arguments, holds
 
 ## [Unreleased]
 
+## [0.7.4] — 2026-11-24
+
+Content Studio plans the way a strategist would: it reviews what went out
+before proposing anything, plans each channel on its own results, writes
+stories from what you shipped, and publishes only after your yes. Around it:
+a launch check any coding agent can install, Duct in Simplified Chinese, and
+the desktop app on ARM64 Linux.
+
 ### Added
 
 - **A launch check for your coding agent.** `npx skills add 5hirish/duct`
@@ -61,6 +69,27 @@ published without one. The same script, with no arguments, holds
   ARM runner, and they update themselves like every other install. That covers
   ARM laptops, Raspberry Pi and Linux VMs on Apple silicon, none of which could
   start the x86_64 build.
+- **Plan from what you shipped, every week.** Content Studio reads your
+  GitHub releases, merged pull requests, changelog edits and Duct's own
+  briefs, keeps what is worth telling and places those stories on the plan's
+  empty days. A schedule runs it weekly or on each release, in the cloud or
+  in the desktop app, without anyone clicking.
+- **A growth report on the Analytics tab.** The insights agent writes it over
+  the sources you tick (Search Console, Google Analytics, Google Ads,
+  Mixpanel, Clarity, GrowthBook, your schedulers, OpenSEO and PostHog) from
+  one of four templates, says what it could not check, and keeps it for a
+  day so a look costs nothing; Refresh is the only thing that runs it again.
+- **Content agents research, search TikTok and read your data.** A post
+  session can research trends like the planner, both agents can search
+  TikTok by hashtag or the trending feed on your Apify key after a yes on
+  the card, and both read the project's connected sources.
+- **Change a few days of a plan.** Ask for a change to some days and Accept
+  writes only those days onto the plan as it stands; the rest stay put.
+- **Your coding agent can edit a project when you ask.** Duct's MCP server
+  has an `update_project` tool for changes you ask for, and every edit it
+  makes can be undone from Activity in Duct. A project draft from your
+  repository now fills the Brand tab too: tagline, tone, value proposition,
+  words to use and avoid, and colours.
 
 ### Changed
 
@@ -86,7 +115,28 @@ published without one. The same script, with no arguments, holds
 - **A draft sees your recent posts.** Its brief listed "no recent posts"
   every time; it now gets the last five, so it does not repeat a topic or a
   hook you just used.
-
+- **A plan session reviews before it plans.** When a project has a plan or
+  published posts, the session opens with what went out, what was missed and
+  what earned what, then asks which way to go. A plan is a proposal until you
+  accept it; nothing is saved unasked.
+- **Each channel is planned on its own history.** Posts are judged on the
+  brand's content goal (reach, engagement or saves and shares), each channel
+  on its own posts, and the days slowly move toward the channels that earn
+  that goal while every channel keeps room for experiments.
+- **Channels and formats per project.** A project says which channels it
+  posts on and through which scheduler, blog and WordPress join as long-form
+  channels, each channel brings a guide to what works there, and formats are
+  editable skill files instead of a slider.
+- **The Plans tab is a board again.** List, Kanban and calendar under a plan
+  picker that shows each plan's state, dates, progress and channels, and an
+  accepted plan stays on screen with "Draft the next post" beside it.
+- **One Memory page.** Shared and private memory are one page with a Project
+  and Only you switch, plain groups instead of database kinds, and Keep or
+  Dismiss on what an agent proposed.
+- **Schedulers and Apify connect in the Toolbox.** Zernio, PostBridge and
+  Apify sit on Toolbox shelves like every other tool, and a key the vendor
+  refuses reads "Key rejected" instead of "Connected". GitHub's connector
+  uses the same dialog as the rest, with one searchable repository picker.
 - **The cookie bar and the privacy policy name Google Analytics.** Cloudflare's
   Google tag gateway kept adding Google Tag Manager and GA4 at the edge after
   they left this repository, on the site, in the web app and in the desktop
@@ -100,6 +150,20 @@ published without one. The same script, with no arguments, holds
   on every page load, so GA4 read nearly every visitor as new.
 - **The privacy page fits a phone in German.** Its one-word heading pushed the
   page wider than the screen.
+- **The content agent publishes only after your yes.** Every post it sends
+  to a scheduler waits on the approval card, which shows every word that goes
+  out, the accounts and the time. A post changed after the card appeared is
+  not sent.
+- **A Google connection Google refuses says Reconnect.** A revoked or expired
+  Google sign-in used to stay green "Connected" while every read failed, and
+  the property picker showed a network error.
+- **Agent runs survive a dropped database connection.** One lost connection
+  used to fail every agent run until the server restarted.
+- **Insights read the weeks you asked about.** The agent now knows today's
+  date, so "the last four weeks" means the last four weeks; OpenRouter calls
+  stop reserving credit for a reply a hundred times longer than they write.
+- **Every plan Kanban lane is one width.** A full lane no longer stretches
+  across two-thirds of a wide window.
 
 ## [0.7.3] — 2026-11-05
 
