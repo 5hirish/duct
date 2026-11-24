@@ -82,8 +82,8 @@ Both differences come from the size of a frozen Python tree.
 
 | | macOS | Windows | Linux |
 |---|---|---|---|
-| Runner | `macos-latest`, universal | `windows-latest` | `ubuntu-22.04`: its glibc sets the oldest distro the AppImage runs on |
-| Bundles | `.app`, DMG, updater archive | NSIS `-setup.exe` | `.deb`, AppImage |
+| Runner | `macos-latest`, universal | `windows-latest` | `ubuntu-22.04` (x86_64) and `ubuntu-22.04-arm` (aarch64): their glibc sets the oldest distro the AppImage runs on |
+| Bundles | `.app`, DMG, updater archive | NSIS `-setup.exe` | `.deb`, AppImage, one of each per arch |
 | Signing | Developer ID + notarization | None: Authenticode needed | Unsigned by convention |
 | Build flags | `--features crash-reporting --target universal-apple-darwin --bundles app,dmg,updater` | `--features crash-reporting --bundles nsis,updater` | `--features crash-reporting --bundles deb,appimage,updater` |
 

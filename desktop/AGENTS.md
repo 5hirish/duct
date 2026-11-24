@@ -441,9 +441,10 @@ carries all the code.
 - **Every installer is published twice**, once under Tauri's versioned name and
   once under a fixed one (`Duct-macOS-universal.dmg`,
   `Duct-Windows-x64-setup.exe`, `Duct-Linux-x86_64.AppImage`,
-  `Duct-Linux-amd64.deb`). GitHub redirects
+  `Duct-Linux-amd64.deb`, `Duct-Linux-aarch64.AppImage`,
+  `Duct-Linux-arm64.deb`). GitHub redirects
   `releases/latest/download/<name>` to the newest release only when the name
-  does not change, and Tauri puts the version in every filename — so those four
+  does not change, and Tauri puts the version in every filename — so those
   are what getduct.ai links to, and the site needs no JavaScript, no API call
   and no edit when a version ships. Renaming one breaks the site silently: the
   link 404s and nothing in this repo fails. Add a platform here and it needs a

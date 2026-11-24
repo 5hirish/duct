@@ -65,6 +65,11 @@ function walk(dir) {
 function slotFor(file) {
   if (file.endsWith(".dmg")) return "macos";
   if (file.endsWith("-setup.exe")) return "windows";
+  // ARM first, so the existing `linux-*` slots keep meaning x86_64 and the site
+  // cards that read them do not change. Without these, the two arches would
+  // fight over one slot and the last file walked would win.
+  if (file.endsWith("_aarch64.AppImage")) return "linux-appimage-arm64";
+  if (file.endsWith("_arm64.deb")) return "linux-deb-arm64";
   if (file.endsWith(".AppImage")) return "linux-appimage";
   if (file.endsWith(".deb")) return "linux-deb";
   return null;

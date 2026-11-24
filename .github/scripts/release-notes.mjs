@@ -135,6 +135,9 @@ new signing identity; choose *More info* → *Run anyway*.
 chmod +x Duct_${version}_amd64.AppImage && ./Duct_${version}_amd64.AppImage
 \`\`\`
 
+On ARM64 (aarch64) Linux, use \`Duct_${version}_aarch64.AppImage\` the same
+way, or the \`_arm64.deb\`.
+
 Existing installs update themselves — the app polls \`latest.json\` in this
 release and verifies the signature before applying anything.`);
 

@@ -64,6 +64,11 @@ function platformsFor(file) {
   // Tauri signs the NSIS installer directly now; older versions zipped it
   // first. Both are the same update, so accept either.
   if (file.endsWith(".nsis.zip") || file.endsWith("-setup.exe")) return ["windows-x86_64"];
+  // Linux ships two AppImages, one per arch, and Tauri puts the arch in the
+  // name. Checked before the catch-all: with both mapped to `linux-x86_64`, the
+  // second one walked would overwrite the first, and every x86 install would be
+  // offered an ARM binary it cannot start.
+  if (file.endsWith("_aarch64.AppImage")) return ["linux-aarch64"];
   if (file.endsWith(".AppImage")) return ["linux-x86_64"];
   return [];
 }
