@@ -52,6 +52,7 @@ from service.mcp.store import (
     RESOURCE,
     TOKEN_ENDPOINT,
     ServerAccess,
+    registration_for,
     with_problem,
     with_tokens,
     without_problem,
@@ -144,7 +145,7 @@ async def _refresh(access: ServerAccess, sink: CredentialSink | None) -> str:
     try:
         fresh = await oauth.refresh(
             token_endpoint=str(access.credentials.get(TOKEN_ENDPOINT) or ""),
-            registration=access.registration(),
+            registration=registration_for(access.url, access.registration()),
             refresh_token=tokens.refresh_token,
             resource=str(access.credentials.get(RESOURCE) or access.url),
         )

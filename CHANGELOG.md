@@ -56,6 +56,10 @@ published without one. The same script, with no arguments, holds
   us". At most twice ever, 60 days apart, never again after a star; any other
   notice takes the corner first. The account menu always has "Star Duct on
   GitHub" (#539).
+- **HubSpot MCP preset.** It connects the HubSpot MCP server with one shared
+  OAuth client, held in settings, so rotating it does not orphan existing
+  connections. The tile is hidden until both `HUBSPOT_MCP_CLIENT_ID` and
+  `HUBSPOT_MCP_CLIENT_SECRET` are set.
 
 ### Changed
 

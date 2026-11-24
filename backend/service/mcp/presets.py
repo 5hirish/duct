@@ -20,6 +20,11 @@ card. Off by default, and off for infrastructure accounts, whose "read-only"
 tools hand back environment variables and API tokens. Those land in the
 model's context, and from there an unasked read on another server can carry
 them out, so every call to such a server shows the card.
+
+``pre_registered`` is for a vendor whose server does not publish dynamic
+client registration: one client, shared by every install, whose ID and secret
+come from Duct's settings instead of from a per-install registration. The
+secret is read from settings at token time and never stored on a connection.
 """
 
 from __future__ import annotations
@@ -36,6 +41,7 @@ class McpPreset:
     publisher: str
     key_url: str = ""
     trust_read_only: bool = False
+    pre_registered: bool = False
 
     def as_dict(self) -> dict[str, str]:
         return asdict(self)
@@ -68,6 +74,14 @@ PRESETS: tuple[McpPreset, ...] = (
         home="https://linear.app",
         publisher="Linear",
         trust_read_only=True,
+    ),
+    McpPreset(
+        id="hubspot",
+        label="HubSpot",
+        url="https://mcp.hubspot.com",
+        home="https://www.hubspot.com",
+        publisher="HubSpot",
+        pre_registered=True,
     ),
     McpPreset(
         id="posthog",
@@ -109,3 +123,14 @@ def preset(preset_id: str) -> McpPreset | None:
 
 def preset_for_url(url: str) -> McpPreset | None:
     return _BY_URL.get(url)
+
+
+def is_shared_client(url: str) -> bool:
+    """A preset whose server does not publish dynamic client registration.
+
+    One client for every install: its secret is read from settings, not from a
+    per-connection registration, so rotating it does not orphan existing
+    sign-ins. See ``McpPreset.pre_registered``.
+    """
+    found = preset_for_url(url)
+    return bool(found and found.pre_registered)

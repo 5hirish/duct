@@ -3273,6 +3273,10 @@ msgstr ""
 msgid "Consumer"
 msgstr ""
 
+#: src/components/connections/McpConnectors.jsx
+msgid "Contacts, deals and pipeline stages from your HubSpot account. Grant read-only permissions during sign-in. Until Duct's connector is listed, HubSpot will ask you to type \"I accept the risk\" to continue."
+msgstr ""
+
 #: src/components/content/ContentWorkspace.jsx
 msgid "Content agent"
 msgstr ""

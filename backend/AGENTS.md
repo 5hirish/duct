@@ -647,18 +647,32 @@ Postgres `DATABASE_URL` names.
     off by default). On a server added by address every call shows the
     approval card: a stranger's "read-only" still carries the agent's
     arguments to the stranger. Infrastructure presets (Railway, Cloudflare)
-    stay untrusted too, because their reads return secrets. The card gets the arguments
-    whole; a call too long to show (`APPROVAL_ARGUMENT_CHARS`) is refused,
-    never cut.
+    stay untrusted too, because their reads return secrets. Infrastructure
+    presets (Railway, Cloudflare) stay untrusted too, because their reads
+    return secrets. An application preset whose tool list is not narrowed by
+    the consent scope (HubSpot) stays untrusted as well, because a View-only
+    install still lists every tool and the card (not the grant) is what stops
+    a write. The card gets the arguments whole; a call too long to show
+    (`APPROVAL_ARGUMENT_CHARS`) is refused, never cut.
   - **Sign-in is GitHub's shape.** Start (signed in) parks the flow under the
     OAuth `state`; the callback parks the tokens as a grant; only the user who
-    started may claim it. A client metadata document where the server takes one
-    (its URL *is* the client id, served at `/auth/mcp/client-metadata.json`),
-    dynamic registration otherwise, a pasted key when neither works. PKCE and
-    the RFC 8707 `resource` on both legs. The metadata is held to where it
-    was found: a resource that is not this server or a parent of it, or an
-    issuer other than the server the document was fetched for (RFC 8414
-    §3.3), ends the sign-in with the key prompt.
+    started may claim it. A shared pre-registered client where the preset stays
+    so (`preset.pre_registered`, HubSpot), a client metadata document where the
+    server takes one (its URL *is* the client id, served at
+    `/auth/mcp/client-metadata.json`), dynamic registration otherwise, a pasted
+    key when neither works. PKCE and the RFC 8707 `resource` on both legs. The
+    metadata is held to where it was found: a resource that is not this server or
+    a parent of it, or an issuer other than the server the document was fetched
+    for (RFC 8414 §3.3), ends the sign-in with the key prompt.
+  - **A shared client's secret lives in settings, not on the connection.** One
+    client is shared by every install of a pre-registered preset, so
+    `store.registration_for` reads it from settings at token time and
+    `oauth_credentials` writes `CLIENT_SECRET: ""` rather than a copy on each
+    row. A stored copy would go stale on every connection the moment the
+    setting rotates, and each would have to be reconnected. Both settings or
+    neither: `_visible_presets` hides the tile when either is empty, because
+    there is no key path (HubSpot's Service Keys are REST-only) and no
+    registration endpoint for a fallback to reach.
   - **Every request goes to a public https address**, redirects included:
     `service/mcp/http.guarded_client` runs the crawl fetcher's resolved-address
     check. No stdio servers on the hosted API.
