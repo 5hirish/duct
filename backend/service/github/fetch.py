@@ -201,6 +201,9 @@ def commit_event(raw: dict) -> dict[str, Any]:
     )
 
 
+_PR_MERGE = re.compile(r"^Merge pull request #\d+")
+
+
 def mark_branch_commits(raw: list[dict], events: list[dict]) -> None:
     """Set ``state`` to ``branch`` on every commit a merge brought in.
 
@@ -210,19 +213,38 @@ def mark_branch_commits(raw: list[dict], events: list[dict]) -> None:
     told ten times, and on a busy month enough of them to crowd the pull
     requests out of a plan's read (#561). The default branch's own history is
     the first-parent chain from its newest commit; anything off it arrived
-    through a merge. A squash or rebase repository has no such commits, and a
-    list without parents (an old fake, a trimmed response) is left alone."""
+    through a merge. Only a pull request's merge marks what it brought in: a
+    branch merged by hand ("Merge branch 'feat/x'") has no pull request to
+    tell its story, so its commits stay. A squash or rebase repository has no
+    such commits, and a list without parents (an old fake, a trimmed
+    response) is left alone."""
     if not raw or not isinstance(raw[0].get("parents"), list):
         return
     by_sha = {str(c.get("sha") or ""): c for c in raw}
-    mainline: set[str] = set()
+
+    def parent_shas(sha: str) -> list[str]:
+        return [str((p or {}).get("sha") or "") for p in by_sha[sha].get("parents") or []]
+
+    mainline: list[str] = []
     sha = str(raw[0].get("sha") or "")
     while sha in by_sha and sha not in mainline:
-        mainline.add(sha)
-        parents = by_sha[sha].get("parents") or []
-        sha = str((parents[0] or {}).get("sha") or "") if parents else ""
+        mainline.append(sha)
+        parents = parent_shas(sha)
+        sha = parents[0] if parents else ""
+    on_main = set(mainline)
+    carried: set[str] = set()
+    for merge in mainline:
+        message = str((by_sha[merge].get("commit") or {}).get("message") or "")
+        if not _PR_MERGE.match(message):
+            continue
+        stack = parent_shas(merge)[1:]
+        while stack:
+            sha = stack.pop()
+            if sha in by_sha and sha not in on_main and sha not in carried:
+                carried.add(sha)
+                stack.extend(parent_shas(sha))
     for commit, event in zip(raw, events):
-        if str(commit.get("sha") or "") not in mainline:
+        if str(commit.get("sha") or "") in carried:
             event["state"] = "branch"
 
 

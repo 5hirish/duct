@@ -355,7 +355,7 @@ def _load_brand_context(project_id: UUID) -> ContentBrandContext:
             content_goal=str(brand_blob.get("content_goal") or ""),
             do_say=str(brand_blob.get("do_say") or ""),
             do_not_say=str(brand_blob.get("do_not_say") or ""),
-            content_language=str(brand_blob.get("content_language") or "")[:40],
+            content_language=_content_language(brand_blob.get("content_language")),
             features=features,
             pillars=pillars,
             visual=visual,
@@ -582,6 +582,14 @@ async def _memory_block(session: ContentSession, *, query: str = "", emit: EmitF
 # Runner
 # ---------------------------------------------------------------------------
 
+
+
+def _content_language(value: Any) -> str:
+    """The brand's content language when it is one Duct offers, else "": a
+    value written before the route checked it never reaches a prompt."""
+    from service.project_config import CONTENT_LANGUAGES
+
+    return value if value in CONTENT_LANGUAGES else ""
 
 
 def _recent_posts(project_id: Any, limit: int = 5) -> list[dict]:

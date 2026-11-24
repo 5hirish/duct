@@ -84,6 +84,7 @@ from agents.content.channels import (
 )
 from agents.content.channel_mix import mix_snapshot, overreaching_hooks
 from agents.content.feed import (
+    MAX_SET_ASIDE,
     DayBrief,
     SetAside,
     clean_set_aside,
@@ -1133,13 +1134,20 @@ def build_content_tools_lc(
         OUTSIDE: "is outside this plan",
     }
 
-    def _feed_record(set_aside: list) -> dict:
+    def _feed_record(set_aside: list, prior: dict | None = None) -> dict:
         """The window this plan read, and what it left out and why, so the
-        next plan from shipped work knows both (feed.set_aside_refs)."""
+        next plan from shipped work knows both (feed.set_aside_refs). A
+        revision adds to what the plan already set aside: a one-day change
+        that names nothing left out must not erase the reasons it had."""
         record = session.feed.strategy()
         aside = clean_set_aside(set_aside, session.feed.refs())
+        named = {a["ref"] for a in aside}
+        for entry in ((prior or {}).get("set_aside") or []):
+            if isinstance(entry, dict) and entry.get("ref") and entry["ref"] not in named:
+                aside.append({"ref": str(entry["ref"]), "why": str(entry.get("why") or "")})
+                named.add(entry["ref"])
         if aside:
-            record["set_aside"] = aside
+            record["set_aside"] = aside[:MAX_SET_ASIDE]
         return record
 
     async def revise_plan_days(changes: list[PlanDayChange | dict], set_aside: list[SetAside | dict] | None = None) -> str:
@@ -1177,16 +1185,19 @@ def build_content_tools_lc(
             if start is None:
                 return _err("This plan has no start date, so its days have no dates to change by.")
             edits = [(c.date, c.fields()) for c in parsed]
-            if getattr(session, "feed", None) is None:
-                # A day renamed outside a plan from shipped work no longer
-                # tells the story its brief was read for; its writer would
-                # follow the brief, not the new topic.
-                edits = [
-                    (on, {**f, "sources": [], "brief": DayBrief().model_dump()})
-                    if 0 <= (on - start).days < len(base_days) and story_moved(base_days[(on - start).days], f)
-                    else (on, f)
-                    for on, f in edits
-                ]
+            # A day that drops its sources, or is renamed without restating
+            # them, no longer tells the story its brief was read for; its
+            # writer would follow the brief, not the new topic.
+            cleared = {"sources": [], "brief": DayBrief().model_dump()}
+            edits = [
+                (on, {**f, **cleared})
+                if f.get("sources") == [] or (
+                    "sources" not in f and 0 <= (on - start).days < len(base_days)
+                    and story_moved(base_days[(on - start).days], f)
+                )
+                else (on, f)
+                for on, f in edits
+            ]
             days, changed, refused = change_days(base_days, edits, start=start, today=today)
             if refused:
                 end = start + timedelta(days=max(len(base_days) - 1, 0))
@@ -1227,7 +1238,11 @@ def build_content_tools_lc(
                 )
                 live_id = saved["plan_id"]
             if getattr(session, "feed", None) is not None:
-                proposal.strategy = {**(proposal.strategy or {}), "feed": _feed_record(set_aside or [])}
+                prior = (proposal.strategy or {}).get("feed")
+                proposal.strategy = {
+                    **(proposal.strategy or {}),
+                    "feed": _feed_record(set_aside or [], prior if isinstance(prior, dict) else None),
+                }
             logger.info(
                 "content: %d day(s) proposed for session %s (of %s)",
                 len(changed), session.session_id, "a proposal" if held is not None else f"plan {live_id}",

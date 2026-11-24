@@ -95,6 +95,12 @@ def test_the_brief_body_is_the_why_without_the_template_and_the_launch_line_is_k
     ("changelog only, because this changes how a plan is composed rather than adding a surface", False, False),
     ("a blog post through add-blog-post, then an X thread", False, True),
     ("changelog line now; the first publish is manual", False, False),
+    # Found in review: words in passing are not a decision, and a refusal or
+    # the template's own menu names no outlet.
+    ("blog post: people waited until now for Windows builds", False, True),
+    ("changelog only, not a blog post", False, False),
+    ("none, nothing to post", False, False),
+    ("changelog only | post #<n> | integration page | for-<page> section, because …", False, False),
 ])
 def test_a_launch_line_that_says_wait_is_held_and_one_that_names_an_outlet_is_meant(launch, held, outlet):
     assert launch_held(launch) is held
@@ -138,6 +144,16 @@ def test_commits_a_merge_brought_in_are_marked_and_dropped_beside_their_pull_req
     kept, left = github_items(rows, Disclosure.SHIPPED, already=set())
     assert [i.ref for i in kept] == ["gh:pr-9", "gh:c-m1xxxxx"]
     assert left["squashed"] == 1
+
+    # A branch merged by hand has no pull request to tell it: its commits stay.
+    by_hand = [
+        c("m2", ["m1", "b1"], "Merge branch 'feat/x'"),
+        c("b1", ["m1"], "feat: built on a branch"),
+        c("m1", ["m0"], "fix: a direct fix on main"),
+    ]
+    events = [{"state": None} for _ in by_hand]
+    mark_branch_commits(by_hand, events)
+    assert [e["state"] for e in events] == [None, None, None]
 
 
 def test_a_release_a_workflow_published_is_a_release_not_a_bot_s_noise():
@@ -211,6 +227,10 @@ def test_open_asks_join_a_public_repository_s_feed_after_its_work_and_never_make
     rows = [_row("pull_request", "#9", "feat: a thing", state="merged")]
     mixed = build_digest(FeedOptions(), (TODAY, TODAY), github_rows=rows, duct=None, already=set(), github_repo=repo)
     assert [i.ref for i in mixed.items] == ["gh:pr-9", "gh:i-320"]
+    # The read card counts what shipped; an open ask travels apart.
+    payload = mixed.payload()
+    assert [c["ref"] for c in payload["items"]] == ["gh:pr-9"]
+    assert [c["ref"] for c in payload["asks"]] == ["gh:i-320"]
     private = build_digest(FeedOptions(), (TODAY, TODAY), github_rows=rows, duct=None, already=set(),
                            github_repo={"visibility": "private", "asks": asks})
     assert [i.ref for i in private.items] == ["gh:pr-9"]

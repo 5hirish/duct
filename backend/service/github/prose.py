@@ -33,13 +33,23 @@ _LAUNCH_LINE = re.compile(r"^\s*(?:[-*+]\s+)?\**launch\**\s*:\**\s*(.+?)\s*$", r
 _LAUNCH_INLINE = re.compile(r"(?:^|\s)Launch:\s*(.+)$")
 _CLOSES = re.compile(r"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)\b", re.IGNORECASE)
 # The maintainer said "not yet": a story to leave out, not to tell early.
+# Each phrase is a decision, not a word that can turn up in passing: a bare
+# "until" held "blog post: people waited until now for Windows builds".
 _HELD = re.compile(
-    r"\b(for now|not yet|until|hold(?:ing)? (?:it|the|off)|wait(?:s|ing)? (?:for|on|until)|no post|"
+    r"\b(only for now|for now only|(?:changelog|nothing) [\w ]{0,20}for now|not yet|"
+    r"(?:hold|wait|not) until|hold(?:ing)? (?:it|the|off)|wait(?:s|ing)? (?:for|on)|no post|"
     r"before (?:there(?:'|’)s |any )?evidence|would be a claim)\b",
     re.IGNORECASE,
 )
 # An outlet the maintainer named, so the story was meant to be told.
 _OUTLET = re.compile(r"\b(blog|post|thread|announce\w*|landing page|video|newsletter)\b", re.IGNORECASE)
+# ...unless the line turns it down ("changelog only, not a blog post").
+_OUTLET_REFUSED = re.compile(
+    r"\b(?:no|not|nothing|never|without|none)\b[^.;|]{0,30}?\b(?:blog|post|thread|announce\w*|video|newsletter)\b",
+    re.IGNORECASE,
+)
+# The pull request template's own line, left unfilled: a menu, not a choice.
+_TEMPLATE_LAUNCH = re.compile(r"\|.*\||<n>|…$")
 
 LAUNCH_CHARS = 300
 
@@ -118,7 +128,9 @@ def launch_held(launch: str) -> bool:
 
 def launch_names_outlet(launch: str) -> bool:
     """The Launch line names somewhere to tell it, and does not say to wait."""
-    return bool(launch) and not launch_held(launch) and bool(_OUTLET.search(launch))
+    if not launch or launch_held(launch) or _TEMPLATE_LAUNCH.search(launch):
+        return False
+    return bool(_OUTLET.search(launch)) and not _OUTLET_REFUSED.search(launch)
 
 
 def closes(text: str) -> list[int]:

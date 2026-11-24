@@ -3080,7 +3080,7 @@ Now:
    something you read carries it.
 3. Nobody is watching this run: the schedule started it, and the person
    will accept or reject the proposal later. Keep the 2 strongest
-   stories yourself, by the test in step 1, and do not ask.
+   stories yourself, by the test in step 2, and do not ask.
 4. Place them, on channels <account_performance> favours:
    There is no plan for this period yet. Use submit_plan for the whole
    period: the kept stories on at most 2 days, each with `sources`

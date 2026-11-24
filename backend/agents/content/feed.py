@@ -325,7 +325,10 @@ class FeedDigest:
             "worth_a_plan": self.worth_a_plan,
             "score": self.score,
             "gate": GATE_SCORE,
-            "items": [i.chip() for i in self.all_items],
+            # An open help-wanted issue is offered to the plan, not shipped:
+            # the card counts what shipped, so asks travel apart.
+            "items": [i.chip() for i in self.all_items if i.state != ASK],
+            "asks": [i.chip() for i in self.all_items if i.state == ASK],
             "left_out": {str(k): n for k, n in self.left_out.items()},
             "notes": list(self.notes),
             "max_days": self.options.max_days,
@@ -371,8 +374,10 @@ def feed_window(options: FeedOptions, plans: Iterable[Any], *, today: date) -> t
 
 def set_aside_refs(plans: Iterable[Any]) -> dict[str, str]:
     """Every ref an earlier plan from shipped work looked at and left out,
-    with its reason. Shown again marked, never hidden: a Launch line that
-    said "not yet" may say "post it" now, and only a read can tell."""
+    with its reason. Shown marked, never hidden, when it is in a later run's
+    window, which is a run given a look-back over days already planned. The
+    default window starts where the last plan's ended, so an item left out
+    there is not read again, and a rejected proposal records nothing."""
     aside: dict[str, str] = {}
     for plan in plans:
         feed = (getattr(plan, "strategy", None) or {}).get("feed") or {}
@@ -874,6 +879,7 @@ __all__ = [
     "FeedSource",
     "LEFT_OUT_WORDS",
     "LeftOut",
+    "MAX_SET_ASIDE",
     "ask_items",
     "build_digest",
     "conventional_type",

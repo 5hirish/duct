@@ -1855,7 +1855,7 @@ def build_feed_plan_prompt(
         choose = f"""\
 3. Nobody is watching this run: the schedule started it, and the person
    will accept or reject the proposal later. Keep the {max_days} strongest
-   stories yourself, by the test in step 1, and do not ask.
+   stories yourself, by the test in step 2, and do not ask.
 4. Place them, on channels <account_performance> favours:
 {place}
 5. Say in two lines which stories you kept, which you left out, and why
@@ -2197,7 +2197,9 @@ def _story_stanza(day: "Day | None", project_name: str) -> str:
     other day."""
     sources = list(getattr(day, "sources", None) or [])
     brief = getattr(day, "brief", None)
-    if not sources and (brief is None or brief.empty()):
+    # A brief without sources is left over from a story the day no longer
+    # tells (a day turned back into a pillar post): never hand it on.
+    if not sources:
         return ""
     lines = ["<story_brief>"]
     if brief is not None:
