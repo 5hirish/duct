@@ -63,6 +63,9 @@ def upsert_credential(
     if existing is not None:
         existing.account_name = account_name
         existing.credentials_enc = enc
+        # New credentials are a new sign-in: whatever the last read was
+        # refused belonged to the blob this replaces (service/connector_health).
+        existing.needs_reconnect_at = None
         existing.residency = residency
         if granted:
             existing.granted_scopes = granted

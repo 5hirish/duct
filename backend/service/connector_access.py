@@ -83,6 +83,9 @@ class DataSource:
     has_catalog: bool = False
     catalog_stale: bool = False
     stored_accounts: list[dict] = field(default_factory=list)
+    #: The provider refused this sign-in on its last read, so a reconnect, not
+    #: a retry, is what brings it back (service/connector_health.py).
+    needs_reconnect: bool = False
 
     def as_dict(self) -> dict:
         return {
@@ -99,6 +102,7 @@ class DataSource:
             "access": self.access,
             "has_catalog": self.has_catalog,
             "catalog_stale": self.catalog_stale,
+            "needs_reconnect": self.needs_reconnect,
             "stored_accounts": self.stored_accounts,
         }
 
@@ -204,11 +208,26 @@ def _stored_credentials(
     CREDENTIALS_ENCRYPTION_KEY, or a corrupt token all degrade to ``{}`` so
     the env fallback still applies.
     """
-    for row in _candidate_rows(session, user_id, connector_type, account_id, project_id):
-        data = decrypt_row(row)
-        if data:
-            return data
-    return {}
+    row = read_credential_row(session, user_id, connector_type, account_id, project_id)
+    return decrypt_row(row) if row is not None else {}
+
+
+def read_credential_row(
+    session: Session,
+    user_id: UUID,
+    connector_type: str,
+    account_id: str = "",
+    project_id: UUID | None = None,
+) -> ConnectorCredential | None:
+    """The row whose secrets a read would spend: the first readable candidate.
+
+    Public so a reader can say afterwards how that sign-in fared
+    (``service/connector_health``) about the same row it read from.
+    """
+    for row in _candidate_rows(session, user_id, connector_type, account_id.strip(), project_id):
+        if decrypt_row(row):
+            return row
+    return None
 
 
 def granted_scopes_for(
@@ -405,6 +424,7 @@ def list_data_sources(
                     {"account_id": r.account_id, "account_name": r.account_name}
                     for r in rows
                 ],
+                needs_reconnect=bool(scope_source and scope_source.needs_reconnect_at),
             )
         )
 

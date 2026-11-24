@@ -92,6 +92,7 @@ def test_legacy_create_all_install_is_adopted_and_upgraded(clean_env, tmp_path):
         conn.execute(sa.text("ALTER TABLE project_connectors DROP COLUMN entity_id"))
         conn.execute(sa.text("ALTER TABLE project_connectors DROP COLUMN entity_name"))
         conn.execute(sa.text("ALTER TABLE connector_credentials DROP COLUMN residency"))
+        conn.execute(sa.text("ALTER TABLE connector_credentials DROP COLUMN needs_reconnect_at"))
         conn.execute(sa.text("ALTER TABLE agent_conversations DROP COLUMN run_status"))
         conn.execute(sa.text("ALTER TABLE agent_conversations DROP COLUMN run_error"))
         conn.execute(sa.text("ALTER TABLE oauth_states DROP COLUMN link_user_id"))

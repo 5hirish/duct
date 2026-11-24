@@ -8193,6 +8193,7 @@ msgstr "推荐"
 msgid "Recommended actions"
 msgstr "推荐操作"
 
+#: src/app/(app)/connections/page.jsx
 #: src/components/connections/McpConnectDialog.jsx
 #: src/components/connections/OAuthConnectorCard.jsx
 #: src/components/connections/ProviderCard.jsx
@@ -10858,6 +10859,10 @@ msgstr "仅本次会话"
 #: src/components/settings/AgentConsent.jsx
 msgid "This sign-in link doesn't work"
 msgstr "此登录链接无效"
+
+#: src/components/connections/ProjectEntitySelect.jsx
+msgid "This sign-in no longer works. Reconnect, then choose again."
+msgstr "此登录已失效。请重新连接，然后再次选择。"
 
 #: src/components/content/PostViewport.jsx
 msgid "This slide is outdated — regenerate"

@@ -4934,6 +4934,15 @@ function OAuthCardScene() {
         scopeStatus="partial"
         rows={[row]}
       />
+      {/* Google refused the stored sign-in on its last read (needs_reconnect). */}
+      <OAuthConnectorCard
+        {...common}
+        connected={false}
+        oauthConnected
+        tone="partial"
+        status="Reconnect"
+        rows={[{ ...row, scope_status: "complete", missing_scopes: [], needs_reconnect: true }]}
+      />
     </div>
   );
 }

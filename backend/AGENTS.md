@@ -1449,6 +1449,17 @@ don't fit.
   `ConnectorMeta.settings_keys` is the opposite list: non-secret keys the user
   may change on a stored row (`PATCH /api/user/connectors/{id}`), today only
   the Ads `login_customer_id`, shown back as `settings` on the row.
+- `service/connector_health.py` — whether a stored sign-in still works, as
+  the last read found it. A row existing is not the same as a sign-in
+  Google honours: a read that meets `invalid_grant` or `unauthorized_client`
+  sets `connector_credentials.needs_reconnect_at`, the next read that works
+  clears it, and so does any fresh credential write (`upsert_credential`).
+  The Toolbox card reads it as Reconnect, the agent as `needs_reconnect` on
+  its data source. Only those two refusals count: `invalid_client` and the
+  network are the server's problem, and sending someone to reconnect for them
+  is a loop. A reader that reaches a provider reports through `record_read`
+  about the row it spent (`connector_access.read_credential_row`); the
+  entities route and `fetch_entity` do.
 - `service/content_metrics.py` — a content post's `perf`, read and written one
   way. `METRIC_ALIASES` reconciles the three key conventions in the column
   (PostBridge's `view_count`, migrated `avgWatchTime`, hand-entered `saves`;
