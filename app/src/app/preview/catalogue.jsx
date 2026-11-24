@@ -57,7 +57,57 @@ function Specimen({ label, children }) {
   );
 }
 
+// The screen bands of "Responsive layout", drawn to scale (a tenth of the
+// window's width): where the navigation is, how wide the page column runs,
+// and whether a rail sits beside it. A schematic of regions, not a screen:
+// the real screens at each size are the canvas's "As built" page.
+const LAYOUT_BANDS = [
+  { w: 390, label: "390 · phone", note: "Drawer behind the top bar; one column", nav: "bar", column: 1 },
+  { w: 820, label: "820 · iPad portrait", note: "Sidebar; one column, a rail drops below it", nav: "side", column: 1 },
+  { w: 1100, label: "1100 · desktop app", note: "Sidebar; a rail beside the column once it fits", nav: "side", column: 1, rail: true },
+  { w: 1180, label: "1180 · iPad landscape", note: "Sidebar; a workspace splits chat and document", nav: "side", column: 1, rail: true },
+  { w: 1440, label: "1440 · laptop", note: "Sidebar; the page fills its 81rem cap", nav: "side", column: 1, rail: true },
+  { w: 2560, label: "2560 · 4K at 150%", note: "The 81rem column centres; a board keeps the edge", nav: "side", column: 1296 / 2304, rail: true },
+  { w: 3840, label: "3840 · 4K at 100%", note: "Root ×1.5: reads as the 2560 screen", nav: "side", scale: 1.5, column: (1296 * 1.5) / 3456, rail: true },
+];
+
+function LayoutBand({ band }) {
+  const k = 0.1;
+  const side = band.nav === "side" ? 256 * (band.scale || 1) * k : 0;
+  // The page column inside the main area's padding: the whole width up to
+  // the cap, then the capped share of it, centred.
+  const block = (band.w * k - side - 8) * band.column;
+  const rail = band.rail ? Math.max(block * 0.25, 4) : 0;
+  return (
+    <Specimen label={band.label}>
+      <div className="flex overflow-hidden rounded-md border bg-background" style={{ width: band.w * k, height: 96 }} aria-hidden>
+        {band.nav === "side" && <div className="shrink-0 border-r bg-muted" style={{ width: side }} />}
+        <div className="flex min-w-0 flex-1 flex-col">
+          {band.nav === "bar" && <div className="h-2.5 shrink-0 border-b bg-muted" />}
+          <div className="flex flex-1 justify-center p-1">
+            <div className="flex gap-0.5" style={{ width: block }}>
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <div className="h-1.5 w-2/3 rounded-sm bg-foreground/60" />
+                <div className="flex-1 rounded-sm bg-primary/25" />
+                {!band.rail && band.w >= 640 && <div className="h-3 rounded-sm bg-muted-foreground/25" />}
+              </div>
+              {band.rail && <div className="shrink-0 rounded-sm bg-muted-foreground/25" style={{ width: rail }} />}
+            </div>
+          </div>
+        </div>
+      </div>
+      <span className="text-xs text-muted-foreground">{band.note}</span>
+    </Specimen>
+  );
+}
+
 const EXAMPLES = {
+  "Responsive layout": () => (
+    <div className="flex flex-wrap items-end gap-x-6 gap-y-5">
+      {LAYOUT_BANDS.map((band) => <LayoutBand key={band.w} band={band} />)}
+    </div>
+  ),
+
   // The specimens render the primitives, never a copy of their markup: a
   // catalogue entry that hand-rolls the thing it documents is how forks start.
   "Page frame": () => (

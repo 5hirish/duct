@@ -43,7 +43,12 @@ const REPO = resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const req = createRequire(import.meta.url);
 // site/ installs Playwright for its own E2E tests; PLAYWRIGHT_FROM points at
 // another install (a worktree without its own site/node_modules).
-const { chromium } = req(req.resolve("playwright", { paths: [process.env.PLAYWRIGHT_FROM || join(REPO, "site")] }));
+const playwright = req(req.resolve("playwright", { paths: [process.env.PLAYWRIGHT_FROM || join(REPO, "site")] }));
+// Both engines by default. The desktop app is WKWebView and Safari is WebKit,
+// so a screen judged only in Chromium is judged in the engine nobody ships:
+// on 2026-11-23 a logo that Chromium drew was a blank tile in the desktop
+// window. ENGINES=chromium for a quick local pass.
+const ENGINES = (process.env.ENGINES || "chromium,webkit").split(",").map((e) => e.trim()).filter(Boolean);
 const fixtures = await import(join(REPO, "scripts/shots/fixtures.mjs"));
 const { STORY } = await import(join(REPO, "app/src/lib/__fixtures__/solo-story.mjs"));
 const { DESK_SCENARIOS } = await import(join(REPO, "app/src/lib/__fixtures__/deskScenarios.mjs"));
@@ -66,10 +71,18 @@ const ROUTES = process.env.ROUTES
       "/settings/models", "/settings/profile", "/settings/agents",
       "/memory", `/project/${P}/memory`,
     ];
+// The design canvas's sizes (design/tools/screens.mjs VARIANTS). WebKit runs
+// where WebKit ships: the phone and the iPad (Safari) and the desktop app's
+// window (WKWebView). The wide screens are Chromium's alone, since nobody
+// runs the desktop app at 3840 and Safari's layout there is Chromium's.
 const WIDTHS = [
-  { width: 390, height: 844 },
-  { width: 1100, height: 760 },
+  { width: 390, height: 844, webkit: true },
+  { width: 820, height: 1180, webkit: true },
+  { width: 1100, height: 760, webkit: true },
+  { width: 1180, height: 820, webkit: true },
   { width: 1440, height: 900 },
+  { width: 2560, height: 1440 },
+  { width: 3840, height: 2160 },
 ];
 const PX = 1; // sub-pixel rounding
 
@@ -88,124 +101,140 @@ const fail = (where, what) => failures.push(`${where}  ${what}`);
 
 try {
   await waitFor(`${MOCK}/api/agents`, 15000);
-  const browser = await chromium.launch({ headless: true });
-  const deskScenes = (await fetch(`${APP}/preview`).then((r) => r.ok).catch(() => false))
-    ? DESK_SCENARIOS.map((s) => s.id)
-    : null;
-  if (!deskScenes) console.log("desk scenarios skipped: /preview is dev-only");
-  try {
-    for (const viewport of WIDTHS) {
-      const context = await browser.newContext({ viewport, colorScheme: "dark", locale: "en-GB" });
-      await context.route(new RegExp(`^${API.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/`), (route) =>
-        route.continue({ url: route.request().url().replace(API, MOCK) }));
-      await context.addCookies([{ name: "duct_consent", value: "rejected", url: APP }]);
-      const page = await context.newPage();
-      page.setDefaultTimeout(30000);
-      await signIn(page);
+  for (const engine of ENGINES) {
+    const tag = engine === "chromium" ? "" : ` ${engine}`;
+    const browser = await playwright[engine].launch({ headless: true });
+    const deskScenes = (await fetch(`${APP}/preview`).then((r) => r.ok).catch(() => false))
+      ? DESK_SCENARIOS.map((s) => s.id)
+      : null;
+    if (!deskScenes) console.log("desk scenarios skipped: /preview is dev-only");
+    try {
+      for (const { webkit: inWebKit, ...viewport } of WIDTHS) {
+        if (engine === "webkit" && !inWebKit) continue;
+        const context = await browser.newContext({ viewport, colorScheme: "dark", locale: "en-GB" });
+        await context.route(new RegExp(`^${API.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/`), (route) =>
+          route.continue({ url: route.request().url().replace(API, MOCK) }));
+        await context.addCookies([{ name: "duct_consent", value: "rejected", url: APP }]);
+        const page = await context.newPage();
+        page.setDefaultTimeout(30000);
+        await signIn(page);
 
-      const titles = [];
-      for (const route of ROUTES) {
-        const where = `${route} @${viewport.width}`;
-        await page.goto(`${APP}${route}`, { waitUntil: "domcontentloaded" });
-        await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
-        await page.waitForSelector('[data-slot="page-header"] h1', { timeout: 20000 }).catch(() => {});
-        await page.waitForTimeout(400);
-        const m = await page.evaluate(measure);
-        if (m.h1Count !== 1) fail(where, `${m.h1Count} visible <h1>, expected 1`);
-        if (!m.header) {
-          fail(where, "no PageHeader");
-          continue;
-        }
-        if (Math.abs(m.header.left - m.page.left) > PX) {
-          fail(where, `title starts at ${m.header.left}px, its page at ${m.page.left}px`);
-        }
-        titles.push({ route, ...m.header });
-        if (m.overflow > PX) fail(where, `page is ${m.overflow}px wider than the window`);
-        // One line of state on a desktop; a phone may take two.
-        const maxLines = viewport.width < 640 ? 2 : 1;
-        if (m.statusLines > maxLines) fail(where, `header status wraps to ${m.statusLines} lines`);
-        for (const row of m.misalignedRows) {
-          fail(where, `card footers in one grid row differ by ${row}px`);
-        }
-        for (const block of m.centred) {
-          fail(where, `a ${block}px column is centred inside a left-aligned page — it moves the content's left edge off the title's`);
-        }
-        for (const text of m.squeezed) {
-          fail(where, `"${text.text}" is cut to ${text.width}px — the layout should wrap, not crush it`);
-        }
-        // The top bar and the page take turns naming the page: never both at
-        // rest, and the bar takes over once the title scrolls under it.
-        if (m.barRepeatsTitle) fail(where, `the top bar repeats the page title "${m.titleText}" while it is on screen`);
-        if (m.scrollable) {
-          await page.evaluate(() => {
-            const h1 = document.querySelector('[data-slot="page-header"] h1');
-            window.scrollTo(0, h1.getBoundingClientRect().bottom + window.scrollY + 40);
-          });
-          await page.waitForTimeout(250);
-          const handover = await page.evaluate(() => {
-            const h1 = document.querySelector('[data-slot="page-header"] h1');
-            const bar = document.querySelector(".app-header nav")?.textContent.trim() || "";
-            return { hidden: h1.getBoundingClientRect().bottom <= 60, bar, title: h1.textContent.trim() };
-          });
-          if (handover.hidden && !handover.bar.includes(handover.title)) {
-            fail(where, `scrolled past "${handover.title}", the top bar does not take the title over`);
-          }
-          await page.evaluate(() => window.scrollTo(0, 0));
-        }
-      }
-
-      // The desk in every generated situation (lib/__fixtures__/deskScenarios.mjs),
-      // through /preview, which only a dev server has: under `next start` this
-      // half is skipped and says so. The arrangement's counts are held by
-      // check:desk; this holds what only a browser can see — the clamps.
-      if (deskScenes) {
-        for (const id of deskScenes) {
-          const where = `desk scenario ${id} @${viewport.width}`;
-          await page.goto(`${APP}/preview/frame?scene=desk-scenario-${id}&theme=dark`, { waitUntil: "domcontentloaded" });
+        const titles = [];
+        for (const route of ROUTES) {
+          const where = `${route} @${viewport.width}${tag}`;
+          await open(page, `${APP}${route}`);
+          await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
           await page.waitForSelector('[data-slot="page-header"] h1', { timeout: 20000 }).catch(() => {});
           await page.waitForTimeout(400);
-          const d = await page.evaluate(measureDesk);
-          if (d.leads > 1) fail(where, `${d.leads} lead items, expected at most one`);
-          if (d.h1Lines > (viewport.width < 640 ? 2 : 1)) fail(where, `the headline runs to ${d.h1Lines} lines`);
-          if (d.overflow > PX) fail(where, `page is ${d.overflow}px wider than the window`);
-          for (const h of d.tallRows) fail(where, `a row is ${h}px tall: its title is not held to one line`);
-          if (d.leadTitleLines > 2) fail(where, `the lead's title runs to ${d.leadTitleLines} lines`);
-        }
-        // The content plan board, in every generated plan as the agenda and in
-        // the Kanban scenes as the Kanban: nothing wider than the window,
-        // nothing crushed, no lane wider than a card should be. (The comment
-        // said "and as the Kanban" for a week while only the agenda was
-        // visited, which is how a two-thirds-wide lane got through.)
-        const planScenes = [
-          ...PLAN_SCENARIOS.map((s) => s.id),
-          ...KANBAN_SCENARIO_IDS.map((id) => `${id}-kanban`),
-        ];
-        for (const id of planScenes) {
-          const where = `plan scenario ${id} @${viewport.width}`;
-          await page.goto(`${APP}/preview/frame?scene=plan-scenario-${id}&theme=dark`, { waitUntil: "domcontentloaded" });
-          await page.waitForSelector('[aria-label="Plan strategy"], [aria-pressed]', { timeout: 20000 }).catch(() => {});
-          await page.waitForTimeout(300);
           const m = await page.evaluate(measure);
+          if (m.h1Count !== 1) fail(where, `${m.h1Count} visible <h1>, expected 1`);
+          if (!m.header) {
+            fail(where, "no PageHeader");
+            continue;
+          }
+          if (Math.abs(m.header.left - m.page.left) > PX) {
+            fail(where, `title starts at ${m.header.left}px, its page at ${m.page.left}px`);
+          }
+          titles.push({ route, ...m.header });
           if (m.overflow > PX) fail(where, `page is ${m.overflow}px wider than the window`);
-          for (const text of m.squeezed) fail(where, `"${text.text}" is cut to ${text.width}px`);
-          if (m.widestLaneRem > LANE_MAX_REM + 0.1) {
-            fail(where, `a Kanban lane is ${m.widestLaneRem.toFixed(1)}rem wide; lanes stop at ${LANE_MAX_REM}rem`);
+          // One line of state on a desktop; a phone may take two.
+          const maxLines = viewport.width < 640 ? 2 : 1;
+          if (m.statusLines > maxLines) fail(where, `header status wraps to ${m.statusLines} lines`);
+          for (const row of m.misalignedRows) {
+            fail(where, `card footers in one grid row differ by ${row}px`);
+          }
+          for (const block of m.centred) {
+            fail(where, `a ${block}px column is centred inside a left-aligned page — it moves the content's left edge off the title's`);
+          }
+          for (const text of m.squeezed) {
+            fail(where, `"${text.text}" is cut to ${text.width}px — the layout should wrap, not crush it`);
+          }
+          // The top bar and the page take turns naming the page: never both at
+          // rest, and the bar takes over once the title scrolls under it.
+          if (m.barRepeatsTitle) fail(where, `the top bar repeats the page title "${m.titleText}" while it is on screen`);
+          if (m.scrollable) {
+            await page.evaluate(() => {
+              const h1 = document.querySelector('[data-slot="page-header"] h1');
+              window.scrollTo(0, h1.getBoundingClientRect().bottom + window.scrollY + 40);
+            });
+            await page.waitForTimeout(250);
+            const handover = await page.evaluate(() => {
+              const h1 = document.querySelector('[data-slot="page-header"] h1');
+              const bar = document.querySelector(".app-header nav")?.textContent.trim() || "";
+              return { hidden: h1.getBoundingClientRect().bottom <= 60, bar, title: h1.textContent.trim() };
+            });
+            if (handover.hidden && !handover.bar.includes(handover.title)) {
+              fail(where, `scrolled past "${handover.title}", the top bar does not take the title over`);
+            }
+            await page.evaluate(() => window.scrollTo(0, 0));
           }
         }
-      }
 
-      // Same left edge and same size for every page title at this width.
-      const plain = titles.filter((t) => t.size !== "hero");
-      const lefts = new Set(titles.map((t) => Math.round(t.left)));
-      if (lefts.size > 1) {
-        fail(`@${viewport.width}`, `page titles start at ${[...lefts].join(", ")}px — one edge expected`);
+        // The desk in every generated situation (lib/__fixtures__/deskScenarios.mjs),
+        // through /preview, which only a dev server has: under `next start` this
+        // half is skipped and says so. The arrangement's counts are held by
+        // check:desk; this holds what only a browser can see — the clamps.
+        if (deskScenes) {
+          for (const id of deskScenes) {
+            const where = `desk scenario ${id} @${viewport.width}${tag}`;
+            await open(page, `${APP}/preview/frame?scene=desk-scenario-${id}&theme=dark`);
+            await page.waitForSelector('[data-slot="page-header"] h1', { timeout: 20000 }).catch(() => {});
+            await page.waitForTimeout(400);
+            const d = await page.evaluate(measureDesk);
+            if (d.leads > 1) fail(where, `${d.leads} lead items, expected at most one`);
+            // Two lines where the desk's own column is phone-narrow: on an
+            // iPad portrait the activity rail takes 18rem beside it, and the
+            // column is a phone's width whatever the window is.
+            if (d.h1Lines > (viewport.width < 640 || d.columnRem < 32 ? 2 : 1)) fail(where, `the headline runs to ${d.h1Lines} lines`);
+            if (d.overflow > PX) fail(where, `page is ${d.overflow}px wider than the window`);
+            for (const h of d.tallRows) fail(where, `a row is ${h}px tall: its title is not held to one line`);
+            if (d.leadTitleLines > 2) fail(where, `the lead's title runs to ${d.leadTitleLines} lines`);
+          }
+          // The content plan board, in every generated plan as the agenda and in
+          // the Kanban scenes as the Kanban: nothing wider than the window,
+          // nothing crushed, no lane wider than a card should be. (The comment
+          // said "and as the Kanban" for a week while only the agenda was
+          // visited, which is how a two-thirds-wide lane got through.)
+          const planScenes = [
+            ...PLAN_SCENARIOS.map((s) => s.id),
+            ...KANBAN_SCENARIO_IDS.map((id) => `${id}-kanban`),
+          ];
+          for (const id of planScenes) {
+            const where = `plan scenario ${id} @${viewport.width}${tag}`;
+            await open(page, `${APP}/preview/frame?scene=plan-scenario-${id}&theme=dark`);
+            await page.waitForSelector('[aria-label="Plan strategy"], [aria-pressed]', { timeout: 20000 }).catch(() => {});
+            await page.waitForTimeout(300);
+            const m = await page.evaluate(measure);
+            if (m.overflow > PX) fail(where, `page is ${m.overflow}px wider than the window`);
+            for (const text of m.squeezed) fail(where, `"${text.text}" is cut to ${text.width}px`);
+            if (m.widestLaneRem > LANE_MAX_REM + 0.1) {
+              fail(where, `a Kanban lane is ${m.widestLaneRem.toFixed(1)}rem wide; lanes stop at ${LANE_MAX_REM}rem`);
+            }
+          }
+        }
+
+        // Same left edge and same size for every page title at this width,
+        // among pages of one frame. Up to a laptop the two frames share an
+        // edge; past the cap (81rem) a capped page centres its column and a
+        // tool surface keeps the window's edge, which is the design (give
+        // the room to the board, read down the middle), not a drift.
+        const plain = titles.filter((t) => t.size !== "hero");
+        const sharesEdge = viewport.width <= 1440;
+        const lefts = new Set(titles.filter((t) => sharesEdge || !t.wide).map((t) => Math.round(t.left)));
+        const wideLefts = new Set(titles.filter((t) => t.wide).map((t) => Math.round(t.left)));
+        if (wideLefts.size > 1) {
+          fail(`@${viewport.width}${tag}`, `full-width page titles start at ${[...wideLefts].join(", ")}px — one edge expected`);
+        }
+        if (lefts.size > 1) {
+          fail(`@${viewport.width}${tag}`, `page titles start at ${[...lefts].join(", ")}px — one edge expected`);
+        }
+        const sizes = new Set(plain.map((t) => t.fontSize));
+        if (sizes.size > 1) fail(`@${viewport.width}${tag}`, `page titles at ${[...sizes].join(", ")} — one size expected`);
+        await context.close();
       }
-      const sizes = new Set(plain.map((t) => t.fontSize));
-      if (sizes.size > 1) fail(`@${viewport.width}`, `page titles at ${[...sizes].join(", ")} — one size expected`);
-      await context.close();
+    } finally {
+      await browser.close();
     }
-  } finally {
-    await browser.close();
   }
 } finally {
   mock.kill();
@@ -220,7 +249,7 @@ if (failures.length) {
   );
   process.exit(1);
 }
-console.log(`layout OK — ${ROUTES.length} screens × ${WIDTHS.length} widths`);
+console.log(`layout OK — ${ROUTES.length} screens at ${ENGINES.map((e) => `${WIDTHS.filter((w) => e !== "webkit" || w.webkit).length} widths in ${e}`).join(", ")}`);
 
 // Runs in the page: the desk's slots, whatever the generated content was.
 function measureDesk() {
@@ -230,6 +259,7 @@ function measureDesk() {
   return {
     leads: document.querySelectorAll('[data-desk="lead"]').length,
     h1Lines: lines(h1),
+    columnRem: h1 ? h1.closest('[data-slot="page-header"]').getBoundingClientRect().width / parseFloat(getComputedStyle(document.documentElement).fontSize) : 0,
     leadTitleLines: lines(lead?.querySelector("h2")),
     overflow: document.documentElement.scrollWidth - window.innerWidth,
     // One line of text plus the row's padding is ~57px; a second line is ~77.
@@ -260,6 +290,10 @@ function measure() {
       left: Math.round(h1.getBoundingClientRect().left * 10) / 10,
       fontSize: getComputedStyle(h1).fontSize,
       size: headerEl.dataset.size,
+      // A tool surface (.app-main-wide, Content Studio's board) fills the
+      // window; every other page is a capped column, centred once the window
+      // is wider than the cap.
+      wide: Boolean(headerEl.closest(".app-main-wide")),
     };
     const status = headerEl.querySelector('[data-slot="page-status"]');
     if (status) {
@@ -351,6 +385,18 @@ async function signIn(page) {
     localStorage.setItem("duct_projects", JSON.stringify([{ id: project.id, name: project.name, profile: { company: { name: project.name } } }]));
     localStorage.setItem("duct_active_project_id", project.id);
   }, { user: STORY.user, project: STORY.project });
+}
+
+// WebKit reports a navigation the page's own client-side redirect replaced
+// as "Frame load interrupted", where Chromium just follows it; the page that
+// redirected there is the one to measure either way.
+async function open(page, url) {
+  try {
+    await page.goto(url, { waitUntil: "domcontentloaded" });
+  } catch (e) {
+    if (!/interrupted/i.test(String(e?.message))) throw e;
+    await page.waitForLoadState("domcontentloaded").catch(() => {});
+  }
 }
 
 async function waitFor(url, ms) {

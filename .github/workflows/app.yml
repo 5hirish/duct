@@ -106,7 +106,7 @@ jobs:
   app-layout:
     name: App layout (browser)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
 
     defaults:
       run:
@@ -139,8 +139,8 @@ jobs:
           npm ci
           npm --prefix ../site ci
 
-      - name: Install Playwright browser
-        run: npx --prefix ../site playwright install --with-deps chromium
+      - name: Install Playwright browsers
+        run: npx --prefix ../site playwright install --with-deps chromium webkit
 
       # The API base is baked in at build time; the check reroutes it to the
       # fixture backend it starts, so nothing here reaches a real server.

@@ -228,8 +228,8 @@ msgid "{agent} wasn't connected"
 msgstr "{agent} no estaba conectado"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "{back} days back"
-msgstr "{back} días atrás"
+#~ msgid "{back} days back"
+#~ msgstr "{back} días atrás"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{blogPosts, plural, one {# blog post} other {# blog posts}}"
@@ -412,6 +412,10 @@ msgstr "{granted} de {total} otorgados"
 msgid "{hidden, plural, one {# character sits behind the fold.} other {# characters sit behind the fold.}}"
 msgstr "{hidden, plural, one {# carácter queda oculto tras «ver más».} other {# caracteres quedan ocultos tras «ver más».}}"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "{hostName} · releases and finished work"
+msgstr "{hostName} · lanzamientos y trabajo terminado"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "{hreflangCount, plural, one {# lang} other {# langs}}"
 msgstr "{hreflangCount, plural, one {# idioma} other {# idiomas}}"
@@ -545,6 +549,10 @@ msgstr "{linkedHere, plural, one {# cuenta} other {# cuentas}} mediante {primary
 msgid "{llmsLines} lines"
 msgstr "{llmsLines} líneas"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "{maxDays, plural, one {Up to # post} other {Up to # posts}}"
+msgstr "{maxDays, plural, one {Hasta # publicación} other {Hasta # publicaciones}}"
+
 #: src/components/insights/desk/DeskLists.jsx
 msgid "{messageCount, plural, one {# message} other {# messages}}"
 msgstr "{messageCount, plural, one {# mensaje} other {# mensajes}}"
@@ -568,6 +576,10 @@ msgstr "{n} caracteres"
 #: src/components/content/FeedPlanDialog.jsx
 msgid "{n} days"
 msgstr "{n} días"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "{n} days back"
+msgstr "{n} días atrás"
 
 #: src/app/(app)/project/[projectId]/members/page.jsx
 #~ msgid "{name} · Members"
@@ -755,8 +767,8 @@ msgstr "{read}, parcialmente leído"
 #~ msgstr "{read}, lee la primera parte"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "{readLabel} to read, {aheadLabel} to plan"
-msgstr "{readLabel} para leer, {aheadLabel} para planificar"
+#~ msgid "{readLabel} to read, {aheadLabel} to plan"
+#~ msgstr "{readLabel} para leer, {aheadLabel} para planificar"
 
 #: src/components/content/PlanDayOne.jsx
 msgid "{ready} of {total} ready"
@@ -860,8 +872,8 @@ msgid "{sourceCount, plural, one {# source connected} other {# sources connected
 msgstr "{sourceCount, plural, one {# fuente conectada} other {# fuentes conectadas}}"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "{stories, plural, one {up to # story} other {up to # stories}}"
-msgstr "{stories, plural, one {hasta # historia} other {hasta # historias}}"
+#~ msgid "{stories, plural, one {up to # story} other {up to # stories}}"
+#~ msgstr "{stories, plural, one {hasta # historia} other {hasta # historias}}"
 
 #: src/components/GoogleAdsReport.js
 msgid "{summary} Operator takeaway: {takeaway}"
@@ -1208,8 +1220,8 @@ msgid "A change that matches a guardrail arrives blocked and can never apply on 
 msgstr "Un cambio que coincide con una barrera de seguridad llega bloqueado y nunca se puede aplicar por sí solo. Los agentes ven las reglas y proponen soluciones a su alrededor. Una regla sin coincidencia es solo una guía."
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "A changelog or launch notes database. Duct reads its rows once a run, nothing else in the workspace."
-msgstr "Una base de datos de changelog o notas de lanzamiento. Duct lee sus filas una vez por ejecución y nada más del espacio de trabajo."
+#~ msgid "A changelog or launch notes database. Duct reads its rows once a run, nothing else in the workspace."
+#~ msgstr "Una base de datos de changelog o notas de lanzamiento. Duct lee sus filas una vez por ejecución y nada más del espacio de trabajo."
 
 #: src/components/content/ContentWorkspace.jsx
 #~ msgid "A clearer brief produces sharper content. Skip if you'd rather Duct decide."
@@ -1808,8 +1820,12 @@ msgstr "Ya dicho"
 #~ msgstr "¿Ya usas Duct?"
 
 #: src/lib/contentFeedLabels.js
-msgid "Also closed issues and changes under docs/."
-msgstr "Además, issues cerrados y cambios en docs/."
+#~ msgid "Also closed issues and changes under docs/."
+#~ msgstr "Además, issues cerrados y cambios en docs/."
+
+#: src/lib/contentFeedLabels.js
+msgid "Also closed issues and documentation changes."
+msgstr "También issues cerrados y cambios de documentación."
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "alt ×{missingAlt}"
@@ -2412,6 +2428,10 @@ msgstr "bloques: {blockedOps}"
 msgid "Blog / Articles"
 msgstr "Blog / Artículos"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Blog and newsletter posts from your Toolbox"
+msgstr "Publicaciones de blog y newsletter de tu Caja de herramientas"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Bold"
 msgstr "Negrita"
@@ -2456,8 +2476,8 @@ msgstr "Informes"
 #~ msgstr "Los briefs que escribió, los cambios que aprobaste y lo que lograron."
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Briefs, approved changes and what they did"
-msgstr "Informes, cambios aprobados y lo que lograron"
+#~ msgid "Briefs, approved changes and what they did"
+#~ msgstr "Informes, cambios aprobados y lo que lograron"
 
 #: src/components/connections/BringAnyTool.jsx
 msgid "Bring any tool"
@@ -3719,8 +3739,12 @@ msgid "Date"
 msgstr "Fecha"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Dated pages in one database you pick"
-msgstr "Páginas con fecha en una base de datos que elijas"
+msgid "Dated pages from one database"
+msgstr "Páginas con fecha de una base de datos"
+
+#: src/components/content/FeedPlanDialog.jsx
+#~ msgid "Dated pages in one database you pick"
+#~ msgstr "Páginas con fecha en una base de datos que elijas"
 
 #: src/components/memory/MemoryTimeline.jsx
 #~ msgid "Dates"
@@ -3739,8 +3763,8 @@ msgid "Day {dayNumber}"
 msgstr "Día {dayNumber}"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Days it may change"
-msgstr "Días que puede cambiar"
+#~ msgid "Days it may change"
+#~ msgstr "Días que puede cambiar"
 
 #: src/lib/memoryApi.js
 msgid "Decisions"
@@ -4307,8 +4331,8 @@ msgid "Duct is waiting on your answer"
 msgstr "Duct está esperando tu respuesta"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Duct keeps what a reader would notice and asks which stories to tell. Your plan changes only when you accept."
-msgstr "Duct se queda con lo que un lector notaría y te pregunta qué historias contar. Tu plan solo cambia cuando lo aceptas."
+#~ msgid "Duct keeps what a reader would notice and asks which stories to tell. Your plan changes only when you accept."
+#~ msgstr "Duct se queda con lo que un lector notaría y te pregunta qué historias contar. Tu plan solo cambia cuando lo aceptas."
 
 #: src/components/insights/desk/DeskCards.jsx
 msgid "Duct last looked {lastChecked} and found nothing worth your time. Enjoy the quiet."
@@ -5106,8 +5130,8 @@ msgid "From"
 msgstr "Desde"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "From a private repository, talk about"
-msgstr "De un repositorio privado, puede mencionar"
+#~ msgid "From a private repository, talk about"
+#~ msgstr "De un repositorio privado, puede mencionar"
 
 #: src/app/(app)/connections/page.jsx
 msgid "From Ads Manager → Settings → API keys"
@@ -5121,6 +5145,10 @@ msgstr "Desde Clarity → Configuración → Exportación de datos"
 msgid "From date"
 msgstr "Desde la fecha"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "From private code, mention"
+msgstr "Desde código privado, menciona"
+
 #: src/components/content/BrandContextForm.jsx
 msgid "From project context"
 msgstr "Desde el contexto del proyecto"
@@ -5130,8 +5158,8 @@ msgid "From the MCP Registry"
 msgstr "Del Registro MCP"
 
 #: src/components/content/PlanDayOne.jsx
-msgid "From what you shipped"
-msgstr "A partir de lo que lanzaste"
+#~ msgid "From what you shipped"
+#~ msgstr "A partir de lo que lanzaste"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "From your files"
@@ -5143,6 +5171,7 @@ msgstr "Desde tu sitio"
 
 #: src/components/content/FeedSummary.jsx
 #: src/components/content/PlanBoard.jsx
+#: src/components/content/PlanDayOne.jsx
 msgid "From your work"
 msgstr "A partir de tu trabajo"
 
@@ -5932,8 +5961,12 @@ msgid "Issues"
 msgstr "Issues"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Issues completed in the window"
-msgstr "Issues completados en el periodo"
+#~ msgid "Issues completed in the window"
+#~ msgstr "Issues completados en el periodo"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Issues finished in that time"
+msgstr "Issues finalizados en ese período"
 
 #: src/lib/mcpServers.js
 msgid "It answered with an error the last time Duct called it. The next chat tries again, or check it now."
@@ -6743,8 +6776,8 @@ msgid "Mid-market"
 msgstr "Mercado medio"
 
 #: src/lib/contentFeedLabels.js
-msgid "Milestones"
-msgstr "Hitos"
+#~ msgid "Milestones"
+#~ msgstr "Hitos"
 
 #: src/components/content/PlanList.jsx
 #: src/components/content/PostMiniCard.jsx
@@ -7990,8 +8023,8 @@ msgid "Only a sample of your sitemap was scanned."
 msgstr "Solo se escaneó una muestra de tu sitemap."
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Only days with no draft yet."
-msgstr "Solo días sin borrador."
+#~ msgid "Only days with no draft yet."
+#~ msgstr "Solo días sin borrador."
 
 #: src/components/content/FeedPlanDialog.jsx
 #~ msgid "Only days with no draft yet. The rest of your plan stays as it is."
@@ -8013,6 +8046,10 @@ msgstr "Solo en {bindingName}"
 msgid "only on {projectName}"
 msgstr "solo en {projectName}"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Only on days with no draft yet."
+msgstr "Solo en días sin borrador aún."
+
 #: src/components/workspace/ActivityRow.jsx
 #~ msgid "Only the project owner can approve {tool} on {server}"
 #~ msgstr ""
@@ -8020,6 +8057,10 @@ msgstr "solo en {projectName}"
 #: src/app/(app)/execute/page.jsx
 msgid "Only the project owner can change autonomy."
 msgstr "Solo el propietario del proyecto puede cambiar la autonomía."
+
+#: src/lib/contentFeedLabels.js
+msgid "Only what you published as a release."
+msgstr "Solo lo que publicaste como lanzamiento."
 
 #: src/components/schedules/ScheduleCard.jsx
 msgid "Only when you run it"
@@ -8274,6 +8315,10 @@ msgstr "Opcional. Conecta Apify para buscar TikTok en Discover; las publicacione
 #: src/components/content/PlanDayOne.jsx
 msgid "Optional. Link one and the plan learns from your own results and posting times."
 msgstr "Opcional. Vincula uno y el plan aprende de tus propios resultados y tiempos de publicación."
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Options"
+msgstr "Opciones"
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Or add it by hand"
@@ -8607,13 +8652,14 @@ msgid "Plan discarded. Tell Duct what to plan instead, or close this tab."
 msgstr "Plan descartado. Dile a Duct qué planear en su lugar, o cierra esta pestaña."
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Plan from what you shipped"
-msgstr "Planifica a partir de lo que lanzaste"
+#~ msgid "Plan from what you shipped"
+#~ msgstr "Planifica a partir de lo que lanzaste"
 
 #: src/components/content/FeedSummary.jsx
 msgid "Plan from your goals"
 msgstr "Planifica a partir de tus objetivos"
 
+#: src/components/content/FeedPlanDialog.jsx
 #: src/components/schedules/ScheduleCard.jsx
 msgid "Plan from your work"
 msgstr "Planifica a partir de tu trabajo"
@@ -8748,12 +8794,16 @@ msgid "Posts"
 msgstr "Publicaciones"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Posts from the feeds you added in the Toolbox"
-msgstr "Entradas de los feeds que añadiste en la Toolbox"
+#~ msgid "Posts from the feeds you added in the Toolbox"
+#~ msgstr "Entradas de los feeds que añadiste en la Toolbox"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Posts go out through {primaryLabel}."
 msgstr "Las publicaciones se envían a través de {primaryLabel}."
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Posts, at most"
+msgstr "Publicaciones, como máximo"
 
 #: src/lib/userProfile.js
 msgid "Practitioner"
@@ -9079,7 +9129,6 @@ msgstr "Alcance"
 msgid "read"
 msgstr "leído"
 
-#: src/components/content/FeedPlanDialog.jsx
 #: src/components/onboarding/DocumentPicker.jsx
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read"
@@ -9096,6 +9145,10 @@ msgstr "Leyó una memoria"
 #: src/components/connections/McpConnectors.jsx
 msgid "Read and write pages in your Notion workspace."
 msgstr "Lee y escribe páginas en tu espacio de trabajo de Notion."
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Read code from"
+msgstr "Leer código de"
 
 #: src/components/content/AnalyticsReport.jsx
 msgid "Read from"
@@ -9390,20 +9443,24 @@ msgstr "Versión"
 #~ msgstr ""
 
 #: src/lib/contentFeedLabels.js
-msgid "Releases and their notes."
-msgstr "Releases y sus notas."
+msgid "Releases and finished work, never work in progress."
+msgstr "Lanzamientos y trabajo terminado, nunca trabajo en curso."
+
+#: src/lib/contentFeedLabels.js
+#~ msgid "Releases and their notes."
+#~ msgstr "Releases y sus notas."
 
 #: src/lib/contentFeedLabels.js
 msgid "Releases only"
 msgstr "Solo releases"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Releases, merged pull requests, changelog edits"
-msgstr "Versiones, pull requests fusionados, cambios en el changelog"
+#~ msgid "Releases, merged pull requests, changelog edits"
+#~ msgstr "Versiones, pull requests fusionados, cambios en el changelog"
 
 #: src/lib/contentFeedLabels.js
-msgid "Releases, merged pull requests, commits to your main branch, README and changelog edits."
-msgstr "Releases, pull requests fusionados, commits en tu rama principal y cambios en el README y el changelog."
+#~ msgid "Releases, merged pull requests, commits to your main branch, README and changelog edits."
+#~ msgstr "Releases, pull requests fusionados, commits en tu rama principal y cambios en el README y el changelog."
 
 #: src/components/ReloadToast.jsx
 msgid "Reload"
@@ -9576,6 +9633,10 @@ msgstr "Los informes y las ejecuciones de agente para este proyecto usan esta cu
 #: src/components/connections/ProjectEntitySelect.jsx
 msgid "Reports and agent runs use this {one}."
 msgstr "Los informes y las ejecuciones de agente usan este {one}."
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Reports and the changes you approved"
+msgstr "Informes y los cambios que aprobaste"
 
 #: src/app/(app)/artifacts/page.jsx
 msgid "Reports are stored against your account, so they survive the tab that made them."
@@ -9860,8 +9921,8 @@ msgid "Rolling back…"
 msgstr "Revirtiendo…"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Round GitHub star counts and your best week in GA4"
-msgstr "Cifras redondas de estrellas en GitHub y tu mejor semana en GA4"
+#~ msgid "Round GitHub star counts and your best week in GA4"
+#~ msgstr "Cifras redondas de estrellas en GitHub y tu mejor semana en GA4"
 
 #: src/app/(app)/connections/page.jsx
 #: src/components/connections/logos.jsx
@@ -11092,6 +11153,10 @@ msgstr "Algo salió mal"
 msgid "Source"
 msgstr "Fuente"
 
+#: src/components/content/FeedPlanDialog.jsx
+msgid "Source code"
+msgstr "Código fuente"
+
 #: src/components/GoogleAdsReport.js
 msgid "Source: {source}"
 msgstr "Fuente: {source}"
@@ -12267,8 +12332,8 @@ msgid "To date"
 msgstr "Hasta la fecha"
 
 #: src/components/content/FeedPlanDialog.jsx
-msgid "Today"
-msgstr "Hoy"
+#~ msgid "Today"
+#~ msgstr "Hoy"
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Token name"
@@ -13057,6 +13122,10 @@ msgstr "Qué prueba este plan"
 #: src/components/content/AccountsTab.jsx
 msgid "What to know about this channel"
 msgstr "Qué saber sobre este canal"
+
+#: src/components/content/FeedPlanDialog.jsx
+msgid "What to read"
+msgstr "Qué leer"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "What to remember"

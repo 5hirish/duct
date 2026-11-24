@@ -1,39 +1,50 @@
 # design/
 
-**Every screen of the app lives on one canvas as an editable board, and a UI change is designed there before it is built.** This folder holds the tools that keep that canvas, and the design system beside it, equal to the app.
+**Every UI change starts from the screen as it ships, at all eight sizes.** Anyone can capture that with this folder's tools. The maintainer also keeps the captures as an editable canvas on Claude, which helps but is never a step a contributor needs.
 
 ```
- As built ──► pick its board ──► copy it ──► design the change ──► build it ──► refresh
- (every screen,  (Core page:      (beside the   (approved on        (the PR      (capture after
-  every size)     the app's own    original)     the canvas)         links it)    it ships)
-                  markup)
+ capture the screen ──► design the change ──► build it ──► capture again ──► PR shows both
+ (all eight sizes,      (in code, /preview,    (the app)    (same sizes)      (before, after)
+  Playwright only)       or any tool you like)
 ```
 
 ## At a glance
 
-- **Duct Prototype** is the canvas. Its *Core* page holds an editable, clickable board per screen; its *As built* page shows every screen at four sizes.
-- **Duct Design System** holds the tokens (55 colours in two themes, type, spacing, radii), 30 components with previews and their rules, the logos, mosaic panels and connector marks.
-- **Both come from the code.** One command captures the app, one lays out the canvas, one builds the system. Nothing is redrawn by hand, so nothing drifts unseen.
+- **The screen list** ([`tools/screens.mjs`](tools/screens.mjs)) names every screen, dialog and sheet and how to open it. CI fails when a page or dialog is missing from it.
+- **The capture** (`tools/capture.mjs`) shoots any of them at eight sizes, from a phone to a 4K screen. It needs Playwright and the app's dev server, nothing else: no account, no backend, no keys.
+- **The canvas and design system** are the maintainer's Claude-hosted view of the same captures: an editable board per screen, tokens and components. Built from the code, never redrawn by hand.
 - `storyboard/` and `motion/` are the launch film, unrelated to the above.
 
-## Where they are
+## Show a change at every size
+
+1. Start the app: `npm --prefix app run dev`.
+2. Capture the screen before you change it: `node design/tools/capture.mjs <id>` (the id is in `screens.mjs`). Pictures land in `$TMPDIR/duct-design/asbuilt/<id>@<size>.webp`.
+3. Design and build the change. The [`/preview`](../app/AGENTS.md) route shows one component in every state.
+4. Capture again, and run `npm --prefix app run check:layout`.
+5. Attach before and after at 390, 1100 and 1440 to the PR, plus any size the change affects.
+
+The eight sizes: a phone (390), an iPad either way up (820, 1180), the desktop app's window (1100), a laptop (1440, light and dark), a 4K screen at 150% (2560) and at 100% (3840). `SIZES=390,1440 node design/tools/capture.mjs <id>` shoots only the ones named.
+
+A design is never one frame: the extra width has to show something the phone couldn't. Every size is judged against the page frame and the screen review checklist in [`app/DESIGN.md`](../app/DESIGN.md), not against "nothing broke".
+
+## Every screen is in the list
+
+`npm --prefix app run check:parity` fails when a page or a dialog has no entry in [`tools/screens.mjs`](tools/screens.mjs) (`app/scripts/check-screen-coverage.mjs`, with the reason for each deliberate exception). Fixing it needs only code: add the entry (its route, and how to open it) and run the capture on it to see it opens.
+
+The screens show the README's story: Solo, a budgeting app, in the week of 8–14 Sep 2026. Every backend answer lives in `scripts/shots/routes/`, one file per area, each shape named after the handler it copies. A screen that comes out empty is a route missing there.
+
+## The maintainer's canvas
 
 | What | Link | What it holds |
 | --- | --- | --- |
-| Canvas | [Duct Prototype](https://claude.ai/artifact/BBDispmr2B1UYoNR3E9aCK) | 30 editable boards (1440, light), 39 screens and overlays as built |
+| Canvas | [Duct Prototype](https://claude.ai/artifact/BBDispmr2B1UYoNR3E9aCK) | 49 editable boards (1440, light); 50 screens, dialogs and sheets as built at eight sizes |
 | Design system | [Duct Design System](https://claude.ai/artifact/Y4DKNzQU96Go4kRx7r9JNt) | tokens, components, assets, the brand book |
 
-Both are private to the maintainer: ask for access. Agents read and publish them with the Artifact tool.
+Both are private Claude artifacts: they need a Claude account and the maintainer's invite. Agents read and publish them with the Artifact tool. With access, the loop is the one above with a board in the middle:
 
-## Design first, then build
-
-1. **Find the screen** on *As built*. It shows the screen at a phone (390), the desktop app's window (1100) and a laptop (1440), and the laptop again in dark.
-2. **Start from its board** on *Core*. No board yet? Add the screen to the screen list (Go deeper) and capture it.
-3. **Copy the board** beside the original and design the change on the copy. A refresh replaces the originals, never a copy.
-4. **Get it approved on the canvas,** then build from the board. The PR links it.
-5. **Refresh the canvas** after the change ships, so the next change starts from the truth.
-
-A design is never one frame. The extra width has to show something the phone couldn't, and every size is judged against the page-frame rules in [`app/DESIGN.md`](../app/DESIGN.md), not against "nothing broke".
+1. Find the screen on *As built*, then its board on *Core*.
+2. Copy the board beside the original and design on the copy. A refresh replaces the originals, never a copy.
+3. Build from the approved board, link it in the PR, and refresh the canvas after the change ships.
 
 ## A board is the app, not a drawing of it
 
@@ -45,20 +56,18 @@ Three things are adapted, because a canvas cannot hold them:
 - Links go to the matching board, so Play moves through the app.
 - A pane scrolled to an answer stays there, pinned to its end, so a narrower board still shows the latest turn.
 
-The screens show the README's story: Solo, a budgeting app, in the week of 8–14 Sep 2026. Every backend answer lives in `scripts/shots/routes/`, one file per area, each shape named after the handler it copies. A screen that comes out empty is a route missing there.
-
-## Refresh after a release
+## Refresh the canvas after a release
 
 With the app's dev server running (`npm --prefix app run dev`):
 
 1. `node design/tools/capture.mjs`: shoots every screen at every size and writes the boards. About ten minutes.
-2. `node design/tools/board-check.mjs --size <1440|1100|390|1440-dark>`, once per size: renders each board at that size and theme beside the app's picture there, and fails on a mean difference over 3.
+2. `node design/tools/board-check.mjs --size <id>`, once per size in `VARIANTS` (1440, 1440-dark, 1100, 390, 820, 1180, 2560, 3840): renders each board at that size and theme beside the app's picture there, and fails on a mean difference over 3.
 3. `node design/tools/layout.mjs --from <live canvas.json> --ds <system link>`: lays out the canvas, keeping everything people added.
 4. `node design/tools/assets.mjs plan --map <live project/assets.json>`, upload each batch it stages to the canvas's asset store, then `record` and `apply`. The canvas serves only stylesheets, scripts and JSON, so every picture and font has to live in that store.
 5. `node design/tools/design-system.mjs`: rebuilds the tokens, the stylesheet and the component previews.
 6. Publish both with the Artifact tool. That step is Claude's, not a script's.
 
-**Check it worked:** board-check passes at all four sizes, `assets.mjs apply` finds nothing the canvas cannot load, and the canvas's blue notes carry the new date and commit.
+**Check it worked:** board-check passes at all eight sizes, `assets.mjs apply` finds nothing the canvas cannot load, and the canvas's blue notes carry the new date and commit.
 
 ## The design system follows the code
 
@@ -69,8 +78,8 @@ So a token is changed in the code and re-synced, never on the system's page: an 
 ## Go deeper
 
 - [`app/DESIGN.md`](../app/DESIGN.md): the rules, with their reasons. [`app/AGENTS.md`](../app/AGENTS.md): sizing, units, `/preview`.
-- [`tools/screens.mjs`](tools/screens.mjs): every screen on the canvas and how each is reached. [`tools/components.mjs`](tools/components.mjs): the system's components.
+- [`tools/screens.mjs`](tools/screens.mjs): every screen and how each is reached. [`tools/components.mjs`](tools/components.mjs): the system's components.
 - [`../scripts/shots/`](../scripts/shots/): the story the screens show, shared with the README's pictures and `check:layout`.
 - The board format: `artifact-type/reference/format.md` on the canvas itself.
 
-**The one rule, again: design on the canvas first, on a copy of the board that matches the app.**
+**The one rule, again: start from the screen as it ships, at every size, and show the change at every size.**

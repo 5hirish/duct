@@ -814,6 +814,14 @@ export function routes(story, { slidesHtml } = {}) {
     [`GET /api/content/formats?${q}`]: formats,
     [`GET /api/content/brand?${q}`]: brand,
     [`GET /api/content/publishers?${q}`]: publishers,
+    // The Toolbox asks each vendor whether the saved key still works
+    // (routes/content.py list_publishers, check=true): PostBridge's does.
+    [`GET /api/content/publishers?${q}&check=true`]: publishers.map((p) => ({ ...p, key_status: p.connected ? "ok" : "" })),
+    // Apify (VendorKeyStatusOut): Solo has not connected it.
+    ...Object.fromEntries(["", "&check=true"].map((c) => [
+      `GET /api/content/vendor-keys/apify?${q}${c}`,
+      { connected: false, own_key: false, is_owner: true, key_status: "" },
+    ])),
     [`GET /api/content/channels?${q}`]: channels,
     // Read once a scheduler is connected, which the publishers above say it is:
     // without them the Accounts tab says "no accounts" and Analytics "link one".

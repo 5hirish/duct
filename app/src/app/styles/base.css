@@ -9,6 +9,29 @@ html {
   scroll-padding-top: 4rem;
 }
 
+/* A 4K screen at 100% scaling. Everything here is sized in rem (type,
+   spacing, the sidebar, the 81rem page cap), which reads right from a phone
+   to a laptop at the OS's own scaling. A 3840px-wide window means a 4K
+   display at 100%, where 14px text is a third smaller than a laptop's and the
+   page cap leaves most of the screen empty. So past 3000px the root grows,
+   by 1.25 and then 1.5 past 3600px: the same screen as at 150% scaling.
+   Root font size, not `zoom`: zoom on the root multiplies the full-height
+   layouts (`h-svh`, `100dvh`) past the window. Media queries in rem read the
+   browser's initial size, so the bigger root cannot move its own breakpoint.
+   The app's one viewport breakpoint by number, because it is about the
+   device, not the layout (app/AGENTS.md, "Sizing"). */
+@media (min-width: 187.5rem) {
+  html {
+    font-size: 125%;
+  }
+}
+
+@media (min-width: 225rem) {
+  html {
+    font-size: 150%;
+  }
+}
+
 /* Scrollbars, defined once for the whole app.
 
    Every browser we ship to supports the two standard properties now, so there

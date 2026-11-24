@@ -69,6 +69,10 @@ for (const file of readdirSync(STYLES).filter((f) => f.endsWith(".css")).sort())
     if (/^(inherit|unset|initial|revert)$/.test(value)) continue;
     if (/var\(|clamp\(|calc\(|min\(|max\(/.test(value)) continue;
     if (SCALE.has(value)) continue;
+    // The root's own size is what every rem is measured from, not a size on
+    // the scale: base.css grows it on a 4K screen at 100% so the whole scale
+    // grows with it.
+    if (/html\s*\{\s*$/.test(text.slice(0, m.index)) && /%$/.test(value)) continue;
     bad.push({ value, line: text.slice(0, m.index).split("\n").length });
   }
 

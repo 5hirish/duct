@@ -4299,24 +4299,24 @@ export const SCENES = [
     id: "feed-plan-dialog",
     state: "GitHub connected, the defaults",
     group: "FeedPlanDialog",
-    title: "Plan from what you shipped: the setup sheet",
-    note: "Opened from the plan board's \"From your work\" button. What Duct reads, how far back, how far ahead, how many days it may change and how much of a private repository it may talk about. What to check: every answer row stays on one line in a phone-width dialog; the hint under the disclosure row changes with the pick; unticking both sources disables Find stories and says why.",
+    title: "Plan from your work: the setup sheet",
+    note: "Opened from the plan board's \"From your work\" button (the first-run screen says the same). The defaults are the answer, so the sheet is the sources as rows and one Options line that says what the rest is set to. Source code is one row whatever hosts the code; the host is named in its line, and a picker appears only once a second host exists. What to check: Find stories is the heaviest thing; the GitHub mark shows on its pale stone in both themes and in WebKit; every row is one target; unticking everything disables Find stories and says why.",
     render: () => <FeedDialogScene />,
   },
   {
-    id: "feed-plan-dialog-long",
-    state: "30 days back, 2 weeks ahead, 4 days",
+    id: "feed-plan-dialog-options",
+    state: "Options open, 30 days back, 2 weeks ahead, 4 posts",
     group: "FeedPlanDialog",
-    title: "The setup sheet at its widest window",
-    note: "The drawing at its densest: 30 day cells read, 14 planned, four lit. What to check: every cell keeps the same width on both sides of today, the Today label stays under its bar, and the cells never shrink below a visible stone at phone width.",
-    render: () => <FeedDialogScene initial={{ ...DEFAULT_FEED, lookBack: 30, horizon: 14, maxDays: 4, disclosure: "releases" }} />,
+    title: "The setup sheet with its options open",
+    note: "The four tuning questions behind Options, each a segmented row. The private-code row only shows while source code is ticked, and its hint changes with the pick. What to check: every row stays on one line at phone width; the summary line truncates rather than wraps.",
+    render: () => <FeedDialogScene showOptions initial={{ ...DEFAULT_FEED, lookBack: 30, horizon: 14, maxDays: 4, disclosure: "releases" }} />,
   },
   {
     id: "feed-plan-dialog-linear-notion",
     state: "Linear and Notion connected, Notion ticked without a database",
     group: "FeedPlanDialog",
     title: "The setup sheet with Linear and Notion",
-    note: "Linear and Notion appear as sources only when the person has them connected. Ticking Notion asks for the one database to read, and Find stories waits until there is one. What to check: four tiles sit two by two from @md; the database field and its error sit under the tiles, not between them.",
+    note: "Linear and Notion appear as rows only when the person has them connected. Ticking Notion asks for the one database to read, and Find stories waits until there is one. What to check: the database field sits under the rows, with its guidance under it.",
     render: () => <FeedDialogScene connected={["linear", "notion"]}
       initial={{ ...DEFAULT_FEED, sources: ["github", "linear", "notion"] }} />,
   },
@@ -4324,8 +4324,8 @@ export const SCENES = [
     id: "feed-plan-dialog-no-github",
     state: "no repository connected",
     group: "FeedPlanDialog",
-    title: "The setup sheet without GitHub",
-    note: "GitHub is unticked and disabled, with the way to the Toolbox under it; Duct's own record stays ticked, so the sheet still starts.",
+    title: "The setup sheet without source code",
+    note: "Source code has no checkbox and its line is the way to the Toolbox; Duct's own record stays ticked, so the sheet still starts. The private-code option is not offered.",
     render: () => <FeedDialogScene githubConnected={false} />,
   },
   {
@@ -4719,13 +4719,13 @@ const PLAN_WITH_FEED_DAYS = {
   ),
 };
 
-function FeedDialogScene({ githubConnected = true, initial, connected }) {
+function FeedDialogScene({ githubConnected = true, initial, connected, showOptions = false }) {
   const [open, setOpen] = useState(true);
   return (
     <>
       <Button size="sm" variant="outline" onClick={() => setOpen(true)}>Open the setup sheet</Button>
       <FeedPlanDialog open={open} onOpenChange={setOpen} onStart={() => setOpen(false)} onRepeat={() => setOpen(false)}
-        githubConnected={githubConnected} connected={connected} {...(initial ? { initial } : {})} />
+        githubConnected={githubConnected} connected={connected} showOptions={showOptions} {...(initial ? { initial } : {})} />
     </>
   );
 }

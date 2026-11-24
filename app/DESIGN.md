@@ -8,12 +8,14 @@ reading as generated defaults. The deep reasoning behind the layout system
 lives in `docs/engineering/2026-09-01-desktop-adaptive-ui-review.html`; this file does
 not repeat it.
 
-Screens are designed before they are built, on the Duct Prototype canvas: every
-screen as it ships, at a phone, the desktop app's window and a laptop, plus an
-editable board per screen captured from this app's own markup. Its companion,
-the Duct Design System, carries these tokens and this file's canon as a
-reference for design agents. This file stays the source both are judged by;
-the loop and the links are in [`design/README.md`](../design/README.md).
+Screens are designed before they are built, starting from the screen as it
+ships at all eight sizes: `node design/tools/capture.mjs <screen>` shoots it
+from this app with only Playwright and the dev server. The maintainer also
+keeps those captures as the Duct Prototype canvas (an editable board per
+screen) and the Duct Design System (these tokens and this file's canon), both
+hosted on Claude, so they are an aid, never a step a contributor needs. This
+file stays the source all of them are judged by; the loop is in
+[`design/README.md`](../design/README.md).
 
 Rules cite their source where they came from research (NN/g, Apple HIG,
 Material, Refactoring UI, WCAG 2.2, Emil Kowalski, Rauno Freiberg, Linear,
@@ -533,6 +535,7 @@ are the canonical choices; migrate the others when a change touches them.
 
 | Job | Canonical | Retire on touch |
 |---|---|---|
+| Responsive layout | One layout that answers its container, judged at eight sizes: 390 (phone), 820 and 1180 (iPad either way up), 1100 (the desktop app), 1440 light and dark, 2560 (4K at 150%) and 3840 (4K at 100%). Below 48rem of window the sidebar is a drawer behind the top bar. Inside a page every grid and row switches at its own container's `@`-size, never the window's, so a list in a half-width column lays out as a phone list. An agent workspace splits chat and document at 36rem of its own width. Past the 81rem cap a framed page centres its column and a full-width tool surface (the plan board) keeps the window's edge. Past 3000px the root font grows ×1.25, past 3600px ×1.5, so a 4K screen at 100% reads as at 150% (`styles/base.css`). `check:layout` measures the widths, the first four in WebKit; the canvas shows every screen at all eight | viewport prefixes (`md:`, `lg:`) inside a page; hand-picked pixel breakpoints; a row that asks the page how wide it is (the desk's conversation rows crushed every title to two letters on an iPad, 2026-11-23); `zoom` on the root, which pushes `100dvh` layouts past the window |
 | Page frame | `ui/page`'s `Page` + `PageHeader` (title, one line of `status`, `actions`, `help` behind a "?") + `Section`. No paragraph under a title: the explanation goes in `help` | `.page-toolbar` rows, a `<p className="app-subtle">` under an `<h1>`, a back arrow on a top-level page |
 | Card | `ui/card`'s `Card`: `rounded-xl border bg-card p-6`, `CardFooter` pinned with `mt-auto`, variants `default` / `interactive` (+ `cardLinkClass` on the title) / `hero` (one a screen) / `quiet`. Items of one kind are rows in one `Card className="gap-0 p-0"`, not a card each | hand-rolled `rounded-xl border bg-card` boxes (a burn-down budget in `check:design`); `.connection-card` CSS; `.conn-tile` |
 | Grid of cards | `ui/page`'s `TileGrid`: `size` sm/md/lg for open sets, `cols` 2/3/4 for a set of known size | per-page `grid-cols-*` ladders and `minmax()` widths (there were eight) |

@@ -13,7 +13,6 @@ export const SOURCE_LABELS = {
   [FeedSource.LINEAR]: msg`Linear`,
   [FeedSource.NOTION]: msg`Notion`,
   [FeedSource.RSS]: msg`Your feeds`,
-  [FeedSource.MILESTONES]: msg`Milestones`,
 };
 
 export const DISCLOSURE_LABELS = {
@@ -22,10 +21,13 @@ export const DISCLOSURE_LABELS = {
   [Disclosure.EVERYTHING]: msg`Everything`,
 };
 
+// What each setting lets a post mention, in a marketer's words. The exact
+// list per setting (merged pull requests, commits to the main branch, README
+// and changelog edits, docs/) is agents/content/feed.py's.
 export const DISCLOSURE_HINTS = {
-  [Disclosure.RELEASES]: msg`Releases and their notes.`,
-  [Disclosure.SHIPPED]: msg`Releases, merged pull requests, commits to your main branch, README and changelog edits.`,
-  [Disclosure.EVERYTHING]: msg`Also closed issues and changes under docs/.`,
+  [Disclosure.RELEASES]: msg`Only what you published as a release.`,
+  [Disclosure.SHIPPED]: msg`Releases and finished work, never work in progress.`,
+  [Disclosure.EVERYTHING]: msg`Also closed issues and documentation changes.`,
 };
 
 // Mirror of backend LeftOut. Plural-free on purpose: the count is drawn
