@@ -50,6 +50,8 @@ from service.project_config import (
 from service.project_draft import (
     FIELDS,
     MAX_DRAFT_PERSONAS,
+    PERSONA_DESCRIPTION_MAX,
+    PERSONA_NAME_MAX,
     PROVENANCE_CRAWL,
     PROVENANCE_DOCUMENT,
     PROVENANCE_INFERRED,
@@ -197,8 +199,8 @@ def get_project(args: ProjectRef, caller: Caller) -> dict[str, Any]:
 
 class PersonaIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    name: str = Field(max_length=80, description="A role or segment, e.g. 'Indie iOS developer'.")
-    description: str = Field("", max_length=400, description="One sentence: their goal and their pain.")
+    name: str = Field(max_length=PERSONA_NAME_MAX, description="A role or segment, e.g. 'Indie iOS developer'.")
+    description: str = Field("", max_length=PERSONA_DESCRIPTION_MAX, description="One sentence: their goal and their pain.")
 
 
 class CompetitorIn(BaseModel):

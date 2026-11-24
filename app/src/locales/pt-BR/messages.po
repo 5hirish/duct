@@ -215,6 +215,10 @@ msgstr "{0} linhas"
 msgid "{0} sources"
 msgstr "{0} fontes"
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "{action}: {verdict}"
+msgstr "{action}: {verdict}"
+
 #: src/components/settings/AgentConsent.jsx
 msgid "{agent} is connected"
 msgstr "{agent} está conectado"
@@ -1579,6 +1583,10 @@ msgid "Add one or more names, separated by commas."
 msgstr "Adicione um ou mais nomes, separados por vírgulas."
 
 #: src/components/content/BrandContextForm.jsx
+msgid "Add persona"
+msgstr "Adicionar persona"
+
+#: src/components/content/BrandContextForm.jsx
 msgid "Add pillar"
 msgstr "Adicionar pilar"
 
@@ -2232,9 +2240,12 @@ msgid "Attachment"
 msgstr "Anexo"
 
 #: src/app/(app)/project/[projectId]/page.jsx
-#: src/components/content/BrandContextForm.jsx
 msgid "Audience"
 msgstr "Público"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Audience personas"
+msgstr "Personas do público"
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Audience, competitors, positioning"
@@ -2874,6 +2885,7 @@ msgid "Clear filters"
 msgstr "Limpar filtros"
 
 #: src/components/content/PlanDayOne.jsx
+#: src/lib/contentReview.js
 msgid "Clicks"
 msgstr "Cliques"
 
@@ -4418,6 +4430,10 @@ msgstr "Duct lê suas fontes novamente e diz o que mudou desde {since}."
 #~ msgid "Duct reads your work, leaves out the noise and shows you the stories it found. You pick which to tell, and nothing changes in your plan until you accept it."
 #~ msgstr "O Duct lê o seu trabalho, deixa o ruído de fora e mostra as histórias que encontrou. Você escolhe quais contar, e nada muda no seu plano até você aceitar."
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Duct role-plays the personas in your Brand settings. Advice, not a measurement."
+msgstr "O Duct interpreta as personas nas suas configurações de Marca. Um conselho, não uma medição."
+
 #: src/app/(start)/start/page.jsx
 msgid "Duct runs on your own account, so an audit costs you cents — and Duct never sees your data twice."
 msgstr "Duct roda na sua própria conta, então uma auditoria custa centavos — e Duct nunca vê seus dados duas vezes."
@@ -5713,6 +5729,10 @@ msgstr "Como isso foi calculado"
 #~ msgid "How you like to be worked with. Every agent reads this, on every project, and only you can see it."
 #~ msgstr "Como você gosta de ser trabalhado. Todo agente lê isso, em todo projeto, e só você pode ver."
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "How your audience reacts"
+msgstr "Como seu público reage"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Hreflang"
 msgstr "Hreflang"
@@ -6639,6 +6659,10 @@ msgstr "Corresponder às minhas mensagens"
 msgid "Match the brand description"
 msgstr "Igual à descrição da marca"
 
+#: src/lib/contentReview.js
+msgid "Maybe"
+msgstr "Talvez"
+
 #: src/components/connections/ConnectorSource.jsx
 #: src/components/connections/ConnectorTile.jsx
 msgid "MCP"
@@ -6931,6 +6955,10 @@ msgstr "Nome — ex: Análise do Formato do Rosto"
 msgid "Name (optional)"
 msgstr "Nome (opcional)"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Name and role, e.g. Priya, solo founder"
+msgstr "Nome e função, ex.: Priya, fundadora solo"
+
 #: src/components/settings/AgentAccess.jsx
 msgid "Name it, e.g. CI on GitHub Actions"
 msgstr "Nomeie-o, ex: CI no GitHub Actions"
@@ -7100,6 +7128,10 @@ msgstr "Próxima semana"
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Nightly check"
 msgstr "Verificação noturna"
+
+#: src/lib/contentReview.js
+msgid "No"
+msgstr "Não"
 
 #: src/app/(app)/content/page.jsx
 msgid "No {filterLabel} posts."
@@ -8546,9 +8578,17 @@ msgstr "Desempenho"
 msgid "Permissions"
 msgstr "Permissões"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Persona"
+msgstr "Persona"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Persona description"
 msgstr "Descrição da persona"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Persona name"
+msgstr "Nome da persona"
 
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "Photo carousels and videos both work. The clone is always a carousel."
@@ -8883,6 +8923,10 @@ msgstr "Tipo de conteúdo principal"
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Primary growth motions"
 msgstr "Principais movimentos de crescimento"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Primary persona"
+msgstr "Persona principal"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Primary persona name"
@@ -9577,6 +9621,10 @@ msgid "Remove reply {n}"
 msgstr "Remover a resposta {n}"
 
 #: src/components/content/BrandContextForm.jsx
+msgid "Remove this persona"
+msgstr "Remover esta persona"
+
+#: src/components/content/BrandContextForm.jsx
 msgid "Remove this pillar"
 msgstr "Remover este pilar"
 
@@ -10203,6 +10251,7 @@ msgstr "salvo na sua conta Duct"
 
 #: src/components/content/PlanDayOne.jsx
 #: src/components/content/PostMetricsForm.jsx
+#: src/lib/contentReview.js
 msgid "Saves"
 msgstr "Salvos"
 
@@ -11346,6 +11395,10 @@ msgstr "Parou aqui — a vez foi interrompida."
 msgid "Stopped."
 msgstr "Parado."
 
+#: src/lib/contentReview.js
+msgid "Stops"
+msgstr "Para"
+
 #: src/components/content/VendorKeyForm.jsx
 msgid "Stored encrypted, and used only for projects you own."
 msgstr "Armazenada com criptografia e usada só nos projetos que são seus."
@@ -11907,6 +11960,10 @@ msgstr "A receita à qual todos os outros números devem responder."
 #: src/lib/agentSession.js
 msgid "The run stopped without saying why. Try again."
 msgstr "A execução parou sem dizer o porquê. Tente novamente."
+
+#: src/components/content/BrandContextForm.jsx
+msgid "The same personas as in project setup: an edit here shows there too."
+msgstr "As mesmas personas da configuração do projeto: uma edição aqui também aparece lá."
 
 #: src/components/audit/AuditWorkspace.jsx
 msgid "The SEO audit"
@@ -13278,6 +13335,18 @@ msgstr "Quais testes estão ativos, se ainda agrupam, resultados por métrica."
 msgid "Who do customers compare you against most often?"
 msgstr "Com quem os clientes mais comparam você?"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Who they are, what they want, what gets in their way, and the words they use."
+msgstr "Quem são, o que querem, o que as atrapalha e as palavras que usam."
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Who this persona is"
+msgstr "Quem é esta persona"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Who your posts are for. The pre-publish review plays each one and says whether they'd stop, save or click."
+msgstr "Para quem são seus posts. A revisão pré-publicação interpreta cada uma e diz se pararia, salvaria ou clicaria."
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Why it matters"
 msgstr "Por que importa"
@@ -13477,6 +13546,10 @@ msgstr "xAI"
 #: src/components/audit/AuditStepProgress.jsx
 msgid "yes"
 msgstr "sim"
+
+#: src/lib/contentReview.js
+msgid "Yes"
+msgstr "Sim"
 
 #: src/app/(app)/activity/page.jsx
 msgid "you"

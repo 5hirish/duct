@@ -215,6 +215,10 @@ msgstr "{0} 行"
 msgid "{0} sources"
 msgstr "{0} ソース"
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "{action}: {verdict}"
+msgstr "{action}: {verdict}"
+
 #: src/components/settings/AgentConsent.jsx
 msgid "{agent} is connected"
 msgstr "{agent} は接続済みです"
@@ -1579,6 +1583,10 @@ msgid "Add one or more names, separated by commas."
 msgstr "1つ以上の名前をコンマで区切って追加してください。"
 
 #: src/components/content/BrandContextForm.jsx
+msgid "Add persona"
+msgstr "ペルソナを追加"
+
+#: src/components/content/BrandContextForm.jsx
 msgid "Add pillar"
 msgstr "ピラーを追加"
 
@@ -2232,9 +2240,12 @@ msgid "Attachment"
 msgstr "添付ファイル"
 
 #: src/app/(app)/project/[projectId]/page.jsx
-#: src/components/content/BrandContextForm.jsx
 msgid "Audience"
 msgstr "オーディエンス"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Audience personas"
+msgstr "オーディエンスペルソナ"
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Audience, competitors, positioning"
@@ -2874,6 +2885,7 @@ msgid "Clear filters"
 msgstr "フィルターをクリア"
 
 #: src/components/content/PlanDayOne.jsx
+#: src/lib/contentReview.js
 msgid "Clicks"
 msgstr "クリック数"
 
@@ -4418,6 +4430,10 @@ msgstr "Duct はソースを再度読み込み、{since} 以降の変更点を�
 #~ msgid "Duct reads your work, leaves out the noise and shows you the stories it found. You pick which to tell, and nothing changes in your plan until you accept it."
 #~ msgstr "Duct があなたの作業を読み、ノイズを除いて、見つけたストーリーを表示します。どれを伝えるかはあなたが選び、承認するまで計画は何も変わりません。"
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Duct role-plays the personas in your Brand settings. Advice, not a measurement."
+msgstr "Ductはブランド設定のペルソナをロールプレイします。計測値ではなくアドバイスです。"
+
 #: src/app/(start)/start/page.jsx
 msgid "Duct runs on your own account, so an audit costs you cents — and Duct never sees your data twice."
 msgstr "Ductはお客様自身のアカウントで実行されるため、監査にかかる費用はわずかです。また、Ductがお客様のデータを二度見ることはありません。"
@@ -5713,6 +5729,10 @@ msgstr "計算方法"
 #~ msgid "How you like to be worked with. Every agent reads this, on every project, and only you can see it."
 #~ msgstr "あなたがどのように協力したいか。すべてのエージェントがすべてのプロジェクトでこれを読み、あなただけが見ることができます。"
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "How your audience reacts"
+msgstr "オーディエンスの反応"
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Hreflang"
 msgstr "Hreflang"
@@ -6639,6 +6659,10 @@ msgstr "メッセージに合わせる"
 msgid "Match the brand description"
 msgstr "ブランドの説明と同じ"
 
+#: src/lib/contentReview.js
+msgid "Maybe"
+msgstr "どちらとも言えない"
+
 #: src/components/connections/ConnectorSource.jsx
 #: src/components/connections/ConnectorTile.jsx
 msgid "MCP"
@@ -6931,6 +6955,10 @@ msgstr "名前 — 例: 顔の形分析"
 msgid "Name (optional)"
 msgstr "名前（オプション）"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Name and role, e.g. Priya, solo founder"
+msgstr "名前と役割（例：Priya、個人創業者）"
+
 #: src/components/settings/AgentAccess.jsx
 msgid "Name it, e.g. CI on GitHub Actions"
 msgstr "名前を付けてください（例：GitHub Actions の CI）"
@@ -7100,6 +7128,10 @@ msgstr "来週"
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Nightly check"
 msgstr "夜間チェック"
+
+#: src/lib/contentReview.js
+msgid "No"
+msgstr "いいえ"
 
 #: src/app/(app)/content/page.jsx
 msgid "No {filterLabel} posts."
@@ -8546,9 +8578,17 @@ msgstr "パフォーマンス"
 msgid "Permissions"
 msgstr "権限"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Persona"
+msgstr "ペルソナ"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Persona description"
 msgstr "ペルソナの説明"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Persona name"
+msgstr "ペルソナ名"
 
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "Photo carousels and videos both work. The clone is always a carousel."
@@ -8883,6 +8923,10 @@ msgstr "主要なコンテンツタイプ"
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Primary growth motions"
 msgstr "主要な成長戦略"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Primary persona"
+msgstr "メインペルソナ"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Primary persona name"
@@ -9577,6 +9621,10 @@ msgid "Remove reply {n}"
 msgstr "返信{n}を削除"
 
 #: src/components/content/BrandContextForm.jsx
+msgid "Remove this persona"
+msgstr "このペルソナを削除"
+
+#: src/components/content/BrandContextForm.jsx
 msgid "Remove this pillar"
 msgstr "この柱を削除"
 
@@ -10203,6 +10251,7 @@ msgstr "Ductアカウントに保存済み"
 
 #: src/components/content/PlanDayOne.jsx
 #: src/components/content/PostMetricsForm.jsx
+#: src/lib/contentReview.js
 msgid "Saves"
 msgstr "保存"
 
@@ -11346,6 +11395,10 @@ msgstr "ここで停止しました — ターンが中断されました。"
 msgid "Stopped."
 msgstr "停止しました。"
 
+#: src/lib/contentReview.js
+msgid "Stops"
+msgstr "手を止める"
+
 #: src/components/content/VendorKeyForm.jsx
 msgid "Stored encrypted, and used only for projects you own."
 msgstr "暗号化して保存され、あなたが所有するプロジェクトでのみ使用されます。"
@@ -11907,6 +11960,10 @@ msgstr "他のすべての数値の基準となる収益。"
 #: src/lib/agentSession.js
 msgid "The run stopped without saying why. Try again."
 msgstr "実行が理由なく停止しました。もう一度お試しください。"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "The same personas as in project setup: an edit here shows there too."
+msgstr "プロジェクト設定と同じペルソナです。ここでの編集はそちらにも反映されます。"
 
 #: src/components/audit/AuditWorkspace.jsx
 msgid "The SEO audit"
@@ -13278,6 +13335,18 @@ msgstr "どのテストが稼働中で、まだバケットに分類されてい
 msgid "Who do customers compare you against most often?"
 msgstr "顧客はあなたを誰と最も比較しますか"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Who they are, what they want, what gets in their way, and the words they use."
+msgstr "人物像、願望、阻害要因、使う言葉。"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Who this persona is"
+msgstr "ペルソナの人物像"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Who your posts are for. The pre-publish review plays each one and says whether they'd stop, save or click."
+msgstr "投稿のターゲット層です。公開前のレビューで各ペルソナをシミュレーションし、手を止めるか、保存するか、クリックするかを判定します。"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Why it matters"
 msgstr "重要な理由"
@@ -13476,6 +13545,10 @@ msgstr "xAI"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "yes"
+msgstr "はい"
+
+#: src/lib/contentReview.js
+msgid "Yes"
 msgstr "はい"
 
 #: src/app/(app)/activity/page.jsx

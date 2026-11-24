@@ -35,6 +35,7 @@ from agents.content.assessment import (
 from agents.content.schema import (
     CheckSeverity,
     MarkerScore,
+    PersonaVerdict,
     ReviewBand,
     ReviewMarker,
     SanityCheckId,
@@ -282,6 +283,52 @@ def test_the_tool_stores_the_review_and_shows_it(engine, emitted):
     assert event["payload"]["assessment"]["overall"] == 70
 
 
+def _reaction(name, stop="yes", save="maybe", click="no"):
+    return {"persona": name, "reaction": f"I'm {name}; this is my Monday argument.", "stop": stop, "save": save, "click": click,
+            "fix": "Name the tool in the first line."}
+
+
+def test_persona_reactions_ride_with_the_review_and_never_move_the_score(engine, emitted):
+    row = _post(engine)
+    session = make_session("s", row.project_id, "draft_post")
+    session.post_id = row.id
+    four = [_reaction(n) for n in ("Priya", "Northside", "Sam", "Extra")]
+
+    result = _submit(session, emitted, {"markers": _wire(_scores(70)), "personas": four[:3]})
+
+    assert result["overall"] == 70          # the same post without personas scores 70 too
+    assert [r["persona"] for r in result["personas"]] == ["Priya", "Northside", "Sam"]
+    assert result["personas"][0] == {"persona": "Priya", "stop": "yes", "save": "maybe", "click": "no",
+                                     "fix": "Name the tool in the first line."}
+    with Session(engine) as db:
+        stored = db.get(ContentPost, row.id).last_assessment
+    assert [r["persona"] for r in stored["personas"]] == ["Priya", "Northside", "Sam"]
+
+    # Read back: kept, and stale with the markers once the post changes.
+    slides, caption, tags = _complete_post()
+    again = reassess(slides, "", tags, stored)
+    assert [r.persona for r in again.personas] == ["Priya", "Northside", "Sam"] and again.stale is True
+
+
+def test_more_reactions_than_a_project_keeps_personas_are_cut_not_refused(engine, emitted):
+    row = _post(engine)
+    session = make_session("s", row.project_id, "draft_post")
+    session.post_id = row.id
+
+    result = _submit(session, emitted, {"markers": _wire(_scores(70)),
+                                        "personas": [_reaction(n) for n in ("A", "B", "C", "D")]})
+
+    assert result["status"] == "ok" and [r["persona"] for r in result["personas"]] == ["A", "B", "C"]
+
+
+def test_an_unreadable_stored_reaction_costs_only_itself():
+    slides, caption, tags = _complete_post()
+    stored = assess(slides, caption, tags, _scores(80)).model_dump(mode="json")
+    stored["personas"] = [_reaction("Priya"), {"persona": "Sam", "stop": "sure"}]
+
+    assert [r.persona for r in reassess(slides, caption, tags, stored).personas] == ["Priya"]
+
+
 def test_the_tool_wants_all_six_markers(engine, emitted):
     row = _post(engine)
     session = make_session("s", row.project_id, "draft_post")
@@ -321,7 +368,9 @@ def test_the_tool_schema_has_no_weight_and_nothing_gemini_refuses(emitted):
             for value in node:
                 yield from enums(value)
 
-    assert sorted(next(enums(schema))) == sorted(m.value for m in ReviewMarker)
+    found = [sorted(e) for e in enums(schema)]
+    assert sorted(m.value for m in ReviewMarker) in found
+    assert sorted(v.value for v in PersonaVerdict) in found
     assert all("" not in e and None not in e for e in enums(schema))
     assert '"weight"' not in json.dumps(schema)
 
@@ -389,7 +438,7 @@ def test_the_board_listing_carries_no_review(engine, member_client):
 APP_MIRROR = Path(__file__).resolve().parents[2] / "app" / "src" / "lib" / "contentReview.js"
 
 
-@pytest.mark.parametrize("enum", [ReviewMarker, SanityCheckId, ReviewBand])
+@pytest.mark.parametrize("enum", [ReviewMarker, SanityCheckId, ReviewBand, PersonaVerdict])
 def test_the_app_words_every_id_the_backend_sends(enum):
     """The backend sends ids and the app owns the words, so an id on one side
     only is a check the panel prints raw, or a label nothing ever shows."""

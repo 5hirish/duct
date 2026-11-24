@@ -13,6 +13,7 @@ import {
   Quote,
   ShieldCheck,
   Trash2,
+  Users,
 } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,7 @@ import { getBrandContext, putBrandContext } from "@/lib/contentApi";
 import { RULES_KEY, SAMPLES_KEY, cleanSamples } from "@/lib/voiceRules";
 import WritingSamples from "@/components/content/WritingSamples";
 import VoiceRulesFields from "@/components/content/VoiceRulesFields";
-import { getActiveProject } from "@/lib/projects";
+import { getActiveProject, hydrateProjectsFromBackend } from "@/lib/projects";
 import { slugify } from "@/lib/slug";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
@@ -40,9 +41,18 @@ import { Card } from "@/components/ui/card";
  *   - Audience + voice (who + how)
  *   - Value proposition + content goal
  *   - Writing samples + voice rules — the text writer's own voice (#271)
+ *   - Audience personas — the project's one persona list, which the
+ *     pre-publish review role-plays
  *   - Pillars — repeating-row editor (add/remove)
  *   - Visual identity (primary/secondary color, style)
  */
+// The project keeps up to three personas (service/project_draft.py
+// MAX_DRAFT_PERSONAS), and the route holds the same field lengths.
+const MAX_PERSONAS = 3;
+const PERSONA_NAME_MAX = 80;
+const PERSONA_DESCRIPTION_MAX = 400;
+const BLANK_PERSONA = Object.freeze({ name: "", description: "" });
+
 export default function BrandContextForm({ projectId, onSaved }) {
   const { t, i18n } = useLingui();
   const [loaded, setLoaded] = useState(false);
@@ -73,6 +83,8 @@ export default function BrandContextForm({ projectId, onSaved }) {
   const [rules, setRules] = useState(null);
   const [rulesDefault, setRulesDefault] = useState(null);
   const [rulesCustomised, setRulesCustomised] = useState(false);
+  // Audience personas (projects.audience.personas)
+  const [personas, setPersonas] = useState([]);
   // Pillars
   const [pillars, setPillars]   = useState([]);
   // Visual
@@ -101,6 +113,10 @@ export default function BrandContextForm({ projectId, onSaved }) {
         setRules(b.voice_rules || null);
         setRulesDefault(b.voice_rules_default || null);
         setRulesCustomised(Boolean(b.content_brand?.[RULES_KEY]));
+        const people = Array.isArray(b.audience_personas) ? b.audience_personas : [];
+        setPersonas(people.length
+          ? people.map((p) => ({ name: p.name || "", description: p.description || "" }))
+          : [{ ...BLANK_PERSONA }]);
         const items = Array.isArray(b.content_pillars?.items) ? b.content_pillars.items : [];
         setPillars(items.length ? items : [{ id: "", name: "", description: "" }]);
         setPrimaryColor(b.content_visual_assets?.primary_color || "");
@@ -114,6 +130,16 @@ export default function BrandContextForm({ projectId, onSaved }) {
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
+
+  function updatePersona(idx, patch) {
+    setPersonas(prev => prev.map((p, i) => (i === idx ? { ...p, ...patch } : p)));
+  }
+  function addPersona() {
+    setPersonas(prev => [...prev, { ...BLANK_PERSONA }].slice(0, MAX_PERSONAS));
+  }
+  function removePersona(idx) {
+    setPersonas(prev => prev.filter((_, i) => i !== idx));
+  }
 
   function updatePillar(idx, patch) {
     setPillars(prev => prev.map((p, i) => (i === idx ? { ...p, ...patch } : p)));
@@ -156,6 +182,9 @@ export default function BrandContextForm({ projectId, onSaved }) {
         description: description.trim(),
         content_brand: contentBrand,
         content_pillars:       { items: cleanedPillars },
+        audience_personas: personas
+          .filter(p => (p.name || "").trim())
+          .map(p => ({ name: p.name.trim(), description: (p.description || "").trim() })),
         content_visual_assets: {
           primary_color:   primaryColor.trim(),
           secondary_color: secondaryColor.trim(),
@@ -165,6 +194,9 @@ export default function BrandContextForm({ projectId, onSaved }) {
       setBrandBlob(updated?.content_brand || contentBrand);
       setSavedAt(new Date());
       onSaved?.(updated);
+      // The personas live on the project, which the app caches: take the
+      // server's copy so project setup shows what was just saved here.
+      hydrateProjectsFromBackend().then(() => setProject(getActiveProject())).catch(() => {});
     } catch (e) {
       setError(e.message || t`Couldn't save. Please try again.`);
     } finally {
@@ -217,10 +249,6 @@ export default function BrandContextForm({ projectId, onSaved }) {
             <ReadOnly label={t`Industry`} value={project?.company?.industry} />
             <ReadOnly label={t`Website`} value={project?.company?.website_url} />
             <ReadOnly label={t`Brand voice`} value={project?.brand_channels?.brand_voice} />
-            {/* Personas are where setup (and an MCP draft) puts the audience;
-                primary_segment is the older single field, read as a fallback.
-                Reading only it said "Not set" over two drafted personas. */}
-            <ReadOnly label={t`Audience`} value={audienceLine(project?.audience)} className="@lg:col-span-2" />
           </dl>
         </div>
       </Card>
@@ -301,6 +329,62 @@ export default function BrandContextForm({ projectId, onSaved }) {
           />
         </Section>
       )}
+
+      <Section
+        icon={Users}
+        title={t`Audience personas`}
+        hint={t`Who your posts are for. The pre-publish review plays each one and says whether they'd stop, save or click.`}
+      >
+        <div className="space-y-3">
+          {personas.map((p, i) => (
+            <div key={i} className="rounded-xl border border-border bg-background p-3">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                  <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-2xs font-semibold text-brand tabular-nums">
+                    {i + 1}
+                  </span>
+                  {i === 0 ? <Trans>Primary persona</Trans> : <Trans>Persona</Trans>}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-7 text-muted-foreground hover:text-destructive"
+                  onClick={() => removePersona(i)}
+                  title={t`Remove this persona`}
+                  aria-label={t`Remove this persona`}
+                >
+                  <Trash2 className="size-3.5" />
+                </Button>
+              </div>
+              <Input value={p.name}
+                onChange={e => updatePersona(i, { name: e.target.value })}
+                maxLength={PERSONA_NAME_MAX}
+                aria-label={t`Persona name`}
+                placeholder={t`Name and role, e.g. Priya, solo founder`} />
+              <Textarea value={p.description}
+                onChange={e => updatePersona(i, { description: e.target.value })}
+                maxLength={PERSONA_DESCRIPTION_MAX}
+                rows={3}
+                className="mt-2"
+                aria-label={t`Who this persona is`}
+                placeholder={t`Who they are, what they want, what gets in their way, and the words they use.`} />
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={addPersona}
+            disabled={personas.length >= MAX_PERSONAS}
+            className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Plus className="size-4" /> <Trans>Add persona</Trans>
+            <span className="text-xs text-muted-foreground">({personas.length}/{MAX_PERSONAS})</span>
+          </button>
+          <p className="text-xs text-muted-foreground">
+            <Trans>The same personas as in project setup: an edit here shows there too.</Trans>
+          </p>
+        </div>
+      </Section>
 
       <Section
         icon={Layers}
@@ -385,13 +469,6 @@ export default function BrandContextForm({ projectId, onSaved }) {
 // ---------------------------------------------------------------------------
 
 /** Who the project is for, in one line: its personas by name, primary first. */
-function audienceLine(audience) {
-  const names = (Array.isArray(audience?.personas) ? audience.personas : [])
-    .map((p) => String(p?.name || "").trim())
-    .filter(Boolean);
-  return names.length ? names.join(" · ") : audience?.primary_segment || "";
-}
-
 /** Two-column settings section: label + description on the left, fields on the right. */
 function Section({ icon: Icon, title, hint, children }) {
   return (

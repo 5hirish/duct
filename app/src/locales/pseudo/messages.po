@@ -215,6 +215,10 @@ msgstr ""
 msgid "{0} sources"
 msgstr ""
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "{action}: {verdict}"
+msgstr ""
+
 #: src/components/settings/AgentConsent.jsx
 msgid "{agent} is connected"
 msgstr ""
@@ -1573,6 +1577,10 @@ msgid "Add one or more names, separated by commas."
 msgstr ""
 
 #: src/components/content/BrandContextForm.jsx
+msgid "Add persona"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
 msgid "Add pillar"
 msgstr ""
 
@@ -2226,8 +2234,11 @@ msgid "Attachment"
 msgstr ""
 
 #: src/app/(app)/project/[projectId]/page.jsx
-#: src/components/content/BrandContextForm.jsx
 msgid "Audience"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Audience personas"
 msgstr ""
 
 #: src/components/settings/AgentAccess.jsx
@@ -2868,6 +2879,7 @@ msgid "Clear filters"
 msgstr ""
 
 #: src/components/content/PlanDayOne.jsx
+#: src/lib/contentReview.js
 msgid "Clicks"
 msgstr ""
 
@@ -4412,6 +4424,10 @@ msgstr ""
 #~ msgid "Duct reads your work, leaves out the noise and shows you the stories it found. You pick which to tell, and nothing changes in your plan until you accept it."
 #~ msgstr ""
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Duct role-plays the personas in your Brand settings. Advice, not a measurement."
+msgstr ""
+
 #: src/app/(start)/start/page.jsx
 msgid "Duct runs on your own account, so an audit costs you cents — and Duct never sees your data twice."
 msgstr ""
@@ -5707,6 +5723,10 @@ msgstr ""
 #~ msgid "How you like to be worked with. Every agent reads this, on every project, and only you can see it."
 #~ msgstr ""
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "How your audience reacts"
+msgstr ""
+
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Hreflang"
 msgstr ""
@@ -6633,6 +6653,10 @@ msgstr ""
 msgid "Match the brand description"
 msgstr ""
 
+#: src/lib/contentReview.js
+msgid "Maybe"
+msgstr ""
+
 #: src/components/connections/ConnectorSource.jsx
 #: src/components/connections/ConnectorTile.jsx
 msgid "MCP"
@@ -6925,6 +6949,10 @@ msgstr ""
 msgid "Name (optional)"
 msgstr ""
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Name and role, e.g. Priya, solo founder"
+msgstr ""
+
 #: src/components/settings/AgentAccess.jsx
 msgid "Name it, e.g. CI on GitHub Actions"
 msgstr ""
@@ -7093,6 +7121,10 @@ msgstr ""
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Nightly check"
+msgstr ""
+
+#: src/lib/contentReview.js
+msgid "No"
 msgstr ""
 
 #: src/app/(app)/content/page.jsx
@@ -8540,8 +8572,16 @@ msgstr ""
 msgid "Permissions"
 msgstr ""
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Persona"
+msgstr ""
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Persona description"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Persona name"
 msgstr ""
 
 #: src/components/content/CloneFromUrlDialog.jsx
@@ -8876,6 +8916,10 @@ msgstr ""
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Primary growth motions"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Primary persona"
 msgstr ""
 
 #: src/app/(app)/project/[projectId]/page.jsx
@@ -9571,6 +9615,10 @@ msgid "Remove reply {n}"
 msgstr ""
 
 #: src/components/content/BrandContextForm.jsx
+msgid "Remove this persona"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
 msgid "Remove this pillar"
 msgstr ""
 
@@ -10197,6 +10245,7 @@ msgstr ""
 
 #: src/components/content/PlanDayOne.jsx
 #: src/components/content/PostMetricsForm.jsx
+#: src/lib/contentReview.js
 msgid "Saves"
 msgstr ""
 
@@ -11340,6 +11389,10 @@ msgstr ""
 msgid "Stopped."
 msgstr ""
 
+#: src/lib/contentReview.js
+msgid "Stops"
+msgstr ""
+
 #: src/components/content/VendorKeyForm.jsx
 msgid "Stored encrypted, and used only for projects you own."
 msgstr ""
@@ -11900,6 +11953,10 @@ msgstr ""
 
 #: src/lib/agentSession.js
 msgid "The run stopped without saying why. Try again."
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "The same personas as in project setup: an edit here shows there too."
 msgstr ""
 
 #: src/components/audit/AuditWorkspace.jsx
@@ -13272,6 +13329,18 @@ msgstr ""
 msgid "Who do customers compare you against most often?"
 msgstr ""
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Who they are, what they want, what gets in their way, and the words they use."
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Who this persona is"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Who your posts are for. The pre-publish review plays each one and says whether they'd stop, save or click."
+msgstr ""
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Why it matters"
 msgstr ""
@@ -13470,6 +13539,10 @@ msgstr ""
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "yes"
+msgstr ""
+
+#: src/lib/contentReview.js
+msgid "Yes"
 msgstr ""
 
 #: src/app/(app)/activity/page.jsx

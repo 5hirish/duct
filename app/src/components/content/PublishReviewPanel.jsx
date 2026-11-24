@@ -9,7 +9,9 @@ import { Progress } from "@/components/ui/progress";
 import {
   BAND_META,
   MARKER_LABELS,
+  PERSONA_ACTIONS,
   SanityCheckId,
+  VERDICT_META,
   failedChecks,
   isScored,
   replyNumber,
@@ -21,6 +23,14 @@ import { relativeTime } from "@/lib/format";
 // How many fixes the publish dialog shows: the dialog is a last look before
 // posting, not the place to read all six.
 const COMPACT_FIXES = 2;
+
+// A verdict's chip: yes reads as good news, no as the quiet one, never red,
+// since a persona the post is not for saying no is information, not an error.
+const VERDICT_TONE = Object.freeze({
+  yes:   "bg-success/10 text-success",
+  maybe: "bg-warning/10 text-warning",
+  no:    "bg-muted text-muted-foreground",
+});
 
 /**
  * A post's pre-publish review: the score the agent gave it, the checks the
@@ -165,6 +175,41 @@ export default function PublishReviewPanel({ assessment, compact = false, onRevi
                 </li>
               );
             })}
+          </ul>
+        </div>
+      )}
+
+      {!compact && scored && (assessment.personas || []).length > 0 && (
+        <div className="space-y-2.5 border-t border-border/60 pt-3">
+          <div>
+            <h3 className="text-xs font-semibold"><Trans>How your audience reacts</Trans></h3>
+            <p className="text-xs text-muted-foreground">
+              <Trans>Duct role-plays the personas in your Brand settings. Advice, not a measurement.</Trans>
+            </p>
+          </div>
+          <ul className="space-y-3">
+            {assessment.personas.map((r) => (
+              <li key={r.persona} className="space-y-1.5">
+                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                  <span className="text-xs font-semibold">{r.persona}</span>
+                  <span className="flex flex-wrap gap-1">
+                    {PERSONA_ACTIONS.map(({ key, label }) => {
+                      const meta = VERDICT_META[r[key]];
+                      if (!meta) return null;
+                      const action = i18n._(label);
+                      const verdict = i18n._(meta.label);
+                      return (
+                        <span key={key} className={`rounded-full px-2 py-0.5 text-2xs font-medium ${VERDICT_TONE[meta.tone]}`}>
+                          {t`${action}: ${verdict}`}
+                        </span>
+                      );
+                    })}
+                  </span>
+                </div>
+                <p className="text-xs leading-relaxed">“{r.reaction}”</p>
+                {r.fix && <p className="text-xs text-muted-foreground">{r.fix}</p>}
+              </li>
+            ))}
           </ul>
         </div>
       )}

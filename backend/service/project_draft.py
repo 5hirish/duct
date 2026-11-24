@@ -75,6 +75,11 @@ UNTITLED_PROJECT = "Untitled project"
 # and marketers (Duct's own, docs/personas/) lost the third on every update,
 # though every persona stored reaches the content prompts.
 MAX_DRAFT_PERSONAS = 3
+# A persona's two fields, held the same by every writer (an MCP draft, the
+# Brand tab). The description is what the pre-publish review role-plays from,
+# so it has room for who they are, what they want and the words they use.
+PERSONA_NAME_MAX = 80
+PERSONA_DESCRIPTION_MAX = 400
 
 
 @dataclass(frozen=True)
