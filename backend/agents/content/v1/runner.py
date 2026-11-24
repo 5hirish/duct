@@ -355,6 +355,7 @@ def _load_brand_context(project_id: UUID) -> ContentBrandContext:
             content_goal=str(brand_blob.get("content_goal") or ""),
             do_say=str(brand_blob.get("do_say") or ""),
             do_not_say=str(brand_blob.get("do_not_say") or ""),
+            content_language=str(brand_blob.get("content_language") or "")[:40],
             features=features,
             pillars=pillars,
             visual=visual,

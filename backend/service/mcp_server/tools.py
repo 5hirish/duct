@@ -41,7 +41,12 @@ from models.membership import ROLE_COLLABORATOR, ROLE_OWNER
 from service.activity import log_activity
 from service.membership import accessible_projects, get_project_for_user
 from service.mcp_server.protocol import Caller, Tool, ToolError
-from service.project_config import BRAND_VOICE_OPTIONS, BUSINESS_MODEL_OPTIONS, INDUSTRY_OPTIONS
+from service.project_config import (
+    BRAND_VOICE_OPTIONS,
+    BUSINESS_MODEL_OPTIONS,
+    CONTENT_LANGUAGES,
+    INDUSTRY_OPTIONS,
+)
 from service.project_draft import (
     FIELDS,
     MAX_DRAFT_PERSONAS,
@@ -111,6 +116,7 @@ _DRAFTABLE = tuple(name for name in FIELDS if name != "active_channels")
 IndustryValue = Literal[tuple(o.value for o in INDUSTRY_OPTIONS)]  # type: ignore[valid-type]
 BusinessModelValue = Literal[tuple(o.value for o in BUSINESS_MODEL_OPTIONS)]  # type: ignore[valid-type]
 BrandVoiceValue = Literal[tuple(o.value for o in BRAND_VOICE_OPTIONS)]  # type: ignore[valid-type]
+ContentLanguageValue = Literal[("", *CONTENT_LANGUAGES)]  # type: ignore[valid-type]
 DraftableField = Literal[_DRAFTABLE]  # type: ignore[valid-type]
 
 
@@ -229,6 +235,9 @@ class DraftFields(BaseModel):
     content_goal: str | None = Field(None, max_length=200, description="What content should achieve: 'GitHub stars and installs'.")
     do_say: str | None = Field(None, max_length=400, description="Words and claims posts use, comma-separated.")
     do_not_say: str | None = Field(None, max_length=400, description="Words and claims posts never use, comma-separated.")
+    content_language: ContentLanguageValue | None = Field(
+        None, description="The language every post and plan is written in; empty follows the brand's own description.",
+    )
     primary_color: str | None = Field(None, description="The brand's main colour as #RRGGBB, from its CSS or theme.")
     secondary_color: str | None = Field(None, description="Its accent colour as #RRGGBB.")
     visual_style: str | None = Field(None, max_length=200, description="A few words on how its visuals look.")

@@ -2843,6 +2843,10 @@ msgid "Content goal"
 msgstr "内容目标"
 
 #: src/components/content/BrandContextForm.jsx
+msgid "Content language"
+msgstr "内容语言"
+
+#: src/components/content/BrandContextForm.jsx
 #: src/components/content/PlanDayOne.jsx
 msgid "Content pillars"
 msgstr "内容支柱"
@@ -5788,6 +5792,10 @@ msgstr "SaaS 初创公司的营销经理"
 msgid "Match my messages"
 msgstr "匹配我的消息"
 
+#: src/lib/userProfile.js
+msgid "Match the brand description"
+msgstr "与品牌描述一致"
+
 #: src/components/connections/ConnectorSource.jsx
 #: src/components/connections/ConnectorTile.jsx
 msgid "MCP"
@@ -7618,6 +7626,10 @@ msgstr "计划"
 #: src/components/content/AnalyticsView.jsx
 msgid "Plans that learn"
 msgstr "可学习的计划"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Plans, briefs and every post are written in it."
+msgstr "计划、简报和每条帖子都用这种语言撰写。"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Playful"

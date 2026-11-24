@@ -333,3 +333,12 @@ def test_a_draft_s_kickoff_lists_the_project_s_recent_posts(engine):
                                topic=f"topic {n}", pillar="p", status=status))
         db.commit()
     assert [p["topic"] for p in _recent_posts(project_id)] in (["topic 0", "topic 2"], ["topic 2", "topic 0"])
+
+
+@pytest.mark.parametrize("language", ["Spanish", ""])
+def test_the_brand_s_content_language_governs_every_content_prompt(language):
+    from agents.content.prompts import _brand_stanza
+    from agents.content.schema import ContentBrandContext
+
+    stanza = _brand_stanza(ContentBrandContext(project_id=uuid4(), project_name="Acme", content_language=language))
+    assert ("Write all content in Spanish" in stanza) is bool(language)

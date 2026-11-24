@@ -3286,6 +3286,10 @@ msgid "Content goal"
 msgstr ""
 
 #: src/components/content/BrandContextForm.jsx
+msgid "Content language"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
 #: src/components/content/PlanDayOne.jsx
 msgid "Content pillars"
 msgstr ""
@@ -6625,6 +6629,10 @@ msgstr ""
 msgid "Match my messages"
 msgstr ""
 
+#: src/lib/userProfile.js
+msgid "Match the brand description"
+msgstr ""
+
 #: src/components/connections/ConnectorSource.jsx
 #: src/components/connections/ConnectorTile.jsx
 msgid "MCP"
@@ -8693,6 +8701,10 @@ msgstr ""
 
 #: src/components/content/AnalyticsView.jsx
 msgid "Plans that learn"
+msgstr ""
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Plans, briefs and every post are written in it."
 msgstr ""
 
 #: src/app/(app)/project/[projectId]/page.jsx

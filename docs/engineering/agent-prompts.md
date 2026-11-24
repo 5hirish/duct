@@ -2778,7 +2778,7 @@ Answer in the fields you were given:
 
 ```
 
-### Clone: opening user turn (system prompt is mode=draft_post) · ~1,711 tokens
+### Clone: opening user turn (system prompt is mode=draft_post) · ~1,730 tokens
 
 ```text
 ## BRAND CONTEXT (project_id=00000000-0000-0000-0000-000000000000)
@@ -2796,6 +2796,7 @@ Answer in the fields you were given:
 - Never say:    (none specified)
 - Visual style: (unspecified), primary —, secondary —
 - Posts on:     (unknown — TikTok unless the user says otherwise)
+- Language:     (not set: the language of the brand's description)
 
 Features:
   (none)
@@ -2902,7 +2903,7 @@ Now — WRITE PHASE (copy + image prompts only; NO images yet):
 
 ```
 
-### Plan from shipped work: opening user turn (system prompt is mode=plan_month) · ~1,281 tokens
+### Plan from shipped work: opening user turn (system prompt is mode=plan_month) · ~1,299 tokens
 
 ```text
 ## BRAND CONTEXT (project_id=00000000-0000-0000-0000-000000000000)
@@ -2920,6 +2921,7 @@ Now — WRITE PHASE (copy + image prompts only; NO images yet):
 - Never say:    (none specified)
 - Visual style: (unspecified), primary —, secondary —
 - Posts on:     (unknown — TikTok unless the user says otherwise)
+- Language:     (not set: the language of the brand's description)
 
 Features:
   (none)
@@ -3002,7 +3004,7 @@ When they answer:
 5. Say in two lines which days changed and what each now tells.
 ```
 
-### Plan from shipped work, scheduled (nobody to ask) · ~1,219 tokens
+### Plan from shipped work, scheduled (nobody to ask) · ~1,238 tokens
 
 ```text
 ## BRAND CONTEXT (project_id=00000000-0000-0000-0000-000000000000)
@@ -3020,6 +3022,7 @@ When they answer:
 - Never say:    (none specified)
 - Visual style: (unspecified), primary —, secondary —
 - Posts on:     (unknown — TikTok unless the user says otherwise)
+- Language:     (not set: the language of the brand's description)
 
 Features:
   (none)

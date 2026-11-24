@@ -171,6 +171,9 @@ class ContentBrandContext(BaseModel):
     content_goal: str = ""
     do_say: str = ""
     do_not_say: str = ""
+    # The language every plan, brief and post is written in (Brand tab); empty
+    # follows the language of the brand's own description, as before.
+    content_language: str = ""
     features: list[AppFeature] = Field(default_factory=list)
     pillars: list[ContentPillar] = Field(default_factory=list)
     visual: ContentVisualAssets = Field(default_factory=ContentVisualAssets)

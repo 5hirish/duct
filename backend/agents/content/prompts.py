@@ -1239,6 +1239,14 @@ def _brand_stanza(brand: ContentBrandContext, channels: list[str] | None = None)
     wanted = [c for c in (channels if channels is not None else brand.active_channels) if c]
     block = render_channel_guides(wanted, brand.channel_profiles)
     guides = f"\n{block}\n" if block else ""
+    # Set once on the Brand tab, it governs everything the audience reads: a
+    # plan's topics and briefs, every hook, slide, caption and hashtag. The
+    # chat with the person stays in the language they write in.
+    language = (
+        f"\nWrite all content in {brand.content_language}: plan topics, briefs, hooks, slide text, "
+        f"captions, hashtags and posts. Talk to the person in the language they write to you in.\n"
+        if brand.content_language else ""
+    )
     return f"""\
 ## BRAND CONTEXT (project_id={brand.project_id})
 
@@ -1255,7 +1263,8 @@ def _brand_stanza(brand: ContentBrandContext, channels: list[str] | None = None)
 - Never say:    {brand.do_not_say or '(none specified)'}
 - Visual style: {brand.visual.style or '(unspecified)'}, primary {brand.visual.primary_color or '—'}, secondary {brand.visual.secondary_color or '—'}
 - Posts on:     {', '.join(brand.active_channels) or '(unknown — TikTok unless the user says otherwise)'}
-
+- Language:     {brand.content_language or "(not set: the language of the brand's description)"}
+{language}
 Features:
 {features}
 

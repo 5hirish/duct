@@ -74,6 +74,10 @@ published without one. The same script, with no arguments, holds
   shows that idea under each story day, the writer can open the day's pull
   requests itself, and what a plan chose to leave out is remembered with its
   reason, so the next plan does not offer it again as new.
+- **Choose the language your content is written in.** The Brand tab has a
+  content language: plans, briefs and every post are written in it, while
+  Duct keeps talking to you in yours. Agents setting up a project through
+  Duct's MCP server can fill it too.
 - **A draft sees your recent posts.** Its brief listed "no recent posts"
   every time; it now gets the last five, so it does not repeat a topic or a
   hook you just used.

@@ -34,6 +34,15 @@ BUSINESS_MODEL_OPTIONS: tuple[ConfigOption, ...] = (
     ConfigOption(value="Hybrid", label="Hybrid"),
 )
 
+# The languages a project's content can be written in, by the English name a
+# model reads ("Write in Spanish"). A list, not free text: a typo here is a
+# post in the wrong language that nobody notices until it is published. The
+# app's picker (app/src/lib/userProfile.js LANGUAGES) offers the same names.
+CONTENT_LANGUAGES: tuple[str, ...] = (
+    "English", "Spanish", "French", "German", "Portuguese", "Italian", "Dutch",
+    "Hindi", "Japanese", "Simplified Chinese",
+)
+
 NORTH_STAR_OPTIONS: tuple[ConfigOption, ...] = (
     ConfigOption(value="Weekly active users", label="Weekly active users"),
     ConfigOption(value="Monthly active customers", label="Monthly active customers"),
