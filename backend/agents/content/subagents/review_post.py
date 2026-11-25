@@ -30,6 +30,7 @@ REVIEW_POST_SUBAGENT = "review_post"
 REVIEW_POST_TOOLS: tuple[str, ...] = (
     ContentTool.FETCH_POST.value,
     ContentTool.FETCH_BRAND_CONTEXT.value,
+    ContentTool.FETCH_PANEL_POSTS.value,
 )
 
 

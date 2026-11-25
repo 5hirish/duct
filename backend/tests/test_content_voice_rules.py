@@ -245,8 +245,8 @@ def test_personas_edited_on_the_brand_tab_are_the_projects_one_list(db, project,
     ]}).json()
 
     assert saved["audience_personas"] == [
-        {"name": "Priya", "description": "Solo founder, does marketing alone.", "priority": "primary"},
-        {"name": "Sam", "description": "Fractional marketer, five clients.", "priority": "secondary"},
+        {"name": "Priya", "description": "Solo founder, does marketing alone.", "priority": "primary", "quotes": []},
+        {"name": "Sam", "description": "Fractional marketer, five clients.", "priority": "secondary", "quotes": []},
     ]
     db.refresh(project)
     assert project.audience["primary_segment"] == "founders"
@@ -271,7 +271,37 @@ def test_the_brand_route_holds_the_persona_caps(db, project, owner):
     too_long = api.put(f"/api/content/brand?project_id={project.id}",
                        json={"audience_personas": [{"name": "P", "description": "x" * 401}]})
 
+    too_many_quotes = api.put(f"/api/content/brand?project_id={project.id}",
+                              json={"audience_personas": [{"name": "P", "quotes": ["a", "b", "c", "d"]}]})
+    quote_too_long = api.put(f"/api/content/brand?project_id={project.id}",
+                             json={"audience_personas": [{"name": "P", "quotes": ["x" * 201]}]})
+
     assert too_many.status_code == 422 and too_long.status_code == 422
+    assert too_many_quotes.status_code == 422 and quote_too_long.status_code == 422
+
+
+def test_a_personas_quotes_survive_a_writer_that_never_saw_them(db, project, owner):
+    """The Brand tab holds the real lines an audience said. An agent editing
+    the personas through the MCP server sends names and descriptions only,
+    and replacing the list must not wipe what the person pasted."""
+    from service.project_draft import edit_fields, persona_rows
+
+    api = _api(db, owner)
+    api.put(f"/api/content/brand?project_id={project.id}", json={"audience_personas": [
+        {"name": "Priya", "description": "Solo founder.", "quotes": [" Is my ad money working? ", "", "Is my ad money working?"]},
+    ]})
+    db.refresh(project)
+    assert project.audience["personas"][0]["quotes"] == ["Is my ad money working?"]
+
+    edit_fields(project, {"personas": persona_rows([("priya", "Solo founder, 4 hours a week."), ("Sam", "Marketer.")])})
+    assert [p.get("quotes") for p in project.audience["personas"]] == [["Is my ad money working?"], None]
+
+    # The Brand tab naming no quotes clears them: the person removed them.
+    db.add(project)
+    db.commit()
+    api.put(f"/api/content/brand?project_id={project.id}", json={"audience_personas": [{"name": "Priya", "quotes": []}]})
+    db.refresh(project)
+    assert project.audience["personas"][0]["quotes"] == []
 
 
 def test_brand_fields_an_agent_drafted_are_the_persons_once_saved_on_the_brand_tab(db, project, owner):

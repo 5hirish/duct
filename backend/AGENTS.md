@@ -546,8 +546,20 @@ Postgres `DATABASE_URL` names.
   `MAX_DRAFT_PERSONAS`, shaped by `persona_rows`): project setup and the
   Brand tab (`audience_personas` on `PUT /content/brand`, labelled `user`)
   edit the same rows, and the review_post sub-agent role-plays each one into
-  `last_assessment.personas` (words, then stop/save/click as yes, maybe or
-  no), advice that never moves the overall score.
+  `last_assessment.personas`, advice that never moves the overall score. A
+  persona may carry `quotes`, lines that audience really said; only the
+  Brand tab writes them, and `persona_shape` keeps them through any writer
+  that sends a persona without the key. The panel is built against what the
+  2026 digital-twin studies (Columbia's mega-study, Stanford's 1,052
+  interviews) found twins get wrong: the reason to scroll past comes first
+  (they lean kind), a no-persona `baseline` sits beside them (they collapse
+  onto the model's average reader), they pick between three openings
+  (`hooks`) rather than only rate one (they rank better than they predict),
+  and `agents/content/panel.py` tests them on the brand's own published
+  posts: `fetch_panel_posts` shows openings and short ids, never numbers,
+  and `submit_assessment` scores the returned order against the goal
+  measure (`panel_check`). The app shows the yes/maybe/no chips only when
+  that check beat a coin.
 - `routes/mcp_server.py` + `service/mcp_server/` — Duct as an MCP server at
   `POST /mcp`, for the person's own agent (Claude Code, Codex, Cursor,
   OpenCode). Stateless JSON-RPC with no SDK: five methods, no sessions, no

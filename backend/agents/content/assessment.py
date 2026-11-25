@@ -30,6 +30,7 @@ import hashlib
 import json
 import re
 from collections.abc import Iterable
+from typing import Any
 
 from pydantic import ValidationError
 
@@ -37,8 +38,11 @@ from agents.content.channels import primary_channel, resolve as resolve_channel
 from agents.content.schema import (
     CheckSeverity,
     ContentMarker,
+    HOOK_MAX,
+    MAX_HOOK_OPTIONS,
     MAX_PERSONA_REACTIONS,
     MarkerScore,
+    PanelCheck,
     PersonaReaction,
     PublishAssessment,
     ReviewBand,
@@ -251,6 +255,9 @@ def assess(
     channel: str | None = None,
     notes: str = "",
     personas: Iterable[PersonaReaction] = (),
+    baseline: PersonaReaction | None = None,
+    hooks: Iterable[str] = (),
+    panel_check: PanelCheck | None = None,
     scored_at: str = "",
     scored_fingerprint: str = "",
 ) -> PublishAssessment:
@@ -263,6 +270,7 @@ def assess(
     overall = content_score = band = None
     if markers:
         overall, content_score, band = compute_overall(markers, checks)
+    options = clean_hooks(hooks)
     return PublishAssessment(
         overall=overall,
         content_score=content_score,
@@ -270,11 +278,36 @@ def assess(
         markers=markers,
         checks=checks,
         notes=notes,
-        personas=list(personas)[:MAX_PERSONA_REACTIONS],
+        personas=[_picked_from(r, options) for r in list(personas)[:MAX_PERSONA_REACTIONS]],
+        baseline=_picked_from(baseline, options) if baseline else None,
+        hooks=options,
+        panel_check=panel_check,
         scored_at=scored_at,
         fingerprint=scored_fingerprint or current,
         stale=bool(markers) and bool(scored_fingerprint) and scored_fingerprint != current,
     )
+
+
+def clean_hooks(hooks: Iterable[str]) -> list[str]:
+    """The openings the panel chose between, as stored: trimmed, non-empty,
+    at most MAX_HOOK_OPTIONS, the draft's own first."""
+    out = [str(h).strip()[:HOOK_MAX] for h in hooks or () if str(h or "").strip()]
+    return out[:MAX_HOOK_OPTIONS]
+
+
+def _picked_from(reaction: PersonaReaction, options: list[str]) -> PersonaReaction:
+    # A pick names an opening by its place; with fewer openings than that it
+    # names nothing, and a dangling index would show as "Hook C" over a blank.
+    if reaction.pick is not None and reaction.pick >= len(options):
+        return reaction.model_copy(update={"pick": None})
+    return reaction
+
+
+def _reaction(raw: Any) -> PersonaReaction | None:
+    try:
+        return PersonaReaction.model_validate(raw)
+    except ValidationError:
+        return None
 
 
 def reassess(
@@ -296,12 +329,13 @@ def reassess(
             scores.append(MarkerScore.model_validate(raw))
         except ValidationError:
             continue  # a marker retired since it was scored; the rest still stand
-    reactions: list[PersonaReaction] = []
-    for raw in stored.get("personas") or []:
-        try:
-            reactions.append(PersonaReaction.model_validate(raw))
-        except ValidationError:
-            continue  # one unreadable reaction never costs the review the others
+    # One unreadable reaction never costs the review the others.
+    reactions = [r for raw in stored.get("personas") or [] if (r := _reaction(raw))]
+    baseline = _reaction(stored["baseline"]) if stored.get("baseline") else None
+    try:
+        check = PanelCheck.model_validate(stored["panel_check"]) if stored.get("panel_check") else None
+    except ValidationError:
+        check = None
     return assess(
         slides,
         caption,
@@ -311,6 +345,9 @@ def reassess(
         channel=channel,
         notes=str(stored.get("notes") or ""),
         personas=reactions,
+        baseline=baseline,
+        hooks=[h for h in stored.get("hooks") or [] if isinstance(h, str)],
+        panel_check=check,
         scored_at=str(stored.get("scored_at") or ""),
         scored_fingerprint=str(stored.get("fingerprint") or ""),
     )
@@ -323,6 +360,7 @@ __all__ = [
     "PENALTY",
     "assess",
     "band_for",
+    "clean_hooks",
     "compute_overall",
     "compute_sanity",
     "fingerprint",
