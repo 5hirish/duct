@@ -64,9 +64,10 @@ _TEXT_MAX_CHARS = 40_000
 # next. Taken out before validation, so it never reaches a tool body and the
 # `extra="forbid"` argument models stay strict about everything else.
 CONTEXT_ARG = "context"
+_CONTEXT_MAX_CHARS = 2048
 _CONTEXT_SCHEMA = {
     "type": "string",
-    "maxLength": 2048,
+    "maxLength": _CONTEXT_MAX_CHARS,
     "description": (
         "Optional. In one sentence, why you are calling this tool. Describe the goal in "
         "general terms and refer to people by role (\"the founder\"), never by name or email."
@@ -234,7 +235,10 @@ def _split_context(arguments: Any) -> tuple[Any, str | None]:
         return arguments, None
     rest = {k: v for k, v in arguments.items() if k != CONTEXT_ARG}
     intent = arguments[CONTEXT_ARG]
-    return rest, intent.strip() if isinstance(intent, str) and intent.strip() else None
+    # The schema says 2,048; a client need not honour it, and nothing after
+    # this should handle more than that of a model's free text.
+    intent = intent[:_CONTEXT_MAX_CHARS].strip() if isinstance(intent, str) else ""
+    return rest, intent or None
 
 
 def _result(id_: Any, result: dict[str, Any]) -> dict[str, Any]:

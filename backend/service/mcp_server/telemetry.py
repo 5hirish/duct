@@ -46,13 +46,13 @@ _TEXT_MAX = 2048
 # Free text the calling model wrote (its reason for a call) or a message that
 # may quote a value. Each is replaced, then the whole is cut.
 _REDACTIONS = (
-    (re.compile(r"\bduct_mcp_[A-Za-z0-9_-]+"), "[redacted]"),
-    (re.compile(r"\b(?:sk|pk|rk)-[A-Za-z0-9_-]{16,}"), "[redacted]"),
-    (re.compile(r"\bph[a-z]_[A-Za-z0-9_-]{20,}"), "[redacted]"),
-    (re.compile(r"\bBearer\s+\S+", re.IGNORECASE), "Bearer [redacted]"),
-    (re.compile(r"(?i)\b(token|secret|password|api[_-]?key)\s*[:=]\s*\S+"), r"\1=[redacted]"),
-    (re.compile(r"://[^/\s:@]+:[^/\s@]+@"), "://[redacted]@"),
-    (re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+"), "[email]"),
+    (re.compile(r"\bduct_mcp_[A-Za-z0-9_-]{1,128}"), "[redacted]"),
+    (re.compile(r"\b(?:sk|pk|rk)-[A-Za-z0-9_-]{16,256}"), "[redacted]"),
+    (re.compile(r"\bph[a-z]_[A-Za-z0-9_-]{20,256}"), "[redacted]"),
+    (re.compile(r"\bBearer\s{1,8}\S{1,512}", re.IGNORECASE), "Bearer [redacted]"),
+    (re.compile(r"(?i)\b(token|secret|password|api[_-]?key)\s{0,8}[:=]\s{0,8}\S{1,512}"), r"\1=[redacted]"),
+    (re.compile(r"://[^/\s:@]{1,256}:[^/\s@]{1,256}@"), "://[redacted]@"),
+    (re.compile(r"[\w.+-]{1,64}@[\w-]{1,63}(?:\.[\w-]{1,63}){1,8}"), "[email]"),
     # A ten-digit phone in its usual spellings, and not a date or an id.
     (re.compile(r"(?<![\w-])\+?(?:\d{1,3}[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}(?![\w-])"), "[number]"),
 )
@@ -61,6 +61,10 @@ _REDACTIONS = (
 def redact(text: str | None) -> str | None:
     if not text:
         return None
+    # Cut before matching, not after: the text is the calling model's, as
+    # long as a request body allows, and every pattern above is bounded so
+    # the work is linear in what is left (CodeQL py/polynomial-redos).
+    text = text[:_TEXT_MAX]
     for pattern, replacement in _REDACTIONS:
         text = pattern.sub(replacement, text)
     return text[:_TEXT_MAX]

@@ -210,3 +210,25 @@ def test_a_failed_credential_is_counted_and_a_missing_one_is_not(mcp, posthog):
 )
 def test_redaction(text, expected):
     assert telemetry.redact(text) == expected
+
+
+@pytest.mark.parametrize(
+    "hostile",
+    ["a" * 256_000, "a." * 128_000, "://" + "a:" * 128_000, "Bearer " + " " * 256_000, "x@" + "y" * 256_000],
+)
+def test_redaction_is_linear_on_a_models_longest_text(hostile):
+    # The reason text is the calling model's and as long as a request body
+    # allows. An unbounded pattern here backtracked quadratically: 32,000
+    # characters took over five seconds of a worker (CodeQL py/polynomial-redos).
+    import time
+
+    started = time.perf_counter()
+    out = telemetry.redact(hostile)
+    assert time.perf_counter() - started < 0.5
+    assert len(out) <= 2048
+
+
+def test_the_reason_is_cut_where_the_protocol_reads_it(mcp, posthog):
+    _call(mcp, "list_projects", {CONTEXT_ARG: "why " * 5_000})
+    props = posthog.named("$mcp_tool_call")[0]["properties"]
+    assert len(props["$mcp_intent"]) <= 2048
