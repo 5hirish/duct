@@ -30,6 +30,7 @@ import {
   isSessionExpired,
 } from "@/lib/authFetch";
 import { allowSignInRequest, declineSignInRequest, fetchSignInRequest } from "@/lib/mcpTokensApi";
+import { fetchProjectsRemote } from "@/lib/projectsApi";
 
 /** The signed-in person, or "" for nobody. A guest is an install, not a
  *  person, and cannot connect an agent, so it counts as nobody. */
@@ -48,6 +49,8 @@ export default function AuthorizePage({ searchParams }) {
   const [viewerEmail, setViewerEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  // The person's projects, for "Only the ones I pick". null while loading.
+  const [projects, setProjects] = useState(null);
 
   useEffect(() => {
     // The backend sends `error` instead of a request when it could not check
@@ -62,6 +65,12 @@ export default function AuthorizePage({ searchParams }) {
       (found) => {
         setRequest(found);
         setState(email ? CONSENT_ASK : CONSENT_SIGN_IN);
+        if (email) {
+          fetchProjectsRemote().then(
+            (rows) => setProjects(rows.map((p) => ({ id: p.id, name: p.name }))),
+            () => setProjects([]),
+          );
+        }
       },
       (err) => {
         setError(err?.message || "");
@@ -83,11 +92,11 @@ export default function AuthorizePage({ searchParams }) {
   }, [code, router]);
 
   const answer = useCallback(
-    async (allow) => {
+    async (allow, grant = null) => {
       setBusy(true);
       setError("");
       try {
-        const { redirect_to: next } = await (allow ? allowSignInRequest(code) : declineSignInRequest(code));
+        const { redirect_to: next } = await (allow ? allowSignInRequest(code, grant) : declineSignInRequest(code));
         setState(allow ? CONSENT_ALLOWED : CONSENT_DECLINED);
         // The agent's own address, checked by the backend when it parked the
         // request: a loopback listener, the client's site or its app.
@@ -98,6 +107,10 @@ export default function AuthorizePage({ searchParams }) {
           setState(CONSENT_SIGN_IN);
         } else if (err?.status === 404) {
           setState(CONSENT_EXPIRED);
+        } else if (err?.status === 422) {
+          // A choice the server refused (a project no longer theirs): the
+          // request is still open, so the sentence goes beside the button.
+          setError(err?.message || t`Check which projects you picked, then try again.`);
         } else {
           setError(err?.message || t`That didn't go through. Try again in a moment.`);
         }
@@ -111,9 +124,10 @@ export default function AuthorizePage({ searchParams }) {
       state={state}
       request={request}
       viewerEmail={viewerEmail}
+      projects={projects}
       busy={busy}
       error={error}
-      onAllow={() => answer(true)}
+      onAllow={(grant) => answer(true, grant)}
       onDecline={() => answer(false)}
       onSignIn={goSignIn}
       onSwitchAccount={() => {

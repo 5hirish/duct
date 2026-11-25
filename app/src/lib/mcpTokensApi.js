@@ -70,18 +70,33 @@ export function agentFromName(name) {
 }
 
 /** Where an agent sends its requests. Read at call time: the desktop shell
- *  repoints BASE at boot (see api.js). */
+ *  repoints BASE at boot (see api.js). This is the API's own /mcp, which
+ *  always answers; `fetchMcpServerUrl` asks for the address to advertise. */
 export function mcpServerUrl() {
   return `${BASE}/mcp`;
+}
+
+/** The address the backend advertises (mcp.getduct.ai on the hosted
+ *  service), falling back to the API's /mcp on any failure. Never asked of a
+ *  desktop sidecar: its port changes every launch, so only BASE is right. */
+export async function fetchMcpServerUrl() {
+  try {
+    const { url } = await authedRequest(`${TOKENS_PATH}/server`);
+    return typeof url === "string" && url ? url : mcpServerUrl();
+  } catch {
+    return mcpServerUrl();
+  }
 }
 
 export function listMcpTokens() {
   return authedRequest(TOKENS_PATH);
 }
 
-/** Resolves to the new token row, with `token` set: the only copy there is. */
-export function createMcpToken(name) {
-  return authedRequest(TOKENS_PATH, { method: "POST", body: { name } });
+/** Resolves to the new token row, with `token` set: the only copy there is.
+ *  `grant` is `grantBody()` from agentScopes.js; without one the token can
+ *  set up projects and nothing more. */
+export function createMcpToken(name, grant = null) {
+  return authedRequest(TOKENS_PATH, { method: "POST", body: { name, ...(grant || {}) } });
 }
 
 export function revokeMcpToken(id) {
@@ -151,9 +166,13 @@ export function fetchSignInRequest(code) {
 }
 
 /** Resolves to `{ redirect_to }`: the address to send the browser to, which
- *  hands the agent its code. Needs the signed-in person. */
-export function allowSignInRequest(code) {
-  return authedRequest(`${REQUESTS_PATH}/${encodeURIComponent(code)}/approve`, { method: "POST" });
+ *  hands the agent its code. Needs the signed-in person. `grant` is
+ *  `grantBody()` from agentScopes.js: what they ticked, and on which projects. */
+export function allowSignInRequest(code, grant = null) {
+  return authedRequest(`${REQUESTS_PATH}/${encodeURIComponent(code)}/approve`, {
+    method: "POST",
+    ...(grant ? { body: grant } : {}),
+  });
 }
 
 /** Resolves to `{ redirect_to }`, which tells the agent the person declined. */

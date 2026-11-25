@@ -19,7 +19,10 @@
  * which step 2 draws in miniature so it is recognised when it appears.
  *
  * Below the steps, the agents that signed in, each disconnectable, and the
- * older way in, a pasted token, for an agent that cannot open a browser. On
+ * older way in, a pasted token, for an agent that cannot open a browser.
+ * Each row says what it may do and where, from its grant (lib/agentScopes.js),
+ * and a new token is offered the same two tiers the consent page offers
+ * (AgentGrantPicker), project setup alone unless the person switches on more. On
  * the desktop sidecar the token is the only way (`signInAvailable`): its
  * address changes every launch, and the browser cannot reach its app.
  *
@@ -29,13 +32,15 @@
 
 import { useEffect, useState } from "react";
 import { ArrowRight, ArrowUpRight, Bot, Check, ChevronRight, Copy, FolderGit2, KeyRound } from "lucide-react";
-import { Trans, useLingui } from "@lingui/react/macro";
+import { Plural, Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { useConfirm } from "@/components/ui/confirm-dialog";
 import { AGENT_LOGOS, AgentLogoTile } from "@/components/connections/logos";
 import AgentAbilities from "@/components/settings/AgentAbilities";
+import AgentGrantPicker from "@/components/settings/AgentGrantPicker";
+import { SCOPE_NAMES, grantBody, grantFacts, grantProblem, initialGrant } from "@/lib/agentScopes";
 import { cn } from "@/lib/utils";
 import { formatDate, relativeTime } from "@/lib/format";
 import {
@@ -321,12 +326,12 @@ function ConsentPreview({ agentId }) {
         </div>
         <p className="font-serif text-sm leading-snug text-foreground">
           <Trans>
-            Allow <em className="text-brand">{agent}</em> to use your Duct account?
+            <em className="text-brand">{agent}</em> would like to work with Duct
           </Trans>
         </p>
         <div className="flex justify-end gap-1.5 text-xs">
           <span className="rounded-md border border-border px-2.5 py-1 text-muted-foreground">
-            <Trans>Cancel</Trans>
+            <Trans>Not now</Trans>
           </span>
           <span className="rounded-md bg-primary px-2.5 py-1 font-semibold text-primary-foreground ring-2 ring-primary/30 ring-offset-2 ring-offset-background">
             <Trans>Allow</Trans>
@@ -485,7 +490,7 @@ function SignInSteps({ agent, onAgentChange, serverUrl, agents, watching, deepLi
 
         <Step number={2} state={step2} title={t`Allow it in your browser`}>
           <Lead>
-            <Trans>{name} opens Duct in your browser. Check the name it shows, then choose Allow.</Trans>
+            <Trans>{name} opens Duct in your browser. Check the name it shows, choose what it can do, then Allow.</Trans>
           </Lead>
           <ConsentPreview agentId={agent} />
           <SignInStatus
@@ -527,6 +532,28 @@ function SignInSteps({ agent, onAgentChange, serverUrl, agents, watching, deepLi
 
 /** One connected agent or one pasted token. An agent's access token changes
  *  every hour, so it shows no hint; a token's last four tell two apart. */
+/** "Project setup · Data, Memory, Briefs · 2 projects": what one connection
+ *  may do and where, in the row's second line. */
+function GrantLine({ row }) {
+  const { i18n } = useLingui();
+  const { scopes, projects } = grantFacts(row);
+  const names = scopes.map((scope) => i18n._(SCOPE_NAMES[scope])).join(", ");
+  return (
+    <p className="flex flex-wrap gap-x-2 text-xs text-muted-foreground">
+      <span><Trans>Project setup</Trans></span>
+      {names && <span>· {names}</span>}
+      <span>
+        ·{" "}
+        {projects == null ? (
+          <Trans>All projects</Trans>
+        ) : (
+          <Plural value={projects} one="# project" other="# projects" />
+        )}
+      </span>
+    </p>
+  );
+}
+
 function CredentialRow({ row, onRemove }) {
   const { t } = useLingui();
   const agent = row.kind === KIND_AGENT;
@@ -555,6 +582,7 @@ function CredentialRow({ row, onRemove }) {
           <span>{row.last_used_at ? <Trans>Used {used}</Trans> : <Trans>Never used</Trans>}</span>
           {!agent && <span><Trans>Expires {expires}</Trans></span>}
         </p>
+        <GrantLine row={row} />
       </div>
       <Button
         type="button"
@@ -590,12 +618,15 @@ export default function AgentAccess({
   signInAvailable = true,
   watching = false,
   deepLinks = true,
+  projects = null,
+  defaultGrant = null,
   onCreate,
   onRevoke,
   onWatch,
 }) {
   const { t } = useLingui();
   const [name, setName] = useState("");
+  const [grant, setGrant] = useState(() => defaultGrant || initialGrant());
   const [agent, setAgent] = useState(AGENTS[0]);
   const { confirm, dialog } = useConfirm();
   const agents = tokens?.filter((row) => row.kind === KIND_AGENT) ?? null;
@@ -672,7 +703,7 @@ export default function AgentAccess({
           className="flex flex-wrap gap-2"
           onSubmit={(e) => {
             e.preventDefault();
-            if (name.trim()) onCreate(name.trim());
+            if (name.trim() && !grantProblem(grant)) onCreate(name.trim(), grantBody(grant));
           }}
         >
           <label htmlFor="agent-token-name" className="sr-only">
@@ -686,10 +717,13 @@ export default function AgentAccess({
             placeholder={t`Name it, e.g. CI on GitHub Actions`}
             onChange={(e) => setName(e.target.value)}
           />
-          <Button type="submit" variant="outline" disabled={creating || !name.trim()}>
+          <Button type="submit" variant="outline" disabled={creating || !name.trim() || Boolean(grantProblem(grant))}>
             {creating ? <Trans>Creating…</Trans> : <Trans>Create token</Trans>}
           </Button>
         </form>
+        {/* Outside the form: inside one, Radix adds a hidden native input per
+            checkbox for submission, and the grant is sent from state anyway. */}
+        <AgentGrantPicker className="mt-3" grant={grant} onChange={setGrant} projects={projects} idPrefix="token" />
         {error && (
           <p role="alert" className="mt-2 text-sm text-destructive">
             {error}

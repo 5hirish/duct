@@ -969,68 +969,140 @@ msgid "“Why did this move?”"
 msgstr "“为什么会这样？”"
 
 #: connect-agent.html
-msgid "<0/>ChatGPT"
-msgstr "<0/>ChatGPT"
+msgid "4 more days"
+msgstr "还有 4 天"
 
 #: connect-agent.html
-msgid "<0/>Claude"
-msgstr "<0/>Claude"
+msgid "<0/>Brief saved in Duct<1>Open →</1>"
+msgstr "<0/>简报已保存至 Duct<1>打开 →</1>"
 
-#: connect-agent.html skills.html
-msgid "<0/>Claude Code"
-msgstr "<0/>Claude Code"
-
-#: connect-agent.html skills.html
-msgid "<0/>Codex"
-msgstr "<0/>Codex"
-
-#: connect-agent.html skills.html
-msgid "<0/>Cursor"
-msgstr "<0/>Cursor"
+#: connect-agent.html
+msgid "<0></0> Duct's MCP server · Runs on your AI plan"
+msgstr "<0></0> Duct 的 MCP 服务端 · 基于你的 AI 方案运行"
 
 #: connect-agent.html
 msgid ""
-"A draft never overwrites what you typed in Duct. It only fills blank fields or replaces an earlier draft. To change a field you set, ask for that edit by name."
-msgstr "草稿绝不会覆盖你在 Duct 中输入的文本。它只会填写空白字段或替换先前的草稿。若要更改你设置的字段，请明确说明修改该字段。"
+"<0><1>$18,420</1> new revenue</0><2><3>+6.2%</3> on last week</2><4><5>3</5> refunds</4>"
+msgstr "<0><1>$18,420</1> 新增收入</0><2>较上周 <3>+6.2%</3></2><4><5>3</5> 笔退款</4>"
+
+#: connect-agent.html
+msgid "<0>></0>Write this week's brief for Acme"
+msgstr "<0>></0>撰写 Acme 本周的简报"
+
+#: connect-agent.html
+msgid "<0>Claude Code</0> would like to work with Duct"
+msgstr "<0>Claude Code</0> 请求与 Duct 协作"
+
+#: connect-agent.html
+msgid ""
+"<0>Help set up my projects.</0> It drafts your project's description, audience and competitors from your repo."
+msgstr "<0>协助设置我的项目。</0>它会根据你的代码库起草项目的描述、受众和竞争对手。"
+
+#: connect-agent.html
+msgid ""
+"<0>Never the agent's, whatever you allow:</0> approving or applying a change, publishing, connecting a tool, your passwords and keys. Everything it saves shows in Activity under its name, and an edit is one click to undo."
+msgstr ""
+"<0>未经你的许可，智能体绝不能：</0>批准或应用变更、发布内容、连接工具、获取你的密码和密钥。它保存的所有内容都会以其名称显示在“活动”中，只需一键即可撤销编辑。"
+
+#: connect-agent.html
+msgid ""
+"<0>Work alongside me.</0> It also reads your tools, remembers what matters and writes briefs. Proposed changes, post drafts and images on your own keys stay off until you turn them on."
+msgstr "<0>与我协同。</0>它还会读取你的工具，记住重要事项并撰写简报。提议的变更、帖子草稿以及基于你自身密钥的图像生成功能默认关闭，直到你手动开启。"
+
+#: connect-agent.html
+msgid "A connector hands your agent rows. <0>Duct hands it answers.</0>"
+msgstr "连接器向你的智能体提供数据行。<0>Duct 则直接提供答案。</0>"
+
+#: connect-agent.html
+msgid ""
+"A general assistant can't see your revenue, remember last month or keep a brief. Duct gives it all three."
+msgstr "通用助手无法查看你的收入、记住上个月的事项或保留简报。Duct 为其赋予这三项能力。"
+
+#: connect-agent.html
+msgid "A tool I expected isn't there"
+msgstr "没有找到我需要的工具"
+
+#: connect-agent.html
+msgid "Acme · Brief · Last 7 days"
+msgstr "Acme · 简报 · 最近 7 天"
+
+#: connect-agent.html
+msgid "Add Duct to <0>opencode.json</0>:"
+msgstr "将 Duct 添加至 <0>opencode.json</0>："
+
+#: connect-agent.html
+msgid "Add Duct to <0>~/.cursor/mcp.json</0>:"
+msgstr "将 Duct 添加至 <0>~/.cursor/mcp.json</0>："
+
+#: connect-agent.html
+msgid "Add Duct to <0>~/.gemini/settings.json</0>:"
+msgstr "将 Duct 添加至 <0>~/.gemini/settings.json</0>："
 
 #. meta description
 #: connect-agent.html
 msgid ""
-"Add Duct's MCP server to Claude Code, Codex, Cursor, VS Code or ChatGPT. Sign in with your browser, click Allow, and your agent can read and set up projects."
+"Add Duct to Claude Code, Codex, Cursor, Gemini CLI or ChatGPT. Your agent quotes totals Duct reconciled, keeps memory and saves briefs, on your own plan."
 msgstr ""
-"将 Duct 的 MCP 服务器添加到 Claude Code、Codex、Cursor、VS Code 或 ChatGPT。使用浏览器登录，点击“允许”，你的智能体即可读取和设置项目。"
+"将 Duct 添加至 Claude Code、Codex、Cursor、Gemini CLI 或 ChatGPT。你的智能体可以直接引用 Duct 对齐的总计数据、保留记忆并保存简报，基于你自身的方案运行。"
 
 #: connect-agent.html
-msgid "Add a connector with OAuth and this address:"
-msgstr "使用 OAuth 和此地址添加连接器："
+msgid "Add Duct to your agent"
+msgstr "将 Duct 添加到你的智能体"
 
 #: connect-agent.html
-msgid "Add this to <0>~/.cursor/mcp.json</0>:"
-msgstr "将此内容添加到 <0>~/.cursor/mcp.json</0>："
+msgid "Add a connector with this address and OAuth sign-in:"
+msgstr "使用此地址和 OAuth 登录添加连接器："
+
+#: connect-agent.html
+msgid "Add it, allow it, <0>ask it.</0>"
+msgstr "添加、允许，然后<0>提问。</0>"
 
 #: connect-agent.html
 msgid ""
-"Another agent? Any that adds a remote MCP server by address works. If it can't sign in, <0>use a token</0>."
-msgstr "使用其他智能体？任何支持通过地址添加远程 MCP 服务器的智能体均可运作。如果无法登录，<0>请使用令牌</0>。"
+"Add one address to Claude Code, Codex, Cursor, Gemini CLI, ChatGPT or Claude. Your agent reads your tools through Duct, quotes Duct's totals, remembers what you decided and saves every brief in Duct. No API key to paste."
+msgstr ""
+"将同一个地址添加至 Claude Code、Codex、Cursor、Gemini CLI、ChatGPT 或 Claude。你的智能体可以通过 Duct 读取工具数据、引用 Duct 的总计值、记住你的决策，并将每份简报保存至 Duct。无需粘贴 API 密钥。"
 
 #: connect-agent.html
-msgid "Changes only what you asked. Undo it from Activity."
-msgstr "仅修改你要求的内容。可在“活动”中撤销。"
+msgid "All your projects, or only the ones you pick."
+msgstr "你的所有项目，或仅你选择的项目。"
+
+#: connect-agent.html
+msgid "Allow"
+msgstr "允许"
+
+#: connect-agent.html
+msgid ""
+"Another agent? Give it the same address, or <0>use a token</0> if it can't sign in."
+msgstr "要接入其他智能体？提供相同的地址，如果无法登录，可以<0>使用令牌</0>。"
+
+#: connect-agent.html
+msgid "Ask it something"
+msgstr "向它提问"
+
+#: connect-agent.html
+msgid "Before you connect"
+msgstr "连接之前"
+
+#: connect-agent.html
+msgid "Can it change my ad account?"
+msgstr "它能修改我的广告账号吗？"
 
 #: connect-agent.html
 msgid "ChatGPT"
 msgstr "ChatGPT"
 
+#: connect-agent.html
+msgid "Choose HTTP, paste the address and name it <0>duct</0>:"
+msgstr "选择 HTTP，粘贴地址并将其命名为 <0>duct</0>："
+
+#: connect-agent.html
+msgid "Claude"
+msgstr "Claude"
+
 #: connect-agent.html skills.html
 msgid "Claude Code"
 msgstr "Claude Code"
-
-#. meta twitter:description
-#: connect-agent.html
-msgid ""
-"Claude Code, Codex, Cursor, VS Code, OpenCode, Claude and ChatGPT all connect to Duct by one address. No token to copy or paste."
-msgstr ""
-"Claude Code、Codex、Cursor、VS Code、OpenCode、Claude 和 ChatGPT 都通过一个地址连接到 Duct。无需复制或粘贴令牌。"
 
 #: connect-agent.html
 msgid "Claude, on claude.ai or Claude Desktop"
@@ -1070,8 +1142,13 @@ msgstr "复制 Cursor 设置"
 
 #. button aria-label
 #: connect-agent.html
-msgid "Copy the OpenCode command"
-msgstr "复制 OpenCode 命令"
+msgid "Copy the Gemini CLI settings"
+msgstr "复制 Gemini CLI 设置"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the OpenCode settings"
+msgstr "复制 OpenCode 设置"
 
 #. button aria-label
 #: connect-agent.html
@@ -1088,36 +1165,66 @@ msgid "Cursor"
 msgstr "Cursor"
 
 #: connect-agent.html
-msgid "Drafts the pitch, audience and competitors. What you typed stays."
-msgstr "起草推介词、受众和竞争对手。你输入的内容保持不变。"
+msgid "Do I need an API key?"
+msgstr "我需要 API 密钥吗？"
 
 #: connect-agent.html
-msgid "Drop Acme from our competitors."
-msgstr "从竞争对手中移除 Acme。"
+msgid "Does Duct see my conversation?"
+msgstr "Duct 能看到我的对话吗？"
+
+#: connect-agent.html
+msgid ""
+"Duct adds up every pull in code, so the brief quotes $18,420, not a model's own sum of a thousand rows."
+msgstr "Duct 会在代码层面累加每次拉取的数据，因此简报中引用的数值是 $18,420，而不是模型自行对上千行数据相加的结果。"
+
+#: connect-agent.html
+msgid "Duct's playbook and what it knows about Acme"
+msgstr "Duct 的剧本以及对 Acme 的已知信息"
+
+#: connect-agent.html
+msgid "Duct's playbook, one command"
+msgstr "Duct 的剧本，一条命令"
 
 #. img alt
 #: connect-agent.html
 msgid ""
-"Duct's sign-in page: Allow Claude Code to use your Duct account? It will be able to see your projects, draft a project's description, audience and competitors, and edit a project when you ask. It can never approve or apply changes to your tools, connect new ones, or see your keys. Cancel and Allow buttons."
+"Duct's sign-in page: Claude Code would like to work with Duct. Two choices, Help set up my projects, and Work alongside me, which is selected, asked for by Claude Code, and includes Data, Memory and Briefs. On: All your projects. It can't approve changes, publish, or see your passwords and keys. Not now and Allow buttons."
 msgstr ""
-"Duct 的登录页面：允许 Claude Code 使用你的 Duct 账号？它将能够查看你的项目，起草项目描述、受众和竞争对手，并在你要求时编辑项目。它绝不能批准或应用针对你工具的变更、连接新工具，或查看你的密钥。“取消”与“允许”按钮。"
+"Duct 登录页面：Claude Code 请求与 Duct 协作。有两个选项：“协助设置我的项目”和“与我协同”（已被选中，由 Claude Code 请求，包含数据、记忆和简报）。生效范围：你的所有项目。它无法批准变更、发布内容或查看你的密码和密钥。“暂不”和“允许”按钮。"
+
+#: connect-agent.html
+msgid "Eight agents. <0>One address.</0>"
+msgstr "8 个智能体。<0>一个地址。</0>"
+
+#: connect-agent.html
+msgid "Every agent connects to the same address. Pick yours."
+msgstr "每个智能体都连接到同一个地址。选择你的智能体。"
 
 #: connect-agent.html
 msgid ""
-"For CI or a remote machine. Create one on the same settings page; your agent sends it as a header."
-msgstr "适用于 CI 或远程机器。在同一设置页面上创建一个；你的智能体会将其作为请求头发送。"
+"For CI or a remote machine. Create one in Settings → Connect your AI agent, with the same choices. That page also lists every agent you allowed, and disconnects any one. Send it as a header:"
+msgstr ""
+"适用于 CI 或远程机器。在“设置”→“连接你的 AI 智能体”中创建一个，包含相同的选项。该页面还会列出你允许的所有智能体，并可断开其中任何一个。将其作为请求头发送："
 
 #: connect-agent.html
-msgid "From the Command Palette, run <0>MCP: Add Server</0>, choose HTTP and paste:"
-msgstr "从命令面板运行 <0>MCP: Add Server</0>，选择 HTTP 并粘贴："
+msgid "Gemini CLI"
+msgstr "Gemini CLI"
 
 #: connect-agent.html
-msgid "I asked it to set up the project and nothing changed"
-msgstr "我让它设置项目，但没有任何改变"
+msgid "Help set up my projects"
+msgstr "帮助设置我的项目"
+
+#: connect-agent.html
+msgid "How to connect your agent"
+msgstr "如何连接你的智能体"
 
 #: connect-agent.html
 msgid "I host Duct myself"
 msgstr "我自行托管 Duct"
+
+#: connect-agent.html
+msgid "If something goes wrong"
+msgstr "如果出现问题"
 
 #: connect-agent.html
 msgid "In ChatGPT's settings, turn on developer mode."
@@ -1125,36 +1232,32 @@ msgstr "在 ChatGPT 的设置中，开启开发者模式。"
 
 #: connect-agent.html
 msgid ""
-"In Claude Code, run <0>/mcp</0>, pick <1>duct</1>, choose <2>Authenticate</2> and click Allow."
-msgstr "在 Claude Code 中运行 <0>/mcp</0>，选择 <1>duct</1>，选择 <2>Authenticate</2> 并点击允许。"
+"In Claude Code, run <0>/mcp</0>, pick <1>duct</1> and choose <2>Authenticate</2>."
+msgstr "在 Claude Code 中，运行 <0>/mcp</0>，选择 <1>duct</1> 并选择 <2>Authenticate</2>。"
 
 #: connect-agent.html
 msgid "In Claude Code:"
 msgstr "在 Claude Code 中："
 
 #: connect-agent.html
-msgid "In Cursor's MCP settings, sign in on duct and click Allow."
-msgstr "在 Cursor 的 MCP 设置中，登录 duct 并点击允许。"
+msgid "In Cursor's MCP settings, press Login on duct."
+msgstr "在 Cursor 的 MCP 设置中，点击 duct 上的 Login。"
 
 #: connect-agent.html
-msgid ""
-"In Duct, Settings → Connect your AI agent lists each agent you allowed. One you disconnect stops on its next call."
-msgstr "在 Duct 中，“设置”→“连接你的 AI 智能体”会列出你允许的每个智能体。断开连接的智能体会在其下一次调用时停止运作。"
+msgid "In Duct"
+msgstr "在 Duct 中"
 
 #: connect-agent.html
-msgid ""
-"In Settings → Connectors, choose Add custom connector, name it Duct and paste:"
-msgstr "在“设置 → 连接器”中，选择“添加自定义连接器”，将其命名为 Duct 并粘贴："
+msgid "In your browser, choose what it can do, then click Allow."
+msgstr "在浏览器中，选择它可以执行的操作，然后点击 Allow。"
 
 #: connect-agent.html
-msgid ""
-"It can never approve or apply changes to your tools, connect new ones, or see your keys."
-msgstr "它绝不能批准或应用对你工具的变更、连接新工具或查看你的密钥。"
+msgid "In your terminal, run:"
+msgstr "在终端中运行："
 
 #: connect-agent.html
-msgid ""
-"It reads and drafts your projects from your repo or files. You can undo any edit in Duct."
-msgstr "它能从你的代码库或文件中读取并起草你的项目。你可以在 Duct 中撤销任何编辑。"
+msgid "It already writes well. <0>Now it knows your numbers.</0>"
+msgstr "它本身就很擅长写作。<0>现在它更懂得你的数据。</0>"
 
 #: connect-agent.html
 msgid ""
@@ -1162,125 +1265,230 @@ msgid ""
 msgstr "它显示无法注册，或“不支持动态客户端注册”"
 
 #: connect-agent.html
+msgid ""
+"It sees only what you allowed. Disconnect it in Duct, connect again and choose Work alongside me."
+msgstr "它只能看到你允许的内容。在 Duct 中断开连接，重新连接并选择 Work alongside me。"
+
+#: connect-agent.html
+msgid "It was disconnected, or unused for 90 days. Sign in again from your agent."
+msgstr "连接已断开，或已有 90 天未被使用。请从你的智能体重新登录。"
+
+#: connect-agent.html
 msgid "It worked, and now it gets a 401"
 msgstr "它已工作，但现在收到 401 错误"
+
+#: connect-agent.html
+msgid "Memory that carries over"
+msgstr "可延续的记忆"
 
 #: connect-agent.html
 msgid "My browser never opened"
 msgstr "我的浏览器从未打开"
 
 #: connect-agent.html
-msgid ""
-"Name it <0>duct</0>. The first time it uses Duct, click Allow in your browser."
-msgstr "将其命名为 <0>duct</0>。它首次使用 Duct 时，请在浏览器中点击“允许”。"
+msgid "Name it Duct and paste the address:"
+msgstr "将其命名为 Duct 并粘贴地址："
 
 #: connect-agent.html
 msgid "No browser? Use a token."
 msgstr "没有浏览器？使用令牌。"
 
-#. meta og:description
 #: connect-agent.html
 msgid ""
-"One address in your agent, one Allow in your browser. It can read your Duct projects and draft their details, never approve a change."
-msgstr "你的智能体中一个地址，你的浏览器中一个“允许”。它可以读取你的 Duct 项目并起草其详细信息，绝不能批准变更。"
+"No. Duct sees only the calls your agent makes to it, never the rest of your chat."
+msgstr "否。Duct 只能看到你的智能体对它的调用，无法查看对话中的其他内容。"
+
+#: connect-agent.html
+msgid ""
+"No. It runs on the plan you already pay for. A saved key is only for images and scheduled briefs."
+msgstr "否。它直接使用你现有的套餐运行。保存的密钥仅用于生成图片和定时简报。"
+
+#: connect-agent.html
+msgid ""
+"Not from your agent. Scheduled briefs run in Duct on a saved key, because nobody's agent runs at 3am."
+msgstr "并非来自你的智能体。定时简报会在 Duct 中基于保存的密钥运行，因为没有人的智能体会在凌晨 3 点运行。"
+
+#: connect-agent.html
+msgid "Not now"
+msgstr "暂不"
+
+#: connect-agent.html
+msgid "Nov 12"
+msgstr "11 月 12 日"
+
+#: connect-agent.html
+msgid "Nov 18"
+msgstr "11 月 18 日"
+
+#: connect-agent.html
+msgid "Nov 19"
+msgstr "11 月 19 日"
+
+#: connect-agent.html
+msgid "Nov 20"
+msgstr "11 月 20 日"
+
+#: connect-agent.html
+msgid "Numbers Duct reconciled"
+msgstr "Duct 对齐的数据"
+
+#. meta twitter:description
+#: connect-agent.html
+msgid ""
+"One address in your agent, one Allow in your browser. Reconciled numbers, memory and Duct's playbook, with every change waiting for you."
+msgstr "智能体只需填入一个地址，浏览器只需点击一次 Allow。对齐的数据、记忆与 Duct 剧本，所有变更随时待命。"
+
+#: connect-agent.html
+msgid ""
+"Only as a proposal, if you turn that on. It waits in Duct until you approve it. No agent can apply a change."
+msgstr "仅以建议形式呈现（需开启此功能）。建议会在 Duct 中保留，直到你批准。没有智能体可以应用变更。"
+
+#: connect-agent.html
+msgid "Open Settings → Connectors and choose Add custom connector."
+msgstr "打开“设置 → 连接器”，然后选择“添加自定义连接器”。"
+
+#: connect-agent.html
+msgid "Open the Command Palette and run <0>MCP: Add Server</0>."
+msgstr "打开命令面板并运行 <0>MCP: Add Server</0>。"
 
 #: connect-agent.html
 msgid "OpenCode"
 msgstr "OpenCode"
 
 #: connect-agent.html
-msgid "Paste it in your agent. Click Allow."
-msgstr "将其粘贴到你的智能体中。点击“允许”。"
+msgid "Or, in Claude Code"
+msgstr "或者，在 Claude Code 中"
+
+#: connect-agent.html
+msgid "Paste the address above, as one command or one line of settings."
+msgstr "粘贴上方地址，作为单个命令或单行设置。"
+
+#: connect-agent.html
+msgid "Press Connect. In your browser, choose what it can do, then click Allow."
+msgstr "点击 Connect。在浏览器中，选择它可以执行的操作，然后点击 Allow。"
+
+#: connect-agent.html
+msgid "Questions"
+msgstr "常见问题"
+
+#: connect-agent.html
+msgid "Rates too, never an average of averages."
+msgstr "包含比率数据，绝非平均值的平均值。"
+
+#: connect-agent.html
+msgid "Revenue is up 6.2% since the pricing page shipped. Saved in Duct."
+msgstr "自定价页面上线以来，收入增长了 6.2%。已保存至 Duct。"
+
+#: connect-agent.html
+msgid "Revenue is up since the pricing page shipped. Refunds held level."
+msgstr "自定价页面上线以来，收入有所增长。退款保持稳定。"
+
+#: connect-agent.html
+msgid "Run <0>/insights_brief</0> for Duct's brief playbook, or just ask."
+msgstr "运行 <0>/insights_brief</0> 获取 Duct 的简报剧本，或直接提问。"
 
 #: connect-agent.html
 msgid ""
-"Paste one address into your agent, click Allow once, and it can read and draft your Duct projects."
-msgstr "将一个地址粘贴到你的智能体中，点击一次“允许”，它即可读取并起草你的 Duct 项目。"
+"Run <0>/mcp__duct__insights_brief</0> for Duct's brief playbook, or just ask."
+msgstr "运行 <0>/mcp__duct__insights_brief</0> 获取 Duct 的简报剧本，或直接提问。"
 
 #: connect-agent.html
-msgid "Pick your agent. Paste one line."
-msgstr "选择你的智能体。粘贴一行内容。"
+msgid "Saved to Acme's library, version 1"
+msgstr "已保存至 Acme 的库，版本 1"
 
 #: connect-agent.html
-msgid "Press Connect, then click Allow."
-msgstr "点击“连接”，然后点击“允许”。"
+msgid "Server address"
+msgstr "服务器地址"
 
 #: connect-agent.html
-msgid "Reads the project, and where each answer came from."
-msgstr "读取项目以及每个答案的来源。"
+msgid "Set up a project, <0>or work alongside you.</0>"
+msgstr "设置项目，<0>或与你协同工作。</0>"
 
 #: connect-agent.html
-msgid "Run these in your terminal:"
-msgstr "在你的终端中运行以下命令："
+msgid "Setup by agent"
+msgstr "由智能体设置"
 
 #: connect-agent.html
-msgid "Run this in your terminal:"
-msgstr "在你的终端中运行此命令："
+msgid "Sign in and choose"
+msgstr "登录并选择"
 
 #: connect-agent.html
-msgid "See every agent. Disconnect any one."
-msgstr "查看每个智能体。断开任何一个的连接。"
-
-#: connect-agent.html
-msgid "Set up this product in Duct."
-msgstr "在 Duct 中设置此产品。"
-
-#: connect-agent.html
-msgid "Setup for"
-msgstr "设置指南："
+msgid "Start Gemini CLI and sign in:"
+msgstr "启动 Gemini CLI 并登录："
 
 #: connect-agent.html
 msgid ""
-"Start the sign-in yourself: run /mcp in Claude Code, codex mcp login duct in Codex, or opencode mcp auth duct in OpenCode."
+"Start it yourself: /mcp in Claude Code, codex mcp login duct, /mcp auth duct in Gemini CLI, or opencode mcp auth duct."
 msgstr ""
-"自行开始登录：在 Claude Code 中运行 /mcp，在 Codex 中运行 codex mcp login duct，或在 OpenCode 中运行 opencode mcp auth duct。"
+"手动启动：Claude Code 中的 /mcp、codex mcp login duct、Gemini CLI 中的 /mcp auth duct，或 opencode mcp auth duct。"
 
 #: connect-agent.html
 msgid ""
-"Start the sign-in yourself: run <0>/mcp</0> in Claude Code, <1>codex mcp login duct</1> in Codex, or <2>opencode mcp auth duct</2> in OpenCode."
+"Start it yourself: <0>/mcp</0> in Claude Code, <1>codex mcp login duct</1>, <2>/mcp auth duct</2> in Gemini CLI, or <3>opencode mcp auth duct</3>."
 msgstr ""
-"自行开始登录：在 Claude Code 中运行 <0>/mcp</0>，在 Codex 中运行 <1>codex mcp login duct</1>，或在 OpenCode 中运行 <2>opencode mcp auth duct</2>。"
-
-#: connect-agent.html
-msgid "Stuck? Start here."
-msgstr "遇到问题？从这里开始。"
-
-#: connect-agent.html
-msgid "The one Allow, in your browser"
-msgstr "仅需在浏览器中点击一次“允许”"
-
-#: connect-agent.html
-msgid "Then ask it in plain words."
-msgstr "然后用日常语言询问它。"
+"手动启动：Claude Code 中的 <0>/mcp</0>、<1>codex mcp login duct</1>、Gemini CLI 中的 <2>/mcp auth duct</2>，或 <3>opencode mcp auth duct</3>。"
 
 #: connect-agent.html
 msgid ""
-"Update your agent to its latest version and try again. If it still fails, connect with a token instead."
-msgstr "将你的智能体更新到最新版本然后重试。如果仍然失败，请改用令牌连接。"
+"Stripe, Meta Ads, Mixpanel, GitHub, RevenueCat and the rest you connect in Duct. Google Analytics, Search Console, Ads and Tag Manager stay with Duct's own agent for now, while Google's policy for outside assistants is confirmed."
+msgstr ""
+"Stripe、Meta Ads、Mixpanel、GitHub、RevenueCat 以及其他连接均在 Duct 中完成。Google Analytics、Search Console、Ads 和 Tag Manager 暂时保留在 Duct 自身的智能体中，等待 Google 对外部助手的政策确定。"
+
+#: connect-agent.html
+msgid "Stripe, Mixpanel, GitHub · Totals by Duct · 1 memory"
+msgstr "Stripe、Mixpanel、GitHub · Duct 汇总 · 1 条记忆"
+
+#: connect-agent.html
+msgid "Stripe, the last 7 days. Totals by Duct:"
+msgstr "Stripe，过去 7 天。Duct 汇总："
+
+#: connect-agent.html
+msgid "The ones people ask. <0>Then the fixes.</0>"
+msgstr "常见问题。<0>以及解决方法。</0>"
+
+#: connect-agent.html
+msgid ""
+"The other direction, Duct's agent calling your servers: <0>Your MCP servers in Duct →</0>"
+msgstr "另一个方向，即 Duct 的智能体调用你的服务器：<0>Duct 中你的 MCP 服务器 →</0>"
+
+#: connect-agent.html
+msgid "The sign-in, as your browser shows it"
+msgstr "浏览器中显示的登录界面"
+
+#: connect-agent.html
+msgid "Then sign in:"
+msgstr "然后登录："
+
+#: connect-agent.html
+msgid "Total, by Duct"
+msgstr "Duct 汇总"
+
+#: connect-agent.html
+msgid ""
+"Try “Write this week's brief.” It follows Duct's playbook and saves the brief in Duct."
+msgstr "尝试“编写本周简报。”它遵循 Duct 的剧本，并将简报保存在 Duct 中。"
+
+#: connect-agent.html
+msgid "Update your agent and try again. If it still fails, use a token."
+msgstr "更新你的智能体并重试。如果仍然失败，请使用令牌。"
 
 #. meta og:title
 #. meta twitter:title
 #: connect-agent.html
-msgid "Use Duct from Claude Code, Codex or Cursor"
-msgstr "从 Claude Code、Codex 或 Cursor 使用 Duct"
+msgid "Use Duct from Claude Code, Codex, Gemini or ChatGPT"
+msgstr "在 Claude Code、Codex、Gemini 或 ChatGPT 中使用 Duct"
 
 #: connect-agent.html partials/footer-expanded.html
 msgid "Use Duct from your agent"
 msgstr "通过你的智能体使用 Duct"
 
 #: connect-agent.html
-msgid "Use Duct from your agent. <0>No token to copy.</0>"
-msgstr "从你的智能体中使用 Duct。<0>无需复制令牌。</0>"
+msgid "Use your own API address followed by /mcp."
+msgstr "使用你自己的 API 地址，后接 /mcp。"
 
 #: connect-agent.html
-msgid ""
-"Use your own API address followed by /mcp, in place of https://api.getduct.ai/mcp."
-msgstr "使用你自己的 API 地址后跟 /mcp，代替 https://api.getduct.ai/mcp。"
-
-#: connect-agent.html
-msgid ""
-"Use your own API address followed by <0>/mcp</0>, in place of <1>https://api.getduct.ai/mcp</1>."
-msgstr "使用你自己的 API 地址后跟 <0>/mcp</0>，代替 <1>https://api.getduct.ai/mcp</1>。"
+msgid "Use your own API address followed by <0>/mcp</0>."
+msgstr "使用你自己的 API 地址，后接 <0>/mcp</0>。"
 
 #: connect-agent.html
 msgid "VS Code"
@@ -1288,38 +1496,106 @@ msgstr "VS Code"
 
 #: connect-agent.html
 msgid ""
-"Want Duct's agent to call your MCP servers instead? <0>Your MCP servers in Duct →</0>"
-msgstr "想让 Duct 的智能体调用你的 MCP 服务器吗？<0>Duct 中的 MCP 服务器 →</0>"
+"VS Code asks you to sign in the first time. In your browser, choose what it can do, then click Allow."
+msgstr "VS Code 首次使用时会要求你登录。在浏览器中选择其权限，然后点击允许。"
 
 #: connect-agent.html
-msgid "What does Duct know about our audience?"
-msgstr "Duct 对我们的受众了解多少？"
+msgid "What you decided and measured last month is there next time, in any agent."
+msgstr "你上个月做出的决定和测量的指标，下次在任何智能体中都依然存在。"
+
+#: connect-agent.html
+msgid "What your agent gains"
+msgstr "你的智能体能获得什么"
 
 #: connect-agent.html
 msgid ""
-"You disconnected it in Duct, or its sign-in lapsed after 90 days without use. Sign in again from your agent."
-msgstr "你已在 Duct 中断开它的连接，或它在 90 天未使用后登录失效。请从你的智能体再次登录。"
+"When your agent signs in, you pick what it can do and on which projects. Change it any time in Settings."
+msgstr "当你的智能体登录时，由你选择其权限及可访问的项目。随时可以在设置中更改。"
+
+#: connect-agent.html
+msgid "Which of my tools can it read?"
+msgstr "它可以读取我的哪些工具？"
+
+#: connect-agent.html
+msgid "Will a brief run while my laptop is closed?"
+msgstr "笔记本电脑合上时，简报还会运行吗？"
+
+#: connect-agent.html
+msgid "Work alongside me"
+msgstr "与我协同工作"
+
+#: connect-agent.html
+msgid "Write this week's brief."
+msgstr "编写本周简报。"
+
+#: connect-agent.html
+msgid ""
+"You ask your agent. It asks Duct for the playbook, the sources, the totals and the memory, then saves the brief. The model is yours. The numbers and the method are Duct's."
+msgstr "你询问你的智能体。它向 Duct 获取剧本、数据源、汇总和记忆，然后保存简报。模型属于你，数据和方法属于 Duct。"
+
+#: connect-agent.html
+msgid "You choose"
+msgstr "由你选择"
 
 #. div aria-label
 #: connect-agent.html
 msgid "Your agent"
 msgstr "你的智能体"
 
+#. meta og:description
 #: connect-agent.html
-msgid "Your browser opens on Duct. Click Allow."
-msgstr "你的浏览器将在 Duct 上打开。点击允许。"
+msgid ""
+"Your agent does the thinking on the plan you already pay for. Duct brings the numbers it reconciled, the memory and the method, and keeps the brief."
+msgstr "你的智能体利用你现有的订阅套餐进行思考。Duct 提供对齐的数据、记忆与方法，并保存简报。"
 
 #: connect-agent.html
-msgid "draft_project"
-msgstr "draft_project"
+msgid "Your agent does the thinking.<0/><1>Duct brings the method.</1>"
+msgstr "你的智能体负责思考。<0/><1>Duct 提供方法。</1>"
 
 #: connect-agent.html
-msgid "get_project"
-msgstr "get_project"
+msgid "Your agent follows the same method Duct's own agent uses for a brief."
+msgstr "你的智能体遵循 Duct 自有智能体生成简报时使用的相同方法。"
 
 #: connect-agent.html
-msgid "update_project"
-msgstr "update_project"
+msgid ""
+"Your browser opens on Duct. Choose what it can do and where, then click Allow."
+msgstr "你的浏览器将打开 Duct。选择权限与作用范围，然后点击允许。"
+
+#: connect-agent.html
+msgid "duct <0>·</0> fetch_data"
+msgstr "duct <0>·</0> fetch_data"
+
+#: connect-agent.html
+msgid "duct <0>·</0> list_data_sources"
+msgstr "duct <0>·</0> list_data_sources"
+
+#: connect-agent.html
+msgid "duct <0>·</0> search_memory"
+msgstr "duct <0>·</0> search_memory"
+
+#: connect-agent.html
+msgid "duct <0>·</0> start_run"
+msgstr "duct <0>·</0> start_run"
+
+#: connect-agent.html
+msgid "duct <0>·</0> submit_brief"
+msgstr "duct <0>·</0> submit_brief"
+
+#: connect-agent.html
+msgid "new revenue, up 6.2% on last week"
+msgstr "新收入，较上周增长 6.2%"
+
+#: connect-agent.html
+msgid "refunds, level with last month"
+msgstr "退款，与上月持平"
+
+#: connect-agent.html
+msgid "the day the new pricing page shipped"
+msgstr "新定价页面上线的日期"
+
+#: connect-agent.html
+msgid "“The new pricing page shipped on November 12.”"
+msgstr "“新定价页面于 11 月 12 日上线。”"
 
 #: doctrine.html
 msgid ".github/PULL_REQUEST_TEMPLATE.md"
@@ -8729,8 +9005,20 @@ msgid "your-site.com"
 msgstr "your-site.com"
 
 #: skills.html
+msgid "<0/>Claude Code"
+msgstr "<0/>Claude Code"
+
+#: skills.html
+msgid "<0/>Codex"
+msgstr "<0/>Codex"
+
+#: skills.html
 msgid "<0/>Copilot"
 msgstr "<0/>Copilot"
+
+#: skills.html
+msgid "<0/>Cursor"
+msgstr "<0/>Cursor"
 
 #: skills.html
 msgid "<0/>Gemini CLI"
@@ -11871,6 +12159,192 @@ msgstr "← 返回"
 msgid "← Start over"
 msgstr "← 重新开始"
 
+#~ msgid "<0/>ChatGPT"
+#~ msgstr "<0/>ChatGPT"
+
+#~ msgid "<0/>Claude"
+#~ msgstr "<0/>Claude"
+
+#~ msgid ""
+#~ "A draft never overwrites what you typed in Duct. It only fills blank fields or replaces an earlier draft. To change a field you set, ask for that edit by name."
+#~ msgstr "草稿绝不会覆盖你在 Duct 中输入的文本。它只会填写空白字段或替换先前的草稿。若要更改你设置的字段，请明确说明修改该字段。"
+
+#. meta description
+#~ msgid ""
+#~ "Add Duct's MCP server to Claude Code, Codex, Cursor, VS Code or ChatGPT. Sign in with your browser, click Allow, and your agent can read and set up projects."
+#~ msgstr ""
+#~ "将 Duct 的 MCP 服务器添加到 Claude Code、Codex、Cursor、VS Code 或 ChatGPT。使用浏览器登录，点击“允许”，你的智能体即可读取和设置项目。"
+
+#~ msgid "Add a connector with OAuth and this address:"
+#~ msgstr "使用 OAuth 和此地址添加连接器："
+
+#~ msgid "Add this to <0>~/.cursor/mcp.json</0>:"
+#~ msgstr "将此内容添加到 <0>~/.cursor/mcp.json</0>："
+
+#~ msgid ""
+#~ "Another agent? Any that adds a remote MCP server by address works. If it can't sign in, <0>use a token</0>."
+#~ msgstr "使用其他智能体？任何支持通过地址添加远程 MCP 服务器的智能体均可运作。如果无法登录，<0>请使用令牌</0>。"
+
+#~ msgid "Changes only what you asked. Undo it from Activity."
+#~ msgstr "仅修改你要求的内容。可在“活动”中撤销。"
+
+#. meta twitter:description
+#~ msgid ""
+#~ "Claude Code, Codex, Cursor, VS Code, OpenCode, Claude and ChatGPT all connect to Duct by one address. No token to copy or paste."
+#~ msgstr ""
+#~ "Claude Code、Codex、Cursor、VS Code、OpenCode、Claude 和 ChatGPT 都通过一个地址连接到 Duct。无需复制或粘贴令牌。"
+
+#. button aria-label
+#~ msgid "Copy the OpenCode command"
+#~ msgstr "复制 OpenCode 命令"
+
+#~ msgid "Drafts the pitch, audience and competitors. What you typed stays."
+#~ msgstr "起草推介词、受众和竞争对手。你输入的内容保持不变。"
+
+#~ msgid "Drop Acme from our competitors."
+#~ msgstr "从竞争对手中移除 Acme。"
+
+#. img alt
+#~ msgid ""
+#~ "Duct's sign-in page: Allow Claude Code to use your Duct account? It will be able to see your projects, draft a project's description, audience and competitors, and edit a project when you ask. It can never approve or apply changes to your tools, connect new ones, or see your keys. Cancel and Allow buttons."
+#~ msgstr ""
+#~ "Duct 的登录页面：允许 Claude Code 使用你的 Duct 账号？它将能够查看你的项目，起草项目描述、受众和竞争对手，并在你要求时编辑项目。它绝不能批准或应用针对你工具的变更、连接新工具，或查看你的密钥。“取消”与“允许”按钮。"
+
+#~ msgid ""
+#~ "For CI or a remote machine. Create one on the same settings page; your agent sends it as a header."
+#~ msgstr "适用于 CI 或远程机器。在同一设置页面上创建一个；你的智能体会将其作为请求头发送。"
+
+#~ msgid "From the Command Palette, run <0>MCP: Add Server</0>, choose HTTP and paste:"
+#~ msgstr "从命令面板运行 <0>MCP: Add Server</0>，选择 HTTP 并粘贴："
+
+#~ msgid "I asked it to set up the project and nothing changed"
+#~ msgstr "我让它设置项目，但没有任何改变"
+
+#~ msgid ""
+#~ "In Claude Code, run <0>/mcp</0>, pick <1>duct</1>, choose <2>Authenticate</2> and click Allow."
+#~ msgstr "在 Claude Code 中运行 <0>/mcp</0>，选择 <1>duct</1>，选择 <2>Authenticate</2> 并点击允许。"
+
+#~ msgid "In Cursor's MCP settings, sign in on duct and click Allow."
+#~ msgstr "在 Cursor 的 MCP 设置中，登录 duct 并点击允许。"
+
+#~ msgid ""
+#~ "In Duct, Settings → Connect your AI agent lists each agent you allowed. One you disconnect stops on its next call."
+#~ msgstr "在 Duct 中，“设置”→“连接你的 AI 智能体”会列出你允许的每个智能体。断开连接的智能体会在其下一次调用时停止运作。"
+
+#~ msgid ""
+#~ "In Settings → Connectors, choose Add custom connector, name it Duct and paste:"
+#~ msgstr "在“设置 → 连接器”中，选择“添加自定义连接器”，将其命名为 Duct 并粘贴："
+
+#~ msgid ""
+#~ "It can never approve or apply changes to your tools, connect new ones, or see your keys."
+#~ msgstr "它绝不能批准或应用对你工具的变更、连接新工具或查看你的密钥。"
+
+#~ msgid ""
+#~ "It reads and drafts your projects from your repo or files. You can undo any edit in Duct."
+#~ msgstr "它能从你的代码库或文件中读取并起草你的项目。你可以在 Duct 中撤销任何编辑。"
+
+#~ msgid ""
+#~ "Name it <0>duct</0>. The first time it uses Duct, click Allow in your browser."
+#~ msgstr "将其命名为 <0>duct</0>。它首次使用 Duct 时，请在浏览器中点击“允许”。"
+
+#. meta og:description
+#~ msgid ""
+#~ "One address in your agent, one Allow in your browser. It can read your Duct projects and draft their details, never approve a change."
+#~ msgstr "你的智能体中一个地址，你的浏览器中一个“允许”。它可以读取你的 Duct 项目并起草其详细信息，绝不能批准变更。"
+
+#~ msgid "Paste it in your agent. Click Allow."
+#~ msgstr "将其粘贴到你的智能体中。点击“允许”。"
+
+#~ msgid ""
+#~ "Paste one address into your agent, click Allow once, and it can read and draft your Duct projects."
+#~ msgstr "将一个地址粘贴到你的智能体中，点击一次“允许”，它即可读取并起草你的 Duct 项目。"
+
+#~ msgid "Pick your agent. Paste one line."
+#~ msgstr "选择你的智能体。粘贴一行内容。"
+
+#~ msgid "Press Connect, then click Allow."
+#~ msgstr "点击“连接”，然后点击“允许”。"
+
+#~ msgid "Reads the project, and where each answer came from."
+#~ msgstr "读取项目以及每个答案的来源。"
+
+#~ msgid "Run these in your terminal:"
+#~ msgstr "在你的终端中运行以下命令："
+
+#~ msgid "Run this in your terminal:"
+#~ msgstr "在你的终端中运行此命令："
+
+#~ msgid "See every agent. Disconnect any one."
+#~ msgstr "查看每个智能体。断开任何一个的连接。"
+
+#~ msgid "Set up this product in Duct."
+#~ msgstr "在 Duct 中设置此产品。"
+
+#~ msgid "Setup for"
+#~ msgstr "设置指南："
+
+#~ msgid ""
+#~ "Start the sign-in yourself: run /mcp in Claude Code, codex mcp login duct in Codex, or opencode mcp auth duct in OpenCode."
+#~ msgstr ""
+#~ "自行开始登录：在 Claude Code 中运行 /mcp，在 Codex 中运行 codex mcp login duct，或在 OpenCode 中运行 opencode mcp auth duct。"
+
+#~ msgid ""
+#~ "Start the sign-in yourself: run <0>/mcp</0> in Claude Code, <1>codex mcp login duct</1> in Codex, or <2>opencode mcp auth duct</2> in OpenCode."
+#~ msgstr ""
+#~ "自行开始登录：在 Claude Code 中运行 <0>/mcp</0>，在 Codex 中运行 <1>codex mcp login duct</1>，或在 OpenCode 中运行 <2>opencode mcp auth duct</2>。"
+
+#~ msgid "Stuck? Start here."
+#~ msgstr "遇到问题？从这里开始。"
+
+#~ msgid "The one Allow, in your browser"
+#~ msgstr "仅需在浏览器中点击一次“允许”"
+
+#~ msgid "Then ask it in plain words."
+#~ msgstr "然后用日常语言询问它。"
+
+#~ msgid ""
+#~ "Update your agent to its latest version and try again. If it still fails, connect with a token instead."
+#~ msgstr "将你的智能体更新到最新版本然后重试。如果仍然失败，请改用令牌连接。"
+
+#. meta og:title
+#. meta twitter:title
+#~ msgid "Use Duct from Claude Code, Codex or Cursor"
+#~ msgstr "从 Claude Code、Codex 或 Cursor 使用 Duct"
+
+#~ msgid "Use Duct from your agent. <0>No token to copy.</0>"
+#~ msgstr "从你的智能体中使用 Duct。<0>无需复制令牌。</0>"
+
+#~ msgid ""
+#~ "Use your own API address followed by /mcp, in place of https://api.getduct.ai/mcp."
+#~ msgstr "使用你自己的 API 地址后跟 /mcp，代替 https://api.getduct.ai/mcp。"
+
+#~ msgid ""
+#~ "Use your own API address followed by <0>/mcp</0>, in place of <1>https://api.getduct.ai/mcp</1>."
+#~ msgstr "使用你自己的 API 地址后跟 <0>/mcp</0>，代替 <1>https://api.getduct.ai/mcp</1>。"
+
+#~ msgid ""
+#~ "Want Duct's agent to call your MCP servers instead? <0>Your MCP servers in Duct →</0>"
+#~ msgstr "想让 Duct 的智能体调用你的 MCP 服务器吗？<0>Duct 中的 MCP 服务器 →</0>"
+
+#~ msgid "What does Duct know about our audience?"
+#~ msgstr "Duct 对我们的受众了解多少？"
+
+#~ msgid ""
+#~ "You disconnected it in Duct, or its sign-in lapsed after 90 days without use. Sign in again from your agent."
+#~ msgstr "你已在 Duct 中断开它的连接，或它在 90 天未使用后登录失效。请从你的智能体再次登录。"
+
+#~ msgid "Your browser opens on Duct. Click Allow."
+#~ msgstr "你的浏览器将在 Duct 上打开。点击允许。"
+
+#~ msgid "draft_project"
+#~ msgstr "draft_project"
+
+#~ msgid "get_project"
+#~ msgstr "get_project"
+
+#~ msgid "update_project"
+#~ msgstr "update_project"
+
 #~ msgid "Scheduled runs<0>A scheduled content plan, the Analytics report</0>"
 #~ msgstr "定时运行<0>定时内容计划、Analytics 报告</0>"
 
@@ -12082,28 +12556,13 @@ msgstr "← 重新开始"
 #~ "A draft never overwrites what you typed in Duct. It only fills blank fields or replaces an earlier draft. Check the project page in Duct."
 #~ msgstr "草稿绝不会覆盖你在 Duct 中输入的内容。它只填充空白字段或替换之前的草稿。请检查 Duct 中的项目页面。"
 
-#~ msgid "Add Duct to <0>opencode.json</0>:"
-#~ msgstr "将 Duct 添加到 <0>opencode.json</0>："
-
-#~ msgid "Add Duct to <0>~/.cursor/mcp.json</0>:"
-#~ msgstr "将 Duct 添加到 <0>~/.cursor/mcp.json</0>："
-
-#~ msgid "Add Duct to your agent"
-#~ msgstr "将 Duct 添加到你的智能体"
-
 #~ msgid "Add a connector with this address, and choose OAuth for authentication:"
 #~ msgstr "使用此地址添加连接器，并选择 OAuth 进行身份验证："
-
-#~ msgid "Add it, allow it, <0>ask it.</0>"
-#~ msgstr "添加它，允许它，<0>询问它。</0>"
 
 #~ msgid ""
 #~ "Add this address to Claude Code, Codex, Cursor, VS Code, OpenCode, Claude or ChatGPT. Your browser opens on Duct, you click Allow, and your agent can read your projects and draft their details."
 #~ msgstr ""
 #~ "将此地址添加到 Claude Code、Codex、Cursor、VS Code、OpenCode、Claude 或 ChatGPT。你的浏览器将打开 Duct，你点击“允许”，然后你的智能体即可读取你的项目并起草其详细信息。"
-
-#~ msgid "Allow"
-#~ msgstr "允许"
 
 #~ msgid ""
 #~ "Another agent? If it can add a remote MCP server by its address, give it the same one. If it can't sign in, <0>use a token</0>."
@@ -12112,24 +12571,11 @@ msgstr "← 重新开始"
 #~ msgid "Approve or apply changes."
 #~ msgstr "批准或应用变更。"
 
-#~ msgid "Ask it something"
-#~ msgstr "问它一些问题"
-
 #~ msgid "Cancel"
 #~ msgstr "取消"
 
-#~ msgid "Choose HTTP, paste the address and name it <0>duct</0>:"
-#~ msgstr "选择 HTTP，粘贴地址并将其命名为 <0>duct</0>："
-
-#~ msgid "Claude"
-#~ msgstr "Claude"
-
 #~ msgid "Connect tools."
 #~ msgstr "连接工具。"
-
-#. button aria-label
-#~ msgid "Copy the OpenCode settings"
-#~ msgstr "复制 OpenCode 设置"
 
 #~ msgid ""
 #~ "Draft a project's description, audience and competitors from your repo or files."
@@ -12163,22 +12609,12 @@ msgstr "← 重新开始"
 #~ "Give your agent the address above, with one command or one line of settings. The exact steps for each agent are below."
 #~ msgstr "将上述地址提供给你的智能体，通过一个命令或一行设置。每个智能体的具体步骤如下。"
 
-#~ msgid "How to connect your agent"
-#~ msgstr "如何连接你的智能体"
-
-#~ msgid ""
-#~ "In Claude Code, run <0>/mcp</0>, pick <1>duct</1> and choose <2>Authenticate</2>."
-#~ msgstr "在 Claude Code 中，运行 <0>/mcp</0>，选择 <1>duct</1> 并选择 <2>Authenticate</2>。"
-
 #~ msgid "In Cursor's MCP settings, press the login prompt on the duct server."
 #~ msgstr "在 Cursor 的 MCP 设置中，点击 duct 服务器上的登录提示。"
 
 #~ msgid ""
 #~ "In Duct, open Settings → Connect your AI agent. Every agent you allowed is there, and you can disconnect it. A disconnected agent stops on its next call."
 #~ msgstr "在 Duct 中，打开“设置”→“连接你的 AI 智能体”。你允许的每个智能体都在那里，你可以断开它的连接。已断开连接的智能体在下次调用时停止。"
-
-#~ msgid "In your terminal, run:"
-#~ msgstr "在你的终端中，运行："
 
 #~ msgid "It can never"
 #~ msgstr "它绝不能"
@@ -12189,15 +12625,9 @@ msgstr "← 重新开始"
 #~ msgid "List your projects."
 #~ msgstr "列出你的项目。"
 
-#~ msgid "Name it Duct and paste the address:"
-#~ msgstr "命名为 Duct 并粘贴地址："
-
 #~ msgid ""
 #~ "On claude.ai or in Claude Desktop, open Settings → Connectors and choose Add custom connector."
 #~ msgstr "在 claude.ai 或 Claude Desktop 中，打开“设置”→“连接器”，然后选择“添加自定义连接器”。"
-
-#~ msgid "Open the Command Palette and run <0>MCP: Add Server</0>."
-#~ msgstr "打开命令面板并运行 <0>MCP: Add Server</0>。"
 
 #~ msgid ""
 #~ "Overwrite what you typed in Duct. A draft only fills blanks or replaces an earlier draft."
@@ -12212,12 +12642,6 @@ msgstr "← 重新开始"
 #~ msgid "See keys or credentials."
 #~ msgstr "查看密钥或凭据。"
 
-#~ msgid "Server address"
-#~ msgstr "服务器地址"
-
-#~ msgid "Setup by agent"
-#~ msgstr "通过智能体设置"
-
 #~ msgid "Seven agents. <0>One address.</0>"
 #~ msgstr "七个智能体。<0>一个地址。</0>"
 
@@ -12226,9 +12650,6 @@ msgstr "← 重新开始"
 
 #~ msgid "Stuck? <0>Start here.</0>"
 #~ msgstr "卡住了？<0>从这里开始。</0>"
-
-#~ msgid "Then sign in:"
-#~ msgstr "然后登录："
 
 #~ msgid "Troubleshooting"
 #~ msgstr "故障排除"
@@ -12820,9 +13241,6 @@ msgstr "← 重新开始"
 
 #~ msgid "One person cannot ask for trust. He can show the code."
 #~ msgstr "一个人不能要求信任。他可以展示代码。"
-
-#~ msgid "Questions"
-#~ msgstr "问题"
 
 #~ msgid "Read access to everything is a lot to ask."
 #~ msgstr "请求读取所有内容的权限要求很高。"

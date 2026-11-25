@@ -327,15 +327,18 @@ const AGENT_TOKENS = [
     id: "a1", kind: "agent", name: "Claude Code", hint: "",
     created_at: "2026-10-30T09:00:00Z", expires_at: "2027-01-28T09:00:00Z",
     last_used_at: new Date(Date.now() - 20 * 60_000).toISOString(),
+    scopes: ["projects", "data", "memory", "reports"], project_ids: ["p-kestrel", "p-wren"],
   },
   {
     id: "a2", kind: "agent", name: "Visual Studio Code, the Kestrel rebrand workspace with its two landing pages", hint: "",
     created_at: "2026-11-01T09:00:00Z", expires_at: "2027-01-30T09:00:00Z", last_used_at: null,
+    scopes: ["projects"], project_ids: null,
   },
   {
     id: "t1", kind: "token", name: "CI on GitHub Actions", hint: "Q7mz",
     created_at: "2026-09-02T09:00:00Z", expires_at: "2027-09-02T09:00:00Z",
     last_used_at: new Date(Date.now() - 3 * 3600_000).toISOString(),
+    scopes: ["projects", "data", "reports"], project_ids: ["p-kestrel"],
   },
   {
     id: "t2", kind: "token", name: "Cursor, client laptop for the Kestrel rebrand and its two landing pages", hint: "b81X",
@@ -349,6 +352,14 @@ const AGENT_TOKENS = [
  *  browser's, so rendering it on both sides is a hydration error. */
 const NO_TOKENS = [];
 
+// The person's projects, for "Only the ones I pick". The second is long on
+// purpose: a name that has to truncate in a narrow card.
+const AGENT_PROJECTS = [
+  { id: "p-kestrel", name: "Kestrel Studio" },
+  { id: "p-wren", name: "Wren & Co, the spring relaunch of the online shop and its two landing pages" },
+  { id: "p-moor", name: "Moorland Coffee" },
+];
+
 // Built, not written out: scripts/security/audit.py reads `token: "…"` with
 // eight or more characters as a hardcoded secret, and baselining this file
 // would stop it checking every other scene here.
@@ -358,6 +369,7 @@ const previewPlaintext = (hint) => `duct_mcp_preview-only-not-a-real-token-${hin
  *  Claude Code agent signs in that long after, as the poll would find it. */
 function AgentAccessScene({
   initial = NO_TOKENS, mintedFirst = false, error = "", signInAvailable = true, deepLinks = true, signInAfterMs = 0,
+  defaultGrant = null,
 }) {
   const [tokens, setTokens] = useState(null);
   const [watching, setWatching] = useState(false);
@@ -389,11 +401,14 @@ function AgentAccessScene({
         signInAvailable={signInAvailable}
         watching={watching}
         deepLinks={deepLinks}
+        projects={AGENT_PROJECTS}
+        defaultGrant={defaultGrant}
         onWatch={setWatching}
-        onCreate={(name) => {
+        onCreate={(name, grant) => {
           const row = {
             id: `t${Date.now()}`, kind: "token", name, hint: "Zp4c", created_at: new Date().toISOString(),
             expires_at: new Date(Date.now() + 365 * 86400_000).toISOString(), last_used_at: null,
+            scopes: grant?.scopes || ["projects"], project_ids: grant?.project_ids ?? null,
           };
           setTokens((prev) => [row, ...(prev || [])]);
           setMinted({ ...row, token: previewPlaintext(row.hint) });
@@ -2065,6 +2080,19 @@ export const SCENES = [
     render: () => <AgentAccessScene initial={AGENT_TOKENS.filter((row) => row.kind === "token")} signInAvailable={false} />,
   },
   {
+    id: "agent-access-token-grant",
+    state: "a new token for one project, working on its behalf",
+    group: "AgentAccess",
+    title: "Connect your AI agent",
+    note: "The token form offers the consent page's two choices: Help set up my projects by default, or Work alongside me with what is included and Customise. Here: data and briefs on Kestrel only, so the project line reads 1 project you picked. Every row in the lists says what that connection may do and where, on its second line (Project setup · Data, Memory, Briefs · 2 projects).",
+    render: () => (
+      <AgentAccessScene
+        initial={AGENT_TOKENS}
+        defaultGrant={{ work: true, scopes: ["data", "reports"], projectIds: ["p-kestrel"] }}
+      />
+    ),
+  },
+  {
     id: "agent-access-limit",
     state: "the server refused a new token: ten already exist",
     group: "AgentAccess",
@@ -2082,7 +2110,7 @@ export const SCENES = [
     state: "signed in, a local agent asking",
     group: "AgentConsent",
     title: "Allow an agent",
-    note: "What it can and can't do reads before the buttons, the can'ts in muted ink with an X, never red: nothing is wrong. The destination line says the sign-in goes to this computer. Allow is the filled button on the right, Cancel beside it; both stay one row down to 20rem.",
+    note: "An invitation, not a form: the two marks joined by a short channel with water running in it (still under reduced motion), a warm headline, then two choices. The agent asked for setup alone, so \"Help set up my projects\" is picked and nothing else is open. Projects read as one line with Change. One reassurance row in muted ink with a shield replaces the old X list. Not now and Allow stay one row down to 20rem, and the line under them says where the browser goes next and to allow only if you just added Duct.",
     render: () => (
       <AgentConsent
         state={CONSENT_ASK}
@@ -2096,7 +2124,7 @@ export const SCENES = [
     state: "signed in, a hosted client with a long self-chosen name",
     group: "AgentConsent",
     title: "Allow an agent",
-    note: "A website destination is named in bold, so a page calling itself Claude that sends you to an unknown host is visible. The long name wraps in the heading and in the caution line without breaking the card.",
+    note: "A website destination is named in bold in the line under the buttons, so a page calling itself Claude that sends you to an unknown host is visible. The long name wraps in the heading and in that line without breaking the card.",
     render: () => (
       <AgentConsent
         state={CONSENT_ASK}
@@ -2106,11 +2134,97 @@ export const SCENES = [
     ),
   },
   {
+    id: "agent-consent-work",
+    state: "the agent asked to work alongside: that choice is picked, Customise closed",
+    group: "AgentConsent",
+    title: "Allow an agent",
+    note: "Claude Code asked for data, briefs and proposed changes. \"Work alongside me\" is picked and tagged \"Asked for by Claude Code\"; under it, what is included as three icon words (Data, Memory, Briefs), one line saying it also asked for Proposed changes (off until turned on in Customise) and a quiet Customise. Projects still one line. Pick the first choice and Allow is project setup alone.",
+    render: () => (
+      <AgentConsent
+        state={CONSENT_ASK}
+        request={{
+          client_name: "Claude Code (duct)", destination: "device", destination_name: "127.0.0.1",
+          requested_scopes: ["projects", "data", "reports", "changes"],
+        }}
+        projects={AGENT_PROJECTS}
+        viewerEmail="ana@kestrel.studio"
+      />
+    ),
+  },
+  {
+    id: "agent-consent-customise",
+    state: "the agent also asked for an extra, and the person opened Customise",
+    group: "AgentConsent",
+    title: "Allow an agent",
+    note: "Claude Code asked for data, briefs and proposed changes. Closed, one line under the included icons says it also asked for Proposed changes and where to turn it on. This scene opens Customise: Included (Data, Memory, Briefs, ticked) and Extras, off until you turn them on (Proposed changes, Content, Images, each with the clause that is its reassurance). Proposed changes is not ticked, whatever was asked, and its line says Claude Code asked for it, in brand ink rather than a warning pill.",
+    render: () => (
+      <AgentConsent
+        state={CONSENT_ASK}
+        request={{
+          client_name: "Claude Code (duct)", destination: "device", destination_name: "127.0.0.1",
+          requested_scopes: ["projects", "data", "reports", "changes"],
+        }}
+        projects={AGENT_PROJECTS}
+        defaultCustomise
+        viewerEmail="ana@kestrel.studio"
+      />
+    ),
+  },
+  {
+    id: "agent-consent-projects",
+    state: "working on two picked projects only",
+    group: "AgentConsent",
+    title: "Allow an agent",
+    note: "The project line reads \"On: 2 projects you picked\" and is open (Done closes it): All, or only the ones I pick, with two of three ticked. The long project name truncates on one line inside the card at 20rem; the list scrolls past twelve rem rather than pushing the buttons off the page.",
+    render: () => (
+      <AgentConsent
+        state={CONSENT_ASK}
+        request={{ client_name: "Codex", destination: "device", destination_name: "127.0.0.1", requested_scopes: ["projects"] }}
+        projects={AGENT_PROJECTS}
+        defaultGrant={{ work: true, scopes: ["data", "memory", "reports", "content"], projectIds: ["p-kestrel", "p-wren"] }}
+        viewerEmail="ana@kestrel.studio"
+      />
+    ),
+  },
+  {
+    id: "agent-consent-no-projects",
+    state: "only some projects, none picked: Allow waits",
+    group: "AgentConsent",
+    title: "Allow an agent",
+    note: "Only the ones I pick with nothing ticked: the line under the list says what is missing, in the destructive ink, and Allow waits until a project is ticked or All is chosen again.",
+    render: () => (
+      <AgentConsent
+        state={CONSENT_ASK}
+        request={{ client_name: "Claude Code", destination: "device", destination_name: "127.0.0.1" }}
+        projects={AGENT_PROJECTS}
+        defaultGrant={{ work: true, scopes: ["data", "memory", "reports"], projectIds: [] }}
+        viewerEmail="ana@kestrel.studio"
+      />
+    ),
+  },
+  {
+    id: "agent-consent-refused",
+    state: "the server refused the choice (a project the person no longer has)",
+    group: "AgentConsent",
+    title: "Allow an agent",
+    note: "The server's own sentence above the buttons, under the reassurance row. The request is still open, so the person changes the selection and presses Allow again.",
+    render: () => (
+      <AgentConsent
+        state={CONSENT_ASK}
+        request={{ client_name: "Claude Code", destination: "device", destination_name: "127.0.0.1" }}
+        projects={AGENT_PROJECTS}
+        defaultGrant={{ work: true, scopes: ["data", "memory", "reports"], projectIds: ["p-moor"] }}
+        error="One of those projects is not yours to share. Pick from your projects."
+        viewerEmail="ana@kestrel.studio"
+      />
+    ),
+  },
+  {
     id: "agent-consent-sign-in",
     state: "signed out: who is asking, then sign-in",
     group: "AgentConsent",
     title: "Allow an agent",
-    note: "The agent's name shows before any sign-in, so the person knows why they are being asked. One line, then the Google button.",
+    note: "The same warm headline before any sign-in, so the person knows who is asking and that they will choose. One line, then the Google button.",
     render: () => (
       <AgentConsent
         state={CONSENT_SIGN_IN}

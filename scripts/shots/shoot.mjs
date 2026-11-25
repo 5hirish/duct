@@ -59,7 +59,9 @@ const mock = spawn(process.execPath, [join(REPO, "app/scripts/mock-agent-backend
 await waitFor(`${MOCK}/api/agents`, 15000);
 
 // --- browser ----------------------------------------------------------------
-const browser = await chromium.launch({ headless: true });
+// CHROMIUM names a browser binary when the one the site's pinned Playwright
+// expects is not installed (an agent sandbox, a CI image), as capture-site.mjs.
+const browser = await chromium.launch({ headless: true, ...(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {}) });
 let failed = 0;
 try {
   for (const sc of wanted) {

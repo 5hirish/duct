@@ -1,0 +1,37 @@
+/* agent-consent — the channel between the agent's mark and Duct's on the
+   consent page (components/settings/AgentConsent.jsx). The aqueduct idiom of
+   /start, at the size of an arrow: blue is water and water is data
+   (onboarding.css), and this is the one screen where a person watches their
+   data meet an agent. Loaded after onboarding.css for the --tessera tokens. */
+
+.consent-channel {
+  display: block;
+  overflow: visible;
+}
+
+.consent-channel path {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.consent-channel-bed {
+  stroke: var(--border);
+}
+
+.consent-channel-water {
+  stroke: var(--tessera-glass);
+  stroke-dasharray: 5 6;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .consent-channel-water {
+    animation: consent-flow 1.4s linear infinite;
+  }
+}
+
+@keyframes consent-flow {
+  to {
+    stroke-dashoffset: -22;
+  }
+}

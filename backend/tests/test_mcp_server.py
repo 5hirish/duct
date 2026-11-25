@@ -110,7 +110,8 @@ def test_initialize_echoes_a_version_the_client_speaks_and_offers_tools(env):
     out = env.rpc(token, "initialize", {"protocolVersion": "2025-06-18", "capabilities": {},
                                         "clientInfo": {"name": "claude-code", "version": "2"}}).json()["result"]
     assert out["protocolVersion"] == "2025-06-18"
-    assert out["capabilities"] == {"tools": {"listChanged": False}}
+    # Prompts too: the playbooks a person can run as a slash command.
+    assert out["capabilities"] == {"tools": {"listChanged": False}, "prompts": {"listChanged": False}}
     assert "draft_project" in out["instructions"]
 
     newer = env.rpc(token, "initialize", {"protocolVersion": "2099-01-01"}).json()["result"]
@@ -229,7 +230,9 @@ def test_list_projects_shows_only_what_the_person_can_reach(env):
     by_name = {p["name"]: p for p in out["projects"]}
     assert set(by_name) == {"Acme", "Shared"}
     assert (by_name["Acme"]["role"], by_name["Shared"]["role"]) == ("owner", "collaborator")
-    assert by_name["Acme"]["review_url"].endswith(f"/project/{mine.id}")
+    assert by_name["Acme"]["review_url"].split("?")[0].endswith(f"/project/{mine.id}")
+    # Tagged, so a visit from an agent's link is countable in the app's analytics.
+    assert "utm_source=mcp" in by_name["Acme"]["review_url"]
 
 
 def test_a_strangers_project_reads_exactly_like_a_made_up_one(env):

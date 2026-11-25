@@ -195,13 +195,21 @@ msgstr "{0} 个来源"
 msgid "{action}: {verdict}"
 msgstr "{action}: {verdict}"
 
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "{agent} also asked for <0>{askedNames}</0>. Turn it on in Customise if you want it."
+msgstr "{agent} 还请求了 <0>{askedNames}</0>。如果你需要，请在“自定义”中开启。"
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "{agent} asked for this"
+msgstr "{agent} 请求了此项"
+
 #: src/components/settings/AgentConsent.jsx
 msgid "{agent} is connected"
 msgstr "{agent} 已连接"
 
 #: src/components/settings/AgentConsent.jsx
-msgid "{agent} is the name the agent gave itself. Allow it only if you just added Duct to an agent."
-msgstr "{agent} 是智能体给自己起的名字。仅在你刚将 Duct 添加到智能体时才允许此名称。"
+#~ msgid "{agent} is the name the agent gave itself. Allow it only if you just added Duct to an agent."
+#~ msgstr "{agent} 是智能体给自己起的名字。仅在你刚将 Duct 添加到智能体时才允许此名称。"
 
 #: src/components/settings/AgentConsent.jsx
 msgid "{agent} wasn't connected"
@@ -267,6 +275,10 @@ msgstr "{count, plural, other {# 修复}}"
 #: src/components/content/SynthesisPanel.jsx
 msgid "{count, plural, one {# post} other {# posts}}"
 msgstr "{count, plural, other {# 帖子}}"
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "{count, plural, one {# project you picked} other {# projects you picked}}"
+msgstr "{count, plural, other {# 个你选择的项目}}"
 
 #: src/components/content/FeedSummary.jsx
 #~ msgid "{count, plural, one {# source} other {# sources}}"
@@ -534,8 +546,12 @@ msgid "{name} no longer accepts the saved API key, so nothing goes through it. P
 msgstr "{name} 不再接受已保存的 API 密钥，因此无法通过其处理任何请求。请粘贴来自 {name} 的新密钥。"
 
 #: src/components/settings/AgentAccess.jsx
-msgid "{name} opens Duct in your browser. Check the name it shows, then choose Allow."
-msgstr "{name} 在你的浏览器中打开 Duct。检查它显示的名称，然后选择允许。"
+msgid "{name} opens Duct in your browser. Check the name it shows, choose what it can do, then Allow."
+msgstr "{name} 会在浏览器中打开 Duct。核对显示的名称，选择其权限，然后允许。"
+
+#: src/components/settings/AgentAccess.jsx
+#~ msgid "{name} opens Duct in your browser. Check the name it shows, then choose Allow."
+#~ msgstr "{name} 在你的浏览器中打开 Duct。检查它显示的名称，然后选择允许。"
 
 #: src/components/content/StyleGallery.jsx
 msgid "{name} preview"
@@ -657,6 +673,10 @@ msgstr "{posted} 篇已发布 · {left} 篇待发布"
 #: src/components/audit/AuditReport.jsx
 msgid "{posts, plural, one {# post} other {# posts}}"
 msgstr "{posts, plural, other {# 篇帖子}}"
+
+#: src/components/settings/AgentAccess.jsx
+msgid "{projects, plural, one {# project} other {# projects}}"
+msgstr "{projects, plural, other {# 个项目}}"
 
 #: src/components/workspace/AgentChat.jsx
 msgid "{ranTier} · {requestedTier} is rate limited"
@@ -916,8 +936,13 @@ msgid "< 1 hr"
 msgstr "< 1 小时"
 
 #: src/components/settings/AgentConsent.jsx
-msgid "<0>{agent}</0> wants to use your Duct account"
-msgstr "<0>{agent}</0> 希望使用你的 Duct 账户"
+#~ msgid "<0>{agent}</0> wants to use your Duct account"
+#~ msgstr "<0>{agent}</0> 希望使用你的 Duct 账户"
+
+#: src/components/settings/AgentAccess.jsx
+#: src/components/settings/AgentConsent.jsx
+msgid "<0>{agent}</0> would like to work with Duct"
+msgstr "<0>{agent}</0> 想要与 Duct 配合工作"
 
 #: src/components/content/AccountsTab.jsx
 msgid "<0>{count}</0> linked"
@@ -1430,16 +1455,16 @@ msgid "Advice only, publish either way"
 msgstr "仅供参考，无论如何都发布"
 
 #: src/components/settings/AgentConsent.jsx
-msgid "After you allow it, Duct hands {agent} its sign-in on this computer."
-msgstr "允许后，Duct 会将 {agent} 的登录信息交给它。"
+#~ msgid "After you allow it, Duct hands {agent} its sign-in on this computer."
+#~ msgstr "允许后，Duct 会将 {agent} 的登录信息交给它。"
 
 #: src/components/settings/AgentConsent.jsx
-msgid "After you allow it, you go to <0>{name}</0>."
-msgstr "允许后，你将前往 <0>{name}</0>。"
+#~ msgid "After you allow it, you go to <0>{name}</0>."
+#~ msgstr "允许后，你将前往 <0>{name}</0>。"
 
 #: src/components/settings/AgentConsent.jsx
-msgid "After you allow it, your browser opens the <0>{name}</0> app."
-msgstr "允许后，你的浏览器会打开 <0>{name}</0> 应用。"
+#~ msgid "After you allow it, your browser opens the <0>{name}</0> app."
+#~ msgstr "允许后，你的浏览器会打开 <0>{name}</0> 应用。"
 
 #: src/app/(app)/activity/page.jsx
 msgid "agent"
@@ -1524,6 +1549,7 @@ msgid "All posts <0>· {rowCount}</0>"
 msgstr "所有帖子 <0>· {rowCount}</0>"
 
 #: src/app/(app)/execute/page.jsx
+#: src/components/settings/AgentAccess.jsx
 msgid "All projects"
 msgstr "所有项目"
 
@@ -1535,6 +1561,18 @@ msgstr "所有来源"
 msgid "All statuses"
 msgstr "所有状态"
 
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "All your projects"
+msgstr "你的所有项目"
+
+#: src/components/settings/AgentGrantPicker.jsx
+#~ msgid "All your projects, including ones you add later"
+#~ msgstr "你的所有项目，包括后续添加的项目"
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "All, including ones you add later"
+msgstr "全部，包含你以后添加的项目"
+
 #: src/components/settings/AgentAccess.jsx
 #: src/components/settings/AgentConsent.jsx
 msgid "Allow"
@@ -1545,9 +1583,8 @@ msgid "Allow \"{word}\" again"
 msgstr "再次允许 “{word}”"
 
 #: src/components/settings/AgentAccess.jsx
-#: src/components/settings/AgentConsent.jsx
-msgid "Allow <0>{agent}</0> to use your Duct account?"
-msgstr "允许 <0>{agent}</0> 使用你的 Duct 账户吗？"
+#~ msgid "Allow <0>{agent}</0> to use your Duct account?"
+#~ msgstr "允许 <0>{agent}</0> 使用你的 Duct 账户吗？"
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Allow it in your browser"
@@ -1568,6 +1605,14 @@ msgstr "已说过"
 #: src/lib/contentFeedLabels.js
 msgid "Also closed issues and documentation changes."
 msgstr "还包括已关闭的 issue 和文档变更。"
+
+#: src/components/settings/AgentGrantPicker.jsx
+#~ msgid "Also let it work on your behalf"
+#~ msgstr "同时允许其代你工作"
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Also reads your connected tools, remembers what matters, and writes briefs with Duct's method."
+msgstr "还会读取你连接的工具，记住重要事项，并以 Duct 的方法撰写简报。"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "alt ×{missingAlt}"
@@ -1901,6 +1946,14 @@ msgstr "已询问 {0}"
 msgid "Asked a helper agent"
 msgstr "已询问辅助智能体"
 
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Asked for"
+msgstr "已请求"
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Asked for by {agent}"
+msgstr "由 {agent} 请求"
+
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Asks freely · nothing applies without you"
 msgstr "自由提问 · 未经你同意不应用任何内容"
@@ -2136,6 +2189,7 @@ msgid "Brief"
 msgstr "简报"
 
 #: src/app/(app)/artifacts/page.jsx
+#: src/lib/agentScopes.js
 msgid "Briefs"
 msgstr "简报"
 
@@ -2285,8 +2339,6 @@ msgstr "无法读取你的密钥"
 #: src/components/memory/MemoryTimeline.jsx
 #: src/components/onboarding/ProviderStep.jsx
 #: src/components/ProjectMembers.jsx
-#: src/components/settings/AgentAccess.jsx
-#: src/components/settings/AgentConsent.jsx
 msgid "Cancel"
 msgstr "取消"
 
@@ -2323,6 +2375,7 @@ msgid "Category Scores"
 msgstr "类别得分"
 
 #: src/components/connections/EndpointProviderCard.jsx
+#: src/components/settings/AgentGrantPicker.jsx
 msgid "Change"
 msgstr "更改"
 
@@ -2406,6 +2459,10 @@ msgstr "检查连接"
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Check the connection. Behind a corporate proxy, Duct respects HTTPS_PROXY."
 msgstr "检查连接。在企业代理后，Duct 遵循 HTTPS_PROXY。"
+
+#: src/app/authorize/page.jsx
+msgid "Check which projects you picked, then try again."
+msgstr "检查你选择的项目，然后重试。"
 
 #: src/components/content/report/GrowthReportView.jsx
 msgid "Check:"
@@ -2736,8 +2793,8 @@ msgid "Connect an account once and every project can use it. Open a source to pi
 msgstr "连接一个账户后，所有项目都可以使用它。打开数据源以选择 {projectName} 从你的哪个账户读取数据。"
 
 #: src/components/settings/AgentConsent.jsx
-msgid "Connect an agent"
-msgstr "连接一个智能体"
+#~ msgid "Connect an agent"
+#~ msgstr "连接一个智能体"
 
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Connect anyway"
@@ -2861,6 +2918,10 @@ msgstr "顾问 / 代理机构"
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Consumer"
 msgstr "消费者"
+
+#: src/lib/agentScopes.js
+msgid "Content"
+msgstr "内容"
 
 #: src/components/content/ContentWorkspace.jsx
 msgid "Content agent"
@@ -3225,6 +3286,7 @@ msgstr "除非你明确说明，否则客户、委托人和合作伙伴的名称
 
 #: src/components/content/FormatLibrary.jsx
 #: src/components/models/TierSummary.jsx
+#: src/components/settings/AgentGrantPicker.jsx
 msgid "Customise"
 msgstr "自定义"
 
@@ -3250,6 +3312,7 @@ msgstr "深色"
 
 #: src/components/insights/desk/DeskLists.jsx
 #: src/components/insights/InsightsWorkspace.jsx
+#: src/lib/agentScopes.js
 msgid "Data"
 msgstr "数据"
 
@@ -3579,6 +3642,7 @@ msgstr "没时间修复这些？Duct 可以为你执行其中的 <0>{totalFixes}
 
 #: src/components/audit/ExecutionOffer.jsx
 #: src/components/models/TierSummary.jsx
+#: src/components/settings/AgentGrantPicker.jsx
 msgid "Done"
 msgstr "完成"
 
@@ -3637,6 +3701,10 @@ msgstr "正在起草帖子…"
 #: src/components/content/VoiceRulesFields.jsx
 msgid "Drafts may name customers, clients and partners."
 msgstr "草稿可以提及客户、顾客和合作伙伴。"
+
+#: src/lib/agentScopes.js
+msgid "Drafts posts for you to review. Never posts them"
+msgstr "起草帖子供你审核。绝不会自动发布"
 
 #: src/components/content/VoiceRulesFields.jsx
 msgid "Drafts share the lesson, never the exact prompt, model or sequence that's working."
@@ -4257,6 +4325,10 @@ msgstr "{expires} 过期"
 msgid "Export {format}"
 msgstr "导出 {format}"
 
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Extras, off until you turn them on"
+msgstr "额外项，需手动开启"
+
 #: src/app/(app)/connections/page.jsx
 msgid "Facebook and Instagram spend, reach, conversions and CPA."
 msgstr "Facebook 和 Instagram 的支出、覆盖人数、转化次数和 CPA。"
@@ -4518,6 +4590,10 @@ msgstr "从 MCP 注册表"
 #: src/components/content/PlanDayOne.jsx
 #~ msgid "From what you shipped"
 #~ msgstr "根据你已发布的内容"
+
+#: src/app/(app)/execute/page.jsx
+msgid "From your agent"
+msgstr "来自你的智能体"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "From your files"
@@ -4894,6 +4970,10 @@ msgstr "已保留帖子等待你的批准"
 msgid "Held the TikTok search for your approval"
 msgstr "已保留 TikTok 搜索等待你的批准"
 
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Help set up my projects"
+msgstr "协助设置我的项目"
+
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Helps Duct fit its answers to your job"
 msgstr "帮助 Duct 根据你的工作调整其答案"
@@ -5074,6 +5154,10 @@ msgstr "如果它要求你登录，那将在你的浏览器中进行，然后你
 msgid "If it’s saved you time, a star on GitHub helps the next team find it."
 msgstr "如果它为你节省了时间，在 GitHub 上点个星标就能帮助更多团队发现它。"
 
+#: src/components/settings/AgentAbilities.jsx
+msgid "If you also let it work on your behalf, only what you tick"
+msgstr "如果你同时允许其代你工作，则仅限你勾选的内容"
+
 #: src/components/insights/desk/DeskLists.jsx
 #: src/lib/contentEnums.js
 msgid "Image"
@@ -5093,6 +5177,7 @@ msgstr "此环境中未启用图片上传。"
 
 #: src/components/audit/AuditStepProgress.jsx
 #: src/components/models/TierSummary.jsx
+#: src/lib/agentScopes.js
 msgid "Images"
 msgstr "图片"
 
@@ -5139,6 +5224,10 @@ msgstr "在你的钥匙串中"
 #: src/app/(app)/execute/page.jsx
 msgid "Include {name}"
 msgstr "包含 {name}"
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Included"
+msgstr "已包含"
 
 #: src/components/execution/ChangeSetCard.jsx
 msgid "Includes a change that always waits for you. It can be rolled back from here."
@@ -5245,6 +5334,10 @@ msgstr "Issue"
 msgid "Issues finished in that time"
 msgstr "在该时间内完成的 issue"
 
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "It also asked for <0>{askedNames}</0>. Turn it on in Customise if you want it."
+msgstr "它还请求了 <0>{askedNames}</0>。如果你需要，请在“自定义”中开启。"
+
 #: src/lib/mcpServers.js
 msgid "It answered with an error the last time Duct called it. The next chat tries again, or check it now."
 msgstr "Duct 上次调用时它返回了错误。下次聊天会重试，或者你现在检查一下。"
@@ -5252,6 +5345,10 @@ msgstr "Duct 上次调用时它返回了错误。下次聊天会重试，或者�
 #: src/components/settings/AgentAbilities.jsx
 msgid "It can never"
 msgstr "它永远不能"
+
+#: src/components/settings/AgentConsent.jsx
+msgid "It can't approve changes, publish, or see your passwords and keys. Everything it does shows in Activity, and edits can be undone."
+msgstr "它无法批准变更、发布内容或查看你的密码与密钥。它的所有操作都会显示在“活动”中，且修改均可撤销。"
 
 #: src/lib/mcpServers.js
 msgid "It connected without a sign-in and now asks for one. Reconnect to sign in."
@@ -5286,12 +5383,20 @@ msgid "It refused the saved API key. Reconnect with a new one to use it again."
 msgstr "它拒绝了保存的 API 密钥。请使用新密钥重新连接以再次使用它。"
 
 #: src/components/settings/AgentAbilities.jsx
-msgid "It will be able to"
-msgstr "它将能够"
+#~ msgid "It will be able to"
+#~ msgstr "它将能够"
+
+#: src/components/settings/AgentAbilities.jsx
+msgid "It will be able to set up your project"
+msgstr "它将能够设置你的项目"
 
 #: src/components/schedules/ScheduleCard.jsx
 msgid "It will run again next month, or raise the limit."
 msgstr "下个月会再次运行，也可以提高上限。"
+
+#: src/components/settings/AgentGrantPicker.jsx
+#~ msgid "It won't see or set up any other project."
+#~ msgstr "它无法查看或设置任何其他项目。"
 
 #: src/components/AppErrorPanel.jsx
 msgid "It’s logged on our side. Copy the details below if you report it."
@@ -5696,6 +5801,10 @@ msgstr "加载你已连接的账户…"
 msgid "Loading your models…"
 msgstr "加载你的模型…"
 
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Loading your projects…"
+msgstr "正在加载你的项目…"
+
 #: src/app/(app)/activity/page.jsx
 #: src/app/(app)/settings/models/page.jsx
 #: src/app/(auth)/page.js
@@ -5730,6 +5839,10 @@ msgstr "回顾 30 天"
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "Look into it"
 msgstr "调查"
+
+#: src/lib/agentScopes.js
+msgid "Look through what Duct remembers about your business, and add to it"
+msgstr "查看 Duct 记下的关于你业务的内容，并添加新信息"
 
 #: src/components/connections/McpConnectors.jsx
 msgid "Look up issues and projects, or file a new issue."
@@ -5790,6 +5903,14 @@ msgstr "由 {model} 制作"
 #: src/components/content/AccountsTab.jsx
 msgid "Make"
 msgstr "制作"
+
+#: src/lib/agentScopes.js
+msgid "Make images with the AI keys you saved in Duct, which your provider charges you for"
+msgstr "使用你在 Duct 中保存的 AI 密钥生成图片（提供商将据此向你收费）"
+
+#: src/lib/agentScopes.js
+msgid "Makes images with the keys you saved. Your provider charges you"
+msgstr "使用你保存的密钥生成图像。提供商将向你收费"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Making a video clip"
@@ -5902,6 +6023,7 @@ msgstr "记忆"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 #: src/components/memory/MemoryPage.jsx
+#: src/lib/agentScopes.js
 msgid "Memory"
 msgstr "记忆"
 
@@ -6652,6 +6774,8 @@ msgstr "未列出？任何远程 MCP 服务器都可以通过其地址连接。"
 msgid "Not my voice"
 msgstr "不是我的风格"
 
+#: src/components/settings/AgentAccess.jsx
+#: src/components/settings/AgentConsent.jsx
 #: src/components/StarAsk.jsx
 msgid "Not now"
 msgstr "暂不"
@@ -6771,6 +6895,10 @@ msgstr "未丢弃任何内容。"
 #: src/components/connections/McpConnectors.jsx
 msgid "Nothing else in the MCP Registry matches “{0}”."
 msgstr "MCP Registry 中没有其他内容与“{0}”匹配。"
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Nothing extra yet: turn something on in Customise."
+msgstr "尚无额外项：请在“自定义”中开启。"
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Nothing from project memory is read into this session, and nothing it concludes is written back."
@@ -6956,6 +7084,10 @@ msgstr "默认关闭——Duct 在这里运行其后端，未经你允许，任�
 msgid "Off to audit a competitor or another business."
 msgstr "去审计竞争对手或另一家企业。"
 
+#: src/components/settings/AgentGrantPicker.jsx
+#~ msgid "Off unless you tick it"
+#~ msgstr "除非勾选，否则默认关闭"
+
 #: src/components/connections/McpConnectors.jsx
 msgid "Official"
 msgstr "官方"
@@ -7008,6 +7140,10 @@ msgstr "在此服务器上"
 #: src/components/audit/ExecutionOffer.jsx
 msgid "On-page content rewrites"
 msgstr "页面内容重写"
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "On: <0>{summary}</0>"
+msgstr "已开启：<0>{summary}</0>"
 
 #: src/components/content/PostVideo.jsx
 msgid "Once the writing is right, ask Duct to make the clip. It shows up here to watch before it publishes."
@@ -7069,6 +7205,10 @@ msgstr "进行中"
 msgid "Only a sample of your sitemap was scanned."
 msgstr "只扫描了你网站地图的一部分。"
 
+#: src/components/settings/AgentConsent.jsx
+msgid "Only allow this if you just added Duct to {agent}."
+msgstr "仅当你刚将 Duct 添加到 {agent} 时才允许。"
+
 #: src/components/content/FeedPlanDialog.jsx
 #~ msgid "Only days with no draft yet."
 #~ msgstr "仅限还没有草稿的日子。"
@@ -7097,6 +7237,10 @@ msgstr "仅在 {projectName}"
 msgid "Only on days with no draft yet."
 msgstr "仅限尚无草稿的日期。"
 
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Only the ones I pick"
+msgstr "仅限我选择的项目"
+
 #: src/app/(app)/execute/page.jsx
 msgid "Only the project owner can change autonomy."
 msgstr "只有项目所有者才能更改自主权。"
@@ -7104,6 +7248,10 @@ msgstr "只有项目所有者才能更改自主权。"
 #: src/lib/contentFeedLabels.js
 msgid "Only what you published as a release."
 msgstr "仅限你作为 Release 发布的内容。"
+
+#: src/components/settings/AgentGrantPicker.jsx
+#~ msgid "Only what you tick, on the projects you choose."
+#~ msgstr "仅限你在所选项目上勾选的内容。"
 
 #: src/components/schedules/ScheduleCard.jsx
 msgid "Only when you run it"
@@ -7576,6 +7724,14 @@ msgstr "一次只能选择一个调度器下的账户。"
 msgid "Pick at least one account."
 msgstr "至少选择一个账户。"
 
+#: src/components/settings/AgentGrantPicker.jsx
+#~ msgid "Pick at least one project, or allow all of them."
+#~ msgstr "请选择至少一个项目，或允许所有项目。"
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Pick at least one project, or choose All."
+msgstr "请至少选择一个项目，或选择“全部”。"
+
 #: src/components/content/FeedPlanDialog.jsx
 msgid "Pick at least one thing to read."
 msgstr "请至少选择一个读取来源。"
@@ -7963,6 +8119,10 @@ msgstr "项目设置"
 msgid "Project settings → API keys → Secret API key (V2) with the read scopes. Public SDK keys (appl_/goog_) cannot read the REST API."
 msgstr "项目设置 → API 密钥 → 具有读取范围的秘密 API 密钥 (V2)。公共 SDK 密钥 (appl_/goog_) 无法读取 REST API。"
 
+#: src/components/settings/AgentAccess.jsx
+msgid "Project setup"
+msgstr "项目设置"
+
 #: src/app/(app)/project/[projectId]/members/page.jsx
 #: src/app/(app)/project/[projectId]/memory/page.jsx
 #: src/app/(app)/projects/page.jsx
@@ -7988,6 +8148,10 @@ msgstr "提议者"
 msgid "Proposed by you"
 msgstr "你提议的"
 
+#: src/lib/agentScopes.js
+msgid "Proposed changes"
+msgstr "建议的变更"
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "Proposed changes to the plan"
 msgstr "对计划的变更建议"
@@ -8011,6 +8175,10 @@ msgstr "公共部门"
 #: src/components/content/PostViewport.jsx
 msgid "Publish"
 msgstr "发布"
+
+#: src/components/settings/AgentAbilities.jsx
+msgid "Publish a post or send anything in your name"
+msgstr "以你的名义发布帖子或发送任何内容"
 
 #: src/components/content/PublishModal.jsx
 msgid "Publish post"
@@ -8173,6 +8341,10 @@ msgstr "阅读格式库"
 msgid "Read the slide"
 msgstr "阅读幻灯片"
 
+#: src/lib/agentScopes.js
+msgid "Read the tools you connected, with the totals Duct adds up"
+msgstr "读取你连接的工具以及 Duct 汇总的数据"
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read the topic bank"
 msgstr "阅读主题库"
@@ -8184,6 +8356,14 @@ msgstr "阅读已发布的内容"
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read what was posted before"
 msgstr "阅读之前发布的帖子"
+
+#: src/lib/agentScopes.js
+msgid "Read your brand, plans and posts, and save post drafts for you to review"
+msgstr "读取你的品牌、计划和帖子，并保存帖子草稿供你审核"
+
+#: src/lib/agentScopes.js
+msgid "Read your briefs, write a new one with Duct's method, and save it in Duct"
+msgstr "读取你的简报，使用 Duct 的方法撰写新简报，并保存至 Duct"
 
 #: src/components/workspace/AgentChat.jsx
 msgid "Reading"
@@ -8226,6 +8406,10 @@ msgstr "README、文档、落地页文案"
 msgid "Reads {names}. The first report takes a minute or two and is kept for a day."
 msgstr "读取 {names}。第一份报告需要一两分钟，并保留一天。"
 
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Reads and drafts your projects' details."
+msgstr "读取并起草你的项目详情。"
+
 #: src/components/settings/AgentAccess.jsx
 msgid "Reads it, drafts the profile"
 msgstr "读取它，起草个人资料"
@@ -8233,6 +8417,10 @@ msgstr "读取它，起草个人资料"
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Reads project memory and writes back what it learns."
 msgstr "读取项目记忆，并写回所学内容。"
+
+#: src/lib/agentScopes.js
+msgid "Reads the tools you connected, with Duct's totals"
+msgstr "读取你连接的工具，并附加 Duct 的汇总数据"
 
 #: src/app/(start)/start/page.jsx
 msgid "Reads what a search engine sees"
@@ -9293,6 +9481,10 @@ msgstr "已搜索网页"
 msgid "Searched TikTok"
 msgstr "已搜索 TikTok"
 
+#: src/lib/agentScopes.js
+msgid "Searches and adds to what Duct remembers"
+msgstr "搜索并添加到 Duct 的记忆中"
+
 #: src/components/content/DiscoverPage.jsx
 msgid "Searches run on your own Apify account, so the scraping is billed to you. The same search again within 30 minutes costs nothing."
 msgstr "搜索运行在你的 Apify 账户上，因此抓取费用由你承担。30 分钟内再次进行相同搜索不收费。"
@@ -9744,8 +9936,12 @@ msgid "Sign in with Google to connect"
 msgstr "使用 Google 登录以连接"
 
 #: src/components/settings/AgentConsent.jsx
-msgid "Sign in, and Duct asks you whether to allow it."
-msgstr "登录后，Duct 会询问你是否允许。"
+#~ msgid "Sign in, and Duct asks you whether to allow it."
+#~ msgstr "登录后，Duct 会询问你是否允许。"
+
+#: src/components/settings/AgentConsent.jsx
+msgid "Sign in, then you choose what it can do."
+msgstr "登录，然后选择其权限。"
 
 #: src/lib/mcpServers.js
 msgid "Sign-in expired"
@@ -10171,9 +10367,17 @@ msgstr "子智能体"
 msgid "Suggest an improvement"
 msgstr "建议改进"
 
+#: src/lib/agentScopes.js
+msgid "Suggest changes to your ad and tag accounts, which wait for you to approve in Duct"
+msgstr "对你的广告和标签账户提出变更建议，并在 Duct 中等待你批准"
+
 #: src/components/content/PlanQuickActions.jsx
 msgid "Suggested next steps"
 msgstr "建议的后续步骤"
+
+#: src/lib/agentScopes.js
+msgid "Suggests changes to your ad and tag accounts. You approve every one in Duct"
+msgstr "建议对你的广告和标签账号进行变更。每一项都需要你在 Duct 中批准"
 
 #: src/app/invite/[token]/page.jsx
 #: src/components/settings/AgentConsent.jsx
@@ -10472,6 +10676,10 @@ msgstr "此密钥对应的账户没有余额。"
 msgid "The address that serves OpenAI’s API, usually ending in /v1. One on your own network works here."
 msgstr "提供 OpenAI API 服务的地址，通常以 /v1 结尾。你自己的网络上的地址也适用。"
 
+#: src/components/settings/AgentGrantPicker.jsx
+#~ msgid "The agent asked for this"
+#~ msgstr "智能体请求了此项权限"
+
 #: src/components/memory/MemoryTimeline.jsx
 msgid "The agents lose every fact here from their next turn. This cannot be undone."
 msgstr "智能体从下一轮开始将失去这里的所有事实。此操作无法撤消。"
@@ -10740,9 +10948,21 @@ msgstr "你要采取行动的工作"
 msgid "Theme: {themeLabel}"
 msgstr "主题：{themeLabel}"
 
+#: src/components/settings/AgentConsent.jsx
+msgid "Then back to {agent} on this computer."
+msgstr "然后返回此电脑上的 {agent}。"
+
 #: src/components/settings/AgentAccess.jsx
 msgid "Then sign in from duct's entry in Cursor's MCP settings."
 msgstr "然后从 Cursor 的 MCP 设置中 Duct 的条目登录。"
+
+#: src/components/settings/AgentConsent.jsx
+msgid "Then to <0>{name}</0>."
+msgstr "然后转到 <0>{name}</0>。"
+
+#: src/components/settings/AgentConsent.jsx
+msgid "Then to the <0>{name}</0> app."
+msgstr "然后转到 <0>{name}</0> 应用。"
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Then, in Claude Code, run <0>/mcp</0>, pick duct and choose Authenticate."
@@ -11239,6 +11459,7 @@ msgid "Untitled post"
 msgstr "无标题帖子"
 
 #: src/app/(app)/projects/page.jsx
+#: src/components/settings/AgentGrantPicker.jsx
 msgid "Untitled project"
 msgstr "无标题项目"
 
@@ -11721,6 +11942,10 @@ msgstr "我的网站究竟是关于什么的？"
 msgid "What is this?"
 msgstr "这是什么？"
 
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "What it can do"
+msgstr "它能做什么"
+
 #: src/components/content/FormatLibrary.jsx
 msgid "What it is for"
 msgstr "用途"
@@ -11882,6 +12107,10 @@ msgstr "哪个模型层级运行此项，以及它思考的深度"
 msgid "Which pages should rank and don't?"
 msgstr "哪些页面应该排名但没有排名？"
 
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Which projects"
+msgstr "哪些项目"
+
 #: src/components/TelemetryCard.jsx
 msgid "Which screens and features you open"
 msgstr "你打开了哪些屏幕和功能"
@@ -11983,6 +12212,10 @@ msgstr "成功"
 msgid "Work"
 msgstr "工作"
 
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Work alongside me"
+msgstr "与我协同工作"
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "Working"
 msgstr "正在工作"
@@ -12031,6 +12264,10 @@ msgstr "撰写报告"
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Write to me in"
 msgstr "用以下语言给我写信"
+
+#: src/lib/agentScopes.js
+msgid "Writes briefs with Duct's method and saves them"
+msgstr "以 Duct 的方法撰写简报并保存"
 
 #: src/lib/contentEvents.js
 msgid "Writing post metadata"
@@ -12126,9 +12363,21 @@ msgstr "你可以关闭此标签页并返回你的智能体。"
 msgid "You can close this tab."
 msgstr "你可以关闭此标签页。"
 
+#: src/components/settings/AgentConsent.jsx
+msgid "You choose what it can do. Change it any time in Settings."
+msgstr "由你选择它的权限。可随时在“设置”中修改。"
+
 #: src/app/(start)/start/page.jsx
 msgid "You have more than one project for this site. Which should this audit update?"
 msgstr "此站点你有多个项目。此审计应更新哪个项目？"
+
+#: src/components/settings/AgentGrantPicker.jsx
+#~ msgid "You have no projects yet. Allow all, and it can set up your first one."
+#~ msgstr "你暂无任何项目。允许所有项目，它即可设置你的第一个项目。"
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "You have no projects yet. Choose All, and it can set up your first one."
+msgstr "你目前尚无项目。选择“全部”，它可以协助设置你的第一个项目。"
 
 #: src/components/execution/ChangeSetCard.jsx
 msgid "You rejected this"

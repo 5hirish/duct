@@ -981,70 +981,141 @@ msgid "“Why did this move?”"
 msgstr "「なぜこれが移動したのですか？」"
 
 #: connect-agent.html
-msgid "<0/>ChatGPT"
-msgstr "<0/>ChatGPT"
+msgid "4 more days"
+msgstr "あと4日"
 
 #: connect-agent.html
-msgid "<0/>Claude"
-msgstr "<0/>Claude"
+msgid "<0/>Brief saved in Duct<1>Open →</1>"
+msgstr "<0/>ブリーフをDuctに保存しました<1>開く →</1>"
 
-#: connect-agent.html skills.html
-msgid "<0/>Claude Code"
-msgstr "<0/>Claude Code"
-
-#: connect-agent.html skills.html
-msgid "<0/>Codex"
-msgstr "<0/>Codex"
-
-#: connect-agent.html skills.html
-msgid "<0/>Cursor"
-msgstr "<0/>Cursor"
+#: connect-agent.html
+msgid "<0></0> Duct's MCP server · Runs on your AI plan"
+msgstr "<0></0> DuctのMCPサーバー · お客様のAIプランで動作"
 
 #: connect-agent.html
 msgid ""
-"A draft never overwrites what you typed in Duct. It only fills blank fields or replaces an earlier draft. To change a field you set, ask for that edit by name."
+"<0><1>$18,420</1> new revenue</0><2><3>+6.2%</3> on last week</2><4><5>3</5> refunds</4>"
+msgstr "<0><1>$18,420</1> の新規売上</0><2>先週比 <3>+6.2%</3></2><4>返金 <5>3</5> 件</4>"
+
+#: connect-agent.html
+msgid "<0>></0>Write this week's brief for Acme"
+msgstr "<0>></0>Acmeの今週のブリーフを作成"
+
+#: connect-agent.html
+msgid "<0>Claude Code</0> would like to work with Duct"
+msgstr "<0>Claude Code</0>がDuctとの連携を求めています"
+
+#: connect-agent.html
+msgid ""
+"<0>Help set up my projects.</0> It drafts your project's description, audience and competitors from your repo."
+msgstr "<0>プロジェクトのセットアップを支援。</0> リポジトリからプロジェクトの概要、ターゲット層、競合他社の下書きを作成します。"
+
+#: connect-agent.html
+msgid ""
+"<0>Never the agent's, whatever you allow:</0> approving or applying a change, publishing, connecting a tool, your passwords and keys. Everything it saves shows in Activity under its name, and an edit is one click to undo."
 msgstr ""
-"下書きがDuctに入力した内容を上書きすることはありません。空の項目を埋めるか、以前の下書きを置き換えるのみです。設定したフィールドを変更したい場合は、項目名を指定して修正を依頼してください。"
+"<0>許可する操作の最終決定権は常にユーザーにあります:</0> 変更の承認や適用、公開、ツールの接続、パスワードやキー。保存されたすべての操作はアクティビティにエージェント名で表示され、編集はワンクリックで元に戻せます。"
+
+#: connect-agent.html
+msgid ""
+"<0>Work alongside me.</0> It also reads your tools, remembers what matters and writes briefs. Proposed changes, post drafts and images on your own keys stay off until you turn them on."
+msgstr ""
+"<0>共同作業を行う。</0> ツールを読み取り、重要な事項を記憶し、ブリーフを作成します。提案された変更、投稿の下書き、ご自身のキーを使用した画像生成は、有効にするまでオフのままです。"
+
+#: connect-agent.html
+msgid "A connector hands your agent rows. <0>Duct hands it answers.</0>"
+msgstr "コネクタはエージェントに生データを渡します。<0>Ductは回答を渡します。</0>"
+
+#: connect-agent.html
+msgid ""
+"A general assistant can't see your revenue, remember last month or keep a brief. Duct gives it all three."
+msgstr "一般的なアシスタントは売上を閲覧できず、先月の内容を記憶できず、ブリーフも保持できません。Ductはこの3つすべてを提供します。"
+
+#: connect-agent.html
+msgid "A tool I expected isn't there"
+msgstr "必要なツールが見つかりません"
+
+#: connect-agent.html
+msgid "Acme · Brief · Last 7 days"
+msgstr "Acme · ブリーフ · 過去7日間"
+
+#: connect-agent.html
+msgid "Add Duct to <0>opencode.json</0>:"
+msgstr "<0>opencode.json</0>にDuctを追加:"
+
+#: connect-agent.html
+msgid "Add Duct to <0>~/.cursor/mcp.json</0>:"
+msgstr "<0>~/.cursor/mcp.json</0>にDuctを追加:"
+
+#: connect-agent.html
+msgid "Add Duct to <0>~/.gemini/settings.json</0>:"
+msgstr "<0>~/.gemini/settings.json</0>にDuctを追加:"
 
 #. meta description
 #: connect-agent.html
 msgid ""
-"Add Duct's MCP server to Claude Code, Codex, Cursor, VS Code or ChatGPT. Sign in with your browser, click Allow, and your agent can read and set up projects."
+"Add Duct to Claude Code, Codex, Cursor, Gemini CLI or ChatGPT. Your agent quotes totals Duct reconciled, keeps memory and saves briefs, on your own plan."
 msgstr ""
-"DuctのMCPサーバーをClaude Code、Codex、Cursor、VS Code、またはChatGPTに追加します。ブラウザでサインインし、「許可」をクリックすると、エージェントがプロジェクトを読み取り、設定できるようになります。"
+"Claude Code、Codex、Cursor、Gemini CLI、ChatGPTにDuctを追加。エージェントはDuctが照合した合計値を参照し、メモリを保持し、ブリーフをご利用のプラン上に保存します。"
 
 #: connect-agent.html
-msgid "Add a connector with OAuth and this address:"
-msgstr "OAuthと以下のアドレスを使用してコネクタを追加します："
+msgid "Add Duct to your agent"
+msgstr "エージェントにDuctを追加"
 
 #: connect-agent.html
-msgid "Add this to <0>~/.cursor/mcp.json</0>:"
-msgstr "以下を<0>~/.cursor/mcp.json</0>に追加します："
+msgid "Add a connector with this address and OAuth sign-in:"
+msgstr "このアドレスとOAuthサインインでコネクタを追加:"
+
+#: connect-agent.html
+msgid "Add it, allow it, <0>ask it.</0>"
+msgstr "追加して、許可して、<0>質問する。</0>"
 
 #: connect-agent.html
 msgid ""
-"Another agent? Any that adds a remote MCP server by address works. If it can't sign in, <0>use a token</0>."
+"Add one address to Claude Code, Codex, Cursor, Gemini CLI, ChatGPT or Claude. Your agent reads your tools through Duct, quotes Duct's totals, remembers what you decided and saves every brief in Duct. No API key to paste."
 msgstr ""
-"別のエージェントをお使いですか？アドレスでリモートMCPサーバーを追加できるエージェントであれば動作します。サインインできない場合は、<0>トークンを使用してください</0>。"
+"Claude Code、Codex、Cursor、Gemini CLI、ChatGPT、Claudeにアドレスを1つ追加。エージェントはDuct経由でツールを読み取り、Ductの合計値を引用し、決定事項を記憶し、すべてのブリーフをDuctに保存します。APIキーの貼り付けは不要です。"
 
 #: connect-agent.html
-msgid "Changes only what you asked. Undo it from Activity."
-msgstr "依頼された内容のみを変更します。アクティビティから元に戻すことができます。"
+msgid "All your projects, or only the ones you pick."
+msgstr "すべてのプロジェクト、または選択したプロジェクトのみ。"
+
+#: connect-agent.html
+msgid "Allow"
+msgstr "許可"
+
+#: connect-agent.html
+msgid ""
+"Another agent? Give it the same address, or <0>use a token</0> if it can't sign in."
+msgstr "別のエージェントをお使いですか？同じアドレスを指定するか、サインインできない場合は<0>トークンを使用</0>してください。"
+
+#: connect-agent.html
+msgid "Ask it something"
+msgstr "質問してみる"
+
+#: connect-agent.html
+msgid "Before you connect"
+msgstr "接続する前に"
+
+#: connect-agent.html
+msgid "Can it change my ad account?"
+msgstr "広告アカウントを変更することはできますか？"
 
 #: connect-agent.html
 msgid "ChatGPT"
 msgstr "ChatGPT"
 
+#: connect-agent.html
+msgid "Choose HTTP, paste the address and name it <0>duct</0>:"
+msgstr "HTTPを選択し、アドレスを貼り付けて名前を<0>duct</0>にします:"
+
+#: connect-agent.html
+msgid "Claude"
+msgstr "Claude"
+
 #: connect-agent.html skills.html
 msgid "Claude Code"
 msgstr "Claude Code"
-
-#. meta twitter:description
-#: connect-agent.html
-msgid ""
-"Claude Code, Codex, Cursor, VS Code, OpenCode, Claude and ChatGPT all connect to Duct by one address. No token to copy or paste."
-msgstr ""
-"Claude Code、Codex、Cursor、VS Code、OpenCode、Claude、およびChatGPTはすべて、1つのアドレスでDuctに接続します。コピー＆ペーストするトークンはありません。"
 
 #: connect-agent.html
 msgid "Claude, on claude.ai or Claude Desktop"
@@ -1084,8 +1155,13 @@ msgstr "Cursor設定をコピー"
 
 #. button aria-label
 #: connect-agent.html
-msgid "Copy the OpenCode command"
-msgstr "OpenCodeコマンドをコピー"
+msgid "Copy the Gemini CLI settings"
+msgstr "Gemini CLIの設定をコピー"
+
+#. button aria-label
+#: connect-agent.html
+msgid "Copy the OpenCode settings"
+msgstr "OpenCodeの設定をコピー"
 
 #. button aria-label
 #: connect-agent.html
@@ -1102,36 +1178,66 @@ msgid "Cursor"
 msgstr "Cursor"
 
 #: connect-agent.html
-msgid "Drafts the pitch, audience and competitors. What you typed stays."
-msgstr "ピッチ、ターゲット層、競合他社を元に下書きを作成します。入力した内容は保持されます。"
+msgid "Do I need an API key?"
+msgstr "APIキーは必要ですか？"
 
 #: connect-agent.html
-msgid "Drop Acme from our competitors."
-msgstr "競合他社からAcmeを削除してください。"
+msgid "Does Duct see my conversation?"
+msgstr "Ductは会話内容を閲覧できますか？"
+
+#: connect-agent.html
+msgid ""
+"Duct adds up every pull in code, so the brief quotes $18,420, not a model's own sum of a thousand rows."
+msgstr "Ductはコード上で取得した全データを集計するため、ブリーフにはモデル独自の数千行の合計ではなく、$18,420という正確な数値が引用されます。"
+
+#: connect-agent.html
+msgid "Duct's playbook and what it knows about Acme"
+msgstr "DuctのプレイブックとAcmeに関して保持している情報"
+
+#: connect-agent.html
+msgid "Duct's playbook, one command"
+msgstr "1つのコマンドで呼び出すDuctのプレイブック"
 
 #. img alt
 #: connect-agent.html
 msgid ""
-"Duct's sign-in page: Allow Claude Code to use your Duct account? It will be able to see your projects, draft a project's description, audience and competitors, and edit a project when you ask. It can never approve or apply changes to your tools, connect new ones, or see your keys. Cancel and Allow buttons."
+"Duct's sign-in page: Claude Code would like to work with Duct. Two choices, Help set up my projects, and Work alongside me, which is selected, asked for by Claude Code, and includes Data, Memory and Briefs. On: All your projects. It can't approve changes, publish, or see your passwords and keys. Not now and Allow buttons."
 msgstr ""
-"Ductのサインインページ：Claude CodeにDuctアカウントの使用を許可しますか？Claude Codeはプロジェクトの閲覧、プロジェクトの説明・ターゲット層・競合他社の下書き作成、および依頼に応じたプロジェクトの編集が可能になります。ツールの変更の承認や適用、新しいツールの接続、キーの参照を行うことは一切できません。キャンセルボタンと許可ボタン。"
+"Ductのサインインページ：「Claude CodeがDuctとの連携を求めています」。「プロジェクトのセットアップを支援」と「共同作業を行う」の2つの選択肢があり、後者が選択されています。データ、メモリ、ブリーフが含まれ、対象は「すべてのプロジェクト」です。変更の承認、公開、パスワードやキーの閲覧はできません。「今はしない」と「許可」のボタンがあります。"
+
+#: connect-agent.html
+msgid "Eight agents. <0>One address.</0>"
+msgstr "8つのエージェント。<0>1つのアドレス。</0>"
+
+#: connect-agent.html
+msgid "Every agent connects to the same address. Pick yours."
+msgstr "すべてのエージェントが同じアドレスに接続します。お使いのエージェントを選択してください。"
 
 #: connect-agent.html
 msgid ""
-"For CI or a remote machine. Create one on the same settings page; your agent sends it as a header."
-msgstr "CIまたはリモートマシン用。同じ設定ページで作成してください。エージェントがヘッダーとして送信します。"
+"For CI or a remote machine. Create one in Settings → Connect your AI agent, with the same choices. That page also lists every agent you allowed, and disconnects any one. Send it as a header:"
+msgstr ""
+"CIやリモートマシン用。設定 → AIエージェントを接続で同様の選択肢から作成します。そのページには許可したすべてのエージェントが一覧表示され、個別に切断も可能です。ヘッダーとして送信してください:"
 
 #: connect-agent.html
-msgid "From the Command Palette, run <0>MCP: Add Server</0>, choose HTTP and paste:"
-msgstr "コマンドパレットから<0>MCP: Add Server</0>を実行し、HTTPを選択して以下を貼り付けます："
+msgid "Gemini CLI"
+msgstr "Gemini CLI"
 
 #: connect-agent.html
-msgid "I asked it to set up the project and nothing changed"
-msgstr "プロジェクトの設定を依頼しましたが、何も変更されませんでした"
+msgid "Help set up my projects"
+msgstr "プロジェクトのセットアップを支援"
+
+#: connect-agent.html
+msgid "How to connect your agent"
+msgstr "エージェントの接続方法"
 
 #: connect-agent.html
 msgid "I host Duct myself"
 msgstr "自分でDuctをホストしています"
+
+#: connect-agent.html
+msgid "If something goes wrong"
+msgstr "問題が発生した場合"
 
 #: connect-agent.html
 msgid "In ChatGPT's settings, turn on developer mode."
@@ -1139,37 +1245,32 @@ msgstr "ChatGPTの設定で、開発者モードをオンにします。"
 
 #: connect-agent.html
 msgid ""
-"In Claude Code, run <0>/mcp</0>, pick <1>duct</1>, choose <2>Authenticate</2> and click Allow."
-msgstr ""
-"Claude Codeで<0>/mcp</0>を実行し、<1>duct</1>を選択、<2>Authenticate</2>を選んで許可をクリックします。"
+"In Claude Code, run <0>/mcp</0>, pick <1>duct</1> and choose <2>Authenticate</2>."
+msgstr "Claude Codeで<0>/mcp</0>を実行し、<1>duct</1>を選択して<2>Authenticate</2>を選びます。"
 
 #: connect-agent.html
 msgid "In Claude Code:"
 msgstr "Claude Codeで："
 
 #: connect-agent.html
-msgid "In Cursor's MCP settings, sign in on duct and click Allow."
-msgstr "CursorのMCP設定でductにサインインし、許可をクリックします。"
+msgid "In Cursor's MCP settings, press Login on duct."
+msgstr "CursorのMCP設定で、ductのLoginを押します。"
 
 #: connect-agent.html
-msgid ""
-"In Duct, Settings → Connect your AI agent lists each agent you allowed. One you disconnect stops on its next call."
-msgstr "Ductの「設定」→「AIエージェントの接続」に許可した各エージェントが表示されます。接続を解除すると、次の呼び出し時に停止します。"
+msgid "In Duct"
+msgstr "Duct内"
 
 #: connect-agent.html
-msgid ""
-"In Settings → Connectors, choose Add custom connector, name it Duct and paste:"
-msgstr "設定 → コネクタで「カスタムコネクタを追加」を選択し、名前をDuctにして以下を貼り付けます："
+msgid "In your browser, choose what it can do, then click Allow."
+msgstr "ブラウザで実行可能な操作を選択し、Allowをクリックします。"
 
 #: connect-agent.html
-msgid ""
-"It can never approve or apply changes to your tools, connect new ones, or see your keys."
-msgstr "ツールへの変更を承認・適用したり、新しいツールを接続したり、キーを参照したりすることは決してありません。"
+msgid "In your terminal, run:"
+msgstr "ターミナルで以下を実行します:"
 
 #: connect-agent.html
-msgid ""
-"It reads and drafts your projects from your repo or files. You can undo any edit in Duct."
-msgstr "リポジトリやファイルからプロジェクトの読み取りと下書き作成を行います。Ductでの編集はいつでも元に戻せます。"
+msgid "It already writes well. <0>Now it knows your numbers.</0>"
+msgstr "すでに優れた文章を書けます。<0>これからは数値も把握します。</0>"
 
 #: connect-agent.html
 msgid ""
@@ -1177,125 +1278,230 @@ msgid ""
 msgstr "登録できなかった、または「動的クライアント登録をサポートしていません」と表示されます"
 
 #: connect-agent.html
+msgid ""
+"It sees only what you allowed. Disconnect it in Duct, connect again and choose Work alongside me."
+msgstr "許可された情報のみを参照します。Ductで接続を解除し、再接続してWork alongside meを選択してください。"
+
+#: connect-agent.html
+msgid "It was disconnected, or unused for 90 days. Sign in again from your agent."
+msgstr "切断されたか、90日間使用されていません。エージェントから再度サインインしてください。"
+
+#: connect-agent.html
 msgid "It worked, and now it gets a 401"
 msgstr "動作しましたが、401エラーが発生します"
+
+#: connect-agent.html
+msgid "Memory that carries over"
+msgstr "引き継がれるメモリ"
 
 #: connect-agent.html
 msgid "My browser never opened"
 msgstr "ブラウザが開きませんでした"
 
 #: connect-agent.html
-msgid ""
-"Name it <0>duct</0>. The first time it uses Duct, click Allow in your browser."
-msgstr "名前を<0>duct</0>にします。初めてDuctを使用する際は、ブラウザで「許可」をクリックしてください。"
+msgid "Name it Duct and paste the address:"
+msgstr "名前をDuctにして、アドレスを貼り付けます:"
 
 #: connect-agent.html
 msgid "No browser? Use a token."
 msgstr "ブラウザがない場合：トークンを使用します。"
 
-#. meta og:description
 #: connect-agent.html
 msgid ""
-"One address in your agent, one Allow in your browser. It can read your Duct projects and draft their details, never approve a change."
-msgstr "エージェントに1つのアドレス、ブラウザで1つの「許可」。Ductのプロジェクトを読み取り、詳細を下書きできますが、変更を承認することはありません。"
+"No. Duct sees only the calls your agent makes to it, never the rest of your chat."
+msgstr "いいえ。Ductはエージェントからの呼び出しのみを参照し、チャットの残りの内容は参照しません。"
+
+#: connect-agent.html
+msgid ""
+"No. It runs on the plan you already pay for. A saved key is only for images and scheduled briefs."
+msgstr "いいえ。すでにお支払い中のプランで動作します。保存されたキーは画像とスケジュールされたブリーフにのみ使用されます。"
+
+#: connect-agent.html
+msgid ""
+"Not from your agent. Scheduled briefs run in Duct on a saved key, because nobody's agent runs at 3am."
+msgstr "エージェントからは実行されません。午前3時に稼働するエージェントはないため、スケジュールされたブリーフは保存されたキーでDuct内で実行されます。"
+
+#: connect-agent.html
+msgid "Not now"
+msgstr "今はしない"
+
+#: connect-agent.html
+msgid "Nov 12"
+msgstr "11月12日"
+
+#: connect-agent.html
+msgid "Nov 18"
+msgstr "11月18日"
+
+#: connect-agent.html
+msgid "Nov 19"
+msgstr "11月19日"
+
+#: connect-agent.html
+msgid "Nov 20"
+msgstr "11月20日"
+
+#: connect-agent.html
+msgid "Numbers Duct reconciled"
+msgstr "Ductが照合した数値"
+
+#. meta twitter:description
+#: connect-agent.html
+msgid ""
+"One address in your agent, one Allow in your browser. Reconciled numbers, memory and Duct's playbook, with every change waiting for you."
+msgstr "エージェントにアドレスを1つ、ブラウザでAllowを1つ。照合された数値、メモリ、Ductのプレイブックとともに、すべての変更が承認を待っています。"
+
+#: connect-agent.html
+msgid ""
+"Only as a proposal, if you turn that on. It waits in Duct until you approve it. No agent can apply a change."
+msgstr "有効にした場合、提案としてのみ作成されます。承認するまでDuct内で待機します。エージェントが変更を適用することはありません。"
+
+#: connect-agent.html
+msgid "Open Settings → Connectors and choose Add custom connector."
+msgstr "設定 → コネクタを開き、カスタムコネクタを追加を選択します。"
+
+#: connect-agent.html
+msgid "Open the Command Palette and run <0>MCP: Add Server</0>."
+msgstr "コマンドパレットを開き、<0>MCP: Add Server</0>を実行します。"
 
 #: connect-agent.html
 msgid "OpenCode"
 msgstr "OpenCode"
 
 #: connect-agent.html
-msgid "Paste it in your agent. Click Allow."
-msgstr "エージェントに貼り付け、「許可」をクリックします。"
+msgid "Or, in Claude Code"
+msgstr "または、Claude Codeの場合"
+
+#: connect-agent.html
+msgid "Paste the address above, as one command or one line of settings."
+msgstr "上記のアドレスを、1つのコマンドまたは設定の1行として貼り付けます。"
+
+#: connect-agent.html
+msgid "Press Connect. In your browser, choose what it can do, then click Allow."
+msgstr "Connectを押します。ブラウザで実行可能な操作を選択し、Allowをクリックします。"
+
+#: connect-agent.html
+msgid "Questions"
+msgstr "質問"
+
+#: connect-agent.html
+msgid "Rates too, never an average of averages."
+msgstr "平均の平均ではなく、率も正確に算出されます。"
+
+#: connect-agent.html
+msgid "Revenue is up 6.2% since the pricing page shipped. Saved in Duct."
+msgstr "料金ページの公開以降、売上は6.2%増加しました。Ductに保存済み。"
+
+#: connect-agent.html
+msgid "Revenue is up since the pricing page shipped. Refunds held level."
+msgstr "料金ページの公開以降、売上が増加しました。返金数は横ばいです。"
+
+#: connect-agent.html
+msgid "Run <0>/insights_brief</0> for Duct's brief playbook, or just ask."
+msgstr "Ductのブリーフプレイブックを使用するには<0>/insights_brief</0>を実行するか、質問してください。"
 
 #: connect-agent.html
 msgid ""
-"Paste one address into your agent, click Allow once, and it can read and draft your Duct projects."
-msgstr "アドレスを1つエージェントに貼り付け、一度「許可」をクリックすると、Ductプロジェクトの読み取りと下書き作成が可能になります。"
+"Run <0>/mcp__duct__insights_brief</0> for Duct's brief playbook, or just ask."
+msgstr "Ductのブリーフプレイブックを使用するには<0>/mcp__duct__insights_brief</0>を実行するか、質問してください。"
 
 #: connect-agent.html
-msgid "Pick your agent. Paste one line."
-msgstr "エージェントを選択します。1行貼り付けます。"
+msgid "Saved to Acme's library, version 1"
+msgstr "Acmeのライブラリに保存（バージョン1）"
 
 #: connect-agent.html
-msgid "Press Connect, then click Allow."
-msgstr "「接続」を押し、「許可」をクリックします。"
+msgid "Server address"
+msgstr "サーバーアドレス"
 
 #: connect-agent.html
-msgid "Reads the project, and where each answer came from."
-msgstr "プロジェクトと、各回答の参照元を読み取ります。"
+msgid "Set up a project, <0>or work alongside you.</0>"
+msgstr "プロジェクトのセットアップ、<0>またはあなたと一緒に作業します。</0>"
 
 #: connect-agent.html
-msgid "Run these in your terminal:"
-msgstr "ターミナルで以下を実行します："
+msgid "Setup by agent"
+msgstr "エージェントによるセットアップ"
 
 #: connect-agent.html
-msgid "Run this in your terminal:"
-msgstr "ターミナルで以下を実行します："
+msgid "Sign in and choose"
+msgstr "サインインして選択"
 
 #: connect-agent.html
-msgid "See every agent. Disconnect any one."
-msgstr "すべてのエージェントを確認し、任意のエージェントを切断できます。"
-
-#: connect-agent.html
-msgid "Set up this product in Duct."
-msgstr "Ductでこの製品を設定します。"
-
-#: connect-agent.html
-msgid "Setup for"
-msgstr "セットアップ："
+msgid "Start Gemini CLI and sign in:"
+msgstr "Gemini CLIを起動してサインイン:"
 
 #: connect-agent.html
 msgid ""
-"Start the sign-in yourself: run /mcp in Claude Code, codex mcp login duct in Codex, or opencode mcp auth duct in OpenCode."
+"Start it yourself: /mcp in Claude Code, codex mcp login duct, /mcp auth duct in Gemini CLI, or opencode mcp auth duct."
 msgstr ""
-"自分でサインインを開始します：Claude Codeで/mcp、Codexでcodex mcp login duct、またはOpenCodeでopencode mcp auth ductを実行します。"
+"手動で開始: Claude Codeで /mcp、codex mcp login duct、Gemini CLIで /mcp auth duct、または opencode mcp auth duct。"
 
 #: connect-agent.html
 msgid ""
-"Start the sign-in yourself: run <0>/mcp</0> in Claude Code, <1>codex mcp login duct</1> in Codex, or <2>opencode mcp auth duct</2> in OpenCode."
+"Start it yourself: <0>/mcp</0> in Claude Code, <1>codex mcp login duct</1>, <2>/mcp auth duct</2> in Gemini CLI, or <3>opencode mcp auth duct</3>."
 msgstr ""
-"自分でサインインを開始します：Claude Codeで<0>/mcp</0>、Codexで<1>codex mcp login duct</1>、またはOpenCodeで<2>opencode mcp auth duct</2>を実行します。"
-
-#: connect-agent.html
-msgid "Stuck? Start here."
-msgstr "お困りですか？ここから始めましょう。"
-
-#: connect-agent.html
-msgid "The one Allow, in your browser"
-msgstr "ブラウザでの「許可」は1度だけ"
-
-#: connect-agent.html
-msgid "Then ask it in plain words."
-msgstr "あとは自然な言葉で質問するだけです。"
+"手動で開始: Claude Codeで <0>/mcp</0>、<1>codex mcp login duct</1>、Gemini CLIで <2>/mcp auth duct</2>、または <3>opencode mcp auth duct</3>。"
 
 #: connect-agent.html
 msgid ""
-"Update your agent to its latest version and try again. If it still fails, connect with a token instead."
-msgstr "エージェントを最新バージョンに更新して、もう一度お試しください。それでも失敗する場合は、代わりにトークンで接続してください。"
+"Stripe, Meta Ads, Mixpanel, GitHub, RevenueCat and the rest you connect in Duct. Google Analytics, Search Console, Ads and Tag Manager stay with Duct's own agent for now, while Google's policy for outside assistants is confirmed."
+msgstr ""
+"Stripe、Meta Ads、Mixpanel、GitHub、RevenueCatなどはDuctで接続します。Google Analytics、Search Console、Google Ads、Tag Managerは、外部アシスタントに関するGoogleのポリシーが確認されるまで、当面はDuct自身のエージェントに残ります。"
+
+#: connect-agent.html
+msgid "Stripe, Mixpanel, GitHub · Totals by Duct · 1 memory"
+msgstr "Stripe、Mixpanel、GitHub · Ductによる集計 · 1 メモリ"
+
+#: connect-agent.html
+msgid "Stripe, the last 7 days. Totals by Duct:"
+msgstr "Stripe（過去7日間）。Ductによる集計:"
+
+#: connect-agent.html
+msgid "The ones people ask. <0>Then the fixes.</0>"
+msgstr "よくある質問。<0>そして解決策。</0>"
+
+#: connect-agent.html
+msgid ""
+"The other direction, Duct's agent calling your servers: <0>Your MCP servers in Duct →</0>"
+msgstr "逆方向（Ductのエージェントがあなたのサーバーを呼び出す場合）: <0>Duct内のあなたのMCPサーバー →</0>"
+
+#: connect-agent.html
+msgid "The sign-in, as your browser shows it"
+msgstr "ブラウザに表示されるサインイン画面"
+
+#: connect-agent.html
+msgid "Then sign in:"
+msgstr "次にサインイン:"
+
+#: connect-agent.html
+msgid "Total, by Duct"
+msgstr "合計（Ductによる集計）"
+
+#: connect-agent.html
+msgid ""
+"Try “Write this week's brief.” It follows Duct's playbook and saves the brief in Duct."
+msgstr "「今週のブリーフを作成して」と試してみてください。Ductのプレイブックに従い、ブリーフをDuctに保存します。"
+
+#: connect-agent.html
+msgid "Update your agent and try again. If it still fails, use a token."
+msgstr "エージェントを更新して再試行してください。それでも失敗する場合はトークンを使用してください。"
 
 #. meta og:title
 #. meta twitter:title
 #: connect-agent.html
-msgid "Use Duct from Claude Code, Codex or Cursor"
-msgstr "Claude Code、Codex、またはCursorからDuctを使用"
+msgid "Use Duct from Claude Code, Codex, Gemini or ChatGPT"
+msgstr "Claude Code、Codex、Gemini、ChatGPTからDuctを使用"
 
 #: connect-agent.html partials/footer-expanded.html
 msgid "Use Duct from your agent"
 msgstr "エージェントからDuctを使用"
 
 #: connect-agent.html
-msgid "Use Duct from your agent. <0>No token to copy.</0>"
-msgstr "エージェントからDuctを使用できます。<0>トークンのコピーは不要です。</0>"
+msgid "Use your own API address followed by /mcp."
+msgstr "自身のAPIアドレスの末尾に /mcp を付けて使用します。"
 
 #: connect-agent.html
-msgid ""
-"Use your own API address followed by /mcp, in place of https://api.getduct.ai/mcp."
-msgstr "https://api.getduct.ai/mcpの代わりに、ご自身のAPIアドレスに/mcpを続けて使用します。"
-
-#: connect-agent.html
-msgid ""
-"Use your own API address followed by <0>/mcp</0>, in place of <1>https://api.getduct.ai/mcp</1>."
-msgstr "<1>https://api.getduct.ai/mcp</1>の代わりに、ご自身のAPIアドレスに<0>/mcp</0>を続けて使用します。"
+msgid "Use your own API address followed by <0>/mcp</0>."
+msgstr "自身のAPIアドレスの末尾に <0>/mcp</0> を付けて使用します。"
 
 #: connect-agent.html
 msgid "VS Code"
@@ -1303,38 +1509,107 @@ msgstr "VS Code"
 
 #: connect-agent.html
 msgid ""
-"Want Duct's agent to call your MCP servers instead? <0>Your MCP servers in Duct →</0>"
-msgstr "代わりにDuctのエージェントにMCPサーバーを呼び出させますか？ <0>Duct内のMCPサーバー →</0>"
+"VS Code asks you to sign in the first time. In your browser, choose what it can do, then click Allow."
+msgstr "初回起動時、VS Codeからサインインを求められます。ブラウザで実行できる操作を選択し、「許可」をクリックします。"
 
 #: connect-agent.html
-msgid "What does Duct know about our audience?"
-msgstr "Ductは私たちのオーディエンスについて何を把握していますか？"
+msgid "What you decided and measured last month is there next time, in any agent."
+msgstr "先月決定・測定した内容は、どのエージェントでも次回に引き継がれます。"
+
+#: connect-agent.html
+msgid "What your agent gains"
+msgstr "エージェントが得られる機能"
 
 #: connect-agent.html
 msgid ""
-"You disconnected it in Duct, or its sign-in lapsed after 90 days without use. Sign in again from your agent."
-msgstr "Ductで接続を切断したか、90日間使用されなかったためサインインが失効しました。エージェントから再度サインインしてください。"
+"When your agent signs in, you pick what it can do and on which projects. Change it any time in Settings."
+msgstr "エージェントがサインインするとき、どのプロジェクトで何の操作ができるかを設定します。設定でいつでも変更できます。"
+
+#: connect-agent.html
+msgid "Which of my tools can it read?"
+msgstr "どのツールを読み取ることができますか？"
+
+#: connect-agent.html
+msgid "Will a brief run while my laptop is closed?"
+msgstr "ノートPCを閉じている間もブリーフは実行されますか？"
+
+#: connect-agent.html
+msgid "Work alongside me"
+msgstr "共に作業する"
+
+#: connect-agent.html
+msgid "Write this week's brief."
+msgstr "今週のブリーフを作成。"
+
+#: connect-agent.html
+msgid ""
+"You ask your agent. It asks Duct for the playbook, the sources, the totals and the memory, then saves the brief. The model is yours. The numbers and the method are Duct's."
+msgstr ""
+"エージェントに依頼すると、Ductにプレイブック、データソース、集計値、メモリを問い合わせてブリーフを保存します。モデルは既存のものを使い、数値と手法はDuctのものが適用されます。"
+
+#: connect-agent.html
+msgid "You choose"
+msgstr "選択する"
 
 #. div aria-label
 #: connect-agent.html
 msgid "Your agent"
 msgstr "あなたのエージェント"
 
+#. meta og:description
 #: connect-agent.html
-msgid "Your browser opens on Duct. Click Allow."
-msgstr "ブラウザでDuctが開きます。「許可」をクリックしてください。"
+msgid ""
+"Your agent does the thinking on the plan you already pay for. Duct brings the numbers it reconciled, the memory and the method, and keeps the brief."
+msgstr "あなたのエージェントは既存の契約プラン上で思考を行います。Ductは突き合わされた数値、メモリ、手法を提供し、ブリーフを保持します。"
 
 #: connect-agent.html
-msgid "draft_project"
-msgstr "draft_project"
+msgid "Your agent does the thinking.<0/><1>Duct brings the method.</1>"
+msgstr "エージェントが思考を行い、<0/><1>Ductが手法を提供します。</1>"
 
 #: connect-agent.html
-msgid "get_project"
-msgstr "get_project"
+msgid "Your agent follows the same method Duct's own agent uses for a brief."
+msgstr "エージェントは、Duct自身のエージェントがブリーフに使用するのと同じ手法に従います。"
 
 #: connect-agent.html
-msgid "update_project"
-msgstr "update_project"
+msgid ""
+"Your browser opens on Duct. Choose what it can do and where, then click Allow."
+msgstr "ブラウザでDuctが開きます。実行できる操作と対象を選択し、「許可」をクリックします。"
+
+#: connect-agent.html
+msgid "duct <0>·</0> fetch_data"
+msgstr "duct <0>·</0> fetch_data"
+
+#: connect-agent.html
+msgid "duct <0>·</0> list_data_sources"
+msgstr "duct <0>·</0> list_data_sources"
+
+#: connect-agent.html
+msgid "duct <0>·</0> search_memory"
+msgstr "duct <0>·</0> search_memory"
+
+#: connect-agent.html
+msgid "duct <0>·</0> start_run"
+msgstr "duct <0>·</0> start_run"
+
+#: connect-agent.html
+msgid "duct <0>·</0> submit_brief"
+msgstr "duct <0>·</0> submit_brief"
+
+#: connect-agent.html
+msgid "new revenue, up 6.2% on last week"
+msgstr "新規収益、先週比6.2%増"
+
+#: connect-agent.html
+msgid "refunds, level with last month"
+msgstr "返金額、前月と同水準"
+
+#: connect-agent.html
+msgid "the day the new pricing page shipped"
+msgstr "新しい料金ページが公開された日"
+
+#: connect-agent.html
+msgid "“The new pricing page shipped on November 12.”"
+msgstr "「新しい料金ページは11月12日に公開されました。」"
 
 #: doctrine.html
 msgid ".github/PULL_REQUEST_TEMPLATE.md"
@@ -8930,8 +9205,20 @@ msgid "your-site.com"
 msgstr "your-site.com"
 
 #: skills.html
+msgid "<0/>Claude Code"
+msgstr "<0/>Claude Code"
+
+#: skills.html
+msgid "<0/>Codex"
+msgstr "<0/>Codex"
+
+#: skills.html
 msgid "<0/>Copilot"
 msgstr "<0/>Copilot"
+
+#: skills.html
+msgid "<0/>Cursor"
+msgstr "<0/>Cursor"
 
 #: skills.html
 msgid "<0/>Gemini CLI"
@@ -12120,6 +12407,195 @@ msgstr "← 戻る"
 msgid "← Start over"
 msgstr "← 最初からやり直す"
 
+#~ msgid "<0/>ChatGPT"
+#~ msgstr "<0/>ChatGPT"
+
+#~ msgid "<0/>Claude"
+#~ msgstr "<0/>Claude"
+
+#~ msgid ""
+#~ "A draft never overwrites what you typed in Duct. It only fills blank fields or replaces an earlier draft. To change a field you set, ask for that edit by name."
+#~ msgstr ""
+#~ "下書きがDuctに入力した内容を上書きすることはありません。空の項目を埋めるか、以前の下書きを置き換えるのみです。設定したフィールドを変更したい場合は、項目名を指定して修正を依頼してください。"
+
+#. meta description
+#~ msgid ""
+#~ "Add Duct's MCP server to Claude Code, Codex, Cursor, VS Code or ChatGPT. Sign in with your browser, click Allow, and your agent can read and set up projects."
+#~ msgstr ""
+#~ "DuctのMCPサーバーをClaude Code、Codex、Cursor、VS Code、またはChatGPTに追加します。ブラウザでサインインし、「許可」をクリックすると、エージェントがプロジェクトを読み取り、設定できるようになります。"
+
+#~ msgid "Add a connector with OAuth and this address:"
+#~ msgstr "OAuthと以下のアドレスを使用してコネクタを追加します："
+
+#~ msgid "Add this to <0>~/.cursor/mcp.json</0>:"
+#~ msgstr "以下を<0>~/.cursor/mcp.json</0>に追加します："
+
+#~ msgid ""
+#~ "Another agent? Any that adds a remote MCP server by address works. If it can't sign in, <0>use a token</0>."
+#~ msgstr ""
+#~ "別のエージェントをお使いですか？アドレスでリモートMCPサーバーを追加できるエージェントであれば動作します。サインインできない場合は、<0>トークンを使用してください</0>。"
+
+#~ msgid "Changes only what you asked. Undo it from Activity."
+#~ msgstr "依頼された内容のみを変更します。アクティビティから元に戻すことができます。"
+
+#. meta twitter:description
+#~ msgid ""
+#~ "Claude Code, Codex, Cursor, VS Code, OpenCode, Claude and ChatGPT all connect to Duct by one address. No token to copy or paste."
+#~ msgstr ""
+#~ "Claude Code、Codex、Cursor、VS Code、OpenCode、Claude、およびChatGPTはすべて、1つのアドレスでDuctに接続します。コピー＆ペーストするトークンはありません。"
+
+#. button aria-label
+#~ msgid "Copy the OpenCode command"
+#~ msgstr "OpenCodeコマンドをコピー"
+
+#~ msgid "Drafts the pitch, audience and competitors. What you typed stays."
+#~ msgstr "ピッチ、ターゲット層、競合他社を元に下書きを作成します。入力した内容は保持されます。"
+
+#~ msgid "Drop Acme from our competitors."
+#~ msgstr "競合他社からAcmeを削除してください。"
+
+#. img alt
+#~ msgid ""
+#~ "Duct's sign-in page: Allow Claude Code to use your Duct account? It will be able to see your projects, draft a project's description, audience and competitors, and edit a project when you ask. It can never approve or apply changes to your tools, connect new ones, or see your keys. Cancel and Allow buttons."
+#~ msgstr ""
+#~ "Ductのサインインページ：Claude CodeにDuctアカウントの使用を許可しますか？Claude Codeはプロジェクトの閲覧、プロジェクトの説明・ターゲット層・競合他社の下書き作成、および依頼に応じたプロジェクトの編集が可能になります。ツールの変更の承認や適用、新しいツールの接続、キーの参照を行うことは一切できません。キャンセルボタンと許可ボタン。"
+
+#~ msgid ""
+#~ "For CI or a remote machine. Create one on the same settings page; your agent sends it as a header."
+#~ msgstr "CIまたはリモートマシン用。同じ設定ページで作成してください。エージェントがヘッダーとして送信します。"
+
+#~ msgid "From the Command Palette, run <0>MCP: Add Server</0>, choose HTTP and paste:"
+#~ msgstr "コマンドパレットから<0>MCP: Add Server</0>を実行し、HTTPを選択して以下を貼り付けます："
+
+#~ msgid "I asked it to set up the project and nothing changed"
+#~ msgstr "プロジェクトの設定を依頼しましたが、何も変更されませんでした"
+
+#~ msgid ""
+#~ "In Claude Code, run <0>/mcp</0>, pick <1>duct</1>, choose <2>Authenticate</2> and click Allow."
+#~ msgstr ""
+#~ "Claude Codeで<0>/mcp</0>を実行し、<1>duct</1>を選択、<2>Authenticate</2>を選んで許可をクリックします。"
+
+#~ msgid "In Cursor's MCP settings, sign in on duct and click Allow."
+#~ msgstr "CursorのMCP設定でductにサインインし、許可をクリックします。"
+
+#~ msgid ""
+#~ "In Duct, Settings → Connect your AI agent lists each agent you allowed. One you disconnect stops on its next call."
+#~ msgstr "Ductの「設定」→「AIエージェントの接続」に許可した各エージェントが表示されます。接続を解除すると、次の呼び出し時に停止します。"
+
+#~ msgid ""
+#~ "In Settings → Connectors, choose Add custom connector, name it Duct and paste:"
+#~ msgstr "設定 → コネクタで「カスタムコネクタを追加」を選択し、名前をDuctにして以下を貼り付けます："
+
+#~ msgid ""
+#~ "It can never approve or apply changes to your tools, connect new ones, or see your keys."
+#~ msgstr "ツールへの変更を承認・適用したり、新しいツールを接続したり、キーを参照したりすることは決してありません。"
+
+#~ msgid ""
+#~ "It reads and drafts your projects from your repo or files. You can undo any edit in Duct."
+#~ msgstr "リポジトリやファイルからプロジェクトの読み取りと下書き作成を行います。Ductでの編集はいつでも元に戻せます。"
+
+#~ msgid ""
+#~ "Name it <0>duct</0>. The first time it uses Duct, click Allow in your browser."
+#~ msgstr "名前を<0>duct</0>にします。初めてDuctを使用する際は、ブラウザで「許可」をクリックしてください。"
+
+#. meta og:description
+#~ msgid ""
+#~ "One address in your agent, one Allow in your browser. It can read your Duct projects and draft their details, never approve a change."
+#~ msgstr "エージェントに1つのアドレス、ブラウザで1つの「許可」。Ductのプロジェクトを読み取り、詳細を下書きできますが、変更を承認することはありません。"
+
+#~ msgid "Paste it in your agent. Click Allow."
+#~ msgstr "エージェントに貼り付け、「許可」をクリックします。"
+
+#~ msgid ""
+#~ "Paste one address into your agent, click Allow once, and it can read and draft your Duct projects."
+#~ msgstr "アドレスを1つエージェントに貼り付け、一度「許可」をクリックすると、Ductプロジェクトの読み取りと下書き作成が可能になります。"
+
+#~ msgid "Pick your agent. Paste one line."
+#~ msgstr "エージェントを選択します。1行貼り付けます。"
+
+#~ msgid "Press Connect, then click Allow."
+#~ msgstr "「接続」を押し、「許可」をクリックします。"
+
+#~ msgid "Reads the project, and where each answer came from."
+#~ msgstr "プロジェクトと、各回答の参照元を読み取ります。"
+
+#~ msgid "Run these in your terminal:"
+#~ msgstr "ターミナルで以下を実行します："
+
+#~ msgid "Run this in your terminal:"
+#~ msgstr "ターミナルで以下を実行します："
+
+#~ msgid "See every agent. Disconnect any one."
+#~ msgstr "すべてのエージェントを確認し、任意のエージェントを切断できます。"
+
+#~ msgid "Set up this product in Duct."
+#~ msgstr "Ductでこの製品を設定します。"
+
+#~ msgid "Setup for"
+#~ msgstr "セットアップ："
+
+#~ msgid ""
+#~ "Start the sign-in yourself: run /mcp in Claude Code, codex mcp login duct in Codex, or opencode mcp auth duct in OpenCode."
+#~ msgstr ""
+#~ "自分でサインインを開始します：Claude Codeで/mcp、Codexでcodex mcp login duct、またはOpenCodeでopencode mcp auth ductを実行します。"
+
+#~ msgid ""
+#~ "Start the sign-in yourself: run <0>/mcp</0> in Claude Code, <1>codex mcp login duct</1> in Codex, or <2>opencode mcp auth duct</2> in OpenCode."
+#~ msgstr ""
+#~ "自分でサインインを開始します：Claude Codeで<0>/mcp</0>、Codexで<1>codex mcp login duct</1>、またはOpenCodeで<2>opencode mcp auth duct</2>を実行します。"
+
+#~ msgid "Stuck? Start here."
+#~ msgstr "お困りですか？ここから始めましょう。"
+
+#~ msgid "The one Allow, in your browser"
+#~ msgstr "ブラウザでの「許可」は1度だけ"
+
+#~ msgid "Then ask it in plain words."
+#~ msgstr "あとは自然な言葉で質問するだけです。"
+
+#~ msgid ""
+#~ "Update your agent to its latest version and try again. If it still fails, connect with a token instead."
+#~ msgstr "エージェントを最新バージョンに更新して、もう一度お試しください。それでも失敗する場合は、代わりにトークンで接続してください。"
+
+#. meta og:title
+#. meta twitter:title
+#~ msgid "Use Duct from Claude Code, Codex or Cursor"
+#~ msgstr "Claude Code、Codex、またはCursorからDuctを使用"
+
+#~ msgid "Use Duct from your agent. <0>No token to copy.</0>"
+#~ msgstr "エージェントからDuctを使用できます。<0>トークンのコピーは不要です。</0>"
+
+#~ msgid ""
+#~ "Use your own API address followed by /mcp, in place of https://api.getduct.ai/mcp."
+#~ msgstr "https://api.getduct.ai/mcpの代わりに、ご自身のAPIアドレスに/mcpを続けて使用します。"
+
+#~ msgid ""
+#~ "Use your own API address followed by <0>/mcp</0>, in place of <1>https://api.getduct.ai/mcp</1>."
+#~ msgstr "<1>https://api.getduct.ai/mcp</1>の代わりに、ご自身のAPIアドレスに<0>/mcp</0>を続けて使用します。"
+
+#~ msgid ""
+#~ "Want Duct's agent to call your MCP servers instead? <0>Your MCP servers in Duct →</0>"
+#~ msgstr "代わりにDuctのエージェントにMCPサーバーを呼び出させますか？ <0>Duct内のMCPサーバー →</0>"
+
+#~ msgid "What does Duct know about our audience?"
+#~ msgstr "Ductは私たちのオーディエンスについて何を把握していますか？"
+
+#~ msgid ""
+#~ "You disconnected it in Duct, or its sign-in lapsed after 90 days without use. Sign in again from your agent."
+#~ msgstr "Ductで接続を切断したか、90日間使用されなかったためサインインが失効しました。エージェントから再度サインインしてください。"
+
+#~ msgid "Your browser opens on Duct. Click Allow."
+#~ msgstr "ブラウザでDuctが開きます。「許可」をクリックしてください。"
+
+#~ msgid "draft_project"
+#~ msgstr "draft_project"
+
+#~ msgid "get_project"
+#~ msgstr "get_project"
+
+#~ msgid "update_project"
+#~ msgstr "update_project"
+
 #~ msgid "Scheduled runs<0>A scheduled content plan, the Analytics report</0>"
 #~ msgstr "スケジュールされた実行<0>スケジュールされたコンテンツプラン、Analytics リポート</0>"
 
@@ -12340,28 +12816,13 @@ msgstr "← 最初からやり直す"
 #~ msgstr ""
 #~ "下書きはDuctで入力した内容を上書きすることはありません。空白のフィールドを埋めるか、以前の下書きを置き換えるだけです。Ductのプロジェクトページをご確認ください。"
 
-#~ msgid "Add Duct to <0>opencode.json</0>:"
-#~ msgstr "<0>opencode.json</0>にDuctを追加します:"
-
-#~ msgid "Add Duct to <0>~/.cursor/mcp.json</0>:"
-#~ msgstr "<0>~/.cursor/mcp.json</0>にDuctを追加します:"
-
-#~ msgid "Add Duct to your agent"
-#~ msgstr "エージェントにDuctを追加"
-
 #~ msgid "Add a connector with this address, and choose OAuth for authentication:"
 #~ msgstr "このアドレスでコネクタを追加し、認証にはOAuthを選択します:"
-
-#~ msgid "Add it, allow it, <0>ask it.</0>"
-#~ msgstr "追加し、許可し、<0>質問します。</0>"
 
 #~ msgid ""
 #~ "Add this address to Claude Code, Codex, Cursor, VS Code, OpenCode, Claude or ChatGPT. Your browser opens on Duct, you click Allow, and your agent can read your projects and draft their details."
 #~ msgstr ""
 #~ "このアドレスをClaude Code、Codex、Cursor、VS Code、OpenCode、Claude、またはChatGPTに追加します。Ductでブラウザが開き、「許可」をクリックすると、エージェントがプロジェクトを読み取り、その詳細を下書きできるようになります。"
-
-#~ msgid "Allow"
-#~ msgstr "許可する"
 
 #~ msgid ""
 #~ "Another agent? If it can add a remote MCP server by its address, give it the same one. If it can't sign in, <0>use a token</0>."
@@ -12371,24 +12832,11 @@ msgstr "← 最初からやり直す"
 #~ msgid "Approve or apply changes."
 #~ msgstr "変更を承認または適用します。"
 
-#~ msgid "Ask it something"
-#~ msgstr "何か質問します"
-
 #~ msgid "Cancel"
 #~ msgstr "キャンセル"
 
-#~ msgid "Choose HTTP, paste the address and name it <0>duct</0>:"
-#~ msgstr "HTTPを選択し、アドレスを貼り付け、<0>duct</0>と名付けます:"
-
-#~ msgid "Claude"
-#~ msgstr "Claude"
-
 #~ msgid "Connect tools."
 #~ msgstr "ツールを接続します。"
-
-#. button aria-label
-#~ msgid "Copy the OpenCode settings"
-#~ msgstr "OpenCode設定をコピー"
 
 #~ msgid ""
 #~ "Draft a project's description, audience and competitors from your repo or files."
@@ -12423,13 +12871,6 @@ msgstr "← 最初からやり直す"
 #~ "Give your agent the address above, with one command or one line of settings. The exact steps for each agent are below."
 #~ msgstr "上記のアドレスを、1つのコマンドまたは1行の設定でエージェントに与えてください。各エージェントの正確な手順は以下にあります。"
 
-#~ msgid "How to connect your agent"
-#~ msgstr "エージェントの接続方法"
-
-#~ msgid ""
-#~ "In Claude Code, run <0>/mcp</0>, pick <1>duct</1> and choose <2>Authenticate</2>."
-#~ msgstr "Claude Codeで<0>/mcp</0>を実行し、<1>duct</1>を選択して<2>Authenticate</2>を選びます。"
-
 #~ msgid "In Cursor's MCP settings, press the login prompt on the duct server."
 #~ msgstr "CursorのMCP設定で、ductサーバーのログインプロンプトを押します。"
 
@@ -12437,9 +12878,6 @@ msgstr "← 最初からやり直す"
 #~ "In Duct, open Settings → Connect your AI agent. Every agent you allowed is there, and you can disconnect it. A disconnected agent stops on its next call."
 #~ msgstr ""
 #~ "Ductで「設定」→「AIエージェントを接続」を開きます。許可したすべてのエージェントがここに表示され、切断できます。切断されたエージェントは次回の呼び出しで停止します。"
-
-#~ msgid "In your terminal, run:"
-#~ msgstr "ターミナルで実行："
 
 #~ msgid "It can never"
 #~ msgstr "決してできません"
@@ -12450,15 +12888,9 @@ msgstr "← 最初からやり直す"
 #~ msgid "List your projects."
 #~ msgstr "プロジェクトを一覧表示します。"
 
-#~ msgid "Name it Duct and paste the address:"
-#~ msgstr "Ductと名付けてアドレスを貼り付けます："
-
 #~ msgid ""
 #~ "On claude.ai or in Claude Desktop, open Settings → Connectors and choose Add custom connector."
 #~ msgstr "claude.aiまたはClaude Desktopで、「設定」→「コネクタ」を開き、「カスタムコネクタを追加」を選択します。"
-
-#~ msgid "Open the Command Palette and run <0>MCP: Add Server</0>."
-#~ msgstr "コマンドパレットを開き、<0>MCP: Add Server</0>を実行します。"
 
 #~ msgid ""
 #~ "Overwrite what you typed in Duct. A draft only fills blanks or replaces an earlier draft."
@@ -12473,12 +12905,6 @@ msgstr "← 最初からやり直す"
 #~ msgid "See keys or credentials."
 #~ msgstr "キーまたは認証情報を表示します。"
 
-#~ msgid "Server address"
-#~ msgstr "サーバーアドレス"
-
-#~ msgid "Setup by agent"
-#~ msgstr "エージェントによる設定"
-
 #~ msgid "Seven agents. <0>One address.</0>"
 #~ msgstr "7つのエージェント。<0>1つのアドレス。</0>"
 
@@ -12487,9 +12913,6 @@ msgstr "← 最初からやり直す"
 
 #~ msgid "Stuck? <0>Start here.</0>"
 #~ msgstr "行き詰まりましたか？<0>ここから始めましょう。</0>"
-
-#~ msgid "Then sign in:"
-#~ msgstr "次にサインイン："
 
 #~ msgid "Troubleshooting"
 #~ msgstr "トラブルシューティング"
@@ -13099,9 +13522,6 @@ msgstr "← 最初からやり直す"
 
 #~ msgid "One person cannot ask for trust. He can show the code."
 #~ msgstr "一人の人間は信頼を求めることはできません。コードを示すことはできます。"
-
-#~ msgid "Questions"
-#~ msgstr "質問"
 
 #~ msgid "Read access to everything is a lot to ask."
 #~ msgstr "すべてへの読み取りアクセスは、多くの要求です。"

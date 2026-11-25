@@ -52,6 +52,17 @@
 /docs/engineering/agent-prompts.md  @5hirish
 /.agents/skills/                    @5hirish
 
+# What outside agents are told and allowed. Tool descriptions, playbooks and
+# prompts served over MCP become instructions inside a person's own agent,
+# which usually has a shell; a scope or grant change widens what every
+# connected agent can reach. A poisoned description here is the supply-chain
+# version of a prompt injection.
+/backend/service/mcp_server/        @5hirish
+/backend/routes/mcp_server.py       @5hirish
+/backend/routes/mcp_oauth.py        @5hirish
+/backend/service/mcp_tokens.py      @5hirish
+/skills/                            @5hirish
+
 # The contract files themselves.
 /LICENSE                        @5hirish
 /NOTICE                         @5hirish
