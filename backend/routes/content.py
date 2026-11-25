@@ -42,7 +42,7 @@ from collections.abc import AsyncGenerator
 from datetime import datetime, timezone
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 from uuid import UUID, uuid4
 
 import anyio.from_thread
@@ -142,8 +142,10 @@ from service.membership import get_project_for_user, get_project_row_for_user
 from service.project_draft import (
     BRAND_FIELDS,
     MAX_DRAFT_PERSONAS,
+    MAX_PERSONA_QUOTES,
     PERSONA_DESCRIPTION_MAX,
     PERSONA_NAME_MAX,
+    PERSONA_QUOTE_MAX,
     edit_fields,
     get_value,
     persona_rows,
@@ -861,6 +863,10 @@ class BrandPersonaIn(BaseModel):
 
     name:        str = Field(max_length=PERSONA_NAME_MAX)
     description: str = Field("", max_length=PERSONA_DESCRIPTION_MAX)
+    # Things this audience really said; the review speaks from them first.
+    quotes: list[Annotated[str, Field(max_length=PERSONA_QUOTE_MAX)]] = Field(
+        default_factory=list, max_length=MAX_PERSONA_QUOTES,
+    )
 
 
 class BrandContextIn(BaseModel):
@@ -970,7 +976,7 @@ def put_brand_context(
         edit_fields(proj, {"content_pillars": (sent.get("items") if isinstance(sent, dict) else sent) or []})
     if body.audience_personas is not None:
         # The person's, like the pillars: a later draft never replaces them.
-        edit_fields(proj, {"personas": persona_rows((p.name, p.description) for p in body.audience_personas)})
+        edit_fields(proj, {"personas": persona_rows((p.name, p.description, p.quotes) for p in body.audience_personas)})
     if body.content_visual_assets is not None:
         proj.content_visual_assets = body.content_visual_assets
     if body.slug is not None:

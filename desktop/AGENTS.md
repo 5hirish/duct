@@ -187,7 +187,23 @@ carries all the code.
   five-minute timeout. The listener is bound *before* the browser opens, so
   a bind failure never leaves a tab open with nowhere to land, and a
   callback carrying someone else's `state` is answered and ignored rather
-  than ending the wait.
+  than ending the wait. **Refreshes are serialised** (`REFRESH_LOCK`):
+  OpenAI rotates the refresh token on every use and answers a reused one
+  with `refresh_token_reused`, so two concurrent `chatgpt_credential` calls
+  near expiry used to sign the user out. A refused refresh is read in both of
+  OpenAI's error shapes (`read_refusal`); only a spent, expired or revoked
+  token clears the keychain, never an outage. **When 1455 is held**
+  (usually a Codex CLI or OpenCode login left waiting in a terminal),
+  `bind_listener` takes 1457, the client's other registered redirect, and
+  only when both are held asks 1455's owner to give it up with `GET /cancel`,
+  the convention all three clients serve; ours answers it too, so a Duct tab
+  the user walked away from never blocks a sign-in elsewhere. **Sign-out
+  revokes**: `chatgpt_logout` clears the keychain first, then posts the
+  refresh token to OpenAI's revoke endpoint, best effort with a five-second
+  cap, so sign-out still works offline. The refresh window is 30 minutes, not
+  the Codex CLI's 5: the token rides into a backend run that cannot refresh
+  it, and each message into a running session carries the current one
+  (`renew_subscription_credential` in `backend/agents/core/codex.py`).
 
   **A dev rebuild loses every keychain item, and looks like a bug in the
   feature.** macOS grants keychain access per application *signature*. A debug

@@ -69,7 +69,8 @@ from agents.insights.setup import (
 )
 from agents.core import session as _core_session
 from agents.core.context import format_business_context
-from agents.models import run_model_fields
+from agents.core.codex import renew_subscription_credential
+from agents.models import Provider, run_model_fields
 from agents.core.events import AgentEvent, StepStatus
 from agents.core.errors import error_payload
 from agents.core.session import CLIENT_MESSAGE_ID
@@ -623,12 +624,31 @@ class AgentMessage(BaseModel):
     artifact_format: str | None = None
 
 
+def _renew_plan_credential(session: Any, user_keys: dict) -> None:
+    """Hand a running session the fresh ChatGPT token this message carried.
+
+    A plan token is good for an hour and a session is not: a question card
+    answered later, or a follow-up after a break, would otherwise run on the
+    token the session started with and fail as ``subscription_revoked``. Only
+    the session's owner reaches here (``_owned_session``), and the swap holds
+    the run to the ChatGPT account it started on.
+    """
+    lent = getattr(session, "lent_keys", None)
+    held = (lent or {}).get(Provider.OPENAI)
+    fresh = (user_keys or {}).get(Provider.OPENAI)
+    if not held or not fresh or fresh == held:
+        return
+    if renew_subscription_credential(held, fresh):
+        lent[Provider.OPENAI] = fresh
+
+
 @router.post("/{agent_type}/sessions/{session_id}/messages")
 async def send_message(
     agent_type: str,
     session_id: str,
     msg: AgentMessage,
     user: User | None = Depends(get_current_user_optional),
+    user_keys: dict = Depends(get_user_provider_keys),
 ) -> dict:
     """Send a message into an active session.
 
@@ -644,6 +664,7 @@ async def send_message(
     # A user message (chat or answer) is unambiguous activity — keep the session
     # off the stale list while a human is interacting with it.
     _core_session.touch_session(session)
+    _renew_plan_credential(session, user_keys)
 
     recorder = getattr(session, "recorder", None)
     pending = getattr(session, "pending_pauses", None) or {}

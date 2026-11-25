@@ -37,6 +37,10 @@ msgstr "· {fans} ファン"
 #~ msgid "· set to <0>{configured}</0>, stepped down for this model"
 #~ msgstr "· <0>{configured}</0> に設定、このモデルでは段階的に引き下げられました"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "“I just want to know if the ads are working.”"
+msgstr "「広告が機能しているか知りたいだけです。」"
+
 #: src/components/settings/AgentAccess.jsx
 msgid "(done)"
 msgstr "(完了)"
@@ -44,6 +48,10 @@ msgstr "(完了)"
 #: src/components/content/DiscoverPage.jsx
 msgid "(no caption)"
 msgstr "(キャプションなし)"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "(optional)"
+msgstr "(任意)"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "(read the first part of the page)"
@@ -331,6 +339,10 @@ msgstr "{count, plural, one {GitHubに接続しました: リポジトリ # 件�
 #: src/components/connections/ManualConnectorCard.jsx
 msgid "{count} {noun}"
 msgstr "{count} {noun}"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "{count} of {voters} would stop"
+msgstr "{voters}人中{count}人がスクロールを止める"
 
 #: src/app/(app)/scheduled/page.jsx
 msgid "{count} scheduled"
@@ -1973,6 +1985,10 @@ msgstr "すべてのメディア"
 msgid "Any time"
 msgstr "いつでも"
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Anyone scrolling"
+msgstr "スクロール中の誰でも"
+
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Anything else Duct should know"
 msgstr "Ductが知っておくべきその他のこと"
@@ -3024,6 +3040,10 @@ msgstr "OpenCode 用のコマンド"
 #: src/components/content/PostMetricsForm.jsx
 msgid "Comments"
 msgstr "コメント"
+
+#: src/lib/contentReview.js
+msgid "comments, shares and saves"
+msgstr "コメント、シェア、保存"
 
 #: src/components/content/PlanStrategy.jsx
 msgid "Comments, shares and saves per post."
@@ -5952,6 +5972,10 @@ msgstr "Claude Code では、<0>/mcp</0> を実行し、Authenticate を選択�
 msgid "In progress"
 msgstr "進行中"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "In their words"
+msgstr "実際の言葉で"
+
 #: src/components/insights/InsightsWorkspace.jsx
 #~ msgid "in this thread"
 #~ msgstr "このスレッド内"
@@ -7763,6 +7787,10 @@ msgstr "未開始"
 msgid "Not stored"
 msgstr "未保存"
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Not tested on your results yet: that needs five published posts with numbers. Read this as a guess."
+msgstr "まだ実績でテストされていません。数値付きの公開済み投稿が5件必要です。参考程度にお読みください。"
+
 #: src/lib/contentEnums.js
 msgid "Not true"
 msgstr "真実ではない"
@@ -8429,6 +8457,14 @@ msgstr "開きました"
 msgid "Opened the post"
 msgstr "投稿を開きました"
 
+#: src/lib/contentReview.js
+msgid "Opening B"
+msgstr "オープニングB"
+
+#: src/lib/contentReview.js
+msgid "Opening C"
+msgstr "オープニングC"
+
 #: src/components/content/SynthesisPanel.jsx
 msgid "Opening lines of the most engaging posts that reached at least a typical audience"
 msgstr "少なくとも一般的なオーディエンスに届いた、最もエンゲージメントの高い投稿の冒頭部分"
@@ -8448,6 +8484,10 @@ msgstr "セッションを開いています…"
 #: src/components/insights/ConnectionRequest.jsx
 msgid "Opening…"
 msgstr "開いています…"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Openings they compared"
+msgstr "比較したオープニング"
 
 #: src/components/connections/logos.jsx
 msgid "OpenRouter"
@@ -9346,6 +9386,10 @@ msgstr "自動実行されました"
 msgid "Ran, proposed nothing"
 msgstr "実行したが提案なし"
 
+#: src/lib/contentReview.js
+msgid "reach"
+msgstr "リーチ"
+
 #: src/components/content/PostMetricsForm.jsx
 msgid "Reach"
 msgstr "リーチ"
@@ -9386,6 +9430,10 @@ msgstr "全画面表示で読む"
 #: src/app/(start)/start/page.jsx
 msgid "Read my site"
 msgstr "サイトを読み込む"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read past posts to test the audience panel"
+msgstr "ターゲット層パネルをテストするために過去の投稿を読み込む"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read project context"
@@ -10442,6 +10490,10 @@ msgstr "Ductアカウントに保存済み"
 #: src/lib/contentReview.js
 msgid "Saves"
 msgstr "保存"
+
+#: src/lib/contentReview.js
+msgid "saves and shares"
+msgstr "保存とシェア"
 
 #: src/components/content/PlanStrategy.jsx
 msgid "Saves and shares per post, the closest sign of intent the posts report."
@@ -11595,6 +11647,10 @@ msgstr "停止しました。"
 msgid "Stops"
 msgstr "手を止める"
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Stops for: {picked}"
+msgstr "スクロールを止める要素: {picked}"
+
 #: src/components/content/VendorKeyForm.jsx
 msgid "Stored encrypted, and used only for projects you own."
 msgstr "暗号化して保存され、あなたが所有するプロジェクトでのみ使用されます。"
@@ -11814,6 +11870,18 @@ msgstr "お客様がどのような方で、何をされているか教えてく
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Test and connect"
 msgstr "テストして接続"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Tested on your last {posts} posts: a loose match with their real {metric} ({agreed} of {pairs} pairs right). Read this as a lean."
+msgstr "直近の{posts}件の投稿でテスト済み: 実際の{metric}と緩やかに一致（{pairs}ペア中{agreed}ペアが正解）。傾向としてご覧ください。"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Tested on your last {posts} posts: it ranked them close to their real {metric} ({agreed} of {pairs} pairs right). A lean, not a promise."
+msgstr "直近の{posts}件の投稿でテスト済み: 実際の{metric}に近い順位付け（{pairs}ペア中{agreed}ペアが正解）。確約ではなく傾向です。"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Tested on your last {posts} posts: no better than a coin at ranking their real {metric}. Read this as a guess."
+msgstr "直近の{posts}件の投稿でテスト済み: 実際の{metric}の順位付け精度はコイン投げと同等。推測としてご覧ください。"
 
 #: src/components/content/PlanStrategy.jsx
 #~ msgid "Testing"
@@ -12845,6 +12913,10 @@ msgstr "無題のスレッド"
 msgid "Up next"
 msgstr "次"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Up to three things this audience really said, one per line: a review, a comment, a support email. The review speaks from these first."
+msgstr "このターゲット層が実際に発言した内容を1行に1つ、最大3つ入力（レビュー、コメント、サポートメールなど）。レビューではこれらが最優先されます。"
+
 #: src/components/content/PlanPicker.jsx
 msgid "Upcoming"
 msgstr "予定"
@@ -13573,8 +13645,12 @@ msgid "Who this persona is"
 msgstr "ペルソナの人物像"
 
 #: src/components/content/BrandContextForm.jsx
-msgid "Who your posts are for. The pre-publish review plays each one and says whether they'd stop, save or click."
-msgstr "投稿のターゲット層です。公開前のレビューで各ペルソナをシミュレーションし、手を止めるか、保存するか、クリックするかを判定します。"
+#~ msgid "Who your posts are for. The pre-publish review plays each one and says whether they'd stop, save or click."
+#~ msgstr "投稿のターゲット層です。公開前のレビューで各ペルソナをシミュレーションし、手を止めるか、保存するか、クリックするかを判定します。"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Who your posts are for. The pre-publish review plays each one, says why they'd scroll past, and which opening would stop them."
+msgstr "投稿の対象者。公開前レビューでは各自を再現し、スクロールで通り過ぎる理由やスクロールを止めるオープニングを示します。"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Why it matters"
@@ -13709,6 +13785,10 @@ msgstr "作業中…"
 #: src/components/connections/ConnectorBrowser.jsx
 msgid "Worth adding next"
 msgstr "次に追加すべきもの"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Would scroll past: {scrollPast}"
+msgstr "スクロールで通り過ぎる理由: {scrollPast}"
 
 #: src/components/content/AnalyticsReport.jsx
 msgid "Write the report"
@@ -14079,6 +14159,10 @@ msgstr "新しいトークン"
 msgid "Your one-line pitch"
 msgstr "ワンラインピッチ"
 
+#: src/lib/contentReview.js
+msgid "Your opening"
+msgstr "あなたのオープニング"
+
 #: src/components/content/AccountsTab.jsx
 msgid "Your own account and API key, stored encrypted. Duct posts only when you ask it to."
 msgstr "あなた自身のアカウントと API キーは暗号化して保存されます。Duct は依頼されたときだけ投稿します。"
@@ -14090,6 +14174,10 @@ msgstr "あなた自身のアカウントと API キーは暗号化して保存�
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Your own chats use it, in any project. Scheduled runs only call the read-only tools of the servers Duct trusts, so one added by address never runs unattended."
 msgstr "どのプロジェクトでも、ご自身のチャットから使用できます。スケジュール実行ではDuctが信頼するサーバーの読み取り専用ツールのみが呼び出されるため、アドレスで追加されたものが無人で実行されることはありません。"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Your personas react just like anyone would, so this says little about your audience. Add lines they really said in Brand settings to tell them apart."
+msgstr "ペルソナが誰にでも当てはまる反応をするため、ターゲット層の特徴が表れていません。区別化のためにブランド設定で実際の顧客の発言を追加してください。"
 
 #: src/components/content/AccountsTab.jsx
 #~ msgid "your PostBridge accounts"

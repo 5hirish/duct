@@ -51,7 +51,23 @@ import { Card } from "@/components/ui/card";
 const MAX_PERSONAS = 3;
 const PERSONA_NAME_MAX = 80;
 const PERSONA_DESCRIPTION_MAX = 400;
-const BLANK_PERSONA = Object.freeze({ name: "", description: "" });
+// Lines this audience really said, one per line (MAX_PERSONA_QUOTES and
+// PERSONA_QUOTE_MAX on the server). The review speaks from these before the
+// description: a persona grounded in real words drifts less toward the model's
+// own average reader.
+const MAX_PERSONA_QUOTES = 3;
+const PERSONA_QUOTE_MAX = 200;
+const QUOTES_MAX_CHARS = MAX_PERSONA_QUOTES * (PERSONA_QUOTE_MAX + 1);
+const BLANK_PERSONA = Object.freeze({ name: "", description: "", quotes: "" });
+
+/** The quotes box as the route takes it: one per non-empty line, capped. */
+function quoteLines(text) {
+  return (text || "")
+    .split("\n")
+    .map((line) => line.trim().slice(0, PERSONA_QUOTE_MAX))
+    .filter(Boolean)
+    .slice(0, MAX_PERSONA_QUOTES);
+}
 
 export default function BrandContextForm({ projectId, onSaved }) {
   const { t, i18n } = useLingui();
@@ -115,7 +131,11 @@ export default function BrandContextForm({ projectId, onSaved }) {
         setRulesCustomised(Boolean(b.content_brand?.[RULES_KEY]));
         const people = Array.isArray(b.audience_personas) ? b.audience_personas : [];
         setPersonas(people.length
-          ? people.map((p) => ({ name: p.name || "", description: p.description || "" }))
+          ? people.map((p) => ({
+            name: p.name || "",
+            description: p.description || "",
+            quotes: (Array.isArray(p.quotes) ? p.quotes : []).join("\n"),
+          }))
           : [{ ...BLANK_PERSONA }]);
         const items = Array.isArray(b.content_pillars?.items) ? b.content_pillars.items : [];
         setPillars(items.length ? items : [{ id: "", name: "", description: "" }]);
@@ -184,7 +204,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
         content_pillars:       { items: cleanedPillars },
         audience_personas: personas
           .filter(p => (p.name || "").trim())
-          .map(p => ({ name: p.name.trim(), description: (p.description || "").trim() })),
+          .map(p => ({ name: p.name.trim(), description: (p.description || "").trim(), quotes: quoteLines(p.quotes) })),
         content_visual_assets: {
           primary_color:   primaryColor.trim(),
           secondary_color: secondaryColor.trim(),
@@ -333,7 +353,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
       <Section
         icon={Users}
         title={t`Audience personas`}
-        hint={t`Who your posts are for. The pre-publish review plays each one and says whether they'd stop, save or click.`}
+        hint={t`Who your posts are for. The pre-publish review plays each one, says why they'd scroll past, and which opening would stop them.`}
       >
         <div className="space-y-3">
           {personas.map((p, i) => (
@@ -369,6 +389,19 @@ export default function BrandContextForm({ projectId, onSaved }) {
                 className="mt-2"
                 aria-label={t`Who this persona is`}
                 placeholder={t`Who they are, what they want, what gets in their way, and the words they use.`} />
+              <Label className="mt-3 block text-xs font-medium" htmlFor={`persona-quotes-${i}`}>
+                <Trans>In their words</Trans>{" "}
+                <span className="font-normal text-muted-foreground"><Trans>(optional)</Trans></span>
+              </Label>
+              <Textarea id={`persona-quotes-${i}`} value={p.quotes}
+                onChange={e => updatePersona(i, { quotes: e.target.value })}
+                maxLength={QUOTES_MAX_CHARS}
+                rows={2}
+                className="mt-1"
+                placeholder={t`“I just want to know if the ads are working.”`} />
+              <p className="mt-1 text-xs text-muted-foreground">
+                <Trans>Up to three things this audience really said, one per line: a review, a comment, a support email. The review speaks from these first.</Trans>
+              </p>
             </div>
           ))}
           <button

@@ -27,6 +27,10 @@ msgstr "— 已跳过"
 msgid "· {fans} fans"
 msgstr "· {fans} 位粉丝"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "“I just want to know if the ads are working.”"
+msgstr "“我只想知道广告效果如何。”"
+
 #: src/components/settings/AgentAccess.jsx
 msgid "(done)"
 msgstr "(已完成)"
@@ -34,6 +38,10 @@ msgstr "(已完成)"
 #: src/components/content/DiscoverPage.jsx
 msgid "(no caption)"
 msgstr "(无标题)"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "(optional)"
+msgstr "（可选）"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "(read the first part of the page)"
@@ -283,6 +291,10 @@ msgstr "{count, plural, other {GitHub 已连接：# 个仓库。}}"
 #: src/components/connections/ManualConnectorCard.jsx
 msgid "{count} {noun}"
 msgstr "{count} {noun}"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "{count} of {voters} would stop"
+msgstr "{voters} 人中有 {count} 人会停留"
 
 #: src/app/(app)/scheduled/page.jsx
 msgid "{count} scheduled"
@@ -1683,6 +1695,10 @@ msgstr "任何媒体"
 msgid "Any time"
 msgstr "随时"
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Anyone scrolling"
+msgstr "任何划到的人"
+
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Anything else Duct should know"
 msgstr "Duct 还需要知道什么"
@@ -2629,6 +2645,10 @@ msgstr "OpenCode 命令"
 #: src/components/content/PostMetricsForm.jsx
 msgid "Comments"
 msgstr "评论"
+
+#: src/lib/contentReview.js
+msgid "comments, shares and saves"
+msgstr "评论、分享和收藏"
 
 #: src/components/content/PlanStrategy.jsx
 msgid "Comments, shares and saves per post."
@@ -5193,6 +5213,10 @@ msgstr "在 Claude Code 中，运行 <0>/mcp</0> 并选择 Authenticate。在 Co
 msgid "In progress"
 msgstr "进行中"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "In their words"
+msgstr "他们的原话"
+
 #: src/lib/credentialStorage.js
 msgid "In your keychain"
 msgstr "在你的钥匙串中"
@@ -6818,6 +6842,10 @@ msgstr "未开始"
 msgid "Not stored"
 msgstr "未存储"
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Not tested on your results yet: that needs five published posts with numbers. Read this as a guess."
+msgstr "尚未根据你的实际效果进行测试：这需要 5 条已发布且带有数据的帖子。请将其视为推测。"
+
 #: src/lib/contentEnums.js
 msgid "Not true"
 msgstr "不真实"
@@ -7375,6 +7403,14 @@ msgstr "已打开"
 msgid "Opened the post"
 msgstr "已打开帖子"
 
+#: src/lib/contentReview.js
+msgid "Opening B"
+msgstr "开头 B"
+
+#: src/lib/contentReview.js
+msgid "Opening C"
+msgstr "开头 C"
+
 #: src/components/content/SynthesisPanel.jsx
 msgid "Opening lines of the most engaging posts that reached at least a typical audience"
 msgstr "最吸引人的帖子开头，且至少触达了典型受众"
@@ -7394,6 +7430,10 @@ msgstr "正在打开会话…"
 #: src/components/insights/ConnectionRequest.jsx
 msgid "Opening…"
 msgstr "正在打开…"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Openings they compared"
+msgstr "他们对比的开头"
 
 #: src/components/connections/logos.jsx
 msgid "OpenRouter"
@@ -8224,6 +8264,10 @@ msgstr "独立运行"
 msgid "Ran, proposed nothing"
 msgstr "已运行，没有提出方案"
 
+#: src/lib/contentReview.js
+msgid "reach"
+msgstr "触达"
+
 #: src/components/content/PostMetricsForm.jsx
 msgid "Reach"
 msgstr "触达"
@@ -8264,6 +8308,10 @@ msgstr "全屏阅读"
 #: src/app/(start)/start/page.jsx
 msgid "Read my site"
 msgstr "阅读我的网站"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read past posts to test the audience panel"
+msgstr "读取以往帖子以测试受众面板"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read project context"
@@ -9241,6 +9289,10 @@ msgstr "已保存到你的 Duct 账户"
 #: src/lib/contentReview.js
 msgid "Saves"
 msgstr "保存数"
+
+#: src/lib/contentReview.js
+msgid "saves and shares"
+msgstr "收藏和分享"
 
 #: src/components/content/PlanStrategy.jsx
 msgid "Saves and shares per post, the closest sign of intent the posts report."
@@ -10262,6 +10314,10 @@ msgstr "已停止。"
 msgid "Stops"
 msgstr "停留"
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Stops for: {picked}"
+msgstr "因以下内容停留：{picked}"
+
 #: src/components/content/VendorKeyForm.jsx
 msgid "Stored encrypted, and used only for projects you own."
 msgstr "已加密存储，仅用于你拥有的项目。"
@@ -10461,6 +10517,18 @@ msgstr "告诉我们你是谁，做什么。这将作为我们生成的所有审
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Test and connect"
 msgstr "测试并连接"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Tested on your last {posts} posts: a loose match with their real {metric} ({agreed} of {pairs} pairs right). Read this as a lean."
+msgstr "已根据你最近的 {posts} 条帖子测试：与真实的 {metric} 大致匹配（{pairs} 组对比中猜对 {agreed} 组）。请将其视为倾向参考。"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Tested on your last {posts} posts: it ranked them close to their real {metric} ({agreed} of {pairs} pairs right). A lean, not a promise."
+msgstr "已根据你最近的 {posts} 条帖子测试：排名接近真实的 {metric}（{pairs} 组对比中猜对 {agreed} 组）。仅供参考，不作保证。"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Tested on your last {posts} posts: no better than a coin at ranking their real {metric}. Read this as a guess."
+msgstr "已根据你最近的 {posts} 条帖子测试：对真实 {metric} 的排名预测与抛硬币无异。请将其视为推测。"
 
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Testing…"
@@ -11404,6 +11472,10 @@ msgstr "无标题话题"
 msgid "Up next"
 msgstr "接下来"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Up to three things this audience really said, one per line: a review, a comment, a support email. The review speaks from these first."
+msgstr "最多三条该受众的真实原话，每行一条：如评价、评论或客服邮件。审查将优先基于这些内容进行评估。"
+
 #: src/components/content/PlanPicker.jsx
 msgid "Upcoming"
 msgstr "即将推出"
@@ -12064,8 +12136,12 @@ msgid "Who this persona is"
 msgstr "此受众画像是谁"
 
 #: src/components/content/BrandContextForm.jsx
-msgid "Who your posts are for. The pre-publish review plays each one and says whether they'd stop, save or click."
-msgstr "明确你的帖子面向哪些受众。发布前审查会模拟各个画像，评估他们是否会停留、保存或点击。"
+#~ msgid "Who your posts are for. The pre-publish review plays each one and says whether they'd stop, save or click."
+#~ msgstr "明确你的帖子面向哪些受众。发布前审查会模拟各个画像，评估他们是否会停留、保存或点击。"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Who your posts are for. The pre-publish review plays each one, says why they'd scroll past, and which opening would stop them."
+msgstr "你的帖子面向的受众。发布前审查会模拟每个用户角色，说明他们为何会划过，以及哪个开头能让他们停留。"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Why it matters"
@@ -12176,6 +12252,10 @@ msgstr "正在工作…"
 #: src/components/connections/ConnectorBrowser.jsx
 msgid "Worth adding next"
 msgstr "接下来值得添加"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Would scroll past: {scrollPast}"
+msgstr "会直接划过：{scrollPast}"
 
 #: src/components/content/AnalyticsReport.jsx
 msgid "Write the report"
@@ -12514,6 +12594,10 @@ msgstr "你的新令牌"
 msgid "Your one-line pitch"
 msgstr "你的单行宣传语"
 
+#: src/lib/contentReview.js
+msgid "Your opening"
+msgstr "你的开头"
+
 #: src/components/content/AccountsTab.jsx
 msgid "Your own account and API key, stored encrypted. Duct posts only when you ask it to."
 msgstr "你自己的账户和 API 密钥，加密存储。Duct 仅在你要求时发布帖子。"
@@ -12525,6 +12609,10 @@ msgstr "你自己的账户和 API 密钥，加密存储。数据会从 Duct 发�
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Your own chats use it, in any project. Scheduled runs only call the read-only tools of the servers Duct trusts, so one added by address never runs unattended."
 msgstr "你在任何项目中的对话都可以使用它。定时运行仅会调用 Duct 信任的服务器的只读工具，因此通过地址添加的服务器绝不会无人值守地运行。"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Your personas react just like anyone would, so this says little about your audience. Add lines they really said in Brand settings to tell them apart."
+msgstr "你的用户角色反应与普通人无异，因此这无法反映你受众的特质。请在品牌设置中添加他们的真实原话以区分他们。"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "your preferences"

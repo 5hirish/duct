@@ -619,6 +619,7 @@ ACTIVITY_TOOLS: dict[str, tuple[Callable[..., dict], Callable[..., dict]]] = {
     "fetch_discovered_references": (_read_start, _read_finish),
     "discover_tiktok": (_tiktok_start, _tiktok_finish),
     "fetch_post": (_read_start, _read_finish),
+    "fetch_panel_posts": (_read_start, _read_finish),
     "fetch_slide_context": (_read_start, _read_finish),
     # One item of a plan's shipped-work list, opened whole (agents/content/feed_read.py).
     "read_shipped_work": (_read_start, _read_finish),

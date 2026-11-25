@@ -82,7 +82,7 @@ from agents.content.channels import (
     primary_channel,
     resolve as resolve_channel,
 )
-from agents.content.channel_mix import mix_snapshot, overreaching_hooks
+from agents.content.channel_mix import goal_from, mix_snapshot, overreaching_hooks
 from agents.content.feed import (
     MAX_SET_ASIDE,
     DayBrief,
@@ -94,6 +94,7 @@ from agents.content.feed import (
 )
 from agents.content.channel_config import linked_pairs, load_channel_config
 from agents.content.plan_period import MAX_PLAN_DAYS, PlanPeriod, link_post_to_day, plan_end
+from agents.content.panel import PanelPost, panel_check, panel_posts, shuffled
 from agents.content.persistence import link_artifact
 from agents.content.plan_proposal import (
     DRAFTED,
@@ -298,6 +299,28 @@ def _require_post(db: Session, project_id, post_id) -> tuple[ContentPost | None,
     if row is None or row.project_id != project_id:
         return None, _err(f"Post {post_id} not found for this project.")
     return row, None
+
+
+# How many published posts are read to find the panel's test set: enough to
+# hold PANEL_MAX_POSTS measured ones on one channel for any brand posting daily.
+_PANEL_READ_POSTS = 60
+
+
+def _panel_set(db: Session, project_id, row: ContentPost) -> tuple[str, list[PanelPost]]:
+    """The goal measure and the past posts the panel is checked on, for the
+    post under review. One function for the tool that shows the openings and
+    the submit that scores the order, so both see the same posts."""
+    proj = db.get(Project, project_id)
+    brand = proj.content_brand if proj is not None and isinstance(proj.content_brand, dict) else {}
+    metric = goal_from(str(brand.get("content_goal") or "")).measure
+    rows = db.exec(
+        select(ContentPost)
+        .where(ContentPost.project_id == project_id)
+        .where(ContentPost.posted_at.is_not(None))  # type: ignore[union-attr]
+        .order_by(ContentPost.posted_at.desc())  # type: ignore[union-attr]
+        .limit(_PANEL_READ_POSTS)
+    ).all()
+    return metric, panel_posts(rows, channel=primary_channel(row.platforms), metric=metric, exclude=row.id)
 
 
 def _require_slide(post: ContentPost, slide_id: str) -> tuple[dict | None, int, str | None]:
@@ -994,6 +1017,17 @@ def build_content_tools_lc(
         personas: list[PersonaReaction] = Field(
             default_factory=list,
             description="review_post's persona reactions, one per audience persona, as it returned them. Empty when the project has none.",
+        )
+        baseline: PersonaReaction | None = Field(
+            None, description="review_post's `baseline`: the same reading by someone who matches none of the personas.",
+        )
+        hooks: list[str] = Field(
+            default_factory=list,
+            description="review_post's `hooks`: the openings the panel chose between, the draft's own first.",
+        )
+        panel_order: list[str] = Field(
+            default_factory=list,
+            description="review_post's `panel_order`: the past posts' ids as it ranked them. The server scores it.",
         )
 
     # ----------------------- Writers -----------------------
@@ -2545,7 +2579,14 @@ def build_content_tools_lc(
             logger.exception("log_metrics failed")
             return _err(f"log_metrics failed: {exc}")
 
-    async def submit_assessment(markers: list, notes: str = "", personas: list | None = None) -> str:
+    async def submit_assessment(
+        markers: list,
+        notes: str = "",
+        personas: list | None = None,
+        baseline: PersonaReaction | dict | None = None,
+        hooks: list | None = None,
+        panel_order: list | None = None,
+    ) -> str:
         try:
             scores = [m if isinstance(m, MarkerScore) else MarkerScore.model_validate(m) for m in markers or []]
             # Reactions are advisory, so an over-long list is cut to the
@@ -2554,6 +2595,9 @@ def build_content_tools_lc(
                 r if isinstance(r, PersonaReaction) else PersonaReaction.model_validate(r)
                 for r in (personas or [])[:MAX_PERSONA_REACTIONS]
             ]
+            base = baseline if isinstance(baseline, PersonaReaction) or baseline is None else (
+                PersonaReaction.model_validate(baseline)
+            )
             # All six or nothing: a subset would still produce a 0-100 figure,
             # and the owner could not tell it was judged on half the post.
             missing = [m.value for m in ReviewMarker if m not in {s.id for s in scores}]
@@ -2565,10 +2609,14 @@ def build_content_tools_lc(
                 row, err = _require_post(db, project_id, session.post_id)
                 if err:
                     return err
+                metric, past = _panel_set(db, project_id, row)
                 result = assess(
                     row.slides or [], row.caption or "", row.hashtags or [], scores,
                     replies=row.replies or [], channel=primary_channel(row.platforms),
-                    notes=(notes or "").strip(), personas=reactions, scored_at=now_iso(),
+                    notes=(notes or "").strip(), personas=reactions, baseline=base,
+                    hooks=[str(h) for h in hooks or []],
+                    panel_check=panel_check(panel_order or [], past, metric),
+                    scored_at=now_iso(),
                 )
                 # Only this column is written, so an image attach racing the
                 # review cannot be undone by it; no post lock needed.
@@ -2596,9 +2644,12 @@ def build_content_tools_lc(
                     ],
                     "weakest":       [m.model_dump(mode="json", include={"id", "score", "fix"}) for m in weakest],
                     "personas":      [
-                        r.model_dump(mode="json", include={"persona", "stop", "save", "click", "fix"})
+                        r.model_dump(mode="json", include={"persona", "pick", "stop", "save", "click", "fix"})
                         for r in result.personas
                     ],
+                    # How far to trust those reactions, said with them: the
+                    # one-line relay in chat must not sound surer than this.
+                    "panel_check":   result.panel_check.model_dump(mode="json") if result.panel_check else None,
                 })
         except ValidationError as exc:
             return _err(f"markers are invalid — fix and call again:\n{exc}")
@@ -2682,6 +2733,28 @@ def build_content_tools_lc(
             user_id=getattr(session, "user_id", None), project_id=project_id,
         )
         return _ok(result)
+
+    async def fetch_panel_posts() -> str:
+        """The openings of published posts whose results are known, for the
+        review's panel to rank. Never their numbers: the ranking is scored
+        against those on submit, where the model cannot see them."""
+        try:
+            if session.post_id is None:
+                return _err("No current post in this session to review.")
+            with _open_db() as db:
+                row, err = _require_post(db, project_id, session.post_id)
+                if err:
+                    return err
+                _, past = _panel_set(db, project_id, row)
+            if not past:
+                return _ok({"posts": [], "note": "Too few published posts with results to check the panel; return panel_order []."})
+            return _ok({
+                "posts": [{"id": p.id, "opening": p.opening} for p in shuffled(past, seed=session.post_id)],
+                "note": "Rank every id, most likely to have earned the brand's goal first, judging only the openings.",
+            })
+        except Exception as exc:
+            logger.exception("fetch_panel_posts failed")
+            return _err(f"fetch_panel_posts failed: {exc}")
 
     async def fetch_post(post_dir_slug: str = "", post_id: str = "") -> str:
         try:
@@ -2940,6 +3013,13 @@ def build_content_tools_lc(
             FetchPostArgs,
         ),
         _bind(
+            fetch_panel_posts, ContentTool.FETCH_PANEL_POSTS,
+            "For the pre-publish review's panel check: the opening lines of up to eight of this "
+            "brand's published posts whose results are known, shuffled, each with a short id. "
+            "No numbers. Rank the ids; the server scores the ranking. Empty when there are too "
+            "few such posts.",
+        ),
+        _bind(
             read_shipped_work, ContentTool.READ_SHIPPED_WORK,
             "In a plan from shipped work, open one item of <shipped_work> whole: a pull "
             "request's full description, its Launch line, labels and size, and in a public "
@@ -3005,7 +3085,7 @@ def build_content_tools_lc(
             submit_assessment, ContentTool.SUBMIT_ASSESSMENT,
             "Save the pre-publish review of the current post and show it to the user. "
             "Pass the six marker scores the review_post sub-agent returned (all six), "
-            "and its persona reactions when it returned any. "
+            "and, when it returned them, its persona reactions, baseline, hooks and panel_order. "
             "The server adds the completeness checks, weighs the markers and computes "
             "the overall; the result names the failed checks and the weakest markers "
             "for you to relay. Advice only — it never blocks publishing.",

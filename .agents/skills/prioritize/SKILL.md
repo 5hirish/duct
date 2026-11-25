@@ -67,8 +67,10 @@ a proposal. Stop as soon as one fails. **A bug doesn't go through this** —
 something already promised not working isn't a scope question, it's triaged
 by severity.
 
-1. **Whose problem, specifically?** Name the user or persona, not "users."
-   [`README.md`](../../../README.md) names Duct's actual job — cross-tool
+1. **Whose problem, specifically?** Name the persona — `solo`, `team` or
+   `marketer` from [`docs/personas/`](../../../docs/personas/README.md) — not
+   "users", and say which of their listed pains it removes; a problem none of
+   the three has waits. [`README.md`](../../../README.md) names Duct's actual job — cross-tool
    synthesis a single dashboard can't do. If you can't name who is blocked by
    its absence *today*, it doesn't belong in the current milestone, whatever
    else is true about it.

@@ -86,6 +86,7 @@ const TOOL_WORDS = {
   fetch_discovered_references: msg`Read the discovered references`,
   discover_tiktok: msg`Searched TikTok`,
   fetch_post: msg`Opened the post`,
+  fetch_panel_posts: msg`Read past posts to test the audience panel`,
   fetch_slide_context: msg`Read the slide`,
   read_shipped_work: msg`Read what shipped`,
   submit_plan: msg`Proposed a plan`,

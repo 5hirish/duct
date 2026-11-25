@@ -1,0 +1,25 @@
+{
+  "notes": "Read by the social-research skill (the maintainer's agent-skill hub). Audiences are the persona ids in docs/personas/. Reddit for pains in their words, LinkedIn and X for how owners and marketers talk about the work in public, YouTube for how creators teach it. TikTok and Pinterest are out: Duct's readers do not research marketing tools there.",
+  "platforms": ["reddit", "linkedin", "x", "youtube"],
+  "never": ["tiktok", "pinterest", "instagram", "facebook"],
+  "budget": { "per_task": 10, "per_persona_pass": 45 },
+  "audiences": {
+    "solo": {
+      "reddit": ["smallbusiness", "SaaS", "Entrepreneur", "startups", "Solopreneur", "indiehackers"],
+      "linkedin": ["solo founder marketing", "small business google ads worth it", "founder doing my own marketing"],
+      "x": ["solo founder marketing", "google ads small business"],
+      "youtube": ["google ads for small business", "GA4 for beginners"]
+    },
+    "team": {
+      "reddit": ["smallbusiness", "ecommerce", "smallbusinessowner", "Entrepreneurs"],
+      "linkedin": ["small business marketing agency results", "owning your ad accounts", "marketing report for business owners"],
+      "x": ["marketing agency small business results"]
+    },
+    "marketer": {
+      "reddit": ["PPC", "googleads", "GoogleAnalytics", "analytics", "SEO", "DigitalMarketing", "marketing", "AskMarketing", "agency", "freelance"],
+      "linkedin": ["client reporting marketing agency", "GA4 Google Ads attribution gap", "AI Overviews traffic drop", "fractional marketer"],
+      "x": ["client reporting", "auto applied recommendations google ads", "AI Overviews traffic"],
+      "youtube": ["client reporting looker studio", "GA4 vs Google Ads conversions"]
+    }
+  }
+}

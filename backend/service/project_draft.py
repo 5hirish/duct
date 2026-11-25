@@ -80,6 +80,14 @@ MAX_DRAFT_PERSONAS = 3
 # so it has room for who they are, what they want and the words they use.
 PERSONA_NAME_MAX = 80
 PERSONA_DESCRIPTION_MAX = 400
+# Real lines the person heard from that audience: a review, a comment, a
+# support email. A persona written as a description is the weakest thing a
+# simulation can be grounded in (Stanford's 1,052-person study scored a
+# self-written persona below its interviews and surveys), so the review speaks
+# from these first. Only the Brand tab writes them; every other writer's rows
+# keep the ones already stored under the same name (``persona_shape``).
+MAX_PERSONA_QUOTES = 3
+PERSONA_QUOTE_MAX = 200
 
 
 @dataclass(frozen=True)
@@ -137,6 +145,59 @@ def pillar_rows(value: Any, current: Any = None) -> list[dict[str, str]]:
     return rows
 
 
+def persona_quotes(raw: Any) -> list[str]:
+    """A persona's quotes as stored: trimmed, non-empty, distinct, capped."""
+    out: list[str] = []
+    for line in raw if isinstance(raw, list) else []:
+        text = str(line or "").strip()[:PERSONA_QUOTE_MAX]
+        if text and text not in out:
+            out.append(text)
+    return out[:MAX_PERSONA_QUOTES]
+
+
+def persona_rows(people: Iterable[tuple[str, str] | tuple[str, str, Iterable[str]]]) -> list[dict[str, Any]]:
+    """``(name, description)`` pairs, or ``(name, description, quotes)``
+    triples, in the project's persona shape, first one primary. Every writer
+    that drafts personas (the documents, the classifier, the research pass,
+    an outside agent, the Brand tab) lands them in the same select-backed
+    field, so they are shaped here once. A pair carries no ``quotes`` key, so
+    ``persona_shape`` keeps what that persona already had."""
+    rows: list[dict[str, Any]] = []
+    for name, description, *rest in people:
+        if not name or not name.strip():
+            continue
+        row: dict[str, Any] = {
+            "name": name.strip(),
+            "description": (description or "").strip(),
+            "priority": "primary" if not rows else "secondary",
+        }
+        if rest:
+            row["quotes"] = persona_quotes(list(rest[0] or []))
+        rows.append(row)
+    return rows[:MAX_DRAFT_PERSONAS]
+
+
+def persona_shape(value: Any, current: Any = None) -> Any:
+    """Keep each persona's quotes through a writer that does not send them.
+    An agent rewriting a description through the MCP server never saw the
+    quotes the person pasted, and replacing the list must not wipe them; a
+    row that names its quotes (the Brand tab, even an empty list) wins."""
+    if not isinstance(value, list):
+        return value
+    held = {
+        str(row.get("name") or "").strip().casefold(): row.get("quotes")
+        for row in current if isinstance(row, Mapping) and row.get("quotes")
+    } if isinstance(current, list) else {}
+    shaped = []
+    for row in value:
+        if isinstance(row, Mapping) and "quotes" not in row:
+            quotes = held.get(str(row.get("name") or "").strip().casefold())
+            if quotes:
+                row = {**row, "quotes": quotes}
+        shaped.append(row)
+    return shaped
+
+
 # The fields a draft may write, named as the audit's PROJECT_DRAFT event names
 # them. The app also drafts ``favicon``, which it keeps on the device and never
 # sends, so a draft naming it is ignored here like any unknown field.
@@ -147,7 +208,7 @@ FIELDS: dict[str, DraftField] = {
     "website_url": DraftField("url"),
     "industry": DraftField("industry"),
     "business_model": DraftField("business_model"),
-    "personas": DraftField("audience", "personas", list),
+    "personas": DraftField("audience", "personas", list, shape=persona_shape),
     "compare_against": DraftField("competition", "compare_against"),
     "competitors": DraftField("competition", "competitors", list),
     "brand_voice": DraftField("brand_channels", "brand_voice"),
@@ -268,18 +329,6 @@ def clean_labels(raw: Mapping[str, Any] | None) -> dict[str, str] | None:
         name: label for name, label in raw.items()
         if name in FIELDS and isinstance(label, str) and label in RANK
     }
-
-
-def persona_rows(people: Iterable[tuple[str, str]]) -> list[dict[str, str]]:
-    """``(name, description)`` pairs in the project's persona shape, first one
-    primary. Every writer that drafts personas (the documents, the classifier,
-    the research pass, an outside agent) lands them in the same select-backed
-    field, so they are shaped here once."""
-    named = [(n.strip(), (d or "").strip()) for n, d in people if n and n.strip()]
-    return [
-        {"name": n, "description": d, "priority": "primary" if i == 0 else "secondary"}
-        for i, (n, d) in enumerate(named[:MAX_DRAFT_PERSONAS])
-    ]
 
 
 def merge_draft(project: Any, fields: Mapping[str, Mapping[str, Any]]) -> list[str]:

@@ -108,6 +108,18 @@ Product strategy, GTM and deployment runbooks live in a separate private
 repository. Documents here occasionally cite them; those citations state their
 reasoning inline, so a missing link never blocks understanding the code.
 
+## Who Duct is for
+
+Three personas, documented once in [`docs/personas/`](docs/personas/README.md)
+and referred to everywhere by id: `solo` (Priya, the founder doing marketing
+alone), `team` (a small business: an owner who approves, a generalist who does
+the work, a freelancer on the ads) and `marketer` (Sam, fractional or in-house,
+the analyst's job without the analyst). An issue, a PR/FAQ, a screen, a string
+and a post each name one of them; each persona page carries the pains with
+their evidence, the words to use, the moments that decide whether they stay,
+and a role-play brief to review a change as that person. Developers are not
+on the list: they are contributors, not the audience.
+
 ## Scope and prioritization
 
 Development here is 100% agent-executed, which flips the usual constraint:
@@ -213,9 +225,9 @@ scratchpad.
   `origin/main`, not a rebase onto it.
 - **Stage deliberately. Never `git add -A` or `git commit -a`.** Name the paths
   you changed. The working tree routinely carries things that must not ride
-  along: generated files (`app/next-env.d.ts` regenerates on every dev run),
-  another session's edits, and the failure mode the hook exists for, a
-  credential. A blind `add -A` is how all three get committed.
+  along: generated output a tool rewrote on its own, another session's edits,
+  and the failure mode the hook exists for, a credential. A blind `add -A` is
+  how all three get committed.
 - **Changes you did not make are a stop sign.** If `git status` shows files you
   did not touch, do not stage them and do not "clean them up". Say what is
   there and ask. They are someone else's unfinished work, or a symptom, and on

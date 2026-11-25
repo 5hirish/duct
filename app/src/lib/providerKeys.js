@@ -267,12 +267,30 @@ export async function providerKeyHeaders() {
     const key = await getProviderKey(provider.id);
     if (key) headers[provider.header] = key;
   }
-  if (!headers[OPENAI_HEADER]) {
-    const cred = await chatgptCredential().catch(() => null);
-    if (cred?.accessToken) {
-      headers[OPENAI_HEADER] = cred.accessToken;
-      if (cred.accountId) headers[OPENAI_ACCOUNT_HEADER] = cred.accountId;
-    }
-  }
+  if (!headers[OPENAI_HEADER]) Object.assign(headers, await chatgptPlanHeaders());
   return headers;
+}
+
+async function chatgptPlanHeaders() {
+  const cred = await chatgptCredential().catch(() => null);
+  if (!cred?.accessToken) return {};
+  const headers = { [OPENAI_HEADER]: cred.accessToken };
+  if (cred.accountId) headers[OPENAI_ACCOUNT_HEADER] = cred.accountId;
+  return headers;
+}
+
+/**
+ * The ChatGPT plan's headers alone, for a message into a running session.
+ *
+ * A session keeps the credential it started with, and a plan token is good
+ * for an hour: a question answered after lunch would otherwise run on a dead
+ * one. The shell refreshes before answering, so this is always a live token,
+ * and the backend swaps it into the session's models. Nothing else rides
+ * along: a pasted key is not needed after the session starts, and an
+ * OpenAI key in the slot means the session never ran on the plan.
+ */
+export async function planCredentialHeaders() {
+  if (typeof window === "undefined") return {};
+  if (await getProviderKey("openai")) return {};
+  return chatgptPlanHeaders();
 }

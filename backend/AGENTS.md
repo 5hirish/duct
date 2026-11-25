@@ -164,7 +164,19 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   reads it from `/api/providers/status` to hide the sign-in, and
   `get_user_provider_keys` drops a plan token it is still sent, so a shell that
   signed in earlier cannot keep using it — the Codex backend is undocumented
-  and the path can stop working without notice.
+  and the path can stop working without notice. Two things a session on a
+  plan needs that an API key does not: **the token is renewed per message**
+  (a plan token lasts an hour and a session can sit on a question card for
+  longer, so `POST …/messages` takes the plan headers and
+  `renew_subscription_credential` swaps the fresh token into every model the
+  run built, held to the ChatGPT account it started on), and **the request is
+  shaped for the cache** (`cache_friendly_payload`: the system prompt leads
+  `input` as a `developer` item, because GPT-6.2 does not cache
+  `instructions`, and the thread's cache key rides as the `session-id` and
+  `thread-id` headers the ChatGPT backend routes its cache on, as the Codex
+  CLI sends them). OpenAI's official "Sign in with ChatGPT" program
+  (developers.openai.com/siwc) is the documented successor; hosted Duct needs
+  OpenAI's approval for it, so this path stays until then.
 
   So a shared change is made once. Claude remains a first-class *model* through
   V1, which is why retiring its SDK cost no model coverage.
@@ -546,8 +558,20 @@ Postgres `DATABASE_URL` names.
   `MAX_DRAFT_PERSONAS`, shaped by `persona_rows`): project setup and the
   Brand tab (`audience_personas` on `PUT /content/brand`, labelled `user`)
   edit the same rows, and the review_post sub-agent role-plays each one into
-  `last_assessment.personas` (words, then stop/save/click as yes, maybe or
-  no), advice that never moves the overall score.
+  `last_assessment.personas`, advice that never moves the overall score. A
+  persona may carry `quotes`, lines that audience really said; only the
+  Brand tab writes them, and `persona_shape` keeps them through any writer
+  that sends a persona without the key. The panel is built against what the
+  2026 digital-twin studies (Columbia's mega-study, Stanford's 1,052
+  interviews) found twins get wrong: the reason to scroll past comes first
+  (they lean kind), a no-persona `baseline` sits beside them (they collapse
+  onto the model's average reader), they pick between three openings
+  (`hooks`) rather than only rate one (they rank better than they predict),
+  and `agents/content/panel.py` tests them on the brand's own published
+  posts: `fetch_panel_posts` shows openings and short ids, never numbers,
+  and `submit_assessment` scores the returned order against the goal
+  measure (`panel_check`). The app shows the yes/maybe/no chips only when
+  that check beat a coin.
 - `routes/mcp_server.py` + `service/mcp_server/` — Duct as an MCP server at
   `POST /mcp`, for the person's own agent (Claude Code, Codex, Cursor,
   OpenCode). Stateless JSON-RPC with no SDK: seven methods (tools and

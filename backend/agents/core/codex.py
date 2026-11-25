@@ -46,18 +46,26 @@ subscription user and nobody else, which is exactly the kind of break a
 verify step reports as ``model_access`` long after the change.
 
 Three request fields are forced by the backend and set for us:
-``use_responses_api``, ``store=False`` and ``streaming=True``. It also rejects
-a request with no top-level ``instructions`` and any ``SystemMessage`` in the
-input list — ``_ChatOpenAICodex`` lifts one into the other, so a runner's
-system prompt arrives intact with nothing here to do.
+``use_responses_api``, ``store=False`` and ``streaming=True``. It rejects a
+``system`` item in the input list, so ``_ChatOpenAICodex`` lifts a runner's
+SystemMessage into ``instructions``; ``cache_friendly_payload`` then moves it
+to a leading ``developer`` item, which the cache can see, and adds the
+session-affinity headers.
+
+**A session outlives its token.** The access token is good for an hour and a
+session can sit on a question card for longer. Each message brings the
+shell's current token and ``renew_subscription_credential`` swaps it into the
+running models (``_TokenCell``).
 """
 
 from __future__ import annotations
 
 import base64
+import functools
 import json
 import logging
 import os
+import threading
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -282,37 +290,179 @@ def should_use_codex(api_key: str = "") -> bool:
 # ---------------------------------------------------------------------------
 
 
+class _TokenCell:
+    """The access token every model built from one sign-in currently spends.
+
+    A session outlives the hour its token was good for: a question card
+    answered after lunch, a follow-up the next morning. The backend cannot
+    refresh (the refresh token never leaves the desktop), so the app sends the
+    shell's fresh token with each message and ``renew_subscription_credential``
+    writes it here. ``_ChatOpenAICodex`` asks its token provider for the token
+    on every request, so the run's next call spends the new one with nothing
+    rebuilt.
+    """
+
+    __slots__ = ("credential",)
+
+    def __init__(self, credential: SubscriptionCredential) -> None:
+        self.credential = credential
+
+
+# Access token → the cell it belongs to. Keyed by the token itself: it is a
+# secret only its owner's requests carry, so holding one is what entitles a
+# caller to replace it. A renewed cell stays reachable under every token it
+# has held, because a runner that builds another model later (a sub-agent, a
+# fallback) builds it from the string it was started with. In process, like
+# the session registry; an entry goes once its cell's token has expired.
+_CELLS: dict[str, _TokenCell] = {}
+_CELLS_LOCK = threading.Lock()
+
+
+def _prune_cells(now: datetime) -> None:
+    for token in [t for t, cell in _CELLS.items() if cell.credential.expires_at <= now]:
+        del _CELLS[token]
+
+
+def _cell_for(credential: SubscriptionCredential) -> _TokenCell:
+    with _CELLS_LOCK:
+        _prune_cells(datetime.now(timezone.utc))
+        cell = _CELLS.get(credential.access_token)
+        if cell is None:
+            cell = _CELLS[credential.access_token] = _TokenCell(credential)
+        return cell
+
+
+def renew_subscription_credential(held: str, fresh: str) -> bool:
+    """Point every model built from ``held`` at ``fresh``. True when it did.
+
+    Both are packed plan credentials. Refused when ``fresh`` is not a plan
+    token, names a different ChatGPT account (a run never moves to someone
+    else's plan halfway, whoever is asking), or expires no later than what the
+    run already holds.
+    """
+    if not (is_subscription_credential(held) and is_subscription_credential(fresh)):
+        return False
+    old = unpack_subscription_credential(held)
+    new = unpack_subscription_credential(fresh)
+    if new.access_token == old.access_token:
+        return False
+    if not old.account_id or new.account_id != old.account_id:
+        logger.warning("codex: refused a fresh token for a different ChatGPT account")
+        return False
+    with _CELLS_LOCK:
+        _prune_cells(datetime.now(timezone.utc))
+        cell = _CELLS.get(old.access_token) or _TokenCell(old)
+        # Two sessions started on one sign-in share a cell, so the second to
+        # hear of a fresh token finds it already there: still a yes.
+        already = cell.credential.access_token == new.access_token
+        if not already and new.expires_at <= cell.credential.expires_at:
+            return False
+        cell.credential = new
+        _CELLS[old.access_token] = cell
+        _CELLS[new.access_token] = cell
+    return True
+
+
 class _HeaderTokenProvider:
     """A ``_ChatGPTOAuthTokenProvider`` over the credential one request carried.
 
-    Returns the same token every time and never refreshes: there is no refresh
-    token here to refresh with, by design. When the token expires, the run
-    fails with a 401 that the verify step names ``subscription_revoked`` and
-    the shell answers by minting a fresh one on the next request.
+    Never refreshes: there is no refresh token here to refresh with, by design.
+    It reads its cell on every call instead, so a fresher token a later message
+    brought (``renew_subscription_credential``) is the one the next request
+    spends. A token that expires with no message to renew it fails the run
+    with a 401 the verify step names ``subscription_revoked``.
     """
 
     def __init__(self, credential: SubscriptionCredential) -> None:
-        from langchain_openai.chatgpt_oauth import _ChatGPTToken
-
-        self._token = _ChatGPTToken(
-            access_token=credential.access_token,
-            refresh_token=_REFRESH_HELD_BY_SHELL,
-            expires_at=credential.expires_at,
-            account_id=credential.account_id or None,
-            plan_type=credential.plan_type or None,
-        )
+        self._cell = _cell_for(credential)
+        self._built_from: SubscriptionCredential | None = None
+        self._token: Any = None
 
     def get_token(self):
+        credential = self._cell.credential
+        if credential is not self._built_from:
+            from langchain_openai.chatgpt_oauth import _ChatGPTToken
+
+            self._token = _ChatGPTToken(
+                access_token=credential.access_token,
+                refresh_token=_REFRESH_HELD_BY_SHELL,
+                expires_at=credential.expires_at,
+                account_id=credential.account_id or None,
+                plan_type=credential.plan_type or None,
+            )
+            self._built_from = credential
         return self._token
 
     async def aget_token(self):
-        return self._token
+        return self.get_token()
 
     def get_access_token(self) -> str:
-        return self._token.access_token
+        return self._cell.credential.access_token
 
     async def aget_access_token(self) -> str:
-        return self._token.access_token
+        return self.get_access_token()
+
+
+# ---------------------------------------------------------------------------
+# Prompt caching on the ChatGPT backend
+# ---------------------------------------------------------------------------
+
+# What fills the top-level ``instructions`` field once the system prompt has
+# moved into ``input``. Short and fixed, so it never changes the prefix.
+#
+# The field is kept rather than dropped because LangChain's notes say the
+# backend once refused a request without it, and this route cannot be tested
+# offline. The Codex CLI itself now sends none: its base prompt is the first
+# ``developer`` item of ``input`` (``codex-rs/core/src/client.rs``).
+_INSTRUCTIONS_POINTER = "Follow the developer message at the start of the input."
+
+
+def cache_friendly_payload(payload: dict[str, Any], affinity: str) -> dict[str, Any]:
+    """Shape one Codex request the way the backend caches it.
+
+    Two changes, both copied from the first-party client:
+
+    * **The system prompt leads ``input`` as a ``developer`` message** instead
+      of riding in ``instructions``. GPT-6.2 does not cache ``instructions`` at
+      all, so every step of a tool loop re-bought the whole system prompt as
+      uncached input against the user's plan limit (OpenCode 2.3.2 found the
+      same). ``_ChatOpenAICodex`` lifts any SystemMessage into
+      ``instructions``; this moves it back to where the cache can see it.
+    * **``session-id`` and ``thread-id`` headers** carrying the conversation.
+      The ChatGPT backend derives prompt-cache affinity from ``session-id``,
+      the way the public API reads ``prompt_cache_key``; without it each call
+      of a run could land on a machine that has never seen its prefix. The
+      Codex CLI sends both (``codex-api/src/requests/headers.rs``).
+    """
+    instructions = payload.get("instructions")
+    if isinstance(instructions, str) and instructions and instructions != _INSTRUCTIONS_POINTER:
+        lead = {"type": "message", "role": "developer", "content": instructions}
+        payload["input"] = [lead, *(payload.get("input") or [])]
+        payload["instructions"] = _INSTRUCTIONS_POINTER
+    if affinity:
+        payload.setdefault("prompt_cache_key", affinity)
+        headers = {"session-id": affinity, "thread-id": affinity}
+        payload["extra_headers"] = {**headers, **(payload.get("extra_headers") or {})}
+    return payload
+
+
+@functools.cache
+def _codex_chat_class():
+    """``_ChatOpenAICodex`` with the request shaped for the cache.
+
+    Built once, lazily, so importing this module never imports
+    ``langchain_openai``: v1 on Gemini or OpenRouter never pays for it.
+    """
+    from langchain_openai.chat_models.codex import _ChatOpenAICodex
+
+    class _DuctCodexChat(_ChatOpenAICodex):
+        session_affinity: str = ""
+
+        def _get_request_payload(self, input_, *, stop=None, **kwargs):
+            payload = super()._get_request_payload(input_, stop=stop, **kwargs)
+            return cache_friendly_payload(payload, self.session_affinity)
+
+    return _DuctCodexChat
 
 
 def _originator() -> str:
@@ -332,8 +482,6 @@ def build_codex_chat(
     signed the user in, or empty to use the operator's file store. Imported
     lazily so v1 on Gemini/OpenRouter never pays for the import.
     """
-    from langchain_openai.chat_models.codex import _ChatOpenAICodex
-
     if is_subscription_credential(api_key):
         credential = unpack_subscription_credential(api_key)
         if not credential.account_id:
@@ -360,11 +508,15 @@ def build_codex_chat(
         token_provider = _FileChatGPTOAuthTokenProvider.from_default_store()
         logger.info("v1 OpenAI slot on the operator's ChatGPT login: model=%s", model)
 
-    return _ChatOpenAICodex(
+    # The thread's cache key (``lc._cache_kwargs``) doubles as its session
+    # affinity: one conversation, one key, on both of OpenAI's routes.
+    affinity = str((kwargs.get("model_kwargs") or {}).get("prompt_cache_key") or "")
+    return _codex_chat_class()(
         model=getattr(model, "value", model),
         temperature=temperature,
         token_provider=token_provider,
         originator=_originator(),
         include=list(REASONING_CARRYOVER),
+        session_affinity=affinity,
         **kwargs,
     )

@@ -35,6 +35,7 @@ from agents.content.assessment import (
 from agents.content.schema import (
     CheckSeverity,
     MarkerScore,
+    PanelFit,
     PersonaVerdict,
     ReviewBand,
     ReviewMarker,
@@ -298,8 +299,9 @@ def test_persona_reactions_ride_with_the_review_and_never_move_the_score(engine,
 
     assert result["overall"] == 70          # the same post without personas scores 70 too
     assert [r["persona"] for r in result["personas"]] == ["Priya", "Northside", "Sam"]
-    assert result["personas"][0] == {"persona": "Priya", "stop": "yes", "save": "maybe", "click": "no",
+    assert result["personas"][0] == {"persona": "Priya", "pick": None, "stop": "yes", "save": "maybe", "click": "no",
                                      "fix": "Name the tool in the first line."}
+    assert result["panel_check"] is None    # no published posts to check the panel on
     with Session(engine) as db:
         stored = db.get(ContentPost, row.id).last_assessment
     assert [r["persona"] for r in stored["personas"]] == ["Priya", "Northside", "Sam"]
@@ -319,6 +321,80 @@ def test_more_reactions_than_a_project_keeps_personas_are_cut_not_refused(engine
                                         "personas": [_reaction(n) for n in ("A", "B", "C", "D")]})
 
     assert result["status"] == "ok" and [r["persona"] for r in result["personas"]] == ["A", "B", "C"]
+
+
+def test_the_panel_picks_an_opening_and_a_pick_with_no_opening_is_dropped(engine, emitted):
+    row = _post(engine)
+    session = make_session("s", row.project_id, "draft_post")
+    session.post_id = row.id
+    picked = {**_reaction("Priya"), "scroll_past": "Another tools rant.", "pick": 1}
+    stray = {**_reaction("Sam"), "pick": 2}
+
+    _submit(session, emitted, {
+        "markers": _wire(_scores(70)), "personas": [picked, stray],
+        "baseline": {**_reaction("Anyone scrolling"), "pick": 0},
+        "hooks": [" I did everything right and still failed ", "Your colours lie on every screen"],
+    })
+
+    with Session(engine) as db:
+        stored = db.get(ContentPost, row.id).last_assessment
+    assert stored["hooks"] == ["I did everything right and still failed", "Your colours lie on every screen"]
+    assert [r["pick"] for r in stored["personas"]] == [1, None]   # only two openings: index 2 names nothing
+    assert stored["personas"][0]["scroll_past"] == "Another tools rant."
+    slides, caption, tags = _complete_post()
+    again = reassess(slides, caption, tags, stored)
+    assert again.baseline.persona == "Anyone scrolling" and again.hooks == stored["hooks"]
+
+
+def _published(engine, project_id, n, saves):
+    from datetime import timedelta
+
+    from utils.dates import utcnow
+
+    rows = []
+    with Session(engine) as db:
+        for i in range(n):
+            r = ContentPost(project_id=project_id, post_dir_slug=f"p{i}", topic=f"t{i}",
+                            slides=[{"slide_id": "slide-01", "headline": f"Opening number {i}"}],
+                            caption="c", hashtags=[], status="posted", platforms=["tiktok"],
+                            posted_at=utcnow() - timedelta(days=i + 1), perf={"saves": saves[i], "shares": 0})
+            db.add(r)
+            rows.append(r)
+        db.commit()
+        for r in rows:
+            db.refresh(r)
+    return rows
+
+
+def test_the_server_scores_the_panel_on_numbers_the_model_never_sees(engine, emitted):
+    """fetch_panel_posts shows openings and short ids, never a number; the
+    order that comes back is scored against what the posts earned."""
+    from agents.content.panel import short_id
+    from agents.content.tools import build_content_tools_lc
+    from models.project import Project
+
+    with Session(engine) as db:
+        project = Project(user_id=uuid4(), name="Brand", content_brand={"content_goal": "more signups"})
+        db.add(project)
+        db.commit()
+        db.refresh(project)
+    past = _published(engine, project.id, 6, saves=[60, 50, 40, 30, 20, 10])
+    row = _post(engine, project_id=project.id, platforms=["tiktok"])
+    session = make_session("s", project.id, "draft_post")
+    session.post_id = row.id
+
+    tools = {t.name: t for t in build_content_tools_lc(session.project_id, emitted, session)}
+    shown = json.loads(asyncio.run(tools["fetch_panel_posts"].ainvoke({})))
+    assert sorted(p["id"] for p in shown["posts"]) == sorted(short_id(r.id) for r in past)
+    assert all(set(p) == {"id", "opening"} for p in shown["posts"])
+
+    best_first = [short_id(r.id) for r in past]
+    right = _submit(session, emitted, {"markers": _wire(_scores(70)), "panel_order": best_first})
+    wrong = _submit(session, emitted, {"markers": _wire(_scores(70)), "panel_order": best_first[::-1]})
+
+    assert right["panel_check"] == {"metric": "intent", "posts": 6, "pairs": 15, "agreed": 15, "fit": "tracks"}
+    assert (wrong["panel_check"]["agreed"], wrong["panel_check"]["fit"]) == (0, "chance")
+    assert right["overall"] == wrong["overall"] == 70   # advice: never the score
 
 
 def test_an_unreadable_stored_reaction_costs_only_itself():
@@ -438,7 +514,7 @@ def test_the_board_listing_carries_no_review(engine, member_client):
 APP_MIRROR = Path(__file__).resolve().parents[2] / "app" / "src" / "lib" / "contentReview.js"
 
 
-@pytest.mark.parametrize("enum", [ReviewMarker, SanityCheckId, ReviewBand, PersonaVerdict])
+@pytest.mark.parametrize("enum", [ReviewMarker, SanityCheckId, ReviewBand, PersonaVerdict, PanelFit])
 def test_the_app_words_every_id_the_backend_sends(enum):
     """The backend sends ids and the app owns the words, so an id on one side
     only is a check the panel prints raw, or a label nothing ever shows."""

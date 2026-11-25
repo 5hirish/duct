@@ -60,6 +60,7 @@ export const ACTIVITY_TOOLS = Object.freeze({
   fetch_discovered_references: ActivityKind.CONTEXT,
   discover_tiktok: ActivityKind.CONTEXT,
   fetch_post: ActivityKind.CONTEXT,
+  fetch_panel_posts: ActivityKind.CONTEXT,
   fetch_slide_context: ActivityKind.CONTEXT,
   read_shipped_work: ActivityKind.CONTEXT,
   submit_plan: ActivityKind.ACTION,

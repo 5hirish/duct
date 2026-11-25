@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { failedChecks, isScored, replyNumber, slideNumber, weakestMarkers } from "../contentReview";
+import {
+  failedChecks,
+  hookVotes,
+  isScored,
+  panelEchoesBaseline,
+  panelTrusted,
+  replyNumber,
+  slideNumber,
+  weakestMarkers,
+} from "../contentReview";
 
 const assessment = {
   overall: 64,
@@ -41,5 +50,24 @@ describe("contentReview", () => {
     expect(replyNumber("reply-2")).toBe(2);
     expect(replyNumber("slide-02")).toBeNull();
     expect(replyNumber("caption")).toBeNull();
+  });
+
+  it("shows the panel's verdicts only once it beat a coin on past posts", () => {
+    expect(panelTrusted({ panel_check: { fit: "tracks" } })).toBe(true);
+    expect(panelTrusted({ panel_check: { fit: "loose" } })).toBe(true);
+    expect(panelTrusted({ panel_check: { fit: "chance" } })).toBe(false);
+    expect(panelTrusted({ panel_check: null })).toBe(false);
+  });
+
+  it("counts each opening's picks and ignores a pick that names none", () => {
+    const review = { hooks: ["a", "b"], personas: [{ pick: 1 }, { pick: 1 }, { pick: 5 }, { pick: null }] };
+    expect(hookVotes(review)).toEqual([0, 2]);
+  });
+
+  it("notices a panel that reacts exactly like anyone scrolling", () => {
+    const base = { stop: "maybe", save: "no", click: "no", pick: 0 };
+    expect(panelEchoesBaseline({ baseline: base, personas: [{ ...base }, { ...base }] })).toBe(true);
+    expect(panelEchoesBaseline({ baseline: base, personas: [{ ...base }, { ...base, save: "yes" }] })).toBe(false);
+    expect(panelEchoesBaseline({ baseline: null, personas: [{ ...base }] })).toBe(false);
   });
 });
