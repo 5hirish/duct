@@ -1,21 +1,16 @@
 "use client";
 
 /**
- * What an agent connected to Duct's MCP server can and can never do, said the
- * same way in the two places a person decides: the settings page that
- * explains why to connect one, and the consent page the agent opens. One
- * component so the promise cannot drift between them; when the server gains
- * a tool (backend `service/mcp_server/`), this and `lib/agentScopes.js` are
- * the lines to change. The edit line is the maintainer's own wording (issue
- * #512): editing on request is a promise only because every edit can be
- * undone from Activity.
- *
- * Two tiers, because they are two decisions. Setting up a project is what
- * every connection gets. Working on the person's behalf is opt-in, one
- * capability at a time, and its lines are `SCOPE_ABILITIES`, the same words
- * the consent page's checkboxes use. The consent page passes
- * `workTier={false}` and shows those as the checkboxes themselves rather
- * than listing them twice.
+ * What an agent connected to Duct's MCP server can and can never do, in full,
+ * on the settings page that explains why to connect one. The consent page
+ * says the same promise in fewer words (AgentGrantPicker's two choices and
+ * one reassurance row), because a person deciding in a popup reads less than
+ * one exploring Settings; both take their capability words from
+ * `lib/agentScopes.js`, so they cannot promise different things. When the
+ * server gains a tool (backend `service/mcp_server/`), that file and this one
+ * are the lines to change. The edit line is the maintainer's own wording
+ * (issue #512): editing on request is a promise only because every edit can
+ * be undone from Activity.
  *
  * Separate labelled lists, not one: a check and a cross are the only
  * difference otherwise, and a skim reads every line as a grant.

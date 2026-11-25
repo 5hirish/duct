@@ -191,9 +191,11 @@ Four route groups under `app/` (the fourth, `(public)/lead/seo-audit`, is the to
   - `settings/models/` + `settings/profile/` — tiers, providers, usage; profile
   - `settings/agents/` — Connect your AI agent. The why comes first: a
     drawing of repo → agent → Duct project, what that profile feeds, and
-    the can / can never lists from `settings/AgentAbilities.jsx`, which the
-    consent page renders too, so the two cannot promise different things
-    (change it when the MCP server gains a tool). Every setup line is global,
+    the can / can never lists from `settings/AgentAbilities.jsx`. The
+    consent page says the same promise in fewer words (two choices in
+    `AgentGrantPicker`, one reassurance row), and both take their words from
+    `lib/agentScopes.js`, so the two cannot promise different things (change
+    them when the MCP server gains a tool). Every setup line is global,
     because the page says one setup works in every repo. Then pick the agent
     by its logo (`AGENT_LOGOS` in `connections/logos.jsx`) and three tracked
     steps — the line to paste into Claude Code, Codex or OpenCode, or a one-click

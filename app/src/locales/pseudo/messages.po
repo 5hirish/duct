@@ -219,13 +219,21 @@ msgstr ""
 msgid "{action}: {verdict}"
 msgstr ""
 
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "{agent} also asked for <0>{askedNames}</0>. Turn it on in Customise if you want it."
+msgstr ""
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "{agent} asked for this"
+msgstr ""
+
 #: src/components/settings/AgentConsent.jsx
 msgid "{agent} is connected"
 msgstr ""
 
 #: src/components/settings/AgentConsent.jsx
-msgid "{agent} is the name the agent gave itself. Allow it only if you just added Duct to an agent."
-msgstr ""
+#~ msgid "{agent} is the name the agent gave itself. Allow it only if you just added Duct to an agent."
+#~ msgstr ""
 
 #: src/components/settings/AgentConsent.jsx
 msgid "{agent} wasn't connected"
@@ -306,6 +314,10 @@ msgstr ""
 
 #: src/components/content/SynthesisPanel.jsx
 msgid "{count, plural, one {# post} other {# posts}}"
+msgstr ""
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "{count, plural, one {# project you picked} other {# projects you picked}}"
 msgstr ""
 
 #: src/components/content/FeedSummary.jsx
@@ -610,8 +622,12 @@ msgid "{name} no longer accepts the saved API key, so nothing goes through it. P
 msgstr ""
 
 #: src/components/settings/AgentAccess.jsx
-msgid "{name} opens Duct in your browser. Check the name it shows, then choose Allow."
+msgid "{name} opens Duct in your browser. Check the name it shows, choose what it can do, then Allow."
 msgstr ""
+
+#: src/components/settings/AgentAccess.jsx
+#~ msgid "{name} opens Duct in your browser. Check the name it shows, then choose Allow."
+#~ msgstr ""
 
 #: src/components/content/StyleGallery.jsx
 msgid "{name} preview"
@@ -1067,7 +1083,12 @@ msgid "< 1 hr"
 msgstr ""
 
 #: src/components/settings/AgentConsent.jsx
-msgid "<0>{agent}</0> wants to use your Duct account"
+#~ msgid "<0>{agent}</0> wants to use your Duct account"
+#~ msgstr ""
+
+#: src/components/settings/AgentAccess.jsx
+#: src/components/settings/AgentConsent.jsx
+msgid "<0>{agent}</0> would like to work with Duct"
 msgstr ""
 
 #: src/components/content/AccountsTab.jsx
@@ -1669,16 +1690,16 @@ msgid "Advice only, publish either way"
 msgstr ""
 
 #: src/components/settings/AgentConsent.jsx
-msgid "After you allow it, Duct hands {agent} its sign-in on this computer."
-msgstr ""
+#~ msgid "After you allow it, Duct hands {agent} its sign-in on this computer."
+#~ msgstr ""
 
 #: src/components/settings/AgentConsent.jsx
-msgid "After you allow it, you go to <0>{name}</0>."
-msgstr ""
+#~ msgid "After you allow it, you go to <0>{name}</0>."
+#~ msgstr ""
 
 #: src/components/settings/AgentConsent.jsx
-msgid "After you allow it, your browser opens the <0>{name}</0> app."
-msgstr ""
+#~ msgid "After you allow it, your browser opens the <0>{name}</0> app."
+#~ msgstr ""
 
 #: src/app/(app)/activity/page.jsx
 msgid "agent"
@@ -1797,7 +1818,15 @@ msgid "All statuses"
 msgstr ""
 
 #: src/components/settings/AgentGrantPicker.jsx
-msgid "All your projects, including ones you add later"
+msgid "All your projects"
+msgstr ""
+
+#: src/components/settings/AgentGrantPicker.jsx
+#~ msgid "All your projects, including ones you add later"
+#~ msgstr ""
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "All, including ones you add later"
 msgstr ""
 
 #: src/components/settings/AgentAccess.jsx
@@ -1810,9 +1839,8 @@ msgid "Allow \"{word}\" again"
 msgstr ""
 
 #: src/components/settings/AgentAccess.jsx
-#: src/components/settings/AgentConsent.jsx
-msgid "Allow <0>{agent}</0> to use your Duct account?"
-msgstr ""
+#~ msgid "Allow <0>{agent}</0> to use your Duct account?"
+#~ msgstr ""
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Allow it in your browser"
@@ -1839,7 +1867,11 @@ msgid "Also closed issues and documentation changes."
 msgstr ""
 
 #: src/components/settings/AgentGrantPicker.jsx
-msgid "Also let it work on your behalf"
+#~ msgid "Also let it work on your behalf"
+#~ msgstr ""
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Also reads your connected tools, remembers what matters, and writes briefs with Duct's method."
 msgstr ""
 
 #: src/components/audit/AuditStepProgress.jsx
@@ -2208,6 +2240,14 @@ msgstr ""
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Asked a helper agent"
+msgstr ""
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Asked for"
+msgstr ""
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Asked for by {agent}"
 msgstr ""
 
 #: src/components/insights/InsightsWorkspace.jsx
@@ -2644,8 +2684,6 @@ msgstr ""
 #: src/components/memory/MemoryTimeline.jsx
 #: src/components/onboarding/ProviderStep.jsx
 #: src/components/ProjectMembers.jsx
-#: src/components/settings/AgentAccess.jsx
-#: src/components/settings/AgentConsent.jsx
 msgid "Cancel"
 msgstr ""
 
@@ -2686,6 +2724,7 @@ msgid "Category Scores"
 msgstr ""
 
 #: src/components/connections/EndpointProviderCard.jsx
+#: src/components/settings/AgentGrantPicker.jsx
 msgid "Change"
 msgstr ""
 
@@ -3147,8 +3186,8 @@ msgid "Connect an account once and every project can use it. Open a source to pi
 msgstr ""
 
 #: src/components/settings/AgentConsent.jsx
-msgid "Connect an agent"
-msgstr ""
+#~ msgid "Connect an agent"
+#~ msgstr ""
 
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Connect anyway"
@@ -3726,6 +3765,7 @@ msgstr ""
 
 #: src/components/content/FormatLibrary.jsx
 #: src/components/models/TierSummary.jsx
+#: src/components/settings/AgentGrantPicker.jsx
 msgid "Customise"
 msgstr ""
 
@@ -4133,6 +4173,7 @@ msgstr ""
 
 #: src/components/audit/ExecutionOffer.jsx
 #: src/components/models/TierSummary.jsx
+#: src/components/settings/AgentGrantPicker.jsx
 msgid "Done"
 msgstr ""
 
@@ -4198,6 +4239,10 @@ msgstr ""
 
 #: src/components/content/VoiceRulesFields.jsx
 msgid "Drafts may name customers, clients and partners."
+msgstr ""
+
+#: src/lib/agentScopes.js
+msgid "Drafts posts for you to review. Never posts them"
 msgstr ""
 
 #: src/components/content/VoiceRulesFields.jsx
@@ -4902,6 +4947,10 @@ msgstr ""
 
 #: src/app/(app)/artifacts/[artifactId]/page.jsx
 msgid "Export {format}"
+msgstr ""
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Extras, off until you turn them on"
 msgstr ""
 
 #: src/app/(app)/connections/page.jsx
@@ -5622,6 +5671,10 @@ msgstr ""
 msgid "Held the TikTok search for your approval"
 msgstr ""
 
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Help set up my projects"
+msgstr ""
+
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Helps Duct fit its answers to your job"
 msgstr ""
@@ -5905,6 +5958,10 @@ msgstr ""
 msgid "Include {name}"
 msgstr ""
 
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Included"
+msgstr ""
+
 #: src/components/execution/ChangeSetCard.jsx
 msgid "Includes a change that always waits for you. It can be rolled back from here."
 msgstr ""
@@ -6018,12 +6075,20 @@ msgstr ""
 msgid "Issues finished in that time"
 msgstr ""
 
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "It also asked for <0>{askedNames}</0>. Turn it on in Customise if you want it."
+msgstr ""
+
 #: src/lib/mcpServers.js
 msgid "It answered with an error the last time Duct called it. The next chat tries again, or check it now."
 msgstr ""
 
 #: src/components/settings/AgentAbilities.jsx
 msgid "It can never"
+msgstr ""
+
+#: src/components/settings/AgentConsent.jsx
+msgid "It can't approve changes, publish, or see your passwords and keys. Everything it does shows in Activity, and edits can be undone."
 msgstr ""
 
 #: src/lib/mcpServers.js
@@ -6071,8 +6136,8 @@ msgid "It will run again next month, or raise the limit."
 msgstr ""
 
 #: src/components/settings/AgentGrantPicker.jsx
-msgid "It won't see or set up any other project."
-msgstr ""
+#~ msgid "It won't see or set up any other project."
+#~ msgstr ""
 
 #: src/components/AppErrorPanel.jsx
 msgid "It’s logged on our side. Copy the details below if you report it."
@@ -6646,6 +6711,10 @@ msgstr ""
 
 #: src/lib/agentScopes.js
 msgid "Make images with the AI keys you saved in Duct, which your provider charges you for"
+msgstr ""
+
+#: src/lib/agentScopes.js
+msgid "Makes images with the keys you saved. Your provider charges you"
 msgstr ""
 
 #: src/components/workspace/ActivityRow.jsx
@@ -7608,6 +7677,8 @@ msgstr ""
 msgid "Not my voice"
 msgstr ""
 
+#: src/components/settings/AgentAccess.jsx
+#: src/components/settings/AgentConsent.jsx
 #: src/components/StarAsk.jsx
 msgid "Not now"
 msgstr ""
@@ -7738,6 +7809,10 @@ msgstr ""
 #. placeholder {0}: registry.query
 #: src/components/connections/McpConnectors.jsx
 msgid "Nothing else in the MCP Registry matches “{0}”."
+msgstr ""
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Nothing extra yet: turn something on in Customise."
 msgstr ""
 
 #: src/components/workspace/AgentChat.jsx
@@ -7973,8 +8048,8 @@ msgid "Off to audit a competitor or another business."
 msgstr ""
 
 #: src/components/settings/AgentGrantPicker.jsx
-msgid "Off unless you tick it"
-msgstr ""
+#~ msgid "Off unless you tick it"
+#~ msgstr ""
 
 #: src/components/connections/McpConnectors.jsx
 msgid "Official"
@@ -8027,6 +8102,10 @@ msgstr ""
 
 #: src/components/audit/ExecutionOffer.jsx
 msgid "On-page content rewrites"
+msgstr ""
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "On: <0>{summary}</0>"
 msgstr ""
 
 #: src/components/content/PostVideo.jsx
@@ -8114,6 +8193,10 @@ msgstr ""
 msgid "Only a sample of your sitemap was scanned."
 msgstr ""
 
+#: src/components/settings/AgentConsent.jsx
+msgid "Only allow this if you just added Duct to {agent}."
+msgstr ""
+
 #: src/components/content/FeedPlanDialog.jsx
 #~ msgid "Only days with no draft yet."
 #~ msgstr ""
@@ -8159,8 +8242,8 @@ msgid "Only what you published as a release."
 msgstr ""
 
 #: src/components/settings/AgentGrantPicker.jsx
-msgid "Only what you tick, on the projects you choose."
-msgstr ""
+#~ msgid "Only what you tick, on the projects you choose."
+#~ msgstr ""
 
 #: src/components/schedules/ScheduleCard.jsx
 msgid "Only when you run it"
@@ -8666,7 +8749,11 @@ msgid "Pick at least one account."
 msgstr ""
 
 #: src/components/settings/AgentGrantPicker.jsx
-msgid "Pick at least one project, or allow all of them."
+#~ msgid "Pick at least one project, or allow all of them."
+#~ msgstr ""
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Pick at least one project, or choose All."
 msgstr ""
 
 #: src/components/content/FeedPlanDialog.jsx
@@ -9391,12 +9478,20 @@ msgstr ""
 msgid "Reads {names}. The first report takes a minute or two and is kept for a day."
 msgstr ""
 
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Reads and drafts your projects' details."
+msgstr ""
+
 #: src/components/settings/AgentAccess.jsx
 msgid "Reads it, drafts the profile"
 msgstr ""
 
 #: src/app/(app)/audit/seo/page.jsx
 msgid "Reads project memory and writes back what it learns."
+msgstr ""
+
+#: src/lib/agentScopes.js
+msgid "Reads the tools you connected, with Duct's totals"
 msgstr ""
 
 #: src/app/(start)/start/page.jsx
@@ -10537,6 +10632,10 @@ msgstr ""
 msgid "Searched TikTok"
 msgstr ""
 
+#: src/lib/agentScopes.js
+msgid "Searches and adds to what Duct remembers"
+msgstr ""
+
 #: src/components/content/DiscoverPage.jsx
 msgid "Searches run on your own Apify account, so the scraping is billed to you. The same search again within 30 minutes costs nothing."
 msgstr ""
@@ -11072,7 +11171,11 @@ msgid "Sign in with Google to connect"
 msgstr ""
 
 #: src/components/settings/AgentConsent.jsx
-msgid "Sign in, and Duct asks you whether to allow it."
+#~ msgid "Sign in, and Duct asks you whether to allow it."
+#~ msgstr ""
+
+#: src/components/settings/AgentConsent.jsx
+msgid "Sign in, then you choose what it can do."
 msgstr ""
 
 #: src/components/settings/AgentAccess.jsx
@@ -11547,6 +11650,10 @@ msgstr ""
 msgid "Suggested next steps"
 msgstr ""
 
+#: src/lib/agentScopes.js
+msgid "Suggests changes to your ad and tag accounts. You approve every one in Duct"
+msgstr ""
+
 #: src/components/memory/MemoryTimeline.jsx
 #~ msgid "superseded"
 #~ msgstr ""
@@ -11861,8 +11968,8 @@ msgid "The address that serves OpenAI’s API, usually ending in /v1. One on you
 msgstr ""
 
 #: src/components/settings/AgentGrantPicker.jsx
-msgid "The agent asked for this"
-msgstr ""
+#~ msgid "The agent asked for this"
+#~ msgstr ""
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "The agents lose every fact here from their next turn. This cannot be undone."
@@ -12152,6 +12259,10 @@ msgstr ""
 msgid "Theme: {themeLabel}"
 msgstr ""
 
+#: src/components/settings/AgentConsent.jsx
+msgid "Then back to {agent} on this computer."
+msgstr ""
+
 #: src/components/settings/AgentAccess.jsx
 #~ msgid "Then run <0>opencode mcp auth duct</0>."
 #~ msgstr ""
@@ -12163,6 +12274,14 @@ msgstr ""
 #: src/components/settings/AgentAccess.jsx
 #~ msgid "Then sign in from your terminal:"
 #~ msgstr ""
+
+#: src/components/settings/AgentConsent.jsx
+msgid "Then to <0>{name}</0>."
+msgstr ""
+
+#: src/components/settings/AgentConsent.jsx
+msgid "Then to the <0>{name}</0> app."
+msgstr ""
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Then, in Claude Code, run <0>/mcp</0>, pick duct and choose Authenticate."
@@ -13540,6 +13659,10 @@ msgstr ""
 msgid "Work"
 msgstr ""
 
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Work alongside me"
+msgstr ""
+
 #: src/components/insights/desk/DeskDayOne.jsx
 #~ msgid "Work still moving — mine or yours. Nothing here waits on you."
 #~ msgstr ""
@@ -13587,6 +13710,10 @@ msgstr ""
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Write to me in"
+msgstr ""
+
+#: src/lib/agentScopes.js
+msgid "Writes briefs with Duct's method and saves them"
 msgstr ""
 
 #: src/lib/contentEvents.js
@@ -13683,6 +13810,10 @@ msgstr ""
 msgid "You can close this tab."
 msgstr ""
 
+#: src/components/settings/AgentConsent.jsx
+msgid "You choose what it can do. Change it any time in Settings."
+msgstr ""
+
 #: src/components/content/PublishModal.jsx
 #~ msgid "You don't have any social accounts connected yet. Ask your admin to connect a TikTok / Instagram / YouTube account."
 #~ msgstr ""
@@ -13696,7 +13827,11 @@ msgid "You have more than one project for this site. Which should this audit upd
 msgstr ""
 
 #: src/components/settings/AgentGrantPicker.jsx
-msgid "You have no projects yet. Allow all, and it can set up your first one."
+#~ msgid "You have no projects yet. Allow all, and it can set up your first one."
+#~ msgstr ""
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "You have no projects yet. Choose All, and it can set up your first one."
 msgstr ""
 
 #: src/components/execution/ChangeSetCard.jsx

@@ -4,6 +4,7 @@ import {
   DEFAULT_WORK_SCOPES,
   SCOPE_PROJECTS,
   WORK_SCOPES,
+  askedExtras,
   grantBody,
   grantFacts,
   grantProblem,
@@ -36,6 +37,17 @@ describe("the grant a person gives an agent", () => {
     expect(grantProblem(grant)).toBe("no_projects");
     expect(grantProblem({ ...grant, projectIds: ["p1"] })).toBeNull();
     expect(grantBody({ ...grant, projectIds: ["p1"] })).toEqual({ scopes: ["projects", "data"], project_ids: ["p1"] });
+  });
+
+  it("keeps the project choice for setup alone too", () => {
+    const grant = { work: false, scopes: ["data"], projectIds: ["p1"] };
+    expect(grantBody(grant)).toEqual({ scopes: ["projects"], project_ids: ["p1"] });
+    expect(grantProblem({ ...grant, projectIds: [] })).toBe("no_projects");
+  });
+
+  it("names the extras the agent asked for, in table order, and nothing else", () => {
+    expect(askedExtras(["media", "data", "changes"])).toEqual(["changes", "media"]);
+    expect(askedExtras(undefined)).toEqual([]);
   });
 
   it("reads a row from before tiers as setup on every project", () => {

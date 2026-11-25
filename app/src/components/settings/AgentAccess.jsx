@@ -326,12 +326,12 @@ function ConsentPreview({ agentId }) {
         </div>
         <p className="font-serif text-sm leading-snug text-foreground">
           <Trans>
-            Allow <em className="text-brand">{agent}</em> to use your Duct account?
+            <em className="text-brand">{agent}</em> would like to work with Duct
           </Trans>
         </p>
         <div className="flex justify-end gap-1.5 text-xs">
           <span className="rounded-md border border-border px-2.5 py-1 text-muted-foreground">
-            <Trans>Cancel</Trans>
+            <Trans>Not now</Trans>
           </span>
           <span className="rounded-md bg-primary px-2.5 py-1 font-semibold text-primary-foreground ring-2 ring-primary/30 ring-offset-2 ring-offset-background">
             <Trans>Allow</Trans>
@@ -490,7 +490,7 @@ function SignInSteps({ agent, onAgentChange, serverUrl, agents, watching, deepLi
 
         <Step number={2} state={step2} title={t`Allow it in your browser`}>
           <Lead>
-            <Trans>{name} opens Duct in your browser. Check the name it shows, then choose Allow.</Trans>
+            <Trans>{name} opens Duct in your browser. Check the name it shows, choose what it can do, then Allow.</Trans>
           </Lead>
           <ConsentPreview agentId={agent} />
           <SignInStatus

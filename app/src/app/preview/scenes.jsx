@@ -2067,7 +2067,7 @@ export const SCENES = [
     state: "a new token for one project, working on its behalf",
     group: "AgentAccess",
     title: "Connect your AI agent",
-    note: "The token form offers the same two tiers as the consent page: project setup alone unless the switch is on, then what it may do and on which projects. Here: briefs and data on Kestrel only. Every row in the lists says what that connection may do and where, on its second line (Project setup · Data, Memory, Briefs · 2 projects).",
+    note: "The token form offers the consent page's two choices: Help set up my projects by default, or Work alongside me with what is included and Customise. Here: data and briefs on Kestrel only, so the project line reads 1 project you picked. Every row in the lists says what that connection may do and where, on its second line (Project setup · Data, Memory, Briefs · 2 projects).",
     render: () => (
       <AgentAccessScene
         initial={AGENT_TOKENS}
@@ -2093,7 +2093,7 @@ export const SCENES = [
     state: "signed in, a local agent asking",
     group: "AgentConsent",
     title: "Allow an agent",
-    note: "What it can and can't do reads before the buttons, the can'ts in muted ink with an X, never red: nothing is wrong. The destination line says the sign-in goes to this computer. Allow is the filled button on the right, Cancel beside it; both stay one row down to 20rem.",
+    note: "An invitation, not a form: the two marks joined by a short channel with water running in it (still under reduced motion), a warm headline, then two choices. The agent asked for setup alone, so \"Help set up my projects\" is picked and nothing else is open. Projects read as one line with Change. One reassurance row in muted ink with a shield replaces the old X list. Not now and Allow stay one row down to 20rem, and the line under them says where the browser goes next and to allow only if you just added Duct.",
     render: () => (
       <AgentConsent
         state={CONSENT_ASK}
@@ -2107,7 +2107,7 @@ export const SCENES = [
     state: "signed in, a hosted client with a long self-chosen name",
     group: "AgentConsent",
     title: "Allow an agent",
-    note: "A website destination is named in bold, so a page calling itself Claude that sends you to an unknown host is visible. The long name wraps in the heading and in the caution line without breaking the card.",
+    note: "A website destination is named in bold in the line under the buttons, so a page calling itself Claude that sends you to an unknown host is visible. The long name wraps in the heading and in that line without breaking the card.",
     render: () => (
       <AgentConsent
         state={CONSENT_ASK}
@@ -2118,10 +2118,10 @@ export const SCENES = [
   },
   {
     id: "agent-consent-work",
-    state: "the agent asked for more than setup: the second tier opens with the safe defaults",
+    state: "the agent asked to work alongside: that choice is picked, Customise closed",
     group: "AgentConsent",
     title: "Allow an agent",
-    note: "Claude Code asked for data, briefs and proposed changes. The switch is on and Data, Memory and Briefs are ticked; Proposed changes is not, whatever was asked, and says the agent asked for it beside the mark that it stays off unless ticked. Content and Images carry the same mark. Projects start at all of them. Untick everything and Allow still works: it is project setup alone.",
+    note: "Claude Code asked for data, briefs and proposed changes. \"Work alongside me\" is picked and tagged \"Asked for by Claude Code\"; under it, what is included as three icon words (Data, Memory, Briefs), one line saying it also asked for Proposed changes (off until turned on in Customise) and a quiet Customise. Projects still one line. Pick the first choice and Allow is project setup alone.",
     render: () => (
       <AgentConsent
         state={CONSENT_ASK}
@@ -2135,11 +2135,30 @@ export const SCENES = [
     ),
   },
   {
+    id: "agent-consent-customise",
+    state: "the agent also asked for an extra, and the person opened Customise",
+    group: "AgentConsent",
+    title: "Allow an agent",
+    note: "Claude Code asked for data, briefs and proposed changes. Closed, one line under the included icons says it also asked for Proposed changes and where to turn it on. This scene opens Customise: Included (Data, Memory, Briefs, ticked) and Extras, off until you turn them on (Proposed changes, Content, Images, each with the clause that is its reassurance). Proposed changes is not ticked, whatever was asked, and its line says Claude Code asked for it, in brand ink rather than a warning pill.",
+    render: () => (
+      <AgentConsent
+        state={CONSENT_ASK}
+        request={{
+          client_name: "Claude Code (duct)", destination: "device", destination_name: "127.0.0.1",
+          requested_scopes: ["projects", "data", "reports", "changes"],
+        }}
+        projects={AGENT_PROJECTS}
+        defaultCustomise
+        viewerEmail="ana@kestrel.studio"
+      />
+    ),
+  },
+  {
     id: "agent-consent-projects",
     state: "working on two picked projects only",
     group: "AgentConsent",
     title: "Allow an agent",
-    note: "Only the ones I pick, with two of three ticked. The long project name truncates on one line inside the card at 20rem; the list scrolls past twelve rem rather than pushing the buttons off the page.",
+    note: "The project line reads \"On: 2 projects you picked\" and is open (Done closes it): All, or only the ones I pick, with two of three ticked. The long project name truncates on one line inside the card at 20rem; the list scrolls past twelve rem rather than pushing the buttons off the page.",
     render: () => (
       <AgentConsent
         state={CONSENT_ASK}
@@ -2155,7 +2174,7 @@ export const SCENES = [
     state: "only some projects, none picked: Allow waits",
     group: "AgentConsent",
     title: "Allow an agent",
-    note: "The page says what is missing under the list, in the destructive ink, and Allow is disabled until a project is ticked or All is chosen again.",
+    note: "Only the ones I pick with nothing ticked: the line under the list says what is missing, in the destructive ink, and Allow waits until a project is ticked or All is chosen again.",
     render: () => (
       <AgentConsent
         state={CONSENT_ASK}
@@ -2171,7 +2190,7 @@ export const SCENES = [
     state: "the server refused the choice (a project the person no longer has)",
     group: "AgentConsent",
     title: "Allow an agent",
-    note: "The server's own sentence above the buttons. The request is still open, so the person changes the selection and presses Allow again.",
+    note: "The server's own sentence above the buttons, under the reassurance row. The request is still open, so the person changes the selection and presses Allow again.",
     render: () => (
       <AgentConsent
         state={CONSENT_ASK}
@@ -2188,7 +2207,7 @@ export const SCENES = [
     state: "signed out: who is asking, then sign-in",
     group: "AgentConsent",
     title: "Allow an agent",
-    note: "The agent's name shows before any sign-in, so the person knows why they are being asked. One line, then the Google button.",
+    note: "The same warm headline before any sign-in, so the person knows who is asking and that they will choose. One line, then the Google button.",
     render: () => (
       <AgentConsent
         state={CONSENT_SIGN_IN}

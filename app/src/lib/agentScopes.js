@@ -48,6 +48,24 @@ export const SCOPE_ABILITIES = {
   [SCOPE_MEDIA]: msg`Make images with the AI keys you saved in Duct, which your provider charges you for`,
 };
 
+/** One clause each, for the consent page's Customise list, where the name
+ *  above it already says what it is. The extras say the reassurance in the
+ *  same breath, so nothing on the page needs a warning pill. */
+export const SCOPE_HINTS = {
+  [SCOPE_DATA]: msg`Reads the tools you connected, with Duct's totals`,
+  [SCOPE_MEMORY]: msg`Searches and adds to what Duct remembers`,
+  [SCOPE_REPORTS]: msg`Writes briefs with Duct's method and saves them`,
+  [SCOPE_CHANGES]: msg`Suggests changes to your ad and tag accounts. You approve every one in Duct`,
+  [SCOPE_CONTENT]: msg`Drafts posts for you to review. Never posts them`,
+  [SCOPE_MEDIA]: msg`Makes images with the keys you saved. Your provider charges you`,
+};
+
+/** The extras the agent asked for, which stay off until the person turns
+ *  them on; the page opens Customise when there are any, so the ask is seen. */
+export function askedExtras(requested) {
+  return DELIBERATE_SCOPES.filter((scope) => (requested || []).includes(scope));
+}
+
 /** Did the agent ask for anything past project setup? */
 export function asksForWork(requested) {
   return (requested || []).some((scope) => WORK_SCOPES.includes(scope));
@@ -77,17 +95,19 @@ export function toggleScope(scopes, scope, on) {
 
 /** A grant the person cannot submit, as a code the page words, or null. */
 export function grantProblem(grant) {
-  if (grant.work && grant.projectIds && grant.projectIds.length === 0) return "no_projects";
+  if (Array.isArray(grant.projectIds) && grant.projectIds.length === 0) return "no_projects";
   return null;
 }
 
 /**
- * The body the approve and mint routes take. Without the second tier it is
- * project setup on every project, exactly what Allow meant before tiers.
+ * The body the approve and mint routes take. Which projects applies to both
+ * choices: "Help set up my projects" on one client's project is a grant too.
+ * Untouched, it is project setup on every project, exactly what Allow meant
+ * before tiers.
  */
 export function grantBody(grant) {
-  if (!grant.work) return { scopes: [SCOPE_PROJECTS], project_ids: null };
-  return { scopes: [SCOPE_PROJECTS, ...grant.scopes], project_ids: grant.projectIds };
+  const scopes = grant.work ? [SCOPE_PROJECTS, ...grant.scopes] : [SCOPE_PROJECTS];
+  return { scopes, project_ids: grant.projectIds ?? null };
 }
 
 /**

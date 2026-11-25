@@ -27,6 +27,8 @@ const SCALE = new Set([
 
 /** Files with zero off-scale sizes. Adding one here makes it permanent. */
 const CLEAN = new Set([
+  // The consent page's water channel: a drawing, no type of its own.
+  "agent-consent.css",
   "base.css",
   "connector-tiles.css",
   // The feed and schedule drawings (#561, #562): stones and stripes, no type

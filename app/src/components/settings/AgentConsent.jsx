@@ -2,33 +2,31 @@
 
 /**
  * The page an agent opens in the browser to sign in to Duct's MCP server:
- * "Allow Claude Code to use your Duct account?"
+ * "Claude Code would like to work with Duct".
  *
- * It is the one place the person decides, so it says three things before the
- * button and nothing else: what the agent will be able to do, what it never
- * can, and where the browser goes next. The agent's name is whatever it
- * registered as, which anyone can choose, so the page says so and names the
- * destination: an agent on this computer, a website, or an app. That line is
- * what tells a real "Claude Code" from a page pretending to be one.
+ * It is the one place the person decides, and it should read as an
+ * invitation, not a permissions form. So: who is asking, two choices in
+ * plain words (AgentGrantPicker), which projects as one line, one calm
+ * reassurance row for what it can never do, and the two buttons. Everything
+ * finer (the six capabilities, the project list) is one click away and
+ * closed until wanted.
  *
- * Two tiers (lib/agentScopes.js): setting up a project is what Allow always
- * grants, and working on the person's behalf is a separate switch, off
- * unless the agent asked, with the capabilities and projects chosen under it
- * (AgentGrantPicker). The page holds that choice and hands it to `onAllow`
- * as the body the backend takes.
+ * The agent's name is whatever it registered as, which anyone can choose,
+ * so one small line by the buttons names where the browser goes next and
+ * says to allow it only if you just added Duct. That line is what tells a
+ * real "Claude Code" from a page pretending to be one; it stays, quietly.
  *
  * Presentational, like AgentAccess: `app/authorize/page.jsx` owns the
  * requests, so /preview can draw every state.
  */
 
 import { useEffect, useState } from "react";
-import { AppWindow, ArrowRight, Globe, Laptop } from "lucide-react";
+import { AppWindow, Globe, Laptop, ShieldCheck } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
-import AgentAbilities from "@/components/settings/AgentAbilities";
 import AgentGrantPicker from "@/components/settings/AgentGrantPicker";
 import { grantBody, grantProblem, initialGrant } from "@/lib/agentScopes";
 import { AgentLogoTile } from "@/components/connections/logos";
@@ -67,6 +65,19 @@ function Shell({ children, mark = null }) {
   );
 }
 
+/** The two marks are joined by a short channel with water running in it,
+ *  the aqueduct of /start: blue is water and water is data, and this is the
+ *  one place a person watches their data meet an agent. It runs once the
+ *  page is open and stands still under reduced motion (styles/agent-consent.css). */
+function Channel() {
+  return (
+    <svg className="consent-channel" viewBox="0 0 48 12" width="48" height="12" aria-hidden="true">
+      <path className="consent-channel-bed" d="M2 6 H46" />
+      <path className="consent-channel-water" d="M2 6 H46" />
+    </svg>
+  );
+}
+
 /** The agent's mark joined to Duct's: who is asking, at a glance. A known
  *  name gets its owner's logo, anything else a generic agent; the name in
  *  the heading below is still the thing to check. */
@@ -74,7 +85,7 @@ function Pairing({ agentId }) {
   return (
     <div className="mb-6 flex items-center gap-2" aria-hidden="true">
       <AgentLogoTile id={agentId} className="size-11 rounded-xl [&_img]:size-6 [&_svg]:size-6" />
-      <ArrowRight className="size-4 text-muted-foreground" />
+      <Channel />
       <span className="flex size-11 items-center justify-center rounded-xl border border-border bg-background">
         <span className="flex items-baseline gap-0.5">
           <span className="font-serif text-lg leading-none text-foreground">{WORDMARK.charAt(0)}</span>
@@ -97,20 +108,21 @@ function Notice({ title, children }) {
 function Destination({ kind, name, agent }) {
   const Icon = kind === DESTINATION_DEVICE ? Laptop : kind === DESTINATION_APP ? AppWindow : Globe;
   return (
-    <p className="flex items-start gap-2.5 text-sm text-muted-foreground">
-      <Icon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+    <p className="flex items-start gap-2 text-xs text-muted-foreground">
+      <Icon className="mt-px size-3.5 shrink-0" aria-hidden="true" />
       <span>
         {kind === DESTINATION_DEVICE ? (
-          <Trans>After you allow it, Duct hands {agent} its sign-in on this computer.</Trans>
+          <Trans>Then back to {agent} on this computer.</Trans>
         ) : kind === DESTINATION_APP ? (
           <Trans>
-            After you allow it, your browser opens the <strong className="font-medium text-foreground">{name}</strong> app.
+            Then to the <strong className="font-medium text-foreground">{name}</strong> app.
           </Trans>
         ) : (
           <Trans>
-            After you allow it, you go to <strong className="font-medium text-foreground">{name}</strong>.
+            Then to <strong className="font-medium text-foreground">{name}</strong>.
           </Trans>
-        )}
+        )}{" "}
+        <Trans>Only allow this if you just added Duct to {agent}.</Trans>
       </span>
     </p>
   );
@@ -122,6 +134,7 @@ export default function AgentConsent({
   viewerEmail = "",
   projects = null,
   defaultGrant = null,
+  defaultCustomise = false,
   busy = false,
   error = "",
   onAllow,
@@ -199,16 +212,13 @@ export default function AgentConsent({
   if (state === CONSENT_SIGN_IN) {
     return (
       <Shell mark={<Pairing agentId={agentId} />}>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-brand">
-          <Trans>Connect an agent</Trans>
-        </p>
-        <h1 className="mb-3 font-serif text-2xl leading-snug text-foreground">
+        <h1 className="mb-2 font-serif text-2xl leading-snug text-foreground">
           <Trans>
-            <em className="text-brand">{agent}</em> wants to use your Duct account
+            <em className="text-brand">{agent}</em> would like to work with Duct
           </Trans>
         </h1>
         <p className="mb-6 text-sm text-muted-foreground">
-          <Trans>Sign in, and Duct asks you whether to allow it.</Trans>
+          <Trans>Sign in, then you choose what it can do.</Trans>
         </p>
         <GoogleSignInButton onClick={onSignIn} />
       </Shell>
@@ -217,15 +227,15 @@ export default function AgentConsent({
 
   return (
     <Shell mark={<Pairing agentId={agentId} />}>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-brand">
-        <Trans>Connect an agent</Trans>
-      </p>
-      <h1 className="mb-2 font-serif text-2xl leading-snug text-foreground">
+      <h1 className="mb-1.5 font-serif text-2xl leading-snug text-foreground">
         <Trans>
-          Allow <em className="text-brand">{agent}</em> to use your Duct account?
+          <em className="text-brand">{agent}</em> would like to work with Duct
         </Trans>
       </h1>
-      <p className="mb-5 text-xs text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
+        <Trans>You choose what it can do. Change it any time in Settings.</Trans>
+      </p>
+      <p className="mb-6 mt-1 text-xs text-muted-foreground">
         <Trans>
           Signed in as <strong className="font-medium text-foreground">{viewerEmail}</strong>.
         </Trans>{" "}
@@ -234,35 +244,35 @@ export default function AgentConsent({
         </button>
       </p>
 
-      <AgentAbilities className="mb-4" workTier={false} />
-
       <AgentGrantPicker
-        className="mb-5"
         grant={grant}
         onChange={setGrant}
         projects={projects}
         requested={requested}
+        agent={agent}
         idPrefix="consent"
+        defaultCustomise={defaultCustomise}
       />
 
-      <div className="mb-6 space-y-2 border-t border-border pt-4">
-        <Destination kind={request?.destination} name={request?.destination_name} agent={agent} />
-        <p className="text-xs text-muted-foreground">
+      <p className="mt-5 flex items-start gap-2.5 rounded-lg bg-muted/60 px-3.5 py-3 text-xs text-pretty text-muted-foreground">
+        <ShieldCheck className="mt-px size-4 shrink-0 text-success" aria-hidden="true" />
+        <span>
           <Trans>
-            {agent} is the name the agent gave itself. Allow it only if you just added Duct to an agent.
+            It can&apos;t approve changes, publish, or see your passwords and keys. Everything it does shows in
+            Activity, and edits can be undone.
           </Trans>
-        </p>
-      </div>
+        </span>
+      </p>
 
       {error && (
-        <p role="alert" className="mb-4 text-sm text-destructive">
+        <p role="alert" className="mt-4 text-sm text-destructive">
           {error}
         </p>
       )}
 
-      <div className="flex gap-2">
+      <div className="mt-6 flex gap-2">
         <Button type="button" variant="outline" className="flex-1" onClick={onDecline} disabled={busy}>
-          <Trans>Cancel</Trans>
+          <Trans>Not now</Trans>
         </Button>
         <Button
           type="button"
@@ -273,6 +283,9 @@ export default function AgentConsent({
           {busy && <Spinner className="size-4" />}
           <Trans>Allow</Trans>
         </Button>
+      </div>
+      <div className="mt-3">
+        <Destination kind={request?.destination} name={request?.destination_name} agent={agent} />
       </div>
     </Shell>
   );
