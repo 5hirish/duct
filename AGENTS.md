@@ -225,9 +225,9 @@ scratchpad.
   `origin/main`, not a rebase onto it.
 - **Stage deliberately. Never `git add -A` or `git commit -a`.** Name the paths
   you changed. The working tree routinely carries things that must not ride
-  along: generated files (`app/next-env.d.ts` regenerates on every dev run),
-  another session's edits, and the failure mode the hook exists for, a
-  credential. A blind `add -A` is how all three get committed.
+  along: generated output a tool rewrote on its own, another session's edits,
+  and the failure mode the hook exists for, a credential. A blind `add -A` is
+  how all three get committed.
 - **Changes you did not make are a stop sign.** If `git status` shows files you
   did not touch, do not stage them and do not "clean them up". Say what is
   there and ask. They are someone else's unfinished work, or a symptom, and on

@@ -5,6 +5,12 @@ smoke-shots
 *.log
 *.tsbuildinfo
 
+# Written by `next dev`, `next build` and `next typegen`, and different for
+# each: dev points it at .next/dev/types, a build at .next/types. Tracked, it
+# showed up modified after every dev run and rode along into commits.
+# `npm run typecheck` runs `next typegen` first, so a fresh clone still has it.
+next-env.d.ts
+
 # screenshots from scripts/smoke-agent-workspaces.mjs
 smoke-shots/
 
