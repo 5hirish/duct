@@ -108,6 +108,18 @@ Product strategy, GTM and deployment runbooks live in a separate private
 repository. Documents here occasionally cite them; those citations state their
 reasoning inline, so a missing link never blocks understanding the code.
 
+## Who Duct is for
+
+Three personas, documented once in [`docs/personas/`](docs/personas/README.md)
+and referred to everywhere by id: `solo` (Priya, the founder doing marketing
+alone), `team` (a small business: an owner who approves, a generalist who does
+the work, a freelancer on the ads) and `marketer` (Sam, fractional or in-house,
+the analyst's job without the analyst). An issue, a PR/FAQ, a screen, a string
+and a post each name one of them; each persona page carries the pains with
+their evidence, the words to use, the moments that decide whether they stay,
+and a role-play brief to review a change as that person. Developers are not
+on the list: they are contributors, not the audience.
+
 ## Scope and prioritization
 
 Development here is 100% agent-executed, which flips the usual constraint:

@@ -132,6 +132,12 @@ names without consent, nothing from the private GTM plan.
 
 ### The draft is a test
 
+The customer in the press release is one of the three personas in
+[`docs/personas/`](../../../docs/personas/README.md), named by id (`solo`,
+`team`, `marketer`), and the problem paragraph uses that persona's own words
+from its page. Before posting the draft, run the persona's role-play brief
+over it: if they would not care, the release is about the wrong thing.
+
 If the problem paragraph cannot name a person who has this problem today,
 the feature fails `prioritize`'s first question. Say so, and close or park
 the issue under `prioritize`'s rules. That is the PR/FAQ doing its job, not

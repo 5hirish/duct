@@ -1,0 +1,83 @@
+<!doctype html>
+<!-- Template for social cards and LinkedIn carousels. Copy it next to the
+     batch, edit the copy, then: node render.mjs <this file> <out> [--pdf]
+     Every .card becomes one PNG (and one PDF page). Tokens match
+     site/assets/duct.css so a card reads as the site, not as a template. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  :root {
+    --orange: #FF5C00; --navy: #0D0F1A; --navy-2: #2a2d3e; --navy-3: #6b6f82;
+    --off: #f7f7f6; --border: #ebebea;
+    --serif: Georgia, "Times New Roman", Times, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #fff; }
+  /* 1080×1350 (4:5) is LinkedIn's document page and X's vertical image.
+     .wide is X's 16:9. Text under 40px vanishes at phone width. */
+  .card {
+    width: 1080px; height: 1350px; padding: 96px 88px;
+    display: flex; flex-direction: column; gap: 40px;
+    background: var(--off); color: var(--navy); font-family: var(--sans);
+    font-size: 40px; line-height: 1.35; position: relative; overflow: hidden;
+  }
+  .card.wide { width: 1600px; height: 900px; padding: 80px 96px; }
+  /* A cover holds one headline: centre it, pin the footer. */
+  .card.cover { justify-content: center; }
+  .card.cover .foot { position: absolute; left: 88px; right: 88px; bottom: 80px; }
+  /* A mosaic or product shot inside a card; alt text still goes in the post. */
+  .art { width: 100%; flex: 1; min-height: 0; object-fit: cover; border-radius: 20px; }
+  .card.dark { background: var(--navy); color: #fff; }
+  .card.dark .muted { color: #b9bccb; }
+  .tag {
+    font: 600 26px/1 var(--sans); letter-spacing: .18em; text-transform: uppercase;
+    color: var(--navy-3); display: flex; align-items: center; gap: 18px;
+  }
+  .tag::before { content: ""; width: 48px; height: 5px; background: var(--orange); }
+  h1, h2 { font-family: var(--serif); font-weight: 400; letter-spacing: -0.02em; }
+  h1 { font-size: 104px; line-height: 1.02; }
+  h2 { font-size: 72px; line-height: 1.08; }
+  h1 em, h2 em { color: var(--orange); }          /* the italic second beat */
+  .muted { color: var(--navy-2); }
+  .big { font: 400 180px/1 var(--serif); color: var(--orange); }
+  ol, ul { padding-left: 1.1em; display: grid; gap: 22px; }
+  .row { display: flex; gap: 32px; }
+  .box { flex: 1; background: #fff; border: 2px solid var(--border); border-radius: 20px; padding: 40px; }
+  .card.dark .box { background: var(--navy-2); border-color: var(--navy-2); }
+  .foot {
+    margin-top: auto; display: flex; justify-content: space-between; align-items: center;
+    font-size: 30px; color: var(--navy-3);
+  }
+  .page { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+
+<section class="card cover">
+  <p class="tag">Marketing numbers</p>
+  <h1>Your ad platform and GA4 will <em>never agree.</em></h1>
+  <p class="muted">Here is why, and the one number to trust instead.</p>
+  <div class="foot"><span>Shirish Kadam</span><span class="page">1 / 3</span></div>
+</section>
+
+<section class="card">
+  <p class="tag">Why</p>
+  <h2>Two tools, two <em>rules for counting.</em></h2>
+  <div class="row">
+    <div class="box"><strong>Google Ads</strong><p class="muted">puts a sale on the day of the ad click</p></div>
+    <div class="box"><strong>GA4</strong><p class="muted">puts it on the day the sale happened</p></div>
+  </div>
+  <div class="foot"><span>Shirish Kadam</span><span class="page">2 / 3</span></div>
+</section>
+
+<section class="card dark cover">
+  <p class="tag">Try it on your site</p>
+  <h2>One command, <em>no account.</em></h2>
+  <p class="muted">npx getduct check yoursite.com</p>
+  <div class="foot"><span>getduct.ai</span><span class="page">3 / 3</span></div>
+</section>
+
+</body>
+</html>
