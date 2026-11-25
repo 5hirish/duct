@@ -53,6 +53,13 @@ const SCOPE: &str = "openid profile email offline_access";
 /// reason. 1457 is the client's registered fallback, the port the Codex CLI
 /// moves to when 1455 is taken (`codex-rs/login/src/server.rs`).
 const REDIRECT_HOST: &str = "localhost";
+/// The address the listener actually binds: IPv4 loopback, as the Codex CLI
+/// binds it. Binding `localhost` took whichever of `::1` and `127.0.0.1` was
+/// free, so beside a Codex login holding `127.0.0.1:1455` the shell quietly
+/// took `[::1]:1455` and the browser could land on either; a busy port was
+/// never seen as busy. A browser that tries `::1` first is refused there and
+/// falls back to `127.0.0.1`.
+const LISTEN_HOST: &str = "127.0.0.1";
 const REDIRECT_PORT: u16 = 1455;
 const FALLBACK_PORT: u16 = 1457;
 const REDIRECT_PATH: &str = "/auth/callback";
@@ -302,7 +309,7 @@ struct Callback {
 fn try_bind(port: u16, patience: Duration) -> std::io::Result<TcpListener> {
     let give_up = Instant::now() + patience;
     loop {
-        match TcpListener::bind((REDIRECT_HOST, port)) {
+        match TcpListener::bind((LISTEN_HOST, port)) {
             Ok(listener) => return Ok(listener),
             Err(e) if e.kind() == std::io::ErrorKind::AddrInUse && Instant::now() < give_up => {
                 std::thread::sleep(ACCEPT_POLL);
@@ -316,7 +323,7 @@ fn try_bind(port: u16, patience: Duration) -> std::io::Result<TcpListener> {
 /// that is not a login server ignores it, and the bind that follows says
 /// whether it worked.
 fn send_cancel(port: u16) {
-    let Ok(mut stream) = TcpStream::connect((REDIRECT_HOST, port)) else {
+    let Ok(mut stream) = TcpStream::connect((LISTEN_HOST, port)) else {
         return;
     };
     let _ = stream.set_write_timeout(Some(Duration::from_secs(2)));
@@ -813,7 +820,7 @@ mod tests {
     static PORT: Mutex<()> = Mutex::new(());
 
     fn request(port: u16, target: &str) -> String {
-        let mut stream = TcpStream::connect((REDIRECT_HOST, port)).expect("listener up");
+        let mut stream = TcpStream::connect((LISTEN_HOST, port)).expect("listener up");
         write!(stream, "GET {target} HTTP/1.1\r\nHost: localhost\r\n\r\n").unwrap();
         let mut body = String::new();
         stream.read_to_string(&mut body).unwrap();
@@ -828,7 +835,7 @@ mod tests {
     fn a_held_port_falls_back_to_the_registered_one() {
         let _port = PORT.lock().unwrap_or_else(|p| p.into_inner());
         // Something that is not a login server sits on 1455 and will not leave.
-        let squatter = TcpListener::bind((REDIRECT_HOST, REDIRECT_PORT)).expect("port free for the test");
+        let squatter = TcpListener::bind((LISTEN_HOST, REDIRECT_PORT)).expect("port free for the test");
         let (_listener, port) = bind_listener().expect("the fallback port is free");
         assert_eq!(port, FALLBACK_PORT);
         assert_eq!(redirect_uri(port), "http://localhost:1457/auth/callback");
@@ -845,7 +852,7 @@ mod tests {
         assert!(request(port, CANCEL_PATH).contains("cancelled"));
         assert_eq!(waiter.join().unwrap().unwrap_err(), CANCELLED);
         // And the port is free for whoever asked.
-        assert!(TcpListener::bind((REDIRECT_HOST, port)).is_ok());
+        assert!(TcpListener::bind((LISTEN_HOST, port)).is_ok());
     }
 
     #[test]
