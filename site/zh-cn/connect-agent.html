@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <link rel="icon" href="/assets/icon.svg" type="image/svg+xml"/>
 <link rel="apple-touch-icon" href="/assets/apple-icon.svg"/>
-<title>从 Claude Code、Codex 或 Cursor 使用 Duct</title>
+<title>在 Claude Code、Codex、Gemini 或 ChatGPT 中使用 Duct</title>
 <link rel="canonical" href="https://getduct.ai/zh-cn/connect-agent"/>
 <!-- hreflang:start -->
 <link rel="alternate" hreflang="x-default" href="https://getduct.ai/connect-agent"/>
@@ -22,47 +22,46 @@
 <meta property="og:locale:alternate" content="de_DE"/>
 <meta property="og:locale:alternate" content="ja_JP"/>
 <!-- hreflang:end -->
-<meta name="description" content="将 Duct 的 MCP 服务器添加到 Claude Code、Codex、Cursor、VS Code 或 ChatGPT。使用浏览器登录，点击“允许”，你的智能体即可读取和设置项目。"/>
+<meta name="description" content="将 Duct 添加至 Claude Code、Codex、Cursor、Gemini CLI 或 ChatGPT。你的智能体可引用 Duct 核对的总量、保留记忆并保存简报，完全基于你自己的套餐。"/>
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>
 <meta property="og:type" content="website"/>
 <meta property="og:url" content="https://getduct.ai/zh-cn/connect-agent"/>
-<meta property="og:title" content="从 Claude Code、Codex 或 Cursor 使用 Duct"/>
-<meta property="og:description" content="你的智能体中一个地址，你的浏览器中一个“允许”。它可以读取你的 Duct 项目并起草其详细信息，绝不能批准变更。"/>
+<meta property="og:title" content="在 Claude Code、Codex、Gemini 或 ChatGPT 中使用 Duct"/>
+<meta property="og:description" content="你的智能体在你已订阅的套餐上进行思考。Duct 提供其对账后的数据、记忆和方法，并保存简报。"/>
 <meta property="og:image" content="https://getduct.ai/assets/og/connect-agent.jpg"/>
 <meta property="og:image:width" content="1200"/>
 <meta property="og:image:height" content="630"/>
 <meta property="og:site_name" content="Duct"/>
 <meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="从 Claude Code、Codex 或 Cursor 使用 Duct"/>
-<meta name="twitter:description" content="Claude Code、Codex、Cursor、VS Code、OpenCode、Claude 和 ChatGPT 都通过一个地址连接到 Duct。无需复制或粘贴令牌。"/>
+<meta name="twitter:title" content="在 Claude Code、Codex、Gemini 或 ChatGPT 中使用 Duct"/>
+<meta name="twitter:description" content="智能体中一个地址，浏览器中一次“允许”。已核对的数据、记忆与 Duct 剧本，所有变更等待你确认。"/>
 <meta name="twitter:image" content="https://getduct.ai/assets/og/connect-agent.jpg"/>
 <link rel="alternate" type="application/rss+xml" title="Duct 博客" href="/blog/feed.xml"/>
 <link rel="stylesheet" href="/assets/duct.css"/>
 <!-- i18n:js --><script>window.DUCT_I18N={"Cookies, honestly":"Cookie，坦白说","We use PostHog to see which pages earn a signup and where Duct gets in your way, including replays of visits with everything you type hidden. Decline turns PostHog off, and Duct works exactly the same. Google Analytics also counts visits and sets its own cookies, whichever you choose. Nothing is sold.":"我们使用 PostHog 来了解哪些页面促成了注册，以及 Duct 在何处阻碍了你，包括隐藏你输入的所有内容的访问回放。拒绝会关闭 PostHog，Duct 仍能正常运行。Google Analytics 也会统计访问量并设置自己的 Cookie，无论你选择什么。我们不会出售任何数据。","Privacy Policy":"隐私政策","Decline":"拒绝","Accept":"接受","{n} stars on GitHub":"{n} GitHub 星","UTM Builder":"UTM 构建器","SaaS Metrics Benchmark Calculator":"SaaS 指标基准计算器","Weekly Marketing Brief Generator":"每周营销简报生成器","CAC / LTV Calculator":"CAC / LTV 计算器","MRR Growth Rate Calculator":"MRR 增长率计算器","Engagement Rate Calculator":"互动率计算器","CTR Calculator":"CTR 计算器","CPM Calculator":"CPM 计算器","CPC Calculator":"CPC 计算器","CPA Calculator":"CPA 计算器","Marketing ROI Calculator":"营销 ROI 计算器","ROAS Calculator":"ROAS 计算器","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Menu":"菜单","Free Tools":"免费工具","Solutions":"解决方案","Download Duct ↓":"下载 Duct ↓","Language":"语言","Enlarged screenshot":"放大后的截图","Close":"关闭","Fit to screen":"适应屏幕","Zoom in":"放大","Enlarge":"放大","Universal · Apple silicon and Intel":"通用 · Apple 芯片和 Intel","Windows 10 and later":"Windows 10 及更高版本","Runs on any distribution":"可在任何发行版上运行","Debian and Ubuntu":"Debian 和 Ubuntu","Download ↓":"下载 ↓","Download for {label} ↓":"下载适用于 {label} ↓","Example numbers. Change any field and calculate again for yours.":"示例数字。修改任意字段，重新计算你的结果。"};</script>
 <script src="/assets/config.js" defer></script>
-<!-- The HowTo is the three steps and the FAQPage the troubleshooting <details>, word for word:
+<!-- The HowTo is the three steps and the FAQPage every <details> on the page, word for word:
      the i18n generator translates these strings through the page's own catalogue entries. -->
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebPage","inLanguage":"zh-CN","name":"从 Claude Code、Codex 或 Cursor 使用 Duct","url":"https://getduct.ai/zh-cn/connect-agent","description":"将 Duct 的 MCP 服务器添加到 Claude Code、Codex、Cursor、VS Code 或 ChatGPT。使用浏览器登录，点击“允许”，你的智能体即可读取和设置项目。","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"HowTo","name":"如何连接你的智能体","step":[{"@type":"HowToStep","position":1,"name":"将 Duct 添加到你的智能体","text":"将上述地址提供给你的智能体，通过一个命令或一行设置。每个智能体的具体步骤如下。"},{"@type":"HowToStep","position":2,"name":"登录并点击允许","text":"你的浏览器将在 Duct 上打开，并询问你的智能体是否可以使用你的账户。点击允许。没有可复制的令牌。"},{"@type":"HowToStep","position":3,"name":"问它一些问题","text":"尝试“在 Duct 中设置此产品”。你的智能体读取你的仓库并起草项目的描述、受众和竞争对手。"}]}}
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"zh-CN","name":"在 Claude Code、Codex、Gemini 或 ChatGPT 中使用 Duct","url":"https://getduct.ai/zh-cn/connect-agent","description":"将 Duct 添加至 Claude Code、Codex、Cursor、Gemini CLI 或 ChatGPT。你的智能体可引用 Duct 核对的总量、保留记忆并保存简报，完全基于你自己的套餐。","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"HowTo","name":"如何连接你的智能体","step":[{"@type":"HowToStep","position":1,"name":"将 Duct 添加到你的智能体","text":"将上述地址提供给你的智能体，通过一个命令或一行设置。每个智能体的具体步骤如下。"},{"@type":"HowToStep","position":2,"name":"登录并选择","text":"你的浏览器将打开 Duct。选择你的智能体可执行的操作以及适用的项目，然后点击“允许”。无需复制 token。"},{"@type":"HowToStep","position":3,"name":"问它一些问题","text":"尝试“撰写本周简报”。你的智能体将遵循 Duct 的剧本，引用 Duct 对账后的总数，并将简报保存在 Duct 中。"}]}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"zh-CN","mainEntity":[{"@type":"Question","name":"我的浏览器从未打开","acceptedAnswer":{"@type":"Answer","text":"自行开始登录：在 Claude Code 中运行 /mcp，在 Codex 中运行 codex mcp login duct，或在 OpenCode 中运行 opencode mcp auth duct。"}},{"@type":"Question","name":"它显示无法注册，或“不支持动态客户端注册”","acceptedAnswer":{"@type":"Answer","text":"将你的智能体更新到最新版本然后重试。如果仍然失败，请改用令牌连接。"}},{"@type":"Question","name":"它已工作，但现在收到 401 错误","acceptedAnswer":{"@type":"Answer","text":"你已在 Duct 中断开它的连接，或它在 90 天未使用后登录失效。请从你的智能体再次登录。"}},{"@type":"Question","name":"我让它设置项目，但没有任何改变","acceptedAnswer":{"@type":"Answer","text":"草稿绝不会覆盖你在 Duct 中输入的内容。它只填充空白字段或替换之前的草稿。请检查 Duct 中的项目页面。"}},{"@type":"Question","name":"我自行托管 Duct","acceptedAnswer":{"@type":"Answer","text":"使用你自己的 API 地址后跟 /mcp，代替 https://api.getduct.ai/mcp。"}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"zh-CN","mainEntity":[{"@type":"Question","name":"我需要 API 密钥吗？","acceptedAnswer":{"@type":"Answer","text":"不需要。你的智能体在你已订阅的套餐上运行，Duct 不会为此调用任何模型。保存的密钥仅用于生成图片以及 Duct 在你离线时运行的任务（例如定时简报）。"}},{"@type":"Question","name":"它能读取我的哪些工具？","acceptedAnswer":{"@type":"Answer","text":"你在 Duct 中连接的 Stripe、Meta Ads、Mixpanel、GitHub、RevenueCat、Clarity、GrowthBook、Apple Search Ads、RSS 订阅源及其他工具。在确认 Google 对外部 AI 助手的政策前，Google Analytics、Search Console、Google Ads 和 Tag Manager 暂时留在 Duct 自有的智能体内部。"}},{"@type":"Question","name":"它能变更我的广告账户吗？","acceptedAnswer":{"@type":"Answer","text":"只有在开启建议变更时，且仅作为提议。它会在 Duct 的审核队列中等待，直到你在那里批准它。没有任何智能体可以批准或应用变更。"}},{"@type":"Question","name":"Duct 会看到我的对话吗？","acceptedAnswer":{"@type":"Answer","text":"不会。Duct 只能看到你的智能体对其发起的调用（例如请求的数据及原因），绝不会看到聊天中的其他内容。"}},{"@type":"Question","name":"笔记本电脑合上时，简报还会运行吗？","acceptedAnswer":{"@type":"Answer","text":"不是来自你的智能体。定时简报由 Duct 使用保存的密钥运行，因为没有人会让自己的智能体在凌晨 3 点运行。你的智能体撰写的内容会归档到同一个库中。"}},{"@type":"Question","name":"什么是 insights_brief？","acceptedAnswer":{"@type":"Answer","text":"Duct 的简报剧本以斜杠命令形式提供：在 Claude Code 中为 /mcp__duct__insights_brief，在 Gemini CLI 中为 /insights_brief。在任何其他智能体中，只需索取本周简报，它就会调用相同的剧本。"}},{"@type":"Question","name":"我的浏览器从未打开","acceptedAnswer":{"@type":"Answer","text":"亲自发起登录：在 Claude Code 中运行 /mcp，在 Codex 中运行 codex mcp login duct，在 Gemini CLI 中运行 /mcp auth duct，或在 OpenCode 中运行 opencode mcp auth duct。"}},{"@type":"Question","name":"它显示无法注册，或“不支持动态客户端注册”","acceptedAnswer":{"@type":"Answer","text":"将你的智能体更新到最新版本然后重试。如果仍然失败，请改用令牌连接。"}},{"@type":"Question","name":"它已工作，但现在收到 401 错误","acceptedAnswer":{"@type":"Answer","text":"你已在 Duct 中断开它的连接，或它在 90 天未使用后登录失效。请从你的智能体再次登录。"}},{"@type":"Question","name":"我预期的工具不在其中","acceptedAnswer":{"@type":"Answer","text":"你的智能体只能看到它登录时你允许的内容。请在 Duct 中断开连接，重新连接，并选择“与我协作”。"}},{"@type":"Question","name":"我让它设置项目，但没有任何改变","acceptedAnswer":{"@type":"Answer","text":"草稿绝不会覆盖你在 Duct 中输入的内容。它只填充空白字段或替换之前的草稿。请检查 Duct 中的项目页面。"}},{"@type":"Question","name":"我自行托管 Duct","acceptedAnswer":{"@type":"Answer","text":"使用你自己的 API 地址后跟 /mcp，代替 https://api.getduct.ai/mcp。"}}]}
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"zh-CN","itemListElement":[{"@type":"ListItem","position":1,"name":"主页","item":"https://getduct.ai/zh-cn/"},{"@type":"ListItem","position":2,"name":"通过你的智能体使用 Duct","item":"https://getduct.ai/zh-cn/connect-agent"}]}
 </script>
 <style>
 /* ── CONNECT-AGENT-ONLY STYLES ── */
-.ca-hero { padding-bottom: 72px; }
-.ca-hero h1 { font-size: clamp(40px, 5.6vw, 70px); }
-.ca-hero .hero-sub { max-width: 600px; margin-bottom: 32px; }
+.ca-hero { padding-bottom: 56px; }
+.ca-hero h1 { font-size: clamp(40px, 5.6vw, 70px); max-width: 920px; }
+.ca-hero .hero-sub { max-width: 620px; margin-bottom: 32px; }
 .ca-other { margin-top: 22px; font-size: 14px; line-height: 1.6; color: var(--navy-3); max-width: 60ch; animation: fadeUp .5s .32s ease both; }
 .ca-other a { white-space: nowrap; }
 .ca-other a, .ca-link { color: var(--navy); font-weight: 500; text-decoration: underline; text-decoration-color: var(--orange); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
 
 /* Code blocks: the command or address in a <pre> (the i18n generator never translates one), the
    copy button beside it. Dark by default, because that is what a terminal looks like. */
-.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 .code { display: flex; align-items: flex-start; gap: 10px; padding: 10px 10px 10px 16px; background: var(--navy); border-radius: var(--r); }
 .code pre { flex: 1; min-width: 0; margin: 0; padding: 5px 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13.5px; line-height: 1.6; color: #eef0f6; white-space: pre-wrap; overflow-wrap: anywhere; }
 .copy { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 6px 12px; border-radius: var(--pill); border: 1px solid rgba(255,255,255,.22); background: transparent; color: #fff; font-family: var(--sans); font-size: 13px; font-weight: 500; line-height: 1; cursor: pointer; transition: background .2s, border-color .2s; }
@@ -71,31 +70,83 @@
 .copy .ic { font-size: 14px; }
 .nw { white-space: nowrap; }
 .copy.is-done { border-color: #7fd9a3; color: #a6ecc2; }
-/* The hero's address: light and large, the one thing a returning visitor came to copy */
-.addr { width: 100%; max-width: 560px; text-align: left; animation: fadeUp .5s .24s ease both; }
+/* The hero's address: light and large, the one thing a returning visitor came to copy. The
+   one-line command for the most common agent sits under it. */
+.addr { width: 100%; max-width: 600px; text-align: left; animation: fadeUp .5s .24s ease both; }
 .addr-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); margin: 0 0 8px 4px; }
+.code + .addr-label { margin-top: 18px; }
 .code.is-big { align-items: center; padding: 10px 10px 10px 20px; background: var(--white); border: 1.5px solid var(--border); border-radius: var(--r-lg); box-shadow: 0 18px 48px rgba(13,15,26,.08); }
 .code.is-big pre { font-size: 17px; color: var(--navy); }
 .code.is-big .copy { min-height: 40px; padding: 8px 18px; border: none; background: var(--navy); font-size: 14px; }
 .code.is-big .copy:hover { background: var(--navy-2); }
 .code.is-big .copy.is-done { background: #1a7f37; color: #fff; }
 
-/* Steps: the shared navy .how band, each step ending in a small picture of that moment */
-.how .step { display: flex; flex-direction: column; }
-.how .step-title { font-weight: 400; }
-.step-mini { margin-top: auto; padding-top: 26px; }
-.mini-cmd { margin: 0; padding: 12px 14px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.6; color: rgba(255,255,255,.85); white-space: pre-wrap; overflow-wrap: anywhere; }
-.mini-consent { padding: 16px 18px; background: var(--white); border-radius: var(--r); box-shadow: 0 18px 40px rgba(0,0,0,.28); }
-.mini-consent .logo { font-size: 17px; }
-.mini-consent .logo-mark { animation: none; }
-.mini-consent p { margin: 10px 0 14px; font-size: 14px; line-height: 1.5; color: var(--navy); }
-.mini-btns { display: flex; justify-content: flex-end; gap: 8px; }
-.mini-btns span { padding: 6px 16px; border-radius: var(--pill); border: 1px solid var(--border); font-size: 12px; font-weight: 600; color: var(--navy); }
-.mini-btns .is-go { background: var(--orange); border-color: var(--orange); color: #fff; }
-.mini-chat { display: grid; gap: 10px; }
-.mini-ask { justify-self: end; max-width: 92%; padding: 9px 14px; background: var(--white); color: var(--navy); border-radius: 14px 14px 4px 14px; font-size: 14px; line-height: 1.45; }
-.mini-reply { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.55; color: rgba(255,255,255,.78); }
-.mini-reply .ic { flex: none; margin-top: 3px; color: #7fd9a3; }
+/* THE DEMO: the page's one heavy element. Your agent on the left, Duct on the right, the
+   aqueduct's water between them. It plays once when it reveals: the calls arrive, the brief
+   fills, it is saved. Keyframes fill backwards and hang off .in, so a visitor without scripts,
+   or with reduced motion, gets the finished frame. */
+.demo { padding: 0 52px 96px; }
+.demo-fig { max-width: 1100px; margin: 0 auto; }
+.demo-frame { display: grid; grid-template-columns: minmax(0, 6fr) 64px minmax(0, 5fr); column-gap: 14px; align-items: center; padding: 28px; background: var(--off); border: 1px solid var(--border); border-radius: var(--r-lg); }
+.demo-label { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); margin-bottom: 12px; }
+.demo-term { background: var(--navy); border-radius: var(--r); padding: 16px 18px 18px; box-shadow: 0 24px 60px rgba(13,15,26,.18); text-align: left; }
+.demo-bar { display: flex; align-items: center; gap: 6px; margin-bottom: 14px; }
+.demo-bar i { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,255,255,.18); }
+.demo-bar span { margin-left: 8px; font-size: 12px; color: rgba(255,255,255,.55); }
+.demo-ask { margin-bottom: 14px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; line-height: 1.5; color: #fff; }
+.demo-ask b { color: var(--orange); font-weight: 600; margin-right: 6px; }
+.demo-calls { list-style: none; display: grid; gap: 8px; }
+.demo-call { display: grid; grid-template-columns: 18px minmax(0, 1fr); column-gap: 10px; align-items: start; padding: 9px 12px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.09); border-radius: 10px; }
+.demo-call > .ic { font-size: 15px; margin-top: 2px; color: #7fd9a3; }
+.demo-tool { display: block; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; color: #fff; }
+.demo-tool span { color: rgba(255,255,255,.5); }
+.demo-note { display: block; margin-top: 2px; font-size: 13px; line-height: 1.45; color: rgba(255,255,255,.72); }
+.demo-logos { display: flex; gap: 6px; margin-top: 6px; }
+.demo-logos img { display: block; width: 18px; height: 18px; padding: 3px; background: #fff; border-radius: 5px; box-sizing: content-box; }
+.demo-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+.demo-chip { display: inline-flex; align-items: baseline; gap: 5px; padding: 3px 9px; border-radius: var(--pill); background: rgba(255,255,255,.1); font-size: 12px; color: rgba(255,255,255,.8); }
+.demo-chip b { font-weight: 600; color: #fff; }
+.demo-pipe { display: block; width: 64px; height: 20px; overflow: visible; }
+.demo-pipe path { fill: none; stroke-width: 2; stroke-linecap: round; }
+.demo-pipe .bed { stroke: var(--navy); opacity: .18; }
+.demo-pipe .water { stroke: var(--orange); stroke-dasharray: 4 6; }
+.demo-brief { padding: 22px 22px 18px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r); box-shadow: 0 18px 48px rgba(13,15,26,.08); text-align: left; }
+.demo-kicker { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); }
+.demo-title { margin: 8px 0 14px; font-family: var(--serif); font-size: 21px; line-height: 1.25; color: var(--navy); }
+.demo-points { list-style: none; display: grid; gap: 10px; }
+.demo-points li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: baseline; font-size: 14px; line-height: 1.5; color: var(--navy-2); }
+.demo-points b { min-width: 4.6em; font-family: var(--serif); font-size: 19px; font-weight: 400; color: var(--navy); }
+.demo-src { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 12px; color: var(--navy-3); }
+.demo-saved { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding: 11px 14px; background: #e6f4ea; border-radius: var(--r); font-size: 14px; font-weight: 500; color: #14532d; }
+.demo-saved .ic { flex: none; font-size: 17px; color: #1a7f37; }
+.demo-saved span { margin-left: auto; font-weight: 500; color: #14532d; text-decoration: underline; text-underline-offset: 3px; }
+.demo-fig figcaption { max-width: 62ch; margin: 18px auto 0; font-size: 14px; line-height: 1.6; color: var(--navy-3); text-align: center; }
+@keyframes ca-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes ca-pop { 0% { opacity: 0; transform: scale(.5); } 60% { opacity: 1; transform: scale(1.2); } 100% { transform: scale(1); } }
+@keyframes ca-water { to { stroke-dashoffset: -20; } }
+@media (prefers-reduced-motion: no-preference) {
+  .demo-pipe .water { animation: ca-water 1.2s linear infinite; }
+  .demo-fig.in .demo-call { animation: ca-in .35s ease-out both; }
+  .demo-fig.in .demo-call:nth-child(1) { animation-delay: .35s; }
+  .demo-fig.in .demo-call:nth-child(2) { animation-delay: .8s; }
+  .demo-fig.in .demo-call:nth-child(3) { animation-delay: 1.25s; }
+  .demo-fig.in .demo-call:nth-child(4) { animation-delay: 1.75s; }
+  .demo-fig.in .demo-call:nth-child(5) { animation-delay: 2.5s; }
+  .demo-fig.in .demo-call > .ic { animation: ca-pop .35s ease-out both; }
+  .demo-fig.in .demo-call:nth-child(1) > .ic { animation-delay: .6s; }
+  .demo-fig.in .demo-call:nth-child(2) > .ic { animation-delay: 1.05s; }
+  .demo-fig.in .demo-call:nth-child(3) > .ic { animation-delay: 1.5s; }
+  .demo-fig.in .demo-call:nth-child(4) > .ic { animation-delay: 2s; }
+  .demo-fig.in .demo-call:nth-child(5) > .ic { animation-delay: 2.75s; }
+  .demo-fig.in .demo-title { animation: ca-in .35s ease-out 1.5s both; }
+  .demo-fig.in .demo-points li { animation: ca-in .35s ease-out both; }
+  .demo-fig.in .demo-points li:nth-child(1) { animation-delay: 1.5s; }
+  .demo-fig.in .demo-points li:nth-child(2) { animation-delay: 1.75s; }
+  .demo-fig.in .demo-points li:nth-child(3) { animation-delay: 2.1s; }
+  .demo-fig.in .demo-src { animation: ca-in .35s ease-out 2.2s both; }
+  .demo-fig.in .demo-saved { animation: ca-in .35s ease-out 3s both; }
+  .demo-fig.in .demo-saved .ic { animation: ca-pop .4s ease-out 3.2s both; }
+}
 
 /* Section shells, as on /mcp */
 .ca-sec { padding: 96px 52px; }
@@ -105,6 +156,93 @@
 .ca-head h2 { margin-bottom: 14px; }
 .ca-head .sub { max-width: 60ch; }
 .ca-sec code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9em; padding: 1px 6px; background: var(--off); border: 1px solid var(--border); border-radius: 6px; overflow-wrap: anywhere; }
+
+/* Value: a hairline grid with one wider card, because the reconciled numbers are the argument */
+.gains { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin-top: 44px; background: var(--border); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+.gain { padding: 30px 28px 32px; background: var(--white); }
+.gain > .ic, .gain.is-lead > div > .ic { display: block; font-size: 22px; color: var(--orange); margin-bottom: 16px; }
+.gain h3 { font-family: var(--serif); font-size: 21px; font-weight: 400; line-height: 1.25; color: var(--navy); margin-bottom: 8px; }
+.gain p { font-size: 15px; line-height: 1.65; color: var(--navy-3); max-width: 48ch; }
+.gain.is-lead { grid-column: span 2; grid-row: span 2; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: center; background: var(--off); }
+.gain.is-lead h3 { font-size: 26px; }
+.sum { padding: 18px 18px 14px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r); box-shadow: 0 14px 36px rgba(13,15,26,.06); }
+.sum-row { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; font-size: 13px; color: var(--navy-3); border-bottom: 1px dashed var(--border); }
+.sum-row b { font-weight: 500; color: var(--navy-2); }
+.sum-total { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-top: 10px; padding: 10px 12px; background: var(--navy); border-radius: 10px; color: rgba(255,255,255,.75); font-size: 12px; }
+.sum-total b { font-family: var(--serif); font-size: 22px; font-weight: 400; color: #fff; }
+.sum-note { margin-top: 8px; font-size: 12px; color: var(--navy-3); }
+
+/* Steps: the shared navy .how band, each step ending in a small picture of that moment */
+.how .step { display: flex; flex-direction: column; }
+.how .step-title { font-weight: 400; }
+.step-mini { margin-top: auto; padding-top: 26px; }
+.mini-cmd { margin: 0; padding: 12px 14px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.6; color: rgba(255,255,255,.85); white-space: pre-wrap; overflow-wrap: anywhere; }
+.mini-consent { padding: 16px 18px; background: var(--white); border-radius: var(--r); box-shadow: 0 18px 40px rgba(0,0,0,.28); }
+.mini-consent p { margin: 0 0 10px; font-size: 14px; line-height: 1.45; color: var(--navy); }
+.mini-choice { display: flex; align-items: center; gap: 9px; padding: 8px 10px; margin-bottom: 6px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 13px; color: var(--navy-2); }
+.mini-choice::before { content: ''; flex: none; width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--navy-3); }
+.mini-choice.is-on { border-color: var(--navy); color: var(--navy); font-weight: 500; }
+.mini-choice.is-on::before { border: 4px solid var(--navy); width: 12px; height: 12px; }
+.mini-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+.mini-btns span { padding: 6px 16px; border-radius: var(--pill); border: 1px solid var(--border); font-size: 12px; font-weight: 600; color: var(--navy); }
+.mini-btns .is-go { background: var(--orange); border-color: var(--orange); color: #fff; }
+.mini-chat { display: grid; gap: 10px; }
+.mini-ask { justify-self: end; max-width: 92%; padding: 9px 14px; background: var(--white); color: var(--navy); border-radius: 14px 14px 4px 14px; font-size: 14px; line-height: 1.45; }
+.mini-reply { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.55; color: rgba(255,255,255,.78); }
+.mini-reply .ic { flex: none; margin-top: 3px; color: #7fd9a3; }
+
+/* Two tiers: the sign-in the person will see, drawn beside what it means */
+.split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 56px; align-items: center; }
+.split.is-top { align-items: start; }
+.points { list-style: none; display: grid; gap: 14px; margin-top: 28px; max-width: 52ch; }
+.points li { display: flex; align-items: flex-start; gap: 12px; font-size: 15px; line-height: 1.65; color: var(--navy-2); }
+.points .ic { flex: none; font-size: 18px; margin-top: 3px; color: #10883c; }
+.consent { padding: 26px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: 0 24px 60px rgba(13,15,26,.08); }
+.consent-pair { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.consent-tile { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 10px; color: var(--navy-2); font-size: 18px; }
+.consent-tile.is-duct { font-family: var(--serif); font-size: 18px; color: var(--navy); }
+.consent-tile.is-duct i { width: 5px; height: 5px; margin-left: 1px; border-radius: 50%; background: var(--orange); }
+.consent-pair > .ic { font-size: 15px; color: var(--navy-3); }
+.consent-title { font-family: var(--serif); font-size: 22px; line-height: 1.25; color: var(--navy); }
+.consent-sub { margin: 6px 0 18px; font-size: 14px; color: var(--navy-3); }
+.choice { position: relative; padding: 14px 16px 14px 46px; border: 1.5px solid var(--border); border-radius: var(--r); }
+.choice + .choice { margin-top: 10px; }
+.choice::before { content: ''; position: absolute; left: 16px; top: 17px; width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--navy-3); box-sizing: border-box; }
+.choice.is-on { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(13,15,26,.06); }
+.choice.is-on::before { border: 5px solid var(--navy); }
+.choice-name { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 15px; font-weight: 500; color: var(--navy); }
+.choice-tag { padding: 2px 9px; border-radius: var(--pill); background: var(--off); border: 1px solid var(--border); font-size: 11px; font-weight: 600; color: var(--navy-2); }
+.choice-desc { margin-top: 3px; font-size: 13.5px; line-height: 1.55; color: var(--navy-3); }
+.choice-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.choice-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: var(--pill); background: #e6f4ea; font-size: 12px; font-weight: 500; color: #14532d; }
+.choice-chip .ic { font-size: 13px; }
+.choice-extra { margin-top: 10px; font-size: 12.5px; line-height: 1.55; color: var(--navy-3); }
+.consent-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding: 11px 14px; background: var(--off); border-radius: var(--r); font-size: 13.5px; color: var(--navy-2); }
+.consent-row b { font-weight: 500; color: var(--navy); }
+.consent-row u { text-decoration-color: var(--orange); text-underline-offset: 3px; color: var(--navy); }
+.consent-safe { display: flex; align-items: flex-start; gap: 10px; margin-top: 10px; font-size: 13px; line-height: 1.55; color: var(--navy-3); }
+.consent-safe .ic { flex: none; font-size: 16px; margin-top: 1px; color: #1a7f37; }
+.consent-btns { display: flex; gap: 8px; margin-top: 18px; }
+.consent-btns span { flex: 1; padding: 10px 16px; border-radius: var(--pill); border: 1px solid var(--border); text-align: center; font-size: 14px; font-weight: 600; color: var(--navy); }
+.consent-btns .is-go { background: var(--orange); border-color: var(--orange); color: #fff; }
+
+/* What makes it different: two columns read across, the same row in each */
+.diff { margin-top: 44px; border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; background: var(--white); }
+.diff-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.diff-row + .diff-row { border-top: 1px solid var(--border); }
+.diff-cell { display: flex; align-items: flex-start; gap: 12px; padding: 18px 24px; font-size: 15px; line-height: 1.6; color: var(--navy-3); }
+.diff-cell + .diff-cell { border-left: 1px solid var(--border); background: var(--off); color: var(--navy); }
+.diff-cell .ic { flex: none; font-size: 18px; margin-top: 3px; color: var(--navy-3); }
+.diff-cell + .diff-cell .ic { color: var(--orange); }
+.diff-head .diff-cell { padding-top: 16px; padding-bottom: 16px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); }
+.diff-head .diff-cell + .diff-cell { color: var(--navy); }
+
+/* Safety: what stays with you, in the green of a thing that is fine */
+.req { padding: 28px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); }
+.req-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); margin-bottom: 12px; }
+.req-list { list-style: none; display: grid; gap: 14px; }
+.req-list li { display: flex; align-items: flex-start; gap: 12px; font-size: 15px; line-height: 1.6; color: var(--navy); }
+.req-list .ic { flex: none; font-size: 18px; margin-top: 3px; color: #10883c; }
 
 /* Agents: a tab per agent once the script runs; without it, every panel shows in turn */
 .agents { max-width: 860px; margin-top: 40px; scroll-margin-top: 90px; }
@@ -123,18 +261,6 @@
 .setup-steps .code { margin-top: 10px; }
 .agent-note { max-width: 860px; margin-top: 20px; font-size: 14px; line-height: 1.65; color: var(--navy-3); }
 
-/* What it can do: copy left, the can and never lists right */
-.split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: start; }
-.req { padding: 28px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); }
-.req-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); margin-bottom: 12px; }
-.req-list { list-style: none; display: grid; gap: 12px; }
-.req-list + .req-label { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--border); }
-.req-list li { display: flex; align-items: flex-start; gap: 12px; font-size: 15px; line-height: 1.6; color: var(--navy); }
-.req-list .ic { flex: none; font-size: 18px; margin-top: 3px; color: #10883c; }
-.req-list.is-no .ic { color: #b42318; }
-.req-foot { display: flex; align-items: flex-start; gap: 10px; margin-top: 24px; padding: 14px 16px; background: var(--off); border-radius: var(--r); font-size: 14px; line-height: 1.6; color: var(--navy-2); }
-.req-foot .ic { flex: none; font-size: 17px; margin-top: 2px; color: var(--navy-3); }
-
 /* Access: two cards, the token one wider because it carries the code */
 .pair { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 16px; margin-top: 44px; align-items: start; }
 .card { padding: 28px; background: var(--white); border: 1.5px solid var(--border); border-radius: var(--r-lg); scroll-margin-top: 90px; }
@@ -147,6 +273,8 @@
 
 .ca-sec .faq-list { max-width: 820px; margin-top: 40px; }
 .ca-sec .faq-a { max-width: 66ch; }
+.faq-group { max-width: 820px; margin-top: 40px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); }
+.faq-group + .faq-list { margin-top: 12px; }
 
 /* Phones: the copy button takes its own row above the code, so a command gets the full width
    instead of wrapping into a column beside the button; the hero's button drops its word. */
@@ -158,16 +286,30 @@
   .code.is-big pre { font-size: 14px; }
   .code.is-big .copy { padding: 8px 12px; }
   .code.is-big .copy span { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+  .diff-cell { gap: 8px; padding: 12px 12px; font-size: 13.5px; }
+  .diff-cell .ic { font-size: 15px; }
+  .diff-head .diff-cell { font-size: 10.5px; letter-spacing: .06em; }
+}
+@media (max-width: 1000px) {
+  .gains { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .gain.is-lead { grid-column: span 2; grid-row: auto; }
 }
 @media (max-width: 860px) {
-  .ca-hero { padding-bottom: 56px; }
+  .ca-hero { padding-bottom: 48px; }
+  .demo { padding: 0 24px 64px; }
+  .demo-frame { grid-template-columns: 1fr; padding: 16px; row-gap: 4px; }
+  .demo-pipe { transform: rotate(90deg); margin: 18px auto; }
   .ca-sec { padding: 64px 24px; }
   .agent-panel { padding: 22px 18px 24px; }
   .setup-steps > li { padding-left: 38px; }
   .code { padding-left: 12px; }
   .split, .pair { grid-template-columns: 1fr; gap: 32px; }
   .pair { gap: 16px; }
-  .req, .card { padding: 22px; }
+  .req, .card, .consent { padding: 22px; }
+  .gains { grid-template-columns: 1fr; }
+  .gain.is-lead { grid-column: auto; grid-template-columns: 1fr; gap: 20px; }
+  .gain { padding: 24px 22px 26px; }
+  .diff-cell { padding: 14px 18px; }
 }
 </style>
 </head>
@@ -175,27 +317,120 @@
 
 <a href="#main-content" class="skip-link">跳到内容</a>
 
-<!-- EXPERIMENT: the setup page for Duct's own MCP server, the reverse of /mcp (Duct's agent calling
-     yours). Hypothesis: a developer who already works in Claude Code, Codex or Cursor connects Duct
-     when setup is one address and one Allow in the browser, and when what the agent can never do is
-     stated before they connect. Measured by copy clicks (ductTrack connect_agent_copied, by block)
-     and download clicks per visit. -->
+<!-- EXPERIMENT: the flagship page for Duct's MCP server: use Duct from the agent you already pay
+     for. Hypothesis: someone who works in Claude Code, Codex, Gemini CLI or ChatGPT connects Duct
+     when they see what their agent gains that it cannot do alone (numbers Duct reconciled, memory,
+     a method, a library) and what it can never do, before they connect. Measured by copy clicks
+     (ductTrack connect_agent_copied, by block) and download clicks per visit. -->
 
 <!-- NAV (shared: site/partials/nav-simple.html) -->
 <div data-duct-partial="/zh-cn/partials/nav-simple.html"></div>
 
 <main id="main-content">
 
-<!-- HERO: the address is the answer, so it sits where the eye lands -->
+<!-- HERO: the idea in one line, then the address and the command, ready to copy -->
 <section class="hero ca-hero">
-<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Duct 的 MCP 服务器 · 浏览器登录</div>
-<h1>通过你的智能体使用 Duct。<br/><em>无需复制令牌。</em></h1>
-<p class="hero-sub">将此地址添加到 Claude Code、Codex、Cursor、VS Code、OpenCode、Claude 或 ChatGPT。你的浏览器将打开 Duct，你点击“允许”，然后你的智能体即可读取你的项目并起草其详细信息。</p>
+<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Duct 的 MCP 服务器 · 基于你的 AI 套餐运行</div>
+<h1>你的智能体负责思考。<br/><em>Duct 提供方法。</em></h1>
+<p class="hero-sub">将一个地址添加至 Claude Code、Codex、Cursor、Gemini CLI、ChatGPT 或 Claude。你的智能体可通过 Duct 读取已连接的工具，引用 Duct 核对的总量，记住你的决定，并将每份简报保存到你阅读的地方。无需粘贴 API 密钥。</p>
 <div class="addr">
 <span class="addr-label">服务器地址</span>
 <div class="code is-big"><pre>https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="address" aria-label="复制服务器地址"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div>
+<span class="addr-label">或者在 Claude Code 中</span>
+<div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="hero-claude-code" aria-label="复制 Claude Code 命令"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div>
 </div>
 <p class="ca-other">希望 Duct 自己的智能体调用你的 MCP 服务器吗？那是另一个方向：<a href="/zh-cn/mcp">你在 Duct 中的 MCP 服务器 →</a></p>
+</section>
+
+<!-- THE DEMO: one ask, five calls to Duct, a brief saved in the library -->
+<section class="demo" id="demo" aria-labelledby="demo-caption">
+<figure class="demo-fig reveal">
+<div class="demo-frame" aria-hidden="true">
+<div class="demo-agent">
+<p class="demo-label">你的智能体</p>
+<div class="demo-term">
+<div class="demo-bar"><i></i><i></i><i></i><span>Claude Code</span></div>
+<p class="demo-ask"><b>&gt;</b>为 Acme 撰写本周简报</p>
+<ol class="demo-calls">
+<li class="demo-call"><svg class="ic"><use href="/assets/icons.svg#circle-check"/></svg><div><span class="demo-tool">duct <span>·</span> start_run</span><span class="demo-note">Duct 的剧本，以及它对 Acme 的了解</span></div></li>
+<li class="demo-call"><svg class="ic"><use href="/assets/icons.svg#circle-check"/></svg><div><span class="demo-tool">duct <span>·</span> list_data_sources</span><span class="demo-logos"><img src="/assets/icons/stripe.svg" width="18" height="18" alt=""/><img src="/assets/icons/mixpanel.svg" width="18" height="18" alt=""/><img src="/assets/icons/github.svg" width="18" height="18" alt=""/></span></div></li>
+<li class="demo-call"><svg class="ic"><use href="/assets/icons.svg#circle-check"/></svg><div><span class="demo-tool">duct <span>·</span> fetch_data</span><span class="demo-note">Stripe，过去 7 天。Duct 统计总数：</span><span class="demo-chips"><span class="demo-chip">新增收入 <b>$18,420</b></span><span class="demo-chip">较上周 <b>+6.2%</b></span><span class="demo-chip"><b>3</b> 次退款</span></span></div></li>
+<li class="demo-call"><svg class="ic"><use href="/assets/icons.svg#circle-check"/></svg><div><span class="demo-tool">duct <span>·</span> search_memory</span><span class="demo-note">“新定价页面于 11 月 12 日上线。”</span></div></li>
+<li class="demo-call"><svg class="ic"><use href="/assets/icons.svg#circle-check"/></svg><div><span class="demo-tool">duct <span>·</span> submit_brief</span><span class="demo-note">已保存至 Acme 的库，版本 1</span></div></li>
+</ol>
+</div>
+</div>
+<svg class="demo-pipe" viewBox="0 0 64 20" width="64" height="20"><path class="bed" d="M0 6H64M0 14H64"/><path class="water" d="M0 10H64"/></svg>
+<div class="demo-duct">
+<p class="demo-label">在 Duct 中</p>
+<div class="demo-brief">
+<p class="demo-kicker">Acme · 简报 · 过去 7 天</p>
+<p class="demo-title">自价格页面上线以来，收入有所增长。退款保持稳定。</p>
+<ul class="demo-points">
+<li><b>$18,420</b><span>新增收入，比前一周增长 6.2%</span></li>
+<li><b>11 月 12 日</b><span>提升开始的日期，即新定价页面上线之时</span></li>
+<li><b>3</b><span>退款，与前 4 周持平</span></li>
+</ul>
+<p class="demo-src">读取：Stripe、Mixpanel、GitHub · Duct 统计总数 · 已调取：1 个记忆</p>
+</div>
+<p class="demo-saved"><svg class="ic"><use href="/assets/icons.svg#circle-check"/></svg>简报已保存至 Duct<span>打开 →</span></p>
+</div>
+</div>
+<figcaption id="demo-caption">你向你的智能体提出要求。它向 Duct 请求剧本、数据源、总数以及 Duct 的记忆，然后将简报保存在你的库中。模型属于你，数据和方法属于 Duct。</figcaption>
+</figure>
+</section>
+
+<!-- WHAT YOUR AGENT GAINS -->
+<section class="ca-sec is-off" id="why">
+<div class="ca-inner">
+<div class="ca-head reveal">
+<p class="tag">你的智能体将获得什么</p>
+<h2>它本身就很擅长写作。<em>现在它更懂你的数据。</em></h2>
+<p class="sub">通用助手可以推理任何事情。但它无法查看你的收入、记住上个月的情况或保存简报。Duct 为它赋予这三项能力。</p>
+</div>
+<div class="gains reveal">
+<div class="gain is-lead">
+<div>
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#calculator"/></svg>
+<h3>Duct 核对的数据</h3>
+<p>Duct 会在代码中汇总每次拉取的数据，并将总额与转化率提供给你的智能体，因此简报中引用的金额是 $18,420，而不是模型自己在数千行数据上算出的结果。</p>
+</div>
+<div class="sum" aria-hidden="true">
+<p class="sum-row"><span>11 月 18 日</span><b>$2,140</b></p>
+<p class="sum-row"><span>11 月 19 日</span><b>$2,980</b></p>
+<p class="sum-row"><span>11 月 20 日</span><b>$2,615</b></p>
+<p class="sum-row"><span>…</span><b>还有 4 天</b></p>
+<p class="sum-total"><span>总计，由 Duct 汇总</span><b>$18,420</b></p>
+<p class="sum-note">比率也是如此：求和后再计算比率，绝不是平均值的平均值。</p>
+</div>
+</div>
+<div class="gain">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg>
+<h3>无需粘贴密钥</h3>
+<p>它使用你已订阅的套餐运行。Duct 不会为此调用任何模型。</p>
+</div>
+<div class="gain">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#history"/></svg>
+<h3>可延续的记忆</h3>
+<p>你上个月做出的决定、发起的项目和测量的指标，下次在任何智能体中都可以直接查阅。</p>
+</div>
+<div class="gain">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg>
+<h3>Duct 的剧本，一条命令</h3>
+<p>从 Claude Code 或 Gemini CLI 的斜杠菜单中选择 <code>insights_brief</code>，你的智能体就会遵循 Duct 自有智能体所使用的方法。</p>
+</div>
+<div class="gain">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>
+<h3>等待你确认的变更</h3>
+<p>它可以提议变更预算或标签。该变更将保留在 Duct 的审核队列中，直到你批准它。</p>
+</div>
+<div class="gain">
+<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg>
+<h3>资料库中的简报</h3>
+<p>它撰写的每一份简报都会保存在 Duct 中并保留版本记录，与 Duct 自身撰写的简报存放在一起。</p>
+</div>
+</div>
+</div>
 </section>
 
 <!-- STEPS -->
@@ -216,24 +451,25 @@
 </div>
 <div class="step reveal" style="transition-delay:.1s">
 <span class="step-num">02</span>
-<h3 class="step-title">登录并点击允许</h3>
-<p class="step-body">你的浏览器将在 Duct 上打开，并询问你的智能体是否可以使用你的账户。点击允许。没有可复制的令牌。</p>
+<h3 class="step-title">登录并选择</h3>
+<p class="step-body">你的浏览器将打开 Duct。选择你的智能体可执行的操作以及适用的项目，然后点击“允许”。无需复制 token。</p>
 <div class="step-mini" aria-hidden="true">
 <div class="mini-consent">
-<span class="logo">duct <span class="logo-mark"></span></span>
-<p><strong>Claude Code</strong> 想使用你的 Duct 账户</p>
-<div class="mini-btns"><span>取消</span><span class="is-go">允许</span></div>
+<p><strong>Claude Code</strong> 希望与 Duct 协同工作</p>
+<span class="mini-choice">帮助设置我的项目</span>
+<span class="mini-choice is-on">与我协同工作</span>
+<div class="mini-btns"><span>暂不</span><span class="is-go">允许</span></div>
 </div>
 </div>
 </div>
 <div class="step reveal" style="transition-delay:.2s">
 <span class="step-num">03</span>
 <h3 class="step-title">问它一些问题</h3>
-<p class="step-body">尝试“在 Duct 中设置此产品”。你的智能体读取你的仓库并起草项目的描述、受众和竞争对手。</p>
+<p class="step-body">尝试“撰写本周简报”。你的智能体将遵循 Duct 的剧本，引用 Duct 对账后的总数，并将简报保存在 Duct 中。</p>
 <div class="step-mini" aria-hidden="true">
 <div class="mini-chat">
-<p class="mini-ask">在 Duct 中设置此产品。</p>
-<p class="mini-reply"><svg class="ic"><use href="/assets/icons.svg#circle-check"/></svg><span>已从仓库起草描述、受众和竞争对手。它们已在 Duct 中的项目里。</span></p>
+<p class="mini-ask">撰写本周简报。</p>
+<p class="mini-reply"><svg class="ic"><use href="/assets/icons.svg#circle-check"/></svg><span>自价格页面上线以来，收入增长了 6.2%。简报已保存在 Duct 中。</span></p>
 </div>
 </div>
 </div>
@@ -241,12 +477,87 @@
 </div>
 </section>
 
+<!-- TWO TIERS: what the sign-in asks, drawn as the person will see it -->
+<section class="ca-sec" id="choose">
+<div class="ca-inner split">
+<div class="ca-head reveal">
+<p class="tag">由你选择</p>
+<h2>设置项目，<em>或与你协同工作。</em></h2>
+<p class="sub">当你的智能体登录时，你可以选择它能做什么以及在哪些项目上执行。随时可在“设置”中更改。</p>
+<ul class="points">
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span><strong>协助设置我的项目。</strong> 它会读取你的代码库或文件，并起草项目的描述、目标受众和竞争对手。</span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span><strong>与我协同工作。</strong> 它还会读取你连接的工具，记住重要事项，并使用 Duct 的方法撰写简报。</span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span><strong>附加功能保持关闭，直到你手动开启：</strong>拟定广告和标签账号的变更、起草帖子，以及使用你自己保存的 API 密钥生成图片（提供商会为此收费）。</span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span><strong>你的所有项目，或仅限你选择的项目。</strong> 未提供给智能体的客户项目对它而言并不存在。</span></li>
+</ul>
+</div>
+<div class="consent reveal" style="transition-delay:.08s" aria-hidden="true">
+<div class="consent-pair"><span class="consent-tile"><svg class="ic"><use href="/assets/icons.svg#code-2"/></svg></span><svg class="ic"><use href="/assets/icons.svg#arrow-right"/></svg><span class="consent-tile is-duct">d<i></i></span></div>
+<p class="consent-title">Claude Code 想要与 Duct 配合工作</p>
+<p class="consent-sub">你可以选择它能做什么。随时可在“设置”中更改。</p>
+<div class="choice">
+<p class="choice-name">帮助设置我的项目</p>
+<p class="choice-desc">读取并起草你项目的详细信息。</p>
+</div>
+<div class="choice is-on">
+<p class="choice-name">与我协同工作 <span class="choice-tag">由 Claude Code 请求</span></p>
+<p class="choice-desc">还会读取已连接的工具，记住重要事项，并使用 Duct 的方法撰写简报。</p>
+<div class="choice-chips"><span class="choice-chip"><svg class="ic"><use href="/assets/icons.svg#database"/></svg>数据</span><span class="choice-chip"><svg class="ic"><use href="/assets/icons.svg#history"/></svg>记忆</span><span class="choice-chip"><svg class="ic"><use href="/assets/icons.svg#file-text"/></svg>简报</span></div>
+<p class="choice-extra">附加功能（默认关闭，需手动开启）：提议变更、撰写帖子草稿、生成图片。</p>
+</div>
+<p class="consent-row"><span>适用于：<b>你的所有项目</b></span><u>变更</u></p>
+<p class="consent-safe"><svg class="ic"><use href="/assets/icons.svg#shield-check"/></svg><span>它无法批准变更、发布内容，也无法查看你的密码和密钥。</span></p>
+<div class="consent-btns"><span>暂不</span><span class="is-go">允许</span></div>
+</div>
+</div>
+</section>
+
+<!-- WHAT MAKES IT DIFFERENT -->
+<section class="ca-sec is-off" id="different">
+<div class="ca-inner">
+<div class="ca-head reveal">
+<p class="tag">有何与众不同之处</p>
+<h2>连接器向你的智能体提供数据行。<em>Duct 则向它提供答案。</em></h2>
+<p class="sub">很多服务器都会将你的数据传递给智能体。然后智能体必须求和、猜测上下文，并每次都从空白提示词开始。</p>
+</div>
+<div class="diff reveal" role="table" aria-label="Duct 旁边的原始数据连接器">
+<div class="diff-row diff-head" role="row"><span class="diff-cell" role="columnheader">原始数据连接器提供给它</span><span class="diff-cell" role="columnheader">Duct 提供给它</span></div>
+<div class="diff-row" role="row"><span class="diff-cell" role="cell"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#layers"/></svg><span>需要自行相加的数据行</span></span><span class="diff-cell" role="cell"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#calculator"/></svg><span>Duct 在代码中已核对的总量和比率，及其所覆盖的时间范围</span></span></div>
+<div class="diff-row" role="row"><span class="diff-cell" role="cell"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#layers"/></svg><span>上次的记录没有任何保留</span></span><span class="diff-cell" role="cell"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#history"/></svg><span>根据问题排序的你所决定、发布和衡量的记录</span></span></div>
+<div class="diff-row" role="row"><span class="diff-cell" role="cell"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#layers"/></svg><span>每次都是空白提示词</span></span><span class="diff-cell" role="cell"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg><span>Duct 自有的操作指南，附有各工具如何报告错误数字的说明</span></span></div>
+<div class="diff-row" role="row"><span class="diff-cell" role="cell"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#layers"/></svg><span>在工具允许的任何地方直接进行更改</span></span><span class="diff-cell" role="cell"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>保留在 Duct 中等待你批准的提案</span></span></div>
+<div class="diff-row" role="row"><span class="diff-cell" role="cell"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#layers"/></svg><span>在聊天中随着滚动而消失的回答</span></span><span class="diff-cell" role="cell"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg><span>在 Duct 中保存、具备版本控制且易于共享的简报</span></span></div>
+</div>
+</div>
+</section>
+
+<!-- SAFETY: what stays with you, said as a promise rather than a warning -->
+<section class="ca-sec" id="what-it-can-do">
+<div class="ca-inner split is-top">
+<div class="ca-head reveal">
+<p class="tag">专为交付给智能体而构建</p>
+<h2>它负责干活。<em>密钥由你掌控。</em></h2>
+<p class="sub">智能体会受其读取内容的影响。因此无论你开放什么权限，重要事项绝不由它擅自执行。</p>
+</div>
+<div class="req reveal" style="transition-delay:.08s">
+<span class="req-label">在 Duct 中始终归你所有</span>
+<ul class="req-list">
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>批准或应用变更、发布帖子、连接工具。无论你开放什么权限，任何智能体都无法擅自操作。</span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>你的密码和密钥。没有任何智能体能看到它们。</span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>在“活动”中以其自身名称记录它保存的所有内容。修改只需一键即可撤销。</span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>来自网页、搜索词或帖子的文本在送达时会被标记为数据，绝不会被当作指令。</span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>关闭开关。在“设置”中断开连接，它将在下一次调用时停止。</span></li>
+</ul>
+</div>
+</div>
+</section>
+
 <!-- SETUP, PER AGENT -->
-<section class="ca-sec" id="setup">
+<section class="ca-sec is-off" id="setup">
 <div class="ca-inner">
 <div class="ca-head reveal">
 <p class="tag">通过智能体设置</p>
-<h2>七个智能体。<em>一个地址。</em></h2>
+<h2>8 个智能体。<em>一个地址。</em></h2>
 <p class="sub">每个智能体都连接到同一个服务器。选择你的智能体以获取具体步骤。</p>
 </div>
 <div class="agents reveal" data-agent-tabs>
@@ -254,6 +565,7 @@
 <button type="button" class="agent-tab" role="tab" id="tab-claude-code" aria-controls="claude-code" aria-selected="true">Claude Code</button>
 <button type="button" class="agent-tab" role="tab" id="tab-codex" aria-controls="codex" aria-selected="false" tabindex="-1">Codex</button>
 <button type="button" class="agent-tab" role="tab" id="tab-cursor" aria-controls="cursor" aria-selected="false" tabindex="-1">Cursor</button>
+<button type="button" class="agent-tab" role="tab" id="tab-gemini-cli" aria-controls="gemini-cli" aria-selected="false" tabindex="-1">Gemini CLI</button>
 <button type="button" class="agent-tab" role="tab" id="tab-vs-code" aria-controls="vs-code" aria-selected="false" tabindex="-1">VS Code</button>
 <button type="button" class="agent-tab" role="tab" id="tab-opencode" aria-controls="opencode" aria-selected="false" tabindex="-1">OpenCode</button>
 <button type="button" class="agent-tab" role="tab" id="tab-claude" aria-controls="claude" aria-selected="false" tabindex="-1">Claude</button>
@@ -266,7 +578,8 @@
 <li>在你的终端中，运行：
 <div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="claude-code" aria-label="复制 Claude Code 命令"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div></li>
 <li>在 Claude Code 中，运行 <code>/mcp</code>，选择 <code>duct</code> 并选择 <code>Authenticate</code>。</li>
-<li>你的浏览器将在 Duct 上打开。点击允许。</li>
+<li>你的浏览器将打开 Duct。选择它可执行的操作，然后点击“允许”。</li>
+<li>运行 <code>/mcp__duct__insights_brief</code>，或索取本周简报。</li>
 </ol>
 </section>
 
@@ -277,7 +590,7 @@
 <div class="code"><pre>codex mcp add duct <span class="nw">--url</span> https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="codex" aria-label="复制 Codex 命令"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div></li>
 <li>然后登录：
 <div class="code"><pre>codex mcp login duct</pre><button type="button" class="copy" data-copy="codex-login" aria-label="复制登录命令"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div></li>
-<li>你的浏览器将在 Duct 上打开。点击允许。</li>
+<li>你的浏览器将打开 Duct。选择它可执行的操作，然后点击“允许”。</li>
 </ol>
 </section>
 
@@ -293,7 +606,25 @@
   }
 }</pre><button type="button" class="copy" data-copy="cursor" aria-label="复制 Cursor 设置"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div></li>
 <li>在 Cursor 的 MCP 设置中，点击 duct 服务器上的登录提示。</li>
-<li>你的浏览器将在 Duct 上打开。点击允许。</li>
+<li>你的浏览器将打开 Duct。选择它可执行的操作，然后点击“允许”。</li>
+</ol>
+</section>
+
+<section class="agent-panel" id="gemini-cli">
+<h3>Gemini CLI</h3>
+<ol class="setup-steps" role="list">
+<li>将 Duct 添加至 <code>~/.gemini/settings.json</code>：
+<div class="code"><pre>{
+  "mcpServers": {
+    "duct": {
+      "httpUrl": "https://api.getduct.ai/mcp"
+    }
+  }
+}</pre><button type="button" class="copy" data-copy="gemini-cli" aria-label="复制 Gemini CLI 设置"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div></li>
+<li>启动 Gemini CLI 并登录：
+<div class="code"><pre>/mcp auth duct</pre><button type="button" class="copy" data-copy="gemini-cli-auth" aria-label="复制登录命令"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div></li>
+<li>你的浏览器将打开 Duct。选择它可执行的操作，然后点击“允许”。</li>
+<li>运行 <code>/insights_brief</code>，或获取本周的简报。</li>
 </ol>
 </section>
 
@@ -303,7 +634,7 @@
 <li>打开命令面板并运行 <code>MCP: Add Server</code>。</li>
 <li>选择 HTTP，粘贴地址并将其命名为 <code>duct</code>：
 <div class="code"><pre>https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="vs-code" aria-label="复制服务器地址"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div></li>
-<li>VS Code 首次使用 Duct 时会要求你登录。你的浏览器会在 Duct 上打开。点击允许。</li>
+<li>首次使用 Duct 时，VS Code 会提示你登录。你的浏览器将打开 Duct。选择它能做什么，然后点击“允许”。</li>
 </ol>
 </section>
 
@@ -322,7 +653,7 @@
 }</pre><button type="button" class="copy" data-copy="opencode" aria-label="复制 OpenCode 设置"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div></li>
 <li>然后登录：
 <div class="code"><pre>opencode mcp auth duct</pre><button type="button" class="copy" data-copy="opencode-auth" aria-label="复制登录命令"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div></li>
-<li>你的浏览器将在 Duct 上打开。点击允许。</li>
+<li>你的浏览器将打开 Duct。选择它可执行的操作，然后点击“允许”。</li>
 </ol>
 </section>
 
@@ -332,7 +663,7 @@
 <li>在 claude.ai 或 Claude Desktop 中，打开“设置”→“连接器”，然后选择“添加自定义连接器”。</li>
 <li>命名为 Duct 并粘贴地址：
 <div class="code"><pre>https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="claude" aria-label="复制服务器地址"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div></li>
-<li>点击连接。Duct 在你的浏览器中打开。点击允许。</li>
+<li>点击“连接”。Duct 会在你的浏览器中打开。选择它能做什么，然后点击“允许”。</li>
 </ol>
 </section>
 
@@ -342,38 +673,11 @@
 <li>在 ChatGPT 的设置中，开启开发者模式。</li>
 <li>使用此地址添加连接器，并选择 OAuth 进行身份验证：
 <div class="code"><pre>https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="chatgpt" aria-label="复制服务器地址"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div></li>
-<li>Duct 在你的浏览器中打开。点击“允许”。</li>
+<li>Duct 会在你的浏览器中打开。选择允许其执行的操作，然后点击“允许”。</li>
 </ol>
 </section>
 </div>
 <p class="agent-note">另一个智能体？如果它可以通过地址添加远程 MCP 服务器，请给它相同的地址。如果它无法登录，<a class="ca-link" href="#token">请使用令牌</a>。</p>
-</div>
-</section>
-
-<!-- WHAT THE AGENT CAN AND CAN NEVER DO -->
-<section class="ca-sec is-off" id="what-it-can-do">
-<div class="ca-inner split">
-<div class="ca-head reveal">
-<p class="tag">你的智能体能做什么</p>
-<h2>它读取并起草。<em>你来决定。</em></h2>
-<p class="sub">Duct 今天为你的智能体提供了三个工具。批准、应用和连接仍由你掌控，在 Duct 中。</p>
-</div>
-<div class="req reveal" style="transition-delay:.08s">
-<span class="req-label">你的智能体可以</span>
-<ul class="req-list">
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>列出你的项目。</span></li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>读取一个项目。</span></li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>从你的仓库或文件中起草项目的描述、受众和竞争对手。</span></li>
-</ul>
-<span class="req-label">它绝不能</span>
-<ul class="req-list is-no">
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg><span>批准或应用变更。</span></li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg><span>连接工具。</span></li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg><span>查看密钥或凭据。</span></li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg><span>覆盖你在 Duct 中输入的内容。草稿只填充空白或替换之前的草稿。</span></li>
-</ul>
-<p class="req-foot"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#history"/></svg><span>每个变更都显示在项目的活动中。</span></p>
-</div>
 </div>
 </section>
 
@@ -388,12 +692,12 @@
 <div class="card reveal">
 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>
 <h3>你看到所有已连接的智能体</h3>
-<p>在 Duct 中，打开“设置”→“连接你的 AI 智能体”。你允许的每个智能体都在那里，你可以断开它的连接。已断开连接的智能体在下次调用时停止。</p>
+<p>在 Duct 中，打开设置 → 连接你的 AI 智能体。你允许的每个智能体都会显示在那里，包含其权限与适用项目，你随时可以断开连接。断开连接的智能体将在下一次调用时停止操作。</p>
 </div>
 <div class="card reveal" id="token" style="transition-delay:.08s">
 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg>
 <h3>没有浏览器？使用令牌。</h3>
-<p>适用于 CI、远程机器或无需登录的智能体。在同一设置页面中，在“没有浏览器？使用令牌”下创建一个。你的智能体将其作为标头发送：</p>
+<p>适用于 CI、远程机器或无需登录的智能体。在同一设置页面的“没有浏览器？使用令牌”下方创建一个，选项相同。你的智能体将其作为请求头发送：</p>
 <div class="code"><pre>Authorization: Bearer duct_mcp_…</pre></div>
 <p>在 Claude Code 中：</p>
 <div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://api.getduct.ai/mcp <span class="nw">--header</span> "Authorization: Bearer YOUR_TOKEN"</pre><button type="button" class="copy" data-copy="token-claude-code" aria-label="复制带令牌的 Claude Code 命令"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div>
@@ -402,17 +706,45 @@
 </div>
 </section>
 
-<!-- TROUBLESHOOTING -->
+<!-- QUESTIONS AND TROUBLESHOOTING -->
 <section class="ca-sec is-off" id="troubleshooting">
 <div class="ca-inner">
 <div class="ca-head reveal">
-<p class="tag">故障排除</p>
-<h2>卡住了？<em>从这里开始。</em></h2>
+<p class="tag">问题</p>
+<h2>人们常问的问题。<em>以及解决方案。</em></h2>
 </div>
+<p class="faq-group">在连接之前</p>
+<div class="faq-list reveal">
+<details class="faq-item">
+<summary class="faq-q">我需要 API 密钥吗？</summary>
+<p class="faq-a">不需要。你的智能体在你已订阅的套餐上运行，Duct 不会为此调用任何模型。保存的密钥仅用于生成图片以及 Duct 在你离线时运行的任务（例如定时简报）。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">它能读取我的哪些工具？</summary>
+<p class="faq-a">你在 Duct 中连接的 Stripe、Meta Ads、Mixpanel、GitHub、RevenueCat、Clarity、GrowthBook、Apple Search Ads、RSS 订阅源及其他工具。在确认 Google 对外部 AI 助手的政策前，Google Analytics、Search Console、Google Ads 和 Tag Manager 暂时留在 Duct 自有的智能体内部。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">它能变更我的广告账户吗？</summary>
+<p class="faq-a">只有在开启建议变更时，且仅作为提议。它会在 Duct 的审核队列中等待，直到你在那里批准它。没有任何智能体可以批准或应用变更。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Duct 会看到我的对话吗？</summary>
+<p class="faq-a">不会。Duct 只能看到你的智能体对其发起的调用（例如请求的数据及原因），绝不会看到聊天中的其他内容。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">笔记本电脑合上时，简报还会运行吗？</summary>
+<p class="faq-a">不是来自你的智能体。定时简报由 Duct 使用保存的密钥运行，因为没有人会让自己的智能体在凌晨 3 点运行。你的智能体撰写的内容会归档到同一个库中。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">什么是 insights_brief？</summary>
+<p class="faq-a">Duct 的简报剧本以斜杠命令形式提供：在 Claude Code 中为 /mcp__duct__insights_brief，在 Gemini CLI 中为 /insights_brief。在任何其他智能体中，只需索取本周简报，它就会调用相同的剧本。</p>
+</details>
+</div>
+<p class="faq-group">如果出现问题</p>
 <div class="faq-list reveal">
 <details class="faq-item">
 <summary class="faq-q">我的浏览器从未打开</summary>
-<p class="faq-a">自行开始登录：在 Claude Code 中运行 <code>/mcp</code>，在 Codex 中运行 <code>codex mcp login duct</code>，或在 OpenCode 中运行 <code>opencode mcp auth duct</code>。</p>
+<p class="faq-a">亲自发起登录：在 Claude Code 中运行 <code>/mcp</code>，在 Codex 中运行 <code>codex mcp login duct</code>，在 Gemini CLI 中运行 <code>/mcp auth duct</code>，或在 OpenCode 中运行 <code>opencode mcp auth duct</code>。</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">它显示无法注册，或“不支持动态客户端注册”</summary>
@@ -421,6 +753,10 @@
 <details class="faq-item">
 <summary class="faq-q">它已工作，但现在收到 401 错误</summary>
 <p class="faq-a">你已在 Duct 中断开它的连接，或它在 90 天未使用后登录失效。请从你的智能体再次登录。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">我预期的工具不在其中</summary>
+<p class="faq-a">你的智能体只能看到它登录时你允许的内容。请在 Duct 中断开连接，重新连接，并选择“与我协作”。</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">我让它设置项目，但没有任何改变</summary>

@@ -3,7 +3,7 @@
   "keep": [
     "Duct", "GA4", "GSC", "GTM", "Search Console", "Google Ads", "Stripe", "Mixpanel",
     "Clarity", "GrowthBook", "PostHog", "TikTok", "YouTube", "ChatGPT", "Claude", "Codex",
-    "OpenAI", "Anthropic", "Gemini", "Ollama", "GitHub", "MIT", "ROAS", "CPA", "CPC", "CPM",
+    "OpenAI", "Anthropic", "Gemini CLI", "Gemini", "Ollama", "GitHub", "MIT", "ROAS", "CPA", "CPC", "CPM",
     "CTR", "LTV", "CAC", "MRR", "SEO", "URL", "API", "JSON", "CSV", "macOS", "Windows", "Linux",
     "Meta Ads", "Apple Search Ads", "ChatGPT Ads", "OpenAI Ads", "Google Analytics", "Tag Manager",
     "Microsoft Clarity", "RevenueCat", "HubSpot",
@@ -16,7 +16,7 @@
     "SaaS", "UTM", "CMGR", "ROI", "OAuth", "PDF", "Word", "PowerPoint", "Markdown", "MCP", "Model Context Protocol", "Streamable HTTP", "HTTPS",
     "Claude Code", "Claude Desktop", "claude.ai", "Cursor", "VS Code", "OpenCode", "HTTP",
     "launch-check", "SKILL.md", "Agent Skills", "skills.sh", "GitHub Copilot", "Windsurf", "Zed",
-    "Perplexity", "Node.js"
+    "Perplexity", "Node.js", "Acme"
   ],
   "terms": {
     "brief": { "es": "informe", "pt-BR": "resumo", "de": "Briefing", "ja": "ブリーフ", "zh-CN": "简报", "note": "The weekly synthesis Duct writes. A noun." },

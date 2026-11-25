@@ -1114,12 +1114,117 @@ msgid "“Why did this move?”"
 msgstr "„Warum hat sich das bewegt?“"
 
 #: connect-agent.html
-msgid "<0></0> Duct's MCP server · Browser sign-in"
-msgstr "<0></0> Ducts MCP-Server · Browser-Anmeldung"
+msgid "4 more days"
+msgstr "Noch 4 Tage"
 
 #: connect-agent.html
-msgid "<0>Claude Code</0> wants to use your Duct account"
-msgstr "<0>Claude Code</0> möchte dein Duct-Konto nutzen"
+msgid "<0/><1>A blank prompt, every time</1>"
+msgstr "<0/><1>Jedes Mal ein leeres Prompt</1>"
+
+#: connect-agent.html
+msgid "<0/><1>A brief saved, versioned and easy to share, in Duct</1>"
+msgstr ""
+"<0/><1>Ein gespeichertes, versioniertes und leicht zu teilendes Briefing in Duct</1>"
+
+#: connect-agent.html
+msgid "<0/><1>An answer that scrolls away in the chat</1>"
+msgstr "<0/><1>Eine Antwort, die im Chat wegscrollt</1>"
+
+#: connect-agent.html
+msgid "<0/><1>Changes made wherever the tool allows</1>"
+msgstr "<0/><1>Änderungen, wo immer das Tool es erlaubt</1>"
+
+#: connect-agent.html
+msgid ""
+"<0/><1>Duct's own playbook, with notes on how each tool reports wrong numbers</1>"
+msgstr ""
+"<0/><1>Ducts eigenes Playbook mit Notizen dazu, wie jedes Tool falsche Zahlen meldet</1>"
+
+#: connect-agent.html
+msgid "<0/><1>Nothing from last time</1>"
+msgstr "<0/><1>Nichts vom letzten Mal</1>"
+
+#: connect-agent.html
+msgid "<0/><1>Proposals that wait in Duct until you approve them</1>"
+msgstr "<0/><1>Vorschläge, die in Duct warten, bis du sie freigibst</1>"
+
+#: connect-agent.html
+msgid "<0/><1>Rows to add up itself</1>"
+msgstr "<0/><1>Zeilen, die es selbst zusammenzählen muss</1>"
+
+#: connect-agent.html
+msgid ""
+"<0/><1>Totals and rates Duct reconciled in code, with the window they cover</1>"
+msgstr ""
+"<0/><1>Summen und Raten, die Duct im Code abgeglichen hat, inklusive Zeitraum</1>"
+
+#: connect-agent.html
+msgid "<0/><1>What you decided, launched and measured, ranked for the question</1>"
+msgstr ""
+"<0/><1>Was du entschieden, gestartet und gemessen hast, sortiert nach der Frage</1>"
+
+#: connect-agent.html
+msgid "<0/>Brief saved in Duct<1>Open →</1>"
+msgstr "<0/>Briefing in Duct gespeichert<1>Öffnen →</1>"
+
+#: connect-agent.html
+msgid "<0/>Briefs"
+msgstr "<0/>Briefings"
+
+#: connect-agent.html
+msgid "<0/>Data"
+msgstr "<0/>Daten"
+
+#: connect-agent.html
+msgid "<0/>Memory"
+msgstr "<0/>Gedächtnis"
+
+#: connect-agent.html
+msgid "<0></0> Duct's MCP server · Runs on your AI plan"
+msgstr "<0></0> Ducts MCP-Server · Läuft über deinen AI-Tarif"
+
+#: connect-agent.html
+msgid ""
+"<0><1>$18,420</1> new revenue</0><2><3>+6.2%</3> on last week</2><4><5>3</5> refunds</4>"
+msgstr ""
+"<0><1>$18.420</1> neuer Umsatz</0><2><3>+6,2 %</3> zur Vorwoche</2><4><5>3</5> Rückerstattungen</4>"
+
+#: connect-agent.html
+msgid "<0>></0>Write this week's brief for Acme"
+msgstr "<0>></0>Schreibe das Briefing dieser Woche für Acme"
+
+#: connect-agent.html
+msgid ""
+"<0>All your projects, or only the ones you pick.</0> A client's project it was not given does not exist to it."
+msgstr ""
+"<0>Alle deine Projekte oder nur die, die du auswählst.</0> Ein Kundenprojekt, das ihm nicht zugewiesen wurde, existiert für ihn nicht."
+
+#: connect-agent.html
+msgid "<0>Claude Code</0> would like to work with Duct"
+msgstr "<0>Claude Code</0> möchte mit Duct zusammenarbeiten"
+
+#: connect-agent.html
+msgid ""
+"<0>Extras stay off until you turn them on:</0> proposing changes to ad and tag accounts, drafting posts, and making images on your own saved keys, which your provider charges for."
+msgstr ""
+"<0>Extras bleiben ausgeschaltet, bis du sie aktivierst:</0> das Vorschlagen von Änderungen an Werbe- und Tag-Konten, das Entwerfen von Beiträgen und das Erstellen von Bildern mit deinen eigenen gespeicherten Keys, die dein Anbieter berechnet."
+
+#: connect-agent.html
+msgid ""
+"<0>Help set up my projects.</0> It reads your repo or files and drafts your project's description, audience and competitors."
+msgstr ""
+"<0>Hilf beim Einrichten meiner Projekte.</0> Es liest dein Repo oder deine Dateien und entwirft Beschreibung, Zielgruppe und Mitbewerber deines Projekts."
+
+#: connect-agent.html
+msgid ""
+"<0>Work alongside me.</0> It also reads your connected tools, remembers what matters and writes briefs with Duct's method."
+msgstr ""
+"<0>Arbeite an meiner Seite.</0> Es liest auch deine verbundenen Tools, merkt sich, was wichtig ist, und schreibt Briefings nach der Methode von Duct."
+
+#: connect-agent.html
+msgid "A connector hands your agent rows. <0>Duct hands it answers.</0>"
+msgstr ""
+"Ein Connector übergibt deinem Agenten Zeilen. <0>Duct übergibt ihm Antworten.</0>"
 
 #: connect-agent.html
 msgid ""
@@ -1127,9 +1232,38 @@ msgid ""
 msgstr ""
 "Ein Entwurf überschreibt niemals, was du in Duct eingegeben hast. Er füllt nur leere Felder aus oder ersetzt einen früheren Entwurf. Prüfe die Projektseite in Duct."
 
+#: connect-agent.html
+msgid ""
+"A general assistant can reason about anything. It cannot see your revenue, remember last month or keep a brief. Duct gives it all three."
+msgstr ""
+"Ein allgemeiner Assistent kann über alles nachdenken. Er kann jedoch nicht deinen Umsatz sehen, sich an den letzten Monat erinnern oder ein Briefing führen. Duct gibt ihm alle drei."
+
+#. div aria-label
+#: connect-agent.html
+msgid "A raw-data connector beside Duct"
+msgstr "Ein Rohdaten-Connector neben Duct"
+
+#: connect-agent.html
+msgid "A raw-data connector gives it"
+msgstr "Ein Rohdaten-Connector gibt ihm"
+
+#: connect-agent.html
+msgid ""
+"A record of everything it saves, in Activity under its own name. An edit is one click to undo."
+msgstr ""
+"Ein Protokoll von allem, was es speichert, unter Aktivitäten unter seinem eigenen Namen. Eine Bearbeitung lässt sich mit einem Klick rückgängig machen."
+
+#: connect-agent.html
+msgid "A tool I expected isn't there"
+msgstr "Ein Tool, das ich erwartet habe, ist nicht da"
+
 #: connect-agent.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html
 msgid "Access"
 msgstr "Zugriff"
+
+#: connect-agent.html
+msgid "Acme · Brief · Last 7 days"
+msgstr "Acme · Briefing · Letzte 7 Tage"
 
 #: connect-agent.html
 msgid "Add Duct to <0>opencode.json</0>:"
@@ -1140,15 +1274,19 @@ msgid "Add Duct to <0>~/.cursor/mcp.json</0>:"
 msgstr "Füge Duct zu <0>~/.cursor/mcp.json</0> hinzu:"
 
 #: connect-agent.html
-msgid "Add Duct to your agent"
-msgstr "Füge Duct zu deinem Agenten hinzu"
+msgid "Add Duct to <0>~/.gemini/settings.json</0>:"
+msgstr "Füge Duct zu <0>~/.gemini/settings.json</0> hinzu:"
 
 #. meta description
 #: connect-agent.html
 msgid ""
-"Add Duct's MCP server to Claude Code, Codex, Cursor, VS Code or ChatGPT. Sign in with your browser, click Allow, and your agent can read and set up projects."
+"Add Duct to Claude Code, Codex, Cursor, Gemini CLI or ChatGPT. Your agent quotes totals Duct reconciled, keeps memory and saves briefs, on your own plan."
 msgstr ""
-"Füge Ducts MCP-Server zu Claude Code, Codex, Cursor, VS Code oder ChatGPT hinzu. Melde dich mit deinem Browser an, klicke auf „Zulassen“, und dein Agent kann Projekte lesen und einrichten."
+"Füge Duct zu Claude Code, Codex, Cursor, Gemini CLI oder ChatGPT hinzu. Dein Agent zitiert von Duct abgeglichene Summen, behält ein Gedächtnis und speichert Briefings – in deinem eigenen Tarif."
+
+#: connect-agent.html
+msgid "Add Duct to your agent"
+msgstr "Füge Duct zu deinem Agenten hinzu"
 
 #: connect-agent.html
 msgid "Add a connector with this address, and choose OAuth for authentication:"
@@ -1161,13 +1299,29 @@ msgstr "Füge es hinzu, erlaube es, <0>frage es.</0>"
 
 #: connect-agent.html
 msgid ""
-"Add this address to Claude Code, Codex, Cursor, VS Code, OpenCode, Claude or ChatGPT. Your browser opens on Duct, you click Allow, and your agent can read your projects and draft their details."
+"Add one address to Claude Code, Codex, Cursor, Gemini CLI, ChatGPT or Claude. Your agent reads your connected tools through Duct, quotes the totals Duct reconciled, remembers what you decided, and saves every brief where you read it. No API key to paste."
 msgstr ""
-"Füge diese Adresse zu Claude Code, Codex, Cursor, VS Code, OpenCode, Claude oder ChatGPT hinzu. Dein Browser öffnet Duct, du klickst auf „Zulassen“, und dein Agent kann deine Projekte lesen und deren Details entwerfen."
+"Füge eine Adresse zu Claude Code, Codex, Cursor, Gemini CLI, ChatGPT oder Claude hinzu. Dein Agent liest deine verbundenen Tools über Duct, zitiert von Duct abgeglichene Summen, merkt sich deine Entscheidungen und speichert jedes Briefing dort, wo du es liest. Kein API-Key zum Einfügen."
+
+#: connect-agent.html
+msgid ""
+"Agents can be talked into things by what they read. So the things that matter are never theirs to do, whatever you allow."
+msgstr ""
+"Agenten können durch das, was sie lesen, zu Dingen überredet werden. Wichtige Dinge liegen daher nie in ihrer Hand – egal, was du erlaubst."
 
 #: connect-agent.html
 msgid "Allow"
 msgstr "Erlauben"
+
+#: connect-agent.html
+msgid ""
+"Also reads your connected tools, remembers what matters and writes briefs with Duct's method."
+msgstr ""
+"Liest auch deine verbundenen Tools, merkt sich, was wichtig ist, und schreibt Briefings nach der Methode von Duct."
+
+#: connect-agent.html
+msgid "Always yours, in Duct"
+msgstr "Immer deins, in Duct"
 
 #: connect-agent.html
 msgid ""
@@ -1176,16 +1330,38 @@ msgstr ""
 "Ein anderer Agent? Wenn er einen entfernten MCP-Server über seine Adresse hinzufügen kann, gib ihm dieselbe. Wenn er sich nicht anmelden kann, <0>verwende einen Token</0>."
 
 #: connect-agent.html
-msgid "Approve or apply changes."
-msgstr "Änderungen freigeben oder anwenden."
+msgid ""
+"Approving or applying a change, publishing a post, connecting a tool. No agent can, whatever you allow."
+msgstr ""
+"Das Freigeben oder Anwenden einer Änderung, das Veröffentlichen eines Beitrags, das Verbinden eines Tools. Kein Agent kann das, egal was du erlaubst."
 
 #: connect-agent.html
 msgid "Ask it something"
 msgstr "Frage es etwas"
 
 #: connect-agent.html
-msgid "Cancel"
-msgstr "Abbrechen"
+msgid "Before you connect"
+msgstr "Bevor du dich verbindest"
+
+#: connect-agent.html
+msgid "Briefs in your library"
+msgstr "Briefings in deiner Bibliothek"
+
+#: connect-agent.html
+msgid "Built to hand to an agent"
+msgstr "Gebaut, um es an einen Agenten zu übergeben"
+
+#: connect-agent.html
+msgid "Can it change my ad account?"
+msgstr "Kann es mein Werbekonto ändern?"
+
+#: connect-agent.html
+msgid "Change"
+msgstr "Ändern"
+
+#: connect-agent.html
+msgid "Changes that wait for you"
+msgstr "Änderungen, die auf dich warten"
 
 #: connect-agent.html
 msgid "ChatGPT"
@@ -1203,12 +1379,9 @@ msgstr "Claude"
 msgid "Claude Code"
 msgstr "Claude Code"
 
-#. meta twitter:description
 #: connect-agent.html
-msgid ""
-"Claude Code, Codex, Cursor, VS Code, OpenCode, Claude and ChatGPT all connect to Duct by one address. No token to copy or paste."
-msgstr ""
-"Claude Code, Codex, Cursor, VS Code, OpenCode, Claude und ChatGPT verbinden sich alle über eine Adresse mit Duct. Kein Token zum Kopieren oder Einfügen."
+msgid "Claude Code would like to work with Duct"
+msgstr "Claude Code möchte mit Duct arbeiten"
 
 #: connect-agent.html
 msgid "Claude, on claude.ai or Claude Desktop"
@@ -1217,10 +1390,6 @@ msgstr "Claude, auf claude.ai oder Claude Desktop"
 #: connect-agent.html skills.html
 msgid "Codex"
 msgstr "Codex"
-
-#: connect-agent.html
-msgid "Connect tools."
-msgstr "Tools verbinden."
 
 #: connect-agent.html skills.html
 msgid "Copied"
@@ -1252,6 +1421,11 @@ msgstr "Cursor-Einstellungen kopieren"
 
 #. button aria-label
 #: connect-agent.html
+msgid "Copy the Gemini CLI settings"
+msgstr "Gemini CLI-Einstellungen kopieren"
+
+#. button aria-label
+#: connect-agent.html
 msgid "Copy the OpenCode settings"
 msgstr "OpenCode-Einstellungen kopieren"
 
@@ -1270,26 +1444,45 @@ msgid "Cursor"
 msgstr "Cursor"
 
 #: connect-agent.html
-msgid ""
-"Draft a project's description, audience and competitors from your repo or files."
-msgstr ""
-"Entwirf die Beschreibung, Zielgruppe und Wettbewerber eines Projekts aus deinem Repo oder deinen Dateien."
+msgid "Do I need an API key?"
+msgstr "Brauche ich einen API-Schlüssel?"
+
+#: connect-agent.html
+msgid "Does Duct see my conversation?"
+msgstr "Sieht Duct meine Unterhaltung?"
 
 #: connect-agent.html
 msgid ""
-"Drafted the description, audience and competitors from the repo. They're on the project in Duct."
+"Duct adds up every pull in code and hands your agent the totals and rates, so the brief quotes $18,420, not a model's own arithmetic on a thousand rows."
 msgstr ""
-"Die Beschreibung, Zielgruppe und Wettbewerber wurden aus dem Repo entworfen. Sie sind im Projekt in Duct."
+"Duct rechnet jeden Abruf im Code zusammen und übergibt deinem Agenten die Gesamtsummen und Raten, sodass im Briefing 18.420 $ stehen und nicht die eigene Arithmetik eines Modells über tausend Zeilen."
+
+#: connect-agent.html
+msgid "Duct gives it"
+msgstr "Duct gibt ihm"
+
+#: connect-agent.html
+msgid "Duct opens in your browser. Choose what it can do, then click Allow."
+msgstr ""
+"Duct öffnet sich in deinem Browser. Wähle, was es tun kann, und klicke dann auf Zulassen."
 
 #: connect-agent.html
 msgid ""
-"Duct gives your agent three tools today. Approving, applying and connecting stay with you, in Duct."
+"Duct's playbook for a brief, as a slash command: /mcp__duct__insights_brief in Claude Code, /insights_brief in Gemini CLI. In any other agent, ask for this week's brief and it calls the same playbook."
 msgstr ""
-"Duct gibt deinem Agenten heute drei Tools. Freigeben, Anwenden und Verbinden bleiben bei dir, in Duct."
+"Ducts Playbook für ein Briefing als Slash-Befehl: /mcp__duct__insights_brief in Claude Code, /insights_brief in Gemini CLI. Frage in jedem anderen Agenten nach dem Briefing dieser Woche, und er ruft dasselbe Playbook auf."
 
 #: connect-agent.html
-msgid "Duct opens in your browser. Click Allow."
-msgstr "Duct öffnet sich in deinem Browser. Klicke auf „Zulassen“."
+msgid "Duct's playbook, and what it knows about Acme"
+msgstr "Ducts Playbook und was es über Acme weiß"
+
+#: connect-agent.html
+msgid "Duct's playbook, one command"
+msgstr "Ducts Playbook, ein Befehl"
+
+#: connect-agent.html
+msgid "Eight agents. <0>One address.</0>"
+msgstr "Acht Agenten. <0>Eine Adresse.</0>"
 
 #: connect-agent.html
 msgid "Every agent connects to the same server. Pick yours for the exact steps."
@@ -1301,20 +1494,36 @@ msgid "Every agent is listed. <0>Disconnect any one.</0>"
 msgstr "Jeder Agent ist aufgelistet. <0>Trenne einen beliebigen.</0>"
 
 #: connect-agent.html
-msgid "Every change shows in the project's activity."
-msgstr "Jede Änderung wird in der Projektaktivität angezeigt."
+msgid ""
+"Every brief it writes is saved and versioned in Duct, next to the ones Duct wrote."
+msgstr ""
+"Jedes von ihm geschriebene Briefing wird in Duct gespeichert und versioniert, direkt neben den von Duct geschriebenen."
 
 #: connect-agent.html
 msgid ""
-"For CI, a remote machine or an agent without sign-in. Create one on the same settings page, under No browser? Use a token. Your agent sends it as a header:"
+"Extras, off until you turn them on: propose changes, draft posts, make images."
 msgstr ""
-"Für CI, eine Remote-Maschine oder einen Agenten ohne Anmeldung. Erstelle einen auf derselben Einstellungsseite, unter „Kein Browser? Verwende ein Token.“ Dein Agent sendet es als Header:"
+"Extras, deaktiviert, bis du sie aktivierst: Änderungen vorschlagen, Beiträge entwerfen, Bilder erstellen."
+
+#: connect-agent.html
+msgid ""
+"For CI, a remote machine or an agent without sign-in. Create one on the same settings page, under No browser? Use a token, with the same choices. Your agent sends it as a header:"
+msgstr ""
+"Für CI, einen Remote-Rechner oder einen Agenten ohne Anmeldung. Erstelle einen auf derselben Einstellungsseite unter Kein Browser? Token verwenden mit denselben Optionen. Dein Agent sendet ihn als Header:"
+
+#: connect-agent.html
+msgid "Gemini CLI"
+msgstr "Gemini CLI"
 
 #: connect-agent.html
 msgid ""
 "Give your agent the address above, with one command or one line of settings. The exact steps for each agent are below."
 msgstr ""
 "Gib deinem Agenten die obige Adresse mit einem Befehl oder einer Zeile Einstellungen. Die genauen Schritte für jeden Agenten sind unten aufgeführt."
+
+#: connect-agent.html
+msgid "Help set up my projects"
+msgstr "Beim Einrichten meiner Projekte helfen"
 
 #: connect-agent.html
 msgid "How to connect your agent"
@@ -1327,6 +1536,10 @@ msgstr "Ich bat es, das Projekt einzurichten, und nichts änderte sich"
 #: connect-agent.html
 msgid "I host Duct myself"
 msgstr "Ich hoste Duct selbst"
+
+#: connect-agent.html
+msgid "If something goes wrong"
+msgstr "Wenn etwas schiefgeht"
 
 #: connect-agent.html
 msgid "In ChatGPT's settings, turn on developer mode."
@@ -1348,22 +1561,42 @@ msgstr ""
 "Drücke in Cursors MCP-Einstellungen die Anmeldeaufforderung auf dem Duct-Server."
 
 #: connect-agent.html
+msgid "In Duct"
+msgstr "In Duct"
+
+#: connect-agent.html
 msgid ""
-"In Duct, open Settings → Connect your AI agent. Every agent you allowed is there, and you can disconnect it. A disconnected agent stops on its next call."
+"In Duct, open Settings → Connect your AI agent. Every agent you allowed is there, with what it can do and on which projects, and you can disconnect it. A disconnected agent stops on its next call."
 msgstr ""
-"Öffne in Duct Einstellungen → Verbinde deinen KI-Agenten. Jeder von dir zugelassene Agent ist dort, und du kannst ihn trennen. Ein getrennter Agent stoppt bei seinem nächsten Aufruf."
+"Öffne in Duct Einstellungen → KI-Agenten verbinden. Jeder von dir erlaubte Agent ist dort aufgeführt, zusammen mit seinen Befugnissen und Projekten, und du kannst die Verbindung trennen. Ein getrennter Agent stoppt bei seinem nächsten Aufruf."
 
 #: connect-agent.html
 msgid "In your terminal, run:"
 msgstr "Führe in deinem Terminal aus:"
 
 #: connect-agent.html
-msgid "It can never"
-msgstr "Es kann niemals"
+msgid "It already writes well. <0>Now it knows your numbers.</0>"
+msgstr "Es schreibt bereits gut. <0>Jetzt kennt es deine Zahlen.</0>"
 
 #: connect-agent.html
-msgid "It reads and drafts. <0>You decide.</0>"
-msgstr "Es liest und erstellt Entwürfe. <0>Du entscheidest.</0>"
+msgid ""
+"It can propose a budget or tag change. That change sits in Duct's review queue until you approve it."
+msgstr ""
+"Es kann Budget- oder Tag-Änderungen vorschlagen. Diese Änderung wartet in Ducts Prüfwarteschlange, bis du sie freigibst."
+
+#: connect-agent.html
+msgid "It can't approve changes, publish, or see your passwords and keys."
+msgstr ""
+"Es kann keine Änderungen freigeben, veröffentlichen oder deine Passwörter und Schlüssel sehen."
+
+#: connect-agent.html
+msgid "It does the work. <0>You keep the keys.</0>"
+msgstr "Es erledigt die Arbeit. <0>Du behältst die Schlüssel.</0>"
+
+#: connect-agent.html
+msgid "It runs on the plan you already pay for. Duct calls no model for it."
+msgstr ""
+"Es läuft über den Tarif, den du bereits bezahlst. Duct ruft dafür kein Modell auf."
 
 #: connect-agent.html
 msgid ""
@@ -1376,8 +1609,8 @@ msgid "It worked, and now it gets a 401"
 msgstr "Es hat funktioniert, und jetzt erhält es einen 401-Fehler"
 
 #: connect-agent.html
-msgid "List your projects."
-msgstr "Liste deine Projekte auf."
+msgid "Memory that carries over"
+msgstr "Gedächtnis, das erhalten bleibt"
 
 #: connect-agent.html
 msgid "My browser never opened"
@@ -1392,17 +1625,73 @@ msgid "No browser? Use a token."
 msgstr "Kein Browser? Verwende ein Token."
 
 #: connect-agent.html
+msgid "No key to paste"
+msgstr "Kein Schlüssel zum Einfügen"
+
+#: connect-agent.html
+msgid ""
+"No. Duct sees the calls your agent makes to it, like the data it asked for and why, never the rest of your chat."
+msgstr ""
+"Nein. Duct sieht nur die Aufrufe, die dein Agent an Duct richtet, wie die angeforderten Daten und den Grund, aber nie den Rest deines Chats."
+
+#: connect-agent.html
+msgid ""
+"No. Your agent runs on the plan you already pay for, and Duct calls no model for it. A saved key is only for images, and for what Duct runs without you, like a scheduled brief."
+msgstr ""
+"Nein. Dein Agent läuft über den Tarif, den du bereits bezahlst, und Duct ruft dafür kein Modell auf. Ein gespeicherter Schlüssel wird nur für Bilder benötigt und für das, was Duct ohne dich ausführt, wie ein geplantes Briefing."
+
+#: connect-agent.html
+msgid ""
+"Not from your agent. Scheduled briefs run in Duct on a saved key, because nobody's agent runs at 3am. What your agent writes lands in the same library."
+msgstr ""
+"Nicht von deinem Agenten. Geplante Briefings laufen in Duct über einen gespeicherten Schlüssel, weil niemands Agent um 3 Uhr morgens läuft. Was dein Agent schreibt, landet in derselben Bibliothek."
+
+#: connect-agent.html
+msgid "Not now"
+msgstr "Jetzt nicht"
+
+#: connect-agent.html
+msgid "Nov 12"
+msgstr "12. Nov."
+
+#: connect-agent.html
+msgid "Nov 18"
+msgstr "18. Nov."
+
+#: connect-agent.html
+msgid "Nov 19"
+msgstr "19. Nov."
+
+#: connect-agent.html
+msgid "Nov 20"
+msgstr "20. Nov."
+
+#: connect-agent.html
+msgid "Numbers Duct reconciled"
+msgstr "Zahlen, die Duct abgeglichen hat"
+
+#: connect-agent.html
 msgid ""
 "On claude.ai or in Claude Desktop, open Settings → Connectors and choose Add custom connector."
 msgstr ""
 "Öffne auf claude.ai oder in Claude Desktop Einstellungen → Connectors und wähle Benutzerdefinierten Connector hinzufügen."
 
-#. meta og:description
+#: connect-agent.html
+msgid "On: <0>All your projects</0>"
+msgstr "An: <0>Alle deine Projekte</0>"
+
+#. meta twitter:description
 #: connect-agent.html
 msgid ""
-"One address in your agent, one Allow in your browser. It can read your Duct projects and draft their details, never approve a change."
+"One address in your agent, one Allow in your browser. Reconciled numbers, memory and Duct's playbook, with every change waiting for you."
 msgstr ""
-"Eine Adresse in deinem Agenten, einmal „Zulassen“ in deinem Browser. Es kann deine Duct Projekte lesen und deren Details entwerfen, niemals eine Änderung freigeben."
+"Eine Adresse in deinem Agenten, einmal Zulassen in deinem Browser. Abgeglichene Zahlen, Gedächtnis und Ducts Playbook – und jede Änderung wartet auf dich."
+
+#: connect-agent.html
+msgid ""
+"Only if you turn on proposed changes, and only as a proposal. It waits in Duct's review queue until you approve it there. No agent can approve or apply a change."
+msgstr ""
+"Nur wenn du vorgeschlagene Änderungen aktivierst, und nur als Vorschlag. Es wartet in Ducts Prüfwarteschlange, bis du es dort freigibst. Kein Agent kann eine Änderung freigeben oder anwenden."
 
 #: connect-agent.html
 msgid "Open the Command Palette and run <0>MCP: Add Server</0>."
@@ -1413,72 +1702,140 @@ msgid "OpenCode"
 msgstr "OpenCode"
 
 #: connect-agent.html
+msgid "Or, in Claude Code"
+msgstr "Oder in Claude Code"
+
+#: connect-agent.html
 msgid ""
-"Overwrite what you typed in Duct. A draft only fills blanks or replaces an earlier draft."
+"Pick <0>insights_brief</0> from the slash menu in Claude Code or Gemini CLI, and your agent follows the method Duct's own agent uses."
 msgstr ""
-"Überschreibe, was du in Duct eingegeben hast. Ein Entwurf füllt nur Lücken oder ersetzt einen früheren Entwurf."
+"Wähle <0>insights_brief</0> aus dem Slash-Menü in Claude Code oder Gemini CLI, und dein Agent folgt der Methode, die Ducts eigener Agent nutzt."
 
 #: connect-agent.html
-msgid "Press Connect. Duct opens in your browser. Click Allow."
-msgstr "Drücke Verbinden. Duct öffnet sich in deinem Browser. Klicke auf Zulassen."
+msgid ""
+"Plenty of servers will pass your data to an agent. Then the agent has to add it up, guess at the context and start from a blank prompt every time."
+msgstr ""
+"Viele Server leiten deine Daten einfach an einen Agenten weiter. Dann muss der Agent sie zusammenrechnen, den Kontext erraten und jedes Mal bei einem leeren Prompt anfangen."
 
 #: connect-agent.html
-msgid "Read one project."
-msgstr "Lies ein Projekt."
+msgid ""
+"Press Connect. Duct opens in your browser. Choose what it can do, then click Allow."
+msgstr ""
+"Klicke auf Verbinden. Duct öffnet sich in deinem Browser. Wähle aus, was es tun darf, und klicke dann auf Zulassen."
+
+#: connect-agent.html open-source.html
+msgid "Questions"
+msgstr "Fragen"
 
 #: connect-agent.html
-msgid "See keys or credentials."
-msgstr "Siehe Schlüssel oder Anmeldeinformationen."
+msgid "Rates too: total over total, never an average of averages."
+msgstr ""
+"Auch Quoten: Gesamt durch Gesamt, niemals ein Durchschnitt von Durchschnitten."
+
+#: connect-agent.html
+msgid "Read: Stripe, Mixpanel, GitHub · Totals by Duct · Recalled: 1 memory"
+msgstr ""
+"Gelesen: Stripe, Mixpanel, GitHub · Summen von Duct · Abgerufen: 1 Gedächtnis"
+
+#: connect-agent.html
+msgid "Reads and drafts your project's details."
+msgstr "Liest und entwirft die Details deines Projekts."
+
+#: connect-agent.html
+msgid ""
+"Revenue is up 6.2% since the pricing page shipped. The brief is saved in Duct."
+msgstr ""
+"Umsatz ist um 6,2 % gestiegen, seit die Preisseite live ging. Das Briefing ist in Duct gespeichert."
+
+#: connect-agent.html
+msgid "Revenue is up since the pricing page shipped. Refunds held level."
+msgstr ""
+"Umsatz ist gestiegen, seit die Preisseite live ging. Rückerstattungen blieben stabil."
+
+#: connect-agent.html
+msgid "Run <0>/insights_brief</0>, or ask for this week's brief."
+msgstr ""
+"Führe <0>/insights_brief</0> aus oder frage nach dem Briefing für diese Woche."
+
+#: connect-agent.html
+msgid "Run <0>/mcp__duct__insights_brief</0>, or ask for this week's brief."
+msgstr ""
+"Führe <0>/mcp__duct__insights_brief</0> aus oder frage nach dem Briefing dieser Woche."
+
+#: connect-agent.html
+msgid "Saved to Acme's library, version 1"
+msgstr "In Acmes Bibliothek gespeichert, Version 1"
 
 #: connect-agent.html mcp.html
 msgid "Server address"
 msgstr "Serveradresse"
 
 #: connect-agent.html
-msgid "Set up this product in Duct."
-msgstr "Richte dieses Produkt in Duct ein."
+msgid "Set up a project, <0>or work alongside you.</0>"
+msgstr "Richte ein Projekt ein <0>oder arbeite an deiner Seite.</0>"
 
 #: connect-agent.html
 msgid "Setup by agent"
 msgstr "Einrichtung durch Agent"
 
 #: connect-agent.html
-msgid "Seven agents. <0>One address.</0>"
-msgstr "Sieben Agenten. <0>Eine Adresse.</0>"
+msgid "Sign in and choose"
+msgstr "Melde dich an und wähle"
 
 #: connect-agent.html
-msgid "Sign in and click Allow"
-msgstr "Anmelden und auf Zulassen klicken"
-
-#: connect-agent.html
-msgid ""
-"Start the sign-in yourself: run /mcp in Claude Code, codex mcp login duct in Codex, or opencode mcp auth duct in OpenCode."
-msgstr ""
-"Starte die Anmeldung selbst: führe /mcp in Claude Code, codex mcp login duct in Codex oder opencode mcp auth duct in OpenCode aus."
+msgid "Start Gemini CLI and sign in:"
+msgstr "Starte Gemini CLI und melde dich an:"
 
 #: connect-agent.html
 msgid ""
-"Start the sign-in yourself: run <0>/mcp</0> in Claude Code, <1>codex mcp login duct</1> in Codex, or <2>opencode mcp auth duct</2> in OpenCode."
+"Start the sign-in yourself: run /mcp in Claude Code, codex mcp login duct in Codex, /mcp auth duct in Gemini CLI, or opencode mcp auth duct in OpenCode."
 msgstr ""
-"Starte die Anmeldung selbst: führe <0>/mcp</0> in Claude Code, <1>codex mcp login duct</1> in Codex oder <2>opencode mcp auth duct</2> in OpenCode aus."
+"Starte die Anmeldung selbst: Führe /mcp in Claude Code, codex mcp login duct in Codex, /mcp auth duct in Gemini CLI oder opencode mcp auth duct in OpenCode aus."
 
 #: connect-agent.html
-msgid "Stuck? <0>Start here.</0>"
-msgstr "Steckst du fest? <0>Beginne hier.</0>"
+msgid ""
+"Start the sign-in yourself: run <0>/mcp</0> in Claude Code, <1>codex mcp login duct</1> in Codex, <2>/mcp auth duct</2> in Gemini CLI, or <3>opencode mcp auth duct</3> in OpenCode."
+msgstr ""
+"Starte die Anmeldung selbst: Führe <0>/mcp</0> in Claude Code, <1>codex mcp login duct</1> in Codex, <2>/mcp auth duct</2> in Gemini CLI oder <3>opencode mcp auth duct</3> in OpenCode aus."
+
+#: connect-agent.html
+msgid ""
+"Stripe, Meta Ads, Mixpanel, GitHub, RevenueCat, Clarity, GrowthBook, Apple Search Ads, RSS feeds and the rest you connect in Duct. Google Analytics, Search Console, Google Ads and Tag Manager stay inside Duct's own agent for now, while Google's policy for outside AI assistants is confirmed."
+msgstr ""
+"Stripe, Meta Ads, Mixpanel, GitHub, RevenueCat, Clarity, GrowthBook, Apple Search Ads, RSS-Feeds und den Rest verbindest du in Duct. Google Analytics, Search Console, Google Ads und Tag Manager bleiben vorerst in Ducts eigenem Agenten, während Googles Richtlinie für externe KI-Assistenten bestätigt wird."
+
+#: connect-agent.html
+msgid "Stripe, the last 7 days. Totals by Duct:"
+msgstr "Stripe, die letzten 7 Tage. Summen von Duct:"
+
+#: connect-agent.html
+msgid ""
+"Text from a web page, a search term or a post reaches it marked as data, never as instructions."
+msgstr ""
+"Text von einer Webseite, ein Suchbegriff oder ein Beitrag erreicht ihn als Daten markiert, niemals als Anweisungen."
+
+#: connect-agent.html
+msgid "The off switch. Disconnect it in Settings and it stops on its next call."
+msgstr ""
+"Der Ausschalter. Trenne es in den Einstellungen und es stoppt beim nächsten Aufruf."
+
+#: connect-agent.html
+msgid "The ones people ask. <0>Then the fixes.</0>"
+msgstr "Die Fragen, die gestellt werden. <0>Dann die Lösungen.</0>"
 
 #: connect-agent.html
 msgid "Then sign in:"
 msgstr "Dann anmelden:"
 
-#: connect-agent.html mcp.html
-msgid "Troubleshooting"
-msgstr "Fehlerbehebung"
+#: connect-agent.html
+msgid "Total, by Duct"
+msgstr "Summe, von Duct"
 
 #: connect-agent.html
 msgid ""
-"Try “Set up this product in Duct.” Your agent reads your repo and drafts the project's description, audience and competitors."
+"Try “Write this week's brief.” Your agent follows Duct's playbook, quotes the totals Duct reconciled and saves the brief in Duct."
 msgstr ""
-"Probiere „Dieses Produkt in Duct einrichten.“ Dein Agent liest dein Repo und entwirft die Beschreibung, Zielgruppe und Wettbewerber des Projekts."
+"Versuche „Schreibe das Briefing für diese Woche.“ Dein Agent folgt Ducts Playbook, zitiert die von Duct abgeglichenen Summen und speichert das Briefing in Duct."
 
 #: connect-agent.html
 msgid ""
@@ -1489,16 +1846,12 @@ msgstr ""
 #. meta og:title
 #. meta twitter:title
 #: connect-agent.html
-msgid "Use Duct from Claude Code, Codex or Cursor"
-msgstr "Nutze Duct von Claude Code, Codex oder Cursor"
+msgid "Use Duct from Claude Code, Codex, Gemini or ChatGPT"
+msgstr "Nutze Duct in Claude Code, Codex, Gemini oder ChatGPT"
 
 #: connect-agent.html partials/footer-expanded.html
 msgid "Use Duct from your agent"
 msgstr "Nutze Duct von deinem Agenten"
-
-#: connect-agent.html
-msgid "Use Duct from your agent.<0/><1>No token to copy.</1>"
-msgstr "Nutze Duct von deinem Agenten.<0/><1>Kein Token zum Kopieren.</1>"
 
 #: connect-agent.html
 msgid ""
@@ -1518,9 +1871,9 @@ msgstr "VS Code"
 
 #: connect-agent.html
 msgid ""
-"VS Code asks you to sign in the first time it uses Duct. Your browser opens on Duct. Click Allow."
+"VS Code asks you to sign in the first time it uses Duct. Your browser opens on Duct. Choose what it can do, then click Allow."
 msgstr ""
-"VS Code fordert dich zur Anmeldung auf, wenn es Duct zum ersten Mal verwendet. Dein Browser öffnet sich auf Duct. Klicke auf Zulassen."
+"VS Code fordert dich bei der ersten Nutzung von Duct zum Anmelden auf. Dein Browser öffnet Duct. Wähle aus, was es tun darf, und klicke dann auf Zulassen."
 
 #: connect-agent.html
 msgid ""
@@ -1529,8 +1882,62 @@ msgstr ""
 "Möchtest du, dass Ducts eigener Agent stattdessen deine MCP-Server aufruft? Das ist die andere Richtung: <0>Deine MCP-Server in Duct →</0>"
 
 #: connect-agent.html
-msgid "What your agent can do"
-msgstr "Was dein Agent tun kann"
+msgid "What is insights_brief?"
+msgstr "Was ist insights_brief?"
+
+#: connect-agent.html
+msgid "What makes it different"
+msgstr "Was es unterscheidet"
+
+#: connect-agent.html
+msgid ""
+"What you decided, launched and measured last month is there next time, in any agent."
+msgstr ""
+"Was du letzten Monat entschieden, gestartet und gemessen hast, ist beim nächsten Mal da – in jedem Agenten."
+
+#: connect-agent.html
+msgid "What your agent gains"
+msgstr "Was dein Agent gewinnt"
+
+#: connect-agent.html
+msgid ""
+"When your agent signs in, you pick how much it can do and on which projects. Change it any time in Settings."
+msgstr ""
+"Wenn sich dein Agent anmeldet, wählst du aus, wie viel er tun darf und in welchen Projekten. Ändere es jederzeit in den Einstellungen."
+
+#: connect-agent.html
+msgid "Which of my tools can it read?"
+msgstr "Welche meiner Tools kann er lesen?"
+
+#: connect-agent.html
+msgid "Will a brief run while my laptop is closed?"
+msgstr "Wird ein Briefing ausgeführt, während mein Laptop geschlossen ist?"
+
+#: connect-agent.html
+msgid "Work alongside me"
+msgstr "An meiner Seite arbeiten"
+
+#: connect-agent.html
+msgid "Work alongside me <0>Asked for by Claude Code</0>"
+msgstr "An meiner Seite arbeiten <0>Angefordert von Claude Code</0>"
+
+#: connect-agent.html
+msgid "Write this week's brief."
+msgstr "Schreibe das Briefing für diese Woche."
+
+#: connect-agent.html
+msgid ""
+"You ask your agent. It asks Duct for the playbook, the sources, the totals and what Duct remembers, then saves the brief in your library. The model is yours. The numbers and the method are Duct's."
+msgstr ""
+"Du fragst deinen Agenten. Er fragt Duct nach dem Playbook, den Quellen, den Summen und woran sich Duct erinnert, und speichert dann das Briefing in deiner Bibliothek. Das Modell gehört dir. Die Zahlen und die Methode gehören Duct."
+
+#: connect-agent.html
+msgid "You choose"
+msgstr "Du wählst"
+
+#: connect-agent.html
+msgid "You choose what it can do. Change it any time in Settings."
+msgstr "Du wählst aus, was er tun darf. Ändere es jederzeit in den Einstellungen."
 
 #: connect-agent.html
 msgid ""
@@ -1547,23 +1954,74 @@ msgstr "Du siehst jeden verbundenen Agenten"
 msgid "Your agent"
 msgstr "Dein Agent"
 
+#. meta og:description
 #: connect-agent.html
-msgid "Your agent can"
-msgstr "Dein Agent kann"
+msgid ""
+"Your agent does the thinking on the plan you already pay for. Duct brings the numbers it reconciled, the memory and the method, and keeps the brief."
+msgstr ""
+"Dein Agent übernimmt das Denken im Tarif, für den du bereits bezahlst. Duct liefert die abgeglichenen Zahlen, das Gedächtnis und die Methode – und bewahrt das Briefing auf."
+
+#: connect-agent.html
+msgid "Your agent does the thinking.<0/><1>Duct brings the method.</1>"
+msgstr "Dein Agent übernimmt das Denken.<0/><1>Duct liefert die Methode.</1>"
 
 #: connect-agent.html
 msgid ""
-"Your browser opens on Duct and asks whether your agent may use your account. Click Allow. There is no token to copy."
+"Your agent only sees what you allowed when it signed in. Disconnect it in Duct, connect again, and choose Work alongside me."
 msgstr ""
-"Dein Browser öffnet sich in Duct und fragt, ob dein Agent dein Konto verwenden darf. Klicke auf Zulassen. Es gibt kein Token zum Kopieren."
+"Dein Agent sieht nur das, was du beim Anmelden erlaubt hast. Trenne ihn in Duct, verbinde ihn erneut und wähle „An meiner Seite arbeiten“."
 
 #: connect-agent.html
-msgid "Your browser opens on Duct. Click Allow."
-msgstr "Dein Browser öffnet sich in Duct. Klicke auf Zulassen."
+msgid "Your browser opens on Duct. Choose what it can do, then click Allow."
+msgstr ""
+"Dein Browser öffnet sich bei Duct. Wähle, was er tun kann, und klicke dann auf Zulassen."
 
-#: connect-agent.html integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-seo-audit.html partials/nav-simple.html
-msgid "duct <0></0>"
-msgstr "duct <0></0>"
+#: connect-agent.html
+msgid ""
+"Your browser opens on Duct. Choose what your agent can do and on which projects, then click Allow. There is no token to copy."
+msgstr ""
+"Dein Browser öffnet sich bei Duct. Wähle, was dein Agent tun kann und bei welchen Projekten, und klicke dann auf Zulassen. Es gibt kein Token zum Kopieren."
+
+#: connect-agent.html
+msgid "Your passwords and keys. No agent ever sees one."
+msgstr "Deine Passwörter und Schlüssel. Kein Agent sieht je eines davon."
+
+#: connect-agent.html
+msgid "duct <0>·</0> fetch_data"
+msgstr "duct <0>·</0> fetch_data"
+
+#: connect-agent.html
+msgid "duct <0>·</0> list_data_sources"
+msgstr "duct <0>·</0> list_data_sources"
+
+#: connect-agent.html
+msgid "duct <0>·</0> search_memory"
+msgstr "duct <0>·</0> search_memory"
+
+#: connect-agent.html
+msgid "duct <0>·</0> start_run"
+msgstr "duct <0>·</0> start_run"
+
+#: connect-agent.html
+msgid "duct <0>·</0> submit_brief"
+msgstr "duct <0>·</0> submit_brief"
+
+#: connect-agent.html
+msgid "new revenue, 6.2% more than the week before"
+msgstr "neuer Umsatz, 6,2 % mehr als in der Vorwoche"
+
+#: connect-agent.html
+msgid "refunds, level with the four weeks before"
+msgstr "Rückerstattungen, auf dem Niveau der vier Wochen davor"
+
+#: connect-agent.html
+msgid "the day the lift starts, when the new pricing page shipped"
+msgstr ""
+"der Tag, an dem der Anstieg beginnt, an dem die neue Preisseite veröffentlicht wurde"
+
+#: connect-agent.html
+msgid "“The new pricing page shipped on November 12.”"
+msgstr "„Die neue Preisseite wurde am 12. November veröffentlicht.“"
 
 #: doctrine.html
 msgid ""
@@ -3881,6 +4339,10 @@ msgid ""
 "Yes. Duct is free with your own model keys or the ChatGPT plan you already have, and the core is MIT licensed. A paid plan later bundles the models; nothing open today moves behind it. What will cost money."
 msgstr ""
 "Ja. Duct ist kostenlos mit deinen eigenen Modell-Keys oder dem ChatGPT-Plan, den du bereits hast, und der Kern ist MIT-lizenziert. Ein kostenpflichtiger Plan bündelt später die Modelle; nichts, was heute offen ist, wird dahinter verschoben. Was Geld kosten wird."
+
+#: integrations/apple-search-ads.html integrations/chatgpt-ads.html integrations/ga4.html integrations/google-ads.html integrations/google-search-console.html integrations/google-tag-manager.html integrations/growthbook.html integrations/meta-ads.html integrations/microsoft-clarity.html integrations/mixpanel.html integrations/revenuecat.html integrations/stripe.html partials/footer-expanded.html partials/nav-blog.html partials/nav-changelog.html partials/nav-home.html partials/nav-seo-audit.html partials/nav-simple.html
+msgid "duct <0></0>"
+msgstr "duct <0></0>"
 
 #: integrations/chatgpt-ads.html
 msgid ""
@@ -7464,6 +7926,10 @@ msgstr ""
 "Heute werden verbundene Server im Erkenntnisse-Chat verwendet. Geplante Briefings und Content Studio rufen sie noch nicht auf."
 
 #: mcp.html
+msgid "Troubleshooting"
+msgstr "Fehlerbehebung"
+
+#: mcp.html
 msgid "Try: <0>Did yesterday's deploy go out cleanly?</0>"
 msgstr "Versuch: <0>Ist der gestrige Deploy sauber durchgelaufen?</0>"
 
@@ -7830,10 +8296,6 @@ msgstr "Nichts. Es spricht nie mit uns."
 #: open-source.html
 msgid "One person cannot ask for trust. He can show the code."
 msgstr "Eine Person kann nicht um Vertrauen bitten. Sie kann den Code zeigen."
-
-#: open-source.html
-msgid "Questions"
-msgstr "Fragen"
 
 #: open-source.html
 msgid "Read access to everything is a lot to ask."
@@ -13196,6 +13658,165 @@ msgstr "← Zurück"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← Neu beginnen"
+
+#~ msgid ""
+#~ "Duct's playbook for a brief, as a slash command in Claude Code and Gemini CLI. In any other agent, ask for this week's brief and it calls the same playbook."
+#~ msgstr ""
+#~ "Ducts Playbook für ein Briefing als Slash-Befehl in Claude Code und Gemini CLI. Frage jeden anderen Agenten nach dem Briefing dieser Woche, und er ruft dasselbe Playbook auf."
+
+#~ msgid ""
+#~ "Type <0>/insights_brief</0> in Claude Code or Gemini CLI, and your agent follows the method Duct's own agent uses."
+#~ msgstr ""
+#~ "Gib <0>/insights_brief</0> in Claude Code oder Gemini CLI ein, und dein Agent folgt der Methode, die Ducts eigener Agent nutzt."
+
+#~ msgid "What is /insights_brief?"
+#~ msgstr "Was ist /insights_brief?"
+
+#~ msgid "<0></0> Duct's MCP server · Browser sign-in"
+#~ msgstr "<0></0> Ducts MCP-Server · Browser-Anmeldung"
+
+#~ msgid "<0>Claude Code</0> wants to use your Duct account"
+#~ msgstr "<0>Claude Code</0> möchte dein Duct-Konto nutzen"
+
+#. meta description
+#~ msgid ""
+#~ "Add Duct's MCP server to Claude Code, Codex, Cursor, VS Code or ChatGPT. Sign in with your browser, click Allow, and your agent can read and set up projects."
+#~ msgstr ""
+#~ "Füge Ducts MCP-Server zu Claude Code, Codex, Cursor, VS Code oder ChatGPT hinzu. Melde dich mit deinem Browser an, klicke auf „Zulassen“, und dein Agent kann Projekte lesen und einrichten."
+
+#~ msgid ""
+#~ "Add this address to Claude Code, Codex, Cursor, VS Code, OpenCode, Claude or ChatGPT. Your browser opens on Duct, you click Allow, and your agent can read your projects and draft their details."
+#~ msgstr ""
+#~ "Füge diese Adresse zu Claude Code, Codex, Cursor, VS Code, OpenCode, Claude oder ChatGPT hinzu. Dein Browser öffnet Duct, du klickst auf „Zulassen“, und dein Agent kann deine Projekte lesen und deren Details entwerfen."
+
+#~ msgid "Approve or apply changes."
+#~ msgstr "Änderungen freigeben oder anwenden."
+
+#~ msgid "Cancel"
+#~ msgstr "Abbrechen"
+
+#. meta twitter:description
+#~ msgid ""
+#~ "Claude Code, Codex, Cursor, VS Code, OpenCode, Claude and ChatGPT all connect to Duct by one address. No token to copy or paste."
+#~ msgstr ""
+#~ "Claude Code, Codex, Cursor, VS Code, OpenCode, Claude und ChatGPT verbinden sich alle über eine Adresse mit Duct. Kein Token zum Kopieren oder Einfügen."
+
+#~ msgid "Connect tools."
+#~ msgstr "Tools verbinden."
+
+#~ msgid ""
+#~ "Draft a project's description, audience and competitors from your repo or files."
+#~ msgstr ""
+#~ "Entwirf die Beschreibung, Zielgruppe und Wettbewerber eines Projekts aus deinem Repo oder deinen Dateien."
+
+#~ msgid ""
+#~ "Drafted the description, audience and competitors from the repo. They're on the project in Duct."
+#~ msgstr ""
+#~ "Die Beschreibung, Zielgruppe und Wettbewerber wurden aus dem Repo entworfen. Sie sind im Projekt in Duct."
+
+#~ msgid ""
+#~ "Duct gives your agent three tools today. Approving, applying and connecting stay with you, in Duct."
+#~ msgstr ""
+#~ "Duct gibt deinem Agenten heute drei Tools. Freigeben, Anwenden und Verbinden bleiben bei dir, in Duct."
+
+#~ msgid "Duct opens in your browser. Click Allow."
+#~ msgstr "Duct öffnet sich in deinem Browser. Klicke auf „Zulassen“."
+
+#~ msgid "Every change shows in the project's activity."
+#~ msgstr "Jede Änderung wird in der Projektaktivität angezeigt."
+
+#~ msgid ""
+#~ "For CI, a remote machine or an agent without sign-in. Create one on the same settings page, under No browser? Use a token. Your agent sends it as a header:"
+#~ msgstr ""
+#~ "Für CI, eine Remote-Maschine oder einen Agenten ohne Anmeldung. Erstelle einen auf derselben Einstellungsseite, unter „Kein Browser? Verwende ein Token.“ Dein Agent sendet es als Header:"
+
+#~ msgid ""
+#~ "In Duct, open Settings → Connect your AI agent. Every agent you allowed is there, and you can disconnect it. A disconnected agent stops on its next call."
+#~ msgstr ""
+#~ "Öffne in Duct Einstellungen → Verbinde deinen KI-Agenten. Jeder von dir zugelassene Agent ist dort, und du kannst ihn trennen. Ein getrennter Agent stoppt bei seinem nächsten Aufruf."
+
+#~ msgid "It can never"
+#~ msgstr "Es kann niemals"
+
+#~ msgid "It reads and drafts. <0>You decide.</0>"
+#~ msgstr "Es liest und erstellt Entwürfe. <0>Du entscheidest.</0>"
+
+#~ msgid "List your projects."
+#~ msgstr "Liste deine Projekte auf."
+
+#. meta og:description
+#~ msgid ""
+#~ "One address in your agent, one Allow in your browser. It can read your Duct projects and draft their details, never approve a change."
+#~ msgstr ""
+#~ "Eine Adresse in deinem Agenten, einmal „Zulassen“ in deinem Browser. Es kann deine Duct Projekte lesen und deren Details entwerfen, niemals eine Änderung freigeben."
+
+#~ msgid ""
+#~ "Overwrite what you typed in Duct. A draft only fills blanks or replaces an earlier draft."
+#~ msgstr ""
+#~ "Überschreibe, was du in Duct eingegeben hast. Ein Entwurf füllt nur Lücken oder ersetzt einen früheren Entwurf."
+
+#~ msgid "Press Connect. Duct opens in your browser. Click Allow."
+#~ msgstr "Drücke Verbinden. Duct öffnet sich in deinem Browser. Klicke auf Zulassen."
+
+#~ msgid "Read one project."
+#~ msgstr "Lies ein Projekt."
+
+#~ msgid "See keys or credentials."
+#~ msgstr "Siehe Schlüssel oder Anmeldeinformationen."
+
+#~ msgid "Set up this product in Duct."
+#~ msgstr "Richte dieses Produkt in Duct ein."
+
+#~ msgid "Seven agents. <0>One address.</0>"
+#~ msgstr "Sieben Agenten. <0>Eine Adresse.</0>"
+
+#~ msgid "Sign in and click Allow"
+#~ msgstr "Anmelden und auf Zulassen klicken"
+
+#~ msgid ""
+#~ "Start the sign-in yourself: run /mcp in Claude Code, codex mcp login duct in Codex, or opencode mcp auth duct in OpenCode."
+#~ msgstr ""
+#~ "Starte die Anmeldung selbst: führe /mcp in Claude Code, codex mcp login duct in Codex oder opencode mcp auth duct in OpenCode aus."
+
+#~ msgid ""
+#~ "Start the sign-in yourself: run <0>/mcp</0> in Claude Code, <1>codex mcp login duct</1> in Codex, or <2>opencode mcp auth duct</2> in OpenCode."
+#~ msgstr ""
+#~ "Starte die Anmeldung selbst: führe <0>/mcp</0> in Claude Code, <1>codex mcp login duct</1> in Codex oder <2>opencode mcp auth duct</2> in OpenCode aus."
+
+#~ msgid "Stuck? <0>Start here.</0>"
+#~ msgstr "Steckst du fest? <0>Beginne hier.</0>"
+
+#~ msgid ""
+#~ "Try “Set up this product in Duct.” Your agent reads your repo and drafts the project's description, audience and competitors."
+#~ msgstr ""
+#~ "Probiere „Dieses Produkt in Duct einrichten.“ Dein Agent liest dein Repo und entwirft die Beschreibung, Zielgruppe und Wettbewerber des Projekts."
+
+#. meta og:title
+#. meta twitter:title
+#~ msgid "Use Duct from Claude Code, Codex or Cursor"
+#~ msgstr "Nutze Duct von Claude Code, Codex oder Cursor"
+
+#~ msgid "Use Duct from your agent.<0/><1>No token to copy.</1>"
+#~ msgstr "Nutze Duct von deinem Agenten.<0/><1>Kein Token zum Kopieren.</1>"
+
+#~ msgid ""
+#~ "VS Code asks you to sign in the first time it uses Duct. Your browser opens on Duct. Click Allow."
+#~ msgstr ""
+#~ "VS Code fordert dich zur Anmeldung auf, wenn es Duct zum ersten Mal verwendet. Dein Browser öffnet sich auf Duct. Klicke auf Zulassen."
+
+#~ msgid "What your agent can do"
+#~ msgstr "Was dein Agent tun kann"
+
+#~ msgid "Your agent can"
+#~ msgstr "Dein Agent kann"
+
+#~ msgid ""
+#~ "Your browser opens on Duct and asks whether your agent may use your account. Click Allow. There is no token to copy."
+#~ msgstr ""
+#~ "Dein Browser öffnet sich in Duct und fragt, ob dein Agent dein Konto verwenden darf. Klicke auf Zulassen. Es gibt kein Token zum Kopieren."
+
+#~ msgid "Your browser opens on Duct. Click Allow."
+#~ msgstr "Dein Browser öffnet sich in Duct. Klicke auf Zulassen."
 
 #~ msgid ""
 #~ "Any agent the open skills CLI installs into: Claude Code, Codex, Cursor, OpenCode, Gemini CLI, GitHub Copilot, Windsurf and Zed among them. The skill is one SKILL.md folder in the Agent Skills format, so an agent that reads that format can use it without the installer."
