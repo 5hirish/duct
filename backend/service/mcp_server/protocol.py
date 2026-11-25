@@ -12,7 +12,10 @@ where its auth pieces would earn their keep.
 Stateless means every request stands alone: the bearer token says who is
 asking, and nothing is remembered between calls, so any replica can answer
 any request. ``initialize`` still negotiates a version, because a client
-refuses a server that does not echo one it speaks.
+refuses a server that does not echo one it speaks. The ``Mcp-Session-Id`` it
+hands out is a label, not a session: nothing is stored under it and nothing
+is refused for lacking it. It exists so analytics can tell one agent
+conversation from the next (``service/mcp_server/telemetry.py``).
 
 Spec: modelcontextprotocol.io/specification, revisions listed in
 ``PROTOCOL_VERSIONS``.
@@ -53,6 +56,38 @@ INTERNAL_ERROR = -32603
 # person's context window, not ours.
 _TEXT_MAX_CHARS = 40_000
 
+# An optional argument on every tool: the calling model says, in a sentence,
+# why it is calling. It is the one signal that says what people wanted from
+# an agent that Duct's tools could not yet do, so it decides what gets built
+# next. Taken out before validation, so it never reaches a tool body and the
+# `extra="forbid"` argument models stay strict about everything else.
+CONTEXT_ARG = "context"
+_CONTEXT_SCHEMA = {
+    "type": "string",
+    "maxLength": 2048,
+    "description": (
+        "Optional. In one sentence, why you are calling this tool. Describe the goal in "
+        "general terms and refer to people by role (\"the founder\"), never by name or email."
+    ),
+}
+
+
+@dataclass
+class ToolOutcome:
+    """What one tools/call came to, for telemetry. Written by ``_call_tool``
+    and read by the route once the reply exists; no tool reads it."""
+
+    tool: str
+    intent: str | None = None
+    # None on success. Otherwise a low-cardinality label: "validation" for
+    # arguments the schema refused, a ToolError's code, or "internal" (set by
+    # the route) for an exception nothing caught.
+    error_type: str | None = None
+    error_message: str | None = None
+    project_id: str | None = None
+    result_chars: int = 0
+    truncated: bool = False
+
 
 @dataclass
 class Caller:
@@ -62,12 +97,20 @@ class Caller:
     user: User
     token: McpToken
     session: Session
+    outcome: ToolOutcome | None = None
 
 
 class ToolError(Exception):
     """A failure the calling model should read and can act on: a wrong id, a
     value out of range. Returned as a tool result with ``isError`` rather than
-    a protocol error, so the model sees it and corrects the call."""
+    a protocol error, so the model sees it and corrects the call.
+
+    ``code`` is what telemetry counts, never the message: "not_found" and
+    "rate_limited" are the two worth telling apart from a plain refusal."""
+
+    def __init__(self, message: str, *, code: str = "refused") -> None:
+        super().__init__(message)
+        self.code = code
 
 
 @dataclass(frozen=True)
@@ -87,7 +130,7 @@ class Tool:
             "name": self.name,
             "title": self.title,
             "description": self.description,
-            "inputSchema": tool_schema(self.args),
+            "inputSchema": _with_context(tool_schema(self.args)),
             # Hints, not guarantees, in the spec's words; a client uses them to
             # decide what to confirm with the person before calling.
             "annotations": {
@@ -100,6 +143,21 @@ class Tool:
         }
 
 
+def _with_context(schema: dict[str, Any]) -> dict[str, Any]:
+    properties = dict(schema.get("properties") or {})
+    if CONTEXT_ARG in properties:
+        return schema
+    return {**schema, "type": "object", "properties": {**properties, CONTEXT_ARG: _CONTEXT_SCHEMA}}
+
+
+def _split_context(arguments: Any) -> tuple[Any, str | None]:
+    if not isinstance(arguments, dict) or CONTEXT_ARG not in arguments:
+        return arguments, None
+    rest = {k: v for k, v in arguments.items() if k != CONTEXT_ARG}
+    intent = arguments[CONTEXT_ARG]
+    return rest, intent.strip() if isinstance(intent, str) and intent.strip() else None
+
+
 def _result(id_: Any, result: dict[str, Any]) -> dict[str, Any]:
     return {"jsonrpc": "2.0", "id": id_, "result": result}
 
@@ -108,10 +166,13 @@ def error(id_: Any, code: int, message: str) -> dict[str, Any]:
     return {"jsonrpc": "2.0", "id": id_, "error": {"code": code, "message": message}}
 
 
-def _tool_result(payload: dict[str, Any], *, is_error: bool = False) -> dict[str, Any]:
+def _tool_result(payload: dict[str, Any], *, is_error: bool = False, outcome: ToolOutcome | None = None) -> dict[str, Any]:
     # The JSON as text too: the spec asks for it beside structuredContent, and
     # several clients still show the model only the text.
     text = json.dumps(payload, ensure_ascii=False, default=str)
+    if outcome is not None:
+        outcome.result_chars = len(text)
+        outcome.truncated = len(text) > _TEXT_MAX_CHARS
     if len(text) > _TEXT_MAX_CHARS:
         text = text[:_TEXT_MAX_CHARS] + "…"
     return {
@@ -130,14 +191,26 @@ def _validation_message(exc: ValidationError) -> str:
 
 
 def _call_tool(tool: Tool, arguments: Any, caller: Caller) -> dict[str, Any]:
+    arguments, intent = _split_context(arguments)
+    # Set before anything can raise, so an exception that escapes still leaves
+    # the route a record of which tool it came from.
+    outcome = caller.outcome = ToolOutcome(tool=tool.name, intent=intent)
     try:
         args = tool.args.model_validate(arguments or {})
     except ValidationError as exc:
-        return _tool_result({"error": _validation_message(exc)}, is_error=True)
+        message = _validation_message(exc)
+        outcome.error_type, outcome.error_message = "validation", message
+        return _tool_result({"error": message}, is_error=True, outcome=outcome)
+    project_id = getattr(args, "project_id", None)
+    outcome.project_id = str(project_id) if project_id else None
     try:
-        return _tool_result(tool.run(args, caller))
+        payload = tool.run(args, caller)
     except ToolError as exc:
-        return _tool_result({"error": str(exc)}, is_error=True)
+        outcome.error_type, outcome.error_message = exc.code, str(exc)
+        return _tool_result({"error": str(exc)}, is_error=True, outcome=outcome)
+    # A draft that created the project names it only in its result.
+    outcome.project_id = outcome.project_id or (str(payload.get("project_id")) if payload.get("project_id") else None)
+    return _tool_result(payload, outcome=outcome)
 
 
 def negotiate(requested: Any) -> str:

@@ -229,7 +229,9 @@ def test_list_projects_shows_only_what_the_person_can_reach(env):
     by_name = {p["name"]: p for p in out["projects"]}
     assert set(by_name) == {"Acme", "Shared"}
     assert (by_name["Acme"]["role"], by_name["Shared"]["role"]) == ("owner", "collaborator")
-    assert by_name["Acme"]["review_url"].endswith(f"/project/{mine.id}")
+    assert by_name["Acme"]["review_url"].split("?")[0].endswith(f"/project/{mine.id}")
+    # Tagged, so a visit from an agent's link is countable in the app's analytics.
+    assert "utm_source=mcp" in by_name["Acme"]["review_url"]
 
 
 def test_a_strangers_project_reads_exactly_like_a_made_up_one(env):

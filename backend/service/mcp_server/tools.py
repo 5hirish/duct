@@ -66,7 +66,7 @@ from service.ratelimit import RateLimit
 
 # What serverInfo reports. Bump it when a tool's name, arguments or result
 # shape changes, so a client that cached the old list has a reason to refetch.
-TOOLSET_VERSION = "1.2.0"
+TOOLSET_VERSION = "1.3.0"
 
 INSTRUCTIONS = """\
 Duct reads a product's marketing and analytics tools and turns them into \
@@ -122,8 +122,18 @@ ContentLanguageValue = Literal[("", *CONTENT_LANGUAGES)]  # type: ignore[valid-t
 DraftableField = Literal[_DRAFTABLE]  # type: ignore[valid-type]
 
 
+# On every link a tool hands back. The person clicks it in their agent's
+# reply, and the app's analytics reads UTM tags on landing, so "visits that
+# came from an agent" is a filter rather than a guess (issue #197).
+_LINK_TAGS = "utm_source=mcp&utm_medium=agent"
+
+
+def _app_link(path: str) -> str:
+    return f"{get_configs().frontend_origin.rstrip('/')}{path}?{_LINK_TAGS}"
+
+
 def review_url(project_id: UUID) -> str:
-    return f"{get_configs().frontend_origin.rstrip('/')}/project/{project_id}"
+    return _app_link(f"/project/{project_id}")
 
 
 def _site_key(url: str) -> str:
@@ -169,7 +179,7 @@ def _member_project(project_id: UUID, caller: Caller):
         if exc.status_code == 404:
             # One answer for "no such project" and "not yours", as the HTTP
             # routes give: the reply must not tell a stranger it exists.
-            raise ToolError("No project with that id among your projects. Call list_projects.")
+            raise ToolError("No project with that id among your projects. Call list_projects.", code="not_found")
         raise
 
 
@@ -305,7 +315,9 @@ def _kept_reason(name: str, sent: Any, current: Any, label: str | None, source: 
 def draft_project(args: DraftArgs, caller: Caller) -> dict[str, Any]:
     allowed, retry_after = _DRAFT_LIMIT.allow(str(caller.user.id))
     if not allowed:
-        raise ToolError(f"Too many drafts in a short time. Try again in {int(retry_after) + 1} seconds.")
+        raise ToolError(
+            f"Too many drafts in a short time. Try again in {int(retry_after) + 1} seconds.", code="rate_limited"
+        )
 
     guessed = set(args.guessed)
     sent = {}
@@ -393,13 +405,15 @@ class UpdateArgs(BaseModel):
 
 
 def activity_url() -> str:
-    return f"{get_configs().frontend_origin.rstrip('/')}/activity"
+    return _app_link("/activity")
 
 
 def update_project(args: UpdateArgs, caller: Caller) -> dict[str, Any]:
     allowed, retry_after = _DRAFT_LIMIT.allow(str(caller.user.id))
     if not allowed:
-        raise ToolError(f"Too many changes in a short time. Try again in {int(retry_after) + 1} seconds.")
+        raise ToolError(
+            f"Too many changes in a short time. Try again in {int(retry_after) + 1} seconds.", code="rate_limited"
+        )
 
     values = {
         name: _draft_value(name, value)

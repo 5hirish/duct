@@ -582,6 +582,19 @@ Postgres `DATABASE_URL` names.
   confirms it, and is undoable from the activity feed. Each write leaves an
   `activity_logs` row (`category="project"`). No tool calls a model on
   Duct's side, and none approves, applies, connects or touches credentials.
+  **Every call is reported** (`service/mcp_server/telemetry.py`) as PostHog
+  MCP Analytics' own events, `$mcp_initialize` and `$mcp_tool_call` (tool,
+  duration, error class, client, the model's one-line `context` reason),
+  through `analytics.capture_mcp`, so PostHog's MCP dashboards work with no
+  query of ours. Arguments and results never leave (the AI callback's
+  privacy rule), the reason is redacted, and reporting runs after the reply
+  inside a `try`, so analytics can drop an event but never fail a call. A
+  tool's failure is a class, not a message: `validation`, a `ToolError`'s
+  `code` (`not_found`, `rate_limited`, `refused`), or `internal`, which is
+  also the error report through `logger.exception`. `initialize` hands out an
+  `Mcp-Session-Id` that is a label and not a session (hashed, never stored,
+  never required). Tool links carry `utm_source=mcp`, so the app counts the
+  visits an agent sends.
 - `agents/engines.resolve_job_run` — provider and model over the keys *this
   caller* can spend, so a user holding only an OpenAI key runs on OpenAI
   instead of a 402 for the instance default. All three agents route through

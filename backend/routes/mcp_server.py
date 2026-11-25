@@ -16,6 +16,8 @@ from __future__ import annotations
 
 import json
 import logging
+import time
+from dataclasses import replace
 from typing import Any
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
@@ -41,10 +43,11 @@ from service.mcp_server.protocol import (
     error,
     handle,
 )
-from service.mcp_server import oauth
+from service.mcp_server import oauth, telemetry
 from service.mcp_server.tools import INSTRUCTIONS, TOOLS, TOOLSET_VERSION
 from service.mcp_tokens import resolve
 from service.ratelimit import RateLimit
+from utils.dates import utcnow
 
 logger = logging.getLogger(__name__)
 
@@ -70,13 +73,29 @@ def _challenge(*, presented: bool) -> dict[str, str]:
     return {"WWW-Authenticate": "Bearer " + ", ".join(params)}
 
 
+def _transport(request: Request) -> telemetry.Transport:
+    headers = request.headers
+    return telemetry.Transport(
+        session_id=headers.get(telemetry.SESSION_HEADER),
+        user_agent=headers.get("user-agent"),
+        vendor_client=headers.get("x-anthropic-client"),
+        protocol_version=headers.get("mcp-protocol-version"),
+    )
+
+
 def get_mcp_caller(
+    request: Request,
     authorization: str | None = Header(default=None),
     session: Session = Depends(get_session),
 ) -> Caller:
     scheme, _, raw = (authorization or "").partition(" ")
     resolved = resolve(raw.strip(), session) if scheme.lower() == "bearer" and raw.strip() else None
     if resolved is None:
+        # A call with no credential is how every OAuth client discovers the
+        # sign-in, so only a credential that failed is worth counting: an
+        # expired or revoked connection is a person whose agent stopped.
+        if authorization:
+            telemetry.refused("invalid_token", _transport(request))
         raise HTTPException(
             status_code=HTTP_401_UNAUTHORIZED,
             detail="Sign in to Duct from your agent, or send a Duct MCP token as "
@@ -85,7 +104,11 @@ def get_mcp_caller(
         )
     token, user = resolved
     identify_user(user)
-    _CALL_LIMIT.enforce(str(token.id), "Too many MCP requests. Slow down and try again shortly.")
+    try:
+        _CALL_LIMIT.enforce(str(token.id), "Too many MCP requests. Slow down and try again shortly.")
+    except HTTPException:
+        telemetry.refused("rate_limited", _transport(request), distinct_id=str(user.id))
+        raise
     return Caller(user=user, token=token, session=session)
 
 
@@ -101,14 +124,33 @@ async def _read_body(request: Request) -> bytes:
     return bytes(body)
 
 
-def _dispatch(message: Any, caller: Caller) -> dict[str, Any] | None:
+def _dispatch(message: Any, caller: Caller, transport: telemetry.Transport) -> dict[str, Any] | None:
+    started_at, started = utcnow(), time.monotonic()
+    failure: BaseException | None = None
     try:
-        return handle(message, caller, TOOLS, instructions=INSTRUCTIONS, version=TOOLSET_VERSION)
-    except Exception:  # noqa: BLE001 — one failed call is an error reply, never a dropped connection
-        logger.exception("mcp: request failed")
+        reply = handle(message, caller, TOOLS, instructions=INSTRUCTIONS, version=TOOLSET_VERSION)
+    except Exception as exc:  # noqa: BLE001 — one failed call is an error reply, never a dropped connection
+        failure = exc
+        # The tool's name in the line, because this record is also the error
+        # report (service/analytics._LoggedExceptionHandler).
+        logger.exception("mcp: %s failed", caller.outcome.tool if caller.outcome else _method(message))
         caller.session.rollback()
         id_ = message.get("id") if isinstance(message, dict) else None
-        return error(id_, INTERNAL_ERROR, "Duct could not complete that request.")
+        reply = error(id_, INTERNAL_ERROR, "Duct could not complete that request.")
+    telemetry.observe(
+        message,
+        caller,
+        transport,
+        started_at=started_at,
+        duration_ms=(time.monotonic() - started) * 1000,
+        failure=failure,
+        version=TOOLSET_VERSION,
+    )
+    return reply
+
+
+def _method(message: Any) -> str:
+    return str(message.get("method")) if isinstance(message, dict) else "request"
 
 
 @router.post(MCP_PATH)
@@ -128,10 +170,18 @@ async def mcp_post(
         message = json.loads(await _read_body(request))
     except (UnicodeDecodeError, json.JSONDecodeError):
         return JSONResponse(error(None, PARSE_ERROR, "Body is not valid JSON."), status_code=HTTP_400_BAD_REQUEST)
-    reply = await run_in_threadpool(_dispatch, message, caller)
+    transport = _transport(request)
+    headers: dict[str, str] = {}
+    if isinstance(message, dict) and message.get("method") == "initialize":
+        # A label for analytics, minted here and echoed by the client on every
+        # later request; never stored and never checked (protocol.py).
+        session_id = telemetry.new_session_id()
+        transport = replace(transport, session_id=session_id)
+        headers[telemetry.SESSION_HEADER] = session_id
+    reply = await run_in_threadpool(_dispatch, message, caller, transport)
     if reply is None:
         return Response(status_code=HTTP_202_ACCEPTED)
-    return JSONResponse(reply)
+    return JSONResponse(reply, headers=headers)
 
 
 @router.api_route(MCP_PATH, methods=["GET", "DELETE"], include_in_schema=False)

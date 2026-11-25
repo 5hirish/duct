@@ -153,6 +153,52 @@ def capture_event(event: str, properties: dict | None = None) -> None:
         posthog.capture(event, properties=properties)
 
 
+# PostHog's MCP Analytics dashboards read these events and ignore any without
+# this stamp (posthog.com/docs/mcp-analytics/installation/other-languages).
+# Built by hand because its SDK's `instrument()` wraps only the `mcp`
+# package's servers, and ours is a dictionary (service/mcp_server/protocol.py).
+_MCP_SOURCE = "posthog_mcp_analytics"
+_MCP_EVENTS = {"tool_call": "$mcp_tool_call", "initialize": "$mcp_initialize"}
+# Their spec caps names, versions and header values at 256 characters.
+_MCP_VALUE_MAX = 256
+# Duct's own properties on an MCP event, left unprefixed so nothing mistakes
+# them for part of PostHog's schema.
+_PLAIN_KEYS = frozenset({"project_id", "token_kind", "toolset_version", "result_chars", "truncated", "reason"})
+
+
+def capture_mcp(
+    kind: str,
+    *,
+    distinct_id: str,
+    session_id: str,
+    properties: dict[str, Any],
+    started_at=None,
+) -> None:
+    """One MCP request, in PostHog's MCP Analytics vocabulary.
+
+    The caller speaks plain names (``tool_name``, ``is_error``); this prefixes
+    them, so ``service/mcp_server/telemetry.py`` stays vendor-free like every
+    other caller of this module. A ``kind`` outside ``_MCP_EVENTS`` is sent
+    under its own name as an ordinary product event (``mcp_request_refused``).
+    """
+    posthog = client()
+    if posthog is None:
+        return
+    props: dict[str, Any] = {"$mcp_source": _MCP_SOURCE, "$session_id": session_id}
+    for key, value in properties.items():
+        if value is None:
+            continue
+        if isinstance(value, str) and key not in {"intent", "error_message"}:
+            value = value[:_MCP_VALUE_MAX]
+        props[key if key.startswith("$") or key in _PLAIN_KEYS else f"$mcp_{key}"] = value
+    posthog.capture(
+        _MCP_EVENTS.get(kind, kind),
+        distinct_id=distinct_id,
+        properties=props,
+        timestamp=started_at,
+    )
+
+
 def langchain_callback(*, session_id: str, distinct_id: str = ""):
     """A per-turn AI observability callback, or None when analytics is off."""
     posthog = client()
