@@ -43,7 +43,7 @@
 {"@context":"https://schema.org","@type":"WebApplication","inLanguage":"pt-BR","name":"Calculadora de Taxa de Engajamento","url":"https://getduct.ai/pt-br/tools/engagement-rate-calculator","description":"Calculadora gratuita que calcula a taxa de engajamento por seguidores, alcance e impressões, além do engajamento médio por post.","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Organization","name":"Duct","url":"https://getduct.ai"}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"pt-BR","mainEntity":[{"@type":"Question","name":"Como você calcula a taxa de engajamento?","acceptedAnswer":{"@type":"Answer","text":"Taxa de engajamento = Engajamentos Totais ÷ denominador de público × 100. Denominadores comuns são seguidores, alcance e impressões. O melhor depende do que você está tentando comparar."}},{"@type":"Question","name":"Qual é uma boa taxa de engajamento?","acceptedAnswer":{"@type":"Answer","text":"Os benchmarks variam por plataforma e tamanho de público, mas muitas equipes usam esta heurística baseada em seguidores: abaixo de 1% baixo, 1-3% médio, 3-6% saudável e acima de 6% forte."}},{"@type":"Question","name":"Devo usar alcance ou impressões?","acceptedAnswer":{"@type":"Answer","text":"Use alcance quando você se importa com a qualidade única do público. Use impressões quando seu conteúdo é exibido repetidamente e você quer eficiência em relação ao total de exposições."}},{"@type":"Question","name":"Posso comparar a taxa de engajamento entre canais?","acceptedAnswer":{"@type":"Answer","text":"Compare as tendências primeiro, não os valores absolutos. O design do feed da plataforma, o comportamento do público e o formato do conteúdo podem produzir diferentes faixas de base."}},{"@type":"Question","name":"O que deve contar como engajamento?","acceptedAnswer":{"@type":"Answer","text":"Geralmente curtidas, comentários, compartilhamentos, salvamentos, cliques e respostas. A parte crítica é usar a mesma definição toda semana para que a análise de tendências permaneça consistente."}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"pt-BR","mainEntity":[{"@type":"Question","name":"Seguidores, alcance ou impressões: qual devo usar?","acceptedAnswer":{"@type":"Answer","text":"Seguidores para comparar contas. Alcance para comparar posts que alcançaram números diferentes de pessoas. Impressões quando as pessoas viram o mesmo post mais de uma vez."}},{"@type":"Question","name":"Qual é uma boa taxa de engajamento?","acceptedAnswer":{"@type":"Answer","text":"Varia por plataforma, formato e tamanho do público, e nenhum benchmark cobre todos. As cores nos resultados (abaixo de 1% baixo, 6% para cima forte) são um guia aproximado. Sua própria taxa do mês passado é uma referência melhor."}},{"@type":"Question","name":"O que conta como engajamento?","acceptedAnswer":{"@type":"Answer","text":"Curtidas, comentários, compartilhamentos, salvamentos, cliques e respostas, ou o que sua plataforma relatar. Use a mesma definição toda semana para que a tendência faça sentido."}},{"@type":"Question","name":"Meus dados são enviados para algum lugar?","acceptedAnswer":{"@type":"Answer","text":"Não. Os cálculos rodam no seu navegador. Nada é enviado ou armazenado."}}]}
 </script>
 <style>
   .skip-link {
@@ -132,13 +132,6 @@
   .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
   .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
 
-  .about-section { max-width: 760px; margin: 0 auto 80px; padding: 0 24px; }
-  .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
-  .about-section h2 em { color: var(--orange); font-style: italic; }
-  .about-section p, .about-section li { font-size: 15px; color: var(--navy-3); line-height: 1.75; margin-bottom: 12px; }
-  .about-section ul { padding-left: 20px; }
-  .about-section li { margin-bottom: 6px; }
-  .about-section strong { color: var(--navy); }
 
   .insight-panel {
     margin-top: 24px;
@@ -154,6 +147,53 @@
   }
   .insight-panel p { font-size: 14px; color: var(--navy-3); line-height: 1.7; margin: 0 0 8px; }
   .insight-panel p:last-of-type { margin-bottom: 0; }
+
+  /* Formula drawn as math, the example worked through, and (where the page cites a
+     source) the bands the results are graded against. Same block on the five
+     calculators that carry it; the width follows this page's .tool-wrap. */
+  .math { max-width: 900px; margin: 0 auto 64px; padding: 0 24px; }
+  .math h2 { font-size: clamp(26px, 3.4vw, 34px); line-height: 1.15; margin: 0 0 20px; }
+  .math-grid { display: grid; grid-template-columns: 7fr 5fr; gap: 16px; }
+  @media (max-width: 760px) { .math-grid { grid-template-columns: 1fr; } }
+  .formulas { padding: 32px; background: var(--off); border: 1px solid var(--border); border-radius: var(--r-lg); display: flex; flex-direction: column; justify-content: center; gap: 20px; min-width: 0; }
+  @media (max-width: 600px) { .formulas { padding: 24px 20px; } }
+  .eq { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin: 0; font-family: var(--serif); font-size: clamp(20px, 2.4vw, 26px); line-height: 1.2; color: var(--navy); }
+  .eq.is-small { font-size: clamp(16px, 1.6vw, 18px); color: var(--navy-2); padding-top: 18px; border-top: 1px solid var(--border); }
+  .eq-name { font-weight: 700; white-space: nowrap; }
+  .eq .op { color: var(--navy-3); }
+  .eq .rhs { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
+  .eq .paren { font-size: 2.1em; font-weight: 300; line-height: .9; color: var(--navy-3); }
+  .eq .rhs sup { font-size: .55em; align-self: flex-start; margin-left: -8px; white-space: nowrap; }
+  .frac { display: inline-flex; flex-direction: column; align-items: center; text-align: center; white-space: nowrap; }
+  .frac > span { padding: 0 6px; align-self: stretch; }
+  .frac > span:first-child { padding-bottom: 4px; }
+  .frac > span:last-child { padding-top: 4px; border-top: 2px solid currentColor; }
+  .frac .nb, .lin .nb { display: inline-block; white-space: nowrap; }
+  .frac > span:has(.nb) { white-space: normal; }
+  .worked { padding: 28px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); min-width: 0; }
+  @media (max-width: 600px) { .worked { padding: 24px 20px; } }
+  .worked h3, .bands h3 { font-size: 13px; font-weight: 600; color: var(--navy-3); margin: 0 0 12px; }
+  .worked ul { list-style: none; margin: 0; padding: 0; }
+  .worked li { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 16px; padding: 10px 0; border-top: 1px solid var(--border); font-size: 14px; color: var(--navy-3); font-variant-numeric: tabular-nums; }
+  .worked li strong { font-family: var(--serif); font-size: 20px; font-weight: 400; color: var(--navy); white-space: nowrap; margin-left: auto; }
+  .worked li sup { font-size: .7em; }
+  .worked-note { font-size: 14px; line-height: 1.6; color: var(--navy-3); margin: 12px 0 0; max-width: 60ch; }
+  .bands { margin-top: 16px; padding: 28px 32px; border: 1px solid var(--border); border-radius: var(--r-lg); }
+  @media (max-width: 600px) { .bands { padding: 24px 20px; } }
+  .band { display: grid; grid-template-columns: 140px 1fr; gap: 6px 20px; align-items: center; padding: 14px 0; border-top: 1px solid var(--border); }
+  @media (max-width: 600px) { .band { grid-template-columns: 1fr; } }
+  .band-name { font-size: 14px; font-weight: 600; color: var(--navy); margin: 0; }
+  .band-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin: 0; border-radius: var(--r); overflow: hidden; }
+  .band-bar > span { padding: 8px 10px; font-size: 13px; line-height: 1.35; }
+  .band-bar strong { display: block; font-size: 12px; font-weight: 600; }
+  .band-bar .bad { background: #fef2f2; color: #991b1b; }
+  .band-bar .mid { background: #fffbeb; color: #92400e; }
+  .band-bar .good { background: #f0fdf4; color: #15803d; }
+  .band-src { grid-column: 2; font-size: 12px; color: var(--navy-3); margin: 0; }
+  @media (max-width: 600px) { .band-src { grid-column: 1; } }
+  /* The bridge link is a standalone target: give it 24px of height (WCAG 2.5.8). */
+  .duct-bridge-link { display: inline-block; padding: 4px 0; }
+  .faq-a { max-width: 68ch; }
 </style>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"pt-BR","itemListElement":[{"@type":"ListItem","position":1,"name":"Início","item":"https://getduct.ai/pt-br/"},{"@type":"ListItem","position":2,"name":"Ferramentas gratuitas","item":"https://getduct.ai/pt-br/tools/"},{"@type":"ListItem","position":3,"name":"Calculadora de Taxa de Engajamento","item":"https://getduct.ai/pt-br/tools/engagement-rate-calculator"}]}
@@ -161,7 +201,7 @@
 </head>
 <body>
 
-<!-- EXPERIMENT: Engagement calculator as lead magnet — does ranking for "engagement rate calculator" drive qualified organic signups from social and growth operators? -->
+<!-- EXPERIMENT: Engagement rate calculator as a way in: someone searching "engagement rate calculator" gets three rates, the formula and a worked example on one screen, then a real Duct answer about which content brings trials. Measured by Download clicks from the navy box and the closing band. -->
 
 <a href="#main-content" class="skip-link">Pular para o conteúdo</a>
 
@@ -170,9 +210,8 @@
 <main id="main-content">
 
 <div class="tool-hero">
-  <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Ferramenta gratuita · Não é necessário se cadastrar</div>
-  <h1>Calculadora de Taxa de Engajamento <em>para equipes de crescimento</em></h1>
-  <p>Seu sinal de conteúdo é tão útil quanto a qualidade do seu engajamento. Calcule a taxa por seguidores, alcance e impressões de uma vez — sem precisar limpar planilhas.</p>
+  <h1>Calculadora de taxa de engajamento. <em>Três taxas, um conjunto de posts.</em></h1>
+  <p>Divida por seguidores, alcance ou impressões. Cada um responde a uma pergunta diferente, então você obtém os três.</p>
 </div>
 
 <div class="tool-wrap">
@@ -238,49 +277,41 @@
   </div>
 </div>
 
+<section class="math reveal" aria-labelledby="math-heading">
+  <h2 id="math-heading">Como a taxa de engajamento é calculada</h2>
+  <div class="math-grid">
+    <div class="formulas">
+      <p class="eq" role="math" aria-label="A taxa de engajamento é igual a engajamentos divididos por seguidores, alcance ou impressões, vezes 100"><span class="eq-name">Taxa de engajamento</span><span class="op">=</span><span class="rhs"><span class="frac"><span>Engajamentos</span><span><span class="nb">Seguidores, alcance</span> <span class="nb">ou impressões</span></span></span><span class="op">×</span>100</span></p>
+    </div>
+    <div class="worked">
+      <h3>Com os números de exemplo</h3>
+      <ul>
+        <li><span>780 ÷ 12.500 seguidores</span><strong>6.24%</strong></li>
+        <li><span>780 ÷ 9.400 alcançados</span><strong>8.30%</strong></li>
+        <li><span>780 ÷ 18.400 impressões</span><strong>4.24%</strong></li>
+      </ul>
+      <p class="worked-note">Mesmos posts, três respostas. Escolha um denominador e mantenha-o de semana para semana.</p>
+    </div>
+  </div>
+</section>
+
 <section class="duct-bridge reveal" aria-label="Sobre o Duct">
   <div class="duct-bridge-inner">
     <div class="duct-bridge-text">
-      <p class="duct-bridge-headline">A taxa de engajamento informa a qualidade da interação. Ela não diz se essa atenção se transformou em pipeline.</p>
-      <p class="duct-bridge-body">Duct lê o engajamento junto com cliques, inscrições e receita ao longo do tempo, então os posts que trazem clientes são diferenciados daqueles que trazem curtidas.</p>
+      <p class="duct-bridge-headline">Um cluster de conteúdo gerou 61% dos testes orgânicos a partir de 28% dos cliques.</p>
+      <p class="duct-bridge-body">O engajamento mostra do que as pessoas gostaram. O Duct lê o Search Console, o GA4 e o Clarity juntos e indica o conteúdo que traz testes.</p>
       <a href="/pt-br/" class="duct-bridge-link">Como o Duct funciona →</a>
     </div>
     <figure class="shot-frame duct-bridge-shot">
-      <img src="/assets/media/content-session.webp" srcset="/assets/media/content-session-768.webp 768w, /assets/media/content-session-1536.webp 1536w, /assets/media/content-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="Content Studio rascunhando um carrossel: o progresso do agente e sua nota à esquerda, o primeiro slide renderizado à direita com o botão de aprovar abaixo dele"/>
-      <figcaption>O Content Studio rascunha o post a partir do plano, renderiza o primeiro slide para você ver a aparência e espera um sim antes de fazer o resto.</figcaption>
+      <img src="/assets/media/answer-organic.webp" srcset="/assets/media/answer-organic-768.webp 768w, /assets/media/answer-organic.webp 1392w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="1392" height="920" loading="lazy" alt="Duct respondendo qual conteúdo converte, a partir do Search Console, GA4 e Clarity: um cluster gera 61% dos testes orgânicos a partir de 28% dos cliques"/>
     </figure>
   </div>
 </section>
 
-<div class="about-section reveal">
-  <h2>Como a <em>calculadora funciona</em></h2>
-  <p>A calculadora calcula a taxa de engajamento usando fórmulas padrão:</p>
-  <ul>
-    <li><strong>Taxa de engajamento por seguidores</strong> = Engajamentos ÷ Seguidores × 100</li>
-    <li><strong>Taxa de engajamento por alcance</strong> = Engajamentos ÷ Alcance × 100</li>
-    <li><strong>Taxa de engajamento por impressões</strong> = Engajamentos ÷ Impressões × 100</li>
-    <li><strong>Engajamentos médios por post</strong> = Engajamentos ÷ Número de posts</li>
-  </ul>
-  <p>Você pode usar um denominador ou todos os três. O resultado ajuda você a comparar tanto a qualidade do título (baseada em alcance) quanto a eficiência do feed (baseada em impressões), mantendo o contexto do seguidor em vista.</p>
-
-  <h2 style="margin-top:40px">Por que a taxa de engajamento <em>importa</em></h2>
-  <p>Totais de engajamento brutos podem ser enganosos. Um post com 500 engajamentos pode parecer forte, mas se alcançou 80.000 pessoas, teve um desempenho inferior. A taxa de engajamento normaliza a qualidade em relação à distribuição e permite que as equipes comparem o conteúdo entre semanas e campanhas.</p>
-  <p>Para equipes de crescimento orgânico, a taxa de engajamento é um sinal precoce de ressonância da mensagem. Se a taxa de engajamento diminuir antes que o tráfego diminua, você pode corrigir a criatividade e o posicionamento antes que a conversão do funil seja afetada.</p>
-
-  <h2 style="margin-top:40px">Limitações</h2>
-  <ul>
-    <li>Os algoritmos da plataforma diferem, então comparações diretas entre plataformas devem ser interpretadas com cautela.</li>
-    <li>As definições de engajamento variam por plataforma (por exemplo, salvamentos vs. cliques vs. comentários).</li>
-    <li>Esta ferramenta não separa impressões pagas e orgânicas.</li>
-    <li>Todos os cálculos são executados no seu navegador. Nenhum dado é enviado ou armazenado.</li>
-  </ul>
-</div>
-
 <section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
   <div class="related-tools-banner-inner">
-    <p class="tag">Também gratuito</p>
-    <h2 id="related-tools-heading">Explore <em>ferramentas</em> relacionadas</h2>
-    <p class="related-tools-banner-desc">Combine a qualidade do engajamento com métricas de crescimento e economia unitária. Essas ferramentas seguem o mesmo modelo de privacidade em primeiro lugar, no navegador.</p>
+    <h2 id="related-tools-heading">Mais calculadoras gratuitas</h2>
+    <p class="related-tools-banner-desc">Da atenção ao custo: com que frequência as pessoas clicam e quanto custa cada clique e visualização.</p>
     <div class="insight-links related-tools" data-related-tools data-current-tool="engagement-rate-calculator" data-related-limit="3"></div>
   </div>
 </section>
@@ -288,29 +319,24 @@
 <section class="faq" id="faq">
 <div class="faq-inner">
 <div class="reveal">
-  <p class="tag">FAQ</p>
-  <h2>Perguntas <em>frequentes</em></h2>
+  <h2>Dúvidas sobre a taxa de engajamento</h2>
 </div>
 <div class="faq-list reveal" style="transition-delay:.1s">
   <details class="faq-item">
-    <summary class="faq-q">Como você calcula a taxa de engajamento?</summary>
-    <p class="faq-a">Taxa de engajamento = Engajamentos Totais ÷ denominador de público × 100. Denominadores comuns são seguidores, alcance e impressões. O melhor depende do que você está tentando comparar.</p>
+    <summary class="faq-q">Seguidores, alcance ou impressões: qual devo usar?</summary>
+    <p class="faq-a">Seguidores para comparar contas. Alcance para comparar posts que alcançaram números diferentes de pessoas. Impressões quando as pessoas viram o mesmo post mais de uma vez.</p>
   </details>
   <details class="faq-item">
     <summary class="faq-q">Qual é uma boa taxa de engajamento?</summary>
-    <p class="faq-a">Os benchmarks variam por plataforma e tamanho de público, mas muitas equipes usam esta heurística baseada em seguidores: abaixo de 1% baixo, 1-3% médio, 3-6% saudável e acima de 6% forte.</p>
+    <p class="faq-a">Varia por plataforma, formato e tamanho do público, e nenhum benchmark cobre todos. As cores nos resultados (abaixo de 1% baixo, 6% para cima forte) são um guia aproximado. Sua própria taxa do mês passado é uma referência melhor.</p>
   </details>
   <details class="faq-item">
-    <summary class="faq-q">Devo usar alcance ou impressões?</summary>
-    <p class="faq-a">Use alcance quando você se importa com a qualidade única do público. Use impressões quando seu conteúdo é exibido repetidamente e você quer eficiência em relação ao total de exposições.</p>
+    <summary class="faq-q">O que conta como engajamento?</summary>
+    <p class="faq-a">Curtidas, comentários, compartilhamentos, salvamentos, cliques e respostas, ou o que sua plataforma relatar. Use a mesma definição toda semana para que a tendência faça sentido.</p>
   </details>
   <details class="faq-item">
-    <summary class="faq-q">Posso comparar a taxa de engajamento entre canais?</summary>
-    <p class="faq-a">Compare as tendências primeiro, não os valores absolutos. O design do feed da plataforma, o comportamento do público e o formato do conteúdo podem produzir diferentes faixas de base.</p>
-  </details>
-  <details class="faq-item">
-    <summary class="faq-q">O que deve contar como engajamento?</summary>
-    <p class="faq-a">Geralmente curtidas, comentários, compartilhamentos, salvamentos, cliques e respostas. A parte crítica é usar a mesma definição toda semana para que a análise de tendências permaneça consistente.</p>
+    <summary class="faq-q">Meus dados são enviados para algum lugar?</summary>
+    <p class="faq-a">Não. Os cálculos rodam no seu navegador. Nada é enviado ou armazenado.</p>
   </details>
 </div>
 </div>

@@ -43,7 +43,7 @@
 {"@context":"https://schema.org","@type":"WebApplication","inLanguage":"ja","name":"CTR計算ツール","url":"https://getduct.ai/ja/tools/ctr-calculator","description":"クリック率（CTR）、目標CTRでの予測クリック数、クリック目標を達成するために必要なリフトを算出する無料の計算ツールです。","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Organization","name":"Duct","url":"https://getduct.ai"}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ja","mainEntity":[{"@type":"Question","name":"CTRはどのように計算しますか？","acceptedAnswer":{"@type":"Answer","text":"CTRは、クリック数をインプレッション数で割り、100を掛けて計算されます。例：20,000インプレッションから500クリックの場合、CTRは2.5%です。"}},{"@type":"Question","name":"良いCTRとは何ですか？","acceptedAnswer":{"@type":"Answer","text":"チャネルと意図によって異なりますが、多くのチームは目安の範囲を使用します。多くの広告およびコンテンツの文脈では、1%未満は弱い、1-3%は平均、3%以上は強いとされています。"}},{"@type":"Question","name":"これをGoogle Adsやオーガニック検索に使えますか？","acceptedAnswer":{"@type":"Answer","text":"はい。クリック数とインプレッション数が同じ期間とソースからのものである限り、Google Ads、Meta Ads、LinkedIn、メール、SEOで同じ計算式が機能します。"}},{"@type":"Question","name":"CTRが高いのにコンバージョンが低いのはなぜですか？","acceptedAnswer":{"@type":"Answer","text":"CTRが高くてもコンバージョンが低い場合、あなたの約束は魅力的だが、ランディングページの意図との一致が弱いことを意味することがよくあります。CTRはクリックの魅力を測定するものであり、クリック後の品質ではありません。"}},{"@type":"Question","name":"CTRを迅速に改善するにはどうすればよいですか？","acceptedAnswer":{"@type":"Answer","text":"より強力なフックをテストし、価値提案を研ぎ澄まし、コピーを意図に合わせ、クリエイティブを更新し、ターゲティングセグメントを絞り込みます。持続的なリフトのために、毎週管理されたテストを実行します。"}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ja","mainEntity":[{"@type":"Question","name":"良好なCTRの目安は？","acceptedAnswer":{"@type":"Answer","text":"チャネルによって異なります。検索広告、SNS広告、メール、オーガニック検索結果はそれぞれ基準が異なり、統一されたベンチマークはありません。結果の色分け（1%未満は低い、3%以上は良好）はおおよその目安です。前月の自社のCTRと比較するのがより適切な基準となります。"}},{"@type":"Question","name":"Google Adsやオーガニック検索でも使えますか？","acceptedAnswer":{"@type":"Answer","text":"はい。クリック数とインプレッション数が同じ期間のものであれば、Google Ads、Meta、LinkedIn、メール、Search Consoleのいずれでも計算式は同じです。"}},{"@type":"Question","name":"CTRが高いのにコンバージョンが低い理由は？","acceptedAnswer":{"@type":"Answer","text":"広告の訴求内容がランディングページで提供されていません。CTRはクリックまでを測定する指標であり、それ以上は測定しません。"}},{"@type":"Question","name":"データがどこかに送信されることはありますか？","acceptedAnswer":{"@type":"Answer","text":"いいえ。計算はお使いのブラウザ上で実行されます。送信や保存が行われることはありません。"}}]}
 </script>
 <style>
   .skip-link {
@@ -106,18 +106,58 @@
   .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
   .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
 
-  .about-section { max-width: 760px; margin: 0 auto 80px; padding: 0 24px; }
-  .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
-  .about-section h2 em { color: var(--orange); font-style: italic; }
-  .about-section p, .about-section li { font-size: 15px; color: var(--navy-3); line-height: 1.75; margin-bottom: 12px; }
-  .about-section ul { padding-left: 20px; }
-  .about-section li { margin-bottom: 6px; }
-  .about-section strong { color: var(--navy); }
 
   .insight-panel { margin-top: 24px; background: #eff6ff; border: 1px solid rgba(37,99,235,.18); border-left: 3px solid #2563EB; border-radius: var(--r); padding: 20px 24px; }
   .insight-label { font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: #2563EB; margin-bottom: 10px; }
   .insight-panel p { font-size: 14px; color: var(--navy-3); line-height: 1.7; margin: 0 0 8px; }
   .insight-panel p:last-of-type { margin-bottom: 0; }
+
+  /* Formula drawn as math, the example worked through, and (where the page cites a
+     source) the bands the results are graded against. Same block on the five
+     calculators that carry it; the width follows this page's .tool-wrap. */
+  .math { max-width: 900px; margin: 0 auto 64px; padding: 0 24px; }
+  .math h2 { font-size: clamp(26px, 3.4vw, 34px); line-height: 1.15; margin: 0 0 20px; }
+  .math-grid { display: grid; grid-template-columns: 7fr 5fr; gap: 16px; }
+  @media (max-width: 760px) { .math-grid { grid-template-columns: 1fr; } }
+  .formulas { padding: 32px; background: var(--off); border: 1px solid var(--border); border-radius: var(--r-lg); display: flex; flex-direction: column; justify-content: center; gap: 20px; min-width: 0; }
+  @media (max-width: 600px) { .formulas { padding: 24px 20px; } }
+  .eq { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin: 0; font-family: var(--serif); font-size: clamp(20px, 2.4vw, 26px); line-height: 1.2; color: var(--navy); }
+  .eq.is-small { font-size: clamp(16px, 1.6vw, 18px); color: var(--navy-2); padding-top: 18px; border-top: 1px solid var(--border); }
+  .eq-name { font-weight: 700; white-space: nowrap; }
+  .eq .op { color: var(--navy-3); }
+  .eq .rhs { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
+  .eq .paren { font-size: 2.1em; font-weight: 300; line-height: .9; color: var(--navy-3); }
+  .eq .rhs sup { font-size: .55em; align-self: flex-start; margin-left: -8px; white-space: nowrap; }
+  .frac { display: inline-flex; flex-direction: column; align-items: center; text-align: center; white-space: nowrap; }
+  .frac > span { padding: 0 6px; align-self: stretch; }
+  .frac > span:first-child { padding-bottom: 4px; }
+  .frac > span:last-child { padding-top: 4px; border-top: 2px solid currentColor; }
+  .frac .nb, .lin .nb { display: inline-block; white-space: nowrap; }
+  .frac > span:has(.nb) { white-space: normal; }
+  .worked { padding: 28px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); min-width: 0; }
+  @media (max-width: 600px) { .worked { padding: 24px 20px; } }
+  .worked h3, .bands h3 { font-size: 13px; font-weight: 600; color: var(--navy-3); margin: 0 0 12px; }
+  .worked ul { list-style: none; margin: 0; padding: 0; }
+  .worked li { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 16px; padding: 10px 0; border-top: 1px solid var(--border); font-size: 14px; color: var(--navy-3); font-variant-numeric: tabular-nums; }
+  .worked li strong { font-family: var(--serif); font-size: 20px; font-weight: 400; color: var(--navy); white-space: nowrap; margin-left: auto; }
+  .worked li sup { font-size: .7em; }
+  .worked-note { font-size: 14px; line-height: 1.6; color: var(--navy-3); margin: 12px 0 0; max-width: 60ch; }
+  .bands { margin-top: 16px; padding: 28px 32px; border: 1px solid var(--border); border-radius: var(--r-lg); }
+  @media (max-width: 600px) { .bands { padding: 24px 20px; } }
+  .band { display: grid; grid-template-columns: 140px 1fr; gap: 6px 20px; align-items: center; padding: 14px 0; border-top: 1px solid var(--border); }
+  @media (max-width: 600px) { .band { grid-template-columns: 1fr; } }
+  .band-name { font-size: 14px; font-weight: 600; color: var(--navy); margin: 0; }
+  .band-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin: 0; border-radius: var(--r); overflow: hidden; }
+  .band-bar > span { padding: 8px 10px; font-size: 13px; line-height: 1.35; }
+  .band-bar strong { display: block; font-size: 12px; font-weight: 600; }
+  .band-bar .bad { background: #fef2f2; color: #991b1b; }
+  .band-bar .mid { background: #fffbeb; color: #92400e; }
+  .band-bar .good { background: #f0fdf4; color: #15803d; }
+  .band-src { grid-column: 2; font-size: 12px; color: var(--navy-3); margin: 0; }
+  @media (max-width: 600px) { .band-src { grid-column: 1; } }
+  /* The bridge link is a standalone target: give it 24px of height (WCAG 2.5.8). */
+  .duct-bridge-link { display: inline-block; padding: 4px 0; }
+  .faq-a { max-width: 68ch; }
 </style>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"ja","itemListElement":[{"@type":"ListItem","position":1,"name":"ホーム","item":"https://getduct.ai/ja/"},{"@type":"ListItem","position":2,"name":"無料ツール","item":"https://getduct.ai/ja/tools/"},{"@type":"ListItem","position":3,"name":"CTR計算ツール","item":"https://getduct.ai/ja/tools/ctr-calculator"}]}
@@ -125,7 +165,7 @@
 </head>
 <body>
 
-<!-- EXPERIMENT: CTR calculator lead magnet — does search intent around "ctr calculator" convert to desktop app downloads from paid and SEO operators? -->
+<!-- EXPERIMENT: CTR calculator as a way in: someone searching "ctr calculator" gets the rate, the formula and a worked example on one screen, then a real Duct session that follows clicks to signups. Measured by Download clicks from the navy box and the closing band. -->
 
 <a href="#main-content" class="skip-link">コンテンツへスキップ</a>
 
@@ -133,9 +173,8 @@
 
 <main id="main-content">
 <div class="tool-hero">
-  <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> 無料ツール · サインアップ不要</div>
-  <h1>CTR計算ツール <em>グロースチーム向け</em></h1>
-  <p>メッセージのパフォーマンスは、クリックシグナルと同じくらい明確です。目標リフトシナリオを含むCTRを即座に計算します — チャネル対応で、スプレッドシートのクリーンアップは不要です。</p>
+  <h1>CTR計算ツール。<em>目標達成に必要な率も算出。</em></h1>
+  <p>クリック数とインプレッション数からCTRを計算し、目標CTRや目標クリック数とのギャップを確認できます。</p>
 </div>
 
 <div class="tool-wrap">
@@ -187,48 +226,41 @@
   </div>
 </div>
 
+<section class="math reveal" aria-labelledby="math-heading">
+  <h2 id="math-heading">CTRの計算方法</h2>
+  <div class="math-grid">
+    <div class="formulas">
+      <p class="eq" role="math" aria-label="CTRは、クリック数をインプレッション数で割り、100を掛けた値です"><span class="eq-name">CTR</span><span class="op">=</span><span class="rhs"><span class="frac"><span>クリック数</span><span>インプレッション数</span></span><span class="op">×</span>100</span></p>
+      <p class="eq is-small" role="math" aria-label="必要CTRは、目標クリック数をインプレッション数で割り、100を掛けた値です"><span class="eq-name">必要CTR</span><span class="op">=</span><span class="rhs"><span class="frac"><span>目標クリック数</span><span>インプレッション数</span></span><span class="op">×</span>100</span></p>
+    </div>
+    <div class="worked">
+      <h3>例の数値を使用した場合</h3>
+      <ul>
+        <li><span>1,170 ÷ 45,000 × 100</span><strong>2.60% CTR</strong></li>
+        <li><span>1,600 ÷ 45,000 × 100</span><strong>必要CTR: 3.56%</strong></li>
+      </ul>
+      <p class="worked-note">クリック数とインプレッション数は、必ず同じデータソース・同じ期間のものを使用してください。そうでなければ正確な数値になりません。</p>
+    </div>
+  </div>
+</section>
+
 <section class="duct-bridge reveal" aria-label="Ductについて">
   <div class="duct-bridge-inner">
     <div class="duct-bridge-text">
-      <p class="duct-bridge-headline">CTRは誰がクリックしたかを教えてくれます。そのトラフィックがビジネスに影響を与えたかどうかは教えてくれません。</p>
-      <p class="duct-bridge-body">Ductは、CPC、コンバージョン率、各チャネルの収益とともにCTRを読み取り、最初に修正すべきクリエイティブまたはオーディエンスを特定します。</p>
+      <p class="duct-bridge-headline">2つの検索キーワードで212ユーロを費やしましたが、登録者はゼロでした。</p>
+      <p class="duct-bridge-body">クリック数だけでは誰が課金したかは分かりません。DuctはGoogle Ads、GA4、Stripeのデータをまとめて分析し、各キャンペーンの費用を目標と照合して、停止前の承認を待ちます。</p>
       <a href="/ja/" class="duct-bridge-link">Ductの仕組み →</a>
     </div>
     <figure class="shot-frame duct-bridge-shot">
       <img src="/assets/media/paid-session.webp" srcset="/assets/media/paid-session-768.webp 768w, /assets/media/paid-session-1536.webp 1536w, /assets/media/paid-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="インサイトセッション：広告予算がどこで漏れているかを尋ねると、エージェントはすべてのキャンペーンをCPA目標に対して評価し、一時停止、2つの除外キーワード、予算増額を提案し、右側に支出ブリーフを作成します"/>
-      <figcaption>予算の漏洩箇所を特定します。DuctはすべてのキャンペーンをCPA目標に対して評価し、一時停止、ネガティブキーワード、予算の変更を提案し、あなたの承認を待ちます。</figcaption>
     </figure>
   </div>
 </section>
 
-<div class="about-section reveal">
-  <h2><em>計算ツールの仕組み</em></h2>
-  <p>このツールは標準的なクリックスルー率の計算式を使用します。</p>
-  <ul>
-    <li><strong>CTR</strong> = クリック数 ÷ インプレッション数 × 100</li>
-    <li><strong>目標CTRでの予測クリック数</strong> = インプレッション数 × (目標CTR ÷ 100)</li>
-    <li><strong>目標クリック数達成に必要なCTR</strong> = 目標クリック数 ÷ インプレッション数 × 100</li>
-  </ul>
-  <p>CTRは、露出によるパフォーマンスを正規化するのに役立ちます。インプレッション数が異なるキャンペーン間で、クリエイティブとキーワードの関連性を比較する最も速い方法です。</p>
-
-  <h2 style="margin-top:40px">CTRが<em>重要な理由</em></h2>
-  <p>低いCTRは通常、関連性のギャップを示します。弱いフック、ターゲティングの不備、または意図との一致が低い場合です。CPCが問題ないように見えても、低いCTRは後にコンバージョン率や費用対効果を損なう品質問題を隠している可能性があります。</p>
-  <p>オーガニックチャネルの場合、CTRは主要な診断指標です。有料チャネルの場合、品質シグナルであると同時に、クリエイティブの疲労に対する早期警告でもあります。</p>
-
-  <h2 style="margin-top:40px">制限事項</h2>
-  <ul>
-    <li>CTRだけでは、コンバージョン品質や下流の収益への影響を示すものではありません。</li>
-    <li>ベンチマークは、チャネル、デバイス、オーディエンスの意図によって大幅に異なります。</li>
-    <li>この計算ツールは、ポジション効果（例：広告ランクやSERP掲載順位）を含みません。</li>
-    <li>すべての計算はブラウザで実行されます。データが送信または保存されることはありません。</li>
-  </ul>
-</div>
-
 <section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
   <div class="related-tools-banner-inner">
-    <p class="tag">その他無料</p>
-    <h2 id="related-tools-heading">関連<em>ツール</em>を見る</h2>
-    <p class="related-tools-banner-desc">これらの計算ツールを使用して、ファネル上部のクリック品質をエンゲージメント、成長速度、毎週の実行ペースと接続します。</p>
+    <h2 id="related-tools-heading">その他の無料計算ツール</h2>
+    <p class="related-tools-banner-desc">クリックにかかった費用と、それによって得られた収益。</p>
     <div class="insight-links related-tools" data-related-tools data-current-tool="ctr-calculator" data-related-limit="3"></div>
   </div>
 </section>
@@ -236,29 +268,24 @@
 <section class="faq" id="faq">
 <div class="faq-inner">
 <div class="reveal">
-  <p class="tag">FAQ</p>
-  <h2>よくある<em>質問</em></h2>
+  <h2>CTRに関するよくある質問</h2>
 </div>
 <div class="faq-list reveal" style="transition-delay:.1s">
   <details class="faq-item">
-    <summary class="faq-q">CTRはどのように計算しますか？</summary>
-    <p class="faq-a">CTRは、クリック数をインプレッション数で割り、100を掛けて計算されます。例：20,000インプレッションから500クリックの場合、CTRは2.5%です。</p>
+    <summary class="faq-q">良好なCTRの目安は？</summary>
+    <p class="faq-a">チャネルによって異なります。検索広告、SNS広告、メール、オーガニック検索結果はそれぞれ基準が異なり、統一されたベンチマークはありません。結果の色分け（1%未満は低い、3%以上は良好）はおおよその目安です。前月の自社のCTRと比較するのがより適切な基準となります。</p>
   </details>
   <details class="faq-item">
-    <summary class="faq-q">良いCTRとは何ですか？</summary>
-    <p class="faq-a">チャネルと意図によって異なりますが、多くのチームは目安の範囲を使用します。多くの広告およびコンテンツの文脈では、1%未満は弱い、1-3%は平均、3%以上は強いとされています。</p>
+    <summary class="faq-q">Google Adsやオーガニック検索でも使えますか？</summary>
+    <p class="faq-a">はい。クリック数とインプレッション数が同じ期間のものであれば、Google Ads、Meta、LinkedIn、メール、Search Consoleのいずれでも計算式は同じです。</p>
   </details>
   <details class="faq-item">
-    <summary class="faq-q">これをGoogle Adsやオーガニック検索に使えますか？</summary>
-    <p class="faq-a">はい。クリック数とインプレッション数が同じ期間とソースからのものである限り、Google Ads、Meta Ads、LinkedIn、メール、SEOで同じ計算式が機能します。</p>
+    <summary class="faq-q">CTRが高いのにコンバージョンが低い理由は？</summary>
+    <p class="faq-a">広告の訴求内容がランディングページで提供されていません。CTRはクリックまでを測定する指標であり、それ以上は測定しません。</p>
   </details>
   <details class="faq-item">
-    <summary class="faq-q">CTRが高いのにコンバージョンが低いのはなぜですか？</summary>
-    <p class="faq-a">CTRが高くてもコンバージョンが低い場合、あなたの約束は魅力的だが、ランディングページの意図との一致が弱いことを意味することがよくあります。CTRはクリックの魅力を測定するものであり、クリック後の品質ではありません。</p>
-  </details>
-  <details class="faq-item">
-    <summary class="faq-q">CTRを迅速に改善するにはどうすればよいですか？</summary>
-    <p class="faq-a">より強力なフックをテストし、価値提案を研ぎ澄まし、コピーを意図に合わせ、クリエイティブを更新し、ターゲティングセグメントを絞り込みます。持続的なリフトのために、毎週管理されたテストを実行します。</p>
+    <summary class="faq-q">データがどこかに送信されることはありますか？</summary>
+    <p class="faq-a">いいえ。計算はお使いのブラウザ上で実行されます。送信や保存が行われることはありません。</p>
   </details>
 </div>
 </div>

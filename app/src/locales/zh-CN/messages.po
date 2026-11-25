@@ -7086,8 +7086,8 @@ msgid "Only you"
 msgstr "仅你可见"
 
 #: src/components/connections/McpConnectDialog.jsx
-msgid "Only your own insights chats use it, in any project. Scheduled briefs don’t call MCP connectors yet."
-msgstr "仅你自己的洞察聊天在任何项目中使用它。计划的简报尚未调用 MCP 连接器。"
+#~ msgid "Only your own insights chats use it, in any project. Scheduled briefs don’t call MCP connectors yet."
+#~ msgstr "仅你自己的洞察聊天在任何项目中使用它。计划的简报尚未调用 MCP 连接器。"
 
 #: src/app/(app)/execute/page.jsx
 msgid "Op types to block, comma-separated (optional)"
@@ -12272,6 +12272,10 @@ msgstr "你自己的账户和 API 密钥，加密存储。Duct 仅在你要求�
 #: src/components/content/AnalyticsView.jsx
 msgid "Your own account and API key, stored encrypted. Numbers sync from the posts Duct publishes and the ones you post yourself."
 msgstr "你自己的账户和 API 密钥，加密存储。数据会从 Duct 发布的帖子和你自己发布的帖子中同步。"
+
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Your own chats use it, in any project. Scheduled runs only call the read-only tools of the servers Duct trusts, so one added by address never runs unattended."
+msgstr "你在任何项目中的对话都可以使用它。定时运行仅会调用 Duct 信任的服务器的只读工具，因此通过地址添加的服务器绝不会无人值守地运行。"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "your preferences"

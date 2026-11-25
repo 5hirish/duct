@@ -190,6 +190,44 @@ export const SCENARIOS = [
     },
   },
   {
+    // The site's /mcp page: the dialog where an MCP server is added, its
+    // presets as one-click rows. The dialog alone, as with the ChatGPT card.
+    id: "mcp-add",
+    kind: "page",
+    viewport: { width: 1100, height: 900 },
+    theme: "light",
+    frame: "card",
+    async run({ page, app }) {
+      await page.goto(`${app}/connections`);
+      await page.getByRole("button", { name: "Add an MCP server" }).first().click();
+      const dialog = page.getByRole("dialog");
+      await dialog.waitFor({ timeout: 20000 });
+      await page.waitForTimeout(800);
+      await page.addStyleTag({ content: "[data-slot=dialog-overlay], [data-radix-dialog-overlay] { opacity: 0 !important; }" });
+      const radius = await dialog.evaluate((el) => parseFloat(getComputedStyle(el).borderRadius) || 0);
+      return { element: dialog, radius };
+    },
+  },
+  {
+    // The site's /connect-agent page: the one Allow an agent's sign-in asks
+    // for, in the browser, naming the agent and what it may do.
+    id: "agent-consent",
+    kind: "page",
+    viewport: { width: 900, height: 900 },
+    theme: "light",
+    frame: "card",
+    async run({ page, app }) {
+      await page.goto(`${app}/authorize?request=r1`, { waitUntil: "domcontentloaded" });
+      const allow = page.getByRole("button", { name: /Allow/i }).first();
+      await allow.waitFor({ timeout: 20000 });
+      await page.waitForTimeout(300);
+      // The consent card alone: the nearest rounded box around the Allow button.
+      const card = allow.locator("xpath=ancestor::*[contains(@class,'rounded')][not(self::button)][1]");
+      const radius = await card.evaluate((el) => parseFloat(getComputedStyle(el).borderRadius) || 0);
+      return { element: card, radius };
+    },
+  },
+  {
     id: "chatgpt-card",
     kind: "scene",
     scene: "shot-chatgpt-card",

@@ -8116,8 +8116,8 @@ msgstr "あなたのみ"
 #~ msgstr "どのプロジェクトでも、自分のチャットのみがサーバーを使用します。プロジェクトを共有している人は、各自で接続します。"
 
 #: src/components/connections/McpConnectDialog.jsx
-msgid "Only your own insights chats use it, in any project. Scheduled briefs don’t call MCP connectors yet."
-msgstr "あなた自身のインサイトチャットのみが、どのプロジェクトでも使用します。スケジュールされたブリーフはまだMCPコネクタを呼び出しません。"
+#~ msgid "Only your own insights chats use it, in any project. Scheduled briefs don’t call MCP connectors yet."
+#~ msgstr "あなた自身のインサイトチャットのみが、どのプロジェクトでも使用します。スケジュールされたブリーフはまだMCPコネクタを呼び出しません。"
 
 #: src/app/(app)/execute/page.jsx
 msgid "Op types to block, comma-separated (optional)"
@@ -13837,6 +13837,10 @@ msgstr "あなた自身のアカウントと API キーは暗号化して保存�
 #: src/components/content/AnalyticsView.jsx
 msgid "Your own account and API key, stored encrypted. Numbers sync from the posts Duct publishes and the ones you post yourself."
 msgstr "あなた自身のアカウントと API キーは暗号化して保存されます。数値は Duct が公開した投稿と、あなたが自分で投稿したものの両方から同期されます。"
+
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Your own chats use it, in any project. Scheduled runs only call the read-only tools of the servers Duct trusts, so one added by address never runs unattended."
+msgstr "どのプロジェクトでも、ご自身のチャットから使用できます。スケジュール実行ではDuctが信頼するサーバーの読み取り専用ツールのみが呼び出されるため、アドレスで追加されたものが無人で実行されることはありません。"
 
 #: src/components/content/AccountsTab.jsx
 #~ msgid "your PostBridge accounts"

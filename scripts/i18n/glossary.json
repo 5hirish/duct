@@ -15,7 +15,7 @@
     "Tauri", "FastAPI", "Next.js", "Cloudflare", "Railway", "Turnstile", "Sentry",
     "SaaS", "UTM", "CMGR", "ROI", "OAuth", "PDF", "Word", "PowerPoint", "Markdown", "MCP", "Model Context Protocol", "Streamable HTTP", "HTTPS",
     "Claude Code", "Claude Desktop", "claude.ai", "Cursor", "VS Code", "OpenCode", "HTTP",
-    "launch-check", "SKILL.md", "Agent Skills", "skills.sh", "GitHub Copilot", "Windsurf", "Zed",
+    "launch-check", "SKILL.md", "Agent Skills", "skills.sh", "GitHub Copilot", "Copilot", "Gemini CLI", "Rust", "Python", "Windsurf", "Zed",
     "Perplexity", "Node.js"
   ],
   "terms": {

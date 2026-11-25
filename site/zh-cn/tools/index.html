@@ -68,31 +68,11 @@
   .tools-index-hero h1 em { color:var(--orange); font-style:italic; }
   .tools-index-hero .lead {
     font-size:18px;
-    color:var(--navy-3);
-    font-weight:300;
+    color:var(--navy-2);
+    font-weight:400;
     line-height:1.65;
     margin:0 auto 28px;
     max-width:620px;
-  }
-  .tools-index-trust {
-    display:flex;
-    flex-wrap:wrap;
-    justify-content:center;
-    gap:10px 14px;
-    margin:0;
-    padding:0;
-    list-style:none;
-  }
-  .tools-index-trust li {
-    font-size:12px;
-    font-weight:500;
-    letter-spacing:.04em;
-    text-transform:uppercase;
-    color:var(--navy-3);
-    border:1px solid var(--border);
-    background:var(--off);
-    padding:8px 14px;
-    border-radius:var(--pill);
   }
 
   .tools-hub-wrap { max-width:1160px; margin:0 auto; padding:0 24px 80px; }
@@ -139,17 +119,6 @@
     transform:translateY(-3px);
     box-shadow:0 12px 36px rgba(37,99,235,.1);
   }
-  .ft-badge {
-    font-size:10px;
-    font-weight:600;
-    letter-spacing:.06em;
-    padding:3px 10px;
-    border-radius:var(--pill);
-    background:#eff6ff;
-    color:#2563EB;
-    border:1px solid rgba(37,99,235,.2);
-    align-self:flex-start;
-  }
   .ft-icon { font-size:26px; line-height:1; color: var(--orange); display:inline-flex; }
   .ft-card h3 {
     font-family:var(--serif);
@@ -192,11 +161,6 @@
 <p class="tag">免费工具</p>
 <h1>你所需的一切，用于<em>快速检查</em>数字</h1>
 <p class="lead">在你的浏览器中运行的计算器和生成器。无需账户，无需上传任何内容。当你想要数字的解释，而不仅仅是计算结果时，Duct 会读取你的工具并给出答案。</p>
-<ul class="tools-index-trust" aria-label="预期结果">
-<li>无需注册</li>
-<li>在你的浏览器中运行</li>
-<li>由 Duct 开发者出品</li>
-</ul>
 </section>
 
 <div class="tools-hub-wrap">
@@ -205,20 +169,19 @@
 <h2 id="hub-saas-heading">SaaS 指标与收入</h2>
 <p class="tools-hub-desc">使用财务部门会要求的数据，对健康状况进行基准测试并建模增长。</p>
 <div class="tools-hub-grid">
-<a href="/zh-cn/tools/saas-metrics-calculator" class="ft-card"> <span class="ft-badge">计算器</span> <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#calculator"/></svg></span>
+<a href="/zh-cn/tools/saas-metrics-calculator" class="ft-card">
+<span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#calculator"/></svg></span>
 <h3>SaaS 指标基准计算器</h3>
 <p>流失率、LTV:CAC、回报期和试用到付费转化率，对比行业中位数评分。</p>
 <span class="ft-link">打开计算器 →</span>
 </a>
 <a href="/zh-cn/tools/cac-ltv-calculator" class="ft-card">
-<span class="ft-badge">计算器</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
 <h3>CAC / LTV 计算器</h3>
 <p>单位经济学一览：CAC、LTV、比率和回收期，并提供基准背景。</p>
 <span class="ft-link">打开计算器 →</span>
 </a>
 <a href="/zh-cn/tools/mrr-growth-calculator" class="ft-card">
-<span class="ft-badge">计算器</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#trending-up"/></svg></span>
 <h3>MRR 增长率计算器</h3>
 <p>净 MRR 增长、CMGR 以及达到目标所需的增长率。</p>
@@ -231,41 +194,37 @@
 <h2 id="hub-paid-heading">付费媒体效率</h2>
 <p class="tools-hub-desc">规划、进度或事后分析：无需电子表格即可计算 CTR、CPM、CPC、CPA、ROAS 和 ROI。</p>
 <div class="tools-hub-grid">
-<a href="/zh-cn/tools/ctr-calculator" class="ft-card"> <span class="ft-badge">计算器</span> <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#target"/></svg></span>
+<a href="/zh-cn/tools/ctr-calculator" class="ft-card">
+<span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#target"/></svg></span>
 <h3>CTR 计算器</h3>
 <p>点击率、预计点击量以及你达到流量目标所需的 CTR。</p>
 <span class="ft-link">打开计算器 →</span>
 </a>
 <a href="/zh-cn/tools/cpm-calculator" class="ft-card">
-<span class="ft-badge">计算器</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#banknote"/></svg></span>
 <h3>CPM 计算器</h3>
 <p>每千次展示成本、支出情景和效率目标。</p>
 <span class="ft-link">打开计算器 →</span>
 </a>
 <a href="/zh-cn/tools/cpc-calculator" class="ft-card">
-<span class="ft-badge">计算器</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#mouse-pointer-click"/></svg></span>
 <h3>CPC 计算器</h3>
 <p>每次点击成本以及在你的目标 CPC 下的支出情况。</p>
 <span class="ft-link">打开计算器 →</span>
 </a>
 <a href="/zh-cn/tools/cpa-calculator" class="ft-card">
-<span class="ft-badge">计算器</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#pin"/></svg></span>
 <h3>CPA 计算器</h3>
 <p>每次获客成本、转化情景和预算安全的 CPA。</p>
 <span class="ft-link">打开计算器 →</span>
 </a>
 <a href="/zh-cn/tools/roas-calculator" class="ft-card">
-<span class="ft-badge">计算器</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-line"/></svg></span>
 <h3>ROAS 计算器</h3>
 <p>广告支出回报率作为收入倍数、目标 ROAS 差距以及考虑利润的贡献 ROAS。</p>
 <span class="ft-link">打开计算器 →</span>
 </a>
 <a href="/zh-cn/tools/marketing-roi-calculator" class="ft-card">
-<span class="ft-badge">计算器</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#trending-down"/></svg></span>
 <h3>营销 ROI 计算器</h3>
 <p>几分钟内即可为广告系列决策提供 ROI、利润和收入情景。</p>
@@ -278,20 +237,19 @@
 <h2 id="hub-ops-heading">追踪、社交与报告</h2>
 <p class="tools-hub-desc">清晰的营销活动链接，你的团队将填写的简报模板，以及你可以跨帖子比较的互动率。</p>
 <div class="tools-hub-grid">
-<a href="/zh-cn/tools/utm-builder" class="ft-card"> <span class="ft-badge">生成器</span> <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#link"/></svg></span>
+<a href="/zh-cn/tools/utm-builder" class="ft-card">
+<span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#link"/></svg></span>
 <h3>UTM 构建器</h3>
 <p>兼容 GA4 的广告系列链接，带实时预览和验证。</p>
 <span class="ft-link">构建 UTM →</span>
 </a>
 <a href="/zh-cn/tools/weekly-brief-template" class="ft-card">
-<span class="ft-badge">模板</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#clipboard-list"/></svg></span>
 <h3>每周营销简报生成器</h3>
 <p>针对你的角色和技术栈的每周报告结构，每个工具一个位置。</p>
 <span class="ft-link">生成模板 →</span>
 </a>
 <a href="/zh-cn/tools/engagement-rate-calculator" class="ft-card">
-<span class="ft-badge">计算器</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#message-square"/></svg></span>
 <h3>互动率计算器</h3>
 <p>粉丝互动、触达或展示量，可在不同帖子间进行比较。</p>
@@ -304,8 +262,7 @@
 <section class="faq tools-hub-faq" id="faq">
 <div class="faq-inner">
 <div class="reveal">
-<p class="tag">常见问题</p>
-<h2>关于这些<em>工具</em></h2>
+<h2>关于这些工具</h2>
 </div>
 <div class="faq-list reveal" style="transition-delay:.08s">
 <details class="faq-item">
