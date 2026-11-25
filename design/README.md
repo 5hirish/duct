@@ -69,6 +69,17 @@ With the app's dev server running (`npm --prefix app run dev`):
 
 **Check it worked:** board-check passes at all eight sizes, `assets.mjs apply` finds nothing the canvas cannot load, and the canvas's blue notes carry the new date and commit.
 
+## The site on the canvas
+
+The canvas's **Site** page holds getduct.ai's landing pages as boards, built the same way as the app's: each is the page's own markup at 1440, linking the site's own stylesheet, so a board reads as the page and Play moves through the nav. Both captures share [`tools/board.mjs`](tools/board.mjs).
+
+1. Serve the site: `python3 site/dev_server.py --port 8090`.
+2. `node design/tools/capture-site.mjs`: every page in its `PAGES` list (or the ids named) to `$TMPDIR/duct-design-site/boards/`. Scroll reveals are shown finished, a video becomes a picture of itself, the icon sprite is inlined, and a page's state attribute on `<body>` (the SEO audit's `data-lm-state`) moves to the board's root.
+3. `node design/tools/capture-site.mjs --check`: each board beside its page with a difference image in `check/`, marking ✗ a page over a mean difference of 3. A page whose photos load lazily reads a little high, because the live page has not loaded them yet; read the picture.
+4. Upload `boards/img/` to the canvas's asset store, point the boards and `duct-site.css` at the returned `/_blob/` urls, and publish the boards with a merged `project/canvas.json` (boards on the `site` page, a frame at most 8,000px tall).
+
+To compare another branch's copy of a page, serve a worktree of it (inside the repo, under `.worktrees/`) on another port and set `COMPARE=http://localhost:<port>`: its `/connect-agent` is captured as `site-connect-agent-main`, with its own stylesheet. `CHROMIUM=<path>` points Playwright at a browser binary when the site's pinned version is not installed.
+
 ## The design system follows the code
 
 Tokens are read from the app's stylesheets, previews are captured from the app's preview route, and each component's guideline is its row of the canon table in the app's design guide, word for word. The brand book is the one part written by hand, condensed from that guide, which wins wherever the two disagree.
