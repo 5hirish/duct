@@ -8115,8 +8115,8 @@ msgstr "Nur du"
 #~ msgstr "Nur deine eigenen Chats nutzen deine Server, in jedem Projekt. Personen, mit denen du ein Projekt teilst, verbinden ihre eigenen."
 
 #: src/components/connections/McpConnectDialog.jsx
-msgid "Only your own insights chats use it, in any project. Scheduled briefs don’t call MCP connectors yet."
-msgstr "Nur deine eigenen Insights-Chats nutzen es, in jedem Projekt. Geplante Briefings rufen MCP Connectors noch nicht auf."
+#~ msgid "Only your own insights chats use it, in any project. Scheduled briefs don’t call MCP connectors yet."
+#~ msgstr "Nur deine eigenen Insights-Chats nutzen es, in jedem Projekt. Geplante Briefings rufen MCP Connectors noch nicht auf."
 
 #: src/app/(app)/execute/page.jsx
 msgid "Op types to block, comma-separated (optional)"
@@ -13836,6 +13836,10 @@ msgstr "Dein eigenes Konto und dein API-Schlüssel, verschlüsselt gespeichert. 
 #: src/components/content/AnalyticsView.jsx
 msgid "Your own account and API key, stored encrypted. Numbers sync from the posts Duct publishes and the ones you post yourself."
 msgstr "Dein eigenes Konto und dein API-Schlüssel, verschlüsselt gespeichert. Die Zahlen kommen von den Beiträgen, die Duct veröffentlicht, und von denen, die du selbst postest."
+
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Your own chats use it, in any project. Scheduled runs only call the read-only tools of the servers Duct trusts, so one added by address never runs unattended."
+msgstr "Deine eigenen Chats nutzen es in jedem Projekt. Geplante Läufe rufen nur die schreibgeschützten Tools der Server auf, denen Duct vertraut, sodass ein per Adresse hinzugefügter Server nie unbeaufsichtigt läuft."
 
 #: src/components/content/AccountsTab.jsx
 #~ msgid "your PostBridge accounts"

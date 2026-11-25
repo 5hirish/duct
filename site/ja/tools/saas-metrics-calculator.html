@@ -43,7 +43,7 @@
 {"@context":"https://schema.org","@type":"WebApplication","inLanguage":"ja","name":"SaaS指標ベンチマーク計算ツール","url":"https://getduct.ai/ja/tools/saas-metrics-calculator","description":"SaaSメトリクス（チャーン率、LTV:CAC比率、CAC回収期間、トライアルから有料へのコンバージョン）を、OpenViewとChartMogulの業界平均と比較する無料計算機。","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Organization","name":"Duct","url":"https://getduct.ai"}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ja","mainEntity":[{"@type":"Question","name":"良いSaaSチャーン率とは何ですか？","acceptedAnswer":{"@type":"Answer","text":"SaaSにおける良好な月間チャーン率は2%未満です。2〜4%は平均的で注意が必要です。4%を超える月間チャーン率は危機的であり、その率では毎年収益ベースのほぼ半分を失っています。ベンチマークはステージによって異なり、初期段階のSaaSは通常、成熟した製品よりも高いチャーン率を示します。"}},{"@type":"Question","name":"SaaSビジネスのLTVはどのように計算しますか？","acceptedAnswer":{"@type":"Answer","text":"LTV = 顧客あたりの月間平均収益 ÷ 月間チャーン率。例えば、ARPUが100ユーロで月間チャーン率が2%の場合、LTV = 100ユーロ ÷ 0.02 = 5,000ユーロです。粗利益率調整版：LTV = (ARPU × 粗利益率%) ÷ チャーン率。この計算ツールは、独自のLTVを提供しない限り、簡易版を使用します。"}},{"@type":"Question","name":"健全なLTV:CAC比率とは何ですか？","acceptedAnswer":{"@type":"Answer","text":"SaaSにおける健全なLTV:CAC比率は3:1以上です。顧客獲得に1ユーロ費やすごとに、ライフタイムバリューで3ユーロを回収します。2〜3:1の比率はコストをカバーしますが、強力なユニットエコノミクスを構築しません。2:1未満は通常、モデルが大規模では実行不可能であることを意味します。5:1以上は、成長への投資不足を示唆することがよくあります。"}},{"@type":"Question","name":"SaaSメトリクスはどのくらいの頻度で追跡すべきですか？","acceptedAnswer":{"@type":"Answer","text":"MRR、チャーン、新規顧客を毎月追跡します。LTVとLTV:CACは動きが遅いため、四半期ごとに意味があります。最も重要な4〜5つの指標をカバーする週次ブリーフは、毎月のスプレッドシートの山より常に優れています。"}},{"@type":"Question","name":"この計算ツールはどのデータソースを使用しますか？","acceptedAnswer":{"@type":"Answer","text":"ベンチマークは、OpenView PartnersのSaaSベンチマークレポート（2023-2024）とChartMogulのSaaSベンチマークレポートに基づいています。LTV:CACのしきい値は、For EntrepreneursのDavid Skok氏によるSaaSメトリクスフレームワークで広く引用されている3:1の基準に従っています。"}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ja","mainEntity":[{"@type":"Question","name":"解約率は顧客数ベースと収益ベースのどちらにすべきですか？","acceptedAnswer":{"@type":"Answer","text":"毎月同じ指標を使う限り、どちらでも構いません。顧客によって支払額が大きく異なる場合は、収益ベースの解約率の方がLTVに適しています。"}},{"@type":"Question","name":"なぜLTVは解約率から推定されるのですか？","acceptedAnswer":{"@type":"Answer","text":"これは標準的な簡便法であり、解約率が一定で顧客のアップグレードがないことを前提としています。より適した数値がある場合は、独自のLTVを入力してください。"}},{"@type":"Question","name":"ベンチマークの出典はどこですか？","acceptedAnswer":{"@type":"Answer","text":"解約率はChartMogulのSaaSベンチマークレポート（2024年）、回収期間とトライアル転換率はOpenViewのSaaSベンチマーク（2023〜2024年）、3:1のLTV:CACルールはDavid SkokのSaaSメトリクスフレームワークに基づいています。"}},{"@type":"Question","name":"データがどこかに送信されることはありますか？","acceptedAnswer":{"@type":"Answer","text":"いいえ。計算はお使いのブラウザ上で実行されます。送信や保存が行われることはありません。"}}]}
 </script>
 <style>
   .skip-link {
@@ -153,13 +153,6 @@
   .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
   .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
 
-  .about-section { max-width: 720px; margin: 0 auto 80px; padding: 0 24px; }
-  .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
-  .about-section h2 em { color: var(--orange); font-style: italic; }
-  .about-section p, .about-section li { font-size: 15px; color: var(--navy-3); line-height: 1.75; margin-bottom: 12px; }
-  .about-section ul { padding-left: 20px; }
-  .about-section li { margin-bottom: 6px; }
-  .about-section strong { color: var(--navy); }
 
   .insight-panel {
     margin-top: 24px;
@@ -183,6 +176,53 @@
     background: var(--white); transition: background .15s;
   }
   .insight-link:hover { background: #dbeafe; }
+
+  /* Formula drawn as math, the example worked through, and (where the page cites a
+     source) the bands the results are graded against. Same block on the five
+     calculators that carry it; the width follows this page's .tool-wrap. */
+  .math { max-width: 820px; margin: 0 auto 64px; padding: 0 24px; }
+  .math h2 { font-size: clamp(26px, 3.4vw, 34px); line-height: 1.15; margin: 0 0 20px; }
+  .math-grid { display: grid; grid-template-columns: 7fr 5fr; gap: 16px; }
+  @media (max-width: 760px) { .math-grid { grid-template-columns: 1fr; } }
+  .formulas { padding: 32px; background: var(--off); border: 1px solid var(--border); border-radius: var(--r-lg); display: flex; flex-direction: column; justify-content: center; gap: 20px; min-width: 0; }
+  @media (max-width: 600px) { .formulas { padding: 24px 20px; } }
+  .eq { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin: 0; font-family: var(--serif); font-size: clamp(20px, 2.4vw, 26px); line-height: 1.2; color: var(--navy); }
+  .eq.is-small { font-size: clamp(16px, 1.6vw, 18px); color: var(--navy-2); padding-top: 18px; border-top: 1px solid var(--border); }
+  .eq-name { font-weight: 700; white-space: nowrap; }
+  .eq .op { color: var(--navy-3); }
+  .eq .rhs { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
+  .eq .paren { font-size: 2.1em; font-weight: 300; line-height: .9; color: var(--navy-3); }
+  .eq .rhs sup { font-size: .55em; align-self: flex-start; margin-left: -8px; white-space: nowrap; }
+  .frac { display: inline-flex; flex-direction: column; align-items: center; text-align: center; white-space: nowrap; }
+  .frac > span { padding: 0 6px; align-self: stretch; }
+  .frac > span:first-child { padding-bottom: 4px; }
+  .frac > span:last-child { padding-top: 4px; border-top: 2px solid currentColor; }
+  .frac .nb, .lin .nb { display: inline-block; white-space: nowrap; }
+  .frac > span:has(.nb) { white-space: normal; }
+  .worked { padding: 28px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); min-width: 0; }
+  @media (max-width: 600px) { .worked { padding: 24px 20px; } }
+  .worked h3, .bands h3 { font-size: 13px; font-weight: 600; color: var(--navy-3); margin: 0 0 12px; }
+  .worked ul { list-style: none; margin: 0; padding: 0; }
+  .worked li { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 16px; padding: 10px 0; border-top: 1px solid var(--border); font-size: 14px; color: var(--navy-3); font-variant-numeric: tabular-nums; }
+  .worked li strong { font-family: var(--serif); font-size: 20px; font-weight: 400; color: var(--navy); white-space: nowrap; margin-left: auto; }
+  .worked li sup { font-size: .7em; }
+  .worked-note { font-size: 14px; line-height: 1.6; color: var(--navy-3); margin: 12px 0 0; max-width: 60ch; }
+  .bands { margin-top: 16px; padding: 28px 32px; border: 1px solid var(--border); border-radius: var(--r-lg); }
+  @media (max-width: 600px) { .bands { padding: 24px 20px; } }
+  .band { display: grid; grid-template-columns: 140px 1fr; gap: 6px 20px; align-items: center; padding: 14px 0; border-top: 1px solid var(--border); }
+  @media (max-width: 600px) { .band { grid-template-columns: 1fr; } }
+  .band-name { font-size: 14px; font-weight: 600; color: var(--navy); margin: 0; }
+  .band-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin: 0; border-radius: var(--r); overflow: hidden; }
+  .band-bar > span { padding: 8px 10px; font-size: 13px; line-height: 1.35; }
+  .band-bar strong { display: block; font-size: 12px; font-weight: 600; }
+  .band-bar .bad { background: #fef2f2; color: #991b1b; }
+  .band-bar .mid { background: #fffbeb; color: #92400e; }
+  .band-bar .good { background: #f0fdf4; color: #15803d; }
+  .band-src { grid-column: 2; font-size: 12px; color: var(--navy-3); margin: 0; }
+  @media (max-width: 600px) { .band-src { grid-column: 1; } }
+  /* The bridge link is a standalone target: give it 24px of height (WCAG 2.5.8). */
+  .duct-bridge-link { display: inline-block; padding: 4px 0; }
+  .faq-a { max-width: 68ch; }
 </style>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"ja","itemListElement":[{"@type":"ListItem","position":1,"name":"ホーム","item":"https://getduct.ai/ja/"},{"@type":"ListItem","position":2,"name":"無料ツール","item":"https://getduct.ai/ja/tools/"},{"@type":"ListItem","position":3,"name":"SaaS指標ベンチマーク計算ツール","item":"https://getduct.ai/ja/tools/saas-metrics-calculator"}]}
@@ -190,7 +230,7 @@
 </head>
 <body>
 
-<!-- EXPERIMENT: Free tool as lead magnet — does a benchmark calculator with immediate ungated results drive higher-intent beta signups than a standard landing page CTA? -->
+<!-- EXPERIMENT: SaaS metrics calculator as a way in: someone searching for SaaS benchmarks gets four graded numbers, the formulas, a worked example and the sourced bands on one screen, then a real Duct session that finds the cohort behind a number. Measured by Download clicks from the navy box and the closing band. -->
 
 <a href="#main-content" class="skip-link">コンテンツへスキップ</a>
 
@@ -199,9 +239,8 @@
 <main id="main-content">
 
 <div class="tool-hero">
-  <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> 無料ツール · サインアップ不要</div>
-  <h1>SaaSメトリクス<em>ベンチマーク</em>計算ツール</h1>
-  <p>お客様のSaaSに関する意思決定は、ベースライン指標の強さに依存します。チャーン、LTV:CAC、トライアル転換率を明確にベンチマークしましょう — 色分けされ、意思決定に役立ち、スプレッドシートの遅延もありません。</p>
+  <h1>SaaSメトリクス計算ツール。<em>4つの数値で評価。</em></h1>
+  <p>解約率、LTV:CAC、CAC回収期間、トライアル転換率が、それぞれ公開されているSaaSベンチマークに基づきスコア化されます。</p>
 </div>
 
 <div class="tool-wrap">
@@ -275,44 +314,66 @@
   </div>
 </div>
 
+<section class="math reveal" aria-labelledby="math-heading">
+  <h2 id="math-heading">4つの数値の計算方法</h2>
+  <div class="math-grid">
+    <div class="formulas">
+      <p class="eq" role="math" aria-label="LTVは顧客あたりの月次売上を月次解約率で割った数値です"><span class="eq-name">LTV</span><span class="op">=</span><span class="rhs"><span class="frac"><span>顧客あたり売上</span><span>月次解約率</span></span></span></p>
+      <p class="eq is-small" role="math" aria-label="LTV対CAC比率はLTVをCACで割った数値です"><span class="eq-name">LTV:CAC</span><span class="op">=</span><span class="rhs"><span class="frac"><span>LTV</span><span>CAC</span></span></span></p>
+      <p class="eq is-small" role="math" aria-label="月単位の回収期間は、CAC を月額顧客単価と粗利益率の積で割った値に等しくなります"><span class="eq-name">回収期間</span><span class="op">=</span><span class="rhs"><span class="frac"><span>CAC</span><span><span class="nb">顧客単価</span> <span class="nb">× 利益率</span></span></span></span></p>
+    </div>
+    <div class="worked">
+      <h3>例の数値を使用した場合</h3>
+      <ul>
+        <li><span>120 ÷ 2.5%</span><strong>LTV 4,800</strong></li>
+        <li><span>4,800 ÷ 800</span><strong>6.00:1</strong></li>
+        <li><span>800 ÷ (120 × 75%)</span><strong>8.9 か月</strong></li>
+      </ul>
+      <p class="worked-note">解約率やトライアル転換率は、入力するとすぐに評価されます。</p>
+    </div>
+  </div>
+  <div class="bands">
+    <h3>目安となる基準</h3>
+    <div class="band">
+      <p class="band-name">月次解約率</p>
+      <p class="band-bar"><span class="bad"><strong>危険</strong> 4%超</span><span class="mid"><strong>要改善</strong> 2〜4%</span><span class="good"><strong>良好</strong> 2%以下</span></p>
+      <p class="band-src">中央値2〜3%（ChartMogul 2024より）</p>
+    </div>
+    <div class="band">
+      <p class="band-name">LTV:CAC</p>
+      <p class="band-bar"><span class="bad"><strong>危険</strong> 2:1未満</span><span class="mid"><strong>要改善</strong> 2〜3:1</span><span class="good"><strong>良好</strong> 3:1以上</span></p>
+      <p class="band-src">目標3:1以上（OpenViewおよびDavid Skokより）</p>
+    </div>
+    <div class="band">
+      <p class="band-name">CAC 回収期間</p>
+      <p class="band-bar"><span class="bad"><strong>危険</strong> 18か月超</span><span class="mid"><strong>要改善</strong> 12〜18か月</span><span class="good"><strong>良好</strong> 12か月以下</span></p>
+      <p class="band-src">目標12か月未満（OpenView 2024より）</p>
+    </div>
+    <div class="band">
+      <p class="band-name">トライアル転換率</p>
+      <p class="band-bar"><span class="bad"><strong>危険</strong> 15%未満</span><span class="mid"><strong>要改善</strong> 15〜25%</span><span class="good"><strong>良好</strong> 25%以上</span></p>
+      <p class="band-src">中央値15〜25%（OpenViewのSaaSベンチマークより）</p>
+    </div>
+  </div>
+</section>
+
 <section class="duct-bridge reveal" aria-label="Ductについて">
   <div class="duct-bridge-inner">
     <div class="duct-bridge-text">
-      <p class="duct-bridge-headline">ベンチマークスコアはあなたの現状を示します。今週何が変わったかは教えてくれません。</p>
-      <p class="duct-bridge-body">Ductは、お客様が要求するたびに、ツール全体のチャーン、CAC、コンバージョンを読み取り、何がどのように変化したかを伝え、それが四半期の課題となる前に解決策を提案します。</p>
+      <p class="duct-bridge-headline">ROASが14%上昇しました。その背景にあるキャンペーンは、1週間以内に離脱したユーザーを獲得していました。</p>
+      <p class="duct-bridge-body">ベンチマークは1か月分を評価します。DuctはGoogle Ads、GA4、Stripe、Clarityをまとめて読み取り、離脱しているコホートを特定して、承認を求める変更を提案します。</p>
       <a href="/ja/" class="duct-bridge-link">Ductの仕組み →</a>
     </div>
     <figure class="shot-frame duct-bridge-shot">
       <img src="/assets/media/insights-session.webp" srcset="/assets/media/insights-session-768.webp 768w, /assets/media/insights-session-1536.webp 1536w, /assets/media/insights-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="インサイトセッション：ROASが上昇しているのにサインアップが減少している理由を尋ねると、エージェントは広告、分析、収益をまとめて読み込み、左側で承認待ちの変更セットを提案し、右側でブリーフを作成します。"/>
-      <figcaption>ROASが上昇しているのにサインアップが減少している理由を尋ねます。Ductは広告、分析、収益をまとめて読み込み、離脱しているコホートを特定し、変更セットを提案します。あなたはそれを承認します。</figcaption>
     </figure>
   </div>
 </section>
 
-<div class="about-section reveal">
-  <h2>この<em>計算ツール</em>について</h2>
-  <p>このツールは、お客様の主要なSaaS健全性指標を、MRR帯域別にセグメント化された業界平均と比較してベンチマークします。数値を入力すると、各指標の色分けされたスコアが表示されます。緑は中央値以上、琥珀色は改善の余地あり、赤は複利でコストがかかっていることを意味します。</p>
-
-  <h2 style="margin-top:40px">各指標の<em>意味</em></h2>
-  <p><strong>月間チャーン率</strong>は、毎月解約する顧客ベース（または収益）の割合です。これはSaaSにおいて最も重要な指標であり、LTVの上限を決定します。月間チャーン率が4%の場合、年間でベースの約40%を失っていることになります。新しい成長は、ただ漏れているバケツを補充しているだけです。</p>
-  <p><strong>LTV:CAC比率</strong>は、成長の効率性を示します。顧客獲得に費やす1単位あたり、その顧客のライフタイムで何単位を回収できるか？3:1未満では、持続可能な経済性を構築していません。5:1以上は、成長への投資不足を示唆する可能性があります。</p>
-  <p><strong>CAC回収期間</strong>とは、月間収益から顧客獲得コストを回収するのにかかる月数（収益回収）、または粗利益率を入力した場合は粗利益から回収する月数（貢献度回収）です。</p>
-  <p><strong>トライアルから有料へのコンバージョン</strong>は、ファネル上部の関心がどれだけ実際の顧客に転換するかを測定します。15%未満は通常、オンボーディングまたはプロダクトマーケットフィットの問題を示します。25%以上は、ほとんどのB2B SaaSにとって健全です。</p>
-
-  <h2 style="margin-top:40px">制限事項</h2>
-  <ul>
-    <li>ベンチマークは業界平均に基づいており、特定の業種や市場開拓戦略を反映していない場合があります。</li>
-    <li>LTVの自動計算は一定のチャーンを前提としており、拡張収益は考慮していません。回収期間は、CACを回収するための貢献度ベースの月数にオプションの粗利益率を使用できます。</li>
-    <li>トライアルから有料へのベンチマークは、プロダクト主導型モデルとセールス主導型モデルの間で異なります。</li>
-    <li>すべての計算はブラウザ内で行われます。データが送信または保存されることはありません。</li>
-  </ul>
-</div>
-
 <section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
   <div class="related-tools-banner-inner">
-    <p class="tag">その他無料</p>
-    <h2 id="related-tools-heading">関連<em>ツール</em>を見る</h2>
-    <p class="related-tools-banner-desc">チャーンとLTVをベンチマークに対してストレステストしたり、CAC回収期間をモデル化したり、週次ブリーフを作成したりできます。アカウント不要、データはデバイスから離れません。</p>
+    <h2 id="related-tools-heading">その他の無料計算ツール</h2>
+    <p class="related-tools-banner-desc">支出からCACとLTVを算出するか、MRRの成長スピードを確認できます。</p>
     <div class="insight-links related-tools" data-related-tools data-current-tool="saas-metrics-calculator" data-related-limit="3"></div>
   </div>
 </section>
@@ -320,29 +381,24 @@
 <section class="faq" id="faq">
 <div class="faq-inner">
 <div class="reveal">
-  <p class="tag">FAQ</p>
-  <h2>よくある<em>質問</em></h2>
+  <h2>SaaSメトリクスに関する質問</h2>
 </div>
 <div class="faq-list reveal" style="transition-delay:.1s">
   <details class="faq-item">
-    <summary class="faq-q">良いSaaSチャーン率とは何ですか？</summary>
-    <p class="faq-a">SaaSにおける良好な月間チャーン率は2%未満です。2〜4%は平均的で注意が必要です。4%を超える月間チャーン率は危機的であり、その率では毎年収益ベースのほぼ半分を失っています。ベンチマークはステージによって異なり、初期段階のSaaSは通常、成熟した製品よりも高いチャーン率を示します。</p>
+    <summary class="faq-q">解約率は顧客数ベースと収益ベースのどちらにすべきですか？</summary>
+    <p class="faq-a">毎月同じ指標を使う限り、どちらでも構いません。顧客によって支払額が大きく異なる場合は、収益ベースの解約率の方がLTVに適しています。</p>
   </details>
   <details class="faq-item">
-    <summary class="faq-q">SaaSビジネスのLTVはどのように計算しますか？</summary>
-    <p class="faq-a">LTV = 顧客あたりの月間平均収益 ÷ 月間チャーン率。例えば、ARPUが100ユーロで月間チャーン率が2%の場合、LTV = 100ユーロ ÷ 0.02 = 5,000ユーロです。粗利益率調整版：LTV = (ARPU × 粗利益率%) ÷ チャーン率。この計算ツールは、独自のLTVを提供しない限り、簡易版を使用します。</p>
+    <summary class="faq-q">なぜLTVは解約率から推定されるのですか？</summary>
+    <p class="faq-a">これは標準的な簡便法であり、解約率が一定で顧客のアップグレードがないことを前提としています。より適した数値がある場合は、独自のLTVを入力してください。</p>
   </details>
   <details class="faq-item">
-    <summary class="faq-q">健全なLTV:CAC比率とは何ですか？</summary>
-    <p class="faq-a">SaaSにおける健全なLTV:CAC比率は3:1以上です。顧客獲得に1ユーロ費やすごとに、ライフタイムバリューで3ユーロを回収します。2〜3:1の比率はコストをカバーしますが、強力なユニットエコノミクスを構築しません。2:1未満は通常、モデルが大規模では実行不可能であることを意味します。5:1以上は、成長への投資不足を示唆することがよくあります。</p>
+    <summary class="faq-q">ベンチマークの出典はどこですか？</summary>
+    <p class="faq-a">解約率はChartMogulのSaaSベンチマークレポート（2024年）、回収期間とトライアル転換率はOpenViewのSaaSベンチマーク（2023〜2024年）、3:1のLTV:CACルールはDavid SkokのSaaSメトリクスフレームワークに基づいています。</p>
   </details>
   <details class="faq-item">
-    <summary class="faq-q">SaaSメトリクスはどのくらいの頻度で追跡すべきですか？</summary>
-    <p class="faq-a">MRR、チャーン、新規顧客を毎月追跡します。LTVとLTV:CACは動きが遅いため、四半期ごとに意味があります。最も重要な4〜5つの指標をカバーする週次ブリーフは、毎月のスプレッドシートの山より常に優れています。</p>
-  </details>
-  <details class="faq-item">
-    <summary class="faq-q">この計算ツールはどのデータソースを使用しますか？</summary>
-    <p class="faq-a">ベンチマークは、OpenView PartnersのSaaSベンチマークレポート（2023-2024）とChartMogulのSaaSベンチマークレポートに基づいています。LTV:CACのしきい値は、For EntrepreneursのDavid Skok氏によるSaaSメトリクスフレームワークで広く引用されている3:1の基準に従っています。</p>
+    <summary class="faq-q">データがどこかに送信されることはありますか？</summary>
+    <p class="faq-a">いいえ。計算はお使いのブラウザ上で実行されます。送信や保存が行われることはありません。</p>
   </details>
 </div>
 </div>

@@ -400,8 +400,8 @@ export default function McpConnectDialog({
             <MessageSquare className="mcp-note-icon" aria-hidden="true" />
             <span>
               <Trans>
-                Only your own insights chats use it, in any project. Scheduled briefs don&rsquo;t call MCP
-                connectors yet.
+                Your own chats use it, in any project. Scheduled runs only call the read-only tools of
+                the servers Duct trusts, so one added by address never runs unattended.
               </Trans>{" "}
               <a className="app-link underline underline-offset-2" href={MCP_GUIDE_URL} target="_blank" rel="noreferrer">
                 <Trans>How MCP connectors work</Trans>

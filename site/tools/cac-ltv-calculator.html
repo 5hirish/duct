@@ -42,7 +42,7 @@
 {"@context":"https://schema.org","@type":"WebApplication","inLanguage":"en","name":"SaaS CAC / LTV Calculator","url":"https://getduct.ai/tools/cac-ltv-calculator","description":"Free calculator that computes Customer Acquisition Cost (CAC), Customer Lifetime Value (LTV), LTV:CAC ratio, and CAC payback period from your SaaS metrics, with colour-coded health scores vs industry benchmarks.","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Organization","name":"Duct","url":"https://getduct.ai"}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"en","mainEntity":[{"@type":"Question","name":"What is CAC in SaaS?","acceptedAnswer":{"@type":"Answer","text":"CAC (Customer Acquisition Cost) is the total sales and marketing spend required to acquire one new customer. Formula: CAC = Total Sales & Marketing Spend ÷ New Customers Acquired in the same period. Include salaries, tools, ad spend, and agency fees in the numerator for an accurate figure."}},{"@type":"Question","name":"How do I calculate customer lifetime value (LTV)?","acceptedAnswer":{"@type":"Answer","text":"LTV = Average Monthly Revenue per Customer × Average Customer Lifespan in months. Alternatively: LTV = ARPU ÷ Monthly Churn Rate. For example, if ARPU is €100 and average lifespan is 36 months, LTV = €3,600. If monthly churn is 2%, LTV = €100 ÷ 0.02 = €5,000."}},{"@type":"Question","name":"What is a good LTV:CAC ratio?","acceptedAnswer":{"@type":"Answer","text":"A good LTV:CAC ratio for SaaS is above 3:1. This means for every €1 spent acquiring a customer, you recover €3 in lifetime value. A ratio of 2–3:1 covers costs but doesn't build sustainable economics. Below 2:1 typically means the model isn't viable at scale. Above 5:1 often signals underinvestment in growth."}},{"@type":"Question","name":"What is CAC payback period?","acceptedAnswer":{"@type":"Answer","text":"CAC payback period is how many months it takes to recover your acquisition cost from a customer's monthly revenue. Formula: Payback = CAC ÷ ARPU. A healthy payback period for SaaS is under 12 months. Above 18 months is high-risk — customers may churn before you break even."}},{"@type":"Question","name":"How do I reduce CAC?","acceptedAnswer":{"@type":"Answer","text":"The most effective levers: build organic content that compounds (blog, SEO) to reduce paid acquisition dependence; shorten the sales cycle; improve trial-to-paid conversion to extract more value from existing top-of-funnel; and build referral or PLG loops that reduce per-customer acquisition cost over time."}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"en","mainEntity":[{"@type":"Question","name":"What goes into CAC?","acceptedAnswer":{"@type":"Answer","text":"Everything you spent to win those customers in the same period: ad spend, tools, agency fees, and the salaries of the people doing sales and marketing."}},{"@type":"Question","name":"Can I work out LTV from churn?","acceptedAnswer":{"@type":"Answer","text":"Yes. Months they stay is 1 ÷ monthly churn, so LTV is revenue per customer ÷ churn. At 120 a month and 2.5% churn, that is 120 ÷ 0.025 = 4,800."}},{"@type":"Question","name":"Why does payback ask for gross margin?","acceptedAnswer":{"@type":"Answer","text":"Revenue isn't profit. With a margin, payback counts the months until gross profit covers CAC, which is the slower and truer number."}},{"@type":"Question","name":"Is my data sent anywhere?","acceptedAnswer":{"@type":"Answer","text":"No. The math runs in your browser. Nothing is sent or stored."}}]}
 </script>
 <style>
   .skip-link {
@@ -132,13 +132,6 @@
   .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
   .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
 
-  .about-section { max-width: 720px; margin: 0 auto 80px; padding: 0 24px; }
-  .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
-  .about-section h2 em { color: var(--orange); font-style: italic; }
-  .about-section p, .about-section li { font-size: 15px; color: var(--navy-3); line-height: 1.75; margin-bottom: 12px; }
-  .about-section ul { padding-left: 20px; }
-  .about-section li { margin-bottom: 6px; }
-  .about-section strong { color: var(--navy); }
 
   .insight-panel {
     margin-top: 24px;
@@ -162,6 +155,53 @@
     background: var(--white); transition: background .15s;
   }
   .insight-link:hover { background: #dbeafe; }
+
+  /* Formula drawn as math, the example worked through, and (where the page cites a
+     source) the bands the results are graded against. Same block on the five
+     calculators that carry it; the width follows this page's .tool-wrap. */
+  .math { max-width: 820px; margin: 0 auto 64px; padding: 0 24px; }
+  .math h2 { font-size: clamp(26px, 3.4vw, 34px); line-height: 1.15; margin: 0 0 20px; }
+  .math-grid { display: grid; grid-template-columns: 7fr 5fr; gap: 16px; }
+  @media (max-width: 760px) { .math-grid { grid-template-columns: 1fr; } }
+  .formulas { padding: 32px; background: var(--off); border: 1px solid var(--border); border-radius: var(--r-lg); display: flex; flex-direction: column; justify-content: center; gap: 20px; min-width: 0; }
+  @media (max-width: 600px) { .formulas { padding: 24px 20px; } }
+  .eq { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin: 0; font-family: var(--serif); font-size: clamp(20px, 2.4vw, 26px); line-height: 1.2; color: var(--navy); }
+  .eq.is-small { font-size: clamp(16px, 1.6vw, 18px); color: var(--navy-2); padding-top: 18px; border-top: 1px solid var(--border); }
+  .eq-name { font-weight: 700; white-space: nowrap; }
+  .eq .op { color: var(--navy-3); }
+  .eq .rhs { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
+  .eq .paren { font-size: 2.1em; font-weight: 300; line-height: .9; color: var(--navy-3); }
+  .eq .rhs sup { font-size: .55em; align-self: flex-start; margin-left: -8px; white-space: nowrap; }
+  .frac { display: inline-flex; flex-direction: column; align-items: center; text-align: center; white-space: nowrap; }
+  .frac > span { padding: 0 6px; align-self: stretch; }
+  .frac > span:first-child { padding-bottom: 4px; }
+  .frac > span:last-child { padding-top: 4px; border-top: 2px solid currentColor; }
+  .frac .nb, .lin .nb { display: inline-block; white-space: nowrap; }
+  .frac > span:has(.nb) { white-space: normal; }
+  .worked { padding: 28px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); min-width: 0; }
+  @media (max-width: 600px) { .worked { padding: 24px 20px; } }
+  .worked h3, .bands h3 { font-size: 13px; font-weight: 600; color: var(--navy-3); margin: 0 0 12px; }
+  .worked ul { list-style: none; margin: 0; padding: 0; }
+  .worked li { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 16px; padding: 10px 0; border-top: 1px solid var(--border); font-size: 14px; color: var(--navy-3); font-variant-numeric: tabular-nums; }
+  .worked li strong { font-family: var(--serif); font-size: 20px; font-weight: 400; color: var(--navy); white-space: nowrap; margin-left: auto; }
+  .worked li sup { font-size: .7em; }
+  .worked-note { font-size: 14px; line-height: 1.6; color: var(--navy-3); margin: 12px 0 0; max-width: 60ch; }
+  .bands { margin-top: 16px; padding: 28px 32px; border: 1px solid var(--border); border-radius: var(--r-lg); }
+  @media (max-width: 600px) { .bands { padding: 24px 20px; } }
+  .band { display: grid; grid-template-columns: 140px 1fr; gap: 6px 20px; align-items: center; padding: 14px 0; border-top: 1px solid var(--border); }
+  @media (max-width: 600px) { .band { grid-template-columns: 1fr; } }
+  .band-name { font-size: 14px; font-weight: 600; color: var(--navy); margin: 0; }
+  .band-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin: 0; border-radius: var(--r); overflow: hidden; }
+  .band-bar > span { padding: 8px 10px; font-size: 13px; line-height: 1.35; }
+  .band-bar strong { display: block; font-size: 12px; font-weight: 600; }
+  .band-bar .bad { background: #fef2f2; color: #991b1b; }
+  .band-bar .mid { background: #fffbeb; color: #92400e; }
+  .band-bar .good { background: #f0fdf4; color: #15803d; }
+  .band-src { grid-column: 2; font-size: 12px; color: var(--navy-3); margin: 0; }
+  @media (max-width: 600px) { .band-src { grid-column: 1; } }
+  /* The bridge link is a standalone target: give it 24px of height (WCAG 2.5.8). */
+  .duct-bridge-link { display: inline-block; padding: 4px 0; }
+  .faq-a { max-width: 68ch; }
 </style>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"en","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://getduct.ai/"},{"@type":"ListItem","position":2,"name":"Free tools","item":"https://getduct.ai/tools/"},{"@type":"ListItem","position":3,"name":"CAC / LTV Calculator for SaaS","item":"https://getduct.ai/tools/cac-ltv-calculator"}]}
@@ -169,7 +209,7 @@
 </head>
 <body>
 
-<!-- EXPERIMENT: CAC/LTV calculator as lead magnet — do growth PMs landing on high-volume "cac ltv ratio" keywords convert to beta signups at a higher rate than blog traffic? -->
+<!-- EXPERIMENT: CAC and LTV calculator as a way in: someone searching "cac ltv ratio" gets CAC, LTV, payback, the formulas, a worked example and the sourced bands on one screen, then a real Duct session that checks the customer count CAC depends on. Measured by Download clicks from the navy box and the closing band. -->
 
 <a href="#main-content" class="skip-link">Skip to content</a>
 
@@ -178,9 +218,8 @@
 <main id="main-content">
 
 <div class="tool-hero">
-  <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Free tool · No signup required</div>
-  <h1>CAC &amp; LTV Calculator <em>for SaaS</em></h1>
-  <p>Your growth model is only as healthy as your unit economics. Calculate CAC, LTV, and payback in one pass — benchmarked, decision-ready, no spreadsheet lag.</p>
+  <h1>CAC and LTV calculator. <em>Does a customer pay back?</em></h1>
+  <p>Spend, new customers, revenue per customer and lifespan in. CAC, LTV, LTV:CAC and months to pay back out.</p>
 </div>
 
 <div class="tool-wrap">
@@ -246,49 +285,57 @@
   </div>
 </div>
 
+<section class="math reveal" aria-labelledby="math-heading">
+  <h2 id="math-heading">How CAC and LTV are calculated</h2>
+  <div class="math-grid">
+    <div class="formulas">
+      <p class="eq" role="math" aria-label="CAC equals sales and marketing spend divided by new customers"><span class="eq-name">CAC</span><span class="op">=</span><span class="rhs"><span class="frac"><span><span class="nb">Sales and</span> <span class="nb">marketing spend</span></span><span>New customers</span></span></span></p>
+      <p class="eq is-small" role="math" aria-label="LTV equals monthly revenue per customer times the months they stay"><span class="eq-name">LTV</span><span class="op">=</span><span class="rhs"><span class="lin"><span class="nb">Revenue per customer</span> <span class="op">×</span> <span class="nb">Months they stay</span></span></span></p>
+      <p class="eq is-small" role="math" aria-label="Payback in months equals CAC divided by monthly revenue per customer times gross margin"><span class="eq-name">Payback</span><span class="op">=</span><span class="rhs"><span class="frac"><span>CAC</span><span><span class="nb">Revenue per customer</span> <span class="nb">× Margin</span></span></span></span></p>
+    </div>
+    <div class="worked">
+      <h3>With the example numbers</h3>
+      <ul>
+        <li><span>20,000 ÷ 25</span><strong>800 CAC</strong></li>
+        <li><span>120 × 36</span><strong>4,320 LTV</strong></li>
+        <li><span>4,320 ÷ 800</span><strong>5.40:1</strong></li>
+        <li><span>800 ÷ (120 × 75%)</span><strong>8.9 months</strong></li>
+      </ul>
+      <p class="worked-note">Leave gross margin blank and payback uses full revenue instead.</p>
+    </div>
+  </div>
+  <div class="bands">
+    <h3>What good looks like</h3>
+    <div class="band">
+      <p class="band-name">LTV:CAC</p>
+      <p class="band-bar"><span class="bad"><strong>Unsustainable</strong> under 2:1</span><span class="mid"><strong>Marginal</strong> 2–3:1</span><span class="good"><strong>Healthy</strong> 3:1 and up</span></p>
+      <p class="band-src">Target above 3:1, from David Skok and OpenView</p>
+    </div>
+    <div class="band">
+      <p class="band-name">CAC payback</p>
+      <p class="band-bar"><span class="bad"><strong>High risk</strong> over 18 months</span><span class="mid"><strong>Marginal</strong> 12–18 months</span><span class="good"><strong>Healthy</strong> 12 months or less</span></p>
+      <p class="band-src">Target under 12 months, from OpenView's SaaS Benchmarks 2024</p>
+    </div>
+  </div>
+</section>
+
 <section class="duct-bridge reveal" aria-label="About Duct">
   <div class="duct-bridge-inner">
     <div class="duct-bridge-text">
-      <p class="duct-bridge-headline">LTV:CAC tells you model health now. It doesn't tell you where the next deterioration starts.</p>
-      <p class="duct-bridge-body">Duct reads Google Ads, GA4 and Stripe together, so when the ratio slips it can say which channel's customers stopped staying, and propose where the budget goes instead.</p>
+      <p class="duct-bridge-headline">The ads claimed 64 customers. Stripe settled 23.</p>
+      <p class="duct-bridge-body">CAC divides spend by customers, so the count decides the answer. Duct checks each ad platform's claim against what Stripe actually charged.</p>
       <a href="/" class="duct-bridge-link">How Duct works&nbsp;→</a>
     </div>
     <figure class="shot-frame duct-bridge-shot">
-      <img src="../assets/media/insights-session.webp" srcset="../assets/media/insights-session-768.webp 768w, ../assets/media/insights-session-1536.webp 1536w, ../assets/media/insights-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="An insights session: asked why signups are down when ROAS is up, the agent reads ads, analytics and revenue together, proposes a change waiting for approval on the left, and writes the brief on the right"//>
-      <figcaption>Ask why signups are down when ROAS is up. Duct reads ads, analytics and revenue together, names the cohort that is leaving, and proposes the change. You approve.</figcaption>
+      <img src="../assets/media/session-stripe.webp" srcset="../assets/media/session-stripe-768.webp 768w, ../assets/media/session-stripe-1536.webp 1536w, ../assets/media/session-stripe.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="An insights session: asked how many paying customers the ads brought this week, Duct reads Google Ads, Meta Ads and Stripe and writes the brief: the ads claim 64 customers, Stripe settled 23"/>
     </figure>
   </div>
 </section>
 
-<div class="about-section reveal">
-  <h2>How the <em>calculation works</em></h2>
-  <p>This calculator uses four standard SaaS unit economics formulas:</p>
-  <ul>
-    <li><strong>CAC</strong> = Total Monthly Sales &amp; Marketing Spend ÷ Monthly New Customers</li>
-    <li><strong>LTV</strong> = Average Monthly Revenue per Customer × Average Customer Lifespan</li>
-    <li><strong>LTV:CAC ratio</strong> = LTV ÷ CAC</li>
-    <li><strong>CAC Payback Period</strong> = CAC ÷ Average Monthly Revenue per Customer (revenue-based). Optional gross margin % switches to contribution payback: CAC ÷ (ARPU × Gross Margin %).</li>
-  </ul>
-  <p>Results are benchmarked against widely-cited SaaS standards: a healthy LTV:CAC above 3:1 (David Skok / OpenView), and a payback period under 12 months (OpenView SaaS Benchmarks 2024).</p>
-
-  <h2 style="margin-top:40px">Why these metrics <em>matter together</em></h2>
-  <p>CAC in isolation tells you almost nothing. A €1,200 CAC is healthy if LTV is €6,000 (5:1 ratio) and dangerous if LTV is €1,800 (1.5:1 ratio). The pattern that matters is the relationship between these four numbers — and whether it's moving in the right direction week over week.</p>
-  <p>The most common growth PM mistake: tracking CAC and LTV monthly in a spreadsheet, noticing a problem three months late. Duct runs this calculation automatically each week and surfaces a trend alert the moment LTV:CAC starts to compress.</p>
-
-  <h2 style="margin-top:40px">Limitations</h2>
-  <ul>
-    <li>CAC calculation uses blended spend — it does not separate new business from expansion.</li>
-    <li>LTV calculation assumes linear churn. Actual LTV may differ if churn varies by cohort.</li>
-    <li>LTV here is revenue-based; for margin-adjusted LTV, multiply by gross margin % manually. Payback can use optional gross margin for contribution-based months to recover CAC.</li>
-    <li>All calculations run in your browser. No data is sent or stored.</li>
-  </ul>
-</div>
-
 <section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
   <div class="related-tools-banner-inner">
-    <p class="tag">Also free</p>
-    <h2 id="related-tools-heading">Explore related <em>tools</em></h2>
-    <p class="related-tools-banner-desc">Benchmarks, growth math, and a weekly brief template—each runs in your browser with the same privacy model as this page. Pick the next number you want to pressure-test.</p>
+    <h2 id="related-tools-heading">More free calculators</h2>
+    <p class="related-tools-banner-desc">Grade churn and trial-to-paid too, or see how fast MRR is compounding.</p>
     <div class="insight-links related-tools" data-related-tools data-current-tool="cac-ltv-calculator" data-related-limit="3"></div>
   </div>
 </section>
@@ -296,29 +343,24 @@
 <section class="faq" id="faq">
 <div class="faq-inner">
 <div class="reveal">
-  <p class="tag">FAQ</p>
-  <h2>Frequently asked <em>questions</em></h2>
+  <h2>Questions about CAC and LTV</h2>
 </div>
 <div class="faq-list reveal" style="transition-delay:.1s">
   <details class="faq-item">
-    <summary class="faq-q">What is CAC in SaaS?</summary>
-    <p class="faq-a">CAC (Customer Acquisition Cost) is the total sales and marketing spend required to acquire one new customer. Formula: CAC = Total Sales &amp; Marketing Spend ÷ New Customers Acquired in the same period. Include salaries, tools, ad spend, and agency fees in the numerator for an accurate figure.</p>
+    <summary class="faq-q">What goes into CAC?</summary>
+    <p class="faq-a">Everything you spent to win those customers in the same period: ad spend, tools, agency fees, and the salaries of the people doing sales and marketing.</p>
   </details>
   <details class="faq-item">
-    <summary class="faq-q">How do I calculate customer lifetime value (LTV)?</summary>
-    <p class="faq-a">LTV = Average Monthly Revenue per Customer × Average Customer Lifespan in months. Alternatively: LTV = ARPU ÷ Monthly Churn Rate. For example, if ARPU is €100 and average lifespan is 36 months, LTV = €3,600. If monthly churn is 2%, LTV = €100 ÷ 0.02 = €5,000.</p>
+    <summary class="faq-q">Can I work out LTV from churn?</summary>
+    <p class="faq-a">Yes. Months they stay is 1 ÷ monthly churn, so LTV is revenue per customer ÷ churn. At 120 a month and 2.5% churn, that is 120 ÷ 0.025 = 4,800.</p>
   </details>
   <details class="faq-item">
-    <summary class="faq-q">What is a good LTV:CAC ratio?</summary>
-    <p class="faq-a">A good LTV:CAC ratio for SaaS is above 3:1. This means for every €1 spent acquiring a customer, you recover €3 in lifetime value. A ratio of 2–3:1 covers costs but doesn't build sustainable economics. Below 2:1 typically means the model isn't viable at scale. Above 5:1 often signals underinvestment in growth.</p>
+    <summary class="faq-q">Why does payback ask for gross margin?</summary>
+    <p class="faq-a">Revenue isn't profit. With a margin, payback counts the months until gross profit covers CAC, which is the slower and truer number.</p>
   </details>
   <details class="faq-item">
-    <summary class="faq-q">What is CAC payback period?</summary>
-    <p class="faq-a">CAC payback period is how many months it takes to recover your acquisition cost from a customer's monthly revenue. Formula: Payback = CAC ÷ ARPU. A healthy payback period for SaaS is under 12 months. Above 18 months is high-risk — customers may churn before you break even.</p>
-  </details>
-  <details class="faq-item">
-    <summary class="faq-q">How do I reduce CAC?</summary>
-    <p class="faq-a">The most effective levers: build organic content that compounds (blog, SEO) to reduce paid acquisition dependence; shorten the sales cycle; improve trial-to-paid conversion to extract more value from existing top-of-funnel; and build referral or PLG loops that reduce per-customer acquisition cost over time.</p>
+    <summary class="faq-q">Is my data sent anywhere?</summary>
+    <p class="faq-a">No. The math runs in your browser. Nothing is sent or stored.</p>
   </details>
 </div>
 </div>

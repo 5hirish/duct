@@ -44,97 +44,163 @@
 {"@context":"https://schema.org","@type":"WebPage","inLanguage":"ja","name":"Ductはオープンソースです","url":"https://getduct.ai/ja/open-source","description":"Ductがオープンソースである理由、デスクトップアプリとセルフホストインストールで何がどこで実行されるか、セルフホストの方法、そして費用がかかるものとかからないもの。","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"SoftwareSourceCode","name":"Duct","codeRepository":"https://github.com/5hirish/duct","license":"https://opensource.org/licenses/MIT","programmingLanguage":["Python","JavaScript","Rust"],"isAccessibleForFree":true,"author":{"@type":"Person","name":"Shirish Kadam","url":"https://shirishkadam.com"}}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ja","mainEntity":[{"@type":"Question","name":"Ductは本当に無料ですか？","acceptedAnswer":{"@type":"Answer","text":"はい。DuctはMITライセンスで、独自のモデルキーがあれば無料であり、それは変わりません。モデルプロバイダーに直接支払うか、既にお持ちのChatGPTプランでサインインしてください。後日、キーを保持したくないチーム向けにモデルアクセスをバンドルする有料プランが提供されるかもしれませんが、現在オープンなものがその背後に移動することはありません。"}},{"@type":"Question","name":"アカウントなしでDuctを実行できますか？","acceptedAnswer":{"@type":"Answer","text":"はい。リポジトリをクローンし、`make setup`を実行し、モデルプロバイダーキーを1つ追加して、バックエンドとアプリを起動します。すべてはあなたのマシンまたはサーバーに残り、Ductのアカウントは関与しません。"}},{"@type":"Question","name":"Ductを商用利用したり、フォークしたりできますか？","acceptedAnswer":{"@type":"Answer","text":"はい。MITライセンスは商用利用、変更、再配布を許可しています。唯一の例外は、docs/guidesの下にあるサードパーティのドキュメントと、Ductの名称およびマークです。"}},{"@type":"Question","name":"貢献するにはどうすればよいですか？","acceptedAnswer":{"@type":"Answer","text":"CONTRIBUTING.mdから始めてください。課題と議論はGitHubにあり、ロードマップは公開プロジェクトボードです。エージェントが作成した貢献も歓迎しますが、プルリクエストにエージェントがどこで協力したかを明記してください。"}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ja","mainEntity":[{"@type":"Question","name":"Ductは本当に無料ですか？","acceptedAnswer":{"@type":"Answer","text":"はい。DuctはMITライセンスであり、ご自身のモデルキーを使えば無料です。モデルプロバイダーに直接支払うか、すでにお持ちのChatGPTプランでサインインします。"}},{"@type":"Question","name":"アカウントなしでDuctを実行できますか？","acceptedAnswer":{"@type":"Answer","text":"はい。リポジトリをクローンし、make setupを実行し、モデルキーを1つ追加して、バックエンドとアプリを起動します。Ductのアカウントは一切不要です。"}},{"@type":"Question","name":"セルフホストで失われるものは何ですか？","acceptedAnswer":{"@type":"Answer","text":"Google Ads、GA4、Search Consoleの接続には独自のGoogle OAuthクライアントが必要です。また、データベース、バックアップ、アップグレードの運用はご自身で行います。"}},{"@type":"Question","name":"Ductを商用利用したり、フォークしたりできますか？","acceptedAnswer":{"@type":"Answer","text":"はい。MITライセンスは商用利用、変更、再配布を許可しています。例外はdocs/guides以下のサードパーティドキュメント、およびDuctの名称とマークです。"}},{"@type":"Question","name":"貢献するにはどうすればよいですか？","acceptedAnswer":{"@type":"Answer","text":"CONTRIBUTING.mdから始めましょう。ロードマップは公開ボードであり、エージェントが支援した箇所が明記されていれば、エージェントを使って作成されたプルリクエストも歓迎します。"}}]}
 </script>
 <style>
-/* ── OPEN-SOURCE-ONLY STYLES ── */
-.os-hero { padding: 120px 52px 72px; min-height: 0; }
-.os-hero h1 { font-size: clamp(38px, 5vw, 62px); max-width: 980px; }
-.os-hero .hero-sub { max-width: 600px; }
+/* ── OPEN-SOURCE-ONLY STYLES ──
+   The page proves one claim, "every part is in the repository", by drawing the parts. The hero's
+   map of the real folders is the heavy element; each section after it is one idea with one real
+   picture (the agent's own tool list beside the card you approve on, the two ways to run it, the
+   README's commands). Rewritten 2026-11-25 from an 850-word version with no pictures. */
+.os-hero { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 64px; align-items: center; max-width: calc(1160px + 104px); margin: 0 auto; padding: 128px 52px 88px; }
+.os-hero h1 { font-size: clamp(38px, 4.6vw, 62px); max-width: 13ch; text-wrap: balance; margin-bottom: 20px; }
+.os-hero .hero-sub { max-width: 44ch; margin: 0 0 32px; font-weight: 400; color: var(--navy-2); }
+.os-hero .hero-form { justify-content: flex-start; }
+.os-hero .hero-footnote { font-size: 14px; color: var(--navy-2); }
+.btn .ic { font-size: 18px; }
+.os-link { color: var(--navy); font-weight: 500; text-decoration: underline; text-decoration-color: var(--orange); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+.map a, .repo, .code-bar a { text-decoration: none; }
+.faq-a code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9em; padding: 1px 6px; background: var(--white); border: 1px solid var(--border); border-radius: 6px; }
 
-/* Why: three numbered arguments, left-aligned, one measure */
-.why { padding: 0 52px 96px; }
-.why-inner { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
-.why-block { background: var(--white); padding: 36px 32px 40px; }
-.why-num { font-family: var(--serif); font-size: 11px; color: var(--orange); letter-spacing: .08em; display: block; margin-bottom: 18px; }
-.why-block h2 { font-size: clamp(22px, 2.6vw, 28px); line-height: 1.2; letter-spacing: -.3px; margin-bottom: 14px; }
-.why-block p { font-size: 15px; font-weight: 300; color: var(--navy-3); line-height: 1.75; max-width: 42ch; }
-.why-block a { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--orange); }
+/* The map: the repository's real folders, top to bottom in the order a request travels.
+   The orange dashes between the parts are the aqueduct's water, drawn still. */
+.map { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: 0 24px 64px rgba(13,15,26,.10); overflow: hidden; animation: fadeUp .5s .2s ease both; }
+.map-bar { display: flex; align-items: center; gap: 10px; padding: 14px 20px; background: var(--off); border-bottom: 1px solid var(--border); }
+.map-bar > .ic { font-size: 20px; color: var(--navy); }
+.map-bar a { display: inline-block; padding: 6px 0; font-size: 15px; color: var(--navy); }
+.map-bar a strong { font-weight: 600; }
+.map-lic { margin-left: auto; padding: 3px 10px; border: 1px solid var(--border); border-radius: var(--pill); background: var(--white); font-size: 12px; font-weight: 600; color: var(--navy-2); }
+.map-flow { list-style: none; padding: 20px 20px 22px; display: grid; gap: 0; }
+.map-step { position: relative; }
+.map-step + .map-step { padding-top: 22px; }
+.map-step + .map-step::before { content: ''; position: absolute; top: 2px; left: 28px; width: 2px; height: 18px; background: repeating-linear-gradient(180deg, var(--orange) 0 5px, transparent 5px 9px); }
+.map-fork::before, .map-join::before { left: 25% !important; }
+.map-fork::after, .map-join::after { content: ''; position: absolute; top: 2px; left: 75%; width: 2px; height: 18px; background: repeating-linear-gradient(180deg, var(--orange) 0 5px, transparent 5px 9px); }
+.node { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; row-gap: 2px; align-items: baseline; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--r); background: var(--white); color: var(--navy); transition: border-color .15s, background .15s; }
+a.node:hover { border-color: var(--orange); background: var(--off); }
+a.node:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+.node-path { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; font-weight: 600; color: var(--navy); overflow-wrap: break-word; }
+.node-lang { font-size: 12px; color: var(--navy-3); }
+.node-what { grid-column: 1 / -1; font-size: 14px; line-height: 1.45; color: var(--navy-2); }
+.node.is-gate { border-color: var(--orange); background: #fff7f1; }
+.node.is-gate .node-lang { color: #a33d00; font-weight: 600; }
+.map-fork { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.map-fork .node { align-content: start; grid-template-columns: 1fr; }
+.map-fork .node-lang { order: -1; }
+.map-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 10px 14px; border: 1.5px dashed var(--border); border-radius: var(--r); }
+.map-tools-label { font-size: 13px; font-weight: 600; color: var(--navy-2); margin-right: 4px; }
+.map-tools img { width: 22px; height: 22px; }
+.map-tools a.os-link { margin-left: auto; font-size: 13px; padding: 4px 0; text-decoration: underline; text-decoration-color: var(--orange); }
 
-/* Where things run: the page's heavy element */
-.where { padding: 96px 52px; background: var(--off); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-.where-inner { max-width: 1160px; margin: 0 auto; }
-.where-head { max-width: 640px; margin-bottom: 40px; }
-.where-head h2 { margin-bottom: 14px; }
-.where-head .sub { max-width: 56ch; }
-.where-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.where-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 28px 28px 24px; display: flex; flex-direction: column; gap: 22px; }
-.where-card.pick { position: relative; border: 1.5px solid var(--orange); box-shadow: 0 16px 48px rgba(255,92,0,.10); }
-.where-badge { position: absolute; top: -14px; left: 24px; display: inline-flex; align-items: center; gap: 6px; background: var(--orange); color: #fff; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; padding: 6px 12px; border-radius: var(--pill); }
-.where-badge .ic { font-size: 13px; }
-.where-card-head { display: flex; align-items: center; gap: 14px; }
-.where-card-head .ic { font-size: 26px; color: var(--orange); }
-.where-card-head h3 { font-family: var(--serif); font-size: 22px; color: var(--navy); letter-spacing: -.2px; line-height: 1.2; }
-.where-card-head p { font-size: 14px; color: var(--navy-3); margin-top: 2px; }
-.zones { display: grid; gap: 10px; }
-.zone { border-radius: var(--r); padding: 14px 16px 16px; border: 1.5px dashed var(--border); }
-.zone-you { background: #fff5ee; border-color: #f7c9ad; }
-.zone-cloud { background: #eef0f7; border-color: #cfd4e6; }
-.zone-label { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-2); margin-bottom: 10px; }
-.zone-label .ic { font-size: 15px; }
-.zone-label small { font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--navy-3); font-size: 12px; white-space: nowrap; }
-.pick .zone-cloud { background: #eef7f0; border-color: #bfe0c7; }
-.pick .zone-cloud .zone-label .ic { color: var(--success, #10883c); }
-.zone-items { display: flex; flex-wrap: wrap; gap: 8px; }
-.zone-item { display: inline-flex; align-items: center; gap: 7px; background: var(--white); border: 1px solid var(--border); border-radius: var(--pill); padding: 6px 12px 6px 9px; font-size: 13px; color: var(--navy); }
-.zone-item .ic { font-size: 15px; color: var(--navy-3); }
-.zone-item small { color: var(--navy-3); font-size: 12px; white-space: nowrap; }
-.zone-label, .zone-item { flex-wrap: wrap; }
-.zone-empty { font-size: 14px; color: var(--navy-3); font-style: italic; font-family: var(--serif); }
-.where-facts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; border-top: 1px solid var(--border); padding-top: 18px; }
-.where-facts li { display: flex; align-items: flex-start; gap: 10px; font-size: 14.5px; color: var(--navy); line-height: 1.5; }
-.where-facts .ic { font-size: 18px; flex-shrink: 0; margin-top: 2px; color: var(--success, #10883c); }
-.where-facts li.no .ic { color: var(--navy-3); }
-.where-facts li.no { color: var(--navy-3); }
-.where-cta { margin-top: auto; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.where-fit { font-size: 13px; color: var(--navy-3); line-height: 1.4; max-width: 30ch; }
-.where-note { font-size: 13px; font-weight: 300; color: var(--navy-3); margin-top: 16px; max-width: 72ch; }
-.where-note a { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--orange); }
+/* Section shells */
+.os-sec { padding: 96px 52px; }
+.os-sec.is-off { background: var(--off); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.os-inner { max-width: 1160px; margin: 0 auto; }
+.os-head h2 { font-size: clamp(30px, 3.4vw, 44px); margin-bottom: 14px; }
+.os-head .sub { max-width: 46ch; font-size: 17px; line-height: 1.65; color: var(--navy-2); }
+.split { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 56px; align-items: center; }
 
-/* Self-host: the README's block, and a pointer to it */
-.host { padding: 96px 52px; }
-.host-inner { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: center; }
-.host-copy h2 { margin-bottom: 16px; }
-.host-copy p { font-size: 15px; font-weight: 300; color: var(--navy-3); line-height: 1.75; max-width: 46ch; margin-bottom: 14px; }
-.host-copy a { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--orange); }
-.host-code { border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; background: var(--navy); box-shadow: 0 24px 64px rgba(13,15,26,.12); }
-.host-code-bar { display: flex; align-items: center; gap: 7px; padding: 10px 16px; background: var(--navy-2); }
-.host-code-dot { width: 10px; height: 10px; border-radius: 50%; }
-.host-code-label { font-size: 12px; color: rgba(255,255,255,.55); margin-left: 8px; }
-.host-code pre { margin: 0; padding: 22px 24px 26px; overflow-x: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13.5px; line-height: 1.8; color: #fff; }
-.host-code .c { color: rgba(255,255,255,.45); }
-.host-code .p { color: var(--orange); }
+/* The gate: the agent's real tool list, and the card where a person decides */
+.code-card { margin-top: 28px; border-radius: var(--r-lg); overflow: hidden; background: var(--navy); box-shadow: 0 18px 48px rgba(13,15,26,.12); }
+.code-bar { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: var(--navy-2); }
+.code-bar .ic { font-size: 15px; color: rgba(255,255,255,.7); }
+.code-bar a { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; color: rgba(255,255,255,.78); overflow-wrap: anywhere; padding: 4px 0; }
+.code-bar a:hover { color: #fff; }
+.code-card pre { margin: 0; padding: 18px 20px 20px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13.5px; line-height: 1.8; color: #fff; white-space: pre-wrap; overflow-wrap: anywhere; }
+.code-card .k { color: rgba(255,255,255,.5); }
+.code-card .f { color: #ffb48a; }
+.gate-note { margin-top: 18px; font-size: 15px; line-height: 1.6; color: var(--navy-2); max-width: 52ch; }
+.gate-shot { margin: 0; }
+.gate-shot img { display: block; width: 100%; height: auto; border-radius: var(--r-lg); border: 1px solid var(--border); cursor: zoom-in; }
+.gate-shot figcaption { margin-top: 12px; font-size: 14px; color: var(--navy-3); }
 
-/* Money: one paragraph, no card, no grid */
+/* What runs where: one comparison, read across */
+.where-table { width: 100%; margin-top: 36px; border-collapse: separate; border-spacing: 0; background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; font-size: 15px; }
+.where-table th, .where-table td { padding: 16px 20px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); line-height: 1.45; }
+.where-table tbody tr:last-child th, .where-table tbody tr:last-child td { border-bottom: none; }
+.where-table thead th { font-family: var(--serif); font-size: 21px; font-weight: 400; color: var(--navy); }
+.where-table thead th small { display: block; margin-top: 4px; font-family: var(--sans); font-size: 14px; color: var(--navy-3); }
+.where-table tbody th { width: 30%; font-weight: 500; color: var(--navy); }
+.where-table td { color: var(--navy-2); }
+.where-table .is-app { background: #fff7f1; }
+.where-table thead .is-app { box-shadow: inset 0 3px 0 var(--orange); }
+.where-note { margin-top: 18px; font-size: 15px; color: var(--navy-2); max-width: 70ch; }
+
+/* Self-host: the README's block, wide enough for its comments */
+.host .term { margin-top: 32px; max-width: 920px; }
+.term { border-radius: var(--r-lg); overflow: hidden; background: var(--navy); box-shadow: 0 24px 64px rgba(13,15,26,.12); }
+.term-bar { display: flex; align-items: center; gap: 7px; padding: 10px 16px; background: var(--navy-2); }
+.term-dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,.22); }
+.term-label { font-size: 12px; color: rgba(255,255,255,.6); margin-left: 8px; }
+.term pre { margin: 0; padding: 22px 24px 26px; overflow-x: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13.5px; line-height: 1.8; color: #fff; }
+.term .c { color: rgba(255,255,255,.55); }
+.term .p { color: var(--orange); }
+
+/* Money: who you pay, and the keys you can bring */
 .money { padding: 96px 52px; background: var(--navy); }
-.money-inner { max-width: 760px; margin: 0 auto; }
-.money .tag { color: var(--orange); }
-.money h2 { color: #fff; margin-bottom: 22px; }
-.money h2 em { color: var(--orange); }
-.money p { font-size: 17px; font-weight: 300; color: rgba(255,255,255,.72); line-height: 1.8; max-width: 66ch; }
-.money p + p { margin-top: 16px; }
-.money strong { color: #fff; font-weight: 500; }
+.money-inner { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 56px; align-items: center; }
+.money h2 { color: #fff; font-size: clamp(30px, 3.4vw, 44px); margin-bottom: 18px; }
+.money p { font-size: 17px; line-height: 1.7; color: rgba(255,255,255,.8); max-width: 48ch; }
+.money p + p { margin-top: 14px; }
+.keys-label { font-size: 14px; font-weight: 600; color: rgba(255,255,255,.8); margin-bottom: 14px; }
+.keys { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; }
+.keys li { display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px 10px 12px; background: var(--white); border-radius: var(--pill); font-size: 15px; font-weight: 500; color: var(--navy); }
+.keys img { width: 22px; height: 22px; }
+.keys .ic { font-size: 20px; color: var(--navy-3); }
 
-@media (max-width: 1100px) {
-  .why-inner { grid-template-columns: 1fr; }
-  .where-grid { grid-template-columns: 1fr; }
-  .host-inner { grid-template-columns: 1fr; gap: 36px; }
+.os-sec .faq-list { max-width: 820px; margin-top: 36px; }
+.os-sec .faq-a { max-width: 62ch; font-weight: 400; color: var(--navy-2); }
+
+/* The close: the repository itself, beside the source mosaic */
+.os-close { padding: 96px 52px 112px; background: var(--off); border-top: 1px solid var(--border); }
+.os-close-inner { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 56px; align-items: center; max-width: 880px; margin: 0 auto; }
+.os-panel { width: 240px; height: 240px; border-radius: 6px; }
+.os-close h2 { margin: 0 0 24px; font-size: clamp(30px, 3.4vw, 44px); }
+.repo { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--white); color: var(--navy-3); transition: border-color .15s, background .15s; }
+.repo:hover { border-color: var(--orange); }
+.repo:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+.repo > .ic { font-size: 28px; color: var(--navy); flex-shrink: 0; }
+.repo-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.repo-title { font-size: 16px; color: var(--navy); }
+.repo-desc { font-size: 14px; line-height: 1.5; color: var(--navy-2); }
+.repo-host { margin-left: auto; font-size: 13px; color: var(--navy-3); flex-shrink: 0; }
+.os-close .hero-form { justify-content: flex-start; margin-top: 22px; animation: none; }
+
+@media (max-width: 1000px) {
+  .os-hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; padding: 104px 24px 64px; }
+  .os-hero h1 { max-width: 16ch; }
+  .map { max-width: 560px; }
+  .os-sec, .money { padding: 64px 24px; }
+  .os-close { padding: 64px 24px 80px; }
+  .split, .money-inner { grid-template-columns: 1fr; gap: 36px; }
+  .gate-shot { max-width: 480px; }
+  .os-close-inner { grid-template-columns: 1fr; gap: 28px; justify-items: start; }
+}
+/* 761-960px (a tablet, a narrow window) keeps the result beside the action: stacked, the
+   hero left half the screen empty beside a 520px column. */
+@media (max-width: 760px) {
+  .os-hero { grid-template-columns: 1fr; gap: 48px; }
 }
 @media (max-width: 860px) {
-  .os-hero { padding: 100px 24px 56px; }
-  .why, .where, .host, .money { padding-left: 24px; padding-right: 24px; }
-  .where, .host, .money { padding-top: 64px; padding-bottom: 64px; }
-  .why { padding-bottom: 64px; }
+  .os-hero .hero-form, .os-close .hero-form { margin: 0; }
+}
+/* Phones: the table reads down instead of across, one way of running it per block */
+@media (max-width: 640px) {
+  .map-flow { padding: 16px 14px 18px; }
+  .node { padding: 11px 12px; }
+  .where-table, .where-table thead, .where-table tbody, .where-table tr, .where-table th, .where-table td { display: block; }
+  .where-table thead { display: none; }
+  .where-table tbody tr { padding: 14px 18px; border-bottom: 1px solid var(--border); }
+  .where-table tbody tr:last-child { border-bottom: none; }
+  .where-table tbody th, .where-table td { width: auto; padding: 0; border: none; background: none !important; }
+  .where-table tbody th { margin-bottom: 8px; }
+  .where-table td { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: 10px; font-size: 14.5px; }
+  .where-table td + td { margin-top: 4px; }
+  .where-table td::before { content: attr(data-col); font-weight: 600; color: var(--navy); }
+  .repo-host { display: none; }
+  .term pre { font-size: 12.5px; padding: 18px 16px 20px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .term .c { display: block; padding-left: 1.3em; }
+  .code-bar a { font-size: 11.5px; }
 }
 </style>
 <script type="application/ld+json">
@@ -145,142 +211,96 @@
 
 <a href="#main-content" class="skip-link">コンテンツへスキップ</a>
 
-<!-- EXPERIMENT: the trust page a commercial-later OSS project needs. Hypothesis: a reader who lands
-     here can answer "is it free, what runs where, what will cost money" without opening the README,
-     and downloads or stars at a higher rate than visitors who only saw the home page. -->
+<!-- EXPERIMENT: the trust page for an open-source project that will charge for bundled models later.
+     Hypothesis: a reader who sees the real parts drawn (the folders, the agent's own tool list,
+     the card they approve on) believes "open end to end" without opening the README, and
+     downloads or opens the repository at a higher rate than visitors who only saw the home page. -->
 
 <!-- NAV (shared: site/partials/nav-simple.html) -->
 <div data-duct-partial="/ja/partials/nav-simple.html"></div>
 
 <main id="main-content">
 
-<!-- HERO -->
-<section class="hero os-hero">
-<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> MIT · 公開ロードマップ · お客様ご自身のキーをご用意ください</div>
-<h1>ビジネス全体を読み取ります。<br/><em>だから、あなたも読み取ることができます。</em></h1>
-<p class="hero-sub">Ductはエージェント、コネクタ、プロンプト、承認ゲート、デスクトップシェルまで、エンドツーエンドでオープンソースです。ダウンロードすれば弊社がサービスを運用します。クローンすれば弊社は何も関与しません。</p>
+<!-- HERO: the claim on the left, the parts it names drawn on the right -->
+<section class="os-hero">
+<div>
+<h1>ビジネス全体を読み取ります。<em>だから、あなたもそれを理解できます。</em></h1>
+<p class="hero-sub">Ductのすべてのパーツは、MITライセンスの1つの公開リポジトリに収められています。ダウンロードして弊社にサービスを実行させるか、クローンしてすべてをご自身で実行できます。</p>
 <div class="hero-form">
 <a class="btn btn-orange btn-lg" href="/ja/download" data-duct-download>Ductをダウンロード ↓</a>
-<a class="btn btn-ghost btn-lg" href="https://github.com/5hirish/duct" rel="noopener">ソースを読む</a>
+<a class="btn btn-ghost btn-lg" href="https://github.com/5hirish/duct" rel="noopener"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#github"/></svg> ソースコードを読む</a>
 </div>
-<p class="hero-footnote">独自のキーで常に無料 · ご自身で実行するのにアカウントは不要です</p>
+<p class="hero-footnote">ご自身のモデルキーを使えば無料。</p>
+</div>
+
+<figure class="map" aria-label="ダウンロードしたアプリからツールまで、Ductのパーツがどのように接続するか">
+<div class="map-bar"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#github"/></svg><a href="https://github.com/5hirish/duct" rel="noopener">5hirish/<strong>duct</strong></a><span class="map-lic">MIT</span></div>
+<ol class="map-flow">
+<li class="map-step"><a class="node" href="https://github.com/5hirish/duct/tree/main/desktop" rel="noopener"><span class="node-path">desktop/</span><span class="node-lang">Rust</span><span class="node-what">ダウンロードするアプリ。モデルキーはキーチェーンに保持されます。</span></a></li>
+<li class="map-step"><a class="node" href="https://github.com/5hirish/duct/tree/main/app" rel="noopener"><span class="node-path">app/</span><span class="node-lang">Next.js</span><span class="node-what">クリックするすべての画面。</span></a></li>
+<li class="map-step"><a class="node" href="https://github.com/5hirish/duct/tree/main/backend/agents" rel="noopener"><span class="node-path">backend/agents/</span><span class="node-lang">Python</span><span class="node-what">3つのエージェントと、プレーンテキストのプロンプト。</span></a></li>
+<li class="map-step map-fork">
+<a class="node" href="https://github.com/5hirish/duct/blob/main/backend/service/connectors.py" rel="noopener"><span class="node-path">connectors.py</span><span class="node-what">ツールの読み取り。</span></a>
+<a class="node is-gate" href="https://github.com/5hirish/duct/blob/main/backend/service/execution/policy.py" rel="noopener"><span class="node-path">policy.py</span><span class="node-lang">ゲート</span><span class="node-what">変更は「適用する」の操作を待ちます。</span></a>
+</li>
+<li class="map-step map-join"><div class="map-tools"><span class="map-tools-label">お使いのツール</span><img src="/assets/icons/google-ads.svg" width="22" height="22" alt="Google Ads"/><img src="/assets/icons/googleanalytics.svg" width="22" height="22" alt="Google Analytics"/><img src="/assets/icons/googlesearchconsole.svg" width="22" height="22" alt="Search Console"/><img src="/assets/icons/meta.svg" width="22" height="22" alt="Meta Ads"/><img src="/assets/icons/stripe.svg" width="22" height="22" alt="Stripe"/><img src="/assets/icons/mixpanel.svg" width="22" height="22" alt="Mixpanel"/><a class="os-link" href="/ja/integrations/">全 14 件 →</a></div></li>
+</ol>
+</figure>
 </section>
 
-<!-- WHY -->
-<section class="why">
-<div class="why-inner reveal">
-<div class="why-block">
-<span class="why-num">01</span>
-<h2>すべてへの読み取りアクセスは、多くの要求です。</h2>
-<p>Ductは広告、アナリティクス、収益、セッションリプレイをまとめて読み取ります。この視点を持つツールはブラックボックスであるべきではありません。すべてのAPIコールとすべてのプロンプトはリポジトリにあり、接続する前に読み取ることができます。</p>
+<!-- THE GATE: the agent's real tools for changes beside the card a person approves on -->
+<section class="os-sec is-off" id="gate">
+<div class="os-inner split">
+<div class="os-head">
+<h2>提案はエージェントが。適用できるのはあなただけ。</h2>
+<p class="sub">これらは、エージェントがアカウントを変更するために取得するすべてのツールです。変更を承認するツールはありません。単独で動作する唯一のツールはロールバックで、適用した変更のみを元に戻します。</p>
+<div class="code-card">
+<div class="code-bar"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#code-2"/></svg><a href="https://github.com/5hirish/duct/blob/main/backend/agents/tools/execution_tools.py" rel="noopener">backend/agents/tools/execution_tools.py</a></div>
+<pre><span class="k">async def</span> <span class="f">list_executable_ops</span>(…)
+<span class="k">async def</span> <span class="f">propose_changes</span>(…)
+<span class="k">async def</span> <span class="f">get_change_set_status</span>(…)
+<span class="k">async def</span> <span class="f">rollback_change_set</span>(…)</pre>
 </div>
-<div class="why-block">
-<span class="why-num">02</span>
-<h2>承認ゲートはプロンプトではなく、コード内に存在します。</h2>
-<p>エージェントは変更を提案し、プレビューできます。承認または適用するツールはありません。それはあなたのボタンであり、モデルがそれを見ることはありません。<a href="/ja/doctrine">ドクトリン</a>は各ルールを、それを強制するファイルにリンクしています。</p>
+<p class="gate-note"><a class="os-link" href="/ja/doctrine">Doctrine</a> は、このようなすべてのルールを、それを適用するファイルにリンクします。</p>
 </div>
-<div class="why-block">
-<span class="why-num">03</span>
-<h2>一人の人間は信頼を求めることはできません。コードを示すことはできます。</h2>
-<p>Ductは<a href="/ja/about">スペインの1人のメンテナー</a>によって構築されており、エージェントがほとんどのタイピングを行っています。ロードマップは公開ボードであり、決定はイシューで議論され、お客様またはお客様のエージェントからのプルリクエストも同じレビューを受けます。</p>
-</div>
+<figure class="gate-shot reveal" data-zoom>
+<img src="/assets/media/review-card.webp" srcset="/assets/media/review-card-768.webp 768w, /assets/media/review-card.webp 1088w" sizes="(max-width: 1000px) calc(100vw - 48px), 480px" width="1088" height="936" loading="lazy" decoding="async" alt="承認待ちの変更セット：Performance Max キャンペーンの一時停止と2つの除外キーワードの追加（拒否、承認する、適用するボタン付き）"/>
+<figcaption>変更が停止する場所：あなたの承認ボタン。</figcaption>
+</figure>
 </div>
 </section>
 
-<!-- WHERE THINGS RUN -->
-<section class="where" id="where">
-<div class="where-inner">
-<div class="where-head reveal">
-<p class="tag">何がどこで実行されるか</p>
-<h2>同じコード。<em>2つの実行方法。</em></h2>
-<p class="sub">アプリをダウンロードすると、弊社がその背後にあるサービスを運用します。サインインし、ツールを接続し、質問してください。コードをクローンすると、そのすべての部分をお客様が運用できます。どこに何があるかを分かりやすく説明します。</p>
+<!-- WHAT RUNS WHERE: one table, read across -->
+<section class="os-sec" id="where">
+<div class="os-inner">
+<div class="os-head">
+<h2>同じコード。2つの実行方法。</h2>
+<p class="sub">アプリをダウンロードすれば、弊社がサービスを実行します。リポジトリをクローンすれば、すべてのパーツがあなたのものになります。</p>
 </div>
-<div class="where-grid reveal" style="transition-delay:.1s">
-<article class="where-card pick">
-<span class="where-badge"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#rocket"/></svg> ほとんどの人がここから始めます</span>
-<div class="where-card-head"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#monitor"/></svg><div><h3>デスクトップアプリ</h3><p>ダウンロードしてください。サインインしてください。2分で接続完了です。</p></div></div>
-<div class="zones">
-<div class="zone zone-you">
-<span class="zone-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg> お客様のコンピューターに保存されます</span>
-<div class="zone-items">
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg> お客様のAIキー <small>・キーチェーン内</small></span>
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#user-round"/></svg> お客様のChatGPTサインイン</span>
-</div>
-</div>
-<div class="zone zone-cloud">
-<span class="zone-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg> Ductがお客様のために保持します <small>・暗号化されています</small></span>
-<div class="zone-items">
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg> ツールログイン <small>・一度接続すれば、すべてのデバイスで</small></span>
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg> プロジェクト、ブリーフ、メモリ <small>・同期済み</small></span>
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#users"/></svg> チームメイト <small>・招待1回</small></span>
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-line"/></svg> 利用統計 <small>・設定でオフ</small></span>
-</div>
-</div>
-</div>
-<ul class="where-facts">
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> 無料です。お客様のキー、または既にお支払い済みのChatGPTプランをご利用ください。</li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Google Ads、GA4、その他はワンクリックで接続します。登録は不要です。</li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> お客様のブリーフは次のコンピューターに引き継がれます。招待1回でチームメイトを追加できます。</li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> 自己更新する署名済みビルド。弊社がサービスとデータベースを運用します。</li>
-</ul>
-<div class="where-cta">
-<a class="btn btn-orange" href="/ja/download" data-duct-download>Ductをダウンロード ↓</a>
-<span class="where-fit">macOS、Windows、Linux · 無料 · クレジットカード不要</span>
-</div>
-</article>
-<article class="where-card">
-<div class="where-card-head"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#server"/></svg><div><h3>セルフホスト済み</h3><p>クローンしてください。お客様がそのすべての部分を運用します。</p></div></div>
-<div class="zones">
-<div class="zone zone-you">
-<span class="zone-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#server"/></svg> お客様のコンピューターまたはサーバー上 <small>・すべて</small></span>
-<div class="zone-items">
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg> お客様のAIキー</span>
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg> お客様のツールログイン</span>
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg> プロジェクト、ブリーフ、メモリ</span>
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg> データベース</span>
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#settings-2"/></svg> サインインとOAuthアプリ <small>・お客様が登録します</small></span>
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#refresh-cw"/></svg> バックアップとアップグレード</span>
-</div>
-</div>
-<div class="zone zone-cloud">
-<span class="zone-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#server"/></svg> Ductが保持します</span>
-<p class="zone-empty">何もありません。弊社と通信することはありません。</p>
-</div>
-</div>
-<ul class="where-facts">
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> 無料です。同じコード、同じエージェント、機能制限版はありません。</li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> 弊社とのアカウントは不要です。利用統計は収集されません。</li>
-<li class="no"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg> Google Ads、GA4、またはSearch Consoleが接続する前に、お客様ご自身のGoogle OAuthクライアントが必要です。</li>
-<li class="no"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg> データベース、バックアップ、すべてのアップグレードは、お客様が運用し、継続して運用するものです。</li>
-<li class="no"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg> お客様がサーバーとしてホストしない限り、他のマシンに引き継がれるものはありません。</li>
-</ul>
-<div class="where-cta">
-<a class="btn btn-ghost" href="#self-host">セルフホストの方法 ↓</a>
-<span class="where-fit">データがどこに保存されるかのルール、またはコードを読むために。</span>
-</div>
-</article>
-</div>
-<p class="where-note reveal">詳細については<a href="/ja/privacy">プライバシーポリシー</a>をご覧ください。どちらの方法で実行しても、弊社があなたのAIキーを保持することはありません。デスクトップアプリはそれをキーチェーンに保存し、ジョブの実行中にのみ送信します。</p>
+<table class="where-table reveal">
+<thead><tr><td></td><th scope="col" class="is-app">デスクトップアプリ<small>多くの方がここから開始します</small></th><th scope="col">セルフホスト<small>データの所在に関する規則向け</small></th></tr></thead>
+<tbody>
+<tr><th scope="row">ご自身のモデルキー</th><td class="is-app" data-col="Desktop app">キーチェーン内</td><td data-col="Self-hosted">お使いのマシン上</td></tr>
+<tr><th scope="row">ツールのログイン情報、ブリーフ、メモリ</th><td class="is-app" data-col="Desktop app">Ductのサービス上で暗号化</td><td data-col="Self-hosted">お使いのマシンまたはサーバー上</td></tr>
+<tr><th scope="row">チームメンバーやその他のコンピュータ</th><td class="is-app" data-col="Desktop app">1件の招待</td><td data-col="Self-hosted">サーバーとしてホスト</td></tr>
+<tr><th scope="row">データベースとアップグレード</th><td class="is-app" data-col="Desktop app">弊社が実行</td><td data-col="Self-hosted">ご自身で実行</td></tr>
+<tr><th scope="row">Duct アカウント</th><td class="is-app" data-col="Desktop app">はい</td><td data-col="Self-hosted">なし</td></tr>
+</tbody>
+</table>
+<p class="where-note">いずれの方法でも、お客様のAIキーを弊社が保持することはありません。詳細は<a class="os-link" href="/ja/privacy">プライバシーポリシー</a>をご覧ください。</p>
 </div>
 </section>
 
 <!-- SELF-HOST -->
-<section class="host" id="self-host">
-<div class="host-inner">
-<div class="host-copy reveal">
-<p class="tag">ご自身で実行する</p>
-<h2>クローンしてください。キーを1つ追加してください。<em>両方の部分を開始してください。</em></h2>
-<p>バックエンドはFastAPI、アプリはNext.jsで、1つのMakefileが両方を駆動します。envファイルにモデルプロバイダーキーを追加すれば、数分で自分のマシンから自分のツールを読み取ることができます。</p>
-<p><a href="https://github.com/5hirish/duct#-self-host-it" rel="noopener">README</a>はセットアップの信頼できる情報源であり、バックエンドがバンドルされたデスクトップビルドについても説明しています。ディスク上のSQLite、ループバックのみ、アカウント不要です。<a href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">CONTRIBUTING.md</a>にはCIが実行するチェックが記載されています。</p>
+<section class="os-sec is-off" id="self-host">
+<div class="os-inner host">
+<div class="os-head">
+<h2>クローンして、キーを1つ追加し、起動します。</h2>
+<p class="sub">空のフォルダからお使いのマシンでDuctを動かすまで5つのコマンド。<a class="os-link" href="https://github.com/5hirish/duct#-self-host-it" rel="noopener">README</a>に詳細が記載されています。</p>
 </div>
 <!-- Mirrors the README's "Self-host it" block. If the two disagree, the README is right; fix this one. -->
-<div class="host-code reveal" style="transition-delay:.1s" aria-label="セルフホストコマンド">
-<div class="host-code-bar" aria-hidden="true">
-<span class="host-code-dot" style="background:#ff5f57"></span>
-<span class="host-code-dot" style="background:#febc2e"></span>
-<span class="host-code-dot" style="background:#28c840"></span>
-<span class="host-code-label">ターミナル</span>
-</div>
+<div class="term" aria-label="セルフホストコマンド">
+<div class="term-bar" aria-hidden="true"><span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span><span class="term-label">ターミナル</span></div>
 <pre><code><span class="p">$</span> git clone https://github.com/5hirish/duct.git &amp;&amp; cd duct
 <span class="p">$</span> make setup
 <span class="p">$</span> cp backend/.env.example backend/.env.local   <span class="c"># add one model provider key</span>
@@ -290,46 +310,72 @@
 </div>
 </section>
 
-<!-- MONEY -->
+<!-- MONEY: who you pay, and the keys Duct runs on -->
 <section class="money" id="pricing">
-<div class="money-inner reveal">
-<p class="tag">費用がかかるもの</p>
-<h2>独自のキーで無料です。<em>常に。</em></h2>
-<p><strong>MITライセンスは試用版ではありません。</strong> エージェント、コネクタ、承認ゲートが製品であり、リポジトリに含まれています。お客様ご自身のモデルキー、または既にお支払い済みのChatGPTプランで実行すれば、弊社に何も負うものはありません。</p>
-<p><strong>後日提供されるのは、モデルをバンドルした有料プランです</strong>。これにより、チームはAPIキーを持つことなくDuctを利用でき、デスクトップアプリが既に通信しているホスト型サービスの上に構築されます。現在オープンなものが、そのプランの背後に移動することはありません。もし変更がある場合は、コードが変更される前にこのページでお知らせします。</p>
+<div class="money-inner">
+<div>
+<h2>ご自身のキーを使えば無料。いつでも。</h2>
+<p>使用した分だけモデルプロバイダーに支払うか、すでにお持ちのChatGPTプランを使用します。Ductからの請求はありません。</p>
+<p>キーの管理を望まないチーム向けに、有料プランが後日提供される予定です。現在オープンソースとして公開されている機能が有料化されることはありません。</p>
+</div>
+<div>
+<p class="keys-label">以下のサービスからキーを持参</p>
+<ul class="keys">
+<li><img src="/assets/icons/claude.svg" width="22" height="22" alt=""/>Anthropic</li>
+<li><img src="/assets/icons/openai-ads.svg" width="22" height="22" alt=""/>OpenAI</li>
+<li><img src="/assets/icons/gemini.svg" width="22" height="22" alt=""/>Google Gemini</li>
+<li>xAI</li>
+<li>OpenRouter</li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#server"/></svg>自身で実行するモデル</li>
+</ul>
+</div>
 </div>
 </section>
 
-<!-- FAQ -->
-<section class="faq" id="faq">
-<div class="faq-inner">
-<div class="reveal">
-<p class="tag">質問</p>
-<h2>人々が<em>実際に尋ねる</em>もの</h2>
+<!-- FAQ: the mechanics live here -->
+<section class="os-sec" id="faq">
+<div class="os-inner">
+<div class="os-head">
+<h2>よくある質問</h2>
 </div>
-<div class="faq-list reveal" style="transition-delay:.08s">
+<div class="faq-list">
 <details class="faq-item">
 <summary class="faq-q">Ductは本当に無料ですか？</summary>
-<p class="faq-a">はい。DuctはMITライセンスで、独自のモデルキーがあれば無料であり、それは変わりません。モデルプロバイダーに直接支払うか、既にお持ちのChatGPTプランでサインインしてください。後日、キーを保持したくないチーム向けにモデルアクセスをバンドルする有料プランが提供されるかもしれませんが、現在オープンなものがその背後に移動することはありません。</p>
+<p class="faq-a">はい。DuctはMITライセンスであり、ご自身のモデルキーを使えば無料です。モデルプロバイダーに直接支払うか、すでにお持ちのChatGPTプランでサインインします。</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">アカウントなしでDuctを実行できますか？</summary>
-<p class="faq-a">はい。リポジトリをクローンし、<code>make setup</code>を実行し、モデルプロバイダーキーを1つ追加して、バックエンドとアプリを起動します。すべてはあなたのマシンまたはサーバーに残り、Ductとのアカウントは一切関与しません。</p>
+<p class="faq-a">はい。リポジトリをクローンし、<code>make setup</code>を実行し、モデルキーを1つ追加して、バックエンドとアプリを起動します。Ductのアカウントは一切不要です。</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">セルフホストで失われるものは何ですか？</summary>
+<p class="faq-a">Google Ads、GA4、Search Consoleの接続には独自のGoogle OAuthクライアントが必要です。また、データベース、バックアップ、アップグレードの運用はご自身で行います。</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">Ductを商用利用したり、フォークしたりできますか？</summary>
-<p class="faq-a">はい。MITライセンスは商用利用、変更、再配布を許可しています。唯一の例外は<code>docs/guides</code>以下のサードパーティドキュメントと、Ductの名称およびマークです。</p>
+<p class="faq-a">はい。MITライセンスは商用利用、変更、再配布を許可しています。例外は<code>docs/guides</code>以下のサードパーティドキュメント、およびDuctの名称とマークです。</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">貢献するにはどうすればよいですか？</summary>
-<p class="faq-a"><a href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">CONTRIBUTING.md</a>から始めてください。課題と議論はGitHubにあり、ロードマップは公開プロジェクトボードです。エージェントが作成した貢献も歓迎しますが、プルリクエストにエージェントがどこで協力したかを明記してください。</p>
+<p class="faq-a"><a class="os-link" href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">CONTRIBUTING.md</a>から始めましょう。ロードマップは公開ボードであり、エージェントが支援した箇所が明記されていれば、エージェントを使って作成されたプルリクエストも歓迎します。</p>
 </details>
 </div>
 </div>
 </section>
 
-<!-- CTA (shared: site/partials/cta-home.html) -->
-<div data-duct-partial="/ja/partials/cta-home.html"></div>
+<!-- CLOSE: the page's own two actions, beside the source mosaic -->
+<section class="os-close">
+<div class="os-close-inner">
+<img class="os-panel" src="/assets/art/fons.webp" width="640" height="640" loading="lazy" decoding="async" alt="" aria-hidden="true"/>
+<div>
+<h2>接続する前にご一読ください。</h2>
+<a class="repo" href="https://github.com/5hirish/duct" rel="noopener"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#github"/></svg><span class="repo-body"><span class="repo-title">5hirish/<strong>duct</strong></span><span class="repo-desc">エージェント、コネクタ、プロンプト、承認ゲート、デスクトップシェル。</span></span><span class="repo-host" data-duct-stars>github.com</span></a>
+<div class="hero-form">
+<a class="btn btn-orange btn-lg" href="/ja/download" data-duct-download>Ductをダウンロード ↓</a>
+</div>
+</div>
+</div>
+</section>
 
 </main>
 

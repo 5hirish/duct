@@ -710,7 +710,7 @@ if (barLang) {
   });
   drawer.appendChild(mobileLang);
 }
-// What stays in the bar below 860px: the GitHub mark and the Download pill,
+// What stays in the bar below 1080px (duct.css folds the links there): the GitHub mark and the Download pill,
 // beside the menu button. They are the two actions the page exists for, and
 // a phone visitor used to have to open the drawer to find either — the
 // hero's own buttons are a screen below the fold. Clones of the bar's
@@ -807,7 +807,7 @@ window.addEventListener('keydown', function(e) {
 });
 
 window.addEventListener('resize', function() {
-  if (window.innerWidth > 860 && drawer.classList.contains('is-open')) closeDrawer();
+  if (window.innerWidth > 1080 && drawer.classList.contains('is-open')) closeDrawer();
 });
 })();
 

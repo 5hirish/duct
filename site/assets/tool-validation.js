@@ -71,7 +71,16 @@ var ductT = window.ductT || function (s) { var m = window.DUCT_I18N; return (m &
         seeded.push(inp);
       });
       if (!seeded.length) return;
-      button.click();
+      // Each page's Calculate scrolls to its results, which is right for a
+      // person's click and wrong here: the example ran on load and threw
+      // every visitor 700-1,300px past the hero. Scrolling is switched off
+      // for this one synchronous click only.
+      var proto = Element.prototype, intoView = proto.scrollIntoView;
+      var to = window.scrollTo, by = window.scrollBy, noop = function () {};
+      proto.scrollIntoView = noop; window.scrollTo = noop; window.scrollBy = noop;
+      try { button.click(); } finally {
+        proto.scrollIntoView = intoView; window.scrollTo = to; window.scrollBy = by;
+      }
       if (!results.classList.contains('visible')) return;
       var note = document.createElement('p');
       note.className = 'tool-example-note';
