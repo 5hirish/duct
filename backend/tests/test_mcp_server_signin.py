@@ -400,3 +400,58 @@ def test_connecting_past_the_cap_disconnects_the_least_recently_used(env):
     assert "newest" in names and "agent 0" not in names
     # Pasted tokens are counted apart, so connecting never costs one.
     assert env.client.post("/api/user/mcp-tokens", json={"name": "CI"}).status_code == 201
+
+
+# -- MCP on a hostname of its own ------------------------------------------------------
+
+MCP_HOST = "mcp.duct.test"
+
+
+@pytest.fixture
+def mcp_host(config):
+    """The hosted shape: agents are told mcp.<domain>/mcp, and the API's own
+    /mcp keeps answering for every connection made before the move."""
+    config.mcp_public_url = f"https://{MCP_HOST}"
+    return config
+
+
+def test_each_host_names_itself_so_a_client_never_switches_address_mid_sign_in(env, mcp_host):
+    api_host = API.removeprefix("https://")
+    for host, origin in ((MCP_HOST, f"https://{MCP_HOST}"), (api_host, API)):
+        challenge = env.client.post("/mcp", json={}, headers={"host": host}).headers["WWW-Authenticate"]
+        assert f'resource_metadata="{origin}/.well-known/oauth-protected-resource/mcp"' in challenge
+        metadata = env.client.get("/.well-known/oauth-protected-resource/mcp", headers={"host": host}).json()
+        assert metadata["resource"] == f"{origin}/mcp", "RFC 9728 3.3: the address the client called"
+        assert metadata["authorization_servers"] == [API], "sign-in stays on the API"
+
+
+def test_an_unknown_host_hears_the_advertised_address(env, mcp_host):
+    metadata = env.client.get("/.well-known/oauth-protected-resource/mcp", headers={"host": "elsewhere.test"}).json()
+    assert metadata["resource"] == f"https://{MCP_HOST}/mcp"
+
+
+def test_a_token_for_either_address_is_issued_and_works_on_both(env, mcp_host):
+    from service.mcp_server import oauth
+
+    assert oauth.resource_allowed(f"https://{MCP_HOST}/mcp")
+    assert oauth.resource_allowed(f"{API}/mcp"), "every connection made before the move"
+    assert not oauth.resource_allowed("https://evil.test/mcp")
+
+    _, tokens = env.sign_in(env.user("ana@acme.example"))
+    access = tokens["access_token"]
+    for host in (MCP_HOST, API.removeprefix("https://")):
+        res = env.client.post(
+            "/mcp", json={"jsonrpc": "2.0", "id": 1, "method": "ping"},
+            headers={"Authorization": f"Bearer {access}", "host": host},
+        )
+        assert res.status_code == 200, (host, res.text)
+
+
+def test_the_app_shows_the_address_the_backend_advertises(env, mcp_host):
+    env.signed_in = env.user("ana@acme.example")
+    assert env.client.get("/api/user/mcp-tokens/server").json() == {"url": f"https://{MCP_HOST}/mcp"}
+
+
+def test_without_its_own_hostname_the_address_is_the_apis(env):
+    env.signed_in = env.user("ana@acme.example")
+    assert env.client.get("/api/user/mcp-tokens/server").json() == {"url": f"{API}/mcp"}

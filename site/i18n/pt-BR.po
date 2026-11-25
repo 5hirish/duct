@@ -1844,15 +1844,15 @@ msgstr "Use o Duct do seu agente"
 
 #: connect-agent.html
 msgid ""
-"Use your own API address followed by /mcp, in place of https://api.getduct.ai/mcp."
+"Use your own API address followed by /mcp, in place of https://mcp.getduct.ai/mcp."
 msgstr ""
-"Use seu próprio endereço de API seguido por /mcp, no lugar de https://api.getduct.ai/mcp."
+"Use o seu próprio endereço de API seguido de /mcp, em vez de https://mcp.getduct.ai/mcp."
 
 #: connect-agent.html
 msgid ""
-"Use your own API address followed by <0>/mcp</0>, in place of <1>https://api.getduct.ai/mcp</1>."
+"Use your own API address followed by <0>/mcp</0>, in place of <1>https://mcp.getduct.ai/mcp</1>."
 msgstr ""
-"Use seu próprio endereço de API seguido por <0>/mcp</0>, no lugar de <1>https://api.getduct.ai/mcp</1>."
+"Use o seu próprio endereço de API seguido de <0>/mcp</0>, em vez de <1>https://mcp.getduct.ai/mcp</1>."
 
 #: connect-agent.html
 msgid "VS Code"
@@ -13629,6 +13629,16 @@ msgstr "← Voltar"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← Recomeçar"
+
+#~ msgid ""
+#~ "Use your own API address followed by /mcp, in place of https://api.getduct.ai/mcp."
+#~ msgstr ""
+#~ "Use seu próprio endereço de API seguido por /mcp, no lugar de https://api.getduct.ai/mcp."
+
+#~ msgid ""
+#~ "Use your own API address followed by <0>/mcp</0>, in place of <1>https://api.getduct.ai/mcp</1>."
+#~ msgstr ""
+#~ "Use seu próprio endereço de API seguido por <0>/mcp</0>, no lugar de <1>https://api.getduct.ai/mcp</1>."
 
 #~ msgid ""
 #~ "Duct's playbook for a brief, as a slash command in Claude Code and Gemini CLI. In any other agent, ask for this week's brief and it calls the same playbook."

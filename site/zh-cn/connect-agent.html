@@ -46,7 +46,7 @@
 {"@context":"https://schema.org","@type":"WebPage","inLanguage":"zh-CN","name":"在 Claude Code、Codex、Gemini 或 ChatGPT 中使用 Duct","url":"https://getduct.ai/zh-cn/connect-agent","description":"将 Duct 添加至 Claude Code、Codex、Cursor、Gemini CLI 或 ChatGPT。你的智能体可引用 Duct 核对的总量、保留记忆并保存简报，完全基于你自己的套餐。","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"HowTo","name":"如何连接你的智能体","step":[{"@type":"HowToStep","position":1,"name":"将 Duct 添加到你的智能体","text":"将上述地址提供给你的智能体，通过一个命令或一行设置。每个智能体的具体步骤如下。"},{"@type":"HowToStep","position":2,"name":"登录并选择","text":"你的浏览器将打开 Duct。选择你的智能体可执行的操作以及适用的项目，然后点击“允许”。无需复制 token。"},{"@type":"HowToStep","position":3,"name":"问它一些问题","text":"尝试“撰写本周简报”。你的智能体将遵循 Duct 的剧本，引用 Duct 对账后的总数，并将简报保存在 Duct 中。"}]}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"zh-CN","mainEntity":[{"@type":"Question","name":"我需要 API 密钥吗？","acceptedAnswer":{"@type":"Answer","text":"不需要。你的智能体在你已订阅的套餐上运行，Duct 不会为此调用任何模型。保存的密钥仅用于生成图片以及 Duct 在你离线时运行的任务（例如定时简报）。"}},{"@type":"Question","name":"它能读取我的哪些工具？","acceptedAnswer":{"@type":"Answer","text":"你在 Duct 中连接的 Stripe、Meta Ads、Mixpanel、GitHub、RevenueCat、Clarity、GrowthBook、Apple Search Ads、RSS 订阅源及其他工具。在确认 Google 对外部 AI 助手的政策前，Google Analytics、Search Console、Google Ads 和 Tag Manager 暂时留在 Duct 自有的智能体内部。"}},{"@type":"Question","name":"它能变更我的广告账户吗？","acceptedAnswer":{"@type":"Answer","text":"只有在开启建议变更时，且仅作为提议。它会在 Duct 的审核队列中等待，直到你在那里批准它。没有任何智能体可以批准或应用变更。"}},{"@type":"Question","name":"Duct 会看到我的对话吗？","acceptedAnswer":{"@type":"Answer","text":"不会。Duct 只能看到你的智能体对其发起的调用（例如请求的数据及原因），绝不会看到聊天中的其他内容。"}},{"@type":"Question","name":"笔记本电脑合上时，简报还会运行吗？","acceptedAnswer":{"@type":"Answer","text":"不是来自你的智能体。定时简报由 Duct 使用保存的密钥运行，因为没有人会让自己的智能体在凌晨 3 点运行。你的智能体撰写的内容会归档到同一个库中。"}},{"@type":"Question","name":"什么是 insights_brief？","acceptedAnswer":{"@type":"Answer","text":"Duct 的简报剧本以斜杠命令形式提供：在 Claude Code 中为 /mcp__duct__insights_brief，在 Gemini CLI 中为 /insights_brief。在任何其他智能体中，只需索取本周简报，它就会调用相同的剧本。"}},{"@type":"Question","name":"我的浏览器从未打开","acceptedAnswer":{"@type":"Answer","text":"亲自发起登录：在 Claude Code 中运行 /mcp，在 Codex 中运行 codex mcp login duct，在 Gemini CLI 中运行 /mcp auth duct，或在 OpenCode 中运行 opencode mcp auth duct。"}},{"@type":"Question","name":"它显示无法注册，或“不支持动态客户端注册”","acceptedAnswer":{"@type":"Answer","text":"将你的智能体更新到最新版本然后重试。如果仍然失败，请改用令牌连接。"}},{"@type":"Question","name":"它已工作，但现在收到 401 错误","acceptedAnswer":{"@type":"Answer","text":"你已在 Duct 中断开它的连接，或它在 90 天未使用后登录失效。请从你的智能体再次登录。"}},{"@type":"Question","name":"我预期的工具不在其中","acceptedAnswer":{"@type":"Answer","text":"你的智能体只能看到它登录时你允许的内容。请在 Duct 中断开连接，重新连接，并选择“与我协作”。"}},{"@type":"Question","name":"我让它设置项目，但没有任何改变","acceptedAnswer":{"@type":"Answer","text":"草稿绝不会覆盖你在 Duct 中输入的内容。它只填充空白字段或替换之前的草稿。请检查 Duct 中的项目页面。"}},{"@type":"Question","name":"我自行托管 Duct","acceptedAnswer":{"@type":"Answer","text":"使用你自己的 API 地址后跟 /mcp，代替 https://api.getduct.ai/mcp。"}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"zh-CN","mainEntity":[{"@type":"Question","name":"我需要 API 密钥吗？","acceptedAnswer":{"@type":"Answer","text":"不需要。你的智能体在你已订阅的套餐上运行，Duct 不会为此调用任何模型。保存的密钥仅用于生成图片以及 Duct 在你离线时运行的任务（例如定时简报）。"}},{"@type":"Question","name":"它能读取我的哪些工具？","acceptedAnswer":{"@type":"Answer","text":"你在 Duct 中连接的 Stripe、Meta Ads、Mixpanel、GitHub、RevenueCat、Clarity、GrowthBook、Apple Search Ads、RSS 订阅源及其他工具。在确认 Google 对外部 AI 助手的政策前，Google Analytics、Search Console、Google Ads 和 Tag Manager 暂时留在 Duct 自有的智能体内部。"}},{"@type":"Question","name":"它能变更我的广告账户吗？","acceptedAnswer":{"@type":"Answer","text":"只有在开启建议变更时，且仅作为提议。它会在 Duct 的审核队列中等待，直到你在那里批准它。没有任何智能体可以批准或应用变更。"}},{"@type":"Question","name":"Duct 会看到我的对话吗？","acceptedAnswer":{"@type":"Answer","text":"不会。Duct 只能看到你的智能体对其发起的调用（例如请求的数据及原因），绝不会看到聊天中的其他内容。"}},{"@type":"Question","name":"笔记本电脑合上时，简报还会运行吗？","acceptedAnswer":{"@type":"Answer","text":"不是来自你的智能体。定时简报由 Duct 使用保存的密钥运行，因为没有人会让自己的智能体在凌晨 3 点运行。你的智能体撰写的内容会归档到同一个库中。"}},{"@type":"Question","name":"什么是 insights_brief？","acceptedAnswer":{"@type":"Answer","text":"Duct 的简报剧本以斜杠命令形式提供：在 Claude Code 中为 /mcp__duct__insights_brief，在 Gemini CLI 中为 /insights_brief。在任何其他智能体中，只需索取本周简报，它就会调用相同的剧本。"}},{"@type":"Question","name":"我的浏览器从未打开","acceptedAnswer":{"@type":"Answer","text":"亲自发起登录：在 Claude Code 中运行 /mcp，在 Codex 中运行 codex mcp login duct，在 Gemini CLI 中运行 /mcp auth duct，或在 OpenCode 中运行 opencode mcp auth duct。"}},{"@type":"Question","name":"它显示无法注册，或“不支持动态客户端注册”","acceptedAnswer":{"@type":"Answer","text":"将你的智能体更新到最新版本然后重试。如果仍然失败，请改用令牌连接。"}},{"@type":"Question","name":"它已工作，但现在收到 401 错误","acceptedAnswer":{"@type":"Answer","text":"你已在 Duct 中断开它的连接，或它在 90 天未使用后登录失效。请从你的智能体再次登录。"}},{"@type":"Question","name":"我预期的工具不在其中","acceptedAnswer":{"@type":"Answer","text":"你的智能体只能看到它登录时你允许的内容。请在 Duct 中断开连接，重新连接，并选择“与我协作”。"}},{"@type":"Question","name":"我让它设置项目，但没有任何改变","acceptedAnswer":{"@type":"Answer","text":"草稿绝不会覆盖你在 Duct 中输入的内容。它只填充空白字段或替换之前的草稿。请检查 Duct 中的项目页面。"}},{"@type":"Question","name":"我自行托管 Duct","acceptedAnswer":{"@type":"Answer","text":"使用你自己的 API 地址，后接 /mcp，以代替 https://mcp.getduct.ai/mcp。"}}]}
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"zh-CN","itemListElement":[{"@type":"ListItem","position":1,"name":"主页","item":"https://getduct.ai/zh-cn/"},{"@type":"ListItem","position":2,"name":"通过你的智能体使用 Duct","item":"https://getduct.ai/zh-cn/connect-agent"}]}
@@ -335,9 +335,9 @@
 <p class="hero-sub">将一个地址添加至 Claude Code、Codex、Cursor、Gemini CLI、ChatGPT 或 Claude。你的智能体可通过 Duct 读取已连接的工具，引用 Duct 核对的总量，记住你的决定，并将每份简报保存到你阅读的地方。无需粘贴 API 密钥。</p>
 <div class="addr">
 <span class="addr-label">服务器地址</span>
-<div class="code is-big"><pre>https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="address" aria-label="复制服务器地址"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div>
+<div class="code is-big"><pre>https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="address" aria-label="复制服务器地址"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div>
 <span class="addr-label">或者在 Claude Code 中</span>
-<div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="hero-claude-code" aria-label="复制 Claude Code 命令"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div>
+<div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="hero-claude-code" aria-label="复制 Claude Code 命令"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div>
 </div>
 <p class="ca-other">希望 Duct 自己的智能体调用你的 MCP 服务器吗？那是另一个方向：<a href="/zh-cn/mcp">你在 Duct 中的 MCP 服务器 →</a></p>
 </section>
@@ -447,7 +447,7 @@
 <div class="step-mini" aria-hidden="true"><pre class="mini-cmd">$ claude mcp add \
     --transport http \
     --scope user duct \
-    https://api.getduct.ai/mcp</pre></div>
+    https://mcp.getduct.ai/mcp</pre></div>
 </div>
 <div class="step reveal" style="transition-delay:.1s">
 <span class="step-num">02</span>
@@ -576,7 +576,7 @@
 <h3>Claude Code</h3>
 <ol class="setup-steps" role="list">
 <li>在你的终端中，运行：
-<div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="claude-code" aria-label="复制 Claude Code 命令"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div></li>
+<div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="claude-code" aria-label="复制 Claude Code 命令"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div></li>
 <li>在 Claude Code 中，运行 <code>/mcp</code>，选择 <code>duct</code> 并选择 <code>Authenticate</code>。</li>
 <li>你的浏览器将打开 Duct。选择它可执行的操作，然后点击“允许”。</li>
 <li>运行 <code>/mcp__duct__insights_brief</code>，或索取本周简报。</li>
@@ -587,7 +587,7 @@
 <h3>Codex</h3>
 <ol class="setup-steps" role="list">
 <li>在你的终端中，运行：
-<div class="code"><pre>codex mcp add duct <span class="nw">--url</span> https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="codex" aria-label="复制 Codex 命令"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div></li>
+<div class="code"><pre>codex mcp add duct <span class="nw">--url</span> https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="codex" aria-label="复制 Codex 命令"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div></li>
 <li>然后登录：
 <div class="code"><pre>codex mcp login duct</pre><button type="button" class="copy" data-copy="codex-login" aria-label="复制登录命令"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div></li>
 <li>你的浏览器将打开 Duct。选择它可执行的操作，然后点击“允许”。</li>
@@ -601,7 +601,7 @@
 <div class="code"><pre>{
   "mcpServers": {
     "duct": {
-      "url": "https://api.getduct.ai/mcp"
+      "url": "https://mcp.getduct.ai/mcp"
     }
   }
 }</pre><button type="button" class="copy" data-copy="cursor" aria-label="复制 Cursor 设置"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div></li>
@@ -617,7 +617,7 @@
 <div class="code"><pre>{
   "mcpServers": {
     "duct": {
-      "httpUrl": "https://api.getduct.ai/mcp"
+      "httpUrl": "https://mcp.getduct.ai/mcp"
     }
   }
 }</pre><button type="button" class="copy" data-copy="gemini-cli" aria-label="复制 Gemini CLI 设置"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div></li>
@@ -633,7 +633,7 @@
 <ol class="setup-steps" role="list">
 <li>打开命令面板并运行 <code>MCP: Add Server</code>。</li>
 <li>选择 HTTP，粘贴地址并将其命名为 <code>duct</code>：
-<div class="code"><pre>https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="vs-code" aria-label="复制服务器地址"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div></li>
+<div class="code"><pre>https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="vs-code" aria-label="复制服务器地址"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div></li>
 <li>首次使用 Duct 时，VS Code 会提示你登录。你的浏览器将打开 Duct。选择它能做什么，然后点击“允许”。</li>
 </ol>
 </section>
@@ -647,7 +647,7 @@
   "mcp": {
     "duct": {
       "type": "remote",
-      "url": "https://api.getduct.ai/mcp"
+      "url": "https://mcp.getduct.ai/mcp"
     }
   }
 }</pre><button type="button" class="copy" data-copy="opencode" aria-label="复制 OpenCode 设置"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div></li>
@@ -662,7 +662,7 @@
 <ol class="setup-steps" role="list">
 <li>在 claude.ai 或 Claude Desktop 中，打开“设置”→“连接器”，然后选择“添加自定义连接器”。</li>
 <li>命名为 Duct 并粘贴地址：
-<div class="code"><pre>https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="claude" aria-label="复制服务器地址"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div></li>
+<div class="code"><pre>https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="claude" aria-label="复制服务器地址"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div></li>
 <li>点击“连接”。Duct 会在你的浏览器中打开。选择它能做什么，然后点击“允许”。</li>
 </ol>
 </section>
@@ -672,7 +672,7 @@
 <ol class="setup-steps" role="list">
 <li>在 ChatGPT 的设置中，开启开发者模式。</li>
 <li>使用此地址添加连接器，并选择 OAuth 进行身份验证：
-<div class="code"><pre>https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="chatgpt" aria-label="复制服务器地址"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div></li>
+<div class="code"><pre>https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="chatgpt" aria-label="复制服务器地址"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div></li>
 <li>Duct 会在你的浏览器中打开。选择允许其执行的操作，然后点击“允许”。</li>
 </ol>
 </section>
@@ -700,7 +700,7 @@
 <p>适用于 CI、远程机器或无需登录的智能体。在同一设置页面的“没有浏览器？使用令牌”下方创建一个，选项相同。你的智能体将其作为请求头发送：</p>
 <div class="code"><pre>Authorization: Bearer duct_mcp_…</pre></div>
 <p>在 Claude Code 中：</p>
-<div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://api.getduct.ai/mcp <span class="nw">--header</span> "Authorization: Bearer YOUR_TOKEN"</pre><button type="button" class="copy" data-copy="token-claude-code" aria-label="复制带令牌的 Claude Code 命令"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div>
+<div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://mcp.getduct.ai/mcp <span class="nw">--header</span> "Authorization: Bearer YOUR_TOKEN"</pre><button type="button" class="copy" data-copy="token-claude-code" aria-label="复制带令牌的 Claude Code 命令"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>复制</span></button></div>
 </div>
 </div>
 </div>
@@ -764,7 +764,7 @@
 </details>
 <details class="faq-item">
 <summary class="faq-q">我自行托管 Duct</summary>
-<p class="faq-a">使用你自己的 API 地址后跟 <code>/mcp</code>，代替 <code>https://api.getduct.ai/mcp</code>。</p>
+<p class="faq-a">使用你自己的 API 地址，后接 <code>/mcp</code>，以代替 <code>https://mcp.getduct.ai/mcp</code>。</p>
 </details>
 </div>
 </div>

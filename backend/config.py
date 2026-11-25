@@ -111,6 +111,11 @@ class Configs(BaseSettings):
     # writes into a missing tool for every connected agent at once, without
     # revoking anyone: the switch for an incident, not a setting to tune.
     mcp_write_tools_enabled: bool = True
+    # The origin agents are told to add, when it is not this API's own
+    # (https://mcp.getduct.ai on the hosted service). The API's /mcp keeps
+    # answering too, so a connection made before the move never breaks.
+    # Empty on a self-hosted instance: the API's origin is the address.
+    mcp_public_url: str = ""
     # Whether an agent may read Google sources (GA4, Search Console, Ads)
     # through fetch_data. Off until Google's Limited Use review settles what an
     # agent on a person's own AI plan may receive; Duct's own agent and the

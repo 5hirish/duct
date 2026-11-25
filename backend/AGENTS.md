@@ -615,6 +615,15 @@ Postgres `DATABASE_URL` names.
   `MCP_GOOGLE_DATA_ENABLED` (off) keeps Google sources out of outside agents
   until the Limited Use question is settled; the gate reads the connector
   registry (`tools_data.is_google_source`), so it fails closed.
+  **The address has a hostname of its own** on the hosted service,
+  `https://mcp.getduct.ai/mcp` (`MCP_PUBLIC_URL`), served by the same
+  Railway service as the API; sign-in stays on `api.getduct.ai`. Both hosts
+  answer `/mcp` forever, and each names itself in its discovery document and
+  401 (`oauth._origin_for`), because a client checks that the metadata names
+  the address it called (RFC 9728 §3.3) and one told the other host
+  abandons the sign-in. The app asks `GET /api/user/mcp-tokens/server` for
+  the address to show, except on a desktop sidecar, whose port only
+  `BASE` knows.
   **Every call is reported** (`service/mcp_server/telemetry.py`) as PostHog
   MCP Analytics' own events, `$mcp_initialize` and `$mcp_tool_call` (tool,
   duration, error class, client, the model's one-line `context` reason),

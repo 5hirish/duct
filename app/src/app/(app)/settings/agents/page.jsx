@@ -18,7 +18,7 @@ import AgentAccess from "@/components/settings/AgentAccess";
 import LoadError from "@/components/LoadError";
 import { hasAuthToken } from "@/lib/authFetch";
 import { isLocalBackendActive } from "@/lib/localBackend";
-import { createMcpToken, listMcpTokens, mcpServerUrl, revokeMcpToken } from "@/lib/mcpTokensApi";
+import { createMcpToken, fetchMcpServerUrl, listMcpTokens, mcpServerUrl, revokeMcpToken } from "@/lib/mcpTokensApi";
 import { fetchProjectsRemote } from "@/lib/projectsApi";
 import { isDesktopShell } from "@/lib/shell";
 import { pollWhileVisible } from "@/lib/visibility";
@@ -62,6 +62,7 @@ export default function AgentsSettingsPage() {
     setDeepLinks(!isDesktopShell());
     if (ok) {
       load();
+      if (!isLocalBackendActive()) fetchMcpServerUrl().then(setServerUrl);
       fetchProjectsRemote().then(
         (rows) => setProjects(rows.map((p) => ({ id: p.id, name: p.name }))),
         () => setProjects([]),

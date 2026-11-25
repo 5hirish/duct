@@ -139,18 +139,44 @@ def issuer() -> str:
     return get_configs().api_public_url.rstrip("/")
 
 
-def resource() -> str:
-    return issuer() + MCP_PATH
+def mcp_origin() -> str:
+    """Where people are told to add Duct: MCP_PUBLIC_URL (mcp.getduct.ai on
+    the hosted service), else this API's own origin. Sign-in stays on the
+    API either way: RFC 9728 lets a resource name an authorization server on
+    another host."""
+    return (get_configs().mcp_public_url or "").rstrip("/") or issuer()
 
 
-def resource_metadata_url() -> str:
+def _origin_for(host: str | None) -> str:
+    """The origin an agent actually called, of the two this server answers
+    MCP on. A client checks that the metadata names the address it used
+    (RFC 9728 §3.3), so a client on the old address must hear the old one,
+    or it abandons the sign-in halfway."""
+    if host:
+        for origin in (mcp_origin(), issuer()):
+            if urlsplit(origin).netloc.lower() == host.strip().lower():
+                return origin
+    return mcp_origin()
+
+
+def resource(host: str | None = None) -> str:
+    return _origin_for(host) + MCP_PATH
+
+
+def resources() -> frozenset[str]:
+    """Every address a token may be for: the advertised one and the API's
+    own, which every connection made before the move still uses."""
+    return frozenset({mcp_origin() + MCP_PATH, issuer() + MCP_PATH})
+
+
+def resource_metadata_url(host: str | None = None) -> str:
     # RFC 9728 §3.1: the well-known path, then the resource's own path.
-    return issuer() + RESOURCE_METADATA_PATH + MCP_PATH
+    return _origin_for(host) + RESOURCE_METADATA_PATH + MCP_PATH
 
 
-def protected_resource_metadata() -> dict[str, Any]:
+def protected_resource_metadata(host: str | None = None) -> dict[str, Any]:
     return {
-        "resource": resource(),
+        "resource": resource(host),
         "authorization_servers": [issuer()],
         "scopes_supported": SCOPES_SUPPORTED,
         "bearer_methods_supported": ["header"],
@@ -340,7 +366,7 @@ def resource_allowed(value: str) -> bool:
     protects nothing else. Absent is allowed; most clients send it."""
     if not value:
         return True
-    return value.rstrip("/") in (resource(), issuer())
+    return value.rstrip("/") in resources() | {issuer(), mcp_origin()}
 
 
 def pkce_matches(verifier: str, challenge: str) -> bool:

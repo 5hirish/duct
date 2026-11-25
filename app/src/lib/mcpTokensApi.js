@@ -70,9 +70,22 @@ export function agentFromName(name) {
 }
 
 /** Where an agent sends its requests. Read at call time: the desktop shell
- *  repoints BASE at boot (see api.js). */
+ *  repoints BASE at boot (see api.js). This is the API's own /mcp, which
+ *  always answers; `fetchMcpServerUrl` asks for the address to advertise. */
 export function mcpServerUrl() {
   return `${BASE}/mcp`;
+}
+
+/** The address the backend advertises (mcp.getduct.ai on the hosted
+ *  service), falling back to the API's /mcp on any failure. Never asked of a
+ *  desktop sidecar: its port changes every launch, so only BASE is right. */
+export async function fetchMcpServerUrl() {
+  try {
+    const { url } = await authedRequest(`${TOKENS_PATH}/server`);
+    return typeof url === "string" && url ? url : mcpServerUrl();
+  } catch {
+    return mcpServerUrl();
+  }
 }
 
 export function listMcpTokens() {

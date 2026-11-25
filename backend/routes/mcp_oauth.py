@@ -90,9 +90,9 @@ def _metadata(document: dict[str, Any]) -> JSONResponse:
 # from ``/mcp``, and the bare one older clients try first.
 @router.get(oauth.RESOURCE_METADATA_PATH + MCP_PATH)
 @router.get(oauth.RESOURCE_METADATA_PATH)
-def protected_resource_metadata() -> JSONResponse:
+def protected_resource_metadata(request: Request) -> JSONResponse:
     _require_available()
-    return _metadata(oauth.protected_resource_metadata())
+    return _metadata(oauth.protected_resource_metadata(request.headers.get("host")))
 
 
 @router.get(oauth.SERVER_METADATA_PATH)
@@ -161,7 +161,7 @@ def authorize(
     if not code_challenge or code_challenge_method != "S256":
         return back("invalid_request", "Send a PKCE code_challenge with code_challenge_method=S256.")
     if not oauth.resource_allowed(resource):
-        return back("invalid_target", f"Duct issues tokens for {oauth.resource()} only.")
+        return back("invalid_target", f"Duct issues tokens for {oauth.mcp_origin()}{MCP_PATH} only.")
 
     # What the agent asked for is a starting point for the page, never a
     # grant: the person ticks what it gets, and may give less or more.
@@ -208,7 +208,7 @@ def _exchange_code(
     if not oauth.pkce_matches(code_verifier, grant["code_challenge"]):
         return _oauth_error("invalid_grant", "The code_verifier does not match the code_challenge.")
     if not oauth.resource_allowed(resource):
-        return _oauth_error("invalid_target", f"Duct issues tokens for {oauth.resource()} only.")
+        return _oauth_error("invalid_target", f"Duct issues tokens for {oauth.mcp_origin()}{MCP_PATH} only.")
     user = session.get(User, UUID(grant["user_id"]))
     if user is None:
         return _oauth_error("invalid_grant", "The account that allowed this sign-in no longer exists.")
@@ -240,7 +240,7 @@ def token(
         )
     if grant_type == oauth.GRANT_REFRESH:
         if not oauth.resource_allowed(resource):
-            return _oauth_error("invalid_target", f"Duct issues tokens for {oauth.resource()} only.")
+            return _oauth_error("invalid_target", f"Duct issues tokens for {oauth.mcp_origin()}{MCP_PATH} only.")
         renewed = renew_agent(refresh_token, client_id, session) if oauth.client(client_id) else None
         if renewed is None:
             return _oauth_error("invalid_grant", "That refresh token is unknown, used, revoked or expired. Sign in again.")

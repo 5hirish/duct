@@ -62,7 +62,7 @@ _MAX_BODY_BYTES = 256_000
 # loop makes thousands, and the cost of each lands on the database.
 _CALL_LIMIT = RateLimit(limit=120, window_seconds=60.0)
 
-def _challenge(*, presented: bool) -> dict[str, str]:
+def _challenge(*, presented: bool, host: str | None = None) -> dict[str, str]:
     """RFC 6750 §3, plus the RFC 9728 pointer that lets a client holding only
     this address find where to sign in. ``error`` only when a credential was
     sent: a first call carries none, and nothing about it was invalid."""
@@ -70,7 +70,7 @@ def _challenge(*, presented: bool) -> dict[str, str]:
     if presented:
         params.append('error="invalid_token"')
     if oauth.available():
-        params += [f'resource_metadata="{oauth.resource_metadata_url()}"', f'scope="{oauth.SCOPE}"']
+        params += [f'resource_metadata="{oauth.resource_metadata_url(host)}"', f'scope="{oauth.SCOPE}"']
     return {"WWW-Authenticate": "Bearer " + ", ".join(params)}
 
 
@@ -101,7 +101,7 @@ def get_mcp_caller(
             status_code=HTTP_401_UNAUTHORIZED,
             detail="Sign in to Duct from your agent, or send a Duct MCP token as "
             "'Authorization: Bearer duct_mcp_…' (Settings, Connect your AI agent).",
-            headers=_challenge(presented=bool(authorization)),
+            headers=_challenge(presented=bool(authorization), host=request.headers.get("host")),
         )
     token, user = resolved
     identify_user(user)

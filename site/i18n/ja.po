@@ -1785,13 +1785,14 @@ msgstr "エージェントからDuctを使用"
 
 #: connect-agent.html
 msgid ""
-"Use your own API address followed by /mcp, in place of https://api.getduct.ai/mcp."
-msgstr "https://api.getduct.ai/mcpの代わりに、ご自身のAPIアドレスに/mcpを続けて使用します。"
+"Use your own API address followed by /mcp, in place of https://mcp.getduct.ai/mcp."
+msgstr "https://mcp.getduct.ai/mcp の代わりに、独自のAPIアドレスの後に /mcp を付けて使用してください。"
 
 #: connect-agent.html
 msgid ""
-"Use your own API address followed by <0>/mcp</0>, in place of <1>https://api.getduct.ai/mcp</1>."
-msgstr "<1>https://api.getduct.ai/mcp</1>の代わりに、ご自身のAPIアドレスに<0>/mcp</0>を続けて使用します。"
+"Use your own API address followed by <0>/mcp</0>, in place of <1>https://mcp.getduct.ai/mcp</1>."
+msgstr ""
+"<1>https://mcp.getduct.ai/mcp</1> の代わりに、独自のAPIアドレスの後に <0>/mcp</0> を付けて使用してください。"
 
 #: connect-agent.html
 msgid "VS Code"
@@ -13113,6 +13114,14 @@ msgstr "← 戻る"
 #: tools/weekly-brief-template.html
 msgid "← Start over"
 msgstr "← 最初からやり直す"
+
+#~ msgid ""
+#~ "Use your own API address followed by /mcp, in place of https://api.getduct.ai/mcp."
+#~ msgstr "https://api.getduct.ai/mcpの代わりに、ご自身のAPIアドレスに/mcpを続けて使用します。"
+
+#~ msgid ""
+#~ "Use your own API address followed by <0>/mcp</0>, in place of <1>https://api.getduct.ai/mcp</1>."
+#~ msgstr "<1>https://api.getduct.ai/mcp</1>の代わりに、ご自身のAPIアドレスに<0>/mcp</0>を続けて使用します。"
 
 #~ msgid ""
 #~ "Duct's playbook for a brief, as a slash command in Claude Code and Gemini CLI. In any other agent, ask for this week's brief and it calls the same playbook."

@@ -46,7 +46,7 @@
 {"@context":"https://schema.org","@type":"WebPage","inLanguage":"pt-BR","name":"Use o Duct a partir do Claude Code, Codex, Gemini ou ChatGPT","url":"https://getduct.ai/pt-br/connect-agent","description":"Adicione o Duct ao Claude Code, Codex, Cursor, Gemini CLI ou ChatGPT. Seu agente cita os totais reconciliados pelo Duct, mantém a memória e salva resumos, no seu próprio plano.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"HowTo","name":"Como conectar seu agente","step":[{"@type":"HowToStep","position":1,"name":"Adicione o Duct ao seu agente","text":"Dê ao seu agente o endereço acima, com um comando ou uma linha de configurações. Os passos exatos para cada agente estão abaixo."},{"@type":"HowToStep","position":2,"name":"Entre e escolha","text":"Seu navegador abre no Duct. Escolha o que seu agente pode fazer e em quais projetos, depois clique em Permitir. Não há token para copiar."},{"@type":"HowToStep","position":3,"name":"Pergunte algo a ele","text":"Tente “Escreva o resumo desta semana.” Seu agente segue o playbook do Duct, cita os totais reconciliados pelo Duct e salva o resumo no Duct."}]}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"pt-BR","mainEntity":[{"@type":"Question","name":"Preciso de uma chave de API?","acceptedAnswer":{"@type":"Answer","text":"Não. Seu agente roda no plano que você já paga, e o Duct não chama nenhum modelo para isso. Uma chave salva serve apenas para imagens e para o que o Duct executa sem você, como um resumo agendado."}},{"@type":"Question","name":"Quais das minhas ferramentas ele pode ler?","acceptedAnswer":{"@type":"Answer","text":"Stripe, Meta Ads, Mixpanel, GitHub, RevenueCat, Clarity, GrowthBook, Apple Search Ads, feeds RSS e o restante que você conecta no Duct. Google Analytics, Search Console, Google Ads e Tag Manager permanecem no próprio agente do Duct por enquanto, enquanto a política do Google para assistentes de IA externos é confirmada."}},{"@type":"Question","name":"Pode alterar minha conta de anúncios?","acceptedAnswer":{"@type":"Answer","text":"Apenas se você ativar alterações propostas, e apenas como uma proposta. Fica aguardando na fila de revisão do Duct até você aprovar lá. Nenhum agente pode aprovar ou aplicar uma alteração."}},{"@type":"Question","name":"O Duct vê minha conversa?","acceptedAnswer":{"@type":"Answer","text":"Não. O Duct vê as chamadas que seu agente faz a ele, como os dados solicitados e o motivo, nunca o restante do seu chat."}},{"@type":"Question","name":"Um resumo será executado com o notebook fechado?","acceptedAnswer":{"@type":"Answer","text":"Não do seu agente. Resumos agendados rodam no Duct com uma chave salva, porque o agente de ninguém roda às 3h. O que seu agente escreve vai para a mesma biblioteca."}},{"@type":"Question","name":"O que é insights_brief?","acceptedAnswer":{"@type":"Answer","text":"O playbook do Duct para um resumo, como um comando de barra: /mcp__duct__insights_brief no Claude Code, /insights_brief no Gemini CLI. Em qualquer outro agente, peça o resumo desta semana e ele chama o mesmo playbook."}},{"@type":"Question","name":"Meu navegador nunca abriu","acceptedAnswer":{"@type":"Answer","text":"Inicie o login você mesmo: execute /mcp no Claude Code, codex mcp login duct no Codex, /mcp auth duct no Gemini CLI ou opencode mcp auth duct no OpenCode."}},{"@type":"Question","name":"Ele diz que não conseguiu registrar, ou “não suporta registro dinâmico de cliente”","acceptedAnswer":{"@type":"Answer","text":"Atualize seu agente para a versão mais recente e tente novamente. Se ainda falhar, conecte-se com um token em vez disso."}},{"@type":"Question","name":"Funcionou, e agora ele recebe um 401","acceptedAnswer":{"@type":"Answer","text":"Você o desconectou no Duct, ou seu acesso expirou após 90 dias sem uso. Entre novamente pelo seu agente."}},{"@type":"Question","name":"Uma ferramenta que eu esperava não está aqui","acceptedAnswer":{"@type":"Answer","text":"Seu agente só vê o que você permitiu quando ele entrou. Desconecte-o no Duct, conecte novamente e escolha Trabalhe ao meu lado."}},{"@type":"Question","name":"Eu pedi para ele configurar o projeto e nada mudou","acceptedAnswer":{"@type":"Answer","text":"Um rascunho nunca sobrescreve o que você digitou no Duct. Ele apenas preenche campos em branco ou substitui um rascunho anterior. Verifique a página do projeto no Duct."}},{"@type":"Question","name":"Eu hospedo o Duct","acceptedAnswer":{"@type":"Answer","text":"Use seu próprio endereço de API seguido por /mcp, no lugar de https://api.getduct.ai/mcp."}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"pt-BR","mainEntity":[{"@type":"Question","name":"Preciso de uma chave de API?","acceptedAnswer":{"@type":"Answer","text":"Não. Seu agente roda no plano que você já paga, e o Duct não chama nenhum modelo para isso. Uma chave salva serve apenas para imagens e para o que o Duct executa sem você, como um resumo agendado."}},{"@type":"Question","name":"Quais das minhas ferramentas ele pode ler?","acceptedAnswer":{"@type":"Answer","text":"Stripe, Meta Ads, Mixpanel, GitHub, RevenueCat, Clarity, GrowthBook, Apple Search Ads, feeds RSS e o restante que você conecta no Duct. Google Analytics, Search Console, Google Ads e Tag Manager permanecem no próprio agente do Duct por enquanto, enquanto a política do Google para assistentes de IA externos é confirmada."}},{"@type":"Question","name":"Pode alterar minha conta de anúncios?","acceptedAnswer":{"@type":"Answer","text":"Apenas se você ativar alterações propostas, e apenas como uma proposta. Fica aguardando na fila de revisão do Duct até você aprovar lá. Nenhum agente pode aprovar ou aplicar uma alteração."}},{"@type":"Question","name":"O Duct vê minha conversa?","acceptedAnswer":{"@type":"Answer","text":"Não. O Duct vê as chamadas que seu agente faz a ele, como os dados solicitados e o motivo, nunca o restante do seu chat."}},{"@type":"Question","name":"Um resumo será executado com o notebook fechado?","acceptedAnswer":{"@type":"Answer","text":"Não do seu agente. Resumos agendados rodam no Duct com uma chave salva, porque o agente de ninguém roda às 3h. O que seu agente escreve vai para a mesma biblioteca."}},{"@type":"Question","name":"O que é insights_brief?","acceptedAnswer":{"@type":"Answer","text":"O playbook do Duct para um resumo, como um comando de barra: /mcp__duct__insights_brief no Claude Code, /insights_brief no Gemini CLI. Em qualquer outro agente, peça o resumo desta semana e ele chama o mesmo playbook."}},{"@type":"Question","name":"Meu navegador nunca abriu","acceptedAnswer":{"@type":"Answer","text":"Inicie o login você mesmo: execute /mcp no Claude Code, codex mcp login duct no Codex, /mcp auth duct no Gemini CLI ou opencode mcp auth duct no OpenCode."}},{"@type":"Question","name":"Ele diz que não conseguiu registrar, ou “não suporta registro dinâmico de cliente”","acceptedAnswer":{"@type":"Answer","text":"Atualize seu agente para a versão mais recente e tente novamente. Se ainda falhar, conecte-se com um token em vez disso."}},{"@type":"Question","name":"Funcionou, e agora ele recebe um 401","acceptedAnswer":{"@type":"Answer","text":"Você o desconectou no Duct, ou seu acesso expirou após 90 dias sem uso. Entre novamente pelo seu agente."}},{"@type":"Question","name":"Uma ferramenta que eu esperava não está aqui","acceptedAnswer":{"@type":"Answer","text":"Seu agente só vê o que você permitiu quando ele entrou. Desconecte-o no Duct, conecte novamente e escolha Trabalhe ao meu lado."}},{"@type":"Question","name":"Eu pedi para ele configurar o projeto e nada mudou","acceptedAnswer":{"@type":"Answer","text":"Um rascunho nunca sobrescreve o que você digitou no Duct. Ele apenas preenche campos em branco ou substitui um rascunho anterior. Verifique a página do projeto no Duct."}},{"@type":"Question","name":"Eu hospedo o Duct","acceptedAnswer":{"@type":"Answer","text":"Use o seu próprio endereço de API seguido de /mcp, em vez de https://mcp.getduct.ai/mcp."}}]}
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"pt-BR","itemListElement":[{"@type":"ListItem","position":1,"name":"Início","item":"https://getduct.ai/pt-br/"},{"@type":"ListItem","position":2,"name":"Use o Duct do seu agente","item":"https://getduct.ai/pt-br/connect-agent"}]}
@@ -335,9 +335,9 @@
 <p class="hero-sub">Adicione um endereço ao Claude Code, Codex, Cursor, Gemini CLI, ChatGPT ou Claude. Seu agente lê suas ferramentas conectadas por meio do Duct, cita os totais reconciliados pelo Duct, lembra do que você decidiu e salva cada resumo onde você os lê. Nenhuma chave de API para colar.</p>
 <div class="addr">
 <span class="addr-label">Endereço do servidor</span>
-<div class="code is-big"><pre>https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="address" aria-label="Copiar o endereço do servidor"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copiar</span></button></div>
+<div class="code is-big"><pre>https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="address" aria-label="Copiar o endereço do servidor"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copiar</span></button></div>
 <span class="addr-label">Ou, no Claude Code</span>
-<div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="hero-claude-code" aria-label="Copiar o comando do Claude Code"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copiar</span></button></div>
+<div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="hero-claude-code" aria-label="Copiar o comando do Claude Code"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copiar</span></button></div>
 </div>
 <p class="ca-other">Quer que o próprio agente do Duct chame seus servidores MCP em vez disso? Essa é a outra direção: <a href="/pt-br/mcp">Seus servidores MCP no Duct →</a></p>
 </section>
@@ -447,7 +447,7 @@
 <div class="step-mini" aria-hidden="true"><pre class="mini-cmd">$ claude mcp add \
     --transport http \
     --scope user duct \
-    https://api.getduct.ai/mcp</pre></div>
+    https://mcp.getduct.ai/mcp</pre></div>
 </div>
 <div class="step reveal" style="transition-delay:.1s">
 <span class="step-num">02</span>
@@ -576,7 +576,7 @@
 <h3>Claude Code</h3>
 <ol class="setup-steps" role="list">
 <li>No seu terminal, execute:
-<div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="claude-code" aria-label="Copiar o comando do Claude Code"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copiar</span></button></div></li>
+<div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="claude-code" aria-label="Copiar o comando do Claude Code"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copiar</span></button></div></li>
 <li>No Claude Code, execute <code>/mcp</code>, selecione <code>duct</code> e escolha <code>Autenticar</code>.</li>
 <li>Seu navegador abre no Duct. Escolha o que ele pode fazer e clique em Permitir.</li>
 <li>Execute <code>/mcp__duct__insights_brief</code> ou peça o resumo desta semana.</li>
@@ -587,7 +587,7 @@
 <h3>Codex</h3>
 <ol class="setup-steps" role="list">
 <li>No seu terminal, execute:
-<div class="code"><pre>codex mcp add duct <span class="nw">--url</span> https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="codex" aria-label="Copiar o comando do Codex"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copiar</span></button></div></li>
+<div class="code"><pre>codex mcp add duct <span class="nw">--url</span> https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="codex" aria-label="Copiar o comando do Codex"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copiar</span></button></div></li>
 <li>Então entre:
 <div class="code"><pre>codex mcp login duct</pre><button type="button" class="copy" data-copy="codex-login" aria-label="Copiar o comando de entrada"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copiar</span></button></div></li>
 <li>Seu navegador abre no Duct. Escolha o que ele pode fazer e clique em Permitir.</li>
@@ -601,7 +601,7 @@
 <div class="code"><pre>{
   "mcpServers": {
     "duct": {
-      "url": "https://api.getduct.ai/mcp"
+      "url": "https://mcp.getduct.ai/mcp"
     }
   }
 }</pre><button type="button" class="copy" data-copy="cursor" aria-label="Copiar as configurações do Cursor"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copiar</span></button></div></li>
@@ -617,7 +617,7 @@
 <div class="code"><pre>{
   "mcpServers": {
     "duct": {
-      "httpUrl": "https://api.getduct.ai/mcp"
+      "httpUrl": "https://mcp.getduct.ai/mcp"
     }
   }
 }</pre><button type="button" class="copy" data-copy="gemini-cli" aria-label="Copiar as configurações do Gemini CLI"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copiar</span></button></div></li>
@@ -633,7 +633,7 @@
 <ol class="setup-steps" role="list">
 <li>Abra a Paleta de Comandos e execute <code>MCP: Adicionar Servidor</code>.</li>
 <li>Escolha HTTP, cole o endereço e nomeie-o <code>duct</code>:
-<div class="code"><pre>https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="vs-code" aria-label="Copiar o endereço do servidor"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copiar</span></button></div></li>
+<div class="code"><pre>https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="vs-code" aria-label="Copiar o endereço do servidor"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copiar</span></button></div></li>
 <li>O VS Code pede para você entrar na primeira vez que usa o Duct. Seu navegador abre no Duct. Escolha o que ele pode fazer e clique em Permitir.</li>
 </ol>
 </section>
@@ -647,7 +647,7 @@
   "mcp": {
     "duct": {
       "type": "remote",
-      "url": "https://api.getduct.ai/mcp"
+      "url": "https://mcp.getduct.ai/mcp"
     }
   }
 }</pre><button type="button" class="copy" data-copy="opencode" aria-label="Copiar as configurações do OpenCode"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copiar</span></button></div></li>
@@ -662,7 +662,7 @@
 <ol class="setup-steps" role="list">
 <li>Em claude.ai ou no Claude Desktop, abra Configurações → Conectores e escolha Adicionar conector personalizado.</li>
 <li>Nomeie-o Duct e cole o endereço:
-<div class="code"><pre>https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="claude" aria-label="Copiar o endereço do servidor"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copiar</span></button></div></li>
+<div class="code"><pre>https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="claude" aria-label="Copiar o endereço do servidor"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copiar</span></button></div></li>
 <li>Pressione Conectar. O Duct abre no seu navegador. Escolha o que ele pode fazer e clique em Permitir.</li>
 </ol>
 </section>
@@ -672,7 +672,7 @@
 <ol class="setup-steps" role="list">
 <li>Nas configurações do ChatGPT, ative o modo de desenvolvedor.</li>
 <li>Adicione um conector com este endereço, e escolha OAuth para autenticação:
-<div class="code"><pre>https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="chatgpt" aria-label="Copiar o endereço do servidor"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copiar</span></button></div></li>
+<div class="code"><pre>https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="chatgpt" aria-label="Copiar o endereço do servidor"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copiar</span></button></div></li>
 <li>O Duct abre no seu navegador. Escolha o que ele pode fazer e clique em Permitir.</li>
 </ol>
 </section>
@@ -700,7 +700,7 @@
 <p>Para CI, uma máquina remota ou um agente sem entrar. Crie um na mesma página de configurações, em Sem navegador? Use um token, com as mesmas opções. Seu agente o envia como cabeçalho:</p>
 <div class="code"><pre>Authorization: Bearer duct_mcp_…</pre></div>
 <p>No Claude Code:</p>
-<div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://api.getduct.ai/mcp <span class="nw">--header</span> "Authorization: Bearer YOUR_TOKEN"</pre><button type="button" class="copy" data-copy="token-claude-code" aria-label="Copiar o comando do Claude Code com um token"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copiar</span></button></div>
+<div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://mcp.getduct.ai/mcp <span class="nw">--header</span> "Authorization: Bearer YOUR_TOKEN"</pre><button type="button" class="copy" data-copy="token-claude-code" aria-label="Copiar o comando do Claude Code com um token"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copiar</span></button></div>
 </div>
 </div>
 </div>
@@ -764,7 +764,7 @@
 </details>
 <details class="faq-item">
 <summary class="faq-q">Eu hospedo o Duct</summary>
-<p class="faq-a">Use seu próprio endereço de API seguido por <code>/mcp</code>, no lugar de <code>https://api.getduct.ai/mcp</code>.</p>
+<p class="faq-a">Use o seu próprio endereço de API seguido de <code>/mcp</code>, em vez de <code>https://mcp.getduct.ai/mcp</code>.</p>
 </details>
 </div>
 </div>

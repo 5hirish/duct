@@ -45,7 +45,7 @@
 {"@context":"https://schema.org","@type":"WebPage","inLanguage":"en","name":"Use Duct from Claude Code, Codex, Gemini or ChatGPT","url":"https://getduct.ai/connect-agent","description":"Add Duct to Claude Code, Codex, Cursor, Gemini CLI or ChatGPT. Your agent quotes totals Duct reconciled, keeps memory and saves briefs, on your own plan.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"HowTo","name":"How to connect your agent","step":[{"@type":"HowToStep","position":1,"name":"Add Duct to your agent","text":"Give your agent the address above, with one command or one line of settings. The exact steps for each agent are below."},{"@type":"HowToStep","position":2,"name":"Sign in and choose","text":"Your browser opens on Duct. Choose what your agent can do and on which projects, then click Allow. There is no token to copy."},{"@type":"HowToStep","position":3,"name":"Ask it something","text":"Try “Write this week's brief.” Your agent follows Duct's playbook, quotes the totals Duct reconciled and saves the brief in Duct."}]}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"en","mainEntity":[{"@type":"Question","name":"Do I need an API key?","acceptedAnswer":{"@type":"Answer","text":"No. Your agent runs on the plan you already pay for, and Duct calls no model for it. A saved key is only for images, and for what Duct runs without you, like a scheduled brief."}},{"@type":"Question","name":"Which of my tools can it read?","acceptedAnswer":{"@type":"Answer","text":"Stripe, Meta Ads, Mixpanel, GitHub, RevenueCat, Clarity, GrowthBook, Apple Search Ads, RSS feeds and the rest you connect in Duct. Google Analytics, Search Console, Google Ads and Tag Manager stay inside Duct's own agent for now, while Google's policy for outside AI assistants is confirmed."}},{"@type":"Question","name":"Can it change my ad account?","acceptedAnswer":{"@type":"Answer","text":"Only if you turn on proposed changes, and only as a proposal. It waits in Duct's review queue until you approve it there. No agent can approve or apply a change."}},{"@type":"Question","name":"Does Duct see my conversation?","acceptedAnswer":{"@type":"Answer","text":"No. Duct sees the calls your agent makes to it, like the data it asked for and why, never the rest of your chat."}},{"@type":"Question","name":"Will a brief run while my laptop is closed?","acceptedAnswer":{"@type":"Answer","text":"Not from your agent. Scheduled briefs run in Duct on a saved key, because nobody's agent runs at 3am. What your agent writes lands in the same library."}},{"@type":"Question","name":"What is insights_brief?","acceptedAnswer":{"@type":"Answer","text":"Duct's playbook for a brief, as a slash command: /mcp__duct__insights_brief in Claude Code, /insights_brief in Gemini CLI. In any other agent, ask for this week's brief and it calls the same playbook."}},{"@type":"Question","name":"My browser never opened","acceptedAnswer":{"@type":"Answer","text":"Start the sign-in yourself: run /mcp in Claude Code, codex mcp login duct in Codex, /mcp auth duct in Gemini CLI, or opencode mcp auth duct in OpenCode."}},{"@type":"Question","name":"It says it couldn't register, or “does not support dynamic client registration”","acceptedAnswer":{"@type":"Answer","text":"Update your agent to its latest version and try again. If it still fails, connect with a token instead."}},{"@type":"Question","name":"It worked, and now it gets a 401","acceptedAnswer":{"@type":"Answer","text":"You disconnected it in Duct, or its sign-in lapsed after 90 days without use. Sign in again from your agent."}},{"@type":"Question","name":"A tool I expected isn't there","acceptedAnswer":{"@type":"Answer","text":"Your agent only sees what you allowed when it signed in. Disconnect it in Duct, connect again, and choose Work alongside me."}},{"@type":"Question","name":"I asked it to set up the project and nothing changed","acceptedAnswer":{"@type":"Answer","text":"A draft never overwrites what you typed in Duct. It only fills blank fields or replaces an earlier draft. Check the project page in Duct."}},{"@type":"Question","name":"I host Duct myself","acceptedAnswer":{"@type":"Answer","text":"Use your own API address followed by /mcp, in place of https://api.getduct.ai/mcp."}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"en","mainEntity":[{"@type":"Question","name":"Do I need an API key?","acceptedAnswer":{"@type":"Answer","text":"No. Your agent runs on the plan you already pay for, and Duct calls no model for it. A saved key is only for images, and for what Duct runs without you, like a scheduled brief."}},{"@type":"Question","name":"Which of my tools can it read?","acceptedAnswer":{"@type":"Answer","text":"Stripe, Meta Ads, Mixpanel, GitHub, RevenueCat, Clarity, GrowthBook, Apple Search Ads, RSS feeds and the rest you connect in Duct. Google Analytics, Search Console, Google Ads and Tag Manager stay inside Duct's own agent for now, while Google's policy for outside AI assistants is confirmed."}},{"@type":"Question","name":"Can it change my ad account?","acceptedAnswer":{"@type":"Answer","text":"Only if you turn on proposed changes, and only as a proposal. It waits in Duct's review queue until you approve it there. No agent can approve or apply a change."}},{"@type":"Question","name":"Does Duct see my conversation?","acceptedAnswer":{"@type":"Answer","text":"No. Duct sees the calls your agent makes to it, like the data it asked for and why, never the rest of your chat."}},{"@type":"Question","name":"Will a brief run while my laptop is closed?","acceptedAnswer":{"@type":"Answer","text":"Not from your agent. Scheduled briefs run in Duct on a saved key, because nobody's agent runs at 3am. What your agent writes lands in the same library."}},{"@type":"Question","name":"What is insights_brief?","acceptedAnswer":{"@type":"Answer","text":"Duct's playbook for a brief, as a slash command: /mcp__duct__insights_brief in Claude Code, /insights_brief in Gemini CLI. In any other agent, ask for this week's brief and it calls the same playbook."}},{"@type":"Question","name":"My browser never opened","acceptedAnswer":{"@type":"Answer","text":"Start the sign-in yourself: run /mcp in Claude Code, codex mcp login duct in Codex, /mcp auth duct in Gemini CLI, or opencode mcp auth duct in OpenCode."}},{"@type":"Question","name":"It says it couldn't register, or “does not support dynamic client registration”","acceptedAnswer":{"@type":"Answer","text":"Update your agent to its latest version and try again. If it still fails, connect with a token instead."}},{"@type":"Question","name":"It worked, and now it gets a 401","acceptedAnswer":{"@type":"Answer","text":"You disconnected it in Duct, or its sign-in lapsed after 90 days without use. Sign in again from your agent."}},{"@type":"Question","name":"A tool I expected isn't there","acceptedAnswer":{"@type":"Answer","text":"Your agent only sees what you allowed when it signed in. Disconnect it in Duct, connect again, and choose Work alongside me."}},{"@type":"Question","name":"I asked it to set up the project and nothing changed","acceptedAnswer":{"@type":"Answer","text":"A draft never overwrites what you typed in Duct. It only fills blank fields or replaces an earlier draft. Check the project page in Duct."}},{"@type":"Question","name":"I host Duct myself","acceptedAnswer":{"@type":"Answer","text":"Use your own API address followed by /mcp, in place of https://mcp.getduct.ai/mcp."}}]}
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"en","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://getduct.ai/"},{"@type":"ListItem","position":2,"name":"Use Duct from your agent","item":"https://getduct.ai/connect-agent"}]}
@@ -334,9 +334,9 @@
 <p class="hero-sub">Add one address to Claude Code, Codex, Cursor, Gemini CLI, ChatGPT or Claude. Your agent reads your connected tools through Duct, quotes the totals Duct reconciled, remembers what you decided, and saves every brief where you read it. No API key to paste.</p>
 <div class="addr">
 <span class="addr-label">Server address</span>
-<div class="code is-big"><pre>https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="address" aria-label="Copy the server address"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div>
+<div class="code is-big"><pre>https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="address" aria-label="Copy the server address"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div>
 <span class="addr-label">Or, in Claude Code</span>
-<div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="hero-claude-code" aria-label="Copy the Claude Code command"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div>
+<div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="hero-claude-code" aria-label="Copy the Claude Code command"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div>
 </div>
 <p class="ca-other">Want Duct's own agent to call your MCP servers instead? That is the other direction: <a href="/mcp">Your MCP servers in Duct →</a></p>
 </section>
@@ -446,7 +446,7 @@
 <div class="step-mini" aria-hidden="true"><pre class="mini-cmd">$ claude mcp add \
     --transport http \
     --scope user duct \
-    https://api.getduct.ai/mcp</pre></div>
+    https://mcp.getduct.ai/mcp</pre></div>
 </div>
 <div class="step reveal" style="transition-delay:.1s">
 <span class="step-num">02</span>
@@ -575,7 +575,7 @@
 <h3>Claude Code</h3>
 <ol class="setup-steps" role="list">
 <li>In your terminal, run:
-<div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="claude-code" aria-label="Copy the Claude Code command"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div></li>
+<div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="claude-code" aria-label="Copy the Claude Code command"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div></li>
 <li>In Claude Code, run <code>/mcp</code>, pick <code>duct</code> and choose <code>Authenticate</code>.</li>
 <li>Your browser opens on Duct. Choose what it can do, then click Allow.</li>
 <li>Run <code>/mcp__duct__insights_brief</code>, or ask for this week's brief.</li>
@@ -586,7 +586,7 @@
 <h3>Codex</h3>
 <ol class="setup-steps" role="list">
 <li>In your terminal, run:
-<div class="code"><pre>codex mcp add duct <span class="nw">--url</span> https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="codex" aria-label="Copy the Codex command"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div></li>
+<div class="code"><pre>codex mcp add duct <span class="nw">--url</span> https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="codex" aria-label="Copy the Codex command"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div></li>
 <li>Then sign in:
 <div class="code"><pre>codex mcp login duct</pre><button type="button" class="copy" data-copy="codex-login" aria-label="Copy the sign-in command"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div></li>
 <li>Your browser opens on Duct. Choose what it can do, then click Allow.</li>
@@ -600,7 +600,7 @@
 <div class="code"><pre>{
   "mcpServers": {
     "duct": {
-      "url": "https://api.getduct.ai/mcp"
+      "url": "https://mcp.getduct.ai/mcp"
     }
   }
 }</pre><button type="button" class="copy" data-copy="cursor" aria-label="Copy the Cursor settings"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div></li>
@@ -616,7 +616,7 @@
 <div class="code"><pre>{
   "mcpServers": {
     "duct": {
-      "httpUrl": "https://api.getduct.ai/mcp"
+      "httpUrl": "https://mcp.getduct.ai/mcp"
     }
   }
 }</pre><button type="button" class="copy" data-copy="gemini-cli" aria-label="Copy the Gemini CLI settings"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div></li>
@@ -632,7 +632,7 @@
 <ol class="setup-steps" role="list">
 <li>Open the Command Palette and run <code>MCP: Add Server</code>.</li>
 <li>Choose HTTP, paste the address and name it <code>duct</code>:
-<div class="code"><pre>https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="vs-code" aria-label="Copy the server address"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div></li>
+<div class="code"><pre>https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="vs-code" aria-label="Copy the server address"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div></li>
 <li>VS Code asks you to sign in the first time it uses Duct. Your browser opens on Duct. Choose what it can do, then click Allow.</li>
 </ol>
 </section>
@@ -646,7 +646,7 @@
   "mcp": {
     "duct": {
       "type": "remote",
-      "url": "https://api.getduct.ai/mcp"
+      "url": "https://mcp.getduct.ai/mcp"
     }
   }
 }</pre><button type="button" class="copy" data-copy="opencode" aria-label="Copy the OpenCode settings"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div></li>
@@ -661,7 +661,7 @@
 <ol class="setup-steps" role="list">
 <li>On claude.ai or in Claude Desktop, open Settings → Connectors and choose Add custom connector.</li>
 <li>Name it Duct and paste the address:
-<div class="code"><pre>https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="claude" aria-label="Copy the server address"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div></li>
+<div class="code"><pre>https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="claude" aria-label="Copy the server address"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div></li>
 <li>Press Connect. Duct opens in your browser. Choose what it can do, then click Allow.</li>
 </ol>
 </section>
@@ -671,7 +671,7 @@
 <ol class="setup-steps" role="list">
 <li>In ChatGPT's settings, turn on developer mode.</li>
 <li>Add a connector with this address, and choose OAuth for authentication:
-<div class="code"><pre>https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="chatgpt" aria-label="Copy the server address"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div></li>
+<div class="code"><pre>https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="chatgpt" aria-label="Copy the server address"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div></li>
 <li>Duct opens in your browser. Choose what it can do, then click Allow.</li>
 </ol>
 </section>
@@ -699,7 +699,7 @@
 <p>For CI, a remote machine or an agent without sign-in. Create one on the same settings page, under No browser? Use a token, with the same choices. Your agent sends it as a header:</p>
 <div class="code"><pre>Authorization: Bearer duct_mcp_…</pre></div>
 <p>In Claude Code:</p>
-<div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://api.getduct.ai/mcp <span class="nw">--header</span> "Authorization: Bearer YOUR_TOKEN"</pre><button type="button" class="copy" data-copy="token-claude-code" aria-label="Copy the Claude Code command with a token"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div>
+<div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://mcp.getduct.ai/mcp <span class="nw">--header</span> "Authorization: Bearer YOUR_TOKEN"</pre><button type="button" class="copy" data-copy="token-claude-code" aria-label="Copy the Claude Code command with a token"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div>
 </div>
 </div>
 </div>
@@ -763,7 +763,7 @@
 </details>
 <details class="faq-item">
 <summary class="faq-q">I host Duct myself</summary>
-<p class="faq-a">Use your own API address followed by <code>/mcp</code>, in place of <code>https://api.getduct.ai/mcp</code>.</p>
+<p class="faq-a">Use your own API address followed by <code>/mcp</code>, in place of <code>https://mcp.getduct.ai/mcp</code>.</p>
 </details>
 </div>
 </div>

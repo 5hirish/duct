@@ -83,6 +83,21 @@ def _out(row: McpToken) -> dict:
     }
 
 
+class ServerOut(BaseModel):
+    url: str
+
+
+@router.get("/server")
+def server_address(_: User = Depends(get_current_user)) -> ServerOut:
+    """The address people add to their agent. The backend decides it
+    (MCP_PUBLIC_URL, else this API's /mcp), so the app never names a host
+    of its own and a self-hosted instance shows its own."""
+    from service.mcp_server import oauth
+    from service.mcp_server.protocol import MCP_PATH
+
+    return ServerOut(url=oauth.mcp_origin() + MCP_PATH)
+
+
 @router.get("")
 def list_tokens(
     user: User = Depends(get_current_user),

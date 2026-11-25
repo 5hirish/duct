@@ -46,7 +46,7 @@
 {"@context":"https://schema.org","@type":"WebPage","inLanguage":"ja","name":"Claude Code、Codex、Gemini、またはChatGPTからDuctを使用する","url":"https://getduct.ai/ja/connect-agent","description":"Ductを Claude Code、Codex、Cursor、Gemini CLI、ChatGPT に追加します。お使いのプランのまま、エージェントはDuctが照合した合計値を引用し、メモリを保持し、ブリーフを保存します。","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"HowTo","name":"エージェントの接続方法","step":[{"@type":"HowToStep","position":1,"name":"エージェントにDuctを追加","text":"上記のアドレスを、1つのコマンドまたは1行の設定でエージェントに与えてください。各エージェントの正確な手順は以下にあります。"},{"@type":"HowToStep","position":2,"name":"サインインして選択","text":"ブラウザでDuctが開きます。エージェントが実行できる操作と対象のプロジェクトを選択し、「許可」をクリックしてください。コピーするトークンはありません。"},{"@type":"HowToStep","position":3,"name":"何か質問します","text":"「今週のブリーフを作成して」と試してみてください。エージェントはDuctのプレイブックに従い、Ductが照合した合計値を引用して、ブリーフをDuctに保存します。"}]}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ja","mainEntity":[{"@type":"Question","name":"APIキーは必要ですか？","acceptedAnswer":{"@type":"Answer","text":"いいえ。エージェントはすでに契約しているプランで実行され、Ductがそのためにモデルを呼び出すことはありません。保存されたキーは画像作成や、定期実行のブリーフなどDuctが単独で実行するものにのみ使用されます。"}},{"@type":"Question","name":"どのツールを読み取ることができますか？","acceptedAnswer":{"@type":"Answer","text":"Stripe、Meta Ads、Mixpanel、GitHub、RevenueCat、Clarity、GrowthBook、Apple Search Ads、RSSフィード、その他Ductで接続する各種ツール。Google Analytics、Search Console、Google Ads、Tag Managerは、外部AIアシスタントに対するGoogleのポリシーが確認されるまで、当面はDuct独自のエージェント内に留まります。"}},{"@type":"Question","name":"広告アカウントを変更できますか？","acceptedAnswer":{"@type":"Answer","text":"提案された変更を有効にした場合のみ、かつ提案としてのみ行われます。あなたが承認するまで、Ductのレビューキューで待機します。エージェントが変更を承認したり適用したりすることはできません。"}},{"@type":"Question","name":"Ductは会話を見ることができますか？","acceptedAnswer":{"@type":"Answer","text":"いいえ。Ductには、要求したデータとその理由など、エージェントからの呼び出しのみが表示され、それ以外のチャットは見えません。"}},{"@type":"Question","name":"ノートPCを閉じている間もブリーフは実行されますか？","acceptedAnswer":{"@type":"Answer","text":"エージェントからではありません。午前3時に稼働するエージェントはないため、定期実行のブリーフは保存されたキーを使用してDuct内で実行されます。エージェントが作成した内容も同じライブラリに保存されます。"}},{"@type":"Question","name":"insights_briefとは何ですか？","acceptedAnswer":{"@type":"Answer","text":"ブリーフのためのDuctのプレイブック（スラッシュコマンド）：Claude Codeでは /mcp__duct__insights_brief、Gemini CLIでは /insights_brief。その他のエージェントでは、今週のブリーフをリクエストすると同じプレイブックが呼び出されます。"}},{"@type":"Question","name":"ブラウザが開きませんでした","acceptedAnswer":{"@type":"Answer","text":"自分でサインインを開始: Claude Codeで/mcp、Codexでcodex mcp login duct、Gemini CLIで/mcp auth duct、またはOpenCodeでopencode mcp auth ductを実行します。"}},{"@type":"Question","name":"登録できなかった、または「動的クライアント登録をサポートしていません」と表示されます","acceptedAnswer":{"@type":"Answer","text":"エージェントを最新バージョンに更新して、もう一度お試しください。それでも失敗する場合は、代わりにトークンで接続してください。"}},{"@type":"Question","name":"動作しましたが、401エラーが発生します","acceptedAnswer":{"@type":"Answer","text":"Ductで接続を切断したか、90日間使用されなかったためサインインが失効しました。エージェントから再度サインインしてください。"}},{"@type":"Question","name":"期待していたツールがありません","acceptedAnswer":{"@type":"Answer","text":"エージェントはサインイン時に許可された情報のみを参照できます。Ductで接続を解除し、再度接続して「Work alongside me」を選択してください。"}},{"@type":"Question","name":"プロジェクトの設定を依頼しましたが、何も変更されませんでした","acceptedAnswer":{"@type":"Answer","text":"下書きはDuctで入力した内容を上書きすることはありません。空白のフィールドを埋めるか、以前の下書きを置き換えるだけです。Ductのプロジェクトページをご確認ください。"}},{"@type":"Question","name":"自分でDuctをホストしています","acceptedAnswer":{"@type":"Answer","text":"https://api.getduct.ai/mcpの代わりに、ご自身のAPIアドレスに/mcpを続けて使用します。"}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ja","mainEntity":[{"@type":"Question","name":"APIキーは必要ですか？","acceptedAnswer":{"@type":"Answer","text":"いいえ。エージェントはすでに契約しているプランで実行され、Ductがそのためにモデルを呼び出すことはありません。保存されたキーは画像作成や、定期実行のブリーフなどDuctが単独で実行するものにのみ使用されます。"}},{"@type":"Question","name":"どのツールを読み取ることができますか？","acceptedAnswer":{"@type":"Answer","text":"Stripe、Meta Ads、Mixpanel、GitHub、RevenueCat、Clarity、GrowthBook、Apple Search Ads、RSSフィード、その他Ductで接続する各種ツール。Google Analytics、Search Console、Google Ads、Tag Managerは、外部AIアシスタントに対するGoogleのポリシーが確認されるまで、当面はDuct独自のエージェント内に留まります。"}},{"@type":"Question","name":"広告アカウントを変更できますか？","acceptedAnswer":{"@type":"Answer","text":"提案された変更を有効にした場合のみ、かつ提案としてのみ行われます。あなたが承認するまで、Ductのレビューキューで待機します。エージェントが変更を承認したり適用したりすることはできません。"}},{"@type":"Question","name":"Ductは会話を見ることができますか？","acceptedAnswer":{"@type":"Answer","text":"いいえ。Ductには、要求したデータとその理由など、エージェントからの呼び出しのみが表示され、それ以外のチャットは見えません。"}},{"@type":"Question","name":"ノートPCを閉じている間もブリーフは実行されますか？","acceptedAnswer":{"@type":"Answer","text":"エージェントからではありません。午前3時に稼働するエージェントはないため、定期実行のブリーフは保存されたキーを使用してDuct内で実行されます。エージェントが作成した内容も同じライブラリに保存されます。"}},{"@type":"Question","name":"insights_briefとは何ですか？","acceptedAnswer":{"@type":"Answer","text":"ブリーフのためのDuctのプレイブック（スラッシュコマンド）：Claude Codeでは /mcp__duct__insights_brief、Gemini CLIでは /insights_brief。その他のエージェントでは、今週のブリーフをリクエストすると同じプレイブックが呼び出されます。"}},{"@type":"Question","name":"ブラウザが開きませんでした","acceptedAnswer":{"@type":"Answer","text":"自分でサインインを開始: Claude Codeで/mcp、Codexでcodex mcp login duct、Gemini CLIで/mcp auth duct、またはOpenCodeでopencode mcp auth ductを実行します。"}},{"@type":"Question","name":"登録できなかった、または「動的クライアント登録をサポートしていません」と表示されます","acceptedAnswer":{"@type":"Answer","text":"エージェントを最新バージョンに更新して、もう一度お試しください。それでも失敗する場合は、代わりにトークンで接続してください。"}},{"@type":"Question","name":"動作しましたが、401エラーが発生します","acceptedAnswer":{"@type":"Answer","text":"Ductで接続を切断したか、90日間使用されなかったためサインインが失効しました。エージェントから再度サインインしてください。"}},{"@type":"Question","name":"期待していたツールがありません","acceptedAnswer":{"@type":"Answer","text":"エージェントはサインイン時に許可された情報のみを参照できます。Ductで接続を解除し、再度接続して「Work alongside me」を選択してください。"}},{"@type":"Question","name":"プロジェクトの設定を依頼しましたが、何も変更されませんでした","acceptedAnswer":{"@type":"Answer","text":"下書きはDuctで入力した内容を上書きすることはありません。空白のフィールドを埋めるか、以前の下書きを置き換えるだけです。Ductのプロジェクトページをご確認ください。"}},{"@type":"Question","name":"自分でDuctをホストしています","acceptedAnswer":{"@type":"Answer","text":"https://mcp.getduct.ai/mcp の代わりに、独自のAPIアドレスの後に /mcp を付けて使用してください。"}}]}
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"ja","itemListElement":[{"@type":"ListItem","position":1,"name":"ホーム","item":"https://getduct.ai/ja/"},{"@type":"ListItem","position":2,"name":"エージェントからDuctを使用","item":"https://getduct.ai/ja/connect-agent"}]}
@@ -335,9 +335,9 @@
 <p class="hero-sub">1つのアドレスを Claude Code、Codex、Cursor、Gemini CLI、ChatGPT、Claude に追加します。エージェントはDuct経由で接続ツールを読み込み、Ductが照合した合計値を引用し、決定事項を記憶し、すべてのブリーフを読める場所に保存します。APIキーの貼り付けは不要です。</p>
 <div class="addr">
 <span class="addr-label">サーバーアドレス</span>
-<div class="code is-big"><pre>https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="address" aria-label="サーバーアドレスをコピー"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>コピー</span></button></div>
+<div class="code is-big"><pre>https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="address" aria-label="サーバーアドレスをコピー"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>コピー</span></button></div>
 <span class="addr-label">または、Claude Codeで</span>
-<div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="hero-claude-code" aria-label="Claude Codeコマンドをコピー"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>コピー</span></button></div>
+<div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="hero-claude-code" aria-label="Claude Codeコマンドをコピー"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>コピー</span></button></div>
 </div>
 <p class="ca-other">Duct自身のエージェントにMCPサーバーを呼び出させたいですか？それは逆方向です：<a href="/ja/mcp">Duct内のMCPサーバー →</a></p>
 </section>
@@ -447,7 +447,7 @@
 <div class="step-mini" aria-hidden="true"><pre class="mini-cmd">$ claude mcp add \
     --transport http \
     --scope user duct \
-    https://api.getduct.ai/mcp</pre></div>
+    https://mcp.getduct.ai/mcp</pre></div>
 </div>
 <div class="step reveal" style="transition-delay:.1s">
 <span class="step-num">02</span>
@@ -576,7 +576,7 @@
 <h3>Claude Code</h3>
 <ol class="setup-steps" role="list">
 <li>ターミナルで実行：
-<div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="claude-code" aria-label="Claude Codeコマンドをコピー"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>コピー</span></button></div></li>
+<div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="claude-code" aria-label="Claude Codeコマンドをコピー"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>コピー</span></button></div></li>
 <li>Claude Codeで<code>/mcp</code>を実行し、<code>duct</code>を選択して<code>Authenticate</code>を選びます。</li>
 <li>ブラウザでDuctが開きます。実行可能な操作を選択し、「許可」をクリックしてください。</li>
 <li><code>/mcp__duct__insights_brief</code>を実行するか、今週のブリーフをリクエストしてください。</li>
@@ -587,7 +587,7 @@
 <h3>Codex</h3>
 <ol class="setup-steps" role="list">
 <li>ターミナルで実行：
-<div class="code"><pre>codex mcp add duct <span class="nw">--url</span> https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="codex" aria-label="Codexコマンドをコピー"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>コピー</span></button></div></li>
+<div class="code"><pre>codex mcp add duct <span class="nw">--url</span> https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="codex" aria-label="Codexコマンドをコピー"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>コピー</span></button></div></li>
 <li>次にサインイン：
 <div class="code"><pre>codex mcp login duct</pre><button type="button" class="copy" data-copy="codex-login" aria-label="サインインコマンドをコピー"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>コピー</span></button></div></li>
 <li>ブラウザでDuctが開きます。実行可能な操作を選択し、「許可」をクリックしてください。</li>
@@ -601,7 +601,7 @@
 <div class="code"><pre>{
   "mcpServers": {
     "duct": {
-      "url": "https://api.getduct.ai/mcp"
+      "url": "https://mcp.getduct.ai/mcp"
     }
   }
 }</pre><button type="button" class="copy" data-copy="cursor" aria-label="Cursor設定をコピー"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>コピー</span></button></div></li>
@@ -617,7 +617,7 @@
 <div class="code"><pre>{
   "mcpServers": {
     "duct": {
-      "httpUrl": "https://api.getduct.ai/mcp"
+      "httpUrl": "https://mcp.getduct.ai/mcp"
     }
   }
 }</pre><button type="button" class="copy" data-copy="gemini-cli" aria-label="Gemini CLIの設定をコピー"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>コピー</span></button></div></li>
@@ -633,7 +633,7 @@
 <ol class="setup-steps" role="list">
 <li>コマンドパレットを開き、<code>MCP: Add Server</code>を実行します。</li>
 <li>HTTPを選択し、アドレスを貼り付け、<code>duct</code>と名付けます:
-<div class="code"><pre>https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="vs-code" aria-label="サーバーアドレスをコピー"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>コピー</span></button></div></li>
+<div class="code"><pre>https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="vs-code" aria-label="サーバーアドレスをコピー"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>コピー</span></button></div></li>
 <li>VS Codeで初めてDuctを使用する際にサインインを求められます。ブラウザでDuctが開きます。許可する操作を選択し、「許可」をクリックします。</li>
 </ol>
 </section>
@@ -647,7 +647,7 @@
   "mcp": {
     "duct": {
       "type": "remote",
-      "url": "https://api.getduct.ai/mcp"
+      "url": "https://mcp.getduct.ai/mcp"
     }
   }
 }</pre><button type="button" class="copy" data-copy="opencode" aria-label="OpenCode設定をコピー"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>コピー</span></button></div></li>
@@ -662,7 +662,7 @@
 <ol class="setup-steps" role="list">
 <li>claude.aiまたはClaude Desktopで、「設定」→「コネクタ」を開き、「カスタムコネクタを追加」を選択します。</li>
 <li>Ductと名付けてアドレスを貼り付けます：
-<div class="code"><pre>https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="claude" aria-label="サーバーアドレスをコピー"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>コピー</span></button></div></li>
+<div class="code"><pre>https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="claude" aria-label="サーバーアドレスをコピー"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>コピー</span></button></div></li>
 <li>「接続」を押します。ブラウザでDuctが開きます。許可する操作を選択し、「許可」をクリックします。</li>
 </ol>
 </section>
@@ -672,7 +672,7 @@
 <ol class="setup-steps" role="list">
 <li>ChatGPTの設定で、開発者モードをオンにします。</li>
 <li>このアドレスでコネクタを追加し、認証にはOAuthを選択します:
-<div class="code"><pre>https://api.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="chatgpt" aria-label="サーバーアドレスをコピー"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>コピー</span></button></div></li>
+<div class="code"><pre>https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="chatgpt" aria-label="サーバーアドレスをコピー"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>コピー</span></button></div></li>
 <li>Ductがブラウザで開きます。実行できる操作を選択し、「許可」をクリックしてください。</li>
 </ol>
 </section>
@@ -700,7 +700,7 @@
 <p>CI、リモートマシン、またはサインインなしのエージェント向け。同じ設定ページの「ブラウザがない場合 トークンを使用」の下で、同じ選択肢で作成します。エージェントはそれをヘッダーとして送信します：</p>
 <div class="code"><pre>Authorization: Bearer duct_mcp_…</pre></div>
 <p>Claude Codeで：</p>
-<div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://api.getduct.ai/mcp <span class="nw">--header</span> "Authorization: Bearer YOUR_TOKEN"</pre><button type="button" class="copy" data-copy="token-claude-code" aria-label="トークン付きClaude Codeコマンドをコピー"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>コピー</span></button></div>
+<div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://mcp.getduct.ai/mcp <span class="nw">--header</span> "Authorization: Bearer YOUR_TOKEN"</pre><button type="button" class="copy" data-copy="token-claude-code" aria-label="トークン付きClaude Codeコマンドをコピー"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>コピー</span></button></div>
 </div>
 </div>
 </div>
@@ -764,7 +764,7 @@
 </details>
 <details class="faq-item">
 <summary class="faq-q">自分でDuctをホストしています</summary>
-<p class="faq-a"><code>https://api.getduct.ai/mcp</code>の代わりに、ご自身のAPIアドレスに<code>/mcp</code>を続けて使用します。</p>
+<p class="faq-a"><code>https://mcp.getduct.ai/mcp</code> の代わりに、独自のAPIアドレスの後に <code>/mcp</code> を付けて使用してください。</p>
 </details>
 </div>
 </div>
