@@ -29,6 +29,8 @@ connection was not granted (``common.member_project``).
 
 from __future__ import annotations
 
+from urllib.parse import urlsplit
+
 from typing import Any, Literal
 from uuid import UUID
 
@@ -44,7 +46,18 @@ from service.ratelimit import RateLimit
 # Policy. Derived from the registry rather than listed, so the gate fails
 # closed: a new connector that signs in with a googleapis.com scope is gated
 # the day it is registered, with no list to remember.
-_GOOGLE_SCOPE_HOST = "googleapis.com"
+_GOOGLE_SCOPE_DOMAIN = "googleapis.com"
+
+
+def signs_in_with_google(oauth_scope: str | None) -> bool:
+    """Whether any scope in a space-separated OAuth scope string is a
+    googleapis.com URL. Judged on each scope's parsed host, never a substring
+    of the whole string, which a host like googleapis.com.example would pass."""
+    for scope in (oauth_scope or "").split():
+        host = (urlsplit(scope).hostname or "").lower()
+        if host == _GOOGLE_SCOPE_DOMAIN or host.endswith("." + _GOOGLE_SCOPE_DOMAIN):
+            return True
+    return False
 
 
 def is_google_source(connector_id: str) -> bool:
@@ -52,8 +65,7 @@ def is_google_source(connector_id: str) -> bool:
 
     load_connectors()
     entry = registry().get(connector_id)
-    scope = (entry[0].oauth_scope or "") if entry else ""
-    return _GOOGLE_SCOPE_HOST in scope or connector_id.startswith("google")
+    return signs_in_with_google(entry[0].oauth_scope if entry else None) or connector_id.startswith("google")
 
 # Rows a single fetch_data call may return. Enough to read a top-pages or
 # top-queries report; past it, the totals answer the question better than

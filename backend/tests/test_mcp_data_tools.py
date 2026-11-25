@@ -276,10 +276,20 @@ def test_memory_search_keeps_other_peoples_private_entries_out(env):
 
 def test_every_connector_that_signs_in_with_google_is_gated_with_no_list_to_keep():
     from service.connectors import load_connectors, registry
-    from service.mcp_server.tools_data import is_google_source
+    from service.mcp_server.tools_data import is_google_source, signs_in_with_google
 
     load_connectors()
-    google = {cid for cid, (meta, _) in registry().items() if "googleapis.com" in (meta.oauth_scope or "")}
+    google = {cid for cid, (meta, _) in registry().items() if signs_in_with_google(meta.oauth_scope)}
     assert {"ga4", "gsc", "google_ads", "gtm"} <= google
     assert all(is_google_source(cid) for cid in google)
     assert not any(is_google_source(cid) for cid in registry() if cid not in google)
+
+
+def test_a_google_scope_is_judged_on_its_host_not_a_substring():
+    from service.mcp_server.tools_data import signs_in_with_google
+
+    assert signs_in_with_google("https://www.googleapis.com/auth/analytics.readonly")
+    assert signs_in_with_google("openid https://www.googleapis.com/auth/adwords")
+    assert not signs_in_with_google("https://googleapis.com.example/auth/x")
+    assert not signs_in_with_google("https://example.com/?next=googleapis.com")
+    assert not signs_in_with_google(None)
