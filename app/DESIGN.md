@@ -760,6 +760,13 @@ the words get read (NN/g eyetracking). So:
 
 ## Voice & microcopy
 
+Copy is written for a named person. The three in
+[`docs/personas/`](../docs/personas/README.md) (`solo`, `team`, `marketer`)
+each list the words they use and the words that lose them; a new string uses
+the first list, and a new screen is walked once with each persona's role-play
+brief before review. A screen only the `marketer` uses can say "CPA"; one the
+`solo` founder meets on day one cannot.
+
 The voice already exists in the app; this codifies it so new strings match.
 It is **sentence case, second person, contractions, plain and declarative,
 and it explains the consequence rather than naming the state**:

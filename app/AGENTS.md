@@ -919,10 +919,11 @@ Rules that follow:
 **Review the whole screen, not the part you touched.** Before changing any
 part of a screen, run DESIGN.md's "Screen review checklist" on all of it
 (an agent with the maintainer's `design-sense` skill runs its pre-ship
-checklist too; nobody else needs it), and name its reader: a marketer, a
-solo business owner or a small team, never developers. A surface that grows
-one feature per PR passes every per-PR check and still fails as a whole: the
-plan-from-work sheet reached five questions under a paragraph, a drawing of invented data
+checklist too; nobody else needs it), and name its reader: one of the three personas in
+[`docs/personas/`](../docs/personas/README.md) (`solo`, `team`, `marketer`),
+never developers, walked once with that persona's role-play brief. A surface that grows one feature per PR
+passes every per-PR check and still fails as a whole: the plan-from-work
+sheet reached five questions under a paragraph, a drawing of invented data
 as its heaviest element, a one-option picker and developer words before the
 2026-11-23 review. Fix what the checklist finds in the same change.
 

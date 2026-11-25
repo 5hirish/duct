@@ -199,6 +199,11 @@ text and 3:1 for large text (≥24px, or ≥18.66px bold) and UI components. So:
 
 ## Voice — the copy is the brand
 
+Every page is written to one of the three personas in
+[`docs/personas/`](../docs/personas/README.md) (`solo`, `team`, `marketer`):
+the hero names that persona's pain in that persona's words, and the page is
+read once through its role-play brief before review.
+
 The site's voice is imperative, contrastive, second-person, and specific.
 Its two signature structures, straight from the pages:
 

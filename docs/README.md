@@ -11,6 +11,7 @@ material only.
 
 | I want to… | Read |
 |---|---|
+| Know who Duct is for, and review a change as them | [Personas](personas/README.md): `solo`, `team`, `marketer`, each with pains, words and a role-play brief |
 | See how the monorepo, the apps and the agents fit together | [architecture.html](architecture.html), an interactive map. Open the file in a browser; it is self-contained |
 | Decide where something is recorded before adding a table, event or log | [Data model](engineering/data-model.md) |
 | Add or change an agent | [Building and changing agents](engineering/agent-engineering.md) |
@@ -24,6 +25,7 @@ material only.
 |---|---|
 | `engineering/` | How we build: a short list of references kept current, and dated records beside them |
 | `design/` | UX specs and design decisions |
+| `personas/` | The three people Duct is for, kept current as references |
 | `archive/<quarter>/` | Records a reader should no longer follow. Each carries a banner naming what replaced it, and a row in the folder's README saying why |
 | `guides/` | Third-party model prompting references, each with its source and licence |
 | `assets/` | Images the READMEs embed |
