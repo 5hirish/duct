@@ -11,10 +11,17 @@
  * destination: an agent on this computer, a website, or an app. That line is
  * what tells a real "Claude Code" from a page pretending to be one.
  *
+ * Two tiers (lib/agentScopes.js): setting up a project is what Allow always
+ * grants, and working on the person's behalf is a separate switch, off
+ * unless the agent asked, with the capabilities and projects chosen under it
+ * (AgentGrantPicker). The page holds that choice and hands it to `onAllow`
+ * as the body the backend takes.
+ *
  * Presentational, like AgentAccess: `app/authorize/page.jsx` owns the
  * requests, so /preview can draw every state.
  */
 
+import { useEffect, useState } from "react";
 import { AppWindow, ArrowRight, Globe, Laptop } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Button } from "@/components/ui/button";
@@ -22,6 +29,8 @@ import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 import AgentAbilities from "@/components/settings/AgentAbilities";
+import AgentGrantPicker from "@/components/settings/AgentGrantPicker";
+import { grantBody, grantProblem, initialGrant } from "@/lib/agentScopes";
 import { AgentLogoTile } from "@/components/connections/logos";
 import { DESTINATION_APP, DESTINATION_DEVICE, agentDisplayName, agentFromName } from "@/lib/mcpTokensApi";
 
@@ -111,6 +120,8 @@ export default function AgentConsent({
   state,
   request = null,
   viewerEmail = "",
+  projects = null,
+  defaultGrant = null,
   busy = false,
   error = "",
   onAllow,
@@ -121,6 +132,14 @@ export default function AgentConsent({
   const { t } = useLingui();
   const agent = agentDisplayName(request?.client_name) || t`An AI agent`;
   const agentId = agentFromName(request?.client_name);
+  const requested = request?.requested_scopes || [];
+  const requestedKey = requested.join(" ");
+  const [grant, setGrant] = useState(() => defaultGrant || initialGrant(requested));
+  // The request arrives after the first render on the real page; start the
+  // choice from what it asked for once it does.
+  useEffect(() => {
+    if (!defaultGrant) setGrant(initialGrant(requestedKey ? requestedKey.split(" ") : []));
+  }, [requestedKey, defaultGrant]);
 
   if (state === CONSENT_LOADING) {
     return (
@@ -215,7 +234,16 @@ export default function AgentConsent({
         </button>
       </p>
 
-      <AgentAbilities className="mb-4" />
+      <AgentAbilities className="mb-4" workTier={false} />
+
+      <AgentGrantPicker
+        className="mb-5"
+        grant={grant}
+        onChange={setGrant}
+        projects={projects}
+        requested={requested}
+        idPrefix="consent"
+      />
 
       <div className="mb-6 space-y-2 border-t border-border pt-4">
         <Destination kind={request?.destination} name={request?.destination_name} agent={agent} />
@@ -236,7 +264,12 @@ export default function AgentConsent({
         <Button type="button" variant="outline" className="flex-1" onClick={onDecline} disabled={busy}>
           <Trans>Cancel</Trans>
         </Button>
-        <Button type="button" className="flex-1" onClick={onAllow} disabled={busy}>
+        <Button
+          type="button"
+          className="flex-1"
+          onClick={() => onAllow?.(grantBody(grant))}
+          disabled={busy || Boolean(grantProblem(grant))}
+        >
           {busy && <Spinner className="size-4" />}
           <Trans>Allow</Trans>
         </Button>

@@ -758,6 +758,10 @@ msgstr ""
 #~ msgid "{projectName} · Memory"
 #~ msgstr ""
 
+#: src/components/settings/AgentAccess.jsx
+msgid "{projects, plural, one {# project} other {# projects}}"
+msgstr ""
+
 #: src/components/workspace/AgentChat.jsx
 msgid "{ranTier} · {requestedTier} is rate limited"
 msgstr ""
@@ -1780,6 +1784,7 @@ msgid "All posts <0>· {rowCount}</0>"
 msgstr ""
 
 #: src/app/(app)/execute/page.jsx
+#: src/components/settings/AgentAccess.jsx
 msgid "All projects"
 msgstr ""
 
@@ -1789,6 +1794,10 @@ msgstr ""
 
 #: src/app/(app)/execute/page.jsx
 msgid "All statuses"
+msgstr ""
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "All your projects, including ones you add later"
 msgstr ""
 
 #: src/components/settings/AgentAccess.jsx
@@ -1827,6 +1836,10 @@ msgstr ""
 
 #: src/lib/contentFeedLabels.js
 msgid "Also closed issues and documentation changes."
+msgstr ""
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Also let it work on your behalf"
 msgstr ""
 
 #: src/components/audit/AuditStepProgress.jsx
@@ -2473,6 +2486,7 @@ msgstr ""
 #~ msgstr ""
 
 #: src/app/(app)/artifacts/page.jsx
+#: src/lib/agentScopes.js
 msgid "Briefs"
 msgstr ""
 
@@ -2762,6 +2776,10 @@ msgstr ""
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Check the connection. Behind a corporate proxy, Duct respects HTTPS_PROXY."
+msgstr ""
+
+#: src/app/authorize/page.jsx
+msgid "Check which projects you picked, then try again."
 msgstr ""
 
 #: src/components/content/report/GrowthReportView.jsx
@@ -3285,6 +3303,10 @@ msgstr ""
 msgid "Consumer"
 msgstr ""
 
+#: src/lib/agentScopes.js
+msgid "Content"
+msgstr ""
+
 #: src/components/content/ContentWorkspace.jsx
 msgid "Content agent"
 msgstr ""
@@ -3733,6 +3755,7 @@ msgstr ""
 
 #: src/components/insights/desk/DeskLists.jsx
 #: src/components/insights/InsightsWorkspace.jsx
+#: src/lib/agentScopes.js
 msgid "Data"
 msgstr ""
 
@@ -5175,6 +5198,10 @@ msgstr ""
 #~ msgid "From what you shipped"
 #~ msgstr ""
 
+#: src/app/(app)/execute/page.jsx
+msgid "From your agent"
+msgstr ""
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "From your files"
 msgstr ""
@@ -5807,6 +5834,10 @@ msgstr ""
 msgid "If it’s saved you time, a star on GitHub helps the next team find it."
 msgstr ""
 
+#: src/components/settings/AgentAbilities.jsx
+msgid "If you also let it work on your behalf, only what you tick"
+msgstr ""
+
 #: src/components/insights/desk/DeskLists.jsx
 #: src/lib/contentEnums.js
 msgid "Image"
@@ -5826,6 +5857,7 @@ msgstr ""
 
 #: src/components/audit/AuditStepProgress.jsx
 #: src/components/models/TierSummary.jsx
+#: src/lib/agentScopes.js
 msgid "Images"
 msgstr ""
 
@@ -6027,11 +6059,19 @@ msgid "It refused the saved API key. Reconnect with a new one to use it again."
 msgstr ""
 
 #: src/components/settings/AgentAbilities.jsx
-msgid "It will be able to"
+#~ msgid "It will be able to"
+#~ msgstr ""
+
+#: src/components/settings/AgentAbilities.jsx
+msgid "It will be able to set up your project"
 msgstr ""
 
 #: src/components/schedules/ScheduleCard.jsx
 msgid "It will run again next month, or raise the limit."
+msgstr ""
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "It won't see or set up any other project."
 msgstr ""
 
 #: src/components/AppErrorPanel.jsx
@@ -6493,6 +6533,10 @@ msgstr ""
 msgid "Loading your models…"
 msgstr ""
 
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Loading your projects…"
+msgstr ""
+
 #: src/app/(app)/activity/page.jsx
 #: src/app/(app)/settings/models/page.jsx
 #: src/app/(auth)/page.js
@@ -6530,6 +6574,10 @@ msgstr ""
 
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "Look into it"
+msgstr ""
+
+#: src/lib/agentScopes.js
+msgid "Look through what Duct remembers about your business, and add to it"
 msgstr ""
 
 #: src/components/connections/McpConnectors.jsx
@@ -6594,6 +6642,10 @@ msgstr ""
 
 #: src/components/content/AccountsTab.jsx
 msgid "Make"
+msgstr ""
+
+#: src/lib/agentScopes.js
+msgid "Make images with the AI keys you saved in Duct, which your provider charges you for"
 msgstr ""
 
 #: src/components/workspace/ActivityRow.jsx
@@ -6724,6 +6776,7 @@ msgstr ""
 
 #: src/app/(app)/project/[projectId]/page.jsx
 #: src/components/memory/MemoryPage.jsx
+#: src/lib/agentScopes.js
 msgid "Memory"
 msgstr ""
 
@@ -7919,6 +7972,10 @@ msgstr ""
 msgid "Off to audit a competitor or another business."
 msgstr ""
 
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Off unless you tick it"
+msgstr ""
+
 #: src/components/connections/McpConnectors.jsx
 msgid "Official"
 msgstr ""
@@ -8085,6 +8142,10 @@ msgstr ""
 msgid "Only on days with no draft yet."
 msgstr ""
 
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Only the ones I pick"
+msgstr ""
+
 #: src/components/workspace/ActivityRow.jsx
 #~ msgid "Only the project owner can approve {tool} on {server}"
 #~ msgstr ""
@@ -8095,6 +8156,10 @@ msgstr ""
 
 #: src/lib/contentFeedLabels.js
 msgid "Only what you published as a release."
+msgstr ""
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Only what you tick, on the projects you choose."
 msgstr ""
 
 #: src/components/schedules/ScheduleCard.jsx
@@ -8600,6 +8665,10 @@ msgstr ""
 msgid "Pick at least one account."
 msgstr ""
 
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Pick at least one project, or allow all of them."
+msgstr ""
+
 #: src/components/content/FeedPlanDialog.jsx
 msgid "Pick at least one thing to read."
 msgstr ""
@@ -9031,6 +9100,10 @@ msgstr ""
 msgid "Project settings → API keys → Secret API key (V2) with the read scopes. Public SDK keys (appl_/goog_) cannot read the REST API."
 msgstr ""
 
+#: src/components/settings/AgentAccess.jsx
+msgid "Project setup"
+msgstr ""
+
 #: src/app/(app)/project/[projectId]/members/page.jsx
 #: src/app/(app)/project/[projectId]/memory/page.jsx
 #: src/app/(app)/projects/page.jsx
@@ -9060,6 +9133,10 @@ msgstr ""
 msgid "Proposed by you"
 msgstr ""
 
+#: src/lib/agentScopes.js
+msgid "Proposed changes"
+msgstr ""
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "Proposed changes to the plan"
 msgstr ""
@@ -9082,6 +9159,10 @@ msgstr ""
 
 #: src/components/content/PostViewport.jsx
 msgid "Publish"
+msgstr ""
+
+#: src/components/settings/AgentAbilities.jsx
+msgid "Publish a post or send anything in your name"
 msgstr ""
 
 #: src/components/content/PublishModal.jsx
@@ -9245,6 +9326,10 @@ msgstr ""
 msgid "Read the slide"
 msgstr ""
 
+#: src/lib/agentScopes.js
+msgid "Read the tools you connected, with the totals Duct adds up"
+msgstr ""
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read the topic bank"
 msgstr ""
@@ -9255,6 +9340,14 @@ msgstr ""
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read what was posted before"
+msgstr ""
+
+#: src/lib/agentScopes.js
+msgid "Read your brand, plans and posts, and save post drafts for you to review"
+msgstr ""
+
+#: src/lib/agentScopes.js
+msgid "Read your briefs, write a new one with Duct's method, and save it in Duct"
 msgstr ""
 
 #: src/components/workspace/AgentChat.jsx
@@ -11446,6 +11539,10 @@ msgstr ""
 msgid "Suggest an improvement"
 msgstr ""
 
+#: src/lib/agentScopes.js
+msgid "Suggest changes to your ad and tag accounts, which wait for you to approve in Duct"
+msgstr ""
+
 #: src/components/content/PlanQuickActions.jsx
 msgid "Suggested next steps"
 msgstr ""
@@ -11761,6 +11858,10 @@ msgstr ""
 
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "The address that serves OpenAI’s API, usually ending in /v1. One on your own network works here."
+msgstr ""
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "The agent asked for this"
 msgstr ""
 
 #: src/components/memory/MemoryTimeline.jsx
@@ -12606,6 +12707,7 @@ msgid "Untitled post"
 msgstr ""
 
 #: src/app/(app)/projects/page.jsx
+#: src/components/settings/AgentGrantPicker.jsx
 msgid "Untitled project"
 msgstr ""
 
@@ -13140,6 +13242,10 @@ msgstr ""
 msgid "What is this?"
 msgstr ""
 
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "What it can do"
+msgstr ""
+
 #: src/components/content/FormatLibrary.jsx
 msgid "What it is for"
 msgstr ""
@@ -13311,6 +13417,10 @@ msgstr ""
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Which pages should rank and don't?"
+msgstr ""
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "Which projects"
 msgstr ""
 
 #: src/components/TelemetryCard.jsx
@@ -13583,6 +13693,10 @@ msgstr ""
 
 #: src/app/(start)/start/page.jsx
 msgid "You have more than one project for this site. Which should this audit update?"
+msgstr ""
+
+#: src/components/settings/AgentGrantPicker.jsx
+msgid "You have no projects yet. Allow all, and it can set up your first one."
 msgstr ""
 
 #: src/components/execution/ChangeSetCard.jsx

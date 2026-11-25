@@ -19,6 +19,7 @@ import LoadError from "@/components/LoadError";
 import { hasAuthToken } from "@/lib/authFetch";
 import { isLocalBackendActive } from "@/lib/localBackend";
 import { createMcpToken, listMcpTokens, mcpServerUrl, revokeMcpToken } from "@/lib/mcpTokensApi";
+import { fetchProjectsRemote } from "@/lib/projectsApi";
 import { isDesktopShell } from "@/lib/shell";
 import { pollWhileVisible } from "@/lib/visibility";
 import { Page, PageHeader } from "@/components/ui/page";
@@ -45,6 +46,8 @@ export default function AgentsSettingsPage() {
   // `cursor://` or `vscode:` install link would be a button that does nothing.
   const [deepLinks, setDeepLinks] = useState(true);
   const [watching, setWatching] = useState(false);
+  // For a token limited to some projects. null while loading.
+  const [projects, setProjects] = useState(null);
 
   const load = useCallback(() => {
     setLoadError(null);
@@ -57,7 +60,13 @@ export default function AgentsSettingsPage() {
     setServerUrl(mcpServerUrl());
     setSignInAvailable(!isLocalBackendActive());
     setDeepLinks(!isDesktopShell());
-    if (ok) load();
+    if (ok) {
+      load();
+      fetchProjectsRemote().then(
+        (rows) => setProjects(rows.map((p) => ({ id: p.id, name: p.name }))),
+        () => setProjects([]),
+      );
+    }
   }, [load]);
 
   // A failed refresh keeps the list on screen: the next tick tries again,
@@ -72,11 +81,11 @@ export default function AgentsSettingsPage() {
     };
   }, [watching]);
 
-  async function create(name) {
+  async function create(name, grant) {
     setCreating(true);
     setError("");
     try {
-      const row = await createMcpToken(name);
+      const row = await createMcpToken(name, grant);
       setMinted(row);
       setTokens((prev) => [row, ...(prev || [])]);
     } catch (err) {
@@ -125,6 +134,7 @@ export default function AgentsSettingsPage() {
           signInAvailable={signInAvailable}
           watching={watching}
           deepLinks={deepLinks}
+          projects={projects}
           onCreate={create}
           onRevoke={revoke}
           onWatch={setWatching}

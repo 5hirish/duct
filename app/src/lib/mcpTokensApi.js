@@ -79,9 +79,11 @@ export function listMcpTokens() {
   return authedRequest(TOKENS_PATH);
 }
 
-/** Resolves to the new token row, with `token` set: the only copy there is. */
-export function createMcpToken(name) {
-  return authedRequest(TOKENS_PATH, { method: "POST", body: { name } });
+/** Resolves to the new token row, with `token` set: the only copy there is.
+ *  `grant` is `grantBody()` from agentScopes.js; without one the token can
+ *  set up projects and nothing more. */
+export function createMcpToken(name, grant = null) {
+  return authedRequest(TOKENS_PATH, { method: "POST", body: { name, ...(grant || {}) } });
 }
 
 export function revokeMcpToken(id) {
@@ -151,9 +153,13 @@ export function fetchSignInRequest(code) {
 }
 
 /** Resolves to `{ redirect_to }`: the address to send the browser to, which
- *  hands the agent its code. Needs the signed-in person. */
-export function allowSignInRequest(code) {
-  return authedRequest(`${REQUESTS_PATH}/${encodeURIComponent(code)}/approve`, { method: "POST" });
+ *  hands the agent its code. Needs the signed-in person. `grant` is
+ *  `grantBody()` from agentScopes.js: what they ticked, and on which projects. */
+export function allowSignInRequest(code, grant = null) {
+  return authedRequest(`${REQUESTS_PATH}/${encodeURIComponent(code)}/approve`, {
+    method: "POST",
+    ...(grant ? { body: grant } : {}),
+  });
 }
 
 /** Resolves to `{ redirect_to }`, which tells the agent the person declined. */

@@ -108,6 +108,8 @@ const SOURCE_FILTERS = [
   { value: "", label: msg`All sources` },
   { value: "agent", label: msg`Agent-proposed` },
   { value: "user", label: msg`Proposed by you` },
+  // An outside agent over MCP (backend service/mcp_server/tools_work.py).
+  { value: "mcp", label: msg`From your agent` },
 ];
 
 const CONNECTOR_LABEL = {

@@ -327,15 +327,18 @@ const AGENT_TOKENS = [
     id: "a1", kind: "agent", name: "Claude Code", hint: "",
     created_at: "2026-10-30T09:00:00Z", expires_at: "2027-01-28T09:00:00Z",
     last_used_at: new Date(Date.now() - 20 * 60_000).toISOString(),
+    scopes: ["projects", "data", "memory", "reports"], project_ids: ["p-kestrel", "p-wren"],
   },
   {
     id: "a2", kind: "agent", name: "Visual Studio Code, the Kestrel rebrand workspace with its two landing pages", hint: "",
     created_at: "2026-11-01T09:00:00Z", expires_at: "2027-01-30T09:00:00Z", last_used_at: null,
+    scopes: ["projects"], project_ids: null,
   },
   {
     id: "t1", kind: "token", name: "CI on GitHub Actions", hint: "Q7mz",
     created_at: "2026-09-02T09:00:00Z", expires_at: "2027-09-02T09:00:00Z",
     last_used_at: new Date(Date.now() - 3 * 3600_000).toISOString(),
+    scopes: ["projects", "data", "reports"], project_ids: ["p-kestrel"],
   },
   {
     id: "t2", kind: "token", name: "Cursor, client laptop for the Kestrel rebrand and its two landing pages", hint: "b81X",
@@ -349,6 +352,14 @@ const AGENT_TOKENS = [
  *  browser's, so rendering it on both sides is a hydration error. */
 const NO_TOKENS = [];
 
+// The person's projects, for "Only the ones I pick". The second is long on
+// purpose: a name that has to truncate in a narrow card.
+const AGENT_PROJECTS = [
+  { id: "p-kestrel", name: "Kestrel Studio" },
+  { id: "p-wren", name: "Wren & Co, the spring relaunch of the online shop and its two landing pages" },
+  { id: "p-moor", name: "Moorland Coffee" },
+];
+
 // Built, not written out: scripts/security/audit.py reads `token: "…"` with
 // eight or more characters as a hardcoded secret, and baselining this file
 // would stop it checking every other scene here.
@@ -358,6 +369,7 @@ const previewPlaintext = (hint) => `duct_mcp_preview-only-not-a-real-token-${hin
  *  Claude Code agent signs in that long after, as the poll would find it. */
 function AgentAccessScene({
   initial = NO_TOKENS, mintedFirst = false, error = "", signInAvailable = true, deepLinks = true, signInAfterMs = 0,
+  defaultGrant = null,
 }) {
   const [tokens, setTokens] = useState(null);
   const [watching, setWatching] = useState(false);
@@ -389,11 +401,14 @@ function AgentAccessScene({
         signInAvailable={signInAvailable}
         watching={watching}
         deepLinks={deepLinks}
+        projects={AGENT_PROJECTS}
+        defaultGrant={defaultGrant}
         onWatch={setWatching}
-        onCreate={(name) => {
+        onCreate={(name, grant) => {
           const row = {
             id: `t${Date.now()}`, kind: "token", name, hint: "Zp4c", created_at: new Date().toISOString(),
             expires_at: new Date(Date.now() + 365 * 86400_000).toISOString(), last_used_at: null,
+            scopes: grant?.scopes || ["projects"], project_ids: grant?.project_ids ?? null,
           };
           setTokens((prev) => [row, ...(prev || [])]);
           setMinted({ ...row, token: previewPlaintext(row.hint) });
@@ -2048,6 +2063,19 @@ export const SCENES = [
     render: () => <AgentAccessScene initial={AGENT_TOKENS.filter((row) => row.kind === "token")} signInAvailable={false} />,
   },
   {
+    id: "agent-access-token-grant",
+    state: "a new token for one project, working on its behalf",
+    group: "AgentAccess",
+    title: "Connect your AI agent",
+    note: "The token form offers the same two tiers as the consent page: project setup alone unless the switch is on, then what it may do and on which projects. Here: briefs and data on Kestrel only. Every row in the lists says what that connection may do and where, on its second line (Project setup · Data, Memory, Briefs · 2 projects).",
+    render: () => (
+      <AgentAccessScene
+        initial={AGENT_TOKENS}
+        defaultGrant={{ work: true, scopes: ["data", "reports"], projectIds: ["p-kestrel"] }}
+      />
+    ),
+  },
+  {
     id: "agent-access-limit",
     state: "the server refused a new token: ten already exist",
     group: "AgentAccess",
@@ -2084,6 +2112,73 @@ export const SCENES = [
       <AgentConsent
         state={CONSENT_ASK}
         request={{ client_name: "Claude for the Kestrel rebrand workspace", destination: "web", destination_name: "claude.ai" }}
+        viewerEmail="ana@kestrel.studio"
+      />
+    ),
+  },
+  {
+    id: "agent-consent-work",
+    state: "the agent asked for more than setup: the second tier opens with the safe defaults",
+    group: "AgentConsent",
+    title: "Allow an agent",
+    note: "Claude Code asked for data, briefs and proposed changes. The switch is on and Data, Memory and Briefs are ticked; Proposed changes is not, whatever was asked, and says the agent asked for it beside the mark that it stays off unless ticked. Content and Images carry the same mark. Projects start at all of them. Untick everything and Allow still works: it is project setup alone.",
+    render: () => (
+      <AgentConsent
+        state={CONSENT_ASK}
+        request={{
+          client_name: "Claude Code (duct)", destination: "device", destination_name: "127.0.0.1",
+          requested_scopes: ["projects", "data", "reports", "changes"],
+        }}
+        projects={AGENT_PROJECTS}
+        viewerEmail="ana@kestrel.studio"
+      />
+    ),
+  },
+  {
+    id: "agent-consent-projects",
+    state: "working on two picked projects only",
+    group: "AgentConsent",
+    title: "Allow an agent",
+    note: "Only the ones I pick, with two of three ticked. The long project name truncates on one line inside the card at 20rem; the list scrolls past twelve rem rather than pushing the buttons off the page.",
+    render: () => (
+      <AgentConsent
+        state={CONSENT_ASK}
+        request={{ client_name: "Codex", destination: "device", destination_name: "127.0.0.1", requested_scopes: ["projects"] }}
+        projects={AGENT_PROJECTS}
+        defaultGrant={{ work: true, scopes: ["data", "memory", "reports", "content"], projectIds: ["p-kestrel", "p-wren"] }}
+        viewerEmail="ana@kestrel.studio"
+      />
+    ),
+  },
+  {
+    id: "agent-consent-no-projects",
+    state: "only some projects, none picked: Allow waits",
+    group: "AgentConsent",
+    title: "Allow an agent",
+    note: "The page says what is missing under the list, in the destructive ink, and Allow is disabled until a project is ticked or All is chosen again.",
+    render: () => (
+      <AgentConsent
+        state={CONSENT_ASK}
+        request={{ client_name: "Claude Code", destination: "device", destination_name: "127.0.0.1" }}
+        projects={AGENT_PROJECTS}
+        defaultGrant={{ work: true, scopes: ["data", "memory", "reports"], projectIds: [] }}
+        viewerEmail="ana@kestrel.studio"
+      />
+    ),
+  },
+  {
+    id: "agent-consent-refused",
+    state: "the server refused the choice (a project the person no longer has)",
+    group: "AgentConsent",
+    title: "Allow an agent",
+    note: "The server's own sentence above the buttons. The request is still open, so the person changes the selection and presses Allow again.",
+    render: () => (
+      <AgentConsent
+        state={CONSENT_ASK}
+        request={{ client_name: "Claude Code", destination: "device", destination_name: "127.0.0.1" }}
+        projects={AGENT_PROJECTS}
+        defaultGrant={{ work: true, scopes: ["data", "memory", "reports"], projectIds: ["p-moor"] }}
+        error="One of those projects is not yours to share. Pick from your projects."
         viewerEmail="ana@kestrel.studio"
       />
     ),
