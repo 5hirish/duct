@@ -37,6 +37,10 @@ msgstr "· {fans} Fans"
 #~ msgid "· set to <0>{configured}</0>, stepped down for this model"
 #~ msgstr "· eingestellt auf <0>{configured}</0>, für dieses Modell heruntergestuft"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "“I just want to know if the ads are working.”"
+msgstr "„Ich will einfach nur wissen, ob die Ads funktionieren.“"
+
 #: src/components/settings/AgentAccess.jsx
 msgid "(done)"
 msgstr "(erledigt)"
@@ -44,6 +48,10 @@ msgstr "(erledigt)"
 #: src/components/content/DiscoverPage.jsx
 msgid "(no caption)"
 msgstr "(keine Bildunterschrift)"
+
+#: src/components/content/BrandContextForm.jsx
+msgid "(optional)"
+msgstr "(optional)"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "(read the first part of the page)"
@@ -319,6 +327,10 @@ msgstr "{count, plural, one {GitHub verbunden: # Repository.} other {GitHub verb
 #: src/components/connections/ManualConnectorCard.jsx
 msgid "{count} {noun}"
 msgstr "{count} {noun}"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "{count} of {voters} would stop"
+msgstr "{count} von {voters} würden stoppen"
 
 #: src/app/(app)/scheduled/page.jsx
 msgid "{count} scheduled"
@@ -1928,6 +1940,10 @@ msgstr "Alle Medien"
 msgid "Any time"
 msgstr "Jederzeit"
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Anyone scrolling"
+msgstr "Wer durchscrollt"
+
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Anything else Duct should know"
 msgstr "Sonst noch etwas, das Duct wissen sollte"
@@ -2967,6 +2983,10 @@ msgstr "Befehle für OpenCode"
 #: src/components/content/PostMetricsForm.jsx
 msgid "Comments"
 msgstr "Kommentare"
+
+#: src/lib/contentReview.js
+msgid "comments, shares and saves"
+msgstr "Kommentare, Shares und Saves"
 
 #: src/components/content/PlanStrategy.jsx
 msgid "Comments, shares and saves per post."
@@ -5867,6 +5887,10 @@ msgstr "Führe in Claude Code <0>/mcp</0> aus und wähle Authentifizieren. Führ
 msgid "In progress"
 msgstr "In Bearbeitung"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "In their words"
+msgstr "In ihren Worten"
+
 #: src/components/insights/InsightsWorkspace.jsx
 #~ msgid "in this thread"
 #~ msgstr "in diesem Thread"
@@ -7638,6 +7662,10 @@ msgstr "Nicht gestartet"
 msgid "Not stored"
 msgstr "Nicht gespeichert"
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Not tested on your results yet: that needs five published posts with numbers. Read this as a guess."
+msgstr "Noch nicht an deinen Ergebnissen getestet: Dafür werden fünf veröffentlichte Beiträge mit Zahlen benötigt. Sieh das als Schätzung."
+
 #: src/lib/contentEnums.js
 msgid "Not true"
 msgstr "Nicht wahr"
@@ -8280,6 +8308,14 @@ msgstr "Geöffnet"
 msgid "Opened the post"
 msgstr "Den Beitrag geöffnet"
 
+#: src/lib/contentReview.js
+msgid "Opening B"
+msgstr "Einstieg B"
+
+#: src/lib/contentReview.js
+msgid "Opening C"
+msgstr "Einstieg C"
+
 #: src/components/content/SynthesisPanel.jsx
 msgid "Opening lines of the most engaging posts that reached at least a typical audience"
 msgstr "Anfangszeilen der ansprechendsten Beiträge, die mindestens ein typisches Publikum erreichten"
@@ -8299,6 +8335,10 @@ msgstr "Sitzung wird geöffnet…"
 #: src/components/insights/ConnectionRequest.jsx
 msgid "Opening…"
 msgstr "Wird geöffnet…"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Openings they compared"
+msgstr "Verglichene Einstiege"
 
 #: src/components/connections/logos.jsx
 msgid "OpenRouter"
@@ -9177,6 +9217,10 @@ msgstr "lief von selbst"
 msgid "Ran, proposed nothing"
 msgstr "Gelaufen, nichts vorgeschlagen"
 
+#: src/lib/contentReview.js
+msgid "reach"
+msgstr "Reichweite"
+
 #: src/components/content/PostMetricsForm.jsx
 msgid "Reach"
 msgstr "Reichweite"
@@ -9217,6 +9261,10 @@ msgstr "Vollbild lesen"
 #: src/app/(start)/start/page.jsx
 msgid "Read my site"
 msgstr "Meine Seite lesen"
+
+#: src/components/workspace/ActivityRow.jsx
+msgid "Read past posts to test the audience panel"
+msgstr "Vergangene Beiträge lesen, um das Zielgruppen-Panel zu testen"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read project context"
@@ -10253,6 +10301,10 @@ msgstr "in deinem Duct-Konto gespeichert"
 #: src/lib/contentReview.js
 msgid "Saves"
 msgstr "Speicherungen"
+
+#: src/lib/contentReview.js
+msgid "saves and shares"
+msgstr "Saves und Shares"
 
 #: src/components/content/PlanStrategy.jsx
 msgid "Saves and shares per post, the closest sign of intent the posts report."
@@ -11398,6 +11450,10 @@ msgstr "Gestoppt."
 msgid "Stops"
 msgstr "Stoppt"
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Stops for: {picked}"
+msgstr "Stoppt bei: {picked}"
+
 #: src/components/content/VendorKeyForm.jsx
 msgid "Stored encrypted, and used only for projects you own."
 msgstr "Verschlüsselt gespeichert und nur für deine eigenen Projekte verwendet."
@@ -11609,6 +11665,18 @@ msgstr "Sag uns, wer du bist und was du tust. Das ist die Grundlage für jedes A
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Test and connect"
 msgstr "Testen und verbinden"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Tested on your last {posts} posts: a loose match with their real {metric} ({agreed} of {pairs} pairs right). Read this as a lean."
+msgstr "An deinen letzten {posts} Beiträgen getestet: grobe Übereinstimmung mit ihrer echten Metrik {metric} ({agreed} von {pairs} Paaren richtig). Sieh das als Tendenz."
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Tested on your last {posts} posts: it ranked them close to their real {metric} ({agreed} of {pairs} pairs right). A lean, not a promise."
+msgstr "An deinen letzten {posts} Beiträgen getestet: nahe an ihrer echten Metrik {metric} platziert ({agreed} von {pairs} Paaren richtig). Eine Tendenz, kein Versprechen."
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Tested on your last {posts} posts: no better than a coin at ranking their real {metric}. Read this as a guess."
+msgstr "An deinen letzten {posts} Beiträgen getestet: bei der Einstufung ihrer echten Metrik {metric} nicht besser als ein Münzwurf. Sieh das als Schätzung."
 
 #: src/components/content/PlanStrategy.jsx
 #~ msgid "Testing"
@@ -12623,6 +12691,10 @@ msgstr "Unbenannter Thread"
 msgid "Up next"
 msgstr "Als Nächstes"
 
+#: src/components/content/BrandContextForm.jsx
+msgid "Up to three things this audience really said, one per line: a review, a comment, a support email. The review speaks from these first."
+msgstr "Bis zu drei Dinge, die diese Zielgruppe wirklich gesagt hat, eines pro Zeile: eine Bewertung, ein Kommentar, eine Support-E-Mail. Die Überprüfung greift zuerst darauf zurück."
+
 #: src/components/content/PlanPicker.jsx
 msgid "Upcoming"
 msgstr "Bevorstehend"
@@ -13343,8 +13415,12 @@ msgid "Who this persona is"
 msgstr "Wer diese Persona ist"
 
 #: src/components/content/BrandContextForm.jsx
-msgid "Who your posts are for. The pre-publish review plays each one and says whether they'd stop, save or click."
-msgstr "Für wen deine Beiträge sind. Die Überprüfung vor der Veröffentlichung spielt jede durch und sagt, ob sie stoppen, speichern oder klicken würde."
+#~ msgid "Who your posts are for. The pre-publish review plays each one and says whether they'd stop, save or click."
+#~ msgstr "Für wen deine Beiträge sind. Die Überprüfung vor der Veröffentlichung spielt jede durch und sagt, ob sie stoppen, speichern oder klicken würde."
+
+#: src/components/content/BrandContextForm.jsx
+msgid "Who your posts are for. The pre-publish review plays each one, says why they'd scroll past, and which opening would stop them."
+msgstr "Für wen deine Beiträge sind. Die Überprüfung vor der Veröffentlichung spielt jede Rolle durch, sagt, warum sie vorbeiscrollen würden und welcher Einstieg sie stoppen würde."
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Why it matters"
@@ -13475,6 +13551,10 @@ msgstr "Arbeitet…"
 #: src/components/connections/ConnectorBrowser.jsx
 msgid "Worth adding next"
 msgstr "Als Nächstes hinzufügen"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Would scroll past: {scrollPast}"
+msgstr "Würden vorbeiscrollen: {scrollPast}"
 
 #: src/components/content/AnalyticsReport.jsx
 msgid "Write the report"
@@ -13829,6 +13909,10 @@ msgstr "Dein neuer Token"
 msgid "Your one-line pitch"
 msgstr "Dein Einzeiler-Pitch"
 
+#: src/lib/contentReview.js
+msgid "Your opening"
+msgstr "Dein Einstieg"
+
 #: src/components/content/AccountsTab.jsx
 msgid "Your own account and API key, stored encrypted. Duct posts only when you ask it to."
 msgstr "Dein eigenes Konto und dein API-Schlüssel, verschlüsselt gespeichert. Duct postet nur, wenn du darum bittest."
@@ -13840,6 +13924,10 @@ msgstr "Dein eigenes Konto und dein API-Schlüssel, verschlüsselt gespeichert. 
 #: src/components/connections/McpConnectDialog.jsx
 msgid "Your own chats use it, in any project. Scheduled runs only call the read-only tools of the servers Duct trusts, so one added by address never runs unattended."
 msgstr "Deine eigenen Chats nutzen es in jedem Projekt. Geplante Läufe rufen nur die schreibgeschützten Tools der Server auf, denen Duct vertraut, sodass ein per Adresse hinzugefügter Server nie unbeaufsichtigt läuft."
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Your personas react just like anyone would, so this says little about your audience. Add lines they really said in Brand settings to tell them apart."
+msgstr "Deine Personas reagieren wie jede beliebige Person, daher sagt dies wenig über deine Zielgruppe aus. Füge in den Brand-Einstellungen Auszüge hinzu, die sie wirklich gesagt haben, um sie zu unterscheiden."
 
 #: src/components/content/AccountsTab.jsx
 #~ msgid "your PostBridge accounts"

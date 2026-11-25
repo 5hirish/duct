@@ -8,12 +8,18 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
   BAND_META,
+  HOOK_LABELS,
   MARKER_LABELS,
+  PANEL_METRIC_LABELS,
   PERSONA_ACTIONS,
+  PanelFit,
   SanityCheckId,
   VERDICT_META,
   failedChecks,
+  hookVotes,
   isScored,
+  panelEchoesBaseline,
+  panelTrusted,
   replyNumber,
   slideNumber,
   weakestMarkers,
@@ -180,18 +186,89 @@ export default function PublishReviewPanel({ assessment, compact = false, onRevi
       )}
 
       {!compact && scored && (assessment.personas || []).length > 0 && (
-        <div className="space-y-2.5 border-t border-border/60 pt-3">
-          <div>
-            <h3 className="text-xs font-semibold"><Trans>How your audience reacts</Trans></h3>
-            <p className="text-xs text-muted-foreground">
-              <Trans>Duct role-plays the personas in your Brand settings. Advice, not a measurement.</Trans>
-            </p>
-          </div>
-          <ul className="space-y-3">
-            {assessment.personas.map((r) => (
-              <li key={r.persona} className="space-y-1.5">
-                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-                  <span className="text-xs font-semibold">{r.persona}</span>
+        <AudiencePanel assessment={assessment} />
+      )}
+
+      {!compact && scored && assessment.notes && (
+        <p className="border-t border-border/60 pt-3 text-xs text-muted-foreground">{assessment.notes}</p>
+      )}
+    </section>
+  );
+}
+
+/**
+ * The audience panel: the brand's personas role-played on this post, with
+ * how far to trust them said first. A twin's yes on one post leans kind and
+ * looks like every other twin's, so the chips show only once the panel has
+ * ranked the brand's own past posts better than a coin (panel_check), and a
+ * panel that reacts exactly like "anyone scrolling" says so.
+ */
+function AudiencePanel({ assessment }) {
+  const { t, i18n } = useLingui();
+  const trusted = panelTrusted(assessment);
+  const hooks = assessment.hooks || [];
+  const votes = hookVotes(assessment);
+  const voters = (assessment.personas || []).length;
+  const rows = [
+    ...(assessment.baseline ? [{ ...assessment.baseline, baseline: true }] : []),
+    ...assessment.personas,
+  ];
+  function hookName(i) {
+    return HOOK_LABELS[i] ? i18n._(HOOK_LABELS[i]) : "";
+  }
+
+  return (
+    <div className="space-y-3 border-t border-border/60 pt-3">
+      <div className="space-y-1">
+        <h3 className="text-xs font-semibold"><Trans>How your audience reacts</Trans></h3>
+        <PanelTrust check={assessment.panel_check} />
+      </div>
+
+      {hooks.length > 1 && (
+        <div className="space-y-1.5">
+          <p className="text-xs font-medium text-muted-foreground"><Trans>Openings they compared</Trans></p>
+          <ol className="space-y-1.5">
+            {hooks.map((hook, i) => {
+              const top = votes[i] > 0 && votes[i] === Math.max(...votes);
+              const label = hookName(i);
+              const count = votes[i];
+              return (
+                <li
+                  key={i}
+                  className={`rounded-lg border px-2.5 py-1.5 text-xs ${top ? "border-primary/40 bg-primary/5" : "border-border"}`}
+                >
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="font-medium">{label}</span>
+                    <span className="shrink-0 text-2xs text-muted-foreground tabular-nums">
+                      {t`${count} of ${voters} would stop`}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 leading-relaxed">{hook}</p>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      )}
+
+      {panelEchoesBaseline(assessment) && (
+        <p className="flex items-start gap-1.5 text-xs text-warning">
+          <TriangleAlert className="mt-px size-3.5 shrink-0" aria-hidden="true" />
+          <Trans>Your personas react just like anyone would, so this says little about your audience. Add lines they really said in Brand settings to tell them apart.</Trans>
+        </p>
+      )}
+
+      <ul className="space-y-3">
+        {rows.map((r) => {
+          const scrollPast = r.scroll_past;
+          const picked = hooks.length > 1 && Number.isInteger(r.pick) ? hookName(r.pick) : "";
+          return (
+            <li key={r.baseline ? "baseline" : r.persona} className={`space-y-1 ${r.baseline ? "text-muted-foreground" : ""}`}>
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                <span className={`text-xs ${r.baseline ? "font-medium" : "font-semibold"}`}>
+                  {r.baseline ? <Trans>Anyone scrolling</Trans> : r.persona}
+                </span>
+                {trusted && !r.baseline && (
                   <span className="flex flex-wrap gap-1">
                     {PERSONA_ACTIONS.map(({ key, label }) => {
                       const meta = VERDICT_META[r[key]];
@@ -205,18 +282,63 @@ export default function PublishReviewPanel({ assessment, compact = false, onRevi
                       );
                     })}
                   </span>
-                </div>
-                <p className="text-xs leading-relaxed">“{r.reaction}”</p>
-                {r.fix && <p className="text-xs text-muted-foreground">{r.fix}</p>}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+                )}
+              </div>
+              {scrollPast && (
+                <p className="text-xs text-muted-foreground">
+                  <Trans>Would scroll past: {scrollPast}</Trans>
+                </p>
+              )}
+              <p className="text-xs leading-relaxed">“{r.reaction}”</p>
+              {picked && <p className="text-xs text-muted-foreground">{t`Stops for: ${picked}`}</p>}
+              {!r.baseline && r.fix && <p className="text-xs text-muted-foreground">{r.fix}</p>}
+            </li>
+          );
+        })}
+      </ul>
 
-      {!compact && scored && assessment.notes && (
-        <p className="border-t border-border/60 pt-3 text-xs text-muted-foreground">{assessment.notes}</p>
-      )}
-    </section>
+      <p className="text-xs text-muted-foreground">
+        <Trans>Duct role-plays the personas in your Brand settings. Advice, not a measurement.</Trans>
+      </p>
+    </div>
+  );
+}
+
+/** How far to trust the panel, from how it ranked the brand's past posts. */
+function PanelTrust({ check }) {
+  const { i18n } = useLingui();
+  if (!check) {
+    return (
+      <p className="text-xs text-muted-foreground">
+        <Trans>Not tested on your results yet: that needs five published posts with numbers. Read this as a guess.</Trans>
+      </p>
+    );
+  }
+  const metric = PANEL_METRIC_LABELS[check.metric] ? i18n._(PANEL_METRIC_LABELS[check.metric]) : check.metric;
+  const { posts, agreed, pairs } = check;
+  if (check.fit === PanelFit.TRACKS) {
+    return (
+      <p className="flex items-start gap-1.5 text-xs text-success">
+        <CheckCircle2 className="mt-px size-3.5 shrink-0" aria-hidden="true" />
+        <span>
+          <Trans>Tested on your last {posts} posts: it ranked them close to their real {metric} ({agreed} of {pairs} pairs right). A lean, not a promise.</Trans>
+        </span>
+      </p>
+    );
+  }
+  if (check.fit === PanelFit.LOOSE) {
+    return (
+      <p className="text-xs text-muted-foreground">
+        <Trans>Tested on your last {posts} posts: a loose match with their real {metric} ({agreed} of {pairs} pairs right). Read this as a lean.</Trans>
+      </p>
+    );
+  }
+  return (
+    <p className="flex items-start gap-1.5 text-xs text-warning">
+      <TriangleAlert className="mt-px size-3.5 shrink-0" aria-hidden="true" />
+      <span>
+        <Trans>Tested on your last {posts} posts: no better than a coin at ranking their real {metric}. Read this as a guess.</Trans>
+      </span>
+    </p>
   );
 }

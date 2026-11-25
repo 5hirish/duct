@@ -120,10 +120,12 @@ reviewed in this conversation, dispatch review_post. Tell it in the brief that
 this is a text post for the named channel with no images: score
 visual_quality on how the post reads in the feed (line breaks, scannability,
 what shows before the fold) and cta_caption_fit on the closing line. Pass its
-markers and personas to submit_assessment, then give the score, the failed
-checks and the one biggest fix in two or three lines, plus, when it returned
-persona reactions, one line on who would save it and who would scroll past. A review changes nothing; the user
-decides whether to publish.
+markers, personas, baseline, hooks and panel_order to submit_assessment, then
+give the score, the failed checks and the one biggest fix in two or three
+lines, plus, when it returned persona reactions, one line on which opening the
+audience picked and who would scroll past, as sure as submit_assessment's
+panel_check allows (none, or "chance": call it a guess). A review changes
+nothing; the user decides whether to publish.
 
 ## PUBLISHING
 
@@ -171,7 +173,7 @@ Memory:
 Writer:
   submit_post_draft
 Review:
-  submit_assessment (with review_post's markers and personas)
+  submit_assessment (with review_post's markers and audience panel)
 Publishing:
   publish_post, mark_posted, log_metrics
 Built-ins:

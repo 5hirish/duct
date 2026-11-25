@@ -519,6 +519,7 @@ class ContentTool(StrEnum):
     FETCH_CONTENT_ASSETS        = "fetch_content_assets"
     FETCH_DISCOVERED_REFERENCES = "fetch_discovered_references"
     FETCH_POST                  = "fetch_post"
+    FETCH_PANEL_POSTS           = "fetch_panel_posts"
     FETCH_SLIDE_CONTEXT         = "fetch_slide_context"
     READ_SHIPPED_WORK           = "read_shipped_work"
     RENDER_SLIDE                = "render_slide"
@@ -937,6 +938,12 @@ class ContentMarker(MarkerScore):
 # The project's audience personas the reviewer role-plays: as many as the
 # project keeps (service.project_draft.MAX_DRAFT_PERSONAS).
 MAX_PERSONA_REACTIONS = 3
+# The openings the panel chooses between: the draft's own, then two rewrites.
+# A twin ranks options far better than it predicts a level (Columbia's 2026
+# mega-study: twins "sort people" but miss the average on 64% of outcomes), so
+# the panel picks an opening rather than only saying yes or no to one.
+MAX_HOOK_OPTIONS = 3
+HOOK_MAX = 200
 
 
 class PersonaVerdict(StrEnum):
@@ -960,11 +967,58 @@ class PersonaReaction(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     persona: str = Field(min_length=1, max_length=80, description="The persona's name, as the brand context lists it.")
+    # Asked before anything kind: a model playing a person is more positive
+    # than the person (the mega-study's twins were "pro-human" and
+    # "pro-technology"), so the case against the post is written first.
+    scroll_past: str = Field("", max_length=240, description="First, the honest reason they would scroll past it.")
     reaction: str = Field(min_length=1, max_length=400, description="First person, in the persona's own words: what they think seeing this in their feed. One or two sentences.")
+    pick: int | None = Field(None, ge=0, lt=MAX_HOOK_OPTIONS, description="Which opening in the review's hooks would stop them, by index; 0 is the draft's own.")
     stop: PersonaVerdict = Field(description="Would they stop scrolling for it?")
     save: PersonaVerdict = Field(description="Would they save it?")
     click: PersonaVerdict = Field(description="Would they click through, or follow?")
     fix: str = Field("", max_length=240, description="The one change that would win this persona.")
+
+    # The panel is advice beside the scores, so its newest fields never cost
+    # the review: an over-long reason is cut, and a pick naming no opening is
+    # dropped rather than refusing the six markers that came with it.
+    @field_validator("scroll_past", mode="before")
+    @classmethod
+    def _cut_reason(cls, value: Any) -> Any:
+        return value[:240] if isinstance(value, str) else value
+
+    @field_validator("pick", mode="before")
+    @classmethod
+    def _drop_stray_pick(cls, value: Any) -> Any:
+        if isinstance(value, str) and value.strip().isdigit():
+            value = int(value)
+        if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value < MAX_HOOK_OPTIONS:
+            return None
+        return value
+
+
+class PanelFit(StrEnum):
+    """How closely the panel's order of the brand's past posts matched the
+    order their real numbers put them in, as a share of the pairs it got the
+    right way round. Half is what a coin gets."""
+
+    TRACKS = "tracks"
+    LOOSE  = "loose"
+    CHANCE = "chance"
+
+
+class PanelCheck(BaseModel):
+    """The panel tested on posts whose results are known. The reviewer ranks
+    their openings without the numbers; the server holds the numbers and
+    scores the ranking (``agents.content.panel``), so the check cannot be
+    talked into passing."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    metric: str = Field(description="The goal measure the posts were ranked on (performance.INTENT, ENGAGEMENT or REACHED).")
+    posts: int = Field(ge=0)
+    pairs: int = Field(ge=0, description="Pairs of posts whose numbers differ; ties tell nothing.")
+    agreed: int = Field(ge=0, description="Of those, the pairs the panel put the right way round.")
+    fit: PanelFit
 
 
 class SanityCheck(BaseModel):
@@ -1001,6 +1055,14 @@ class PublishAssessment(BaseModel):
     # The audience personas' reactions, when the project has personas.
     # They go stale with the markers: both are judgements of the same post.
     personas: list[PersonaReaction] = Field(default_factory=list)
+    # The same reading by someone who matches none of the personas. Personas
+    # that react exactly as it does are the model's default, not the audience.
+    baseline: PersonaReaction | None = None
+    # The openings the panel chose between, the draft's own first.
+    hooks: list[str] = Field(default_factory=list)
+    # The panel against the brand's own results; None when it has too few
+    # measured posts to be checked, or the review predates the check.
+    panel_check: PanelCheck | None = None
     scored_at: str = ""
     # Digest of the slides, caption and hashtags that were scored.
     fingerprint: str = ""

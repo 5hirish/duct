@@ -1,7 +1,7 @@
 /**
  * The pre-publish review's vocabulary, mirrored from
  * backend/agents/content/schema.py (ReviewMarker, SanityCheckId, ReviewBand,
- * PersonaVerdict).
+ * PersonaVerdict, PanelFit).
  *
  * The backend sends ids and never words, so every label a reader sees lives
  * here in a `msg` table and is translated. The marker weights are deliberately
@@ -52,6 +52,51 @@ export const PERSONA_ACTIONS = Object.freeze([
   { key: "save",  label: msg`Saves` },
   { key: "click", label: msg`Clicks` },
 ]);
+
+// How closely the panel's order of the brand's past posts matched what those
+// posts really earned: the share of pairs it put the right way round, where a
+// coin gets half. Decides how sure the panel's words may sound.
+export const PanelFit = Object.freeze({
+  TRACKS: "tracks",
+  LOOSE:  "loose",
+  CHANCE: "chance",
+});
+
+// The goal measure a panel check ranked on (backend agents/content/performance.py).
+export const PANEL_METRIC_LABELS = Object.freeze({
+  intent:     msg`saves and shares`,
+  engagement: msg`comments, shares and saves`,
+  reached:    msg`reach`,
+});
+
+// The openings the panel chose between, by place: the post's own, then two rewrites.
+export const HOOK_LABELS = Object.freeze([msg`Your opening`, msg`Opening B`, msg`Opening C`]);
+
+/** Whether the yes/maybe/no chips earn a place: only once the panel has
+ *  ranked the brand's own past posts better than a coin. A twin's verdict on
+ *  one post leans kind, so untested it is words only. */
+export function panelTrusted(assessment) {
+  const fit = assessment?.panel_check?.fit;
+  return fit === PanelFit.TRACKS || fit === PanelFit.LOOSE;
+}
+
+/** How many personas picked each opening, by its index in `hooks`. */
+export function hookVotes(assessment) {
+  const votes = (assessment?.hooks || []).map(() => 0);
+  for (const r of assessment?.personas || []) {
+    if (Number.isInteger(r.pick) && r.pick < votes.length) votes[r.pick] += 1;
+  }
+  return votes;
+}
+
+/** True when every persona reacted exactly as someone matching none of them
+ *  did: then the panel is the model's average reader, not the audience. */
+export function panelEchoesBaseline(assessment) {
+  const base = assessment?.baseline;
+  const personas = assessment?.personas || [];
+  if (!base || personas.length === 0) return false;
+  return personas.every((r) => PERSONA_ACTIONS.every(({ key }) => r[key] === base[key]) && r.pick === base.pick);
+}
 
 export const VERDICT_META = Object.freeze({
   [PersonaVerdict.YES]:   { label: msg`Yes`,   tone: "yes" },
