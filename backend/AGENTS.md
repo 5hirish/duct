@@ -164,7 +164,19 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
   reads it from `/api/providers/status` to hide the sign-in, and
   `get_user_provider_keys` drops a plan token it is still sent, so a shell that
   signed in earlier cannot keep using it — the Codex backend is undocumented
-  and the path can stop working without notice.
+  and the path can stop working without notice. Two things a session on a
+  plan needs that an API key does not: **the token is renewed per message**
+  (a plan token lasts an hour and a session can sit on a question card for
+  longer, so `POST …/messages` takes the plan headers and
+  `renew_subscription_credential` swaps the fresh token into every model the
+  run built, held to the ChatGPT account it started on), and **the request is
+  shaped for the cache** (`cache_friendly_payload`: the system prompt leads
+  `input` as a `developer` item, because GPT-6.2 does not cache
+  `instructions`, and the thread's cache key rides as the `session-id` and
+  `thread-id` headers the ChatGPT backend routes its cache on, as the Codex
+  CLI sends them). OpenAI's official "Sign in with ChatGPT" program
+  (developers.openai.com/siwc) is the documented successor; hosted Duct needs
+  OpenAI's approval for it, so this path stays until then.
 
   So a shared change is made once. Claude remains a first-class *model* through
   V1, which is why retiring its SDK cost no model coverage.
