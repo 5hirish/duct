@@ -43,97 +43,163 @@
 {"@context":"https://schema.org","@type":"WebPage","inLanguage":"en","name":"Duct is open source","url":"https://getduct.ai/open-source","description":"Why Duct is open source, what runs where in the desktop app versus a self-hosted install, how to self-host it, and what will and will not cost money.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"SoftwareSourceCode","name":"Duct","codeRepository":"https://github.com/5hirish/duct","license":"https://opensource.org/licenses/MIT","programmingLanguage":["Python","JavaScript","Rust"],"isAccessibleForFree":true,"author":{"@type":"Person","name":"Shirish Kadam","url":"https://shirishkadam.com"}}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"en","mainEntity":[{"@type":"Question","name":"Is Duct really free?","acceptedAnswer":{"@type":"Answer","text":"Yes. Duct is MIT licensed and free with your own model keys, and that does not change. You pay your model provider directly, or sign in with the ChatGPT plan you already have. A paid plan later bundles model access for teams that would rather not hold keys; nothing that is open today moves behind it."}},{"@type":"Question","name":"Can I run Duct without an account?","acceptedAnswer":{"@type":"Answer","text":"Yes. Clone the repository, run make setup, add one model provider key and start the backend and the app. Everything stays on your machine or your server, and no account with Duct is involved."}},{"@type":"Question","name":"Can I use Duct commercially or fork it?","acceptedAnswer":{"@type":"Answer","text":"Yes. The MIT licence allows commercial use, modification and redistribution. The only exceptions are third-party documentation under docs/guides and the Duct name and mark."}},{"@type":"Question","name":"How do I contribute?","acceptedAnswer":{"@type":"Answer","text":"Start with CONTRIBUTING.md. Issues and discussions are on GitHub, the roadmap is a public project board, and agent-written contributions are welcome as long as the pull request says where an agent helped."}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"en","mainEntity":[{"@type":"Question","name":"Is Duct really free?","acceptedAnswer":{"@type":"Answer","text":"Yes. Duct is MIT licensed and free with your own model keys. You pay your model provider directly, or sign in with the ChatGPT plan you already have."}},{"@type":"Question","name":"Can I run Duct without an account?","acceptedAnswer":{"@type":"Answer","text":"Yes. Clone the repository, run make setup, add one model key and start the backend and the app. No account with Duct is involved."}},{"@type":"Question","name":"What do I give up by self-hosting?","acceptedAnswer":{"@type":"Answer","text":"Google Ads, GA4 and Search Console need your own Google OAuth client before they connect, and the database, backups and upgrades are yours to run."}},{"@type":"Question","name":"Can I use Duct commercially or fork it?","acceptedAnswer":{"@type":"Answer","text":"Yes. The MIT license allows commercial use, changes and redistribution. The exceptions are third-party documentation under docs/guides and the Duct name and mark."}},{"@type":"Question","name":"How do I contribute?","acceptedAnswer":{"@type":"Answer","text":"Start with CONTRIBUTING.md. The roadmap is a public board, and a pull request written with an agent is welcome if it says where the agent helped."}}]}
 </script>
 <style>
-/* ── OPEN-SOURCE-ONLY STYLES ── */
-.os-hero { padding: 120px 52px 72px; min-height: 0; }
-.os-hero h1 { font-size: clamp(38px, 5vw, 62px); max-width: 980px; }
-.os-hero .hero-sub { max-width: 600px; }
+/* ── OPEN-SOURCE-ONLY STYLES ──
+   The page proves one claim, "every part is in the repository", by drawing the parts. The hero's
+   map of the real folders is the heavy element; each section after it is one idea with one real
+   picture (the agent's own tool list beside the card you approve on, the two ways to run it, the
+   README's commands). Rewritten 2026-11-25 from an 850-word version with no pictures. */
+.os-hero { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 64px; align-items: center; max-width: calc(1160px + 104px); margin: 0 auto; padding: 128px 52px 88px; }
+.os-hero h1 { font-size: clamp(38px, 4.6vw, 62px); max-width: 13ch; text-wrap: balance; margin-bottom: 20px; }
+.os-hero .hero-sub { max-width: 44ch; margin: 0 0 32px; font-weight: 400; color: var(--navy-2); }
+.os-hero .hero-form { justify-content: flex-start; }
+.os-hero .hero-footnote { font-size: 14px; color: var(--navy-2); }
+.btn .ic { font-size: 18px; }
+.os-link { color: var(--navy); font-weight: 500; text-decoration: underline; text-decoration-color: var(--orange); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+.map a, .repo, .code-bar a { text-decoration: none; }
+.faq-a code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9em; padding: 1px 6px; background: var(--white); border: 1px solid var(--border); border-radius: 6px; }
 
-/* Why: three numbered arguments, left-aligned, one measure */
-.why { padding: 0 52px 96px; }
-.why-inner { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
-.why-block { background: var(--white); padding: 36px 32px 40px; }
-.why-num { font-family: var(--serif); font-size: 11px; color: var(--orange); letter-spacing: .08em; display: block; margin-bottom: 18px; }
-.why-block h2 { font-size: clamp(22px, 2.6vw, 28px); line-height: 1.2; letter-spacing: -.3px; margin-bottom: 14px; }
-.why-block p { font-size: 15px; font-weight: 300; color: var(--navy-3); line-height: 1.75; max-width: 42ch; }
-.why-block a { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--orange); }
+/* The map: the repository's real folders, top to bottom in the order a request travels.
+   The orange dashes between the parts are the aqueduct's water, drawn still. */
+.map { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: 0 24px 64px rgba(13,15,26,.10); overflow: hidden; animation: fadeUp .5s .2s ease both; }
+.map-bar { display: flex; align-items: center; gap: 10px; padding: 14px 20px; background: var(--off); border-bottom: 1px solid var(--border); }
+.map-bar > .ic { font-size: 20px; color: var(--navy); }
+.map-bar a { display: inline-block; padding: 6px 0; font-size: 15px; color: var(--navy); }
+.map-bar a strong { font-weight: 600; }
+.map-lic { margin-left: auto; padding: 3px 10px; border: 1px solid var(--border); border-radius: var(--pill); background: var(--white); font-size: 12px; font-weight: 600; color: var(--navy-2); }
+.map-flow { list-style: none; padding: 20px 20px 22px; display: grid; gap: 0; }
+.map-step { position: relative; }
+.map-step + .map-step { padding-top: 22px; }
+.map-step + .map-step::before { content: ''; position: absolute; top: 2px; left: 28px; width: 2px; height: 18px; background: repeating-linear-gradient(180deg, var(--orange) 0 5px, transparent 5px 9px); }
+.map-fork::before, .map-join::before { left: 25% !important; }
+.map-fork::after, .map-join::after { content: ''; position: absolute; top: 2px; left: 75%; width: 2px; height: 18px; background: repeating-linear-gradient(180deg, var(--orange) 0 5px, transparent 5px 9px); }
+.node { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; row-gap: 2px; align-items: baseline; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--r); background: var(--white); color: var(--navy); transition: border-color .15s, background .15s; }
+a.node:hover { border-color: var(--orange); background: var(--off); }
+a.node:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+.node-path { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14px; font-weight: 600; color: var(--navy); overflow-wrap: break-word; }
+.node-lang { font-size: 12px; color: var(--navy-3); }
+.node-what { grid-column: 1 / -1; font-size: 14px; line-height: 1.45; color: var(--navy-2); }
+.node.is-gate { border-color: var(--orange); background: #fff7f1; }
+.node.is-gate .node-lang { color: #a33d00; font-weight: 600; }
+.map-fork { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.map-fork .node { align-content: start; grid-template-columns: 1fr; }
+.map-fork .node-lang { order: -1; }
+.map-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 10px 14px; border: 1.5px dashed var(--border); border-radius: var(--r); }
+.map-tools-label { font-size: 13px; font-weight: 600; color: var(--navy-2); margin-right: 4px; }
+.map-tools img { width: 22px; height: 22px; }
+.map-tools a.os-link { margin-left: auto; font-size: 13px; padding: 4px 0; text-decoration: underline; text-decoration-color: var(--orange); }
 
-/* Where things run: the page's heavy element */
-.where { padding: 96px 52px; background: var(--off); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-.where-inner { max-width: 1160px; margin: 0 auto; }
-.where-head { max-width: 640px; margin-bottom: 40px; }
-.where-head h2 { margin-bottom: 14px; }
-.where-head .sub { max-width: 56ch; }
-.where-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.where-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 28px 28px 24px; display: flex; flex-direction: column; gap: 22px; }
-.where-card.pick { position: relative; border: 1.5px solid var(--orange); box-shadow: 0 16px 48px rgba(255,92,0,.10); }
-.where-badge { position: absolute; top: -14px; left: 24px; display: inline-flex; align-items: center; gap: 6px; background: var(--orange); color: #fff; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; padding: 6px 12px; border-radius: var(--pill); }
-.where-badge .ic { font-size: 13px; }
-.where-card-head { display: flex; align-items: center; gap: 14px; }
-.where-card-head .ic { font-size: 26px; color: var(--orange); }
-.where-card-head h3 { font-family: var(--serif); font-size: 22px; color: var(--navy); letter-spacing: -.2px; line-height: 1.2; }
-.where-card-head p { font-size: 14px; color: var(--navy-3); margin-top: 2px; }
-.zones { display: grid; gap: 10px; }
-.zone { border-radius: var(--r); padding: 14px 16px 16px; border: 1.5px dashed var(--border); }
-.zone-you { background: #fff5ee; border-color: #f7c9ad; }
-.zone-cloud { background: #eef0f7; border-color: #cfd4e6; }
-.zone-label { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-2); margin-bottom: 10px; }
-.zone-label .ic { font-size: 15px; }
-.zone-label small { font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--navy-3); font-size: 12px; white-space: nowrap; }
-.pick .zone-cloud { background: #eef7f0; border-color: #bfe0c7; }
-.pick .zone-cloud .zone-label .ic { color: var(--success, #10883c); }
-.zone-items { display: flex; flex-wrap: wrap; gap: 8px; }
-.zone-item { display: inline-flex; align-items: center; gap: 7px; background: var(--white); border: 1px solid var(--border); border-radius: var(--pill); padding: 6px 12px 6px 9px; font-size: 13px; color: var(--navy); }
-.zone-item .ic { font-size: 15px; color: var(--navy-3); }
-.zone-item small { color: var(--navy-3); font-size: 12px; white-space: nowrap; }
-.zone-label, .zone-item { flex-wrap: wrap; }
-.zone-empty { font-size: 14px; color: var(--navy-3); font-style: italic; font-family: var(--serif); }
-.where-facts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; border-top: 1px solid var(--border); padding-top: 18px; }
-.where-facts li { display: flex; align-items: flex-start; gap: 10px; font-size: 14.5px; color: var(--navy); line-height: 1.5; }
-.where-facts .ic { font-size: 18px; flex-shrink: 0; margin-top: 2px; color: var(--success, #10883c); }
-.where-facts li.no .ic { color: var(--navy-3); }
-.where-facts li.no { color: var(--navy-3); }
-.where-cta { margin-top: auto; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.where-fit { font-size: 13px; color: var(--navy-3); line-height: 1.4; max-width: 30ch; }
-.where-note { font-size: 13px; font-weight: 300; color: var(--navy-3); margin-top: 16px; max-width: 72ch; }
-.where-note a { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--orange); }
+/* Section shells */
+.os-sec { padding: 96px 52px; }
+.os-sec.is-off { background: var(--off); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.os-inner { max-width: 1160px; margin: 0 auto; }
+.os-head h2 { font-size: clamp(30px, 3.4vw, 44px); margin-bottom: 14px; }
+.os-head .sub { max-width: 46ch; font-size: 17px; line-height: 1.65; color: var(--navy-2); }
+.split { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 56px; align-items: center; }
 
-/* Self-host: the README's block, and a pointer to it */
-.host { padding: 96px 52px; }
-.host-inner { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: center; }
-.host-copy h2 { margin-bottom: 16px; }
-.host-copy p { font-size: 15px; font-weight: 300; color: var(--navy-3); line-height: 1.75; max-width: 46ch; margin-bottom: 14px; }
-.host-copy a { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--orange); }
-.host-code { border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; background: var(--navy); box-shadow: 0 24px 64px rgba(13,15,26,.12); }
-.host-code-bar { display: flex; align-items: center; gap: 7px; padding: 10px 16px; background: var(--navy-2); }
-.host-code-dot { width: 10px; height: 10px; border-radius: 50%; }
-.host-code-label { font-size: 12px; color: rgba(255,255,255,.55); margin-left: 8px; }
-.host-code pre { margin: 0; padding: 22px 24px 26px; overflow-x: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13.5px; line-height: 1.8; color: #fff; }
-.host-code .c { color: rgba(255,255,255,.45); }
-.host-code .p { color: var(--orange); }
+/* The gate: the agent's real tool list, and the card where a person decides */
+.code-card { margin-top: 28px; border-radius: var(--r-lg); overflow: hidden; background: var(--navy); box-shadow: 0 18px 48px rgba(13,15,26,.12); }
+.code-bar { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: var(--navy-2); }
+.code-bar .ic { font-size: 15px; color: rgba(255,255,255,.7); }
+.code-bar a { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; color: rgba(255,255,255,.78); overflow-wrap: anywhere; padding: 4px 0; }
+.code-bar a:hover { color: #fff; }
+.code-card pre { margin: 0; padding: 18px 20px 20px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13.5px; line-height: 1.8; color: #fff; white-space: pre-wrap; overflow-wrap: anywhere; }
+.code-card .k { color: rgba(255,255,255,.5); }
+.code-card .f { color: #ffb48a; }
+.gate-note { margin-top: 18px; font-size: 15px; line-height: 1.6; color: var(--navy-2); max-width: 52ch; }
+.gate-shot { margin: 0; }
+.gate-shot img { display: block; width: 100%; height: auto; border-radius: var(--r-lg); border: 1px solid var(--border); cursor: zoom-in; }
+.gate-shot figcaption { margin-top: 12px; font-size: 14px; color: var(--navy-3); }
 
-/* Money: one paragraph, no card, no grid */
+/* What runs where: one comparison, read across */
+.where-table { width: 100%; margin-top: 36px; border-collapse: separate; border-spacing: 0; background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; font-size: 15px; }
+.where-table th, .where-table td { padding: 16px 20px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--border); line-height: 1.45; }
+.where-table tbody tr:last-child th, .where-table tbody tr:last-child td { border-bottom: none; }
+.where-table thead th { font-family: var(--serif); font-size: 21px; font-weight: 400; color: var(--navy); }
+.where-table thead th small { display: block; margin-top: 4px; font-family: var(--sans); font-size: 14px; color: var(--navy-3); }
+.where-table tbody th { width: 30%; font-weight: 500; color: var(--navy); }
+.where-table td { color: var(--navy-2); }
+.where-table .is-app { background: #fff7f1; }
+.where-table thead .is-app { box-shadow: inset 0 3px 0 var(--orange); }
+.where-note { margin-top: 18px; font-size: 15px; color: var(--navy-2); max-width: 70ch; }
+
+/* Self-host: the README's block, wide enough for its comments */
+.host .term { margin-top: 32px; max-width: 920px; }
+.term { border-radius: var(--r-lg); overflow: hidden; background: var(--navy); box-shadow: 0 24px 64px rgba(13,15,26,.12); }
+.term-bar { display: flex; align-items: center; gap: 7px; padding: 10px 16px; background: var(--navy-2); }
+.term-dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,.22); }
+.term-label { font-size: 12px; color: rgba(255,255,255,.6); margin-left: 8px; }
+.term pre { margin: 0; padding: 22px 24px 26px; overflow-x: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13.5px; line-height: 1.8; color: #fff; }
+.term .c { color: rgba(255,255,255,.55); }
+.term .p { color: var(--orange); }
+
+/* Money: who you pay, and the keys you can bring */
 .money { padding: 96px 52px; background: var(--navy); }
-.money-inner { max-width: 760px; margin: 0 auto; }
-.money .tag { color: var(--orange); }
-.money h2 { color: #fff; margin-bottom: 22px; }
-.money h2 em { color: var(--orange); }
-.money p { font-size: 17px; font-weight: 300; color: rgba(255,255,255,.72); line-height: 1.8; max-width: 66ch; }
-.money p + p { margin-top: 16px; }
-.money strong { color: #fff; font-weight: 500; }
+.money-inner { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 56px; align-items: center; }
+.money h2 { color: #fff; font-size: clamp(30px, 3.4vw, 44px); margin-bottom: 18px; }
+.money p { font-size: 17px; line-height: 1.7; color: rgba(255,255,255,.8); max-width: 48ch; }
+.money p + p { margin-top: 14px; }
+.keys-label { font-size: 14px; font-weight: 600; color: rgba(255,255,255,.8); margin-bottom: 14px; }
+.keys { list-style: none; display: flex; flex-wrap: wrap; gap: 10px; }
+.keys li { display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px 10px 12px; background: var(--white); border-radius: var(--pill); font-size: 15px; font-weight: 500; color: var(--navy); }
+.keys img { width: 22px; height: 22px; }
+.keys .ic { font-size: 20px; color: var(--navy-3); }
 
-@media (max-width: 1100px) {
-  .why-inner { grid-template-columns: 1fr; }
-  .where-grid { grid-template-columns: 1fr; }
-  .host-inner { grid-template-columns: 1fr; gap: 36px; }
+.os-sec .faq-list { max-width: 820px; margin-top: 36px; }
+.os-sec .faq-a { max-width: 62ch; font-weight: 400; color: var(--navy-2); }
+
+/* The close: the repository itself, beside the source mosaic */
+.os-close { padding: 96px 52px 112px; background: var(--off); border-top: 1px solid var(--border); }
+.os-close-inner { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 56px; align-items: center; max-width: 880px; margin: 0 auto; }
+.os-panel { width: 240px; height: 240px; border-radius: 6px; }
+.os-close h2 { margin: 0 0 24px; font-size: clamp(30px, 3.4vw, 44px); }
+.repo { display: flex; align-items: center; gap: 16px; padding: 18px 20px; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--white); color: var(--navy-3); transition: border-color .15s, background .15s; }
+.repo:hover { border-color: var(--orange); }
+.repo:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+.repo > .ic { font-size: 28px; color: var(--navy); flex-shrink: 0; }
+.repo-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.repo-title { font-size: 16px; color: var(--navy); }
+.repo-desc { font-size: 14px; line-height: 1.5; color: var(--navy-2); }
+.repo-host { margin-left: auto; font-size: 13px; color: var(--navy-3); flex-shrink: 0; }
+.os-close .hero-form { justify-content: flex-start; margin-top: 22px; animation: none; }
+
+@media (max-width: 1000px) {
+  .os-hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; padding: 104px 24px 64px; }
+  .os-hero h1 { max-width: 16ch; }
+  .map { max-width: 560px; }
+  .os-sec, .money { padding: 64px 24px; }
+  .os-close { padding: 64px 24px 80px; }
+  .split, .money-inner { grid-template-columns: 1fr; gap: 36px; }
+  .gate-shot { max-width: 480px; }
+  .os-close-inner { grid-template-columns: 1fr; gap: 28px; justify-items: start; }
+}
+/* 761-960px (a tablet, a narrow window) keeps the result beside the action: stacked, the
+   hero left half the screen empty beside a 520px column. */
+@media (max-width: 760px) {
+  .os-hero { grid-template-columns: 1fr; gap: 48px; }
 }
 @media (max-width: 860px) {
-  .os-hero { padding: 100px 24px 56px; }
-  .why, .where, .host, .money { padding-left: 24px; padding-right: 24px; }
-  .where, .host, .money { padding-top: 64px; padding-bottom: 64px; }
-  .why { padding-bottom: 64px; }
+  .os-hero .hero-form, .os-close .hero-form { margin: 0; }
+}
+/* Phones: the table reads down instead of across, one way of running it per block */
+@media (max-width: 640px) {
+  .map-flow { padding: 16px 14px 18px; }
+  .node { padding: 11px 12px; }
+  .where-table, .where-table thead, .where-table tbody, .where-table tr, .where-table th, .where-table td { display: block; }
+  .where-table thead { display: none; }
+  .where-table tbody tr { padding: 14px 18px; border-bottom: 1px solid var(--border); }
+  .where-table tbody tr:last-child { border-bottom: none; }
+  .where-table tbody th, .where-table td { width: auto; padding: 0; border: none; background: none !important; }
+  .where-table tbody th { margin-bottom: 8px; }
+  .where-table td { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: 10px; font-size: 14.5px; }
+  .where-table td + td { margin-top: 4px; }
+  .where-table td::before { content: attr(data-col); font-weight: 600; color: var(--navy); }
+  .repo-host { display: none; }
+  .term pre { font-size: 12.5px; padding: 18px 16px 20px; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .term .c { display: block; padding-left: 1.3em; }
+  .code-bar a { font-size: 11.5px; }
 }
 </style>
 <script type="application/ld+json">
@@ -144,142 +210,96 @@
 
 <a href="#main-content" class="skip-link">Skip to content</a>
 
-<!-- EXPERIMENT: the trust page a commercial-later OSS project needs. Hypothesis: a reader who lands
-     here can answer "is it free, what runs where, what will cost money" without opening the README,
-     and downloads or stars at a higher rate than visitors who only saw the home page. -->
+<!-- EXPERIMENT: the trust page for an open-source project that will charge for bundled models later.
+     Hypothesis: a reader who sees the real parts drawn (the folders, the agent's own tool list,
+     the card they approve on) believes "open end to end" without opening the README, and
+     downloads or opens the repository at a higher rate than visitors who only saw the home page. -->
 
 <!-- NAV (shared: site/partials/nav-simple.html) -->
 <div data-duct-partial="/partials/nav-simple.html"></div>
 
 <main id="main-content">
 
-<!-- HERO -->
-<section class="hero os-hero">
-<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> MIT · Public roadmap · Bring your own keys</div>
-<h1>It reads your whole business.<br/><em>So you can read it.</em></h1>
-<p class="hero-sub">Duct is open source end to end: the agents, the connectors, the prompts, the approval gate, the desktop shell. Download it and we run the service for you. Clone it and nothing touches us.</p>
+<!-- HERO: the claim on the left, the parts it names drawn on the right -->
+<section class="os-hero">
+<div>
+<h1>It reads your whole business. <em>So you can read it.</em></h1>
+<p class="hero-sub">Every part of Duct is in one public repository under the MIT license. Download it and we run the service, or clone it and run all of it yourself.</p>
 <div class="hero-form">
 <a class="btn btn-orange btn-lg" href="/download" data-duct-download>Download Duct ↓</a>
-<a class="btn btn-ghost btn-lg" href="https://github.com/5hirish/duct" rel="noopener">Read the source</a>
+<a class="btn btn-ghost btn-lg" href="https://github.com/5hirish/duct" rel="noopener"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#github"/></svg> Read the source</a>
 </div>
-<p class="hero-footnote">Free with your own keys, always · No account needed to run it yourself</p>
+<p class="hero-footnote">Free with your own model keys.</p>
+</div>
+
+<figure class="map" aria-label="How Duct's parts connect, from the app you download to your tools">
+<div class="map-bar"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#github"/></svg><a href="https://github.com/5hirish/duct" rel="noopener">5hirish/<strong>duct</strong></a><span class="map-lic">MIT</span></div>
+<ol class="map-flow">
+<li class="map-step"><a class="node" href="https://github.com/5hirish/duct/tree/main/desktop" rel="noopener"><span class="node-path">desktop/</span><span class="node-lang">Rust</span><span class="node-what">The app you download. Your model keys stay in its keychain.</span></a></li>
+<li class="map-step"><a class="node" href="https://github.com/5hirish/duct/tree/main/app" rel="noopener"><span class="node-path">app/</span><span class="node-lang">Next.js</span><span class="node-what">Every screen you click.</span></a></li>
+<li class="map-step"><a class="node" href="https://github.com/5hirish/duct/tree/main/backend/agents" rel="noopener"><span class="node-path">backend/agents/</span><span class="node-lang">Python</span><span class="node-what">Three agents, their prompts in plain text.</span></a></li>
+<li class="map-step map-fork">
+<a class="node" href="https://github.com/5hirish/duct/blob/main/backend/service/connectors.py" rel="noopener"><span class="node-path">connectors.py</span><span class="node-what">Read your tools.</span></a>
+<a class="node is-gate" href="https://github.com/5hirish/duct/blob/main/backend/service/execution/policy.py" rel="noopener"><span class="node-path">policy.py</span><span class="node-lang">The gate</span><span class="node-what">Changes wait for your Apply.</span></a>
+</li>
+<li class="map-step map-join"><div class="map-tools"><span class="map-tools-label">Your tools</span><img src="assets/icons/google-ads.svg" width="22" height="22" alt="Google Ads"/><img src="assets/icons/googleanalytics.svg" width="22" height="22" alt="Google Analytics"/><img src="assets/icons/googlesearchconsole.svg" width="22" height="22" alt="Search Console"/><img src="assets/icons/meta.svg" width="22" height="22" alt="Meta Ads"/><img src="assets/icons/stripe.svg" width="22" height="22" alt="Stripe"/><img src="assets/icons/mixpanel.svg" width="22" height="22" alt="Mixpanel"/><a class="os-link" href="/integrations/">All 14 →</a></div></li>
+</ol>
+</figure>
 </section>
 
-<!-- WHY -->
-<section class="why">
-<div class="why-inner reveal">
-<div class="why-block">
-<span class="why-num">01</span>
-<h2>Read access to everything is a lot to ask.</h2>
-<p>Duct reads your ads, analytics, revenue and session replays together. A tool with that view should not be a black box. Every API call and every prompt is in the repository, readable before you connect a thing.</p>
+<!-- THE GATE: the agent's real tools for changes beside the card a person approves on -->
+<section class="os-sec is-off" id="gate">
+<div class="os-inner split">
+<div class="os-head">
+<h2>The agent proposes. Only you can apply.</h2>
+<p class="sub">These are all the tools an agent gets for changing your accounts. None of them approves a change. The one that acts alone is rollback, which only undoes a change you applied.</p>
+<div class="code-card">
+<div class="code-bar"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#code-2"/></svg><a href="https://github.com/5hirish/duct/blob/main/backend/agents/tools/execution_tools.py" rel="noopener">backend/agents/tools/execution_tools.py</a></div>
+<pre><span class="k">async def</span> <span class="f">list_executable_ops</span>(…)
+<span class="k">async def</span> <span class="f">propose_changes</span>(…)
+<span class="k">async def</span> <span class="f">get_change_set_status</span>(…)
+<span class="k">async def</span> <span class="f">rollback_change_set</span>(…)</pre>
 </div>
-<div class="why-block">
-<span class="why-num">02</span>
-<h2>The approval gate lives in code, not in a prompt.</h2>
-<p>The agent can propose a change and preview it. It has no tool to approve or apply one; that is your button, and the model never sees it. <a href="/doctrine">The doctrine</a> links each rule to the file that enforces it.</p>
+<p class="gate-note"><a class="os-link" href="/doctrine">The doctrine</a> links every rule like this one to the file that enforces it.</p>
 </div>
-<div class="why-block">
-<span class="why-num">03</span>
-<h2>One person cannot ask for trust. He can show the code.</h2>
-<p>Duct is built by <a href="/about">one maintainer in Spain</a>, with agents doing most of the typing. The roadmap is a public board, decisions are argued in issues, and a pull request from you or your agent gets the same review.</p>
-</div>
+<figure class="gate-shot reveal" data-zoom>
+<img src="assets/media/review-card.webp" srcset="assets/media/review-card-768.webp 768w, assets/media/review-card.webp 1088w" sizes="(max-width: 1000px) calc(100vw - 48px), 480px" width="1088" height="936" loading="lazy" decoding="async" alt="A change set waiting for approval: pause a Performance Max campaign and add two negative keywords, with Reject and Approve and apply buttons"/>
+<figcaption>Where a change stops: your Approve button.</figcaption>
+</figure>
 </div>
 </section>
 
-<!-- WHERE THINGS RUN -->
-<section class="where" id="where">
-<div class="where-inner">
-<div class="where-head reveal">
-<p class="tag">What runs where</p>
-<h2>Same code. <em>Two ways to run it.</em></h2>
-<p class="sub">Download the app and we run the service behind it: sign in, connect a tool, ask. Clone the code and every part of it is yours to run. Here is what sits where, in plain words.</p>
+<!-- WHAT RUNS WHERE: one table, read across -->
+<section class="os-sec" id="where">
+<div class="os-inner">
+<div class="os-head">
+<h2>Same code. Two ways to run it.</h2>
+<p class="sub">Download the app and we run the service behind it. Clone the repository and every part is yours.</p>
 </div>
-<div class="where-grid reveal" style="transition-delay:.1s">
-<article class="where-card pick">
-<span class="where-badge"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#rocket"/></svg> Most people start here</span>
-<div class="where-card-head"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#monitor"/></svg><div><h3>The desktop app</h3><p>Download it. Sign in. Connected in two minutes.</p></div></div>
-<div class="zones">
-<div class="zone zone-you">
-<span class="zone-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg> Stays on your computer</span>
-<div class="zone-items">
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg> Your AI keys <small>· in the keychain</small></span>
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#user-round"/></svg> Your ChatGPT sign-in</span>
-</div>
-</div>
-<div class="zone zone-cloud">
-<span class="zone-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg> Duct carries for you <small>· encrypted</small></span>
-<div class="zone-items">
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg> Tool logins <small>· connect once, every device</small></span>
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg> Projects, briefs, memory <small>· synced</small></span>
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#users"/></svg> Teammates <small>· one invite</small></span>
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-line"/></svg> Usage stats <small>· off in Preferences</small></span>
-</div>
-</div>
-</div>
-<ul class="where-facts">
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Free. Bring your keys, or the ChatGPT plan you already pay for.</li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Google Ads, GA4 and the rest connect with one click. Nothing to register.</li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Your briefs follow you to your next computer. One invite adds a teammate.</li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Signed builds that update themselves. We run the service and the database.</li>
-</ul>
-<div class="where-cta">
-<a class="btn btn-orange" href="/download" data-duct-download>Download Duct ↓</a>
-<span class="where-fit">Mac, Windows, Linux · free · no credit card</span>
-</div>
-</article>
-<article class="where-card">
-<div class="where-card-head"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#server"/></svg><div><h3>Self-hosted</h3><p>Clone it. You run every part of it.</p></div></div>
-<div class="zones">
-<div class="zone zone-you">
-<span class="zone-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#server"/></svg> On your computer or your server <small>· all of it</small></span>
-<div class="zone-items">
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg> Your AI keys</span>
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg> Your tool logins</span>
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg> Projects, briefs, memory</span>
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#database"/></svg> The database</span>
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#settings-2"/></svg> Sign-in and OAuth apps <small>· you register them</small></span>
-<span class="zone-item"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#refresh-cw"/></svg> Backups and upgrades</span>
-</div>
-</div>
-<div class="zone zone-cloud">
-<span class="zone-label"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#server"/></svg> Kept by Duct</span>
-<p class="zone-empty">Nothing. It never talks to us.</p>
-</div>
-</div>
-<ul class="where-facts">
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> Free. Same code, same agents, no held-back edition.</li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg> No account with us. Usage stats are not even compiled in.</li>
-<li class="no"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg> Needs your own Google OAuth client before Ads, GA4 or Search Console will connect.</li>
-<li class="no"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg> The database, the backups and every upgrade are yours to run and keep running.</li>
-<li class="no"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg> Nothing follows you to another machine unless you host it as a server yourself.</li>
-</ul>
-<div class="where-cta">
-<a class="btn btn-ghost" href="#self-host">How to self-host ↓</a>
-<span class="where-fit">For a rule about where data lives, or to read the code.</span>
-</div>
-</article>
-</div>
-<p class="where-note reveal">The full detail is in the <a href="/privacy">privacy policy</a>. Whichever way you run it, we never hold an AI key of yours: the desktop app keeps it in your keychain and sends it only while a job runs.</p>
+<table class="where-table reveal">
+<thead><tr><td></td><th scope="col" class="is-app">Desktop app<small>Where most people start</small></th><th scope="col">Self-hosted<small>For a rule about where data lives</small></th></tr></thead>
+<tbody>
+<tr><th scope="row">Your model keys</th><td class="is-app" data-col="Desktop app">In your keychain</td><td data-col="Self-hosted">On your machine</td></tr>
+<tr><th scope="row">Tool logins, briefs, memory</th><td class="is-app" data-col="Desktop app">Encrypted on Duct's service</td><td data-col="Self-hosted">On your machine or server</td></tr>
+<tr><th scope="row">Teammates and other computers</th><td class="is-app" data-col="Desktop app">One invite</td><td data-col="Self-hosted">Host it as a server</td></tr>
+<tr><th scope="row">Database and upgrades</th><td class="is-app" data-col="Desktop app">We run them</td><td data-col="Self-hosted">You run them</td></tr>
+<tr><th scope="row">Account with Duct</th><td class="is-app" data-col="Desktop app">Yes</td><td data-col="Self-hosted">None</td></tr>
+</tbody>
+</table>
+<p class="where-note">Either way, we never hold an AI key of yours. The rest is in the <a class="os-link" href="/privacy">privacy policy</a>.</p>
 </div>
 </section>
 
 <!-- SELF-HOST -->
-<section class="host" id="self-host">
-<div class="host-inner">
-<div class="host-copy reveal">
-<p class="tag">Run it yourself</p>
-<h2>Clone it. Add one key. <em>Start both halves.</em></h2>
-<p>The backend is FastAPI, the app is Next.js, and one Makefile drives both. Add a model provider key to the env file and you are reading your own tools from your own machine in minutes.</p>
-<p>The <a href="https://github.com/5hirish/duct#-self-host-it" rel="noopener">README</a> is the source of truth for setup, and it also covers the desktop build with the backend bundled inside: SQLite on disk, loopback only, no account. <a href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">CONTRIBUTING.md</a> lists the checks CI runs.</p>
+<section class="os-sec is-off" id="self-host">
+<div class="os-inner host">
+<div class="os-head">
+<h2>Clone it, add one key, start it.</h2>
+<p class="sub">Five commands from an empty folder to Duct on your machine. The <a class="os-link" href="https://github.com/5hirish/duct#-self-host-it" rel="noopener">README</a> covers the rest.</p>
 </div>
 <!-- Mirrors the README's "Self-host it" block. If the two disagree, the README is right; fix this one. -->
-<div class="host-code reveal" style="transition-delay:.1s" aria-label="Self-host commands">
-<div class="host-code-bar" aria-hidden="true">
-<span class="host-code-dot" style="background:#ff5f57"></span>
-<span class="host-code-dot" style="background:#febc2e"></span>
-<span class="host-code-dot" style="background:#28c840"></span>
-<span class="host-code-label">terminal</span>
-</div>
+<div class="term" aria-label="Self-host commands">
+<div class="term-bar" aria-hidden="true"><span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span><span class="term-label">terminal</span></div>
 <pre><code><span class="p">$</span> git clone https://github.com/5hirish/duct.git &amp;&amp; cd duct
 <span class="p">$</span> make setup
 <span class="p">$</span> cp backend/.env.example backend/.env.local   <span class="c"># add one model provider key</span>
@@ -289,46 +309,72 @@
 </div>
 </section>
 
-<!-- MONEY -->
+<!-- MONEY: who you pay, and the keys Duct runs on -->
 <section class="money" id="pricing">
-<div class="money-inner reveal">
-<p class="tag">What will cost money</p>
-<h2>Free with your own keys. <em>Always.</em></h2>
-<p><strong>The MIT licence is not a trial.</strong> The agents, the connectors and the approval gate are the product, and they are in the repository. Run them with your own model keys, or with the ChatGPT plan you already pay for, and you owe us nothing.</p>
-<p><strong>What comes later is a paid plan that bundles the models</strong>, so a team can use Duct without anyone holding an API key, on top of the hosted service the desktop app already talks to. Nothing that is open today moves behind that plan. If that ever changes, this page will say so before the code does.</p>
+<div class="money-inner">
+<div>
+<h2>Free with your own keys. Always.</h2>
+<p>You pay your model provider for what you use, or use the ChatGPT plan you already have. Duct charges nothing.</p>
+<p>A paid plan will come later for teams that would rather not hold keys. Nothing open today moves behind it.</p>
+</div>
+<div>
+<p class="keys-label">Bring a key from</p>
+<ul class="keys">
+<li><img src="assets/icons/claude.svg" width="22" height="22" alt=""/>Anthropic</li>
+<li><img src="assets/icons/openai-ads.svg" width="22" height="22" alt=""/>OpenAI</li>
+<li><img src="assets/icons/gemini.svg" width="22" height="22" alt=""/>Google Gemini</li>
+<li>xAI</li>
+<li>OpenRouter</li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#server"/></svg>A model you run</li>
+</ul>
+</div>
 </div>
 </section>
 
-<!-- FAQ -->
-<section class="faq" id="faq">
-<div class="faq-inner">
-<div class="reveal">
-<p class="tag">Questions</p>
-<h2>The ones people <em>actually ask</em></h2>
+<!-- FAQ: the mechanics live here -->
+<section class="os-sec" id="faq">
+<div class="os-inner">
+<div class="os-head">
+<h2>Questions people ask</h2>
 </div>
-<div class="faq-list reveal" style="transition-delay:.08s">
+<div class="faq-list">
 <details class="faq-item">
 <summary class="faq-q">Is Duct really free?</summary>
-<p class="faq-a">Yes. Duct is MIT licensed and free with your own model keys, and that does not change. You pay your model provider directly, or sign in with the ChatGPT plan you already have. A paid plan later bundles model access for teams that would rather not hold keys; nothing that is open today moves behind it.</p>
+<p class="faq-a">Yes. Duct is MIT licensed and free with your own model keys. You pay your model provider directly, or sign in with the ChatGPT plan you already have.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">Can I run Duct without an account?</summary>
-<p class="faq-a">Yes. Clone the repository, run <code>make setup</code>, add one model provider key and start the backend and the app. Everything stays on your machine or your server, and no account with Duct is involved.</p>
+<p class="faq-a">Yes. Clone the repository, run <code>make setup</code>, add one model key and start the backend and the app. No account with Duct is involved.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">What do I give up by self-hosting?</summary>
+<p class="faq-a">Google Ads, GA4 and Search Console need your own Google OAuth client before they connect, and the database, backups and upgrades are yours to run.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">Can I use Duct commercially or fork it?</summary>
-<p class="faq-a">Yes. The MIT licence allows commercial use, modification and redistribution. The only exceptions are third-party documentation under <code>docs/guides</code> and the Duct name and mark.</p>
+<p class="faq-a">Yes. The MIT license allows commercial use, changes and redistribution. The exceptions are third-party documentation under <code>docs/guides</code> and the Duct name and mark.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">How do I contribute?</summary>
-<p class="faq-a">Start with <a href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">CONTRIBUTING.md</a>. Issues and discussions are on GitHub, the roadmap is a public project board, and agent-written contributions are welcome as long as the pull request says where an agent helped.</p>
+<p class="faq-a">Start with <a class="os-link" href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">CONTRIBUTING.md</a>. The roadmap is a public board, and a pull request written with an agent is welcome if it says where the agent helped.</p>
 </details>
 </div>
 </div>
 </section>
 
-<!-- CTA (shared: site/partials/cta-home.html) -->
-<div data-duct-partial="/partials/cta-home.html"></div>
+<!-- CLOSE: the page's own two actions, beside the source mosaic -->
+<section class="os-close">
+<div class="os-close-inner">
+<img class="os-panel" src="assets/art/fons.webp" width="640" height="640" loading="lazy" decoding="async" alt="" aria-hidden="true"/>
+<div>
+<h2>Read it before you connect a thing.</h2>
+<a class="repo" href="https://github.com/5hirish/duct" rel="noopener"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#github"/></svg><span class="repo-body"><span class="repo-title">5hirish/<strong>duct</strong></span><span class="repo-desc">The agents, connectors, prompts, approval gate and desktop shell.</span></span><span class="repo-host" data-duct-stars>github.com</span></a>
+<div class="hero-form">
+<a class="btn btn-orange btn-lg" href="/download" data-duct-download>Download Duct ↓</a>
+</div>
+</div>
+</div>
+</section>
 
 </main>
 

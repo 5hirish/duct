@@ -39,7 +39,7 @@ msgstr "· {fans} ファン"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "“I just want to know if the ads are working.”"
-msgstr "「広告が成果を出しているかだけを知りたい。」"
+msgstr "「広告が機能しているか知りたいだけです。」"
 
 #: src/components/settings/AgentAccess.jsx
 msgid "(done)"
@@ -330,7 +330,7 @@ msgstr "{count} {noun}"
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "{count} of {voters} would stop"
-msgstr "{voters}人中{count}人が手を止めます"
+msgstr "{voters}人中{count}人がスクロールを止める"
 
 #: src/app/(app)/scheduled/page.jsx
 msgid "{count} scheduled"
@@ -1942,7 +1942,7 @@ msgstr "いつでも"
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Anyone scrolling"
-msgstr "スクロール中のユーザー"
+msgstr "スクロール中の誰でも"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Anything else Duct should know"
@@ -5889,7 +5889,7 @@ msgstr "進行中"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "In their words"
-msgstr "ユーザー自身の言葉"
+msgstr "実際の言葉で"
 
 #: src/components/insights/InsightsWorkspace.jsx
 #~ msgid "in this thread"
@@ -7665,7 +7665,7 @@ msgstr "未保存"
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Not tested on your results yet: that needs five published posts with numbers. Read this as a guess."
-msgstr "成果に基づくテストはまだ行われていません。数値付きの公開済み投稿が5件必要です。推測としてお読みください。"
+msgstr "まだ実績でテストされていません。数値付きの公開済み投稿が5件必要です。参考程度にお読みください。"
 
 #: src/lib/contentEnums.js
 msgid "Not true"
@@ -8144,8 +8144,8 @@ msgstr "あなたのみ"
 #~ msgstr "どのプロジェクトでも、自分のチャットのみがサーバーを使用します。プロジェクトを共有している人は、各自で接続します。"
 
 #: src/components/connections/McpConnectDialog.jsx
-msgid "Only your own insights chats use it, in any project. Scheduled briefs don’t call MCP connectors yet."
-msgstr "あなた自身のインサイトチャットのみが、どのプロジェクトでも使用します。スケジュールされたブリーフはまだMCPコネクタを呼び出しません。"
+#~ msgid "Only your own insights chats use it, in any project. Scheduled briefs don’t call MCP connectors yet."
+#~ msgstr "あなた自身のインサイトチャットのみが、どのプロジェクトでも使用します。スケジュールされたブリーフはまだMCPコネクタを呼び出しません。"
 
 #: src/app/(app)/execute/page.jsx
 msgid "Op types to block, comma-separated (optional)"
@@ -8311,11 +8311,11 @@ msgstr "投稿を開きました"
 
 #: src/lib/contentReview.js
 msgid "Opening B"
-msgstr "冒頭 B"
+msgstr "オープニングB"
 
 #: src/lib/contentReview.js
 msgid "Opening C"
-msgstr "冒頭 C"
+msgstr "オープニングC"
 
 #: src/components/content/SynthesisPanel.jsx
 msgid "Opening lines of the most engaging posts that reached at least a typical audience"
@@ -8339,7 +8339,7 @@ msgstr "開いています…"
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Openings they compared"
-msgstr "比較された冒頭"
+msgstr "比較したオープニング"
 
 #: src/components/connections/logos.jsx
 msgid "OpenRouter"
@@ -9265,7 +9265,7 @@ msgstr "サイトを読み込む"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read past posts to test the audience panel"
-msgstr "過去の投稿を読み込んでオーディエンスパネルをテスト"
+msgstr "ターゲット層パネルをテストするために過去の投稿を読み込む"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read project context"
@@ -11453,7 +11453,7 @@ msgstr "手を止める"
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Stops for: {picked}"
-msgstr "手を止める冒頭: {picked}"
+msgstr "スクロールを止める要素: {picked}"
 
 #: src/components/content/VendorKeyForm.jsx
 msgid "Stored encrypted, and used only for projects you own."
@@ -11669,15 +11669,15 @@ msgstr "テストして接続"
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Tested on your last {posts} posts: a loose match with their real {metric} ({agreed} of {pairs} pairs right). Read this as a lean."
-msgstr "直近の{posts}件の投稿でテスト済み: 実際の{metric}と緩やかに一致（{pairs}ペア中{agreed}ペアが正解）。傾向としてお読みください。"
+msgstr "直近の{posts}件の投稿でテスト済み: 実際の{metric}と緩やかに一致（{pairs}ペア中{agreed}ペアが正解）。傾向としてご覧ください。"
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Tested on your last {posts} posts: it ranked them close to their real {metric} ({agreed} of {pairs} pairs right). A lean, not a promise."
-msgstr "直近の{posts}件の投稿でテスト済み: 実際の{metric}に近い順位付け（{pairs}ペア中{agreed}ペアが正解）。保証ではなく傾向です。"
+msgstr "直近の{posts}件の投稿でテスト済み: 実際の{metric}に近い順位付け（{pairs}ペア中{agreed}ペアが正解）。確約ではなく傾向です。"
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Tested on your last {posts} posts: no better than a coin at ranking their real {metric}. Read this as a guess."
-msgstr "直近の{posts}件の投稿でテスト済み: 実際の{metric}の順位付け精度はコイン投げと同等です。推測としてお読みください。"
+msgstr "直近の{posts}件の投稿でテスト済み: 実際の{metric}の順位付け精度はコイン投げと同等。推測としてご覧ください。"
 
 #: src/components/content/PlanStrategy.jsx
 #~ msgid "Testing"
@@ -12694,7 +12694,7 @@ msgstr "次"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Up to three things this audience really said, one per line: a review, a comment, a support email. The review speaks from these first."
-msgstr "このオーディエンスが実際に発言した内容を1行につき1つ、最大3つまで（レビュー、コメント、サポートメールなど）。レビューの際、これらが最優先で考慮されます。"
+msgstr "このターゲット層が実際に発言した内容を1行に1つ、最大3つ入力（レビュー、コメント、サポートメールなど）。レビューではこれらが最優先されます。"
 
 #: src/components/content/PlanPicker.jsx
 msgid "Upcoming"
@@ -13421,7 +13421,7 @@ msgstr "ペルソナの人物像"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Who your posts are for. The pre-publish review plays each one, says why they'd scroll past, and which opening would stop them."
-msgstr "投稿の対象読者。公開前レビューでは各ペルソナをシミュレーションし、読み飛ばす理由と手を止める冒頭を表示します。"
+msgstr "投稿の対象者。公開前レビューでは各自を再現し、スクロールで通り過ぎる理由やスクロールを止めるオープニングを示します。"
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Why it matters"
@@ -13555,7 +13555,7 @@ msgstr "次に追加すべきもの"
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Would scroll past: {scrollPast}"
-msgstr "読み飛ばす場合: {scrollPast}"
+msgstr "スクロールで通り過ぎる理由: {scrollPast}"
 
 #: src/components/content/AnalyticsReport.jsx
 msgid "Write the report"
@@ -13912,7 +13912,7 @@ msgstr "ワンラインピッチ"
 
 #: src/lib/contentReview.js
 msgid "Your opening"
-msgstr "あなたの冒頭"
+msgstr "あなたのオープニング"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Your own account and API key, stored encrypted. Duct posts only when you ask it to."
@@ -13922,9 +13922,13 @@ msgstr "あなた自身のアカウントと API キーは暗号化して保存�
 msgid "Your own account and API key, stored encrypted. Numbers sync from the posts Duct publishes and the ones you post yourself."
 msgstr "あなた自身のアカウントと API キーは暗号化して保存されます。数値は Duct が公開した投稿と、あなたが自分で投稿したものの両方から同期されます。"
 
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Your own chats use it, in any project. Scheduled runs only call the read-only tools of the servers Duct trusts, so one added by address never runs unattended."
+msgstr "どのプロジェクトでも、ご自身のチャットから使用できます。スケジュール実行ではDuctが信頼するサーバーの読み取り専用ツールのみが呼び出されるため、アドレスで追加されたものが無人で実行されることはありません。"
+
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Your personas react just like anyone would, so this says little about your audience. Add lines they really said in Brand settings to tell them apart."
-msgstr "ペルソナの反応が誰にでも当てはまる内容のため、オーディエンスの参考になりません。ブランド設定に実際の顧客の発言を追加して区別できるようにしてください。"
+msgstr "ペルソナが誰にでも当てはまる反応をするため、ターゲット層の特徴が表れていません。区別化のためにブランド設定で実際の顧客の発言を追加してください。"
 
 #: src/components/content/AccountsTab.jsx
 #~ msgid "your PostBridge accounts"

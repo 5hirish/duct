@@ -43,141 +43,108 @@
 <!-- The HowTo is the three steps and the FAQPage the troubleshooting <details>, word for word:
      the i18n generator translates these strings through the page's own catalogue entries. -->
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebPage","inLanguage":"de","name":"Verbinde MCP-Server mit Ducts Agent: Einrichtungsanleitung","url":"https://getduct.ai/de/mcp","description":"Verbinde OpenSEO, Notion, Linear, PostHog oder jeden öffentlichen MCP-Server mit Duct. Melde dich einmal an, dann frage. Schreibgeschützte Tools laufen; alles andere wartet auf dein OK.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"HowTo","name":"So verbindest du einen Server","step":[{"@type":"HowToStep","position":1,"name":"Öffne den Werkzeugkasten","text":"Öffne in der Duct App den Werkzeugkasten. Die vorgefertigten Server sind dort aufgelistet, und jeder andere verbindet sich über seine Adresse."},{"@type":"HowToStep","position":2,"name":"Server auswählen oder Adresse einfügen","text":"Wähle OpenSEO, PostHog, Notion, Linear, Railway oder Cloudflare. Für alles andere füge die HTTPS-Adresse des Servers ein."},{"@type":"HowToStep","position":3,"name":"Einmal anmelden","text":"Ein Klick, wo der Server die Anmeldung unterstützt. Wo nicht, füge einen API-Schlüssel des Anbieters ein. Duct hält ihn verschlüsselt."}]}}
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"de","name":"Verbinde MCP-Server mit Ducts Agent: Einrichtungsanleitung","url":"https://getduct.ai/de/mcp","description":"Verbinde OpenSEO, Notion, Linear, PostHog oder jeden öffentlichen MCP-Server mit Duct. Melde dich einmal an, dann frage. Schreibgeschützte Tools laufen; alles andere wartet auf dein OK.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"HowTo","name":"In drei Schritten verbinden","step":[{"@type":"HowToStep","position":1,"name":"Öffne den Werkzeugkasten","text":"Öffne in der Duct-App den Werkzeugkasten."},{"@type":"HowToStep","position":2,"name":"Server auswählen oder Adresse einfügen","text":"Wähle einen der sechs, suche im Werkzeugkasten nach einem anderen oder füge die HTTPS-Adresse eines beliebigen Servers ein."},{"@type":"HowToStep","position":3,"name":"Einmal anmelden","text":"Ein Klick, wo der Server es unterstützt. Sonst füge einen API-Schlüssel des Anbieters ein."}]}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"de","mainEntity":[{"@type":"Question","name":"Es steht „Dieser Server benötigt einen API-Schlüssel“","acceptedAnswer":{"@type":"Answer","text":"Der Server bietet keine Anmeldung, die Duct nutzen kann. Erstelle einen API-Schlüssel in den Einstellungen des Anbieters und füge ihn im Werkzeugkasten ein."}},{"@type":"Question","name":"Es steht „Muss neu verbunden werden“","acceptedAnswer":{"@type":"Answer","text":"Die Anmeldung ist abgelaufen oder wurde seitens des Anbieters widerrufen. Drücke Erneut verbinden im Werkzeugkasten und melde dich erneut an."}},{"@type":"Question","name":"Es steht „Duct verbindet sich nur mit Servern im öffentlichen Internet“","acceptedAnswer":{"@type":"Answer","text":"Die Adresse zeigt auf deinen eigenen Computer oder ein privates Netzwerk. Der gehostete Dienst ruft nur öffentliche Internetadressen auf, daher kann ein lokaler oder interner Server nicht erreicht werden."}},{"@type":"Question","name":"Warum kann ich Figma oder Slack nicht verbinden?","acceptedAnswer":{"@type":"Answer","text":"Beide lassen nur Clients zu, die sie im Voraus genehmigt haben, daher reicht ihre Serveradresse allein nicht aus. Sie funktionieren noch nicht mit Duct."}},{"@type":"Question","name":"Kostet ein Tool-Aufruf etwas?","acceptedAnswer":{"@type":"Answer","text":"Manche tun das, auf Seiten des Anbieters. Ein Aufruf, der dort Credits kostet, wie OpenSEO-Recherche, verbraucht deine Credits bei diesem Anbieter, genau wie von jedem anderen Client."}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"de","mainEntity":[{"@type":"Question","name":"Es steht „Duct verbindet sich nur mit Servern im öffentlichen Internet“","acceptedAnswer":{"@type":"Answer","text":"Die Adresse zeigt auf deinen eigenen Computer oder ein privates Netzwerk. Duct ruft Server aus der Cloud auf und erreicht daher nur öffentliche HTTPS-Adressen. Server, die lokal über stdio laufen, funktionieren ebenfalls nicht."}},{"@type":"Question","name":"Es fragt nach einem API-Key","acceptedAnswer":{"@type":"Answer","text":"Der Server bietet keine Ein-Klick-Anmeldung, die Duct nutzen kann. Erstelle einen Schlüssel in den Einstellungen des Anbieters und füge ihn im selben Dialog ein. Duct speichert ihn verschlüsselt und sendet ihn nur an diesen Server."}},{"@type":"Question","name":"Es steht „Muss neu verbunden werden“","acceptedAnswer":{"@type":"Answer","text":"Die Anmeldung ist abgelaufen oder wurde seitens des Anbieters widerrufen. Drücke Erneut verbinden im Werkzeugkasten und melde dich erneut an."}},{"@type":"Question","name":"Sieht das Modell meine Keys?","acceptedAnswer":{"@type":"Answer","text":"Nein. Anmeldungen und Keys bleiben auf der Seite von Duct verschlüsselt und werden mit dem Aufruf übertragen. Was ein Server zurücksendet, wird als Daten gelesen, niemals als Anweisungen."}},{"@type":"Question","name":"Können Personen, mit denen ich ein Projekt teile, meine Server nutzen?","acceptedAnswer":{"@type":"Answer","text":"Nein. Ein Server gehört der Person, die ihn verbunden hat, und nur ihre eigenen Chats nutzen ihn. Teammitglieder verbinden ihre eigenen."}},{"@type":"Question","name":"Kostet ein Tool-Aufruf etwas?","acceptedAnswer":{"@type":"Answer","text":"Manche tun das, beim Anbieter. Ein OpenSEO-Rechercheaufruf verbraucht deine OpenSEO-Credits, genauso wie in jeder anderen App."}},{"@type":"Question","name":"Wie unterscheidet sich das von Connectoren für Claude oder ChatGPT?","acceptedAnswer":{"@type":"Answer","text":"Ihre Verzeichnisse listen größtenteils dieselben Anbieter-Server auf. Duct verbindet sich direkt mit diesen Servern, egal welches Modell du mitbringst."}}]}
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"de","itemListElement":[{"@type":"ListItem","position":1,"name":"Startseite","item":"https://getduct.ai/de/"},{"@type":"ListItem","position":2,"name":"MCP-Server","item":"https://getduct.ai/de/mcp"}]}
 </script>
 <style>
-/* ── MCP-ONLY STYLES ── */
-.mcp-hero { padding-bottom: 48px; }
-/* Two lines at desktop: at the default 76px the first beat broke into three. */
-.mcp-hero h1 { font-size: clamp(40px, 5.2vw, 68px); max-width: 1040px; }
-.mcp-hero .hero-sub { max-width: 580px; }
-/* The other direction lives on /connect-agent; the two pages share a protocol and nothing else */
-.mcp-other { margin-top: 20px; font-size: 14px; line-height: 1.6; color: var(--navy-3); max-width: 60ch; animation: fadeUp .5s .4s ease both; }
-.mcp-other a { white-space: nowrap; color: var(--navy); font-weight: 500; text-decoration: underline; text-decoration-color: var(--orange); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+/* ── MCP-ONLY STYLES ──
+   One idea per section. The hero puts the six one-click servers beside the rule that decides
+   which of their calls run unasked (service/mcp/presets.py, trust_read_only), so a visitor
+   sees their own tool and the approval gate before reading a word of how. Rewritten
+   2026-11-25 from a 900-word version with a drawn mock of the chat. */
+.mc-hero { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 48px; align-items: center; max-width: calc(1160px + 104px); margin: 0 auto; padding: 128px 52px 88px; }
+.mc-hero h1 { font-size: clamp(38px, 3.7vw, 52px); max-width: 20ch; text-wrap: balance; margin-bottom: 20px; }
+.mc-hero .hero-sub { max-width: 44ch; margin: 0 0 32px; font-weight: 400; color: var(--navy-2); }
+.mc-hero .hero-form { justify-content: flex-start; }
+.mc-hero .hero-footnote { font-size: 13px; }
+.mc-other { margin-top: 20px; font-size: 15px; line-height: 1.6; color: var(--navy-2); max-width: 46ch; animation: fadeUp .5s .4s ease both; }
+.mc-link { color: var(--navy); font-weight: 500; text-decoration: underline; text-decoration-color: var(--orange); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
+.mc-other .mc-link { display: inline-block; padding: 3px 0; white-space: nowrap; }
 
-/* The flow: the page's one heavy element. No shot of the app's MCP screens exists yet, so this
-   is a diagram of the rule rather than a copy of a screen: the servers you connect, the question,
-   and the two things a tool call can do. The read-only lane names no vendor on purpose, because
-   whether a tool is read-only is the server's own marking, not something this page can promise. */
-.flow { padding: 0 52px 96px; }
-.flow-fig { max-width: 1000px; margin: 0 auto; }
-.flow-frame { display: grid; grid-template-columns: minmax(0, 4fr) 64px minmax(0, 7fr); column-gap: 16px; align-items: center; padding: 32px; background: var(--off); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: 0 24px 64px rgba(13,15,26,.08); }
-.flow-label { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); margin-bottom: 12px; }
-.flow-servers ul { list-style: none; display: grid; gap: 8px; }
-.flow-servers li { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r); font-size: 14px; font-weight: 500; color: var(--navy); }
-.flow-servers li img { display: block; width: 20px; height: 20px; flex: none; }
-.flow-servers li .ic { font-size: 18px; color: var(--navy-3); }
-.flow-servers li.is-any { background: transparent; border-style: dashed; font-weight: 400; color: var(--navy-3); }
-.logo-tile { border-radius: 5px; }
-.flow-pipe { display: block; width: 64px; height: 20px; overflow: visible; }
-.flow-pipe path { fill: none; stroke-width: 2; stroke-linecap: round; }
-.flow-pipe .bed { stroke: var(--navy); opacity: .18; }
-.flow-pipe .water { stroke: var(--orange); stroke-dasharray: 4 6; }
-.flow-agent > .flow-label:first-child { text-align: right; }
-.flow-ask { margin: 0 0 18px auto; max-width: 46ch; padding: 12px 16px; background: var(--navy); color: #fff; border-radius: 16px 16px 4px 16px; font-size: 15px; line-height: 1.5; }
-.flow-calls { display: grid; gap: 10px; }
-.flow-call { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; padding: 12px 14px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r); }
-.flow-call.is-write { border-color: #f3dfb0; box-shadow: 0 10px 28px rgba(122,82,0,.08); }
-.flow-call-ic { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 8px; background: var(--off); font-size: 16px; color: var(--navy-2); }
-.flow-call-ic img { display: block; width: 20px; height: 20px; }
-.flow-call-text { flex: 1; min-width: 0; }
-.flow-call-text b { display: block; font-size: 14px; font-weight: 500; color: var(--navy); }
-.flow-call-text small { display: block; font-size: 12px; color: var(--navy-3); margin-top: 1px; }
-.flow-state { flex: none; display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: var(--pill); font-size: 12px; font-weight: 600; white-space: nowrap; }
-.flow-state.is-ok { background: #e6f4ea; color: #1a7f37; }
-.flow-state.is-wait { background: #fff7e6; color: #7a5200; }
-.flow-args { flex-basis: 100%; margin: 2px 0 0 40px; padding: 8px 12px; background: var(--off); border-radius: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.6; color: var(--navy-2); white-space: pre-wrap; overflow-wrap: anywhere; }
-.flow-actions { flex-basis: 100%; display: flex; justify-content: flex-end; gap: 8px; }
-.flow-btn { font-size: 12px; font-weight: 600; padding: 7px 16px; border-radius: var(--pill); border: 1px solid var(--border); background: var(--white); color: var(--navy); }
-.flow-btn.is-go { background: var(--orange); border-color: var(--orange); color: #fff; }
-.flow-fig figcaption { margin-top: 16px; font-size: 13px; color: var(--navy-3); text-align: center; line-height: 1.6; }
-@keyframes mcp-water { to { stroke-dashoffset: -20; } }
-@media (prefers-reduced-motion: no-preference) { .flow-pipe .water { animation: mcp-water 1.2s linear infinite; } }
+/* The rule, drawn as the two lanes a call can take. Real content only: the presets and their
+   trust flag, read from presets.py, and the logos in assets/icons/. */
+.lanes { background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: 0 24px 64px rgba(13,15,26,.10); overflow: hidden; animation: fadeUp .5s .2s ease both; }
+.lane { padding: 24px 22px 22px; }
+.lane + .lane { border-top: 1px solid var(--border); background: var(--off); }
+.lane-h { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; color: var(--navy); }
+.lane-h .ic { font-size: 18px; }
+.lane.is-run .lane-h .ic { color: #1a7f37; }
+.lane.is-ask .lane-h .ic { color: #9a5b00; }
+.lane-tools { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.lane-tools li { display: inline-flex; align-items: center; gap: 7px; padding: 7px 11px 7px 8px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r); font-size: 15px; font-weight: 500; color: var(--navy); }
+.lane-tools img { display: block; width: 24px; height: 24px; flex: none; }
+.lane-tools .logo-tile { border-radius: 6px; }
+.lane-tools li.is-any { border-style: dashed; color: var(--navy-2); font-weight: 400; padding-left: 12px; }
+.lane-tools li.is-any .ic { font-size: 16px; color: var(--navy-3); }
+.lane-note { margin-top: 12px; font-size: 14px; line-height: 1.55; color: var(--navy-2); max-width: 46ch; }
 
-/* Steps: the shared navy .how band, with the step titles promoted to real headings */
-.how .step-title { font-weight: 400; }
-.ask-line { display: flex; align-items: flex-start; gap: 14px; margin-top: 40px; padding: 20px 24px; border: 1px solid rgba(255,255,255,.12); border-radius: var(--r-lg); color: rgba(255,255,255,.72); font-size: 15px; font-weight: 300; line-height: 1.7; }
-.ask-line .ic { flex: none; font-size: 22px; color: var(--orange); margin-top: 2px; }
-.ask-line strong { color: #fff; font-weight: 500; }
+/* Section shells, as on /skills */
+.mc-sec { padding: 96px 52px; }
+.mc-sec.is-off { background: var(--off); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.mc-inner { max-width: 1160px; margin: 0 auto; }
+.mc-head { max-width: 780px; }
+.mc-head h2 { margin-bottom: 14px; font-size: clamp(30px, 3.4vw, 44px); }
+.mc-head .sub { max-width: 46ch; font-size: 17px; line-height: 1.65; color: var(--navy-2); }
 
-/* Section shells */
-.mcp-sec { padding: 96px 52px; }
-.mcp-sec.is-off { background: var(--off); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-.mcp-inner { max-width: 1160px; margin: 0 auto; }
-.mcp-head { max-width: 780px; }
-.mcp-head h2 { margin-bottom: 14px; }
-.mcp-head .sub { max-width: 60ch; }
+/* Connect: three steps beside the real dialog, which is the page's one product shot */
+.split { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 64px; align-items: center; }
+.steps-ol { list-style: none; counter-reset: st; margin-top: 32px; display: grid; gap: 22px; }
+.steps-ol li { counter-increment: st; position: relative; padding-left: 46px; }
+.steps-ol li::before { content: counter(st); position: absolute; left: 0; top: 0; width: 30px; height: 30px; border-radius: 50%; background: var(--navy); color: #fff; font-size: 13px; font-weight: 600; line-height: 30px; text-align: center; }
+.steps-ol h3 { font-size: 17px; font-weight: 600; line-height: 1.4; color: var(--navy); }
+.steps-ol p { margin-top: 3px; font-size: 16px; line-height: 1.6; color: var(--navy-2); max-width: 44ch; }
+.then { margin-top: 26px; padding-left: 46px; font-family: var(--serif); font-size: 22px; font-style: italic; color: var(--navy); }
+.mc-shot { max-width: 608px; margin: 0 0 0 auto; }
+.mc-shot figcaption { text-align: left; font-size: 14px; color: var(--navy-2); }
 
-/* Ready-made servers: hairline-free cards, the address shown so nothing is hidden */
-.srv-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 44px; }
-.srv { display: flex; flex-direction: column; gap: 16px; padding: 26px 26px 22px; background: var(--white); border: 1.5px solid var(--border); border-radius: var(--r-lg); }
-.srv-head { display: flex; align-items: center; gap: 14px; }
-.srv-head img { display: block; width: 36px; height: 36px; flex: none; }
-.srv-head .logo-tile { border-radius: 8px; }
-.srv-head h3 { font-family: var(--serif); font-size: 22px; font-weight: 400; line-height: 1.2; letter-spacing: -.2px; color: var(--navy); }
-.srv-head p { font-size: 14px; color: var(--navy-3); line-height: 1.5; margin-top: 2px; }
-.srv-addr span { display: block; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); margin-bottom: 6px; }
-.srv-addr code { display: block; padding: 9px 12px; background: var(--off); border: 1px solid var(--border); border-radius: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13.5px; color: var(--navy); overflow-wrap: anywhere; -webkit-user-select: all; user-select: all; }
-.srv-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.srv-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: var(--pill); border: 1px solid var(--border); background: var(--off); font-size: 12px; font-weight: 500; line-height: 1.5; color: var(--navy-2); }
-.srv-chip .ic { font-size: 13px; }
-.srv-chip.is-credit { border-color: #f3dfb0; background: #fff7e6; color: #7a5200; }
-.srv-try { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--border); font-size: 14px; color: var(--navy-3); line-height: 1.6; }
-.srv-try q { font-family: var(--serif); font-style: italic; font-size: 15px; color: var(--navy); quotes: "\201C" "\201D"; }
+/* Where it runs: a comparison, so a table */
+.where { width: 100%; max-width: 880px; margin-top: 36px; border-collapse: collapse; border-top: 1px solid var(--border); }
+.where th, .where td { padding: 20px 0; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+.where th { width: 42%; padding-right: 32px; font-size: 16px; font-weight: 600; line-height: 1.5; color: var(--navy); }
+.where th small { display: block; margin-top: 2px; font-size: 14px; font-weight: 400; color: var(--navy-3); }
+.where td { font-size: 16px; line-height: 1.6; color: var(--navy-2); }
+.where .logos { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 6px; }
+.where .logos span { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 500; color: var(--navy); }
+.where .logos img { width: 18px; height: 18px; }
+.where .logos .logo-tile { border-radius: 4px; }
+.where .is-none { color: var(--navy-3); }
 
-/* Any other server: copy left, the requirements card right */
-.byo-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: start; }
-.req { padding: 28px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); }
-.req-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); margin-bottom: 12px; }
-.req-list { list-style: none; display: grid; gap: 12px; }
-.req-list + .req-label { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--border); }
-.req-list li { display: flex; align-items: flex-start; gap: 12px; font-size: 15px; line-height: 1.6; color: var(--navy); }
-.req-list .ic { flex: none; font-size: 18px; margin-top: 3px; color: var(--success, #10883c); }
-.req-list.is-no li { color: var(--navy-3); }
-.req-list.is-no .ic { color: var(--navy-3); }
-.req-list code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13.5px; padding: 1px 6px; background: var(--off); border: 1px solid var(--border); border-radius: 6px; }
+.mc-sec .faq-list { max-width: 820px; margin-top: 36px; }
+.mc-sec .faq-a { max-width: 62ch; font-weight: 400; color: var(--navy-2); }
 
-/* Trust: six rules on a hairline grid */
-.rules { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; margin-top: 44px; background: var(--border); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
-.rule { padding: 30px 28px 32px; background: var(--white); }
-.rule > .ic { display: block; font-size: 24px; color: var(--orange); margin-bottom: 18px; }
-.rule h3 { font-family: var(--serif); font-size: 21px; font-weight: 400; line-height: 1.25; letter-spacing: -.2px; color: var(--navy); margin-bottom: 10px; }
-.rule p { font-size: 15px; color: var(--navy-3); line-height: 1.7; max-width: 40ch; }
+/* The close: the page's own action, not the home page's band */
+.mc-close { padding: 96px 52px 112px; border-top: 1px solid var(--border); }
+.mc-close-inner { max-width: 1160px; margin: 0 auto; }
+.mc-close h2 { margin-bottom: 14px; font-size: clamp(30px, 3.4vw, 44px); }
+.mc-close p { margin-bottom: 28px; font-size: 17px; line-height: 1.65; color: var(--navy-2); max-width: 46ch; }
 
-/* Troubleshooting: the questions left, the Claude and ChatGPT note right */
-.trouble-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: 56px; align-items: start; margin-top: 40px; }
-.trouble-grid .faq-a { max-width: 62ch; }
-.aside { padding: 28px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); }
-.aside > .ic { display: block; font-size: 22px; color: var(--orange); margin-bottom: 14px; }
-.aside h3 { font-family: var(--serif); font-size: 21px; font-weight: 400; line-height: 1.25; color: var(--navy); margin-bottom: 10px; }
-.aside p { font-size: 15px; color: var(--navy-3); line-height: 1.7; }
-
-@media (max-width: 1100px) {
-  .rules { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 960px) {
+  .mc-hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; padding: 104px 24px 64px; }
+  .mc-hero h1 { max-width: 18ch; }
+  .lanes { max-width: 560px; }
+  .mc-sec { padding: 64px 24px; }
+  .mc-close { padding: 64px 24px 80px; }
+  .split { grid-template-columns: 1fr; gap: 40px; }
+  .mc-shot { margin: 0; }
+}
+/* 761-960px (a tablet, a narrow window) keeps the result beside the action: stacked, the
+   hero left half the screen empty beside a 520px column. */
+@media (max-width: 760px) {
+  .mc-hero { grid-template-columns: 1fr; gap: 48px; }
 }
 @media (max-width: 860px) {
-  .flow { padding: 0 24px 64px; }
-  .flow-frame { grid-template-columns: 1fr; padding: 20px; gap: 4px; }
-  .flow-servers ul { display: flex; flex-wrap: wrap; }
-  .flow-servers li { padding: 8px 10px; font-size: 13px; }
-  .flow-pipe { transform: rotate(90deg); margin: 18px auto; }
-  .flow-agent > .flow-label:first-child { text-align: left; }
-  .flow-ask { margin-left: 0; }
-  /* The status drops under the title on a phone, so the title keeps its line */
-  .flow-call-text { flex-basis: calc(100% - 40px); }
-  .flow-state { margin-left: 40px; }
-  .flow-args { margin-left: 0; }
-  .mcp-sec { padding: 64px 24px; }
-  .srv-grid { grid-template-columns: 1fr; }
-  .byo-grid, .trouble-grid { grid-template-columns: 1fr; gap: 32px; }
-  .rules { grid-template-columns: 1fr; }
-  .req, .aside { padding: 22px; }
+  .mc-hero .hero-form { margin: 0; }
+}
+@media (max-width: 600px) {
+  .lane { padding: 20px 18px 18px; }
+  .where th, .where td { display: block; width: auto; padding-right: 0; }
+  .where th { padding-bottom: 4px; border-bottom: none; }
+  .where td { padding-top: 0; }
 }
 </style>
 </head>
@@ -186,256 +153,137 @@
 <a href="#main-content" class="skip-link">Zum Inhalt springen</a>
 
 <!-- EXPERIMENT: the setup guide for MCP servers, the reverse of a vendor's "add our server to Claude"
-     page. Hypothesis: a founder who already lives in OpenSEO, Notion, Linear or PostHog downloads
-     Duct at a higher rate once they see their tool plugs straight into the agent and that anything
-     that writes waits for them. Measured by download clicks per visit (GTM). -->
+     page. Hypothesis: a founder or marketer who already lives in OpenSEO, Notion, Linear or PostHog
+     downloads Duct at a higher rate when the first screen shows their tool's logo beside the rule
+     that anything not marked read-only waits for them. Measured by download clicks per visit (GTM). -->
 
 <!-- NAV (shared: site/partials/nav-simple.html) -->
 <div data-duct-partial="/de/partials/nav-simple.html"></div>
 
 <main id="main-content">
 
-<!-- HERO -->
-<section class="hero mcp-hero">
-<div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Model Context Protocol · Jedes Modell, das du mitbringst</div>
+<!-- HERO: the ask on the left, the six servers and the approval rule on the right -->
+<section class="mc-hero">
+<div>
 <h1>Bringe deine eigenen MCP-Server mit.<br/><em>Lass den Agenten sie aufrufen.</em></h1>
-<p class="hero-sub">Ducts Agent kann jeden MCP-Server nutzen, den du verbindest. Sechs sind nur einen Klick entfernt (OpenSEO, PostHog, Notion, Linear, Railway und Cloudflare), und jeder andere öffentliche Server verbindet sich über seine Adresse.</p>
+<p class="hero-sub">Verbinde die Tools, die du bereits nutzt, mit einem Klick, oder jeden entfernten MCP-Server über seine Adresse. Frage dann den Agenten von Duct in einfachen Worten.</p>
 <div class="hero-form">
 <a class="btn btn-orange btn-lg" href="/de/download" data-duct-download>Duct herunterladen ↓</a>
-<a class="btn btn-ghost btn-lg" href="#steps">In drei Schritten einrichten</a>
+<a class="btn btn-ghost btn-lg" href="#steps">Siehe die drei Schritte</a>
 </div>
-<p class="hero-footnote">Kostenlos mit deinen eigenen Schlüsseln · Keine Kreditkarte · macOS, Windows und Linux</p>
-<p class="mcp-other">Möchtest du Duct stattdessen von deinem eigenen Agenten nutzen, wie Claude Code oder Cursor? <a href="/de/connect-agent">Duct von deinem Agenten nutzen →</a></p>
-</section>
+<p class="hero-footnote">Kostenlos mit deinen eigenen Modell-Keys, auf macOS, Windows und Linux.</p>
+<p class="mc-other">Möchtest du die andere Richtung, Duct in Claude Code oder Cursor? <a class="mc-link" href="/de/connect-agent">Verwende Duct in deinem Agenten →</a></p>
+</div>
 
-<!-- FLOW: the servers, the question, the two outcomes of a tool call -->
-<section class="flow">
-<figure class="flow-fig reveal">
-<div class="flow-frame" aria-hidden="true">
-<div class="flow-servers">
-<p class="flow-label">Deine Server</p>
-<ul>
-<li><img class="logo-tile" src="/assets/icons/openseo.webp" width="20" height="20" alt=""/>OpenSEO</li>
-<li><img src="/assets/icons/notion.svg" width="20" height="20" alt=""/>Notion</li>
-<li><img src="/assets/icons/linear.svg" width="20" height="20" alt=""/>Linear</li>
-<li><img src="/assets/icons/posthog.svg" width="20" height="20" alt=""/>PostHog</li>
-<li class="is-any"><svg class="ic"><use href="/assets/icons.svg#link"/></svg>Jede HTTPS-Adresse</li>
+<figure class="lanes" aria-label="Die sechs Ein-Klick-Server und wann dich der Agent zuerst fragt">
+<div class="lane is-run">
+<p class="lane-h"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg>Schreibgeschützte Tools werden sofort ausgeführt</p>
+<ul class="lane-tools">
+<li><img class="logo-tile" src="/assets/icons/openseo.webp" width="24" height="24" alt=""/>OpenSEO</li>
+<li><img src="/assets/icons/notion.svg" width="24" height="24" alt=""/>Notion</li>
+<li><img src="/assets/icons/linear.svg" width="24" height="24" alt=""/>Linear</li>
+<li><img src="/assets/icons/posthog.svg" width="24" height="24" alt=""/>PostHog</li>
 </ul>
+<p class="lane-note">Wenn der Anbieter ein Tool als schreibgeschützt markiert. Seine anderen Tools fragen dich zuerst.</p>
 </div>
-<svg class="flow-pipe" viewBox="0 0 64 20" width="64" height="20"><path class="bed" d="M0 6H64M0 14H64"/><path class="water" d="M0 10H64"/></svg>
-<div class="flow-agent">
-<p class="flow-label">Du fragst</p>
-<p class="flow-ask">Welches dieser fünf Themen hat Suchvolumen, das es wert ist, darüber zu schreiben?</p>
-<p class="flow-label">Der Agent ruft auf</p>
-<div class="flow-calls">
-<div class="flow-call">
-<span class="flow-call-ic"><svg class="ic"><use href="/assets/icons.svg#eye"/></svg></span>
-<span class="flow-call-text"><b>Keyword-Volumen nachschlagen</b><small>Vom Server als schreibgeschützt markiert</small></span>
-<span class="flow-state is-ok"><svg class="ic"><use href="/assets/icons.svg#check"/></svg>Lief</span>
+<div class="lane is-ask">
+<p class="lane-h"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Jeder Aufruf fragt dich zuerst</p>
+<ul class="lane-tools">
+<li><img src="/assets/icons/railway.svg" width="24" height="24" alt=""/>Railway</li>
+<li><img src="/assets/icons/cloudflare.svg" width="24" height="24" alt=""/>Cloudflare</li>
+<li class="is-any"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#link"/></svg>Jeder andere Server</li>
+</ul>
+<p class="lane-note">Lesezugriffe auf Railway und Cloudflare können deine Secrets zurückgeben, und Duct kann nicht für einen Server bürgen, den es nicht auflistet.</p>
 </div>
-<div class="flow-call is-write">
-<span class="flow-call-ic"><img src="/assets/icons/linear.svg" width="20" height="20" alt=""/></span>
-<span class="flow-call-text"><b>Issue in Linear erstellen</b><small>Nicht als schreibgeschützt markiert</small></span>
-<span class="flow-state is-wait">Warte auf dich</span>
-<pre class="flow-args">title  "Write the post on topic 2"
-team   "Content"</pre>
-<span class="flow-actions"><span class="flow-btn">Überspringen</span><span class="flow-btn is-go">freigeben</span></span>
-</div>
-</div>
-</div>
-</div>
-<figcaption>Auf einem vorgefertigten Server läuft ein als schreibgeschützt markiertes Tool sofort. Alles andere zeigt dir die Argumente, die es senden wird, und wartet auf dich.</figcaption>
 </figure>
 </section>
 
-<!-- STEPS -->
-<section class="how" id="steps">
-<div class="how-inner">
-<p class="tag">So verbindest du einen Server</p>
-<h2>Drei Schritte. <em>Dann fragen.</em></h2>
-<div class="channel on-dark" aria-hidden="true"></div>
-<div class="steps">
-<div class="step reveal">
-<span class="step-num">01</span>
-<span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#plug"/></svg></span>
-<h3 class="step-title">Öffne den Werkzeugkasten</h3>
-<p class="step-body">Öffne in der Duct App den Werkzeugkasten. Die vorgefertigten Server sind dort aufgelistet, und jeder andere verbindet sich über seine Adresse.</p>
+<!-- CONNECT: three steps beside the real add-by-address dialog -->
+<section class="mc-sec is-off" id="steps">
+<div class="mc-inner split">
+<div>
+<div class="mc-head">
+<h2>In drei Schritten verbinden</h2>
 </div>
-<div class="step reveal" style="transition-delay:.1s">
-<span class="step-num">02</span>
-<span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#link"/></svg></span>
-<h3 class="step-title">Server auswählen oder Adresse einfügen</h3>
-<p class="step-body">Wähle OpenSEO, PostHog, Notion, Linear, Railway oder Cloudflare. Für alles andere füge die HTTPS-Adresse des Servers ein.</p>
+<ol class="steps-ol">
+<li><h3>Öffne den Werkzeugkasten</h3><p>Öffne in der Duct-App den Werkzeugkasten.</p></li>
+<li><h3>Server auswählen oder Adresse einfügen</h3><p>Wähle einen der sechs, suche im Werkzeugkasten nach einem anderen oder füge die HTTPS-Adresse eines beliebigen Servers ein.</p></li>
+<li><h3>Einmal anmelden</h3><p>Ein Klick, wo der Server es unterstützt. Sonst füge einen API-Schlüssel des Anbieters ein.</p></li>
+</ol>
+<p class="then">Dann frage im Chat.</p>
 </div>
-<div class="step reveal" style="transition-delay:.2s">
-<span class="step-num">03</span>
-<span class="step-icon"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg></span>
-<h3 class="step-title">Einmal anmelden</h3>
-<p class="step-body">Ein Klick, wo der Server die Anmeldung unterstützt. Wo nicht, füge einen API-Schlüssel des Anbieters ein. Duct hält ihn verschlüsselt.</p>
-</div>
-</div>
-<p class="ask-line reveal"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#message-square"/></svg><span><strong>Dann frage im Chat.</strong> Der Agent durchsucht die Tools auf den Servern, die du verbunden hast, ruft das passende auf und antwortet mit dem, was zurückkommt.</span></p>
+<figure class="shot-frame mc-shot reveal">
+<img src="/assets/media/mcp-add.webp" srcset="/assets/media/mcp-add-768.webp 768w, /assets/media/mcp-add.webp 1216w" sizes="(max-width: 960px) calc(100vw - 48px), 608px" width="1216" height="1084" loading="lazy" decoding="async" alt="Duct-Dialog „MCP-Server hinzufügen“: ein Server-Adressfeld, ein optionaler Name, ein Link „Ich habe einen API-Key“ und der Hinweis, dass Duct vor jedem Aufruf eines über die Adresse hinzugefügten Servers nachfragt"/>
+<figcaption>Nicht auf der Liste? Füge die Adresse aus der Dokumentation des Servers ein.</figcaption>
+</figure>
 </div>
 </section>
 
-<!-- READY-MADE SERVERS -->
-<section class="mcp-sec" id="servers">
-<div class="mcp-inner">
-<div class="mcp-head reveal">
-<p class="tag">Vorgefertigt</p>
-<h2>Sechs Server. <em>Jeder ein Klick.</em></h2>
-<p class="sub">Wähle einen im Werkzeugkasten und melde dich mit dem Konto an, das du bereits hast. Jede Adresse ist hier als Referenz; du musst sie nie eingeben.</p>
+<!-- WHERE IT RUNS: the chats get every server, unattended runs only trusted reads -->
+<section class="mc-sec" id="where">
+<div class="mc-inner">
+<div class="mc-head reveal">
+<h2>Geplante Läufe lesen nur</h2>
+<p class="sub">Niemand ist da, um einen Aufruf freizugeben, daher erhält ein geplanter Lauf nur die Tools, die keine Freigabe benötigen.</p>
 </div>
-<div class="srv-grid">
-<article class="srv reveal">
-<div class="srv-head"><img class="logo-tile" src="/assets/icons/openseo.webp" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>OpenSEO</h3><p>Keyword-Volumen, Schwierigkeit und Backlinks.</p></div></div>
-<div class="srv-addr"><span>Serveradresse</span><code>https://app.openseo.so/mcp</code></div>
-<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>Ein-Klick-Anmeldung</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg>API-Schlüssel funktioniert auch</span><span class="srv-chip is-credit"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#coins"/></svg>Recherche verbraucht deine OpenSEO-Guthaben</span></div>
-<p class="srv-try">Versuche: <q>Welche Keywords auf dieser Liste lohnen sich, um dafür zu ranken?</q></p>
-</article>
-<article class="srv reveal" style="transition-delay:.08s">
-<div class="srv-head"><img src="/assets/icons/notion.svg" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>Notion</h3><p>Die Seiten und Datenbanken in deinem Arbeitsbereich.</p></div></div>
-<div class="srv-addr"><span>Serveradresse</span><code>https://mcp.notion.com/mcp</code></div>
-<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>Ein-Klick-Anmeldung</span></div>
-<p class="srv-try">Versuche: <q>Was haben wir im Startplan beschlossen?</q></p>
-</article>
-<article class="srv reveal">
-<div class="srv-head"><img src="/assets/icons/linear.svg" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>Linear</h3><p>Deine Probleme und Projekte.</p></div></div>
-<div class="srv-addr"><span>Serveradresse</span><code>https://mcp.linear.app/mcp</code></div>
-<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>Ein-Klick-Anmeldung</span></div>
-<p class="srv-try">Versuche: <q>Welche Probleme im Onboarding-Projekt sind noch offen?</q></p>
-</article>
-<article class="srv reveal" style="transition-delay:.08s">
-<div class="srv-head"><img src="/assets/icons/posthog.svg" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>PostHog</h3><p>Deine Produktanalysen.</p></div></div>
-<div class="srv-addr"><span>Serveradresse</span><code>https://mcp.posthog.com/mcp</code></div>
-<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>Ein-Klick-Anmeldung</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg>API-Schlüssel funktioniert auch</span></div>
-<p class="srv-try">Versuche: <q>Welcher Onboarding-Schritt verliert die meisten Leute?</q></p>
-</article>
-<article class="srv reveal">
-<div class="srv-head"><img src="/assets/icons/railway.svg" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>Railway</h3><p>Deine Dienste, Deployments, Logs und Variablen.</p></div></div>
-<div class="srv-addr"><span>Serveradresse</span><code>https://mcp.railway.com</code></div>
-<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>Ein-Klick-Anmeldung</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Jeder Aufruf fragt zuerst</span></div>
-<p class="srv-try">Versuch: <q>Ist der gestrige Deploy sauber durchgelaufen?</q></p>
-</article>
-<article class="srv reveal" style="transition-delay:.08s">
-<div class="srv-head"><img src="/assets/icons/cloudflare.svg" width="36" height="36" alt="" loading="lazy" decoding="async"/><div><h3>Cloudflare</h3><p>Dein Konto über seine API: Workers, DNS und Analysen.</p></div></div>
-<div class="srv-addr"><span>Serveradresse</span><code>https://mcp.cloudflare.com/mcp</code></div>
-<div class="srv-chips"><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#zap"/></svg>Ein-Klick-Anmeldung</span><span class="srv-chip"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>Jeder Aufruf fragt zuerst</span></div>
-<p class="srv-try">Versuch: <q>Wie viel des Traffics der letzten Woche waren Bots?</q></p>
-</article>
-</div>
+<table class="where reveal">
+<tbody>
+<tr><th scope="row">Deine Chats<small>Erkenntnisse und Content Studio, in jedem Projekt</small></th><td>Jeder von dir verbundene Server mit den obigen Abfragen.</td></tr>
+<tr><th scope="row">Ein geplanter Content-Plan</th><td><div class="logos"><span><img class="logo-tile" src="/assets/icons/openseo.webp" width="18" height="18" alt=""/>OpenSEO</span><span><img src="/assets/icons/notion.svg" width="18" height="18" alt=""/>Notion</span><span><img src="/assets/icons/linear.svg" width="18" height="18" alt=""/>Linear</span><span><img src="/assets/icons/posthog.svg" width="18" height="18" alt=""/>PostHog</span></div>Nur ihre schreibgeschützten Tools, sonst nichts.</td></tr>
+<tr><th scope="row">Der Analytics-Bericht</th><td><div class="logos"><span><img class="logo-tile" src="/assets/icons/openseo.webp" width="18" height="18" alt=""/>OpenSEO</span><span><img src="/assets/icons/posthog.svg" width="18" height="18" alt=""/>PostHog</span></div>Ihre schreibgeschützten Tools, wenn du sie als Quelle auswählst.</td></tr>
+<tr><th scope="row">Geplante Briefings</th><td class="is-none">Noch nicht.</td></tr>
+</tbody>
+</table>
 </div>
 </section>
 
-<!-- ANY OTHER SERVER -->
-<section class="mcp-sec is-off" id="any-server">
-<div class="mcp-inner byo-grid">
-<div class="mcp-head reveal">
-<p class="tag">Jeder andere Server</p>
-<h2>Nicht auf der Liste? <em>Adresse einfügen.</em></h2>
-<p class="sub">Duct verbindet sich mit jedem MCP-Server, den es über das öffentliche Internet erreichen kann. Hier ist, was dazu nötig ist und was nicht funktioniert.</p>
+<!-- FAQ: the mechanics and the error messages, out of the reading path -->
+<section class="mc-sec is-off" id="faq">
+<div class="mc-inner">
+<div class="mc-head reveal">
+<h2>Fragen und was ein Fehler bedeutet</h2>
 </div>
-<div class="req reveal" style="transition-delay:.08s">
-<span class="req-label">Verbindungen</span>
-<ul class="req-list">
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>Eine öffentliche <code>https://</code>-Adresse, die MCP über Streamable HTTP bereitstellt.</span></li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>Ein-Klick-Anmeldung, wenn der Server OAuth Discovery veröffentlicht und entweder ein Client-Metadaten-Dokument akzeptiert oder eine dynamische Client-Registrierung erlaubt.</span></li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>Andernfalls ein von dir eingefügter API-Schlüssel, der als Bearer-Token an den Server gesendet wird.</span></li>
-</ul>
-<span class="req-label">Nicht unterstützt</span>
-<ul class="req-list is-no">
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg><span>Lokale Server, die über Stdio auf deinem eigenen Computer laufen.</span></li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg><span>Server in einem privaten Netzwerk. Der gehostete Dienst ruft nur öffentliche Internetadressen auf.</span></li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-x"/></svg><span>Anbieter, die nur vorab genehmigte Clients zulassen. Figma und Slack funktionieren heute so.</span></li>
-</ul>
-</div>
-</div>
-</section>
-
-<!-- WHAT THE AGENT WILL AND WON'T DO -->
-<section class="mcp-sec" id="trust">
-<div class="mcp-inner">
-<div class="mcp-head reveal">
-<p class="tag">Was der Agent tun wird und nicht.</p>
-<h2>Schreibgeschützte Läufe. <em>Alles andere fragt zuerst.</em></h2>
-<p class="sub">Für jeden Server, den du verbindest, gelten dieselben Regeln, mit einem Unterschied: Ein Server, den du über seine Adresse hinzufügst, fragt vor jedem Aufruf.</p>
-</div>
-<div class="rules reveal" style="transition-delay:.08s">
-<div class="rule">
-<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#eye"/></svg>
-<h3>Schreibgeschützte Tools laufen sofort</h3>
-<p>Wenn OpenSEO, PostHog, Notion oder Linear ein Tool als schreibgeschützt markiert, ruft der Agent es auf, ohne vorher zu fragen. Railway und Cloudflare erhalten dieses Vertrauen nicht, da ihre Lesevorgänge deine Geheimnisse zurückgeben können, und auch nicht ein Server, den du per Adresse hinzufügst: Jeder Aufruf an diese fragt zuerst.</p>
-</div>
-<div class="rule">
-<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>
-<h3>Alles andere wartet auf dich</h3>
-<p>Jeder andere Aufruf pausiert und zeigt dir alles, was er senden wird. Gib es frei oder überspringe es.</p>
-</div>
-<div class="rule">
-<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg>
-<h3>Antworten sind Daten, keine Befehle</h3>
-<p>Was ein Server zurücksendet, wird als zu lesende Daten behandelt, niemals als zu befolgende Anweisungen.</p>
-</div>
-<div class="rule">
-<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg>
-<h3>Deine Tokens erreichen das Modell nie</h3>
-<p>Anmeldungen und API-Schlüssel bleiben auf der Seite von Duct, verschlüsselt, und werden dem Modell nie gezeigt.</p>
-</div>
-<div class="rule">
-<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#users"/></svg>
-<h3>Deine Server, deine Chats</h3>
-<p>Ein Server gehört der Person, die ihn verbunden hat, und nur ihre eigenen Chats nutzen ihn, in jedem Projekt. Jemand, mit dem du ein Projekt teilst, verbindet seinen eigenen und liest niemals deine durch.</p>
-</div>
-<div class="rule">
-<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#message-square"/></svg>
-<h3>Vorerst der Erkenntnisse-Chat</h3>
-<p>Heute werden verbundene Server im Erkenntnisse-Chat verwendet. Geplante Briefings und Content Studio rufen sie noch nicht auf.</p>
-</div>
-</div>
-</div>
-</section>
-
-<!-- TROUBLESHOOTING -->
-<section class="mcp-sec is-off" id="troubleshooting">
-<div class="mcp-inner">
-<div class="mcp-head reveal">
-<p class="tag">Fehlerbehebung</p>
-<h2>Wenn ein Server <em>Nein sagt.</em></h2>
-</div>
-<div class="trouble-grid">
 <div class="faq-list reveal">
 <details class="faq-item">
-<summary class="faq-q">Es steht „Dieser Server benötigt einen API-Schlüssel“</summary>
-<p class="faq-a">Der Server bietet keine Anmeldung, die Duct nutzen kann. Erstelle einen API-Schlüssel in den Einstellungen des Anbieters und füge ihn im Werkzeugkasten ein.</p>
+<summary class="faq-q">Es steht „Duct verbindet sich nur mit Servern im öffentlichen Internet“</summary>
+<p class="faq-a">Die Adresse zeigt auf deinen eigenen Computer oder ein privates Netzwerk. Duct ruft Server aus der Cloud auf und erreicht daher nur öffentliche HTTPS-Adressen. Server, die lokal über stdio laufen, funktionieren ebenfalls nicht.</p>
+</details>
+<details class="faq-item">
+<summary class="faq-q">Es fragt nach einem API-Key</summary>
+<p class="faq-a">Der Server bietet keine Ein-Klick-Anmeldung, die Duct nutzen kann. Erstelle einen Schlüssel in den Einstellungen des Anbieters und füge ihn im selben Dialog ein. Duct speichert ihn verschlüsselt und sendet ihn nur an diesen Server.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">Es steht „Muss neu verbunden werden“</summary>
 <p class="faq-a">Die Anmeldung ist abgelaufen oder wurde seitens des Anbieters widerrufen. Drücke Erneut verbinden im Werkzeugkasten und melde dich erneut an.</p>
 </details>
 <details class="faq-item">
-<summary class="faq-q">Es steht „Duct verbindet sich nur mit Servern im öffentlichen Internet“</summary>
-<p class="faq-a">Die Adresse zeigt auf deinen eigenen Computer oder ein privates Netzwerk. Der gehostete Dienst ruft nur öffentliche Internetadressen auf, daher kann ein lokaler oder interner Server nicht erreicht werden.</p>
+<summary class="faq-q">Sieht das Modell meine Keys?</summary>
+<p class="faq-a">Nein. Anmeldungen und Keys bleiben auf der Seite von Duct verschlüsselt und werden mit dem Aufruf übertragen. Was ein Server zurücksendet, wird als Daten gelesen, niemals als Anweisungen.</p>
 </details>
 <details class="faq-item">
-<summary class="faq-q">Warum kann ich Figma oder Slack nicht verbinden?</summary>
-<p class="faq-a">Beide lassen nur Clients zu, die sie im Voraus genehmigt haben, daher reicht ihre Serveradresse allein nicht aus. Sie funktionieren noch nicht mit Duct.</p>
+<summary class="faq-q">Können Personen, mit denen ich ein Projekt teile, meine Server nutzen?</summary>
+<p class="faq-a">Nein. Ein Server gehört der Person, die ihn verbunden hat, und nur ihre eigenen Chats nutzen ihn. Teammitglieder verbinden ihre eigenen.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">Kostet ein Tool-Aufruf etwas?</summary>
-<p class="faq-a">Manche tun das, auf Seiten des Anbieters. Ein Aufruf, der dort Credits kostet, wie OpenSEO-Recherche, verbraucht deine Credits bei diesem Anbieter, genau wie von jedem anderen Client.</p>
+<p class="faq-a">Manche tun das, beim Anbieter. Ein OpenSEO-Rechercheaufruf verbraucht deine OpenSEO-Credits, genauso wie in jeder anderen App.</p>
 </details>
-</div>
-<aside class="aside reveal" style="transition-delay:.08s">
-<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#compass"/></svg>
-<h3>Wie sich dies auf Claude- und ChatGPT-Connectors bezieht</h3>
-<p>Ihre Verzeichnisse listen meist dieselben Anbieter-MCP-Server auf. Duct verbindet sich direkt mit diesen Servern, mit jedem Modell, das du mitbringst.</p>
-</aside>
+<details class="faq-item">
+<summary class="faq-q">Wie unterscheidet sich das von Connectoren für Claude oder ChatGPT?</summary>
+<p class="faq-a">Ihre Verzeichnisse listen größtenteils dieselben Anbieter-Server auf. Duct verbindet sich direkt mit diesen Servern, egal welches Modell du mitbringst.</p>
+</details>
 </div>
 </div>
 </section>
 
-<!-- CTA (shared: site/partials/cta-home.html) -->
-<div data-duct-partial="/de/partials/cta-home.html"></div>
+<!-- CLOSE: the page's one action again -->
+<section class="mc-close">
+<div class="mc-close-inner">
+<h2>Frage deine Tools in einem Chat.</h2>
+<p>Lade Duct herunter, öffne den Werkzeugkasten und verbinde den ersten Server, für den du bereits bezahlst.</p>
+<a class="btn btn-orange btn-lg" href="/de/download" data-duct-download>Duct herunterladen ↓</a>
+</div>
+</section>
 
 </main>
 

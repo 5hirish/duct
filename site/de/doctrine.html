@@ -67,67 +67,69 @@
 }
 </script>
 <style>
-/* ── DOCTRINE-ONLY STYLES ── */
-.doc-hero {
-  padding: 150px 52px 70px; max-width: 780px; margin: 0 auto; text-align: center;
-}
-.doc-hero h1 {
-  font-family: var(--serif);
-  font-size: clamp(40px, 6.5vw, 74px);
-  line-height: 1.05; letter-spacing: -2px; color: var(--navy); margin-bottom: 26px;
-  animation: fadeUp .5s .08s ease both;
-}
-.doc-hero h1 em { font-style: italic; color: var(--orange); }
-.doc-hero-sub {
-  font-size: 18px; font-weight: 300; color: var(--navy-3);
-  line-height: 1.8; max-width: 620px; margin: 0 auto;
-  animation: fadeUp .5s .16s ease both;
-}
-.doc-preamble {
-  max-width: 700px; margin: 0 auto; padding: 0 52px 80px;
-  font-size: 16px; font-weight: 300; color: var(--navy-3); line-height: 1.85;
-}
-.doc-preamble p + p { margin-top: 18px; }
-.doc-preamble strong { color: var(--navy-2); font-weight: 500; }
+/* ── DOCTRINE-ONLY STYLES ──
+   Each belief is one or two lines beside the file that enforces it, and the file is the
+   picture: real lines, copied verbatim from the repository by line number, linked to the
+   same lines on GitHub. Rewritten 2026-11-25 from a 950-word version with no evidence on
+   screen. When a quoted file moves, re-copy the lines; never paraphrase them. */
+.dc-hero { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 6fr); gap: 56px; align-items: center; max-width: calc(1160px + 104px); margin: 0 auto; padding: 136px 52px 72px; }
+.dc-hero h1 { font-size: clamp(40px, 5.2vw, 68px); max-width: 12ch; margin-bottom: 22px; animation: fadeUp .5s .08s ease both; }
+.dc-hero h1 em { font-style: italic; color: var(--orange); }
+.dc-hero .hero-sub { max-width: 42ch; margin: 0; font-weight: 400; color: var(--navy-2); animation: fadeUp .5s .16s ease both; }
+.dc-link { color: var(--navy); font-weight: 500; text-decoration: underline; text-decoration-color: var(--orange); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
 
-.tenets { max-width: 760px; margin: 0 auto; padding: 0 52px 40px; }
-.tenet { padding: 48px 0; border-top: 1px solid var(--border); }
-.tenet:last-of-type { border-bottom: 1px solid var(--border); }
-.tenet-num {
-  font-family: var(--serif); font-size: 11px; color: var(--orange);
-  letter-spacing: .08em; margin-bottom: 16px; display: block;
-}
-.tenet-title {
-  font-family: var(--serif); font-size: clamp(24px, 3.4vw, 32px);
-  color: var(--navy); line-height: 1.2; letter-spacing: -.4px; margin-bottom: 16px;
-}
-.tenet-body { font-size: 16px; font-weight: 300; color: var(--navy-3); line-height: 1.82; }
-.tenet-body + .tenet-body { margin-top: 14px; }
-.tenet-quote {
-  margin: 20px 0; padding: 16px 20px; border-left: 2px solid var(--orange);
-  background: var(--off); border-radius: 0 var(--r) var(--r) 0;
-  font-size: 15px; font-weight: 300; color: var(--navy-2); line-height: 1.7; font-style: italic;
-}
-.tenet-src {
-  display: inline-flex; align-items: center; gap: 7px; margin-top: 20px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 12.5px; color: var(--navy-3); text-decoration: none;
-  border-bottom: 1px solid var(--border); padding-bottom: 2px; transition: color .2s, border-color .2s;
-}
-.tenet-src:hover { color: var(--orange); border-color: var(--orange); }
-.tenet-src::before { content: "↳"; color: var(--orange); }
+/* The hero's heavy element: the seven files, as the repository holds them */
+.tree { background: var(--navy); border-radius: var(--r-lg); padding: 22px 8px 14px; box-shadow: 0 24px 64px rgba(13,15,26,.16); animation: fadeUp .5s .22s ease both; }
+.tree-root { margin: 0 16px 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; color: rgba(255,255,255,.6); }
+.tree ol { list-style: none; }
+.tree a { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; min-height: 44px; padding: 11px 16px; border-radius: 10px; text-decoration: none; transition: background .2s; }
+.tree a:hover, .tree a:focus-visible { background: rgba(255,255,255,.07); outline: none; }
+.tree a:focus-visible { box-shadow: 0 0 0 2px var(--orange); }
+.tree-path { min-width: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13.5px; line-height: 1.45; color: rgba(255,255,255,.62); overflow-wrap: anywhere; }
+.tree-path b { font-weight: 500; color: #fff; }
+.tree-what { flex: none; font-size: 14px; color: var(--orange); }
 
-.doc-cta { padding: 110px 52px; text-align: center; background: var(--off); border-top: 1px solid var(--border); }
-.doc-cta-inner { max-width: 580px; margin: 0 auto; }
-.doc-cta h2 { font-size: clamp(30px, 4.6vw, 46px); margin-bottom: 16px; }
-.doc-cta .sub { max-width: 460px; margin: 0 auto 34px; }
+/* One belief: the claim on the left, its file on the right */
+.tenet { padding: 60px 52px; border-top: 1px solid var(--border); scroll-margin-top: 72px; }
+.tenet.is-lead { background: var(--off); }
+.tenet-inner { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 48px; align-items: start; max-width: 1160px; margin: 0 auto; }
+.tenet h2 { font-size: clamp(28px, 3vw, 38px); line-height: 1.15; margin-bottom: 16px; text-wrap: balance; }
+.tenet p { max-width: 46ch; font-size: 17px; line-height: 1.65; color: var(--navy-2); }
+.tenet p + p { margin-top: 12px; }
+.tenet .note { font-size: 15px; color: var(--navy-3); }
+.tenet-ev { display: grid; gap: 16px; min-width: 0; }
+.tenet .job-shot { aspect-ratio: auto; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--white); }
+.tenet .job-shot img { height: auto; }
 
-@media (max-width: 860px) {
-  .doc-hero { padding: 110px 24px 50px; }
-  .doc-preamble { padding: 0 24px 56px; }
-  .tenets { padding: 0 24px 24px; }
-  .tenet { padding: 36px 0; }
-  .doc-cta { padding: 72px 24px; }
+/* The file: a path you can follow and the lines it holds */
+.file { min-width: 0; background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
+.file-bar { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: var(--off); border-bottom: 1px solid var(--border); }
+.file-bar .ic { flex: none; font-size: 15px; color: var(--navy-3); }
+.file-bar a { min-width: 0; display: inline-block; padding: 6px 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; color: var(--navy); text-decoration: underline; text-decoration-color: var(--border); text-underline-offset: 3px; overflow-wrap: anywhere; }
+.file-bar a:hover { text-decoration-color: var(--orange); }
+.file-code { margin: 0; padding: 16px 18px 18px 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.7; color: var(--navy-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+.file-code .l { display: block; position: relative; padding-left: 52px; min-height: 1.7em; }
+.file-code .l::before { content: attr(data-n); position: absolute; left: 0; width: 38px; text-align: right; color: #8a8ea0; user-select: none; }
+
+.dc-close { padding: 96px 52px 112px; background: var(--off); border-top: 1px solid var(--border); }
+.dc-close-inner { max-width: 640px; margin: 0 auto; text-align: center; }
+.dc-close h2 { font-size: clamp(30px, 3.6vw, 46px); margin-bottom: 16px; }
+.dc-close p { max-width: 46ch; margin: 0 auto; font-size: 17px; line-height: 1.65; color: var(--navy-2); }
+.dc-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 32px; }
+
+@media (max-width: 960px) {
+  .dc-hero { grid-template-columns: 1fr; gap: 40px; padding: 108px 24px 56px; }
+  .tenet { padding: 56px 24px; }
+  .tenet-inner { grid-template-columns: 1fr; gap: 28px; }
+  .tenet .job-shot { max-width: 560px; }
+  .dc-close { padding: 64px 24px 80px; }
+}
+@media (max-width: 600px) {
+  .tree a { flex-direction: column; gap: 2px; }
+  .tree-path { font-size: 12.5px; overflow-wrap: normal; }
+  .file-code { font-size: 12px; padding-right: 12px; }
+  .file-code .l { padding-left: 40px; }
+  .file-code .l::before { width: 28px; }
 }
 </style>
 <script type="application/ld+json">
@@ -138,93 +140,137 @@
 
 <a href="#main-content" class="skip-link">Zum Inhalt springen</a>
 
+<!-- EXPERIMENT: the page for contributors and careful evaluators. Hypothesis: a belief shown beside
+     the real lines that enforce it earns more trust (and more clicks into the repository) than the
+     same belief argued in prose. Measured by outbound clicks to github.com/5hirish/duct from this
+     page. Every quoted line is copied by line number; a moved line is a bug on this page. -->
+
 <!-- NAV (shared: site/partials/nav-simple.html) -->
 <div data-duct-partial="/de/partials/nav-simple.html"></div>
 
 <main id="main-content">
 
-<section class="doc-hero">
-  <h1>Starke Meinungen,<br/>im <em>Code</em> verankert</h1>
-  <p class="doc-hero-sub">Jedes Projekt hat Überzeugungen. Die meisten davon existieren in den Köpfen von jemandem und sickern bei jeder Code-Überprüfung einzeln heraus. Dies sind die von Duct, aufgeschrieben, jeweils mit der Datei, die sie durchsetzt.</p>
-</section>
-
-<section class="doc-preamble">
-  <p>Duct ist ein KI-Agent, der deinen Produkt- und Growth-Stack liest und Dinge darin ändern kann. Das ist viel Vertrauen, das man von einem Tool verlangt, das man nicht selbst geschrieben hat. Daher ist die Argumentation öffentlich, und der Code, der sie stützt, auch.</p>
-  <p><strong>Nichts von dem Folgenden ist Wunschdenken.</strong> Jedes Prinzip verlinkt auf die Datei, die es wahr macht. Wenn du eine findest, bei der der Code der Seite widerspricht, ist das ein Bug und ich hätte gerne das Issue.</p>
-</section>
-
-<div class="tenets">
-
-  <article class="tenet reveal">
-    <span class="tenet-num">01</span>
-    <h2 class="tenet-title">Der Agent schlägt vor. Ein Mensch gibt frei.</h2>
-    <p class="tenet-body">Duct kann eine Änderung an deinen Live-Systemen vorbereiten: eine Kampagne pausieren, negative Keywords hinzufügen, ein GA4-Schlüsselereignis markieren. Es zeigt dir eine Vorschau und eine Sicherheitsprüfung. Dann stoppt es.</p>
-    <p class="tenet-body">Es gibt kein Agenten-seitiges Tool zum Freigeben oder Anwenden. Kein deaktiviertes, keines hinter einem Flag. Es existiert nicht im Tool-Register, das das Modell sieht, sodass das Modell es nicht aufrufen, nicht dazu überredet werden kann, es aufzurufen, und nicht per Prompt-Injection dazu gebracht werden kann, es aufzurufen. Das destruktive Gate ist absolut: Keine Konfiguration erlaubt eine automatische Anwendung einer destruktiven Operation. Rollback ist Teil des Vertrags jedes Executors, keine nachträgliche Überlegung.</p>
-    <p class="tenet-body">Höhere Autonomie ist eine Haltung, keine breitere Zulassungsliste. Sie ändert, wie oft der Agent dich unterbricht. Sie ändert nie, was ohne Klick angewendet werden darf.</p>
-    <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/backend/service/execution/policy.py" rel="noopener">backend/service/execution/policy.py</a>
-  </article>
-
-  <article class="tenet reveal">
-    <span class="tenet-num">02</span>
-    <h2 class="tenet-title">Duct mietet ein Agenten-Harness. Es heiratet keines.</h2>
-    <p class="tenet-body">Agenten-Frameworks sind die am schnellsten wechselnde, am wenigsten differenzierte Schicht in diesem Stack. Sie sind 0.x, werden wöchentlich ausgeliefert, und jedes von ihnen hat jemanden zu einer breaking migration gezwungen. Dein Produkt auf einem davon aufzubauen, ist wie das Mieten eines Fundaments.</p>
-    <p class="tenet-body">Der Domänen-Code importiert hier also kein Agenten-Framework. Prompts, Tools, Schemas, Ziele, Scoring und der Artefakt-Vertrag sind reines Python. Framework-Importe befinden sich nur in Runnern und Bindern, und ein Test erzwingt die Grenze mit einer expliziten Zulassungsliste. Das Hinzufügen einer Datei zu dieser Zulassungsliste ist eine bewusste Handlung, nicht die Art, wie du einen fehlgeschlagenen Test behebst.</p>
-    <p class="tenet-quote">Es gibt bewusst keine <code>AgentHarness</code>-Schnittstelle, und es sollte auch nie eine geben. Nimm den Schnittpunkt und du verlierst Subagenten, Dateisystem, Fähigkeiten, HITL-Granularität und Kompaktierung, was der gesamte Grund ist, ein Harness zu mieten. Nimm die Vereinigung und du schreibst ein Framework.</p>
-    <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/backend/agents/core/ports/__init__.py" rel="noopener">backend/agents/core/ports/__init__.py</a>
-  </article>
-
-  <article class="tenet reveal">
-    <span class="tenet-num">03</span>
-    <h2 class="tenet-title">Schreibe den Adapter bei der zweiten Implementierung, nicht bei der ersten.</h2>
-    <p class="tenet-body">Ein Port mit einer Implementierung ist eine Vermutung. Ein Port mit zwei ist eine Tatsache. Abstraktionen, die vor dem zweiten Fall erstellt werden, kodieren, was auch immer der erste Fall zufällig benötigte, und danach kämpft alles gegen die Form.</p>
-    <p class="tenet-body">Jeder Port in der Agenten-Schicht hat zwei Adapter, außer einem, und dieser eine sagt dies in seinem eigenen Docstring und benennt die Implementierung, die ihn verdienen würde. Das Benennen der Lücke verhindert, dass sie stillschweigend mit einer Vermutung gefüllt wird.</p>
-    <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/STYLE.md" rel="noopener">STYLE.md</a>
-  </article>
-
-  <article class="tenet reveal">
-    <span class="tenet-num">04</span>
-    <h2 class="tenet-title">Autorisierung ist Mitgliedschaft, und ein API-Schlüssel ist keine Grenze.</h2>
-    <p class="tenet-body">Der API-Schlüssel der App wird an den Browser gesendet. Er beweist: „Diese Anfrage kam von der Duct-App.“ Er hat nie bewiesen: „Dieser Anrufer besitzt diese Zeile“, und ihn so zu behandeln, als ob er es täte, führt zu Datenlecks in Multi-Tenant-Systemen.</p>
-    <p class="tenet-body">Jede Route, die eine projektbezogene Zeile betrifft, löst also einen angemeldeten Benutzer <em>und</em> prüft die Mitgliedschaft. Ein Nicht-Mitglied erhält 404, nicht 403, da 403 ihnen sagt, dass die Zeile existiert. Ein Test durchläuft jede Route im Baum und schlägt den Build fehl, wenn eine ohne schriftlichen Grund ungesichert ist.</p>
-    <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/backend/tests/test_route_auth_boundaries.py" rel="noopener">backend/tests/test_route_auth_boundaries.py</a>
-  </article>
-
-  <article class="tenet reveal">
-    <span class="tenet-num">05</span>
-    <h2 class="tenet-title">Deine Maschine, deine Schlüssel, deine Daten.</h2>
-    <p class="tenet-body">Duct läuft als Desktop-App, die das Backend als lokalen Sidecar bündelt: SQLite auf der Festplatte, nur Loopback, Anbieter-Schlüssel im OS-Schlüsselbund. Kein Konto, kein Server, nichts verlässt die Maschine. Oder hoste das Backend selbst. Oder nutze die gehostete Version auf getduct.ai, die denselben Code ausführt, den du lesen kannst.</p>
-    <p class="tenet-body">Bringe auch dein eigenes Modell mit. Anthropic, OpenAI, Gemini oder alles auf OpenRouter, pro Job über drei Stufen zugewiesen, damit denkintensive Arbeit und günstige Zusammenfassungen nicht den gleichen Preis zahlen. Ein Tool, das dein gesamtes Geschäft liest, sollte nicht auch entscheiden, wer dein Anbieter ist.</p>
-    <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/desktop/README.md" rel="noopener">desktop/README.md</a>
-  </article>
-
-  <article class="tenet reveal">
-    <span class="tenet-num">06</span>
-    <h2 class="tenet-title">Kommentare tragen das Warum. Der Diff zeigt bereits das Was.</h2>
-    <p class="tenet-body">Ein Kommentar, der die darunter liegende Zeile wiederholt, ist schlimmer als kein Kommentar, weil er Leser lehrt, Kommentare zu überspringen. Diejenigen, die es wert sind, geschrieben zu werden, tragen das, was der Code nicht kann: die Einschränkung, den Vertrag, den Fehler, der die Zeile motivierte, die abgelehnte Alternative und warum.</p>
-    <p class="tenet-body">Dies ist in einer teilweise von Agenten geschriebenen Codebasis wichtiger, nicht weniger wichtig. Eine Reihe von einzeln vertretbaren Änderungen, die zusammen eine Architektur auflösen, ist die spezifische Art, wie Agenten-beschleunigte Codebasen scheitern: Jede Änderung argumentiert für sich selbst und nichts argumentiert für das Ganze. Die im Code hinterlassene Begründung ist das, was der nächsten Person oder dem nächsten Modell ermöglicht, den Unterschied zu erkennen.</p>
-    <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/STYLE.md" rel="noopener">STYLE.md</a>
-  </article>
-
-  <article class="tenet reveal">
-    <span class="tenet-num">07</span>
-    <h2 class="tenet-title">Von Agenten verfasste Beiträge sind willkommen. Härter geprüft, nicht weniger.</h2>
-    <p class="tenet-body">Viele Projekte verbieten stillschweigend KI-unterstützte Pull-Requests. Duct fragt das Gegenteil: Das PR-Template fragt, wo ein Agent geholfen hat, damit ein Reviewer weiß, wo er am genauesten hinschauen muss. Das ist keine Strafbank. Es ist derselbe Grund, warum du sagst, bei welchem Teil einer Änderung du dir am wenigsten sicher warst.</p>
-    <p class="tenet-body">Duct ist ein Agentenprodukt, das mit Agenten gebaut wurde. Im Beitragsprozess so zu tun, als wäre es anders, wäre unehrlich und würde das nützlichste Signal, das ein Prüfer erhalten kann, wegwerfen.</p>
-    <a class="tenet-src" href="https://github.com/5hirish/duct/blob/main/CONTRIBUTING.md" rel="noopener">CONTRIBUTING.md</a>
-  </article>
-
+<!-- HERO: the claim on the left, the seven files that hold it on the right -->
+<section class="dc-hero">
+<div>
+<h1>Feste Überzeugungen, festgehalten in <em>Code</em></h1>
+<p class="hero-sub">Sieben Überzeugungen, auf denen Duct aufbaut, jede neben der Datei, die sie wahr macht. Wenn der Code dieser Seite jemals widerspricht, ist das ein Bug, und ich hätte gerne <a class="dc-link" href="https://github.com/5hirish/duct/issues" rel="noopener">das Issue</a>.</p>
 </div>
+<div class="tree" role="navigation" aria-label="Die sieben Überzeugungen und ihre Dateien">
+<p class="tree-root">5hirish/duct</p>
+<ol>
+<li><a href="#approval"><span class="tree-path">backend/<wbr>service/<wbr>execution/<wbr><b>policy.py</b></span><span class="tree-what">Du gibst frei</span></a></li>
+<li><a href="#harness"><span class="tree-path">backend/<wbr>agents/<wbr>core/<wbr>ports/<wbr><b>__init__.py</b></span><span class="tree-what">Miete das Framework</span></a></li>
+<li><a href="#second"><span class="tree-path">backend/<wbr>tests/<wbr><b>test_harness_boundaries.py</b></span><span class="tree-what">Zuerst zwei Verwendungen</span></a></li>
+<li><a href="#membership"><span class="tree-path">backend/<wbr>tests/<wbr><b>test_route_auth_boundaries.py</b></span><span class="tree-what">Nur für Mitglieder</span></a></li>
+<li><a href="#models"><span class="tree-path">backend/<wbr>agents/<wbr><b>tiers.py</b></span><span class="tree-what">Dein Modell</span></a></li>
+<li><a href="#comments"><span class="tree-path">backend/<wbr>service/<wbr><b>membership.py</b></span><span class="tree-what">Das Warum</span></a></li>
+<li><a href="#agents"><span class="tree-path">.github/<wbr><b>PULL_REQUEST_TEMPLATE.md</b></span><span class="tree-what">Agenten willkommen</span></a></li>
+</ol>
+</div>
+</section>
 
-<section class="doc-cta">
-  <div class="doc-cta-inner">
-    <p class="tag" style="justify-content:center;display:flex">Nicht einverstanden?</p>
-    <h2>Gut. <em>Ein Issue öffnen.</em></h2>
-    <p class="sub">Jeder dieser Punkte ist eine Standardeinstellung mit Grund, kein Gesetz. Wenn der Grund falsch ist, ist der Grund das, was sich ändern sollte. Diese Diskussion gehört in die Öffentlichkeit.</p>
-    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:32px">
-      <a class="btn btn-orange btn-lg" href="https://github.com/5hirish/duct/discussions" rel="noopener">Diskussion starten →</a>
-      <a class="btn btn-lg" href="https://github.com/5hirish/duct" rel="noopener" style="border:1px solid var(--border);color:var(--navy);background:var(--white)">Code lesen →</a>
-    </div>
-  </div>
+<!-- 1: the one that matters most to a user, so it carries the product shot as well as the code -->
+<section class="tenet is-lead" id="approval">
+<div class="tenet-inner">
+<div class="reveal">
+<h2>Der Agent schlägt vor. Du gibst frei.</h2>
+<p>Duct kann eine Änderung an deinen Ads oder Analytics vorbereiten. Kein Tool erlaubt es ihm, eine freizugeben, also kann man es nicht dazu überreden.</p>
+<p>Alles Destruktive wartet auf deinen Klick, bei jeder Einstellung.</p>
+<p class="note">Eine kurze Liste umkehrbarer Änderungen kann sich von selbst anwenden, und nur wenn du das aktivierst.</p>
+</div>
+<div class="tenet-ev reveal">
+<div class="job-shot"><img src="/assets/media/review-card.webp" srcset="/assets/media/review-card-768.webp 768w, /assets/media/review-card.webp 1088w" sizes="(max-width: 600px) calc(100vw - 48px), 640px" width="1088" height="936" loading="lazy" decoding="async" alt="Eine Änderungssatz-Karte wartet auf dich: eine Kampagne pausieren, zwei ausschließende Keywords hinzufügen, eine Budgeterhöhung durch eine Schutzplanke blockiert, Schaltflächen Ablehnen und Freigeben"/></div>
+<figure class="file"><figcaption class="file-bar"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg><a href="https://github.com/5hirish/duct/blob/main/backend/service/execution/policy.py#L107-L114" rel="noopener">backend/service/execution/policy.py</a></figcaption><pre class="file-code"><code><span class="l" data-n="107">def change_auto_eligible(spec: ExecutorSpec, change: dict[str, Any]) -&gt; bool:</span><span class="l" data-n="108">    """One change may auto-apply: allowlisted, reversible, clean."""</span><span class="l" data-n="109">    if spec.op_type not in AUTO_APPLY_ALLOWLIST:</span><span class="l" data-n="110">        return False</span><span class="l" data-n="111">    if spec.destructive:  # absolute gate, independent of the allowlist</span><span class="l" data-n="112">        return False</span><span class="l" data-n="113">    if spec.rollback is None:</span><span class="l" data-n="114">        return False</span></code></pre></figure>
+</div>
+</div>
+</section>
+
+<section class="tenet" id="harness">
+<div class="tenet-inner">
+<div class="reveal">
+<h2>Miete das Agent-Framework. Heirate es niemals.</h2>
+<p>Agenten-Frameworks ändern sich jede Woche. Die Prompts, Werkzeuge und das Scoring von Duct sind einfaches Python, und ein Test schlägt fehl, wenn ein Framework-Import außerhalb der wenigen Adapterdateien erscheint.</p>
+</div>
+<div class="tenet-ev reveal">
+<figure class="file"><figcaption class="file-bar"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg><a href="https://github.com/5hirish/duct/blob/main/backend/agents/core/ports/__init__.py#L12-L18" rel="noopener">backend/agents/core/ports/__init__.py</a></figcaption><pre class="file-code"><code><span class="l" data-n="12">There is deliberately **no** ``AgentHarness`` interface, and there should never</span><span class="l" data-n="13">be one. Harnesses differ in *capability*, not just API shape:</span><span class="l" data-n="14"></span><span class="l" data-n="15">  * Take the intersection and you lose subagents, filesystem, skills, HITL</span><span class="l" data-n="16">    granularity and compaction — the entire reason to rent a harness.</span><span class="l" data-n="17">  * Take the union and you are writing a framework, plus adapters for it, which</span><span class="l" data-n="18">    is strictly worse than the three-engine problem this replaced.</span></code></pre></figure>
+</div>
+</div>
+</section>
+
+<section class="tenet" id="second">
+<div class="tenet-inner">
+<div class="reveal">
+<h2>Abstrahiere bei der zweiten Nutzung.</h2>
+<p>Eine Implementierung ist eine Vermutung. Zwei sind eine Tatsache. Die geteilten Adapter wurden herausgezogen, als ein zweiter Agent sie brauchte, und die Allowlist sagt, welcher.</p>
+</div>
+<div class="tenet-ev reveal">
+<figure class="file"><figcaption class="file-bar"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg><a href="https://github.com/5hirish/duct/blob/main/backend/tests/test_harness_boundaries.py#L52-L59" rel="noopener">backend/tests/test_harness_boundaries.py</a></figcaption><pre class="file-code"><code><span class="l" data-n="52">    # -- Shared LangChain adapter: the model-transport + events-out ports for</span><span class="l" data-n="53">    #    every V1 runner. Extracted from agents/audit/v1/runner.py on the second</span><span class="l" data-n="54">    #    consumer (insights), per the ports rule.</span><span class="l" data-n="55">    "agents/core/lc.py":                    "LangChain adapter: resolve_chat_model + stream_agent",</span><span class="l" data-n="56">    # -- The deepagents session: assembly + loop, extracted from the insights</span><span class="l" data-n="57">    #    runner on the second consumer (content). The only place deepagents is</span><span class="l" data-n="58">    #    load-bearing.</span><span class="l" data-n="59">    "agents/core/deep_session.py":          "deepagents adapter: the session runners' shared assembly + loop",</span></code></pre></figure>
+</div>
+</div>
+</section>
+
+<section class="tenet" id="membership">
+<div class="tenet-inner">
+<div class="reveal">
+<h2>Ein API-Schlüssel ist keine Berechtigung.</h2>
+<p>Der Key der App wird an den Browser geliefert, belegt also, welche App anruft, nie wer. Jede Projekt-Route prüft, ob du Mitglied bist, und Fremde erhalten einen 404-Fehler.</p>
+<p>Ein Test durchläuft jede Route und schlägt bei einer ohne angemeldeten Benutzer fehl, es sei denn, eine schriftliche Begründung steht daneben.</p>
+</div>
+<div class="tenet-ev reveal">
+<figure class="file"><figcaption class="file-bar"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg><a href="https://github.com/5hirish/duct/blob/main/backend/tests/test_route_auth_boundaries.py#L53-L60" rel="noopener">backend/tests/test_route_auth_boundaries.py</a></figcaption><pre class="file-code"><code><span class="l" data-n="53">UNGATED: dict[str, str] = {</span><span class="l" data-n="54">    # Public catalogue reads. These describe what Duct *can* do, not what any</span><span class="l" data-n="55">    # account has done, so they leak nothing about a user. All are behind</span><span class="l" data-n="56">    # validate_api_key, which keeps them off the open internet.</span><span class="l" data-n="57">    "GET /api/engines/status": "capability catalogue; reports presence, never a key",</span><span class="l" data-n="58">    "GET /api/engines/thinking": "static catalogue of thinking levels per model",</span><span class="l" data-n="59">    "GET /api/insights/modes": "static list of insight modes",</span><span class="l" data-n="60">    "GET /api/models/catalogue": "static model catalogue",</span></code></pre></figure>
+</div>
+</div>
+</section>
+
+<section class="tenet" id="models">
+<div class="tenet-inner">
+<div class="reveal">
+<h2>Deine Keys, deine Modellwahl.</h2>
+<p>Bringe einen Key von Anthropic, OpenAI, Google, xAI oder OpenRouter mit oder führe ein lokales Modell aus. Du wählst drei Modelle; Duct entscheidet, welche Aufgabe welches braucht.</p>
+<p class="note">Die Desktop-App speichert deine Keys im Schlüsselbund deines Betriebssystems. Um gar keine Duct-Server zu nutzen, führt <a class="dc-link" href="https://github.com/5hirish/duct/blob/main/desktop/README.md#two-builds-one-shell" rel="noopener">der Self-Host-Build</a> das gesamte Backend auf deinem Rechner aus.</p>
+</div>
+<div class="tenet-ev reveal">
+<figure class="file"><figcaption class="file-bar"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg><a href="https://github.com/5hirish/duct/blob/main/backend/agents/tiers.py#L92-L102" rel="noopener">backend/agents/tiers.py</a></figcaption><pre class="file-code"><code><span class="l" data-n="92">JOB_TIER: dict[Job, Tier] = {</span><span class="l" data-n="93">    Job.ANALYSIS:     Tier.HEAVY,</span><span class="l" data-n="94">    Job.AUDIT:        Tier.HEAVY,</span><span class="l" data-n="95">    Job.VERIFICATION: Tier.STANDARD,</span><span class="l" data-n="96">    Job.SYNTHESIS:    Tier.STANDARD,</span><span class="l" data-n="97">    Job.DRAFTING:     Tier.STANDARD,</span><span class="l" data-n="98">    Job.CHAT:         Tier.STANDARD,</span><span class="l" data-n="99">    Job.RESEARCH:     Tier.LIGHT,</span><span class="l" data-n="100">    Job.MEMORY:       Tier.LIGHT,</span><span class="l" data-n="101">    Job.RECAP:        Tier.LIGHT,</span><span class="l" data-n="102">}</span></code></pre></figure>
+</div>
+</div>
+</section>
+
+<section class="tenet" id="comments">
+<div class="tenet-inner">
+<div class="reveal">
+<h2>Kommentare enthalten das Warum.</h2>
+<p>Ein Kommentar, der die Zeile darunter wiederholt, lehrt Leute, Kommentare zu überspringen. Diejenigen, die es wert sind, geschrieben zu werden, nennen die Bedrohung, den Fehler oder die Option, die verloren hat.</p>
+<p class="note">In Code, den Agenten mit schreiben, wird die nächste Änderung an dieser Begründung gemessen. <a class="dc-link" href="https://github.com/5hirish/duct/blob/main/STYLE.md#comments-and-docstrings--write-down-the-why" rel="noopener">STYLE.md</a> führt dies als Vorbild an.</p>
+</div>
+<div class="tenet-ev reveal">
+<figure class="file"><figcaption class="file-bar"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg><a href="https://github.com/5hirish/duct/blob/main/backend/service/membership.py#L39-L41" rel="noopener">backend/service/membership.py</a></figcaption><pre class="file-code"><code><span class="l" data-n="39"># Length of the raw invitation token before URL-safe encoding. 32 bytes gives a</span><span class="l" data-n="40"># 43-character token — far past guessing range for a link that also expires.</span><span class="l" data-n="41">_TOKEN_BYTES = 32</span></code></pre></figure>
+</div>
+</div>
+</section>
+
+<section class="tenet" id="agents">
+<div class="tenet-inner">
+<div class="reveal">
+<h2>Von Agenten geschriebene Pull-Requests sind willkommen.</h2>
+<p>Die Vorlage fragt, wo ein Agent geholfen hat, damit Reviewer wissen, wo sie am genauesten hinschauen müssen. Nichts wird abgelehnt, nur weil es angekreuzt ist.</p>
+</div>
+<div class="tenet-ev reveal">
+<figure class="file"><figcaption class="file-bar"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg><a href="https://github.com/5hirish/duct/blob/main/.github/PULL_REQUEST_TEMPLATE.md#L67-L74" rel="noopener">.github/PULL_REQUEST_TEMPLATE.md</a></figcaption><pre class="file-code"><code><span class="l" data-n="67">## AI assistance</span><span class="l" data-n="68"></span><span class="l" data-n="69">&lt;!-- Agent-written contributions are welcome. This is not a disclosure tax and</span><span class="l" data-n="70">     nothing is rejected for ticking it; it just tells the reviewer where to</span><span class="l" data-n="71">     look hardest, because agents and humans make different mistakes. --&gt;</span><span class="l" data-n="72"></span><span class="l" data-n="73">- [ ] An AI coding agent wrote or substantially shaped this change</span><span class="l" data-n="74">- [ ] I have read every line of this diff and can explain why each part is there</span></code></pre></figure>
+</div>
+</div>
+</section>
+
+<!-- CLOSE: this page's own action, an argument in public, not the home page's download band -->
+<section class="dc-close">
+<div class="dc-close-inner">
+<h2>Stimmst du nicht zu? Sag es öffentlich.</h2>
+<p>Jedes davon ist ein Standard mit einem Grund. Wenn der Grund falsch ist, sollte sich der Grund ändern.</p>
+<div class="dc-actions">
+<a class="btn btn-orange btn-lg" href="https://github.com/5hirish/duct/discussions" rel="noopener">Diskussion starten →</a>
+<a class="btn btn-ghost btn-lg" href="https://github.com/5hirish/duct" rel="noopener">Code lesen →</a>
+</div>
+</div>
 </section>
 
 </main>

@@ -39,7 +39,7 @@ msgstr "· {fans} fans"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "“I just want to know if the ads are working.”"
-msgstr "“Solo quiero saber si los anuncios están funcionando.”"
+msgstr "“Solo quiero saber si los anuncios están funcionando”."
 
 #: src/components/settings/AgentAccess.jsx
 msgid "(done)"
@@ -1942,7 +1942,7 @@ msgstr "En cualquier momento"
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Anyone scrolling"
-msgstr "Cualquiera que esté navegando"
+msgstr "Cualquiera haciendo scroll"
 
 #: src/app/(app)/settings/profile/page.jsx
 msgid "Anything else Duct should know"
@@ -5889,7 +5889,7 @@ msgstr "En progreso"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "In their words"
-msgstr "En sus propias palabras"
+msgstr "En sus palabras"
 
 #: src/components/insights/InsightsWorkspace.jsx
 #~ msgid "in this thread"
@@ -7664,7 +7664,7 @@ msgstr "No almacenado"
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Not tested on your results yet: that needs five published posts with numbers. Read this as a guess."
-msgstr "Aún no se ha probado con tus resultados: se necesitan cinco publicaciones publicadas con números. Tómalo como una estimación."
+msgstr "Aún no se ha probado en tus resultados: se necesitan cinco publicaciones publicadas con números. Tómalo como una estimación."
 
 #: src/lib/contentEnums.js
 msgid "Not true"
@@ -8143,8 +8143,8 @@ msgstr "Solo tú"
 #~ msgstr "Solo tus propios chats usan tus servidores, en cualquier proyecto. Las personas con las que compartes un proyecto conectan los suyos."
 
 #: src/components/connections/McpConnectDialog.jsx
-msgid "Only your own insights chats use it, in any project. Scheduled briefs don’t call MCP connectors yet."
-msgstr "Solo tus propios chats de hallazgos lo usan, en cualquier proyecto. Los informes programados aún no llaman a los conectores MCP."
+#~ msgid "Only your own insights chats use it, in any project. Scheduled briefs don’t call MCP connectors yet."
+#~ msgstr "Solo tus propios chats de hallazgos lo usan, en cualquier proyecto. Los informes programados aún no llaman a los conectores MCP."
 
 #: src/app/(app)/execute/page.jsx
 msgid "Op types to block, comma-separated (optional)"
@@ -8310,11 +8310,11 @@ msgstr "Abrió la publicación"
 
 #: src/lib/contentReview.js
 msgid "Opening B"
-msgstr "Inicio B"
+msgstr "Apertura B"
 
 #: src/lib/contentReview.js
 msgid "Opening C"
-msgstr "Inicio C"
+msgstr "Apertura C"
 
 #: src/components/content/SynthesisPanel.jsx
 msgid "Opening lines of the most engaging posts that reached at least a typical audience"
@@ -8338,7 +8338,7 @@ msgstr "Abriendo…"
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Openings they compared"
-msgstr "Inicios comparados"
+msgstr "Aperturas que compararon"
 
 #: src/components/connections/logos.jsx
 msgid "OpenRouter"
@@ -9264,7 +9264,7 @@ msgstr "Lee mi sitio"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read past posts to test the audience panel"
-msgstr "Lee publicaciones anteriores para probar el panel de audiencia"
+msgstr "Leer publicaciones anteriores para probar el panel de audiencia"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Read project context"
@@ -11668,15 +11668,15 @@ msgstr "Probar y conectar"
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Tested on your last {posts} posts: a loose match with their real {metric} ({agreed} of {pairs} pairs right). Read this as a lean."
-msgstr "Probado en tus últimas {posts} publicaciones: una coincidencia vaga con su {metric} real ({agreed} de {pairs} pares correctos). Tómalo como una tendencia."
+msgstr "Probado en tus últimas {posts} publicaciones: una coincidencia aproximada con su {metric} real ({agreed} de {pairs} pares correctos). Tómalo como una orientación."
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Tested on your last {posts} posts: it ranked them close to their real {metric} ({agreed} of {pairs} pairs right). A lean, not a promise."
-msgstr "Probado en tus últimas {posts} publicaciones: las clasificó cerca de su {metric} real ({agreed} de {pairs} pares correctos). Una tendencia, no una promesa."
+msgstr "Probado en tus últimas {posts} publicaciones: las clasificó cerca de su {metric} real ({agreed} de {pairs} pares correctos). Una orientación, no una promesa."
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Tested on your last {posts} posts: no better than a coin at ranking their real {metric}. Read this as a guess."
-msgstr "Probado en tus últimas {posts} publicaciones: no es mejor que lanzar una moneda al clasificar su {metric} real. Tómalo como una estimación."
+msgstr "Probado en tus últimas {posts} publicaciones: no es mejor que una moneda al aire para clasificar su {metric} real. Tómalo como una estimación."
 
 #: src/components/content/PlanStrategy.jsx
 #~ msgid "Testing"
@@ -12693,7 +12693,7 @@ msgstr "A continuación"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Up to three things this audience really said, one per line: a review, a comment, a support email. The review speaks from these first."
-msgstr "Hasta tres cosas que esta audiencia dijo realmente, una por línea: una reseña, un comentario, un correo de soporte. La revisión se basa primero en esto."
+msgstr "Hasta tres cosas que esta audiencia realmente haya dicho, una por línea: una reseña, un comentario, un correo de soporte. La revisión habla desde estas primero."
 
 #: src/components/content/PlanPicker.jsx
 msgid "Upcoming"
@@ -13420,7 +13420,7 @@ msgstr "Quién es esta persona"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Who your posts are for. The pre-publish review plays each one, says why they'd scroll past, and which opening would stop them."
-msgstr "A quién van dirigidas tus publicaciones. La revisión previa a la publicación simula a cada uno, indica por qué pasaría de largo y qué inicio lo detendría."
+msgstr "A quién van dirigidas tus publicaciones. La revisión previa a la publicación interpreta a cada una, dice por qué pasarían de largo y qué apertura las detendría."
 
 #: src/components/memory/MemoryTimeline.jsx
 msgid "Why it matters"
@@ -13554,7 +13554,7 @@ msgstr "Vale la pena añadir a continuación"
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Would scroll past: {scrollPast}"
-msgstr "Pasaría de largo: {scrollPast}"
+msgstr "Pasarían de largo: {scrollPast}"
 
 #: src/components/content/AnalyticsReport.jsx
 msgid "Write the report"
@@ -13911,7 +13911,7 @@ msgstr "Tu propuesta en una línea"
 
 #: src/lib/contentReview.js
 msgid "Your opening"
-msgstr "Tu inicio"
+msgstr "Tu apertura"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Your own account and API key, stored encrypted. Duct posts only when you ask it to."
@@ -13921,9 +13921,13 @@ msgstr "Tu propia cuenta y clave de API, guardadas cifradas. Duct solo publica c
 msgid "Your own account and API key, stored encrypted. Numbers sync from the posts Duct publishes and the ones you post yourself."
 msgstr "Tu propia cuenta y clave de API, guardadas cifradas. Las cifras llegan de las publicaciones que hace Duct y de las que publicas tú."
 
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Your own chats use it, in any project. Scheduled runs only call the read-only tools of the servers Duct trusts, so one added by address never runs unattended."
+msgstr "Tus propios chats lo usan, en cualquier proyecto. Las ejecuciones programadas solo llaman a las herramientas de solo lectura de los servidores en los que confía Duct, por lo que uno añadido por dirección nunca se ejecuta sin supervisión."
+
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Your personas react just like anyone would, so this says little about your audience. Add lines they really said in Brand settings to tell them apart."
-msgstr "Tus personas reaccionan como lo haría cualquiera, por lo que esto dice poco sobre tu audiencia. Añade frases que hayan dicho realmente en la configuración de la marca para diferenciarlas."
+msgstr "Tus personas reaccionan igual que cualquiera, por lo que esto dice poco sobre tu audiencia. Añade frases que realmente hayan dicho en la configuración de Marca para diferenciarlas."
 
 #: src/components/content/AccountsTab.jsx
 #~ msgid "your PostBridge accounts"

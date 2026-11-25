@@ -68,31 +68,11 @@
   .tools-index-hero h1 em { color:var(--orange); font-style:italic; }
   .tools-index-hero .lead {
     font-size:18px;
-    color:var(--navy-3);
-    font-weight:300;
+    color:var(--navy-2);
+    font-weight:400;
     line-height:1.65;
     margin:0 auto 28px;
     max-width:620px;
-  }
-  .tools-index-trust {
-    display:flex;
-    flex-wrap:wrap;
-    justify-content:center;
-    gap:10px 14px;
-    margin:0;
-    padding:0;
-    list-style:none;
-  }
-  .tools-index-trust li {
-    font-size:12px;
-    font-weight:500;
-    letter-spacing:.04em;
-    text-transform:uppercase;
-    color:var(--navy-3);
-    border:1px solid var(--border);
-    background:var(--off);
-    padding:8px 14px;
-    border-radius:var(--pill);
   }
 
   .tools-hub-wrap { max-width:1160px; margin:0 auto; padding:0 24px 80px; }
@@ -139,17 +119,6 @@
     transform:translateY(-3px);
     box-shadow:0 12px 36px rgba(37,99,235,.1);
   }
-  .ft-badge {
-    font-size:10px;
-    font-weight:600;
-    letter-spacing:.06em;
-    padding:3px 10px;
-    border-radius:var(--pill);
-    background:#eff6ff;
-    color:#2563EB;
-    border:1px solid rgba(37,99,235,.2);
-    align-self:flex-start;
-  }
   .ft-icon { font-size:26px; line-height:1; color: var(--orange); display:inline-flex; }
   .ft-card h3 {
     font-family:var(--serif);
@@ -192,11 +161,6 @@
 <p class="tag">Kostenlose Tools</p>
 <h1>Alles, was du brauchst, um die Zahlen zu <em>prüfen</em></h1>
 <p class="lead">Rechner und Generatoren, die in deinem Browser laufen. Kein Konto, nichts wird hochgeladen. Wenn du die Zahl erklärt, nicht nur berechnet haben möchtest, liest Duct deine Tools und antwortet.</p>
-<ul class="tools-index-trust" aria-label="Was dich erwartet">
-<li>Keine Anmeldung</li>
-<li>Läuft in deinem Browser</li>
-<li>Vom Macher von Duct</li>
-</ul>
 </section>
 
 <div class="tools-hub-wrap">
@@ -205,20 +169,19 @@
 <h2 id="hub-saas-heading">SaaS-Metriken &amp; Umsatz</h2>
 <p class="tools-hub-desc">Benchmarking der Gesundheit und Modellierung des Wachstums mit den Zahlen, die die Finanzabteilung anfragen wird.</p>
 <div class="tools-hub-grid">
-<a href="/de/tools/saas-metrics-calculator" class="ft-card"> <span class="ft-badge">Rechner</span> <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#calculator"/></svg></span>
+<a href="/de/tools/saas-metrics-calculator" class="ft-card">
+<span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#calculator"/></svg></span>
 <h3>SaaS-Metriken-Benchmark-Rechner</h3>
 <p>Churn, LTV:CAC, Amortisationszeit und Trial-to-Paid, bewertet anhand von Branchenmedianen.</p>
 <span class="ft-link">Rechner öffnen →</span>
 </a>
 <a href="/de/tools/cac-ltv-calculator" class="ft-card">
-<span class="ft-badge">Rechner</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
 <h3>CAC / LTV Rechner</h3>
 <p>Unit Economics in einer Ansicht: CAC, LTV, Verhältnis und Amortisation mit Benchmark-Kontext.</p>
 <span class="ft-link">Rechner öffnen →</span>
 </a>
 <a href="/de/tools/mrr-growth-calculator" class="ft-card">
-<span class="ft-badge">Rechner</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#trending-up"/></svg></span>
 <h3>MRR-Wachstumsraten-Rechner</h3>
 <p>Netto-MRR-Wachstum, CMGR und die Rate, die du benötigst, um ein Ziel zu erreichen.</p>
@@ -231,41 +194,37 @@
 <h2 id="hub-paid-heading">Paid-Media-Effizienz</h2>
 <p class="tools-hub-desc">Planung, Steuerung oder die Post-Mortem-Analyse: CTR, CPM, CPC, CPA, ROAS und ROI ohne Tabellenkalkulation.</p>
 <div class="tools-hub-grid">
-<a href="/de/tools/ctr-calculator" class="ft-card"> <span class="ft-badge">Rechner</span> <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#target"/></svg></span>
+<a href="/de/tools/ctr-calculator" class="ft-card">
+<span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#target"/></svg></span>
 <h3>CTR-Rechner</h3>
 <p>Klickrate, prognostizierte Klicks und die CTR, die du benötigst, um Volumen-Ziele zu erreichen.</p>
 <span class="ft-link">Rechner öffnen →</span>
 </a>
 <a href="/de/tools/cpm-calculator" class="ft-card">
-<span class="ft-badge">Rechner</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#banknote"/></svg></span>
 <h3>CPM-Rechner</h3>
 <p>Kosten pro tausend Impressionen, Ausgabenszenarien und Effizienzziele.</p>
 <span class="ft-link">Rechner öffnen →</span>
 </a>
 <a href="/de/tools/cpc-calculator" class="ft-card">
-<span class="ft-badge">Rechner</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#mouse-pointer-click"/></svg></span>
 <h3>CPC-Rechner</h3>
 <p>Kosten pro Klick und wie die Ausgaben bei deinem Ziel-CPC aussehen.</p>
 <span class="ft-link">Rechner öffnen →</span>
 </a>
 <a href="/de/tools/cpa-calculator" class="ft-card">
-<span class="ft-badge">Rechner</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#pin"/></svg></span>
 <h3>CPA-Rechner</h3>
 <p>Kosten pro Akquisition, Konversionsszenarien und budgetfreundliche CPAs.</p>
 <span class="ft-link">Rechner öffnen →</span>
 </a>
 <a href="/de/tools/roas-calculator" class="ft-card">
-<span class="ft-badge">Rechner</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-line"/></svg></span>
 <h3>ROAS-Rechner</h3>
 <p>ROAS als Umsatzmultiplikator, ROAS-Ziellücken und margenbewusster Beitrags-ROAS.</p>
 <span class="ft-link">Rechner öffnen →</span>
 </a>
 <a href="/de/tools/marketing-roi-calculator" class="ft-card">
-<span class="ft-badge">Rechner</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#trending-down"/></svg></span>
 <h3>Marketing-ROI-Rechner</h3>
 <p>ROI-, Gewinn- und Umsatzszenarien für Kampagnenentscheidungen in Minuten.</p>
@@ -278,20 +237,19 @@
 <h2 id="hub-ops-heading">Tracking, Social &amp; Reporting</h2>
 <p class="tools-hub-desc">Saubere Kampagnenlinks, eine Briefing-Vorlage, die dein Team ausfüllt, und Engagement-Raten, die du über Beiträge hinweg vergleichen kannst.</p>
 <div class="tools-hub-grid">
-<a href="/de/tools/utm-builder" class="ft-card"> <span class="ft-badge">Generator</span> <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#link"/></svg></span>
+<a href="/de/tools/utm-builder" class="ft-card">
+<span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#link"/></svg></span>
 <h3>UTM-Builder</h3>
 <p>GA4-freundliche Kampagnenlinks mit Live-Vorschau und Validierung.</p>
 <span class="ft-link">UTMs erstellen →</span>
 </a>
 <a href="/de/tools/weekly-brief-template" class="ft-card">
-<span class="ft-badge">Vorlage</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#clipboard-list"/></svg></span>
 <h3>Wöchentlicher Marketing-Briefing-Generator</h3>
 <p>Eine wöchentliche Berichtsstruktur für deine Rolle und deinen Stack, ein Slot pro Tool.</p>
 <span class="ft-link">Vorlage generieren →</span>
 </a>
 <a href="/de/tools/engagement-rate-calculator" class="ft-card">
-<span class="ft-badge">Rechner</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#message-square"/></svg></span>
 <h3>Engagement-Rate-Rechner</h3>
 <p>Engagement nach Followern, Reichweite oder Impressionen, vergleichbar über Beiträge hinweg.</p>
@@ -304,8 +262,7 @@
 <section class="faq tools-hub-faq" id="faq">
 <div class="faq-inner">
 <div class="reveal">
-<p class="tag">FAQ</p>
-<h2>Über diese <em>Tools</em></h2>
+<h2>Über diese Tools</h2>
 </div>
 <div class="faq-list reveal" style="transition-delay:.08s">
 <details class="faq-item">

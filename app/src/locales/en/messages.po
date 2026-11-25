@@ -8144,8 +8144,8 @@ msgstr "Only you"
 #~ msgstr "Only your own chats use your servers, in any project. People you share a project with connect their own."
 
 #: src/components/connections/McpConnectDialog.jsx
-msgid "Only your own insights chats use it, in any project. Scheduled briefs don’t call MCP connectors yet."
-msgstr "Only your own insights chats use it, in any project. Scheduled briefs don’t call MCP connectors yet."
+#~ msgid "Only your own insights chats use it, in any project. Scheduled briefs don’t call MCP connectors yet."
+#~ msgstr "Only your own insights chats use it, in any project. Scheduled briefs don’t call MCP connectors yet."
 
 #: src/app/(app)/execute/page.jsx
 msgid "Op types to block, comma-separated (optional)"
@@ -13921,6 +13921,10 @@ msgstr "Your own account and API key, stored encrypted. Duct posts only when you
 #: src/components/content/AnalyticsView.jsx
 msgid "Your own account and API key, stored encrypted. Numbers sync from the posts Duct publishes and the ones you post yourself."
 msgstr "Your own account and API key, stored encrypted. Numbers sync from the posts Duct publishes and the ones you post yourself."
+
+#: src/components/connections/McpConnectDialog.jsx
+msgid "Your own chats use it, in any project. Scheduled runs only call the read-only tools of the servers Duct trusts, so one added by address never runs unattended."
+msgstr "Your own chats use it, in any project. Scheduled runs only call the read-only tools of the servers Duct trusts, so one added by address never runs unattended."
 
 #: src/components/content/PublishReviewPanel.jsx
 msgid "Your personas react just like anyone would, so this says little about your audience. Add lines they really said in Brand settings to tell them apart."

@@ -43,7 +43,7 @@
 {"@context":"https://schema.org","@type":"WebApplication","inLanguage":"zh-CN","name":"SaaS 指标基准计算器","url":"https://getduct.ai/zh-cn/tools/saas-metrics-calculator","description":"免费计算器，可将你的 SaaS 指标——流失率、LTV:CAC 比率、CAC 回报期和试用到付费转化率——与 OpenView 和 ChartMogul 的行业平均水平进行基准比较。","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Organization","name":"Duct","url":"https://getduct.ai"}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"zh-CN","mainEntity":[{"@type":"Question","name":"什么是好的 SaaS 流失率？","acceptedAnswer":{"@type":"Answer","text":"SaaS 的良好每月流失率低于 2%。2–4% 之间是平均水平，需要关注。每月流失率高于 4% 是关键——按此速度，你每年将损失近一半的收入基础。基准因阶段而异：早期 SaaS 通常比成熟产品有更高的流失率。"}},{"@type":"Question","name":"如何计算 SaaS 业务的 LTV？","acceptedAnswer":{"@type":"Answer","text":"LTV = 每客户平均月收入 ÷ 月流失率。例如，如果 ARPU 为 100 欧元，月流失率为 2%，则 LTV = 100 欧元 ÷ 0.02 = 5,000 欧元。毛利率调整版本：LTV = (ARPU × 毛利率) ÷ 流失率。除非你提供自己的 LTV，否则此计算器使用简单版本。"}},{"@type":"Question","name":"健康的 LTV:CAC 比率是多少？","acceptedAnswer":{"@type":"Answer","text":"SaaS 的健康 LTV:CAC 比率高于 3:1——每花费 1 欧元用于获客，你就能收回 3 欧元的生命周期价值。2–3:1 的比率可以覆盖成本，但无法建立强大的单位经济效益。低于 2:1 通常意味着该模型无法大规模可行。高于 5:1 通常表明对增长投入不足。"}},{"@type":"Question","name":"我应该多久跟踪一次 SaaS 指标？","acceptedAnswer":{"@type":"Answer","text":"每月跟踪 MRR、流失率和新客户。LTV 和 LTV:CAC 变化缓慢，因此按季度跟踪更有意义。每周涵盖 4-5 个最重要指标的简报，总是优于每月一次的电子表格数据倾倒。"}},{"@type":"Question","name":"此计算器使用哪些数据源？","acceptedAnswer":{"@type":"Answer","text":"基准数据来自 OpenView Partners 的 SaaS Benchmarks Report (2023–2024) 和 ChartMogul 的 SaaS Benchmarks Report。LTV:CAC 阈值遵循 David Skok 在 For Entrepreneurs 的 SaaS 指标框架中广泛引用的 3:1 标准。"}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"zh-CN","mainEntity":[{"@type":"Question","name":"流失率应该按客户数还是按收入计算？","acceptedAnswer":{"@type":"Answer","text":"两者皆可，只要每月保持标准一致。当不同客户的付款金额差异较大时，按收入计算流失率更适合 LTV。"}},{"@type":"Question","name":"为什么 LTV 是根据流失率估算的？","acceptedAnswer":{"@type":"Answer","text":"这是标准的简算方法，其假设流失率保持不变且客户从不升级。如果你有更准确的数据，可以输入自己的 LTV。"}},{"@type":"Question","name":"基准数据来自哪里？","acceptedAnswer":{"@type":"Answer","text":"流失率数据来自 ChartMogul 的《SaaS 基准报告》（2024 年），回收期和试用转化率来自 OpenView 的《SaaS 基准报告》（2023–2024 年），3:1 LTV:CAC 法则来自 David Skok 的 SaaS 指标框架。"}},{"@type":"Question","name":"我的数据会被发送到别处吗？","acceptedAnswer":{"@type":"Answer","text":"不会。计算直接在你的浏览器中运行。不会发送或存储任何数据。"}}]}
 </script>
 <style>
   .skip-link {
@@ -153,13 +153,6 @@
   .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
   .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
 
-  .about-section { max-width: 720px; margin: 0 auto 80px; padding: 0 24px; }
-  .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
-  .about-section h2 em { color: var(--orange); font-style: italic; }
-  .about-section p, .about-section li { font-size: 15px; color: var(--navy-3); line-height: 1.75; margin-bottom: 12px; }
-  .about-section ul { padding-left: 20px; }
-  .about-section li { margin-bottom: 6px; }
-  .about-section strong { color: var(--navy); }
 
   .insight-panel {
     margin-top: 24px;
@@ -183,6 +176,53 @@
     background: var(--white); transition: background .15s;
   }
   .insight-link:hover { background: #dbeafe; }
+
+  /* Formula drawn as math, the example worked through, and (where the page cites a
+     source) the bands the results are graded against. Same block on the five
+     calculators that carry it; the width follows this page's .tool-wrap. */
+  .math { max-width: 820px; margin: 0 auto 64px; padding: 0 24px; }
+  .math h2 { font-size: clamp(26px, 3.4vw, 34px); line-height: 1.15; margin: 0 0 20px; }
+  .math-grid { display: grid; grid-template-columns: 7fr 5fr; gap: 16px; }
+  @media (max-width: 760px) { .math-grid { grid-template-columns: 1fr; } }
+  .formulas { padding: 32px; background: var(--off); border: 1px solid var(--border); border-radius: var(--r-lg); display: flex; flex-direction: column; justify-content: center; gap: 20px; min-width: 0; }
+  @media (max-width: 600px) { .formulas { padding: 24px 20px; } }
+  .eq { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin: 0; font-family: var(--serif); font-size: clamp(20px, 2.4vw, 26px); line-height: 1.2; color: var(--navy); }
+  .eq.is-small { font-size: clamp(16px, 1.6vw, 18px); color: var(--navy-2); padding-top: 18px; border-top: 1px solid var(--border); }
+  .eq-name { font-weight: 700; white-space: nowrap; }
+  .eq .op { color: var(--navy-3); }
+  .eq .rhs { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
+  .eq .paren { font-size: 2.1em; font-weight: 300; line-height: .9; color: var(--navy-3); }
+  .eq .rhs sup { font-size: .55em; align-self: flex-start; margin-left: -8px; white-space: nowrap; }
+  .frac { display: inline-flex; flex-direction: column; align-items: center; text-align: center; white-space: nowrap; }
+  .frac > span { padding: 0 6px; align-self: stretch; }
+  .frac > span:first-child { padding-bottom: 4px; }
+  .frac > span:last-child { padding-top: 4px; border-top: 2px solid currentColor; }
+  .frac .nb, .lin .nb { display: inline-block; white-space: nowrap; }
+  .frac > span:has(.nb) { white-space: normal; }
+  .worked { padding: 28px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); min-width: 0; }
+  @media (max-width: 600px) { .worked { padding: 24px 20px; } }
+  .worked h3, .bands h3 { font-size: 13px; font-weight: 600; color: var(--navy-3); margin: 0 0 12px; }
+  .worked ul { list-style: none; margin: 0; padding: 0; }
+  .worked li { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 16px; padding: 10px 0; border-top: 1px solid var(--border); font-size: 14px; color: var(--navy-3); font-variant-numeric: tabular-nums; }
+  .worked li strong { font-family: var(--serif); font-size: 20px; font-weight: 400; color: var(--navy); white-space: nowrap; margin-left: auto; }
+  .worked li sup { font-size: .7em; }
+  .worked-note { font-size: 14px; line-height: 1.6; color: var(--navy-3); margin: 12px 0 0; max-width: 60ch; }
+  .bands { margin-top: 16px; padding: 28px 32px; border: 1px solid var(--border); border-radius: var(--r-lg); }
+  @media (max-width: 600px) { .bands { padding: 24px 20px; } }
+  .band { display: grid; grid-template-columns: 140px 1fr; gap: 6px 20px; align-items: center; padding: 14px 0; border-top: 1px solid var(--border); }
+  @media (max-width: 600px) { .band { grid-template-columns: 1fr; } }
+  .band-name { font-size: 14px; font-weight: 600; color: var(--navy); margin: 0; }
+  .band-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin: 0; border-radius: var(--r); overflow: hidden; }
+  .band-bar > span { padding: 8px 10px; font-size: 13px; line-height: 1.35; }
+  .band-bar strong { display: block; font-size: 12px; font-weight: 600; }
+  .band-bar .bad { background: #fef2f2; color: #991b1b; }
+  .band-bar .mid { background: #fffbeb; color: #92400e; }
+  .band-bar .good { background: #f0fdf4; color: #15803d; }
+  .band-src { grid-column: 2; font-size: 12px; color: var(--navy-3); margin: 0; }
+  @media (max-width: 600px) { .band-src { grid-column: 1; } }
+  /* The bridge link is a standalone target: give it 24px of height (WCAG 2.5.8). */
+  .duct-bridge-link { display: inline-block; padding: 4px 0; }
+  .faq-a { max-width: 68ch; }
 </style>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"zh-CN","itemListElement":[{"@type":"ListItem","position":1,"name":"主页","item":"https://getduct.ai/zh-cn/"},{"@type":"ListItem","position":2,"name":"免费工具","item":"https://getduct.ai/zh-cn/tools/"},{"@type":"ListItem","position":3,"name":"SaaS 指标基准计算器","item":"https://getduct.ai/zh-cn/tools/saas-metrics-calculator"}]}
@@ -190,7 +230,7 @@
 </head>
 <body>
 
-<!-- EXPERIMENT: Free tool as lead magnet — does a benchmark calculator with immediate ungated results drive higher-intent beta signups than a standard landing page CTA? -->
+<!-- EXPERIMENT: SaaS metrics calculator as a way in: someone searching for SaaS benchmarks gets four graded numbers, the formulas, a worked example and the sourced bands on one screen, then a real Duct session that finds the cohort behind a number. Measured by Download clicks from the navy box and the closing band. -->
 
 <a href="#main-content" class="skip-link">跳到内容</a>
 
@@ -199,9 +239,8 @@
 <main id="main-content">
 
 <div class="tool-hero">
-  <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> 免费工具 · 无需注册</div>
-  <h1>SaaS 指标<em>基准</em>计算器</h1>
-  <p>你的 SaaS 决策的强度取决于你的基线指标。清晰地基准化流失率、LTV:CAC 和试用转化率——颜色编码、决策就绪、无电子表格延迟。</p>
+  <h1>SaaS 指标计算器。<em>四大指标，在线评分。</em></h1>
+  <p>流失率、LTV:CAC、CAC 回收期和试用转化率，均根据已发布的 SaaS 基准进行评分。</p>
 </div>
 
 <div class="tool-wrap">
@@ -275,44 +314,66 @@
   </div>
 </div>
 
+<section class="math reveal" aria-labelledby="math-heading">
+  <h2 id="math-heading">这四个数字的计算方法</h2>
+  <div class="math-grid">
+    <div class="formulas">
+      <p class="eq" role="math" aria-label="LTV 等于客户月平均收入除以月流失率"><span class="eq-name">LTV</span><span class="op">=</span><span class="rhs"><span class="frac"><span>客户平均收入</span><span>月流失率</span></span></span></p>
+      <p class="eq is-small" role="math" aria-label="LTV 与 CAC 的比例等于 LTV 除以 CAC"><span class="eq-name">LTV:CAC</span><span class="op">=</span><span class="rhs"><span class="frac"><span>LTV</span><span>CAC</span></span></span></p>
+      <p class="eq is-small" role="math" aria-label="按月计算的回报周期等于 CAC 除以（每客户每月收入乘以毛利率）"><span class="eq-name">回报周期</span><span class="op">=</span><span class="rhs"><span class="frac"><span>CAC</span><span><span class="nb">每客户收入</span> <span class="nb">× 利润率</span></span></span></span></p>
+    </div>
+    <div class="worked">
+      <h3>使用示例数值</h3>
+      <ul>
+        <li><span>120 ÷ 2.5%</span><strong>4,800 LTV</strong></li>
+        <li><span>4,800 ÷ 800</span><strong>6.00:1</strong></li>
+        <li><span>800 ÷ (120 × 75%)</span><strong>8.9 个月</strong></li>
+      </ul>
+      <p class="worked-note">输入数据时系统会自动对流失率和试用转化率进行评分。</p>
+    </div>
+  </div>
+  <div class="bands">
+    <h3>优秀标准</h3>
+    <div class="band">
+      <p class="band-name">月流失率</p>
+      <p class="band-bar"><span class="bad"><strong>严重</strong> 超过 4%</span><span class="mid"><strong>待改进</strong> 2–4%</span><span class="good"><strong>良好</strong> 2% 或更低</span></p>
+      <p class="band-src">中位数 2–3%，来自 ChartMogul 2024</p>
+    </div>
+    <div class="band">
+      <p class="band-name">LTV:CAC</p>
+      <p class="band-bar"><span class="bad"><strong>严重</strong> 低于 2:1</span><span class="mid"><strong>待改进</strong> 2–3:1</span><span class="good"><strong>良好</strong> 3:1 及以上</span></p>
+      <p class="band-src">目标在 3:1 以上，来自 OpenView 和 David Skok</p>
+    </div>
+    <div class="band">
+      <p class="band-name">CAC 回报周期</p>
+      <p class="band-bar"><span class="bad"><strong>严重</strong> 超过 18 个月</span><span class="mid"><strong>待改进</strong> 12–18 个月</span><span class="good"><strong>良好</strong> 12 个月或更短</span></p>
+      <p class="band-src">目标在 12 个月以内，来自 OpenView 2024</p>
+    </div>
+    <div class="band">
+      <p class="band-name">试用转化率</p>
+      <p class="band-bar"><span class="bad"><strong>严重</strong> 低于 15%</span><span class="mid"><strong>待改进</strong> 15–25%</span><span class="good"><strong>良好</strong> 25% 及以上</span></p>
+      <p class="band-src">中位数 15–25%，来自 OpenView 的 SaaS 基准</p>
+    </div>
+  </div>
+</section>
+
 <section class="duct-bridge reveal" aria-label="关于 Duct">
   <div class="duct-bridge-inner">
     <div class="duct-bridge-text">
-      <p class="duct-bridge-headline">基准分数告诉你当前状况。它们不会告诉你本周发生了什么变化。</p>
-      <p class="duct-bridge-body">Duct 每次都会读取你的工具中的流失率、CAC 和转化率，说明变化的原因，并在问题恶化前提出解决方案。</p>
+      <p class="duct-bridge-headline">ROAS 增长了 14%。但背后的广告系列带来的用户在一周内就流失了。</p>
+      <p class="duct-bridge-body">基准对比只能评估单个月份的数据。Duct 会整合分析 Google Ads、GA4、Stripe 和 Clarity，找出正在流失的客群，并提出修改方案供你确认。</p>
       <a href="/zh-cn/" class="duct-bridge-link">Duct 工作原理 →</a>
     </div>
     <figure class="shot-frame duct-bridge-shot">
       <img src="/assets/media/insights-session.webp" srcset="/assets/media/insights-session-768.webp 768w, /assets/media/insights-session-1536.webp 1536w, /assets/media/insights-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="一次洞察会话：当被问及 ROAS 上升但注册量下降的原因时，智能体将广告、分析和收入数据结合起来阅读，提出一个待批准的变更集在左侧，并在右侧撰写简报"/>
-      <figcaption>询问为什么 ROAS 上升但注册量下降。Duct 会将广告、分析和收入数据结合起来阅读，指出正在流失的群体，并提出变更。你批准即可。</figcaption>
     </figure>
   </div>
 </section>
 
-<div class="about-section reveal">
-  <h2>关于此<em>计算器</em></h2>
-  <p>此工具根据 MRR 范围，将你的核心 SaaS 健康指标与行业平均水平进行基准比较。输入你的数据，查看每个指标的颜色编码分数——绿色表示高于中位数，琥珀色表示有改进空间，红色表示正在造成复合损失。</p>
-
-  <h2 style="margin-top:40px">每个指标的<em>含义</em></h2>
-  <p><strong>每月流失率</strong>是你每月取消的客户群（或收入）的百分比。它是 SaaS 中最重要的单一指标，因为它决定了你的 LTV 上限。如果每月流失率为 4%，你每年将损失约 40% 的客户群——新的增长只是填补了漏水的桶。</p>
-  <p><strong>LTV:CAC 比率</strong>告诉你你的增长效率如何。你每花费一个单位获取客户，在其生命周期内能收回多少个单位？低于 3:1，你没有建立持久的经济效益。高于 5:1 可能表明对增长投入不足。</p>
-  <p><strong>CAC 回收期</strong>是指通过每月收入（收入回收）或通过毛利润（如果你输入毛利率百分比）（贡献回收）收回获客成本所需的月数。</p>
-  <p><strong>试用转付费转化率</strong>衡量你的漏斗顶部兴趣有多少转化为真实客户。低于 15% 通常表示入职或产品市场契合度问题。高于 25% 对大多数 B2B SaaS 来说是健康的。</p>
-
-  <h2 style="margin-top:40px">局限性</h2>
-  <ul>
-    <li>基准基于行业平均水平，可能无法反映你的特定垂直领域或市场推广策略。</li>
-    <li>LTV 自动计算假设流失率恒定，不考虑扩展收入。回报期可使用可选毛利率来计算基于贡献的 CAC 回收月数。</li>
-    <li>试用到付费基准因产品主导和销售主导模式而异。</li>
-    <li>所有计算都在你的浏览器中进行——不会发送或存储任何数据。</li>
-  </ul>
-</div>
-
 <section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
   <div class="related-tools-banner-inner">
-    <p class="tag">也是免费的</p>
-    <h2 id="related-tools-heading">探索相关 <em>工具</em></h2>
-    <p class="related-tools-banner-desc">根据基准压力测试流失率和 LTV，模拟 CAC 回报期，或构建每周简报——无需账户，数据不会离开你的设备。</p>
+    <h2 id="related-tools-heading">更多免费计算器</h2>
+    <p class="related-tools-banner-desc">根据支出计算 CAC 和 LTV，或查看 MRR 的复合增长速度。</p>
     <div class="insight-links related-tools" data-related-tools data-current-tool="saas-metrics-calculator" data-related-limit="3"></div>
   </div>
 </section>
@@ -320,29 +381,24 @@
 <section class="faq" id="faq">
 <div class="faq-inner">
 <div class="reveal">
-  <p class="tag">常见问题</p>
-  <h2>常见<em>问题</em></h2>
+  <h2>关于 SaaS 指标的常见问题</h2>
 </div>
 <div class="faq-list reveal" style="transition-delay:.1s">
   <details class="faq-item">
-    <summary class="faq-q">什么是好的 SaaS 流失率？</summary>
-    <p class="faq-a">SaaS 的良好每月流失率低于 2%。2–4% 之间是平均水平，需要关注。每月流失率高于 4% 是关键——按此速度，你每年将损失近一半的收入基础。基准因阶段而异：早期 SaaS 通常比成熟产品有更高的流失率。</p>
+    <summary class="faq-q">流失率应该按客户数还是按收入计算？</summary>
+    <p class="faq-a">两者皆可，只要每月保持标准一致。当不同客户的付款金额差异较大时，按收入计算流失率更适合 LTV。</p>
   </details>
   <details class="faq-item">
-    <summary class="faq-q">如何计算 SaaS 业务的 LTV？</summary>
-    <p class="faq-a">LTV = 每客户平均月收入 ÷ 月流失率。例如，如果 ARPU 为 100 欧元，月流失率为 2%，则 LTV = 100 欧元 ÷ 0.02 = 5,000 欧元。毛利率调整版本：LTV = (ARPU × 毛利率) ÷ 流失率。除非你提供自己的 LTV，否则此计算器使用简单版本。</p>
+    <summary class="faq-q">为什么 LTV 是根据流失率估算的？</summary>
+    <p class="faq-a">这是标准的简算方法，其假设流失率保持不变且客户从不升级。如果你有更准确的数据，可以输入自己的 LTV。</p>
   </details>
   <details class="faq-item">
-    <summary class="faq-q">健康的 LTV:CAC 比率是多少？</summary>
-    <p class="faq-a">SaaS 的健康 LTV:CAC 比率高于 3:1——每花费 1 欧元用于获客，你就能收回 3 欧元的生命周期价值。2–3:1 的比率可以覆盖成本，但无法建立强大的单位经济效益。低于 2:1 通常意味着该模型无法大规模可行。高于 5:1 通常表明对增长投入不足。</p>
+    <summary class="faq-q">基准数据来自哪里？</summary>
+    <p class="faq-a">流失率数据来自 ChartMogul 的《SaaS 基准报告》（2024 年），回收期和试用转化率来自 OpenView 的《SaaS 基准报告》（2023–2024 年），3:1 LTV:CAC 法则来自 David Skok 的 SaaS 指标框架。</p>
   </details>
   <details class="faq-item">
-    <summary class="faq-q">我应该多久跟踪一次 SaaS 指标？</summary>
-    <p class="faq-a">每月跟踪 MRR、流失率和新客户。LTV 和 LTV:CAC 变化缓慢，因此按季度跟踪更有意义。每周涵盖 4-5 个最重要指标的简报，总是优于每月一次的电子表格数据倾倒。</p>
-  </details>
-  <details class="faq-item">
-    <summary class="faq-q">此计算器使用哪些数据源？</summary>
-    <p class="faq-a">基准数据来自 OpenView Partners 的 SaaS Benchmarks Report (2023–2024) 和 ChartMogul 的 SaaS Benchmarks Report。LTV:CAC 阈值遵循 David Skok 在 For Entrepreneurs 的 SaaS 指标框架中广泛引用的 3:1 标准。</p>
+    <summary class="faq-q">我的数据会被发送到别处吗？</summary>
+    <p class="faq-a">不会。计算直接在你的浏览器中运行。不会发送或存储任何数据。</p>
   </details>
 </div>
 </div>

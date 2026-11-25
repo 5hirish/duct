@@ -102,7 +102,7 @@ another port (the tests assume 8090).
   the page renders as unstyled black-on-white text. `tests/e2e/site-smoke.spec.js`
   fetches a nested miss and fails if any subresource 404s.
 - `config.js` must load before `duct.js`.
-- **Below 860px the bar keeps the GitHub mark and the Download pill beside
+- **Below 1080px the bar keeps the GitHub mark and the Download pill beside
   the menu button.** `duct.js` builds that `.nav-actions` cluster from clones
   of the bar's own links when it builds the drawer, so every nav partial gets
   it and the platform label and star count still land through the same

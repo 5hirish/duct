@@ -451,11 +451,18 @@ footer:not(.footer-expanded) { padding: 44px 52px; border-top: 1px solid var(--b
 @media (scripting: none) { .reveal { opacity: 1; transform: none; } }
 
 /* ── RESPONSIVE ── */
-@media (max-width: 860px) {
+/* The bar folds into the drawer at 1080px, not at the 860px the page layouts
+   use: seven links, the GitHub mark, Download and the language menu need
+   about 1,000px, and between 861 and 1080 (a tablet in portrait, a narrow
+   window) they wrapped "Free Tools" onto two lines and ran the logo into
+   "Home". iPad landscape (1180) keeps the full bar. */
+@media (max-width: 1080px) {
 #nav { padding: 0 16px 0 20px; }
 .nav-links { display: none; }
 .nav-actions { display: inline-flex; }
 .nav-toggle { display: inline-flex; }
+}
+@media (max-width: 860px) {
 .hero { padding: 100px 24px 60px; }
 .hero-form { flex-direction: column; align-items: stretch; max-width: 320px; margin: 0 auto; }
 .shot { padding: 0 24px 56px; }

@@ -42,6 +42,8 @@ ICONS = [
     "building-2", "pen-line", "headphones", "users", "user-round", "lightbulb",
     "clapperboard", "circle-help", "coins", "banknote", "mouse-pointer-click",
     "dollar-sign", "book-open", "code-2", "github", "layers", "compass",
+    # launch-check areas
+    "share-2",
 ]
 
 
