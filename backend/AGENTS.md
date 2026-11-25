@@ -550,8 +550,8 @@ Postgres `DATABASE_URL` names.
   no), advice that never moves the overall score.
 - `routes/mcp_server.py` + `service/mcp_server/` — Duct as an MCP server at
   `POST /mcp`, for the person's own agent (Claude Code, Codex, Cursor,
-  OpenCode). Stateless JSON-RPC with no SDK: five methods, no sessions, no
-  event stream. Its one credential is an MCP token (`service/mcp_tokens.py`),
+  OpenCode). Stateless JSON-RPC with no SDK: seven methods (tools and
+  prompts), no stored sessions, no event stream. Its one credential is an MCP token (`service/mcp_tokens.py`),
   accepted on `/mcp` only and never by `get_current_user`, and there are two
   ways to get one. **Browser sign-in** (issue #197, `routes/mcp_oauth.py` +
   `service/mcp_server/oauth.py`): Duct is the OAuth authorization server, so
@@ -568,8 +568,23 @@ Postgres `DATABASE_URL` names.
   its address changes every launch and its app is `tauri://`). A
   **personal token**, minted at `/api/user/mcp-tokens` by a signed-in
   session, is the way in for an agent with no browser. Both are rows in
-  `mcp_tokens`, listed together with a `kind`, and DELETE ends either. Four tools, and adding a
-  fifth is a scope decision, not a refactor: `list_projects`,
+  `mcp_tokens`, listed together with a `kind`, and DELETE ends either.
+  **What a connection may do is two tiers and a project list**
+  (`service/mcp_server/scopes.py`, issue #594): "Set up your project"
+  (`projects`) is the floor, "Work on your behalf" is opt-in per capability
+  (`data`, `memory`, `reports`, `changes`, `content`, `media`), and
+  `mcp_tokens.project_ids` names the projects it reaches (null is every
+  project; a null `scopes` is a row from before tiers and means `projects`).
+  The person's ticks are the grant, never what the agent asked for, and both
+  doors (consent and the token form) go through `grants.check_grant`. A tool
+  outside the grant is absent from `tools/list` and refused by name; every
+  project-scoped tool reaches its project through `common.member_project`, so
+  a project outside the grant reads like a made-up id, and a limited
+  connection cannot create one. Tools live by capability
+  (`tools.py` for setup, `tools_data.py`, `tools_reports.py`, `tools_work.py`)
+  and meet only in `common.py`; a new tool declares its `scope`, `read_only`
+  and `open_world`, and a write leaves `common.record_write`'s activity row.
+  Adding a tool is still a scope decision, not a refactor. The project tools: `list_projects`,
   `get_project`, `draft_project`, `update_project`. A draft goes through
   `service/project_writes.apply_draft`, labelled `document` (or `inferred`
   for what the agent guessed), so it never replaces the person or their
@@ -580,8 +595,26 @@ Postgres `DATABASE_URL` names.
   (`update_project`, #512) is the person asking in so many
   words: it can replace anything, carries `destructiveHint` so the client
   confirms it, and is undoable from the activity feed. Each write leaves an
-  `activity_logs` row (`category="project"`). No tool calls a model on
-  Duct's side, and none approves, applies, connects or touches credentials.
+  `activity_logs` row (`category="project"`). The rest, by scope:
+  `data` reads sources through `fetch_entity` (`fetch_data` answers Duct's
+  totals and rates by default, rows only on request and capped, third-party
+  text named in `untrusted_fields`); `memory` searches and proposes memories
+  through `remember()`, refusing `rule` and `goal`, which an injected
+  instruction would otherwise persist into every later run; `reports` lists
+  and saves briefs, and `start_run` (plus the `insights_brief` MCP prompt)
+  hands the agent Duct's insights prompt with a tool-name map and the
+  project's context fenced as data (`playbook.py`); `changes` proposes with
+  `source="mcp"`, which policy never auto-applies, and a rollback is a
+  request the person clicks; `content` saves text drafts held to the
+  channel's rules and banned words; `media` generates images on the
+  caller's own saved key. **No tool calls a chat model on Duct's side** (the
+  person's own agent does the reasoning on its own plan), the one spend is
+  `generate_image` on the caller's key, and **none approves, applies,
+  publishes, connects or touches credentials**, whatever is granted.
+  `MCP_WRITE_TOOLS_ENABLED=false` hides every write tool at once, and
+  `MCP_GOOGLE_DATA_ENABLED` (off) keeps Google sources out of outside agents
+  until the Limited Use question is settled; the gate reads the connector
+  registry (`tools_data.is_google_source`), so it fails closed.
   **Every call is reported** (`service/mcp_server/telemetry.py`) as PostHog
   MCP Analytics' own events, `$mcp_initialize` and `$mcp_tool_call` (tool,
   duration, error class, client, the model's one-line `context` reason),
