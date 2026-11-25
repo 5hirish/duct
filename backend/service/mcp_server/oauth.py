@@ -57,9 +57,14 @@ from urllib.parse import urlencode, urlsplit, urlunsplit
 import jwt
 
 from config import get_configs
+from service.mcp_server import scopes as mcp_scopes
 from service.mcp_server.protocol import MCP_PATH
 
-SCOPE = "mcp"
+# What a 401 tells a client to ask for: the floor, project setup. The consent
+# page offers the second tier whatever was asked, and the token response
+# names what the person actually allowed (RFC 6749 §3.3).
+SCOPE = mcp_scopes.PROJECTS
+SCOPES_SUPPORTED = list(mcp_scopes.ALL_SCOPES)
 
 RESOURCE_METADATA_PATH = "/.well-known/oauth-protected-resource"
 SERVER_METADATA_PATH = "/.well-known/oauth-authorization-server"
@@ -147,7 +152,7 @@ def protected_resource_metadata() -> dict[str, Any]:
     return {
         "resource": resource(),
         "authorization_servers": [issuer()],
-        "scopes_supported": [SCOPE],
+        "scopes_supported": SCOPES_SUPPORTED,
         "bearer_methods_supported": ["header"],
         "resource_name": "Duct",
         "resource_documentation": DOCUMENTATION_URL,
@@ -161,7 +166,7 @@ def authorization_server_metadata() -> dict[str, Any]:
         "authorization_endpoint": base + AUTHORIZE_PATH,
         "token_endpoint": base + TOKEN_PATH,
         "registration_endpoint": base + REGISTER_PATH,
-        "scopes_supported": [SCOPE],
+        "scopes_supported": SCOPES_SUPPORTED,
         "response_types_supported": ["code"],
         "grant_types_supported": list(GRANT_TYPES),
         "token_endpoint_auth_methods_supported": ["none"],
@@ -277,7 +282,7 @@ def register(metadata: dict[str, Any]) -> dict[str, Any]:
         "grant_types": grant_types,
         "response_types": ["code"],
         "token_endpoint_auth_method": "none",
-        "scope": SCOPE,
+        "scope": " ".join(SCOPES_SUPPORTED),
     }
 
 

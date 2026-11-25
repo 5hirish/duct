@@ -23,7 +23,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, RedirectResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlmodel import Session
 from starlette.status import HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
 
@@ -38,6 +38,8 @@ from service.auth_exchange import (
     store_agent_request,
 )
 from service.mcp_server import oauth
+from service.mcp_server import scopes as mcp_scopes
+from service.mcp_server.grants import GrantError, check_grant
 from service.mcp_server.protocol import MCP_PATH
 from service.mcp_tokens import ACCESS_LIFETIME, connect_agent, renew_agent
 from service.ratelimit import RateLimit, client_address
@@ -130,6 +132,7 @@ def authorize(
     code_challenge_method: str = Query(default=""),
     state: str = Query(default=""),
     resource: str = Query(default=""),
+    scope: str = Query(default=""),
 ) -> RedirectResponse:
     _require_available()
     _AUTHORIZE_LIMIT.enforce(client_address(request), "Too many sign-in attempts. Try again shortly.")
@@ -160,27 +163,30 @@ def authorize(
     if not oauth.resource_allowed(resource):
         return back("invalid_target", f"Duct issues tokens for {oauth.resource()} only.")
 
-    # Scope is not carried: there is one, and the token response names it.
+    # What the agent asked for is a starting point for the page, never a
+    # grant: the person ticks what it gets, and may give less or more.
     request_code = store_agent_request({
         "client_id": client_id,
         "client_name": client.name,
         "redirect_uri": redirect_uri,
         "code_challenge": code_challenge,
         "state": state,
+        "scope": mcp_scopes.serialize(mcp_scopes.parse(scope)),
     })
     return _redirect(oauth.consent_page(request=request_code))
 
 
 # -- token ------------------------------------------------------------------------
 
-def _tokens(access: str, refresh: str) -> JSONResponse:
+def _tokens(access: str, refresh: str, granted: str | None) -> JSONResponse:
     return JSONResponse(
         {
             "access_token": access,
             "token_type": "Bearer",
             "expires_in": int(ACCESS_LIFETIME.total_seconds()),
             "refresh_token": refresh,
-            "scope": oauth.SCOPE,
+            # What the person allowed, which may differ from what was asked.
+            "scope": mcp_scopes.serialize(mcp_scopes.parse(granted)),
         },
         headers=_NO_STORE,
     )
@@ -206,8 +212,11 @@ def _exchange_code(
     user = session.get(User, UUID(grant["user_id"]))
     if user is None:
         return _oauth_error("invalid_grant", "The account that allowed this sign-in no longer exists.")
-    _, access, refresh = connect_agent(user, client_id=client_id, client_name=client.name, session=session)
-    return _tokens(access, refresh)
+    row, access, refresh = connect_agent(
+        user, client_id=client_id, client_name=client.name, session=session,
+        scopes=grant.get("scopes"), project_ids=grant.get("project_ids"),
+    )
+    return _tokens(access, refresh, row.scopes)
 
 
 @router.post(oauth.TOKEN_PATH)
@@ -235,8 +244,8 @@ def token(
         renewed = renew_agent(refresh_token, client_id, session) if oauth.client(client_id) else None
         if renewed is None:
             return _oauth_error("invalid_grant", "That refresh token is unknown, used, revoked or expired. Sign in again.")
-        _, access, refresh = renewed
-        return _tokens(access, refresh)
+        row, access, refresh = renewed
+        return _tokens(access, refresh, row.scopes)
     return _oauth_error("unsupported_grant_type", "Use authorization_code or refresh_token.")
 
 
@@ -248,6 +257,18 @@ class ConsentRequestOut(BaseModel):
     # Where the browser goes after Allow: this device, a website or an app.
     destination: str
     destination_name: str
+    # What the agent asked for, so the page can open the second tier ticked
+    # when it was asked for. A suggestion; the person decides.
+    requested_scopes: list[str]
+
+
+class ConsentAnswerIn(BaseModel):
+    """What the person ticked. An empty body is project setup on every
+    project, which is what Allow meant before tiers existed."""
+
+    scopes: list[str] = Field(default_factory=lambda: [mcp_scopes.PROJECTS])
+    # None for every project, now and later; a list for those alone.
+    project_ids: list[UUID] | None = None
 
 
 class ConsentAnswerOut(BaseModel):
@@ -260,15 +281,30 @@ def describe_request(request_code: str) -> ConsentRequestOut:
     if parked is None:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=_EXPIRED)
     kind, name = oauth.destination(parked["redirect_uri"])
-    return ConsentRequestOut(client_name=parked["client_name"], destination=kind, destination_name=name)
+    return ConsentRequestOut(
+        client_name=parked["client_name"], destination=kind, destination_name=name,
+        requested_scopes=sorted(mcp_scopes.parse(parked.get("scope"))),
+    )
 
 
 @consent_router.post("/{request_code}/approve")
-def approve_request(request_code: str, user: User = Depends(get_current_user)) -> ConsentAnswerOut:
+def approve_request(
+    request_code: str,
+    body: ConsentAnswerIn | None = None,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+) -> ConsentAnswerOut:
     # A guest is an install, not a person; what it connected would be lost
     # when it signs in properly, and nobody could find it to revoke it.
     if is_guest_user(user):
         raise HTTPException(status_code=HTTP_403_FORBIDDEN, detail="Sign in to Duct to connect an agent.")
+    answer = body or ConsentAnswerIn()
+    # Checked before the request is spent, so a bad project id is a message
+    # on the page and the person can fix the selection and press Allow again.
+    try:
+        granted, project_ids = check_grant(user, answer.scopes, answer.project_ids, session)
+    except GrantError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
     parked = consume_agent_request(request_code)
     if parked is None:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail=_EXPIRED)
@@ -277,8 +313,10 @@ def approve_request(request_code: str, user: User = Depends(get_current_user)) -
         "client_id": parked["client_id"],
         "redirect_uri": parked["redirect_uri"],
         "code_challenge": parked["code_challenge"],
+        "scopes": granted,
+        "project_ids": project_ids,
     })
-    logger.info("mcp sign-in: %s allowed %r", user.id, parked["client_name"])
+    logger.info("mcp sign-in: %s allowed %r (%s)", user.id, parked["client_name"], granted)
     return ConsentAnswerOut(
         redirect_to=oauth.with_query(parked["redirect_uri"], code=code, state=parked["state"], iss=oauth.issuer())
     )

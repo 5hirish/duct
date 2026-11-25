@@ -175,3 +175,11 @@ class McpToken(SQLModel, table=True):
     refresh_expires_at: datetime | None = Field(
         default=None, sa_column=Column(utc_datetime(), nullable=True)
     )
+    # What the person allowed, space-separated (service/mcp_server/scopes.py).
+    # Null for a row made before scopes existed, which reads as project setup
+    # only: exactly what those agents could do when they were allowed.
+    scopes: str | None = Field(default=None, sa_column=Column(String, nullable=True))
+    # The projects it may reach, as UUID strings. Null is every project the
+    # person can reach, now and later; a list is those and no others, and a
+    # project they later lose access to drops out by the membership check.
+    project_ids: list[str] | None = Field(default=None, sa_column=Column(json_column(), nullable=True))

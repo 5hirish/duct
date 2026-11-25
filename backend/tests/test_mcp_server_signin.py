@@ -296,7 +296,11 @@ def test_the_consent_page_learns_who_is_asking_and_where_it_returns(env):
     request_code = env.consent(env.register("Claude Code"), challenge)
     for _ in range(2):  # a reload reads it again
         described = env.client.get(f"/api/oauth/requests/{request_code}").json()
-    assert described == {"client_name": "Claude Code", "destination": "device", "destination_name": "127.0.0.1"}
+    assert described == {
+        "client_name": "Claude Code", "destination": "device", "destination_name": "127.0.0.1",
+        # Asked for nothing, so the page opens on project setup alone.
+        "requested_scopes": ["projects"],
+    }
     assert env.client.get("/api/oauth/requests/made-up").status_code == 404
 
 

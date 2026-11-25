@@ -107,6 +107,16 @@ class Configs(BaseSettings):
     # internal network. Empty turns the search off and the app hides it.
     mcp_registry_url: str = Field(default="https://registry.modelcontextprotocol.io")
 
+    # Duct's own MCP server (service/mcp_server/). Off turns every tool that
+    # writes into a missing tool for every connected agent at once, without
+    # revoking anyone: the switch for an incident, not a setting to tune.
+    mcp_write_tools_enabled: bool = True
+    # Whether an agent may read Google sources (GA4, Search Console, Ads)
+    # through fetch_data. Off until Google's Limited Use review settles what an
+    # agent on a person's own AI plan may receive; Duct's own agent and the
+    # non-Google sources are unaffected.
+    mcp_google_data_enabled: bool = False
+
     # Whether this process runs the schedule loop (service/schedules.py). On
     # by default, in the cloud and in the desktop sidecar alike. Turn it off
     # on the web process once a separate worker service runs the same loop,

@@ -19,6 +19,7 @@ from sqlalchemy import func, select
 from sqlmodel import Session
 
 from models.auth import McpToken, User
+from service.mcp_server import scopes as mcp_scopes
 from utils.dates import utcnow
 
 # Recognisable on sight, by a person reading a config file and by secret
@@ -101,9 +102,22 @@ def is_connected_agent(row: McpToken) -> bool:
     return row.client_id is not None
 
 
-def mint(user: User, name: str, session: Session) -> tuple[McpToken, str]:
+def _grant(scopes, project_ids) -> dict:
+    """The columns that record what the person allowed. ``project_ids`` None
+    means every project; the caller has already checked each id is one the
+    person can reach."""
+    return {
+        "scopes": mcp_scopes.serialize(mcp_scopes.parse(scopes)),
+        "project_ids": None if project_ids is None else sorted({str(p) for p in project_ids}),
+    }
+
+
+def mint(
+    user: User, name: str, session: Session, *, scopes=None, project_ids=None
+) -> tuple[McpToken, str]:
     """A new token for ``user``. Returns the row and the plaintext, which is
-    never stored and cannot be shown again."""
+    never stored and cannot be shown again. Without ``scopes`` it can set up
+    projects and nothing more."""
     now = utcnow()
     count = session.execute(
         select(func.count()).select_from(McpToken).where(McpToken.user_id == user.id, _personal(now))
@@ -118,6 +132,7 @@ def mint(user: User, name: str, session: Session) -> tuple[McpToken, str]:
         hint=raw[-4:],
         created_at=now,
         expires_at=now + TOKEN_LIFETIME,
+        **_grant(scopes, project_ids),
     )
     session.add(row)
     session.commit()
@@ -138,7 +153,7 @@ def _issue(row: McpToken, now) -> tuple[str, str]:
 
 
 def connect_agent(
-    user: User, *, client_id: str, client_name: str, session: Session
+    user: User, *, client_id: str, client_name: str, session: Session, scopes=None, project_ids=None
 ) -> tuple[McpToken, str, str]:
     """A connection for an agent the person allowed. Returns the row, the
     access token and the refresh token; only their hashes are stored."""
@@ -159,6 +174,7 @@ def connect_agent(
         token_hash="",
         hint="",
         expires_at=now,
+        **_grant(scopes, project_ids),
     )
     access, refresh = _issue(row, now)
     session.add(row)

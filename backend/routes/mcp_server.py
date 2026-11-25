@@ -44,6 +44,7 @@ from service.mcp_server.protocol import (
     handle,
 )
 from service.mcp_server import oauth, telemetry
+from service.mcp_server.prompts import PROMPTS
 from service.mcp_server.tools import INSTRUCTIONS, TOOLS, TOOLSET_VERSION
 from service.mcp_tokens import resolve
 from service.ratelimit import RateLimit
@@ -128,7 +129,9 @@ def _dispatch(message: Any, caller: Caller, transport: telemetry.Transport) -> d
     started_at, started = utcnow(), time.monotonic()
     failure: BaseException | None = None
     try:
-        reply = handle(message, caller, TOOLS, instructions=INSTRUCTIONS, version=TOOLSET_VERSION)
+        reply = handle(
+            message, caller, TOOLS, instructions=INSTRUCTIONS, version=TOOLSET_VERSION, prompts=PROMPTS
+        )
     except Exception as exc:  # noqa: BLE001 — one failed call is an error reply, never a dropped connection
         failure = exc
         # The tool's name in the line, because this record is also the error

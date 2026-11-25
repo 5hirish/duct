@@ -21,6 +21,8 @@ from starlette.status import HTTP_409_CONFLICT
 from db.session import get_session
 from models.auth import McpToken, User
 from service.auth import get_current_user
+from service.mcp_server import scopes as mcp_scopes
+from service.mcp_server.grants import GrantError, check_grant
 from service.mcp_tokens import (
     MAX_ACTIVE_TOKENS,
     NAME_MAX_CHARS,
@@ -39,6 +41,9 @@ KIND_AGENT = "agent"
 
 class TokenIn(BaseModel):
     name: str = Field(min_length=1, max_length=NAME_MAX_CHARS)
+    # The same two choices the consent page offers an agent that signs in.
+    scopes: list[str] = Field(default_factory=lambda: [mcp_scopes.PROJECTS])
+    project_ids: list[UUID] | None = None
 
 
 class TokenOut(BaseModel):
@@ -51,6 +56,10 @@ class TokenOut(BaseModel):
     # For an agent, when the connection lapses unless it renews first.
     expires_at: datetime
     last_used_at: datetime | None
+    # What it may do and where, so the list can say it in words.
+    scopes: list[str]
+    # None for every project.
+    project_ids: list[str] | None
 
 
 class MintedTokenOut(TokenOut):
@@ -69,6 +78,8 @@ def _out(row: McpToken) -> dict:
         "created_at": row.created_at,
         "expires_at": row.refresh_expires_at if agent else row.expires_at,
         "last_used_at": row.last_used_at,
+        "scopes": sorted(mcp_scopes.parse(row.scopes), key=mcp_scopes.ALL_SCOPES.index),
+        "project_ids": row.project_ids,
     }
 
 
@@ -89,7 +100,11 @@ def create_token(
     if not body.name.strip():
         raise HTTPException(status_code=422, detail="Give the token a name.")
     try:
-        row, raw = mint(user, body.name, session)
+        granted, project_ids = check_grant(user, body.scopes, body.project_ids, session)
+    except GrantError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    try:
+        row, raw = mint(user, body.name, session, scopes=granted, project_ids=project_ids)
     except TokenLimitReached:
         raise HTTPException(
             status_code=HTTP_409_CONFLICT,

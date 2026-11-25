@@ -33,7 +33,9 @@ from pydantic import BaseModel, ValidationError
 from sqlmodel import Session
 
 from agents.core.tool_schema import tool_schema
+from config import get_configs
 from models.auth import McpToken, User
+from service.mcp_server import scopes as mcp_scopes
 
 logger = logging.getLogger(__name__)
 
@@ -99,6 +101,22 @@ class Caller:
     session: Session
     outcome: ToolOutcome | None = None
 
+    @property
+    def scopes(self) -> frozenset[str]:
+        return mcp_scopes.parse(self.token.scopes)
+
+    @property
+    def project_grant(self) -> frozenset[str] | None:
+        """The projects this connection may reach, or None for all of the
+        person's. Membership is still checked on every call: a grant never
+        reaches a project the person has since lost."""
+        ids = self.token.project_ids
+        return None if ids is None else frozenset(str(i) for i in ids)
+
+    def allows_project(self, project_id: Any) -> bool:
+        grant = self.project_grant
+        return grant is None or str(project_id) in grant
+
 
 class ToolError(Exception):
     """A failure the calling model should read and can act on: a wrong id, a
@@ -124,6 +142,18 @@ class Tool:
     # Replaces what the person set (update_project). Clients read the hint to
     # confirm the call with the person first.
     destructive: bool = False
+    # The capability a connection must have been granted (scopes.py).
+    scope: str = mcp_scopes.PROJECTS
+    # Reads text a stranger wrote (a crawled page, a search term, a caption).
+    # Clients use the hint to treat the result as data, not instructions.
+    open_world: bool = False
+
+    def available_to(self, caller: "Caller") -> bool:
+        """Granted, and not a write while writes are switched off. A tool
+        that fails either is absent from the list, not offered and refused."""
+        if self.scope not in caller.scopes:
+            return False
+        return self.read_only or get_configs().mcp_write_tools_enabled
 
     def descriptor(self) -> dict[str, Any]:
         return {
@@ -138,9 +168,58 @@ class Tool:
                 "readOnlyHint": self.read_only,
                 "destructiveHint": self.destructive,
                 "idempotentHint": True,
-                "openWorldHint": False,
+                "openWorldHint": self.open_world,
             },
         }
+
+
+@dataclass(frozen=True)
+class PromptArgument:
+    name: str
+    description: str
+    required: bool = False
+
+
+@dataclass(frozen=True)
+class Prompt:
+    """A playbook the person can run from their agent (a slash command in
+    Claude Code and Gemini CLI). ``render`` returns the text of one user
+    message; the same text is reachable as a tool for clients that list no
+    prompts, so a prompt is a convenience and never the only way in."""
+
+    name: str
+    title: str
+    description: str
+    arguments: tuple[PromptArgument, ...]
+    render: Callable[[dict[str, str], "Caller"], str]
+    scope: str = mcp_scopes.REPORTS
+
+    def descriptor(self) -> dict[str, Any]:
+        return {
+            "name": self.name,
+            "title": self.title,
+            "description": self.description,
+            "arguments": [
+                {"name": a.name, "description": a.description, "required": a.required} for a in self.arguments
+            ],
+        }
+
+
+def _get_prompt(id_: Any, prompt: Prompt, arguments: Any, caller: "Caller") -> dict[str, Any]:
+    if prompt.scope not in caller.scopes:
+        return error(id_, INVALID_PARAMS, f"{prompt.name} is not allowed on this connection.")
+    args = {str(k): str(v) for k, v in (arguments or {}).items()} if isinstance(arguments, dict) else {}
+    missing = [a.name for a in prompt.arguments if a.required and not args.get(a.name)]
+    if missing:
+        return error(id_, INVALID_PARAMS, f"Missing argument: {', '.join(missing)}")
+    try:
+        text = prompt.render(args, caller)
+    except ToolError as exc:
+        return error(id_, INVALID_PARAMS, str(exc))
+    return _result(id_, {
+        "description": prompt.description,
+        "messages": [{"role": "user", "content": {"type": "text", "text": text}}],
+    })
 
 
 def _with_context(schema: dict[str, Any]) -> dict[str, Any]:
@@ -195,6 +274,16 @@ def _call_tool(tool: Tool, arguments: Any, caller: Caller) -> dict[str, Any]:
     # Set before anything can raise, so an exception that escapes still leaves
     # the route a record of which tool it came from.
     outcome = caller.outcome = ToolOutcome(tool=tool.name, intent=intent)
+    if not tool.available_to(caller):
+        # A client can still call a name it remembers from another
+        # connection; the answer says how to get it, so the model can tell
+        # the person rather than retry.
+        message = (
+            f"{tool.name} is not allowed on this connection. The person can allow it in Duct "
+            "(Settings, Connect your AI agent) and reconnect."
+        )
+        outcome.error_type, outcome.error_message = "not_granted", message
+        return _tool_result({"error": message}, is_error=True, outcome=outcome)
     try:
         args = tool.args.model_validate(arguments or {})
     except ValidationError as exc:
@@ -224,6 +313,7 @@ def handle(
     *,
     instructions: str,
     version: str,
+    prompts: dict[str, Prompt] | None = None,
 ) -> dict[str, Any] | None:
     """Answer one JSON-RPC message. ``None`` for a notification, which the
     transport acknowledges with an empty 202."""
@@ -247,17 +337,28 @@ def handle(
     if method == "initialize":
         return _result(id_, {
             "protocolVersion": negotiate(params.get("protocolVersion")),
-            "capabilities": {"tools": {"listChanged": False}},
+            "capabilities": {
+                "tools": {"listChanged": False},
+                **({"prompts": {"listChanged": False}} if prompts else {}),
+            },
             "serverInfo": {"name": "duct", "title": "Duct", "version": version},
             "instructions": instructions,
         })
     if method == "ping":
         return _result(id_, {})
     if method == "tools/list":
-        return _result(id_, {"tools": [tool.descriptor() for tool in tools.values()]})
+        return _result(id_, {"tools": [tool.descriptor() for tool in tools.values() if tool.available_to(caller)]})
     if method == "tools/call":
         tool = tools.get(params.get("name"))
         if tool is None:
             return error(id_, INVALID_PARAMS, f"Unknown tool: {params.get('name')!r}")
         return _result(id_, _call_tool(tool, params.get("arguments"), caller))
+    if method == "prompts/list" and prompts is not None:
+        listed = [p.descriptor() for p in prompts.values() if p.scope in caller.scopes]
+        return _result(id_, {"prompts": listed})
+    if method == "prompts/get" and prompts is not None:
+        prompt = prompts.get(params.get("name"))
+        if prompt is None:
+            return error(id_, INVALID_PARAMS, f"Unknown prompt: {params.get('name')!r}")
+        return _get_prompt(id_, prompt, params.get("arguments"), caller)
     return error(id_, METHOD_NOT_FOUND, f"Method not found: {method}")
