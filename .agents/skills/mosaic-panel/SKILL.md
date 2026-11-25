@@ -44,6 +44,7 @@ in `app/public/art/mosaic/`.
 | `cdiv` | 404 | road ends at a milestone | `CDIV` |
 | `cave-canem` | 403, no access | the Pompeii guard dog | `CAVE·CANEM` |
 | `otium` | all caught up | water running full, pigeon asleep | `OTIVM` |
+| `proba` | a check before something goes live (the site's launch-check page) | water held behind a closed sluice gate, a levelling table with plumb lines on the dry channel ahead, a pigeon on the gate | `PROBA` |
 
 `fons` and `salve` are both arrival panels because the arrival has two steps:
 the front door is the spring, `/start` is the threshold you cross a click later.

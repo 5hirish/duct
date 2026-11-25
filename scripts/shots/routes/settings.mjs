@@ -489,7 +489,14 @@ export function routes(story) {
     // routes/mcp_oauth.py describe_request -> ConsentRequestOut. Claude Code
     // registers as "<product> (<server name>)" and redirects to a loopback
     // port, which service/mcp_server/oauth.destination() calls "device".
-    "GET /api/oauth/requests/r1": { client_name: "Claude Code (duct)", destination: "device", destination_name: "localhost" },
+    // requested_scopes: what the agent asked for. Claude Code asking for the
+    // second tier is what opens the screen on "Work alongside me".
+    "GET /api/oauth/requests/r1": {
+      client_name: "Claude Code (duct)",
+      destination: "device",
+      destination_name: "localhost",
+      requested_scopes: ["data", "memory", "projects", "reports"],
+    },
 
     // routes/project_members.py preview_invitation -> InvitePreviewOut
     "GET /api/invitations/tok1": {

@@ -43,7 +43,7 @@
 {"@context":"https://schema.org","@type":"WebApplication","inLanguage":"ja","name":"SaaS CAC / LTV 計算ツール","url":"https://getduct.ai/ja/tools/cac-ltv-calculator","description":"SaaS指標から顧客獲得コスト（CAC）、顧客生涯価値（LTV）、LTV:CAC比率、CAC回収期間を算出し、業界ベンチマークと比較した色分けされた健全性スコアを表示する無料の計算ツールです。","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Organization","name":"Duct","url":"https://getduct.ai"}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ja","mainEntity":[{"@type":"Question","name":"SaaSにおけるCACとは何ですか？","acceptedAnswer":{"@type":"Answer","text":"CAC（顧客獲得コスト）は、新規顧客を1人獲得するために必要な総販売・マーケティング費用です。計算式：CAC = 総販売・マーケティング費用 ÷ 同期間に獲得した新規顧客数。正確な数値を出すには、給与、ツール、広告費、代理店手数料を分子に含めます。"}},{"@type":"Question","name":"顧客生涯価値（LTV）はどのように計算しますか？","acceptedAnswer":{"@type":"Answer","text":"LTV = 顧客あたりの平均月間収益 × 顧客の平均寿命（月数）。または：LTV = ARPU ÷ 月間チャーン率。例：ARPUが100ユーロで平均寿命が36ヶ月の場合、LTV = 3,600ユーロ。月間チャーン率が2%の場合、LTV = 100ユーロ ÷ 0.02 = 5,000ユーロ。"}},{"@type":"Question","name":"良いLTV:CAC比率とは何ですか？","acceptedAnswer":{"@type":"Answer","text":"SaaSにおける適切なLTV:CAC比率は3:1以上です。これは、顧客獲得に1ユーロ費やすごとに、生涯価値で3ユーロを回収できることを意味します。2～3:1の比率はコストをカバーしますが、持続可能な経済を構築しません。2:1未満は通常、モデルが大規模では実行不可能であることを意味します。5:1以上は、成長への投資不足を示唆することがよくあります。"}},{"@type":"Question","name":"CAC回収期間とは何ですか？","acceptedAnswer":{"@type":"Answer","text":"CAC回収期間とは、顧客の月間収益から獲得コストを回収するのにかかる月数です。計算式：回収期間 = CAC ÷ ARPU。SaaSにおける健全な回収期間は12ヶ月未満です。18ヶ月を超えると高リスクであり、損益分岐点に達する前に顧客が解約する可能性があります。"}},{"@type":"Question","name":"CACはどのように削減しますか？","acceptedAnswer":{"@type":"Answer","text":"最も効果的なレバー：有料獲得への依存を減らすために、複利的に機能するオーガニックコンテンツ（ブログ、SEO）を構築する。販売サイクルを短縮する。既存のファネル上部からより多くの価値を引き出すために、トライアルから有料へのコンバージョンを改善する。そして、顧客あたりの獲得コストを時間とともに削減する紹介またはPLGループを構築する。"}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ja","mainEntity":[{"@type":"Question","name":"CACに含まれるものは？","acceptedAnswer":{"@type":"Answer","text":"同期間中にそれらの顧客を獲得するために費やしたすべて（広告費、ツール代、代理店費用、営業およびマーケティング担当者の人件費）。"}},{"@type":"Question","name":"解約率（チャーン）から LTV を計算できますか？","acceptedAnswer":{"@type":"Answer","text":"はい。継続月数は 1 ÷ 月次チャーン率となるため、LTVは顧客単価 ÷ チャーン率で計算できます。月額120、チャーン率2.5%の場合、120 ÷ 0.025 = 4,800となります。"}},{"@type":"Question","name":"ペイバック期間の計算で売上総利益率が必要な理由は？","acceptedAnswer":{"@type":"Answer","text":"売上高は利益ではありません。利益率を加味すると、回収期間は粗利益が CAC をカバーするまでの月数をカウントするため、より低速でより正確な数値となります。"}},{"@type":"Question","name":"データがどこかに送信されることはありますか？","acceptedAnswer":{"@type":"Answer","text":"いいえ。計算はお使いのブラウザ上で実行されます。送信や保存が行われることはありません。"}}]}
 </script>
 <style>
   .skip-link {
@@ -133,13 +133,6 @@
   .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
   .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
 
-  .about-section { max-width: 720px; margin: 0 auto 80px; padding: 0 24px; }
-  .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
-  .about-section h2 em { color: var(--orange); font-style: italic; }
-  .about-section p, .about-section li { font-size: 15px; color: var(--navy-3); line-height: 1.75; margin-bottom: 12px; }
-  .about-section ul { padding-left: 20px; }
-  .about-section li { margin-bottom: 6px; }
-  .about-section strong { color: var(--navy); }
 
   .insight-panel {
     margin-top: 24px;
@@ -163,6 +156,53 @@
     background: var(--white); transition: background .15s;
   }
   .insight-link:hover { background: #dbeafe; }
+
+  /* Formula drawn as math, the example worked through, and (where the page cites a
+     source) the bands the results are graded against. Same block on the five
+     calculators that carry it; the width follows this page's .tool-wrap. */
+  .math { max-width: 820px; margin: 0 auto 64px; padding: 0 24px; }
+  .math h2 { font-size: clamp(26px, 3.4vw, 34px); line-height: 1.15; margin: 0 0 20px; }
+  .math-grid { display: grid; grid-template-columns: 7fr 5fr; gap: 16px; }
+  @media (max-width: 760px) { .math-grid { grid-template-columns: 1fr; } }
+  .formulas { padding: 32px; background: var(--off); border: 1px solid var(--border); border-radius: var(--r-lg); display: flex; flex-direction: column; justify-content: center; gap: 20px; min-width: 0; }
+  @media (max-width: 600px) { .formulas { padding: 24px 20px; } }
+  .eq { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin: 0; font-family: var(--serif); font-size: clamp(20px, 2.4vw, 26px); line-height: 1.2; color: var(--navy); }
+  .eq.is-small { font-size: clamp(16px, 1.6vw, 18px); color: var(--navy-2); padding-top: 18px; border-top: 1px solid var(--border); }
+  .eq-name { font-weight: 700; white-space: nowrap; }
+  .eq .op { color: var(--navy-3); }
+  .eq .rhs { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
+  .eq .paren { font-size: 2.1em; font-weight: 300; line-height: .9; color: var(--navy-3); }
+  .eq .rhs sup { font-size: .55em; align-self: flex-start; margin-left: -8px; white-space: nowrap; }
+  .frac { display: inline-flex; flex-direction: column; align-items: center; text-align: center; white-space: nowrap; }
+  .frac > span { padding: 0 6px; align-self: stretch; }
+  .frac > span:first-child { padding-bottom: 4px; }
+  .frac > span:last-child { padding-top: 4px; border-top: 2px solid currentColor; }
+  .frac .nb, .lin .nb { display: inline-block; white-space: nowrap; }
+  .frac > span:has(.nb) { white-space: normal; }
+  .worked { padding: 28px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); min-width: 0; }
+  @media (max-width: 600px) { .worked { padding: 24px 20px; } }
+  .worked h3, .bands h3 { font-size: 13px; font-weight: 600; color: var(--navy-3); margin: 0 0 12px; }
+  .worked ul { list-style: none; margin: 0; padding: 0; }
+  .worked li { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 16px; padding: 10px 0; border-top: 1px solid var(--border); font-size: 14px; color: var(--navy-3); font-variant-numeric: tabular-nums; }
+  .worked li strong { font-family: var(--serif); font-size: 20px; font-weight: 400; color: var(--navy); white-space: nowrap; margin-left: auto; }
+  .worked li sup { font-size: .7em; }
+  .worked-note { font-size: 14px; line-height: 1.6; color: var(--navy-3); margin: 12px 0 0; max-width: 60ch; }
+  .bands { margin-top: 16px; padding: 28px 32px; border: 1px solid var(--border); border-radius: var(--r-lg); }
+  @media (max-width: 600px) { .bands { padding: 24px 20px; } }
+  .band { display: grid; grid-template-columns: 140px 1fr; gap: 6px 20px; align-items: center; padding: 14px 0; border-top: 1px solid var(--border); }
+  @media (max-width: 600px) { .band { grid-template-columns: 1fr; } }
+  .band-name { font-size: 14px; font-weight: 600; color: var(--navy); margin: 0; }
+  .band-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin: 0; border-radius: var(--r); overflow: hidden; }
+  .band-bar > span { padding: 8px 10px; font-size: 13px; line-height: 1.35; }
+  .band-bar strong { display: block; font-size: 12px; font-weight: 600; }
+  .band-bar .bad { background: #fef2f2; color: #991b1b; }
+  .band-bar .mid { background: #fffbeb; color: #92400e; }
+  .band-bar .good { background: #f0fdf4; color: #15803d; }
+  .band-src { grid-column: 2; font-size: 12px; color: var(--navy-3); margin: 0; }
+  @media (max-width: 600px) { .band-src { grid-column: 1; } }
+  /* The bridge link is a standalone target: give it 24px of height (WCAG 2.5.8). */
+  .duct-bridge-link { display: inline-block; padding: 4px 0; }
+  .faq-a { max-width: 68ch; }
 </style>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"ja","itemListElement":[{"@type":"ListItem","position":1,"name":"ホーム","item":"https://getduct.ai/ja/"},{"@type":"ListItem","position":2,"name":"無料ツール","item":"https://getduct.ai/ja/tools/"},{"@type":"ListItem","position":3,"name":"SaaS向けCAC / LTV計算ツール","item":"https://getduct.ai/ja/tools/cac-ltv-calculator"}]}
@@ -170,7 +210,7 @@
 </head>
 <body>
 
-<!-- EXPERIMENT: CAC/LTV calculator as lead magnet — do growth PMs landing on high-volume "cac ltv ratio" keywords convert to beta signups at a higher rate than blog traffic? -->
+<!-- EXPERIMENT: CAC and LTV calculator as a way in: someone searching "cac ltv ratio" gets CAC, LTV, payback, the formulas, a worked example and the sourced bands on one screen, then a real Duct session that checks the customer count CAC depends on. Measured by Download clicks from the navy box and the closing band. -->
 
 <a href="#main-content" class="skip-link">コンテンツへスキップ</a>
 
@@ -179,9 +219,8 @@
 <main id="main-content">
 
 <div class="tool-hero">
-  <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> 無料ツール · サインアップ不要</div>
-  <h1>CAC &amp; LTV計算ツール <em>（SaaS向け）</em></h1>
-  <p>成長モデルはユニットエコノミクスと同じくらい健全です。CAC、LTV、回収期間を一度に計算します — ベンチマーク済みで、意思決定に役立ち、スプレッドシートの遅延はありません。</p>
+  <h1>CAC および LTV 計算ツール。<em>顧客の投資回収はできていますか？</em></h1>
+  <p>支出、新規顧客数、顧客単価、継続期間を入力。CAC、LTV、LTV:CAC、回収月数を出力。</p>
 </div>
 
 <div class="tool-wrap">
@@ -247,49 +286,57 @@
   </div>
 </div>
 
+<section class="math reveal" aria-labelledby="math-heading">
+  <h2 id="math-heading">CAC と LTV の計算方法</h2>
+  <div class="math-grid">
+    <div class="formulas">
+      <p class="eq" role="math" aria-label="CAC は営業およびマーケティング支出を新規顧客数で割った値に等しくなります"><span class="eq-name">CAC</span><span class="op">=</span><span class="rhs"><span class="frac"><span><span class="nb">営業および</span> <span class="nb">マーケティング支出</span></span><span>新規顧客数</span></span></span></p>
+      <p class="eq is-small" role="math" aria-label="LTV は月額顧客単価に継続月数を掛けた値に等しくなります"><span class="eq-name">LTV</span><span class="op">=</span><span class="rhs"><span class="lin"><span class="nb">顧客単価</span> <span class="op">×</span> <span class="nb">継続月数</span></span></span></p>
+      <p class="eq is-small" role="math" aria-label="月単位の回収期間は、CAC を月額顧客単価と粗利益率の積で割った値に等しくなります"><span class="eq-name">回収期間</span><span class="op">=</span><span class="rhs"><span class="frac"><span>CAC</span><span><span class="nb">顧客単価</span> <span class="nb">× 利益率</span></span></span></span></p>
+    </div>
+    <div class="worked">
+      <h3>例の数値を使用した場合</h3>
+      <ul>
+        <li><span>20,000 ÷ 25</span><strong>800 CAC</strong></li>
+        <li><span>120 × 36</span><strong>4,320 LTV</strong></li>
+        <li><span>4,320 ÷ 800</span><strong>5.40:1</strong></li>
+        <li><span>800 ÷ (120 × 75%)</span><strong>8.9 か月</strong></li>
+      </ul>
+      <p class="worked-note">粗利益率を空欄にすると、回収期間の計算には代わりに全売上高が使用されます。</p>
+    </div>
+  </div>
+  <div class="bands">
+    <h3>目安となる基準</h3>
+    <div class="band">
+      <p class="band-name">LTV:CAC</p>
+      <p class="band-bar"><span class="bad"><strong>持続不可能</strong> 2:1 未満</span><span class="mid"><strong>許容範囲</strong> 2〜3:1</span><span class="good"><strong>健全</strong> 3:1 以上</span></p>
+      <p class="band-src">3:1 以上を目標とする（David Skok および OpenView による）</p>
+    </div>
+    <div class="band">
+      <p class="band-name">CAC 回収期間</p>
+      <p class="band-bar"><span class="bad"><strong>ハイリスク</strong> 18 か月超</span><span class="mid"><strong>許容範囲</strong> 12〜18 か月</span><span class="good"><strong>健全</strong> 12 か月以下</span></p>
+      <p class="band-src">目標は12か月未満（OpenViewのSaaS Benchmarks 2024より）</p>
+    </div>
+  </div>
+</section>
+
 <section class="duct-bridge reveal" aria-label="Ductについて">
   <div class="duct-bridge-inner">
     <div class="duct-bridge-text">
-      <p class="duct-bridge-headline">LTV:CACは現在のモデルの健全性を示します。次の悪化がどこから始まるかは示しません。</p>
-      <p class="duct-bridge-body">DuctはGoogle Ads、GA4、Stripeをまとめて読み込むため、比率が低下したときに、どのチャネルの顧客が離脱したかを特定し、代わりにどこに予算を投入すべきかを提案できます。</p>
+      <p class="duct-bridge-headline">広告上の獲得顧客数は64人。Stripeでの決済完了は23件。</p>
+      <p class="duct-bridge-body">CAC は支出を顧客数で割るため、人数によって結果が決まります。Duct は各広告プラットフォームの主張と、Stripe で実際に課金された額を突き合わせて確認します。</p>
       <a href="/ja/" class="duct-bridge-link">Ductの仕組み →</a>
     </div>
     <figure class="shot-frame duct-bridge-shot">
-      <img src="/assets/media/insights-session.webp" srcset="/assets/media/insights-session-768.webp 768w, /assets/media/insights-session-1536.webp 1536w, /assets/media/insights-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="インサイトセッション：ROASが上昇しているのにサインアップが減少している理由を尋ねると、エージェントは広告、分析、収益をまとめて読み込み、左側で承認待ちの変更セットを提案し、右側でブリーフを作成します。"/>
-      <figcaption>ROASが上昇しているのにサインアップが減少している理由を尋ねます。Ductは広告、分析、収益をまとめて読み込み、離脱しているコホートを特定し、変更セットを提案します。あなたはそれを承認します。</figcaption>
+      <img src="/assets/media/session-stripe.webp" srcset="/assets/media/session-stripe-768.webp 768w, /assets/media/session-stripe-1536.webp 1536w, /assets/media/session-stripe.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="インサイトセッション：今週広告がどれだけの有料顧客をもたらしたかを尋ねられると、Duct は Google Ads、Meta Ads、Stripe を読み取り、ブリーフを作成します。広告の主張は 64 顧客、Stripe で決済されたのは 23 顧客です"/>
     </figure>
   </div>
 </section>
 
-<div class="about-section reveal">
-  <h2><em>計算の仕組み</em></h2>
-  <p>この計算ツールは4つの標準的なSaaSユニットエコノミクス式を使用します：</p>
-  <ul>
-    <li><strong>CAC</strong> = 月間総販売・マーケティング費用 ÷ 月間新規顧客数</li>
-    <li><strong>LTV</strong> = 顧客あたりの平均月間収益 × 顧客の平均寿命</li>
-    <li><strong>LTV:CAC比率</strong> = LTV ÷ CAC</li>
-    <li><strong>CAC回収期間</strong> = CAC ÷ 顧客あたりの平均月間収益（収益ベース）。オプションの粗利益率％は、貢献回収期間に切り替わります：CAC ÷ (ARPU × 粗利益率%)。</li>
-  </ul>
-  <p>結果は広く引用されているSaaS標準に対してベンチマークされています：健全なLTV:CACは3:1以上（David Skok / OpenView）、回収期間は12ヶ月未満（OpenView SaaS Benchmarks 2024）。</p>
-
-  <h2 style="margin-top:40px">これらの指標がなぜ<em>一緒に重要なのか</em></h2>
-  <p>CAC単独ではほとんど何もわかりません。LTVが6,000ユーロ（5:1の比率）であれば1,200ユーロのCACは健全ですが、LTVが1,800ユーロ（1.5:1の比率）であれば危険です。重要なパターンは、これら4つの数値間の関係性であり、それが週ごとに正しい方向に動いているかどうかです。</p>
-  <p>最も一般的なグロースPMの過ち：スプレッドシートでCACとLTVを毎月追跡し、3ヶ月遅れで問題に気づくこと。Ductは毎週この計算を自動的に実行し、LTV:CACが圧縮され始めた瞬間にトレンドアラートを表示します。</p>
-
-  <h2 style="margin-top:40px">制限事項</h2>
-  <ul>
-    <li>CACの計算では、ブレンドされた費用を使用します。新規事業と拡張事業を区別しません。</li>
-    <li>LTVの計算は線形チャーンを仮定しています。チャーンがコホートによって異なる場合、実際のLTVは異なる場合があります。</li>
-    <li>ここでのLTVは収益ベースです。マージン調整済みLTVの場合、粗利益率を手動で乗算してください。回収期間は、CACを回収するための貢献ベースの月数にオプションの粗利益率を使用できます。</li>
-    <li>すべての計算はブラウザで実行されます。データが送信または保存されることはありません。</li>
-  </ul>
-</div>
-
 <section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
   <div class="related-tools-banner-inner">
-    <p class="tag">その他無料</p>
-    <h2 id="related-tools-heading">関連<em>ツール</em>を見る</h2>
-    <p class="related-tools-banner-desc">ベンチマーク、成長計算、週次ブリーフテンプレート—これらはすべて、このページと同じプライバシーモデルでブラウザで実行されます。次に検証したい数値を選択してください。</p>
+    <h2 id="related-tools-heading">その他の無料計算ツール</h2>
+    <p class="related-tools-banner-desc">解約率やトライアルから有料への転換率の評価、あるいは MRR の成長スピードを確認できます。</p>
     <div class="insight-links related-tools" data-related-tools data-current-tool="cac-ltv-calculator" data-related-limit="3"></div>
   </div>
 </section>
@@ -297,29 +344,24 @@
 <section class="faq" id="faq">
 <div class="faq-inner">
 <div class="reveal">
-  <p class="tag">FAQ</p>
-  <h2>よくある<em>質問</em></h2>
+  <h2>CAC および LTV に関するよくある質問</h2>
 </div>
 <div class="faq-list reveal" style="transition-delay:.1s">
   <details class="faq-item">
-    <summary class="faq-q">SaaSにおけるCACとは何ですか？</summary>
-    <p class="faq-a">CAC（顧客獲得コスト）は、新規顧客を1人獲得するために必要な総販売・マーケティング費用です。計算式：CAC = 総販売・マーケティング費用 ÷ 同期間に獲得した新規顧客数。正確な数値を出すには、給与、ツール、広告費、代理店手数料を分子に含めます。</p>
+    <summary class="faq-q">CACに含まれるものは？</summary>
+    <p class="faq-a">同期間中にそれらの顧客を獲得するために費やしたすべて（広告費、ツール代、代理店費用、営業およびマーケティング担当者の人件費）。</p>
   </details>
   <details class="faq-item">
-    <summary class="faq-q">顧客生涯価値（LTV）はどのように計算しますか？</summary>
-    <p class="faq-a">LTV = 顧客あたりの平均月間収益 × 顧客の平均寿命（月数）。または：LTV = ARPU ÷ 月間チャーン率。例：ARPUが100ユーロで平均寿命が36ヶ月の場合、LTV = 3,600ユーロ。月間チャーン率が2%の場合、LTV = 100ユーロ ÷ 0.02 = 5,000ユーロ。</p>
+    <summary class="faq-q">解約率（チャーン）から LTV を計算できますか？</summary>
+    <p class="faq-a">はい。継続月数は 1 ÷ 月次チャーン率となるため、LTVは顧客単価 ÷ チャーン率で計算できます。月額120、チャーン率2.5%の場合、120 ÷ 0.025 = 4,800となります。</p>
   </details>
   <details class="faq-item">
-    <summary class="faq-q">良いLTV:CAC比率とは何ですか？</summary>
-    <p class="faq-a">SaaSにおける適切なLTV:CAC比率は3:1以上です。これは、顧客獲得に1ユーロ費やすごとに、生涯価値で3ユーロを回収できることを意味します。2～3:1の比率はコストをカバーしますが、持続可能な経済を構築しません。2:1未満は通常、モデルが大規模では実行不可能であることを意味します。5:1以上は、成長への投資不足を示唆することがよくあります。</p>
+    <summary class="faq-q">ペイバック期間の計算で売上総利益率が必要な理由は？</summary>
+    <p class="faq-a">売上高は利益ではありません。利益率を加味すると、回収期間は粗利益が CAC をカバーするまでの月数をカウントするため、より低速でより正確な数値となります。</p>
   </details>
   <details class="faq-item">
-    <summary class="faq-q">CAC回収期間とは何ですか？</summary>
-    <p class="faq-a">CAC回収期間とは、顧客の月間収益から獲得コストを回収するのにかかる月数です。計算式：回収期間 = CAC ÷ ARPU。SaaSにおける健全な回収期間は12ヶ月未満です。18ヶ月を超えると高リスクであり、損益分岐点に達する前に顧客が解約する可能性があります。</p>
-  </details>
-  <details class="faq-item">
-    <summary class="faq-q">CACはどのように削減しますか？</summary>
-    <p class="faq-a">最も効果的なレバー：有料獲得への依存を減らすために、複利的に機能するオーガニックコンテンツ（ブログ、SEO）を構築する。販売サイクルを短縮する。既存のファネル上部からより多くの価値を引き出すために、トライアルから有料へのコンバージョンを改善する。そして、顧客あたりの獲得コストを時間とともに削減する紹介またはPLGループを構築する。</p>
+    <summary class="faq-q">データがどこかに送信されることはありますか？</summary>
+    <p class="faq-a">いいえ。計算はお使いのブラウザ上で実行されます。送信や保存が行われることはありません。</p>
   </details>
 </div>
 </div>

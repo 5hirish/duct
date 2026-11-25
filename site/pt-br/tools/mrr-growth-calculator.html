@@ -43,7 +43,7 @@
 {"@context":"https://schema.org","@type":"WebApplication","inLanguage":"pt-BR","name":"Calculadora de Taxa de Crescimento de MRR","url":"https://getduct.ai/pt-br/tools/mrr-growth-calculator","description":"Calculadora gratuita que calcula o crescimento líquido do MRR, a taxa de crescimento mensal composta (CMGR) e a taxa de crescimento necessária para atingir um MRR alvo para negócios SaaS.","applicationCategory":"BusinessApplication","operatingSystem":"All","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Organization","name":"Duct","url":"https://getduct.ai"}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"pt-BR","mainEntity":[{"@type":"Question","name":"Como você calcula a taxa de crescimento do MRR?","acceptedAnswer":{"@type":"Answer","text":"Taxa de crescimento líquido do MRR = (MRR Final − MRR Inicial) ÷ MRR Inicial. Multiplique por 100 para obter uma porcentagem. Exemplo: se o MRR cresce de $20.000 para $28.000, o crescimento líquido é ($8.000 ÷ $20.000) = 40%."}},{"@type":"Question","name":"O que é CMGR em SaaS?","acceptedAnswer":{"@type":"Answer","text":"CMGR (Taxa de Crescimento Mensal Composta) é o crescimento mensal médio necessário para passar do seu MRR inicial para o MRR final ao longo de um número de meses. Ele normaliza a velocidade de crescimento, para que as equipes possam comparar períodos de diferentes durações."}},{"@type":"Question","name":"Qual é uma boa taxa de crescimento de MRR?","acceptedAnswer":{"@type":"Answer","text":"Depende do estágio. SaaS em estágio inicial geralmente visa um crescimento mensal de 10 a 20%, enquanto equipes em estágio avançado podem operar eficientemente com taxas mais baixas. O ponto chave é se sua taxa de crescimento sustenta seu modelo operacional e as premissas do plano."}},{"@type":"Question","name":"Esta calculadora pode mostrar contração do MRR?","acceptedAnswer":{"@type":"Answer","text":"Sim. Se o MRR final for menor que o MRR inicial, seu crescimento líquido e CMGR se tornam negativos. A calculadora sinaliza isso como contração para que você possa investigar churn, downgrades e risco de payback de aquisição."}},{"@type":"Question","name":"Como calculo o crescimento necessário para atingir um MRR alvo?","acceptedAnswer":{"@type":"Answer","text":"Insira um valor de MRR alvo e a duração do período. A ferramenta calcula o CMGR necessário a partir do seu MRR final. Você pode comparar essa taxa necessária com o seu CMGR atual para ver se o seu plano é realista."}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"pt-BR","mainEntity":[{"@type":"Question","name":"O que é CMGR?","acceptedAnswer":{"@type":"Answer","text":"Taxa de crescimento mensal composta: a taxa mensal constante que transforma o MRR inicial em MRR final ao longo do período. Permite comparar períodos de durações diferentes."}},{"@type":"Question","name":"Qual é uma boa taxa de crescimento de MRR?","acceptedAnswer":{"@type":"Answer","text":"Depende do seu estágio e do seu plano, e nenhum benchmark publicado está por trás desta página. As cores nos resultados (5% ao mês saudável, 15% para cima hipercrescimento) são um guia aproximado. O teste melhor é o campo de meta: a taxa que seu plano precisa comparada à taxa que você tem."}},{"@type":"Question","name":"E se o MRR caiu?","acceptedAnswer":{"@type":"Answer","text":"O crescimento líquido e o CMGR ficam negativos e os resultados marcam como contração. Duas análises não conseguem dizer se churn, downgrades ou menos novos clientes causaram isso."}},{"@type":"Question","name":"Meus dados são enviados para algum lugar?","acceptedAnswer":{"@type":"Answer","text":"Não. Os cálculos rodam no seu navegador. Nada é enviado ou armazenado."}}]}
 </script>
 <style>
   .skip-link {
@@ -132,13 +132,6 @@
   .tool-cta-text p:first-child { font-size: 16px; font-weight: 500; color: var(--white); margin: 0 0 4px; }
   .tool-cta-text p:last-child { font-size: 13px; color: rgba(255,255,255,.55); margin: 0; }
 
-  .about-section { max-width: 760px; margin: 0 auto 80px; padding: 0 24px; }
-  .about-section h2 { font-family: var(--serif); font-size: 28px; color: var(--navy); margin-bottom: 16px; }
-  .about-section h2 em { color: var(--orange); font-style: italic; }
-  .about-section p, .about-section li { font-size: 15px; color: var(--navy-3); line-height: 1.75; margin-bottom: 12px; }
-  .about-section ul { padding-left: 20px; }
-  .about-section li { margin-bottom: 6px; }
-  .about-section strong { color: var(--navy); }
 
   .insight-panel {
     margin-top: 24px;
@@ -162,6 +155,53 @@
     background: var(--white); transition: background .15s;
   }
   .insight-link:hover { background: #dbeafe; }
+
+  /* Formula drawn as math, the example worked through, and (where the page cites a
+     source) the bands the results are graded against. Same block on the five
+     calculators that carry it; the width follows this page's .tool-wrap. */
+  .math { max-width: 860px; margin: 0 auto 64px; padding: 0 24px; }
+  .math h2 { font-size: clamp(26px, 3.4vw, 34px); line-height: 1.15; margin: 0 0 20px; }
+  .math-grid { display: grid; grid-template-columns: 7fr 5fr; gap: 16px; }
+  @media (max-width: 760px) { .math-grid { grid-template-columns: 1fr; } }
+  .formulas { padding: 32px; background: var(--off); border: 1px solid var(--border); border-radius: var(--r-lg); display: flex; flex-direction: column; justify-content: center; gap: 20px; min-width: 0; }
+  @media (max-width: 600px) { .formulas { padding: 24px 20px; } }
+  .eq { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; margin: 0; font-family: var(--serif); font-size: clamp(20px, 2.4vw, 26px); line-height: 1.2; color: var(--navy); }
+  .eq.is-small { font-size: clamp(16px, 1.6vw, 18px); color: var(--navy-2); padding-top: 18px; border-top: 1px solid var(--border); }
+  .eq-name { font-weight: 700; white-space: nowrap; }
+  .eq .op { color: var(--navy-3); }
+  .eq .rhs { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
+  .eq .paren { font-size: 2.1em; font-weight: 300; line-height: .9; color: var(--navy-3); }
+  .eq .rhs sup { font-size: .55em; align-self: flex-start; margin-left: -8px; white-space: nowrap; }
+  .frac { display: inline-flex; flex-direction: column; align-items: center; text-align: center; white-space: nowrap; }
+  .frac > span { padding: 0 6px; align-self: stretch; }
+  .frac > span:first-child { padding-bottom: 4px; }
+  .frac > span:last-child { padding-top: 4px; border-top: 2px solid currentColor; }
+  .frac .nb, .lin .nb { display: inline-block; white-space: nowrap; }
+  .frac > span:has(.nb) { white-space: normal; }
+  .worked { padding: 28px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); min-width: 0; }
+  @media (max-width: 600px) { .worked { padding: 24px 20px; } }
+  .worked h3, .bands h3 { font-size: 13px; font-weight: 600; color: var(--navy-3); margin: 0 0 12px; }
+  .worked ul { list-style: none; margin: 0; padding: 0; }
+  .worked li { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 16px; padding: 10px 0; border-top: 1px solid var(--border); font-size: 14px; color: var(--navy-3); font-variant-numeric: tabular-nums; }
+  .worked li strong { font-family: var(--serif); font-size: 20px; font-weight: 400; color: var(--navy); white-space: nowrap; margin-left: auto; }
+  .worked li sup { font-size: .7em; }
+  .worked-note { font-size: 14px; line-height: 1.6; color: var(--navy-3); margin: 12px 0 0; max-width: 60ch; }
+  .bands { margin-top: 16px; padding: 28px 32px; border: 1px solid var(--border); border-radius: var(--r-lg); }
+  @media (max-width: 600px) { .bands { padding: 24px 20px; } }
+  .band { display: grid; grid-template-columns: 140px 1fr; gap: 6px 20px; align-items: center; padding: 14px 0; border-top: 1px solid var(--border); }
+  @media (max-width: 600px) { .band { grid-template-columns: 1fr; } }
+  .band-name { font-size: 14px; font-weight: 600; color: var(--navy); margin: 0; }
+  .band-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin: 0; border-radius: var(--r); overflow: hidden; }
+  .band-bar > span { padding: 8px 10px; font-size: 13px; line-height: 1.35; }
+  .band-bar strong { display: block; font-size: 12px; font-weight: 600; }
+  .band-bar .bad { background: #fef2f2; color: #991b1b; }
+  .band-bar .mid { background: #fffbeb; color: #92400e; }
+  .band-bar .good { background: #f0fdf4; color: #15803d; }
+  .band-src { grid-column: 2; font-size: 12px; color: var(--navy-3); margin: 0; }
+  @media (max-width: 600px) { .band-src { grid-column: 1; } }
+  /* The bridge link is a standalone target: give it 24px of height (WCAG 2.5.8). */
+  .duct-bridge-link { display: inline-block; padding: 4px 0; }
+  .faq-a { max-width: 68ch; }
 </style>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"pt-BR","itemListElement":[{"@type":"ListItem","position":1,"name":"Início","item":"https://getduct.ai/pt-br/"},{"@type":"ListItem","position":2,"name":"Ferramentas gratuitas","item":"https://getduct.ai/pt-br/tools/"},{"@type":"ListItem","position":3,"name":"Calculadora de Taxa de Crescimento de MRR","item":"https://getduct.ai/pt-br/tools/mrr-growth-calculator"}]}
@@ -169,7 +209,7 @@
 </head>
 <body>
 
-<!-- EXPERIMENT: MRR growth calculator as lead magnet — do growth leaders landing on "mrr growth rate calculator" convert to beta signups at a higher rate than static content? -->
+<!-- EXPERIMENT: MRR growth calculator as a way in: someone searching "mrr growth rate calculator" gets net growth, CMGR, the formulas and a worked example on one screen, then a real Duct session that finds the MRR the briefs missed. Measured by Download clicks from the navy box and the closing band. -->
 
 <a href="#main-content" class="skip-link">Pular para o conteúdo</a>
 
@@ -178,9 +218,8 @@
 <main id="main-content">
 
 <div class="tool-hero">
-  <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Ferramenta gratuita · Não é necessário se cadastrar</div>
-  <h1>Calculadora de Taxa de Crescimento de MRR <em>para SaaS</em></h1>
-  <p>Seu plano de receita é tão forte quanto sua inclinação de crescimento. Calcule o crescimento do MRR e o CMGR claramente — com benchmarks, pronto para decisão, sem atraso de planilha.</p>
+  <h1>Calculadora de crescimento de MRR. <em>O ritmo é suficiente?</em></h1>
+  <p>Crescimento líquido e crescimento mensal composto (CMGR) a partir de dois registros de MRR, e a taxa mensal que sua meta precisa.</p>
 </div>
 
 <div class="tool-wrap">
@@ -241,48 +280,43 @@
   </div>
 </div>
 
+<section class="math reveal" aria-labelledby="math-heading">
+  <h2 id="math-heading">Como o crescimento do MRR é calculado</h2>
+  <div class="math-grid">
+    <div class="formulas">
+      <p class="eq" role="math" aria-label="O CMGR é igual ao MRR final dividido pelo MRR inicial, elevado a um sobre o número de meses, menos 1"><span class="eq-name">CMGR</span><span class="op">=</span><span class="rhs"><span class="paren">(</span><span class="frac"><span>MRR final</span><span>MRR inicial</span></span><span class="paren">)</span><sup>1/meses</sup><span class="op">−</span>1</span></p>
+      <p class="eq is-small" role="math" aria-label="O crescimento líquido é igual ao MRR final menos o MRR inicial, dividido pelo MRR inicial"><span class="eq-name">Crescimento líquido</span><span class="op">=</span><span class="rhs"><span class="frac"><span><span class="nb">MRR final</span> <span class="nb">− MRR inicial</span></span><span>MRR inicial</span></span></span></p>
+      <p class="eq is-small" role="math" aria-label="O CMGR necessário é igual ao MRR meta dividido pelo MRR final, elevado a um sobre o número de meses, menos 1"><span class="eq-name">CMGR necessário</span><span class="op">=</span><span class="rhs"><span class="paren">(</span><span class="frac"><span>MRR meta</span><span>MRR final</span></span><span class="paren">)</span><sup>1/meses</sup><span class="op">−</span>1</span></p>
+    </div>
+    <div class="worked">
+      <h3>Com os números de exemplo</h3>
+      <ul>
+        <li><span>(28,000 − 20,000) ÷ 20,000</span><strong>40% líquido</strong></li>
+        <li><span>(28,000 ÷ 20,000)<sup>1/6</sup> − 1</span><strong>5,77% ao mês</strong></li>
+        <li><span>(50,000 ÷ 28,000)<sup>1/6</sup> − 1</span><strong>10,15% necessário</strong></li>
+      </ul>
+      <p class="worked-note">O CMGR é o que permite comparar um período de seis meses com um de doze meses.</p>
+    </div>
+  </div>
+</section>
+
 <section class="duct-bridge reveal" aria-label="Sobre o Duct">
   <div class="duct-bridge-inner">
     <div class="duct-bridge-text">
-      <p class="duct-bridge-headline">O CMGR diz o seu momentum. Ele não diz o que mudou sob a inclinação.</p>
-      <p class="duct-bridge-body">Duct lê o MRR ao lado de novos logos, expansão e churn, diz qual dos três mudou a inclinação e propõe onde agir primeiro.</p>
+      <p class="duct-bridge-headline">Os resumos diziam € 18.400 por mês. Com o app, eram € 25.300.</p>
+      <p class="duct-bridge-body">A receita da web e do app fica em ferramentas diferentes. O Duct lê o Stripe e o RevenueCat juntos, para que o MRR do qual você cresce seja o valor total.</p>
       <a href="/pt-br/" class="duct-bridge-link">Como o Duct funciona →</a>
     </div>
     <figure class="shot-frame duct-bridge-shot">
-      <img src="/assets/media/insights-session.webp" srcset="/assets/media/insights-session-768.webp 768w, /assets/media/insights-session-1536.webp 1536w, /assets/media/insights-session.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="Uma sessão de insights: perguntou por que os cadastros caíram enquanto o ROAS subiu, o agente lê anúncios, análises e receita juntos, propõe uma alteração aguardando aprovação à esquerda e escreve o resumo à direita"/>
-      <figcaption>Pergunte por que os cadastros caíram enquanto o ROAS subiu. O Duct lê anúncios, análises e receita juntos, nomeia a coorte que está saindo e propõe a alteração. Você aprova.</figcaption>
+      <img src="/assets/media/session-revenuecat.webp" srcset="/assets/media/session-revenuecat-768.webp 768w, /assets/media/session-revenuecat-1536.webp 1536w, /assets/media/session-revenuecat.webp 3072w" sizes="(max-width: 860px) calc(100vw - 96px), 620px" decoding="async" width="3072" height="2052" loading="lazy" alt="Uma sessão de insights: ao perguntar quanto o app ganha ao lado da web, o Duct lê o RevenueCat e o Stripe e escreve o resumo: € 25.300 por mês em MRR, onde os resumos relataram apenas os € 18.400 da web"/>
     </figure>
   </div>
 </section>
 
-<div class="about-section reveal">
-  <h2>Como a <em>calculadora funciona</em></h2>
-  <p>Esta calculadora de taxa de crescimento de MRR usa três fórmulas principais de crescimento SaaS:</p>
-  <ul>
-    <li><strong>Taxa de Crescimento Líquido do MRR</strong> = (MRR Final − MRR Inicial) ÷ MRR Inicial</li>
-    <li><strong>CMGR</strong> = (MRR Final ÷ MRR Inicial)^(1 ÷ meses) − 1</li>
-    <li><strong>CMGR Necessário</strong> = (MRR Alvo ÷ MRR Final)^(1 ÷ meses) − 1</li>
-  </ul>
-  <p>Use o crescimento líquido para medir o movimento total ao longo de um período, e o CMGR para comparar a qualidade do crescimento mês a mês. Duas equipes podem apresentar o mesmo crescimento total, mas ter consistências mensais muito diferentes.</p>
-
-  <h2 style="margin-top:40px">Por que a taxa de crescimento do MRR <em>importa</em></h2>
-  <p>Planos de receita frequentemente falham porque as equipes rastreiam apenas o MRR absoluto, não a velocidade de crescimento. Se o CMGR diminuir por três meses consecutivos, seu plano anual pode falhar por uma grande margem, mesmo enquanto o MRR ainda está aumentando. Quanto antes você detectar a mudança na inclinação, mais fácil será ajustar os alavancas de pipeline, expansão e retenção.</p>
-  <p>Duct automatiza isso em toda a sua stack para que os líderes de crescimento vejam as mudanças de trajetória semanais em vez de descobri-las no fechamento do trimestre.</p>
-
-  <h2 style="margin-top:40px">Limitações</h2>
-  <ul>
-    <li>Esta calculadora usa snapshots de MRR inicial e final, não a decomposição de retenção em nível de coorte.</li>
-    <li>Não separa os componentes de MRR de novas vendas, expansão, contração e churn.</li>
-    <li>O CMGR necessário assume um ritmo de crescimento consistente a cada mês, o que raramente acontece na prática.</li>
-    <li>Todos os cálculos são executados no seu navegador. Nenhum dado é enviado ou armazenado.</li>
-  </ul>
-</div>
-
 <section class="related-tools-banner reveal" id="related-tools" aria-labelledby="related-tools-heading">
   <div class="related-tools-banner-inner">
-    <p class="tag">Também gratuito</p>
-    <h2 id="related-tools-heading">Explore <em>ferramentas</em> relacionadas</h2>
-    <p class="related-tools-banner-desc">Combine a velocidade de crescimento com benchmarks e economia unitária — cada ferramenta é autônoma, no navegador e construída para o mesmo ritmo de decisão semanal.</p>
+    <h2 id="related-tools-heading">Mais calculadoras gratuitas</h2>
+    <p class="related-tools-banner-desc">Avalie o churn e LTV:CAC, ou calcule o CAC a partir do seu gasto.</p>
     <div class="insight-links related-tools" data-related-tools data-current-tool="mrr-growth-calculator" data-related-limit="3"></div>
   </div>
 </section>
@@ -290,29 +324,24 @@
 <section class="faq" id="faq">
 <div class="faq-inner">
 <div class="reveal">
-  <p class="tag">FAQ</p>
-  <h2>Perguntas <em>frequentes</em></h2>
+  <h2>Dúvidas sobre o crescimento de MRR</h2>
 </div>
 <div class="faq-list reveal" style="transition-delay:.1s">
   <details class="faq-item">
-    <summary class="faq-q">Como você calcula a taxa de crescimento do MRR?</summary>
-    <p class="faq-a">Taxa de crescimento líquido do MRR = (MRR Final − MRR Inicial) ÷ MRR Inicial. Multiplique por 100 para obter uma porcentagem. Exemplo: se o MRR cresce de $20.000 para $28.000, o crescimento líquido é ($8.000 ÷ $20.000) = 40%.</p>
-  </details>
-  <details class="faq-item">
-    <summary class="faq-q">O que é CMGR em SaaS?</summary>
-    <p class="faq-a">CMGR (Taxa de Crescimento Mensal Composta) é o crescimento mensal médio necessário para passar do seu MRR inicial para o MRR final ao longo de um número de meses. Ele normaliza a velocidade de crescimento, para que as equipes possam comparar períodos de diferentes durações.</p>
+    <summary class="faq-q">O que é CMGR?</summary>
+    <p class="faq-a">Taxa de crescimento mensal composta: a taxa mensal constante que transforma o MRR inicial em MRR final ao longo do período. Permite comparar períodos de durações diferentes.</p>
   </details>
   <details class="faq-item">
     <summary class="faq-q">Qual é uma boa taxa de crescimento de MRR?</summary>
-    <p class="faq-a">Depende do estágio. SaaS em estágio inicial geralmente visa um crescimento mensal de 10 a 20%, enquanto equipes em estágio avançado podem operar eficientemente com taxas mais baixas. O ponto chave é se sua taxa de crescimento sustenta seu modelo operacional e as premissas do plano.</p>
+    <p class="faq-a">Depende do seu estágio e do seu plano, e nenhum benchmark publicado está por trás desta página. As cores nos resultados (5% ao mês saudável, 15% para cima hipercrescimento) são um guia aproximado. O teste melhor é o campo de meta: a taxa que seu plano precisa comparada à taxa que você tem.</p>
   </details>
   <details class="faq-item">
-    <summary class="faq-q">Esta calculadora pode mostrar contração do MRR?</summary>
-    <p class="faq-a">Sim. Se o MRR final for menor que o MRR inicial, seu crescimento líquido e CMGR se tornam negativos. A calculadora sinaliza isso como contração para que você possa investigar churn, downgrades e risco de payback de aquisição.</p>
+    <summary class="faq-q">E se o MRR caiu?</summary>
+    <p class="faq-a">O crescimento líquido e o CMGR ficam negativos e os resultados marcam como contração. Duas análises não conseguem dizer se churn, downgrades ou menos novos clientes causaram isso.</p>
   </details>
   <details class="faq-item">
-    <summary class="faq-q">Como calculo o crescimento necessário para atingir um MRR alvo?</summary>
-    <p class="faq-a">Insira um valor de MRR alvo e a duração do período. A ferramenta calcula o CMGR necessário a partir do seu MRR final. Você pode comparar essa taxa necessária com o seu CMGR atual para ver se o seu plano é realista.</p>
+    <summary class="faq-q">Meus dados são enviados para algum lugar?</summary>
+    <p class="faq-a">Não. Os cálculos rodam no seu navegador. Nada é enviado ou armazenado.</p>
   </details>
 </div>
 </div>

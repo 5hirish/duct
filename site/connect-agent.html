@@ -42,10 +42,10 @@
 <!-- The HowTo is the three steps and the FAQPage every <details> on the page, word for word:
      the i18n generator translates these strings through the page's own catalogue entries. -->
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebPage","inLanguage":"en","name":"Use Duct from Claude Code, Codex, Gemini or ChatGPT","url":"https://getduct.ai/connect-agent","description":"Add Duct to Claude Code, Codex, Cursor, Gemini CLI or ChatGPT. Your agent quotes totals Duct reconciled, keeps memory and saves briefs, on your own plan.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"HowTo","name":"How to connect your agent","step":[{"@type":"HowToStep","position":1,"name":"Add Duct to your agent","text":"Give your agent the address above, with one command or one line of settings. The exact steps for each agent are below."},{"@type":"HowToStep","position":2,"name":"Sign in and choose","text":"Your browser opens on Duct. Choose what your agent can do and on which projects, then click Allow. There is no token to copy."},{"@type":"HowToStep","position":3,"name":"Ask it something","text":"Try “Write this week's brief.” Your agent follows Duct's playbook, quotes the totals Duct reconciled and saves the brief in Duct."}]}}
+{"@context":"https://schema.org","@type":"WebPage","inLanguage":"en","name":"Use Duct from Claude Code, Codex, Gemini or ChatGPT","url":"https://getduct.ai/connect-agent","description":"Add Duct to Claude Code, Codex, Cursor, Gemini CLI or ChatGPT. Your agent quotes totals Duct reconciled, keeps memory and saves briefs, on your own plan.","isPartOf":{"@type":"WebSite","name":"Duct","url":"https://getduct.ai"},"mainEntity":{"@type":"HowTo","name":"How to connect your agent","step":[{"@type":"HowToStep","position":1,"name":"Add Duct to your agent","text":"Paste the address above, as one command or one line of settings."},{"@type":"HowToStep","position":2,"name":"Sign in and choose","text":"Your browser opens on Duct. Choose what it can do and where, then click Allow."},{"@type":"HowToStep","position":3,"name":"Ask it something","text":"Try “Write this week's brief.” It follows Duct's playbook and saves the brief in Duct."}]}}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"en","mainEntity":[{"@type":"Question","name":"Do I need an API key?","acceptedAnswer":{"@type":"Answer","text":"No. Your agent runs on the plan you already pay for, and Duct calls no model for it. A saved key is only for images, and for what Duct runs without you, like a scheduled brief."}},{"@type":"Question","name":"Which of my tools can it read?","acceptedAnswer":{"@type":"Answer","text":"Stripe, Meta Ads, Mixpanel, GitHub, RevenueCat, Clarity, GrowthBook, Apple Search Ads, RSS feeds and the rest you connect in Duct. Google Analytics, Search Console, Google Ads and Tag Manager stay inside Duct's own agent for now, while Google's policy for outside AI assistants is confirmed."}},{"@type":"Question","name":"Can it change my ad account?","acceptedAnswer":{"@type":"Answer","text":"Only if you turn on proposed changes, and only as a proposal. It waits in Duct's review queue until you approve it there. No agent can approve or apply a change."}},{"@type":"Question","name":"Does Duct see my conversation?","acceptedAnswer":{"@type":"Answer","text":"No. Duct sees the calls your agent makes to it, like the data it asked for and why, never the rest of your chat."}},{"@type":"Question","name":"Will a brief run while my laptop is closed?","acceptedAnswer":{"@type":"Answer","text":"Not from your agent. Scheduled briefs run in Duct on a saved key, because nobody's agent runs at 3am. What your agent writes lands in the same library."}},{"@type":"Question","name":"What is insights_brief?","acceptedAnswer":{"@type":"Answer","text":"Duct's playbook for a brief, as a slash command: /mcp__duct__insights_brief in Claude Code, /insights_brief in Gemini CLI. In any other agent, ask for this week's brief and it calls the same playbook."}},{"@type":"Question","name":"My browser never opened","acceptedAnswer":{"@type":"Answer","text":"Start the sign-in yourself: run /mcp in Claude Code, codex mcp login duct in Codex, /mcp auth duct in Gemini CLI, or opencode mcp auth duct in OpenCode."}},{"@type":"Question","name":"It says it couldn't register, or “does not support dynamic client registration”","acceptedAnswer":{"@type":"Answer","text":"Update your agent to its latest version and try again. If it still fails, connect with a token instead."}},{"@type":"Question","name":"It worked, and now it gets a 401","acceptedAnswer":{"@type":"Answer","text":"You disconnected it in Duct, or its sign-in lapsed after 90 days without use. Sign in again from your agent."}},{"@type":"Question","name":"A tool I expected isn't there","acceptedAnswer":{"@type":"Answer","text":"Your agent only sees what you allowed when it signed in. Disconnect it in Duct, connect again, and choose Work alongside me."}},{"@type":"Question","name":"I asked it to set up the project and nothing changed","acceptedAnswer":{"@type":"Answer","text":"A draft never overwrites what you typed in Duct. It only fills blank fields or replaces an earlier draft. Check the project page in Duct."}},{"@type":"Question","name":"I host Duct myself","acceptedAnswer":{"@type":"Answer","text":"Use your own API address followed by /mcp, in place of https://mcp.getduct.ai/mcp."}}]}
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"en","mainEntity":[{"@type":"Question","name":"Do I need an API key?","acceptedAnswer":{"@type":"Answer","text":"No. It runs on the plan you already pay for. A saved key is only for images and scheduled briefs."}},{"@type":"Question","name":"Which of my tools can it read?","acceptedAnswer":{"@type":"Answer","text":"Stripe, Meta Ads, Mixpanel, GitHub, RevenueCat and the rest you connect in Duct. Google Analytics, Search Console, Ads and Tag Manager stay with Duct's own agent for now, while Google's policy for outside assistants is confirmed."}},{"@type":"Question","name":"Can it change my ad account?","acceptedAnswer":{"@type":"Answer","text":"Only as a proposal, if you turn that on. It waits in Duct until you approve it. No agent can apply a change."}},{"@type":"Question","name":"Does Duct see my conversation?","acceptedAnswer":{"@type":"Answer","text":"No. Duct sees only the calls your agent makes to it, never the rest of your chat."}},{"@type":"Question","name":"Will a brief run while my laptop is closed?","acceptedAnswer":{"@type":"Answer","text":"Not from your agent. Scheduled briefs run in Duct on a saved key, because nobody's agent runs at 3am."}},{"@type":"Question","name":"My browser never opened","acceptedAnswer":{"@type":"Answer","text":"Start it yourself: /mcp in Claude Code, codex mcp login duct, /mcp auth duct in Gemini CLI, or opencode mcp auth duct."}},{"@type":"Question","name":"It says it couldn't register, or “does not support dynamic client registration”","acceptedAnswer":{"@type":"Answer","text":"Update your agent and try again. If it still fails, use a token."}},{"@type":"Question","name":"It worked, and now it gets a 401","acceptedAnswer":{"@type":"Answer","text":"It was disconnected, or unused for 90 days. Sign in again from your agent."}},{"@type":"Question","name":"A tool I expected isn't there","acceptedAnswer":{"@type":"Answer","text":"It sees only what you allowed. Disconnect it in Duct, connect again and choose Work alongside me."}},{"@type":"Question","name":"I host Duct myself","acceptedAnswer":{"@type":"Answer","text":"Use your own API address followed by /mcp."}}]}
 </script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","inLanguage":"en","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://getduct.ai/"},{"@type":"ListItem","position":2,"name":"Use Duct from your agent","item":"https://getduct.ai/connect-agent"}]}
@@ -196,52 +196,17 @@
 .points { list-style: none; display: grid; gap: 14px; margin-top: 28px; max-width: 52ch; }
 .points li { display: flex; align-items: flex-start; gap: 12px; font-size: 15px; line-height: 1.65; color: var(--navy-2); }
 .points .ic { flex: none; font-size: 18px; margin-top: 3px; color: #10883c; }
-.consent { padding: 26px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: 0 24px 60px rgba(13,15,26,.08); }
-.consent-pair { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
-.consent-tile { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 10px; color: var(--navy-2); font-size: 18px; }
-.consent-tile.is-duct { font-family: var(--serif); font-size: 18px; color: var(--navy); }
-.consent-tile.is-duct i { width: 5px; height: 5px; margin-left: 1px; border-radius: 50%; background: var(--orange); }
-.consent-pair > .ic { font-size: 15px; color: var(--navy-3); }
-.consent-title { font-family: var(--serif); font-size: 22px; line-height: 1.25; color: var(--navy); }
-.consent-sub { margin: 6px 0 18px; font-size: 14px; color: var(--navy-3); }
-.choice { position: relative; padding: 14px 16px 14px 46px; border: 1.5px solid var(--border); border-radius: var(--r); }
-.choice + .choice { margin-top: 10px; }
-.choice::before { content: ''; position: absolute; left: 16px; top: 17px; width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--navy-3); box-sizing: border-box; }
-.choice.is-on { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(13,15,26,.06); }
-.choice.is-on::before { border: 5px solid var(--navy); }
-.choice-name { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 15px; font-weight: 500; color: var(--navy); }
-.choice-tag { padding: 2px 9px; border-radius: var(--pill); background: var(--off); border: 1px solid var(--border); font-size: 11px; font-weight: 600; color: var(--navy-2); }
-.choice-desc { margin-top: 3px; font-size: 13.5px; line-height: 1.55; color: var(--navy-3); }
-.choice-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-.choice-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: var(--pill); background: #e6f4ea; font-size: 12px; font-weight: 500; color: #14532d; }
-.choice-chip .ic { font-size: 13px; }
-.choice-extra { margin-top: 10px; font-size: 12.5px; line-height: 1.55; color: var(--navy-3); }
-.consent-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding: 11px 14px; background: var(--off); border-radius: var(--r); font-size: 13.5px; color: var(--navy-2); }
-.consent-row b { font-weight: 500; color: var(--navy); }
-.consent-row u { text-decoration-color: var(--orange); text-underline-offset: 3px; color: var(--navy); }
-.consent-safe { display: flex; align-items: flex-start; gap: 10px; margin-top: 10px; font-size: 13px; line-height: 1.55; color: var(--navy-3); }
-.consent-safe .ic { flex: none; font-size: 16px; margin-top: 1px; color: #1a7f37; }
-.consent-btns { display: flex; gap: 8px; margin-top: 18px; }
-.consent-btns span { flex: 1; padding: 10px 16px; border-radius: var(--pill); border: 1px solid var(--border); text-align: center; font-size: 14px; font-weight: 600; color: var(--navy); }
-.consent-btns .is-go { background: var(--orange); border-color: var(--orange); color: #fff; }
-
-/* What makes it different: two columns read across, the same row in each */
-.diff { margin-top: 44px; border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; background: var(--white); }
-.diff-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-.diff-row + .diff-row { border-top: 1px solid var(--border); }
-.diff-cell { display: flex; align-items: flex-start; gap: 12px; padding: 18px 24px; font-size: 15px; line-height: 1.6; color: var(--navy-3); }
-.diff-cell + .diff-cell { border-left: 1px solid var(--border); background: var(--off); color: var(--navy); }
-.diff-cell .ic { flex: none; font-size: 18px; margin-top: 3px; color: var(--navy-3); }
-.diff-cell + .diff-cell .ic { color: var(--orange); }
-.diff-head .diff-cell { padding-top: 16px; padding-bottom: 16px; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); }
-.diff-head .diff-cell + .diff-cell { color: var(--navy); }
+.gains-strip { margin-top: 28px; text-align: center; font-family: var(--serif); font-size: clamp(22px, 2.6vw, 30px); line-height: 1.3; color: var(--navy); }
+.gains-strip em { font-style: italic; color: var(--orange); }
+.never { display: flex; align-items: flex-start; gap: 12px; margin-top: 22px; padding: 16px 18px; max-width: 52ch; background: var(--off); border-radius: var(--r); font-size: 14px; line-height: 1.6; color: var(--navy-2); }
+.never .ic { flex: none; font-size: 18px; margin-top: 2px; color: #10883c; }
+.never strong { font-weight: 600; color: var(--navy); }
+.consent-shot { margin: 0; justify-self: center; max-width: 400px; }
+.consent-shot img { display: block; width: 100%; height: auto; border-radius: var(--r-lg); box-shadow: 0 24px 60px rgba(13,15,26,.10); cursor: zoom-in; }
+.consent-shot figcaption { margin-top: 12px; text-align: center; font-size: 13px; color: var(--navy-3); }
+.token-card { max-width: 760px; margin-top: 28px; }
 
 /* Safety: what stays with you, in the green of a thing that is fine */
-.req { padding: 28px; background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg); }
-.req-label { display: block; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--navy-3); margin-bottom: 12px; }
-.req-list { list-style: none; display: grid; gap: 14px; }
-.req-list li { display: flex; align-items: flex-start; gap: 12px; font-size: 15px; line-height: 1.6; color: var(--navy); }
-.req-list .ic { flex: none; font-size: 18px; margin-top: 3px; color: #10883c; }
 
 /* Agents: a tab per agent once the script runs; without it, every panel shows in turn */
 .agents { max-width: 860px; margin-top: 40px; scroll-margin-top: 90px; }
@@ -285,9 +250,6 @@
   .code.is-big pre { font-size: 14px; }
   .code.is-big .copy { padding: 8px 12px; }
   .code.is-big .copy span { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
-  .diff-cell { gap: 8px; padding: 12px 12px; font-size: 13.5px; }
-  .diff-cell .ic { font-size: 15px; }
-  .diff-head .diff-cell { font-size: 10.5px; letter-spacing: .06em; }
 }
 @media (max-width: 1000px) {
   .gains { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -304,11 +266,9 @@
   .code { padding-left: 12px; }
   .split, .pair { grid-template-columns: 1fr; gap: 32px; }
   .pair { gap: 16px; }
-  .req, .card, .consent { padding: 22px; }
   .gains { grid-template-columns: 1fr; }
   .gain.is-lead { grid-column: auto; grid-template-columns: 1fr; gap: 20px; }
   .gain { padding: 24px 22px 26px; }
-  .diff-cell { padding: 14px 18px; }
 }
 </style>
 </head>
@@ -331,14 +291,14 @@
 <section class="hero ca-hero">
 <div class="hero-pill"><span class="hero-pill-dot" aria-hidden="true"></span> Duct's MCP server · Runs on your AI plan</div>
 <h1>Your agent does the thinking.<br/><em>Duct brings the method.</em></h1>
-<p class="hero-sub">Add one address to Claude Code, Codex, Cursor, Gemini CLI, ChatGPT or Claude. Your agent reads your connected tools through Duct, quotes the totals Duct reconciled, remembers what you decided, and saves every brief where you read it. No API key to paste.</p>
+<p class="hero-sub">Add one address to Claude Code, Codex, Cursor, Gemini CLI, ChatGPT or Claude. Your agent reads your tools through Duct, quotes Duct's totals, remembers what you decided and saves every brief in Duct. No API key to paste.</p>
 <div class="addr">
 <span class="addr-label">Server address</span>
 <div class="code is-big"><pre>https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="address" aria-label="Copy the server address"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div>
 <span class="addr-label">Or, in Claude Code</span>
 <div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="hero-claude-code" aria-label="Copy the Claude Code command"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div>
 </div>
-<p class="ca-other">Want Duct's own agent to call your MCP servers instead? That is the other direction: <a href="/mcp">Your MCP servers in Duct →</a></p>
+<p class="ca-other">The other direction, Duct's agent calling your servers: <a href="/mcp">Your MCP servers in Duct →</a></p>
 </section>
 
 <!-- THE DEMO: one ask, five calls to Duct, a brief saved in the library -->
@@ -351,7 +311,7 @@
 <div class="demo-bar"><i></i><i></i><i></i><span>Claude Code</span></div>
 <p class="demo-ask"><b>&gt;</b>Write this week's brief for Acme</p>
 <ol class="demo-calls">
-<li class="demo-call"><svg class="ic"><use href="/assets/icons.svg#circle-check"/></svg><div><span class="demo-tool">duct <span>·</span> start_run</span><span class="demo-note">Duct's playbook, and what it knows about Acme</span></div></li>
+<li class="demo-call"><svg class="ic"><use href="/assets/icons.svg#circle-check"/></svg><div><span class="demo-tool">duct <span>·</span> start_run</span><span class="demo-note">Duct's playbook and what it knows about Acme</span></div></li>
 <li class="demo-call"><svg class="ic"><use href="/assets/icons.svg#circle-check"/></svg><div><span class="demo-tool">duct <span>·</span> list_data_sources</span><span class="demo-logos"><img src="assets/icons/stripe.svg" width="18" height="18" alt=""/><img src="assets/icons/mixpanel.svg" width="18" height="18" alt=""/><img src="assets/icons/github.svg" width="18" height="18" alt=""/></span></div></li>
 <li class="demo-call"><svg class="ic"><use href="/assets/icons.svg#circle-check"/></svg><div><span class="demo-tool">duct <span>·</span> fetch_data</span><span class="demo-note">Stripe, the last 7 days. Totals by Duct:</span><span class="demo-chips"><span class="demo-chip"><b>$18,420</b> new revenue</span><span class="demo-chip"><b>+6.2%</b> on last week</span><span class="demo-chip"><b>3</b> refunds</span></span></div></li>
 <li class="demo-call"><svg class="ic"><use href="/assets/icons.svg#circle-check"/></svg><div><span class="demo-tool">duct <span>·</span> search_memory</span><span class="demo-note">“The new pricing page shipped on November 12.”</span></div></li>
@@ -366,16 +326,16 @@
 <p class="demo-kicker">Acme · Brief · Last 7 days</p>
 <p class="demo-title">Revenue is up since the pricing page shipped. Refunds held level.</p>
 <ul class="demo-points">
-<li><b>$18,420</b><span>new revenue, 6.2% more than the week before</span></li>
-<li><b>Nov 12</b><span>the day the lift starts, when the new pricing page shipped</span></li>
-<li><b>3</b><span>refunds, level with the four weeks before</span></li>
+<li><b>$18,420</b><span>new revenue, up 6.2% on last week</span></li>
+<li><b>Nov 12</b><span>the day the new pricing page shipped</span></li>
+<li><b>3</b><span>refunds, level with last month</span></li>
 </ul>
-<p class="demo-src">Read: Stripe, Mixpanel, GitHub · Totals by Duct · Recalled: 1 memory</p>
+<p class="demo-src">Stripe, Mixpanel, GitHub · Totals by Duct · 1 memory</p>
 </div>
 <p class="demo-saved"><svg class="ic"><use href="/assets/icons.svg#circle-check"/></svg>Brief saved in Duct<span>Open →</span></p>
 </div>
 </div>
-<figcaption id="demo-caption">You ask your agent. It asks Duct for the playbook, the sources, the totals and what Duct remembers, then saves the brief in your library. The model is yours. The numbers and the method are Duct's.</figcaption>
+<figcaption id="demo-caption">You ask your agent. It asks Duct for the playbook, the sources, the totals and the memory, then saves the brief. The model is yours. The numbers and the method are Duct's.</figcaption>
 </figure>
 </section>
 
@@ -385,14 +345,14 @@
 <div class="ca-head reveal">
 <p class="tag">What your agent gains</p>
 <h2>It already writes well. <em>Now it knows your numbers.</em></h2>
-<p class="sub">A general assistant can reason about anything. It cannot see your revenue, remember last month or keep a brief. Duct gives it all three.</p>
+<p class="sub">A general assistant can't see your revenue, remember last month or keep a brief. Duct gives it all three.</p>
 </div>
 <div class="gains reveal">
 <div class="gain is-lead">
 <div>
 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#calculator"/></svg>
 <h3>Numbers Duct reconciled</h3>
-<p>Duct adds up every pull in code and hands your agent the totals and rates, so the brief quotes $18,420, not a model's own arithmetic on a thousand rows.</p>
+<p>Duct adds up every pull in code, so the brief quotes $18,420, not a model's own sum of a thousand rows.</p>
 </div>
 <div class="sum" aria-hidden="true">
 <p class="sum-row"><span>Nov 18</span><b>$2,140</b></p>
@@ -400,35 +360,21 @@
 <p class="sum-row"><span>Nov 20</span><b>$2,615</b></p>
 <p class="sum-row"><span>…</span><b>4 more days</b></p>
 <p class="sum-total"><span>Total, by Duct</span><b>$18,420</b></p>
-<p class="sum-note">Rates too: total over total, never an average of averages.</p>
+<p class="sum-note">Rates too, never an average of averages.</p>
 </div>
-</div>
-<div class="gain">
-<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg>
-<h3>No key to paste</h3>
-<p>It runs on the plan you already pay for. Duct calls no model for it.</p>
 </div>
 <div class="gain">
 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#history"/></svg>
 <h3>Memory that carries over</h3>
-<p>What you decided, launched and measured last month is there next time, in any agent.</p>
+<p>What you decided and measured last month is there next time, in any agent.</p>
 </div>
 <div class="gain">
 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg>
 <h3>Duct's playbook, one command</h3>
-<p>Pick <code>insights_brief</code> from the slash menu in Claude Code or Gemini CLI, and your agent follows the method Duct's own agent uses.</p>
-</div>
-<div class="gain">
-<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>
-<h3>Changes that wait for you</h3>
-<p>It can propose a budget or tag change. That change sits in Duct's review queue until you approve it.</p>
-</div>
-<div class="gain">
-<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg>
-<h3>Briefs in your library</h3>
-<p>Every brief it writes is saved and versioned in Duct, next to the ones Duct wrote.</p>
+<p>Your agent follows the same method Duct's own agent uses for a brief.</p>
 </div>
 </div>
+<p class="gains-strip reveal">A connector hands your agent rows. <em>Duct hands it answers.</em></p>
 </div>
 </section>
 
@@ -442,7 +388,7 @@
 <div class="step reveal">
 <span class="step-num">01</span>
 <h3 class="step-title">Add Duct to your agent</h3>
-<p class="step-body">Give your agent the address above, with one command or one line of settings. The exact steps for each agent are below.</p>
+<p class="step-body">Paste the address above, as one command or one line of settings.</p>
 <div class="step-mini" aria-hidden="true"><pre class="mini-cmd">$ claude mcp add \
     --transport http \
     --scope user duct \
@@ -451,7 +397,7 @@
 <div class="step reveal" style="transition-delay:.1s">
 <span class="step-num">02</span>
 <h3 class="step-title">Sign in and choose</h3>
-<p class="step-body">Your browser opens on Duct. Choose what your agent can do and on which projects, then click Allow. There is no token to copy.</p>
+<p class="step-body">Your browser opens on Duct. Choose what it can do and where, then click Allow.</p>
 <div class="step-mini" aria-hidden="true">
 <div class="mini-consent">
 <p><strong>Claude Code</strong> would like to work with Duct</p>
@@ -464,11 +410,11 @@
 <div class="step reveal" style="transition-delay:.2s">
 <span class="step-num">03</span>
 <h3 class="step-title">Ask it something</h3>
-<p class="step-body">Try “Write this week's brief.” Your agent follows Duct's playbook, quotes the totals Duct reconciled and saves the brief in Duct.</p>
+<p class="step-body">Try “Write this week's brief.” It follows Duct's playbook and saves the brief in Duct.</p>
 <div class="step-mini" aria-hidden="true">
 <div class="mini-chat">
 <p class="mini-ask">Write this week's brief.</p>
-<p class="mini-reply"><svg class="ic"><use href="/assets/icons.svg#circle-check"/></svg><span>Revenue is up 6.2% since the pricing page shipped. The brief is saved in Duct.</span></p>
+<p class="mini-reply"><svg class="ic"><use href="/assets/icons.svg#circle-check"/></svg><span>Revenue is up 6.2% since the pricing page shipped. Saved in Duct.</span></p>
 </div>
 </div>
 </div>
@@ -482,72 +428,18 @@
 <div class="ca-head reveal">
 <p class="tag">You choose</p>
 <h2>Set up a project, <em>or work alongside you.</em></h2>
-<p class="sub">When your agent signs in, you pick how much it can do and on which projects. Change it any time in Settings.</p>
+<p class="sub">When your agent signs in, you pick what it can do and on which projects. Change it any time in Settings.</p>
 <ul class="points">
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span><strong>Help set up my projects.</strong> It reads your repo or files and drafts your project's description, audience and competitors.</span></li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span><strong>Work alongside me.</strong> It also reads your connected tools, remembers what matters and writes briefs with Duct's method.</span></li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span><strong>Extras stay off until you turn them on:</strong> proposing changes to ad and tag accounts, drafting posts, and making images on your own saved keys, which your provider charges for.</span></li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span><strong>All your projects, or only the ones you pick.</strong> A client's project it was not given does not exist to it.</span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span><strong>Help set up my projects.</strong> It drafts your project's description, audience and competitors from your repo.</span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span><strong>Work alongside me.</strong> It also reads your tools, remembers what matters and writes briefs. Proposed changes, post drafts and images on your own keys stay off until you turn them on.</span></li>
+<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span><strong>All your projects, or only the ones you pick.</strong></span></li>
 </ul>
+<p class="never"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span><strong>Never the agent's, whatever you allow:</strong> approving or applying a change, publishing, connecting a tool, your passwords and keys. Everything it saves shows in Activity under its name, and an edit is one click to undo.</span></p>
 </div>
-<div class="consent reveal" style="transition-delay:.08s" aria-hidden="true">
-<div class="consent-pair"><span class="consent-tile"><svg class="ic"><use href="/assets/icons.svg#code-2"/></svg></span><svg class="ic"><use href="/assets/icons.svg#arrow-right"/></svg><span class="consent-tile is-duct">d<i></i></span></div>
-<p class="consent-title">Claude Code would like to work with Duct</p>
-<p class="consent-sub">You choose what it can do. Change it any time in Settings.</p>
-<div class="choice">
-<p class="choice-name">Help set up my projects</p>
-<p class="choice-desc">Reads and drafts your project's details.</p>
-</div>
-<div class="choice is-on">
-<p class="choice-name">Work alongside me <span class="choice-tag">Asked for by Claude Code</span></p>
-<p class="choice-desc">Also reads your connected tools, remembers what matters and writes briefs with Duct's method.</p>
-<div class="choice-chips"><span class="choice-chip"><svg class="ic"><use href="/assets/icons.svg#database"/></svg>Data</span><span class="choice-chip"><svg class="ic"><use href="/assets/icons.svg#history"/></svg>Memory</span><span class="choice-chip"><svg class="ic"><use href="/assets/icons.svg#file-text"/></svg>Briefs</span></div>
-<p class="choice-extra">Extras, off until you turn them on: propose changes, draft posts, make images.</p>
-</div>
-<p class="consent-row"><span>On: <b>All your projects</b></span><u>Change</u></p>
-<p class="consent-safe"><svg class="ic"><use href="/assets/icons.svg#shield-check"/></svg><span>It can't approve changes, publish, or see your passwords and keys.</span></p>
-<div class="consent-btns"><span>Not now</span><span class="is-go">Allow</span></div>
-</div>
-</div>
-</section>
-
-<!-- WHAT MAKES IT DIFFERENT -->
-<section class="ca-sec is-off" id="different">
-<div class="ca-inner">
-<div class="ca-head reveal">
-<p class="tag">What makes it different</p>
-<h2>A connector hands your agent rows. <em>Duct hands it answers.</em></h2>
-<p class="sub">Plenty of servers will pass your data to an agent. Then the agent has to add it up, guess at the context and start from a blank prompt every time.</p>
-</div>
-<div class="diff reveal" role="table" aria-label="A raw-data connector beside Duct">
-<div class="diff-row diff-head" role="row"><span class="diff-cell" role="columnheader">A raw-data connector gives it</span><span class="diff-cell" role="columnheader">Duct gives it</span></div>
-<div class="diff-row" role="row"><span class="diff-cell" role="cell"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#layers"/></svg><span>Rows to add up itself</span></span><span class="diff-cell" role="cell"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#calculator"/></svg><span>Totals and rates Duct reconciled in code, with the window they cover</span></span></div>
-<div class="diff-row" role="row"><span class="diff-cell" role="cell"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#layers"/></svg><span>Nothing from last time</span></span><span class="diff-cell" role="cell"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#history"/></svg><span>What you decided, launched and measured, ranked for the question</span></span></div>
-<div class="diff-row" role="row"><span class="diff-cell" role="cell"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#layers"/></svg><span>A blank prompt, every time</span></span><span class="diff-cell" role="cell"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sparkles"/></svg><span>Duct's own playbook, with notes on how each tool reports wrong numbers</span></span></div>
-<div class="diff-row" role="row"><span class="diff-cell" role="cell"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#layers"/></svg><span>Changes made wherever the tool allows</span></span><span class="diff-cell" role="cell"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg><span>Proposals that wait in Duct until you approve them</span></span></div>
-<div class="diff-row" role="row"><span class="diff-cell" role="cell"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#layers"/></svg><span>An answer that scrolls away in the chat</span></span><span class="diff-cell" role="cell"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#file-text"/></svg><span>A brief saved, versioned and easy to share, in Duct</span></span></div>
-</div>
-</div>
-</section>
-
-<!-- SAFETY: what stays with you, said as a promise rather than a warning -->
-<section class="ca-sec" id="what-it-can-do">
-<div class="ca-inner split is-top">
-<div class="ca-head reveal">
-<p class="tag">Built to hand to an agent</p>
-<h2>It does the work. <em>You keep the keys.</em></h2>
-<p class="sub">Agents can be talked into things by what they read. So the things that matter are never theirs to do, whatever you allow.</p>
-</div>
-<div class="req reveal" style="transition-delay:.08s">
-<span class="req-label">Always yours, in Duct</span>
-<ul class="req-list">
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>Approving or applying a change, publishing a post, connecting a tool. No agent can, whatever you allow.</span></li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>Your passwords and keys. No agent ever sees one.</span></li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>A record of everything it saves, in Activity under its own name. An edit is one click to undo.</span></li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>Text from a web page, a search term or a post reaches it marked as data, never as instructions.</span></li>
-<li><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#circle-check"/></svg><span>The off switch. Disconnect it in Settings and it stops on its next call.</span></li>
-</ul>
-</div>
+<figure class="consent-shot reveal" style="transition-delay:.08s" data-zoom>
+<img src="assets/media/agent-consent.webp" srcset="assets/media/agent-consent-768.webp 768w, assets/media/agent-consent.webp 1088w" sizes="(max-width: 860px) 320px, 400px" width="1088" height="1960" loading="lazy" decoding="async" alt="Duct's sign-in page: Claude Code would like to work with Duct. Two choices, Help set up my projects, and Work alongside me, which is selected, asked for by Claude Code, and includes Data, Memory and Briefs. On: All your projects. It can't approve changes, publish, or see your passwords and keys. Not now and Allow buttons."/>
+<figcaption>The sign-in, as your browser shows it</figcaption>
+</figure>
 </div>
 </section>
 
@@ -557,7 +449,7 @@
 <div class="ca-head reveal">
 <p class="tag">Setup by agent</p>
 <h2>Eight agents. <em>One address.</em></h2>
-<p class="sub">Every agent connects to the same server. Pick yours for the exact steps.</p>
+<p class="sub">Every agent connects to the same address. Pick yours.</p>
 </div>
 <div class="agents reveal" data-agent-tabs>
 <div class="agent-tabs" role="tablist" aria-label="Your agent" hidden>
@@ -577,8 +469,8 @@
 <li>In your terminal, run:
 <div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="claude-code" aria-label="Copy the Claude Code command"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div></li>
 <li>In Claude Code, run <code>/mcp</code>, pick <code>duct</code> and choose <code>Authenticate</code>.</li>
-<li>Your browser opens on Duct. Choose what it can do, then click Allow.</li>
-<li>Run <code>/mcp__duct__insights_brief</code>, or ask for this week's brief.</li>
+<li>In your browser, choose what it can do, then click Allow.</li>
+<li>Run <code>/mcp__duct__insights_brief</code> for Duct's brief playbook, or just ask.</li>
 </ol>
 </section>
 
@@ -589,7 +481,7 @@
 <div class="code"><pre>codex mcp add duct <span class="nw">--url</span> https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="codex" aria-label="Copy the Codex command"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div></li>
 <li>Then sign in:
 <div class="code"><pre>codex mcp login duct</pre><button type="button" class="copy" data-copy="codex-login" aria-label="Copy the sign-in command"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div></li>
-<li>Your browser opens on Duct. Choose what it can do, then click Allow.</li>
+<li>In your browser, choose what it can do, then click Allow.</li>
 </ol>
 </section>
 
@@ -604,8 +496,8 @@
     }
   }
 }</pre><button type="button" class="copy" data-copy="cursor" aria-label="Copy the Cursor settings"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div></li>
-<li>In Cursor's MCP settings, press the login prompt on the duct server.</li>
-<li>Your browser opens on Duct. Choose what it can do, then click Allow.</li>
+<li>In Cursor's MCP settings, press Login on duct.</li>
+<li>In your browser, choose what it can do, then click Allow.</li>
 </ol>
 </section>
 
@@ -622,8 +514,8 @@
 }</pre><button type="button" class="copy" data-copy="gemini-cli" aria-label="Copy the Gemini CLI settings"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div></li>
 <li>Start Gemini CLI and sign in:
 <div class="code"><pre>/mcp auth duct</pre><button type="button" class="copy" data-copy="gemini-cli-auth" aria-label="Copy the sign-in command"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div></li>
-<li>Your browser opens on Duct. Choose what it can do, then click Allow.</li>
-<li>Run <code>/insights_brief</code>, or ask for this week's brief.</li>
+<li>In your browser, choose what it can do, then click Allow.</li>
+<li>Run <code>/insights_brief</code> for Duct's brief playbook, or just ask.</li>
 </ol>
 </section>
 
@@ -633,7 +525,7 @@
 <li>Open the Command Palette and run <code>MCP: Add Server</code>.</li>
 <li>Choose HTTP, paste the address and name it <code>duct</code>:
 <div class="code"><pre>https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="vs-code" aria-label="Copy the server address"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div></li>
-<li>VS Code asks you to sign in the first time it uses Duct. Your browser opens on Duct. Choose what it can do, then click Allow.</li>
+<li>VS Code asks you to sign in the first time. In your browser, choose what it can do, then click Allow.</li>
 </ol>
 </section>
 
@@ -652,17 +544,17 @@
 }</pre><button type="button" class="copy" data-copy="opencode" aria-label="Copy the OpenCode settings"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div></li>
 <li>Then sign in:
 <div class="code"><pre>opencode mcp auth duct</pre><button type="button" class="copy" data-copy="opencode-auth" aria-label="Copy the sign-in command"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div></li>
-<li>Your browser opens on Duct. Choose what it can do, then click Allow.</li>
+<li>In your browser, choose what it can do, then click Allow.</li>
 </ol>
 </section>
 
 <section class="agent-panel" id="claude">
 <h3>Claude, on claude.ai or Claude Desktop</h3>
 <ol class="setup-steps" role="list">
-<li>On claude.ai or in Claude Desktop, open Settings → Connectors and choose Add custom connector.</li>
+<li>Open Settings → Connectors and choose Add custom connector.</li>
 <li>Name it Duct and paste the address:
 <div class="code"><pre>https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="claude" aria-label="Copy the server address"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div></li>
-<li>Press Connect. Duct opens in your browser. Choose what it can do, then click Allow.</li>
+<li>Press Connect. In your browser, choose what it can do, then click Allow.</li>
 </ol>
 </section>
 
@@ -670,37 +562,20 @@
 <h3>ChatGPT</h3>
 <ol class="setup-steps" role="list">
 <li>In ChatGPT's settings, turn on developer mode.</li>
-<li>Add a connector with this address, and choose OAuth for authentication:
+<li>Add a connector with this address and OAuth sign-in:
 <div class="code"><pre>https://mcp.getduct.ai/mcp</pre><button type="button" class="copy" data-copy="chatgpt" aria-label="Copy the server address"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div></li>
-<li>Duct opens in your browser. Choose what it can do, then click Allow.</li>
+<li>In your browser, choose what it can do, then click Allow.</li>
 </ol>
 </section>
 </div>
-<p class="agent-note">Another agent? If it can add a remote MCP server by its address, give it the same one. If it can't sign in, <a class="ca-link" href="#token">use a token</a>.</p>
-</div>
-</section>
-
-<!-- ACCESS: listing, disconnecting, and the token for places without a browser -->
-<section class="ca-sec" id="access">
-<div class="ca-inner">
-<div class="ca-head reveal">
-<p class="tag">Access</p>
-<h2>Every agent is listed. <em>Disconnect any one.</em></h2>
-</div>
-<div class="pair">
-<div class="card reveal">
-<svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#shield-check"/></svg>
-<h3>You see every connected agent</h3>
-<p>In Duct, open Settings → Connect your AI agent. Every agent you allowed is there, with what it can do and on which projects, and you can disconnect it. A disconnected agent stops on its next call.</p>
-</div>
-<div class="card reveal" id="token" style="transition-delay:.08s">
+<p class="agent-note">Another agent? Give it the same address, or <a class="ca-link" href="#token">use a token</a> if it can't sign in.</p>
+<div class="card token-card reveal" id="token">
 <svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#key-round"/></svg>
 <h3>No browser? Use a token.</h3>
-<p>For CI, a remote machine or an agent without sign-in. Create one on the same settings page, under No browser? Use a token, with the same choices. Your agent sends it as a header:</p>
+<p>For CI or a remote machine. Create one in Settings → Connect your AI agent, with the same choices. That page also lists every agent you allowed, and disconnects any one. Send it as a header:</p>
 <div class="code"><pre>Authorization: Bearer duct_mcp_…</pre></div>
 <p>In Claude Code:</p>
 <div class="code"><pre>claude mcp add <span class="nw">--transport</span> http <span class="nw">--scope</span> user duct https://mcp.getduct.ai/mcp <span class="nw">--header</span> "Authorization: Bearer YOUR_TOKEN"</pre><button type="button" class="copy" data-copy="token-claude-code" aria-label="Copy the Claude Code command with a token"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#copy"/></svg><span>Copy</span></button></div>
-</div>
 </div>
 </div>
 </section>
@@ -716,54 +591,46 @@
 <div class="faq-list reveal">
 <details class="faq-item">
 <summary class="faq-q">Do I need an API key?</summary>
-<p class="faq-a">No. Your agent runs on the plan you already pay for, and Duct calls no model for it. A saved key is only for images, and for what Duct runs without you, like a scheduled brief.</p>
+<p class="faq-a">No. It runs on the plan you already pay for. A saved key is only for images and scheduled briefs.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">Which of my tools can it read?</summary>
-<p class="faq-a">Stripe, Meta Ads, Mixpanel, GitHub, RevenueCat, Clarity, GrowthBook, Apple Search Ads, RSS feeds and the rest you connect in Duct. Google Analytics, Search Console, Google Ads and Tag Manager stay inside Duct's own agent for now, while Google's policy for outside AI assistants is confirmed.</p>
+<p class="faq-a">Stripe, Meta Ads, Mixpanel, GitHub, RevenueCat and the rest you connect in Duct. Google Analytics, Search Console, Ads and Tag Manager stay with Duct's own agent for now, while Google's policy for outside assistants is confirmed.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">Can it change my ad account?</summary>
-<p class="faq-a">Only if you turn on proposed changes, and only as a proposal. It waits in Duct's review queue until you approve it there. No agent can approve or apply a change.</p>
+<p class="faq-a">Only as a proposal, if you turn that on. It waits in Duct until you approve it. No agent can apply a change.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">Does Duct see my conversation?</summary>
-<p class="faq-a">No. Duct sees the calls your agent makes to it, like the data it asked for and why, never the rest of your chat.</p>
+<p class="faq-a">No. Duct sees only the calls your agent makes to it, never the rest of your chat.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">Will a brief run while my laptop is closed?</summary>
-<p class="faq-a">Not from your agent. Scheduled briefs run in Duct on a saved key, because nobody's agent runs at 3am. What your agent writes lands in the same library.</p>
-</details>
-<details class="faq-item">
-<summary class="faq-q">What is insights_brief?</summary>
-<p class="faq-a">Duct's playbook for a brief, as a slash command: /mcp__duct__insights_brief in Claude Code, /insights_brief in Gemini CLI. In any other agent, ask for this week's brief and it calls the same playbook.</p>
+<p class="faq-a">Not from your agent. Scheduled briefs run in Duct on a saved key, because nobody's agent runs at 3am.</p>
 </details>
 </div>
 <p class="faq-group">If something goes wrong</p>
 <div class="faq-list reveal">
 <details class="faq-item">
 <summary class="faq-q">My browser never opened</summary>
-<p class="faq-a">Start the sign-in yourself: run <code>/mcp</code> in Claude Code, <code>codex mcp login duct</code> in Codex, <code>/mcp auth duct</code> in Gemini CLI, or <code>opencode mcp auth duct</code> in OpenCode.</p>
+<p class="faq-a">Start it yourself: <code>/mcp</code> in Claude Code, <code>codex mcp login duct</code>, <code>/mcp auth duct</code> in Gemini CLI, or <code>opencode mcp auth duct</code>.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">It says it couldn't register, or “does not support dynamic client registration”</summary>
-<p class="faq-a">Update your agent to its latest version and try again. If it still fails, connect with a token instead.</p>
+<p class="faq-a">Update your agent and try again. If it still fails, use a token.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">It worked, and now it gets a 401</summary>
-<p class="faq-a">You disconnected it in Duct, or its sign-in lapsed after 90 days without use. Sign in again from your agent.</p>
+<p class="faq-a">It was disconnected, or unused for 90 days. Sign in again from your agent.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">A tool I expected isn't there</summary>
-<p class="faq-a">Your agent only sees what you allowed when it signed in. Disconnect it in Duct, connect again, and choose Work alongside me.</p>
-</details>
-<details class="faq-item">
-<summary class="faq-q">I asked it to set up the project and nothing changed</summary>
-<p class="faq-a">A draft never overwrites what you typed in Duct. It only fills blank fields or replaces an earlier draft. Check the project page in Duct.</p>
+<p class="faq-a">It sees only what you allowed. Disconnect it in Duct, connect again and choose Work alongside me.</p>
 </details>
 <details class="faq-item">
 <summary class="faq-q">I host Duct myself</summary>
-<p class="faq-a">Use your own API address followed by <code>/mcp</code>, in place of <code>https://mcp.getduct.ai/mcp</code>.</p>
+<p class="faq-a">Use your own API address followed by <code>/mcp</code>.</p>
 </details>
 </div>
 </div>

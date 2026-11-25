@@ -68,31 +68,11 @@
   .tools-index-hero h1 em { color:var(--orange); font-style:italic; }
   .tools-index-hero .lead {
     font-size:18px;
-    color:var(--navy-3);
-    font-weight:300;
+    color:var(--navy-2);
+    font-weight:400;
     line-height:1.65;
     margin:0 auto 28px;
     max-width:620px;
-  }
-  .tools-index-trust {
-    display:flex;
-    flex-wrap:wrap;
-    justify-content:center;
-    gap:10px 14px;
-    margin:0;
-    padding:0;
-    list-style:none;
-  }
-  .tools-index-trust li {
-    font-size:12px;
-    font-weight:500;
-    letter-spacing:.04em;
-    text-transform:uppercase;
-    color:var(--navy-3);
-    border:1px solid var(--border);
-    background:var(--off);
-    padding:8px 14px;
-    border-radius:var(--pill);
   }
 
   .tools-hub-wrap { max-width:1160px; margin:0 auto; padding:0 24px 80px; }
@@ -139,17 +119,6 @@
     transform:translateY(-3px);
     box-shadow:0 12px 36px rgba(37,99,235,.1);
   }
-  .ft-badge {
-    font-size:10px;
-    font-weight:600;
-    letter-spacing:.06em;
-    padding:3px 10px;
-    border-radius:var(--pill);
-    background:#eff6ff;
-    color:#2563EB;
-    border:1px solid rgba(37,99,235,.2);
-    align-self:flex-start;
-  }
   .ft-icon { font-size:26px; line-height:1; color: var(--orange); display:inline-flex; }
   .ft-card h3 {
     font-family:var(--serif);
@@ -192,11 +161,6 @@
 <p class="tag">Herramientas gratuitas</p>
 <h1>Todo lo que necesitas para <em>verificar</em> los números</h1>
 <p class="lead">Calculadoras y generadores que se ejecutan en tu navegador. Sin cuenta, nada subido. Cuando quieras que el número sea explicado, no solo calculado, Duct lee tus herramientas y responde.</p>
-<ul class="tools-index-trust" aria-label="Qué esperar">
-<li>Sin registro</li>
-<li>Se ejecuta en tu navegador</li>
-<li>Del creador de Duct</li>
-</ul>
 </section>
 
 <div class="tools-hub-wrap">
@@ -205,20 +169,19 @@
 <h2 id="hub-saas-heading">Métricas SaaS e ingresos</h2>
 <p class="tools-hub-desc">Compara la salud y modela el crecimiento con los números que finanzas te pedirá.</p>
 <div class="tools-hub-grid">
-<a href="/es/tools/saas-metrics-calculator" class="ft-card"> <span class="ft-badge">Calculadora</span> <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#calculator"/></svg></span>
+<a href="/es/tools/saas-metrics-calculator" class="ft-card">
+<span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#calculator"/></svg></span>
 <h3>Calculadora de comparativas de métricas SaaS</h3>
 <p>Churn, LTV:CAC, recuperación de la inversión y de prueba a pago, puntuados contra las medianas de la industria.</p>
 <span class="ft-link">Abrir calculadora →</span>
 </a>
 <a href="/es/tools/cac-ltv-calculator" class="ft-card">
-<span class="ft-badge">Calculadora</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
 <h3>Calculadora CAC / LTV</h3>
 <p>Economía unitaria en una vista: CAC, LTV, ratio y recuperación con contexto de comparativa.</p>
 <span class="ft-link">Abrir calculadora →</span>
 </a>
 <a href="/es/tools/mrr-growth-calculator" class="ft-card">
-<span class="ft-badge">Calculadora</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#trending-up"/></svg></span>
 <h3>Calculadora de tasa de crecimiento de MRR</h3>
 <p>Crecimiento neto de MRR, CMGR y la tasa que necesitas para alcanzar un objetivo.</p>
@@ -231,41 +194,37 @@
 <h2 id="hub-paid-heading">Eficiencia de medios pagados</h2>
 <p class="tools-hub-desc">Planificación, ritmo o el post-mortem: CTR, CPM, CPC, CPA, ROAS y ROI sin una hoja de cálculo.</p>
 <div class="tools-hub-grid">
-<a href="/es/tools/ctr-calculator" class="ft-card"> <span class="ft-badge">Calculadora</span> <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#target"/></svg></span>
+<a href="/es/tools/ctr-calculator" class="ft-card">
+<span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#target"/></svg></span>
 <h3>Calculadora de CTR</h3>
 <p>Tasa de clics, clics proyectados y el CTR que necesitas para alcanzar los objetivos de volumen.</p>
 <span class="ft-link">Abrir calculadora →</span>
 </a>
 <a href="/es/tools/cpm-calculator" class="ft-card">
-<span class="ft-badge">Calculadora</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#banknote"/></svg></span>
 <h3>Calculadora de CPM</h3>
 <p>Costo por mil impresiones, escenarios de gasto y objetivos de eficiencia.</p>
 <span class="ft-link">Abrir calculadora →</span>
 </a>
 <a href="/es/tools/cpc-calculator" class="ft-card">
-<span class="ft-badge">Calculadora</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#mouse-pointer-click"/></svg></span>
 <h3>Calculadora de CPC</h3>
 <p>Costo por clic y cómo se ve el gasto en tu CPC objetivo.</p>
 <span class="ft-link">Abrir calculadora →</span>
 </a>
 <a href="/es/tools/cpa-calculator" class="ft-card">
-<span class="ft-badge">Calculadora</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#pin"/></svg></span>
 <h3>Calculadora de CPA</h3>
 <p>Costo por adquisición, escenarios de conversión y CPAs seguros para el presupuesto.</p>
 <span class="ft-link">Abrir calculadora →</span>
 </a>
 <a href="/es/tools/roas-calculator" class="ft-card">
-<span class="ft-badge">Calculadora</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-line"/></svg></span>
 <h3>Calculadora de ROAS</h3>
 <p>Retorno de la inversión publicitaria como múltiplo de ingresos, brechas de ROAS objetivo y ROAS de contribución con margen.</p>
 <span class="ft-link">Abrir calculadora →</span>
 </a>
 <a href="/es/tools/marketing-roi-calculator" class="ft-card">
-<span class="ft-badge">Calculadora</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#trending-down"/></svg></span>
 <h3>Calculadora de ROI de marketing</h3>
 <p>ROI, ganancias y escenarios de ingresos para decisiones de campaña en minutos.</p>
@@ -278,20 +237,19 @@
 <h2 id="hub-ops-heading">Seguimiento, redes sociales e informes</h2>
 <p class="tools-hub-desc">Enlaces de campaña limpios, una plantilla de informe que tu equipo rellenará y tasas de interacción que puedes comparar entre publicaciones.</p>
 <div class="tools-hub-grid">
-<a href="/es/tools/utm-builder" class="ft-card"> <span class="ft-badge">Generador</span> <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#link"/></svg></span>
+<a href="/es/tools/utm-builder" class="ft-card">
+<span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#link"/></svg></span>
 <h3>Creador de UTM</h3>
 <p>Enlaces de campaña compatibles con GA4 con vista previa en vivo y validación.</p>
 <span class="ft-link">Crear UTMs →</span>
 </a>
 <a href="/es/tools/weekly-brief-template" class="ft-card">
-<span class="ft-badge">Plantilla</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#clipboard-list"/></svg></span>
 <h3>Generador de informe de marketing semanal</h3>
 <p>Una estructura de informe semanal para tu rol y tu pila de herramientas, un espacio por herramienta.</p>
 <span class="ft-link">Generar plantilla →</span>
 </a>
 <a href="/es/tools/engagement-rate-calculator" class="ft-card">
-<span class="ft-badge">Calculadora</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#message-square"/></svg></span>
 <h3>Calculadora de tasa de interacción</h3>
 <p>Interacción por seguidores, alcance o impresiones, comparable entre publicaciones.</p>
@@ -304,8 +262,7 @@
 <section class="faq tools-hub-faq" id="faq">
 <div class="faq-inner">
 <div class="reveal">
-<p class="tag">FAQ</p>
-<h2>Sobre estas <em>herramientas</em></h2>
+<h2>Sobre estas herramientas</h2>
 </div>
 <div class="faq-list reveal" style="transition-delay:.08s">
 <details class="faq-item">

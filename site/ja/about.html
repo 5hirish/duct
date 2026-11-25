@@ -75,8 +75,11 @@
 }
 </script>
 <style>
-/* ── ABOUT-ONLY STYLES ── */
-.about-hero { padding: 140px 52px 72px; }
+/* ── ABOUT-ONLY STYLES ──
+   The mosaics are the page's story: FONS where you arrive, OTIVM where the name is explained.
+   Every section between them is one idea in a line or two, with a real picture beside it.
+   Rewritten 2026-11-25 from a 1,100-word version with a 111-word paragraph. */
+.about-hero { padding: 140px 52px 64px; }
 .about-hero-inner {
   max-width: 1160px; margin: 0 auto;
   display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 64px; align-items: center;
@@ -85,111 +88,88 @@
   font-family: var(--serif);
   font-size: clamp(40px, 5.4vw, 66px);
   line-height: 1.06; letter-spacing: -1.5px; color: var(--navy);
-  margin-bottom: 26px;
+  margin-bottom: 24px;
   animation: fadeUp .5s .08s ease both;
 }
 .about-hero h1 em { font-style: italic; color: var(--orange); }
 .about-hero-sub {
-  font-size: 18px; font-weight: 300; color: var(--navy-3);
-  max-width: 54ch; line-height: 1.75;
+  font-size: 19px; font-weight: 400; color: var(--navy-2);
+  max-width: 44ch; line-height: 1.65;
   animation: fadeUp .5s .16s ease both;
 }
 .about-hero-art { justify-self: end; animation: fadeUp .6s .24s ease both; }
 .about-hero-art .mosaic { width: 320px; height: 320px; }
-.about-hero-cap { font-size: 12px; color: var(--navy-3); margin-top: 12px; text-align: center; font-family: var(--serif); font-style: italic; }
+.about-hero-cap { font-size: 13px; color: var(--navy-3); margin-top: 12px; text-align: center; font-family: var(--serif); font-style: italic; }
+.ab-link { color: var(--navy); font-weight: 500; text-decoration: underline; text-decoration-color: var(--orange); text-decoration-thickness: 1.5px; text-underline-offset: 3px; }
 
-/* Manifesto */
-.manifesto { padding: 0 52px 100px; max-width: 720px; margin: 0 auto; }
-.manifesto-block {
-  position: relative;
-  padding: 40px 0;
-  border-top: 1px solid var(--border);
-}
-.manifesto-block:last-child { border-bottom: 1px solid var(--border); }
-.manifesto-num {
-  font-family: var(--serif); font-size: 11px; font-weight: 400;
-  color: var(--orange); letter-spacing: .08em; margin-bottom: 16px; display: block;
-}
-.manifesto-title {
-  font-family: var(--serif); font-size: clamp(22px, 3vw, 30px);
-  color: var(--navy); line-height: 1.2; margin-bottom: 14px; letter-spacing: -.3px;
-}
-.manifesto-body {
-  font-size: 16px; font-weight: 300; color: var(--navy-3); line-height: 1.8;
-}
+/* The story: three beats beside the answer they led to */
+.story { padding: 72px 52px 96px; }
+.story-inner { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 56px; align-items: center; max-width: 1160px; margin: 0 auto; }
+.story h2 { font-size: clamp(30px, 3.4vw, 44px); margin-bottom: 28px; text-wrap: balance; }
+.beats { list-style: none; display: grid; gap: 22px; }
+.beats li { padding-left: 20px; border-left: 2px solid var(--border); }
+.beats li:last-child { border-left-color: var(--orange); }
+.beats h3 { font-size: 16px; font-weight: 600; color: var(--navy); margin-bottom: 4px; }
+.beats p { max-width: 46ch; font-size: 16px; line-height: 1.65; color: var(--navy-2); }
+.story-shot { border: 1px solid var(--border); border-radius: var(--r-lg); box-shadow: 0 24px 64px rgba(13,15,26,.10); aspect-ratio: auto; }
+.story-shot img { height: auto; }
+.story-shot figcaption { padding: 12px 18px; font-size: 14px; color: var(--navy-3); border-top: 1px solid var(--border); background: var(--white); }
 
-/* What we build */
-.what-we-build {
-  padding: 96px 52px; background: var(--navy);
-}
-.what-inner { max-width: 1160px; margin: 0 auto; }
-.what-we-build .tag { color: var(--orange); }
-.what-we-build .tag::before { background: var(--orange); }
-.what-we-build h2 { color: #fff; margin-bottom: 20px; }
-.what-we-build h2 em { color: var(--orange); }
-.what-sub { font-size: 16px; font-weight: 300; color: rgba(255,255,255,.5); line-height: 1.75; max-width: 560px; margin-bottom: 56px; }
-.what-grid {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;
-}
-.what-card {
-  padding: 36px 32px;
-  border-right: 1px solid rgba(255,255,255,.08);
-  transition: background .25s;
-}
-.what-card:last-child { border-right: none; }
-.what-card:hover { background: rgba(255,255,255,.03); }
-.what-card-icon { font-size: 30px; margin-bottom: 18px; display: block; color: var(--orange); }
-.what-card-title {
-  font-family: var(--serif); font-size: 20px; color: #fff;
-  margin-bottom: 10px; letter-spacing: -.2px;
-}
-.what-card-body {
-  font-size: 14px; font-weight: 300; color: rgba(255,255,255,.5); line-height: 1.72;
-}
+/* Three agents: a list, each line saying what you get */
+.agents-sec { padding: 88px 52px; background: var(--off); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.agents-inner { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: 56px; align-items: start; }
+.agents-sec h2 { font-size: clamp(30px, 3.4vw, 44px); }
+.agent-list { list-style: none; border-top: 1px solid var(--border); }
+.agent-list li { display: grid; grid-template-columns: minmax(0, 10rem) minmax(0, 1fr); gap: 16px; align-items: baseline; padding: 20px 0; border-bottom: 1px solid var(--border); }
+.agent-list b { font-family: var(--serif); font-size: 21px; font-weight: 400; color: var(--navy); }
+.agent-list span { font-size: 16px; line-height: 1.6; color: var(--navy-2); max-width: 52ch; }
 
-/* Values */
-.values { padding: 100px 52px; max-width: 1160px; margin: 0 auto; }
-.values h2 { margin-bottom: 52px; }
-.val-grid {
-  display: grid; grid-template-columns: repeat(2, 1fr);
-  gap: 1px; border: 1px solid var(--border); border-radius: var(--r-lg);
-  overflow: hidden; background: var(--border);
-}
-.val-card {
-  padding: 36px; background: var(--white); transition: background .2s; cursor: default;
-}
-.val-card:hover { background: var(--off); }
-.val-label {
-  font-size: 11px; font-weight: 600; letter-spacing: .08em;
-  text-transform: uppercase; color: var(--orange); margin-bottom: 14px; display: block;
-}
-.val-title {
-  font-family: var(--serif); font-size: 22px; color: var(--navy);
-  margin-bottom: 10px; letter-spacing: -.2px;
-}
-.val-body {
-  font-size: 14px; font-weight: 300; color: var(--navy-3); line-height: 1.72;
-}
+/* Origin: where the name comes from */
+.origin { padding: 96px 52px; }
+.origin-inner { max-width: 720px; margin: 0 auto; text-align: center; }
+.origin-inner h2 { margin-bottom: 32px; }
+.origin-arches { width: 100%; max-width: 460px; height: auto; display: block; margin: 0 auto 40px; color: var(--navy); opacity: .32; }
+.origin-body p { font-size: 17px; line-height: 1.7; color: var(--navy-2); margin: 0 auto 18px; max-width: 58ch; text-align: left; }
+.origin-body p:last-child { margin-bottom: 0; }
+.origin-body em { font-style: italic; color: var(--navy); }
+.origin-panel { display: grid; grid-template-columns: 240px 1fr; gap: 28px; align-items: center; margin-top: 44px; padding-top: 40px; border-top: 1px solid var(--border); text-align: left; }
+.origin-panel .mosaic { width: 240px; height: 240px; }
+.origin-panel figcaption { font-size: 16px; line-height: 1.7; color: var(--navy-3); max-width: 44ch; }
+.origin-panel em { font-style: italic; color: var(--navy); }
 
-/* Company info strip */
-.company-strip {
-  padding: 64px 52px; background: var(--off); border-top: 1px solid var(--border);
+/* Maker: the person behind the repo, and where he works */
+.maker { padding: 88px 52px 96px; background: var(--off); border-top: 1px solid var(--border); }
+.maker-wrap { max-width: 1160px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 56px; align-items: center; }
+.maker-inner {
+  display: grid; grid-template-columns: 112px 1fr; gap: 28px; align-items: start;
+  border: 1px solid var(--border); border-radius: var(--r-lg);
+  padding: 36px; background: var(--white);
 }
-.company-inner {
-  max-width: 1160px; margin: 0 auto;
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; text-align: center;
+.maker-avatar {
+  width: 112px; height: 112px; border-radius: 50%;
+  object-fit: cover; border: 1px solid var(--border); background: var(--off);
 }
-.company-item-label {
-  font-size: 11px; font-weight: 600; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--navy-3); margin-bottom: 10px;
+.maker-name {
+  font-family: var(--serif); font-size: 26px; color: var(--navy);
+  letter-spacing: -.3px; margin-bottom: 2px;
 }
-.company-item-value {
-  font-family: var(--serif); font-size: 20px; color: var(--navy); letter-spacing: -.2px;
+.maker-role { font-size: 15px; color: var(--navy-3); margin-bottom: 16px; }
+.maker-bio { font-size: 16px; color: var(--navy-2); line-height: 1.65; max-width: 52ch; }
+.maker-bio + .maker-bio { margin-top: 12px; }
+.maker-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+.maker-link {
+  display: inline-flex; align-items: center; gap: 7px; min-height: 44px;
+  padding: 8px 15px; border: 1px solid var(--border); border-radius: var(--pill);
+  font-size: 14px; font-weight: 500; color: var(--navy-2); text-decoration: none;
+  transition: border-color .2s, color .2s, background .2s;
 }
-.flag { display: inline-block; vertical-align: -1px; margin-right: 8px; border-radius: 2px; box-shadow: 0 0 0 1px rgba(13,15,26,.08); }
+.maker-link:hover { border-color: var(--navy); color: var(--navy); background: var(--off); }
+.maker-link svg { flex-shrink: 0; }
+.maker-link .ic { font-size: 15px; }
+.flag { display: inline-block; vertical-align: -1px; border-radius: 2px; box-shadow: 0 0 0 1px rgba(13,15,26,.08); }
 /* A postcard from where the maintainer works: photo on a white card, a
    little off square, a stamp in the corner. Straightens when hovered. */
-.postcard { margin: 48px auto 0; max-width: 520px; text-align: center; }
+.postcard { margin: 0; text-align: center; }
 .postcard-card {
   position: relative; background: var(--white); padding: 12px 12px 36px;
   border: 1px solid var(--border); box-shadow: 0 18px 44px rgba(13,15,26,.16);
@@ -203,89 +183,35 @@
   font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--navy);
   transform: rotate(4deg);
 }
-.postcard-stamp .flag { margin-right: 0; }
-.postcard figcaption { margin-top: 24px; font-family: var(--serif); font-style: italic; font-size: 17px; color: var(--navy-3); }
-@media (max-width: 860px) { .postcard { margin-top: 36px; } .postcard-card { transform: rotate(-1deg); padding-bottom: 28px; } }
-.company-item-value a { color: var(--orange); text-decoration: none; }
-.company-item-value a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.postcard figcaption { margin-top: 22px; font-family: var(--serif); font-style: italic; font-size: 17px; color: var(--navy-3); }
 
-/* Origin — where the name comes from */
-.origin { padding: 100px 52px; background: var(--off); border-top: 1px solid var(--border); }
-.origin-inner { max-width: 720px; margin: 0 auto; text-align: center; }
-.origin-inner h2 { margin-bottom: 32px; }
-.origin-arches { width: 100%; max-width: 460px; height: auto; display: block; margin: 0 auto 44px; color: var(--navy); opacity: .32; }
-.origin-body p { font-size: 16px; font-weight: 300; line-height: 1.85; color: var(--navy-3); margin-bottom: 20px; text-align: left; }
-.origin-body p:last-child { margin-bottom: 0; }
-.origin-body em { font-style: italic; color: var(--navy); }
-.origin-panel { display: grid; grid-template-columns: 240px 1fr; gap: 28px; align-items: center; margin-top: 44px; padding-top: 40px; border-top: 1px solid var(--border); text-align: left; }
-.origin-panel .mosaic { width: 240px; height: 240px; }
-.origin-panel figcaption { font-size: 15px; font-weight: 300; line-height: 1.8; color: var(--navy-3); }
-.origin-panel em { font-style: italic; color: var(--navy); }
+/* Close: the page's own ask, the repository */
+.about-cta { padding: 104px 52px 112px; text-align: center; border-top: 1px solid var(--border); }
+.about-cta-inner { max-width: 680px; margin: 0 auto; }
+.about-cta h2 { font-size: clamp(32px, 4.4vw, 50px); margin-bottom: 16px; text-wrap: balance; }
+.about-cta .sub { max-width: 42ch; margin: 0 auto; font-size: 17px; line-height: 1.65; color: var(--navy-2); }
+.about-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 32px; }
+
+@media (max-width: 960px) {
+  .about-hero-inner { grid-template-columns: minmax(0, 1fr) 240px; gap: 40px; }
+  .about-hero-art .mosaic { width: 240px; height: 240px; }
+  .story-inner, .agents-inner, .maker-wrap { grid-template-columns: 1fr; gap: 36px; }
+  .postcard { max-width: 460px; margin: 0 auto; }
+}
 @media (max-width: 860px) {
+  .about-hero { padding: 108px 24px 48px; }
+  .about-hero-inner { grid-template-columns: 1fr; gap: 32px; }
+  .about-hero-art { justify-self: start; }
+  .story { padding: 48px 24px 64px; }
+  .agents-sec { padding: 64px 24px; }
+  .agent-list li { grid-template-columns: 1fr; row-gap: 4px; }
   .origin { padding: 64px 24px; }
   .origin-arches { margin-bottom: 28px; }
   .origin-panel { grid-template-columns: 1fr; justify-items: center; text-align: center; }
-}
-
-/* Maker card — the person behind the repo */
-.maker { padding: 100px 52px; max-width: 860px; margin: 0 auto; }
-.maker-inner {
-  display: grid; grid-template-columns: 132px 1fr; gap: 36px; align-items: start;
-  border: 1px solid var(--border); border-radius: var(--r-lg);
-  padding: 40px; background: var(--white);
-}
-.maker-avatar {
-  width: 132px; height: 132px; border-radius: 50%;
-  object-fit: cover; border: 1px solid var(--border); background: var(--off);
-}
-.maker-name {
-  font-family: var(--serif); font-size: 26px; color: var(--navy);
-  letter-spacing: -.3px; margin-bottom: 4px;
-}
-.maker-role {
-  font-size: 11px; font-weight: 600; letter-spacing: .08em;
-  text-transform: uppercase; color: var(--orange); margin-bottom: 18px;
-}
-.maker-bio { font-size: 15px; font-weight: 300; color: var(--navy-3); line-height: 1.78; }
-.maker-bio + .maker-bio { margin-top: 14px; }
-.maker-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
-.maker-link {
-  display: inline-flex; align-items: center; gap: 7px;
-  padding: 8px 15px; border: 1px solid var(--border); border-radius: var(--pill);
-  font-size: 13px; font-weight: 500; color: var(--navy-2); text-decoration: none;
-  transition: border-color .2s, color .2s, background .2s;
-}
-.maker-link:hover { border-color: var(--navy); color: var(--navy); background: var(--off); }
-.maker-link svg { flex-shrink: 0; }
-
-/* CTA */
-.about-cta { padding: 120px 52px; text-align: center; border-top: 1px solid var(--border); }
-.about-cta-inner { max-width: 560px; margin: 0 auto; }
-.about-cta h2 { font-size: clamp(32px, 5vw, 52px); margin-bottom: 18px; }
-.about-cta .sub { max-width: 420px; margin: 0 auto 36px; }
-
-@media (max-width: 960px) {
-  .about-hero-inner { grid-template-columns: 1fr; gap: 36px; }
-  .about-hero-art { justify-self: start; }
-  .about-hero-art .mosaic { width: 260px; height: 260px; }
-}
-@media (max-width: 860px) {
-  .about-hero { padding: 110px 24px 56px; }
-  .manifesto { padding: 0 24px 64px; }
-  .what-we-build { padding: 64px 24px; }
-  .what-grid { grid-template-columns: 1fr; }
-  .what-card { border-right: none; border-bottom: 1px solid rgba(255,255,255,.08); }
-  .what-card:last-child { border-bottom: none; }
-  .values { padding: 64px 24px; }
-  .val-grid { grid-template-columns: 1fr; background: none; border: none; gap: 16px; }
-  .val-card { border: 1px solid var(--border); border-radius: var(--r-lg); }
   .maker { padding: 64px 24px; }
-  .maker-inner { grid-template-columns: 1fr; gap: 24px; padding: 28px; text-align: center; }
-  .maker-avatar { margin: 0 auto; }
-  .maker-links { justify-content: center; }
-  .company-strip { padding: 48px 24px; }
-  .company-inner { grid-template-columns: 1fr; gap: 24px; }
-  .about-cta { padding: 80px 24px; }
+  .maker-inner { grid-template-columns: 1fr; gap: 20px; padding: 26px; }
+  .postcard-card { transform: rotate(-1deg); padding-bottom: 28px; }
+  .about-cta { padding: 72px 24px 80px; }
 }
 </style>
 <script type="application/ld+json">
@@ -293,6 +219,13 @@
 </script>
 </head>
 <body>
+
+<a href="#main-content" class="skip-link">コンテンツへスキップ</a>
+
+<!-- EXPERIMENT: the page someone opens to decide whether to trust a tool built by one person.
+     Hypothesis: the story told in short beats, beside a real answer and the person who wrote it,
+     sends more visitors on to the repository and to /open-source than the long manifesto did.
+     Measured by outbound clicks to github.com/5hirish/duct and to /open-source from this page. -->
 
 <!-- NAV (shared: site/partials/nav-simple.html) -->
 <div data-duct-partial="/ja/partials/nav-simple.html"></div>
@@ -304,42 +237,48 @@
   <div class="about-hero-inner">
     <div>
       <h1>私のツールが連携しなかったため構築されました。<br/>それは<em>すべてのツールを読み込む</em>ためオープンです。</h1>
-      <p class="about-hero-sub">すべての製品チームは8〜12個のツールを使用しています。それぞれが断片的な情報しか見ていません。私はそれらの間の統合レイヤーであることにうんざりしたので、一つ書きました。そして、あなたのビジネス全体を読み込むものは、読み取り可能であるべきなので、MITライセンスでGitHubに公開しました。</p>
+      <p class="about-hero-sub">ツール間で手作業で数値を行き来させるのに疲れたため、データをまとめて読み取るエージェントを作成しました。ビジネス全体を読み取るツールである以上、コード自体も読み取れるべきだという考えから、MITライセンスとしています。</p>
     </div>
     <div class="about-hero-art">
       <img class="mosaic" src="/assets/art/fons.webp" width="640" height="640" alt="" aria-hidden="true"/>
-      <p class="about-hero-cap">FONS。何も実行される前の泉。アプリの玄関。</p>
+      <p class="about-hero-cap">FONS（泉）。アプリの入口です。</p>
     </div>
   </div>
 </section>
 
 <div class="channel" aria-hidden="true"></div>
 
-<!-- MANIFESTO -->
-<section class="manifesto">
-  <div class="manifesto-block reveal">
-    <span class="manifesto-num">01</span>
-    <h2 class="manifesto-title">誰も語らない問題</h2>
-    <p class="manifesto-body">アナリティクスツールは何が起きたかを知っています。サポートツールは誰が不満を持っているかを知っています。プロジェクト管理ツールは何がリリースされたかを知っています。広告プラットフォームはいくら使ったかを知っています。しかし、どれも互いに連携していません。だから週に一度、誰かが数字を手作業でツール間に運び、そのとき開いていた一部分だけで意思決定が行われます。ストーリーはずっとそこにありました。全体を読む人がいなかっただけです。</p>
-  </div>
-  <div class="manifesto-block reveal">
-    <span class="manifesto-num">02</span>
-    <h2 class="manifesto-title">そこで、私はそれらを接続しました</h2>
-    <p class="manifesto-body">Ductは、すでに使っているツールをまとめて読み、どのツールも単独では答えられない問いに答えます。なぜこれが動いたのか、そして何をすべきか。別のダッシュボードではありません。第3四半期に放棄する別のデータウェアハウスプロジェクトでもありません。そして、「そのキャンペーンを一時停止する」または「そのGA4イベントをマークする」という回答が出た場合、Ductは変更を準備し、プレビューを表示できます。それを適用することはできません。適用できるのはあなただけです。その境界はプロンプトではなく、コードの中にあります。</p>
-  </div>
-  <div class="manifesto-block reveal">
-    <span class="manifesto-num">03</span>
-    <h2 class="manifesto-title">そして、私はそれをオープンソースにしました。その理由はこちらです</h2>
-    <p class="manifesto-body">広告、アナリティクス、収益への読み取りアクセスをツールに与えることは大きなことです。ましてや、一人の人間が作ったツールに与えるとなると、さらに大きなことです。その信頼を求めることはできません。コードをお見せできます。すべてのプロンプト、すべてのAPIコール、そして承認ゲート自体がMITライセンスのもと、リポジトリにあります。アプリをダウンロードすれば私がサービスを運用します。クローンすれば、私とは一切関係ありません。ご自身のキーを使えば無料で、その状態は変わりません。有料プランでは、後でモデルがバンドルされ、キーを一切持ちたくないチーム向けになります。<a href="/ja/open-source" style="color:var(--orange);text-decoration:none">どこで何が実行され、何に費用がかかるか</a>については、別のページにあります。</p>
+<!-- STORY: three beats beside the answer they led to -->
+<section class="story">
+  <div class="story-inner">
+    <div class="reveal">
+      <h2>どのツールも一部しか見えておらず、それらをまとめて読み取るものはありません。</h2>
+      <ol class="beats">
+        <li><h3>課題</h3><p>アクセス解析は起きたことを把握し、広告プラットフォームは費やした金額を把握し、Stripeは誰が支払ったかを把握します。週に一度、誰かが手作業でそれらの数値を持ち寄っています。</p></li>
+        <li><h3>そこで、私はそれらを接続しました</h3><p>Ductはそれらをまとめて読み取り、数値が変動した理由を答えます。対策として変更が必要な場合は、それを準備してあなたの承認を待ちます。</p></li>
+        <li><h3>その後オープンソース化しました</h3><p>広告や収益のデータを個人のツールに任せるのは不安なものです。そのため、すべてのプロンプト、API呼び出し、承認ゲートをGitHubで公開しています。<a class="ab-link" href="/ja/open-source">どこで何が実行されるか</a></p></li>
+      </ol>
+    </div>
+    <figure class="job-shot story-shot reveal"><img src="/assets/media/answer-product.webp" srcset="/assets/media/answer-product-768.webp 768w, /assets/media/answer-product.webp 1392w" sizes="(max-width: 960px) calc(100vw - 48px), 660px" width="1392" height="920" loading="lazy" decoding="async" alt="Androidリリース後にアクティベーションが低下した理由をGA4、Clarity、Stripeから回答するDuct"/><figcaption>1つの質問に、3つのツールから同時に回答します。</figcaption></figure>
   </div>
 </section>
 
+<!-- WHAT DUCT DOES: three agents as a list, one line each -->
+<section class="agents-sec">
+  <div class="agents-inner">
+    <h2 class="reveal">現在は3つのエージェント。</h2>
+    <ul class="agent-list reveal">
+      <li><b>インサイト</b><span>なぜ新規登録が減少したかを質問すると、Google Ads、GA4、Stripeのデータをまとめて読み取り、2つ目のエージェントがすべての数値を再検証します。</span></li>
+      <li><b>SEO監査</b><span>URLを貼り付けると、修正箇所を順に取得できます。<a class="ab-link" href="/ja/seo-audit">無料・アカウント不要</a>。</span></li>
+      <li><b>Content Studio</b><span>ボード上で投稿を計画し、9つのネットワークに公開します。結果は各カードに反映されます。</span></li>
+    </ul>
+  </div>
+</section>
 
 <!-- ORIGIN (where the name comes from) -->
 <section class="origin" id="origin">
   <div class="origin-inner">
-    <span class="tag reveal">名前の由来</span>
-    <h2 class="reveal">ダクトは水源ではありません。<br/>それは<em>運ぶもの</em>です。</h2>
+    <h2 class="reveal">ダクトは源泉ではありません。<br/>運ぶものなのです。</h2>
     <svg class="origin-arches reveal" viewBox="0 0 480 104" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
 <path d="M0 8 H480"/>
 <path d="M0 20 H480"/>
@@ -352,81 +291,27 @@
 <path d="M0 100 H480" opacity=".45"/>
 </svg>
     <div class="origin-body">
-      <p class="reveal"><em>Duct</em>はラテン語の<em>ductus</em>（導くもの）に由来します。<em>aquaeductus</em>（導かれた水）にも同じ言葉が含まれています。ローマの水道橋は一滴の水も作りませんでした。泉にはすでに水があったのです。ローマが建設したのは、水がある場所から人々が実際に住む場所まで、重力だけで水を運ぶ水路でした。</p>
-      <p class="reveal">そのエンジニアリングのほとんどは目に見えませんでした。水道橋は何マイルも地下を走り、目立たないものでした。そして、誰もが写真を撮るアーチは、谷が邪魔になったからこそ存在します。ニームの水道橋は50キロメートルにわたって約12メートル下っていました。その隣に立っていても見えないほどの傾斜で、その間のあらゆる種類の地面の上で安定していました。</p>
-      <p class="reveal">あなたのビジネスにはすでにデータがあります。広告、アナリティクス、検索、サポート、収益 — 源泉は問題ありません。不足しているのはチャネルです。それは、多数のAPIと3つのオペレーティングシステムを横断し、実際に意思決定が行われる場所に到達するものです。水道橋が機能しているとき、誰も水道橋について考えません。ただ水があるだけです。</p>
+      <p class="reveal"><em>Duct</em>はラテン語の<em>ductus</em>（導くこと）に由来します。水路を意味する<em>aquaeductus</em>の一部でもあります。古代ローマの水道橋は自ら水を創り出さず、重力だけを利用して人々が暮らす場所へ運んでいました。</p>
+      <p class="reveal">ニームの水道橋は50キロメートルで約12メートルしか低くならず、横に立っていても気づかないほどの傾斜でした。あなたのデータは源泉です。Ductは意思決定がなされる場所へと続くチャネルです。</p>
     </div>
     <figure class="origin-panel reveal">
       <img class="mosaic" src="/assets/art/otium.webp" width="640" height="640" loading="lazy" alt="ローマのモザイク：水路をいっぱいに流れる水、縁で眠るハト、OTIVMの碑文"/>
-      <figcaption>それが、アプリがロボットではなくローマの敷居のモザイクであなたを迎える理由でもあります。これは<em>OTIVM</em>、つまり余暇です。すべてが追いつき、水は満ち、ハトは眠っています。</figcaption>
+      <figcaption>アプリを開くとローマのモザイク画が出迎えるのはそのためです。これは<em>OTIVM</em>（余暇）を描いたもので、水が豊かに流れ、ハトが眠っています。</figcaption>
     </figure>
-  </div>
-</section>
-
-<!-- WHAT DUCT DOES -->
-<section class="what-we-build">
-  <div class="what-inner">
-    <span class="tag reveal">Ductができること</span>
-    <h2 class="reveal">現在3つのエージェント。<br/><em>さらに</em>追加予定です。</h2>
-    <p class="what-sub reveal">それぞれが12個の接続されたソースすべてを一度に読み込み、変更が必要な場合はそれを準備し、承認を待ちます。すべてのコネクタとプロンプトはリポジトリにあるため、このリストは現状であり、ロードマップではありません。</p>
-    <div class="what-grid">
-      <div class="what-card reveal">
-        <span class="what-card-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
-        <h3 class="what-card-title">インサイト</h3>
-        <p class="what-card-body">「先週、サインアップが減少したのはなぜか」と尋ねると、Google Ads、GA4、Stripeをまとめて読み込んだ回答が得られます。2番目のエージェントが、あなたに届く前にすべての数値を再確認し、作成するブリーフは情報源を引用します。</p>
-      </div>
-      <div class="what-card reveal">
-        <span class="what-card-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#sprout"/></svg></span>
-        <h3 class="what-card-title">SEO監査</h3>
-        <p class="what-card-body">URLを貼り付けてください。Ductがサイトをクロールし、技術的およびコンテンツのシグナルを読み取り、優先順位付けされたレポートを返します。<a href="/ja/seo-audit" style="color:var(--orange);text-decoration:none">無料の入り口</a>です。実行にアカウントは不要です。</p>
-      </div>
-      <div class="what-card reveal">
-        <span class="what-card-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#clapperboard"/></svg></span>
-        <h3 class="what-card-title">Content Studio</h3>
-        <p class="what-card-body">ボード上の計画、カードごとの投稿、それぞれに生成されたスライドと画像、ワンクリックで9つのネットワークに公開。結果はカードに戻ってきて、次の計画は前回の計画から学びます。</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- VALUES -->
-<section class="values">
-  <span class="tag reveal">私の働き方</span>
-  <h2 class="reveal"><em>決まり文句</em>ではなく、原則を</h2>
-  <div class="val-grid">
-    <div class="val-card reveal">
-      <span class="val-label">実行前の承認</span>
-      <h3 class="val-title">エージェントが提案します。あなたが決定します。</h3>
-      <p class="val-body">Ductはデフォルトで読み込みます。何かを修正できる場合、変更セットを準備し、プレビューとガードレールチェックを表示し、待機します。エージェントは提案と検査はできますが、承認または適用はできません。その決定はモデルが認識しないコード内に存在し、ロールバックは契約の一部です。</p>
-    </div>
-    <div class="val-card reveal">
-      <span class="val-label">形式よりも実質を</span>
-      <h3 class="val-title">インサイトを届け、ノイズを省く</h3>
-      <p class="val-body">変更ログを埋めるために機能を構築しているのではありません。すべてのエージェント、すべてのコネクタ、すべてのガードレールは、まず実際の意思決定において私の時間を節約してくれたから存在します。</p>
-    </div>
-    <div class="val-card reveal">
-      <span class="val-label">スペインにいる一人の人間</span>
-      <h3 class="val-title">直接お答えできる規模です</h3>
-      <p class="val-body">巨大企業がバックにいるわけでも、サポート待ちの列があるわけでもありません。問題を報告すれば、開発者本人と直接話せます。それが最大の利点であり、ロードマップが公開されている理由です。</p>
-    </div>
-    <div class="val-card reveal">
-      <span class="val-label">MITライセンス</span>
-      <h3 class="val-title">すべてのコードを読めます</h3>
-      <p class="val-body">すべてのデータソース、すべてのAPI呼び出し、すべてのプロンプト、信号を生成するすべてのロジックは<a href="https://github.com/5hirish/duct" rel="noopener" style="color:var(--orange);text-decoration:none">GitHubにあります</a>。原則として文書化され、検査可能であるだけでなく、実際にそこにあり、実際に読み取り可能で、実際にフォーク可能です。</p>
-    </div>
   </div>
 </section>
 
 <!-- MAKER -->
 <section class="maker">
+  <div class="maker-wrap">
   <div class="maker-inner reveal">
-    <img class="maker-avatar" src="https://github.com/5hirish.png" width="132" height="132" loading="lazy" alt="Ductのメンテナー、Shirish Kadam"/>
+    <img class="maker-avatar" src="https://github.com/5hirish.png" width="112" height="112" loading="lazy" alt="Ductのメンテナー、Shirish Kadam"/>
     <div>
       <p class="maker-name">Shirish Kadam</p>
-      <p class="maker-role">メンテナー</p>
-      <p class="maker-bio">プロダクトマネージャー兼エンジニア。キャリアのほとんどを、フィンテックやエドテック企業で製品をゼロから構築し、スケールさせることに費やしてきました。その多くは、数百万人のユーザーにサービスを提供するAIおよびMLシステムです。常にオープンソースに貢献しています。</p>
-      <p class="maker-bio">これらの仕事にはすべて同じギャップがありました。「なぜその数字が変動したのか」という答えは、決して一つのツールの中にはなく、毎週、上級者が数字をツールからツールへ手作業で運ぶのに午前中を費やしていました。Ductはその仕事のために私が欲しかったもので、だから私はそれを構築し、MITライセンスにしました。</p>
-      <p class="maker-bio">設計上の決定は公開の場で議論されます。私を見つけるにはGitHubが最適です。</p>
+      <p class="maker-role">メンテナー（スペイン在住）</p>
+      <p class="maker-bio">プロダクトマネージャー兼エンジニア。フィンテックやエドテック企業でプロダクトをゼロから構築し、その多くは何百万人ものユーザーを抱えるAIシステムでした。</p>
+      <p class="maker-bio">どんな場合でも、「なぜその数値が動いたのか」の答えが単一のツールの中にあったことはありません。Ductはまさにその作業のために欲しかったツールです。</p>
+      <p class="maker-bio">サポートの順番待ちのない、個人による開発です。Issueを開けば、そのコードを書いた本人に届きます。</p>
       <div class="maker-links">
         <a class="maker-link" href="https://github.com/5hirish" rel="noopener">
           <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
@@ -441,51 +326,29 @@
         <a class="maker-link" href="https://shirishkadam.com" rel="noopener">
           <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/><path d="M1.5 8h13M8 1.5c1.7 1.9 2.6 4.1 2.6 6.5S9.7 12.6 8 14.5C6.3 12.6 5.4 10.4 5.4 8S6.3 3.4 8 1.5Z"/></svg> shirishkadam.com
         </a>
+        <a class="maker-link" href="mailto:hello@getduct.ai"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#mail"/></svg>hello@getduct.ai</a>
       </div>
     </div>
   </div>
   <figure class="postcard reveal" style="transition-delay:.1s">
     <div class="postcard-card">
-      <img src="/assets/art/espana.webp" srcset="/assets/art/espana-640.webp 640w, /assets/art/espana.webp 1280w" sizes="(max-width: 860px) calc(100vw - 48px), 496px" width="1280" height="960" loading="lazy" decoding="async" alt="スペイン北部、アストゥリアス海岸の長い砂浜と緑の岬、澄んだ空の下"/>
+      <img src="/assets/art/espana.webp" srcset="/assets/art/espana-640.webp 640w, /assets/art/espana.webp 1280w" sizes="(max-width: 960px) calc(100vw - 48px), 460px" width="1280" height="960" loading="lazy" decoding="async" alt="スペイン北部、アストゥリアス海岸の長い砂浜と緑の岬、澄んだ空の下"/>
       <span class="postcard-stamp" aria-hidden="true"><svg class="flag" viewBox="0 0 3 2" width="18" height="12"><rect width="3" height="2" fill="#AD1519"/><rect y=".5" width="3" height="1" fill="#FABD00"/></svg>スペイン</span>
     </div>
     <figcaption>アストゥリアス、スペイン北部。</figcaption>
   </figure>
-</section>
-
-<!-- COMPANY STRIP -->
-<section class="company-strip">
-  <div class="company-inner">
-    <div class="reveal">
-      <p class="company-item-label">ライセンス</p>
-      <p class="company-item-value">MIT</p>
-    </div>
-    <div class="reveal">
-      <p class="company-item-label">メンテナー</p>
-      <p class="company-item-value"><a href="https://github.com/5hirish" rel="noopener">Shirish Kadam</a></p>
-    </div>
-    <div class="reveal">
-      <p class="company-item-label">制作元</p>
-      <p class="company-item-value"><svg class="flag" viewBox="0 0 3 2" width="21" height="14" aria-hidden="true"><rect width="3" height="2" fill="#AD1519"/><rect y=".5" width="3" height="1" fill="#FABD00"/></svg>スペイン</p>
-    </div>
-    <div class="reveal">
-      <p class="company-item-label">お問い合わせ</p>
-      <p class="company-item-value"><a href="mailto:hello@getduct.ai">hello@getduct.ai</a></p>
-    </div>
   </div>
 </section>
 
-<!-- CTA -->
+<!-- CLOSE: the page's own ask, the repository, not the home page's download band -->
 <section class="about-cta">
   <div class="about-cta-inner">
-    <span class="tag reveal">オープンソース</span>
-    <h2 class="reveal">読んで、実行して、<em>壊してください。</em></h2>
-    <p class="sub reveal">DuctはMITライセンスで、あなた自身のキーまたはChatGPTプランで利用できます。役立つ場合はリポジトリにスターを付けてください。そうでない場合はイシューを開いてください。</p>
-    <div class="reveal" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:32px">
+    <h2 class="reveal">読んで、動かして、試してみてください。</h2>
+    <p class="sub reveal">ご自身のキー、または既にご契約中のChatGPTプランがあれば無料で使用できます。役立ったらリポジトリにスターを、問題があればIssueを作成してください。</p>
+    <div class="about-actions reveal">
       <a class="btn btn-orange btn-lg" href="https://github.com/5hirish/duct" rel="noopener">GitHubでスターを付ける →</a>
       <a class="btn btn-ghost btn-lg" href="/ja/open-source">どこで何が実行されるか →</a>
     </div>
-    <p class="hero-footnote">MITライセンス · 独自のキーを使用 · 自分で実行するのにアカウントは不要</p>
   </div>
 </section>
 

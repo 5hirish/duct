@@ -68,31 +68,11 @@
   .tools-index-hero h1 em { color:var(--orange); font-style:italic; }
   .tools-index-hero .lead {
     font-size:18px;
-    color:var(--navy-3);
-    font-weight:300;
+    color:var(--navy-2);
+    font-weight:400;
     line-height:1.65;
     margin:0 auto 28px;
     max-width:620px;
-  }
-  .tools-index-trust {
-    display:flex;
-    flex-wrap:wrap;
-    justify-content:center;
-    gap:10px 14px;
-    margin:0;
-    padding:0;
-    list-style:none;
-  }
-  .tools-index-trust li {
-    font-size:12px;
-    font-weight:500;
-    letter-spacing:.04em;
-    text-transform:uppercase;
-    color:var(--navy-3);
-    border:1px solid var(--border);
-    background:var(--off);
-    padding:8px 14px;
-    border-radius:var(--pill);
   }
 
   .tools-hub-wrap { max-width:1160px; margin:0 auto; padding:0 24px 80px; }
@@ -139,17 +119,6 @@
     transform:translateY(-3px);
     box-shadow:0 12px 36px rgba(37,99,235,.1);
   }
-  .ft-badge {
-    font-size:10px;
-    font-weight:600;
-    letter-spacing:.06em;
-    padding:3px 10px;
-    border-radius:var(--pill);
-    background:#eff6ff;
-    color:#2563EB;
-    border:1px solid rgba(37,99,235,.2);
-    align-self:flex-start;
-  }
   .ft-icon { font-size:26px; line-height:1; color: var(--orange); display:inline-flex; }
   .ft-card h3 {
     font-family:var(--serif);
@@ -192,11 +161,6 @@
 <p class="tag">無料ツール</p>
 <h1>数値を<em>健全性チェック</em>するために必要なすべて</h1>
 <p class="lead">ブラウザで実行される計算ツールと生成ツール。アカウントも不要で、何もアップロードされません。数値が計算されるだけでなく、説明が必要な場合は、Ductがあなたのツールを読み取り、回答します。</p>
-<ul class="tools-index-trust" aria-label="期待できること">
-<li>サインアップ不要</li>
-<li>ブラウザで動作します</li>
-<li>Ductの作者が制作</li>
-</ul>
 </section>
 
 <div class="tools-hub-wrap">
@@ -205,20 +169,19 @@
 <h2 id="hub-saas-heading">SaaS指標と収益</h2>
 <p class="tools-hub-desc">財務部門が求める数値で健全性をベンチマークし、成長をモデル化します。</p>
 <div class="tools-hub-grid">
-<a href="/ja/tools/saas-metrics-calculator" class="ft-card"> <span class="ft-badge">計算ツール</span> <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#calculator"/></svg></span>
+<a href="/ja/tools/saas-metrics-calculator" class="ft-card">
+<span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#calculator"/></svg></span>
 <h3>SaaS指標ベンチマーク計算ツール</h3>
 <p>チャーン、LTV:CAC、回収期間、トライアルから有料への移行を業界の中央値と比較してスコア化します。</p>
 <span class="ft-link">計算ツールを開く →</span>
 </a>
 <a href="/ja/tools/cac-ltv-calculator" class="ft-card">
-<span class="ft-badge">計算ツール</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-column"/></svg></span>
 <h3>CAC / LTV 計算ツール</h3>
 <p>ユニットエコノミクスを一つのビューで：CAC、LTV、比率、回収期間をベンチマークのコンテキストと共に。</p>
 <span class="ft-link">計算ツールを開く →</span>
 </a>
 <a href="/ja/tools/mrr-growth-calculator" class="ft-card">
-<span class="ft-badge">計算ツール</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#trending-up"/></svg></span>
 <h3>MRR成長率計算ツール</h3>
 <p>純MRR成長、CMGR、および目標を達成するために必要なレート。</p>
@@ -231,41 +194,37 @@
 <h2 id="hub-paid-heading">有料メディアの効率</h2>
 <p class="tools-hub-desc">計画、ペース設定、または事後分析：スプレッドシートなしでCTR、CPM、CPC、CPA、ROAS、ROIを計算します。</p>
 <div class="tools-hub-grid">
-<a href="/ja/tools/ctr-calculator" class="ft-card"> <span class="ft-badge">計算ツール</span> <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#target"/></svg></span>
+<a href="/ja/tools/ctr-calculator" class="ft-card">
+<span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#target"/></svg></span>
 <h3>CTR計算ツール</h3>
 <p>クリック率、予測クリック数、および目標ボリュームを達成するために必要なCTR。</p>
 <span class="ft-link">計算ツールを開く →</span>
 </a>
 <a href="/ja/tools/cpm-calculator" class="ft-card">
-<span class="ft-badge">計算ツール</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#banknote"/></svg></span>
 <h3>CPM計算ツール</h3>
 <p>インプレッション単価、支出シナリオ、および効率目標。</p>
 <span class="ft-link">計算ツールを開く →</span>
 </a>
 <a href="/ja/tools/cpc-calculator" class="ft-card">
-<span class="ft-badge">計算ツール</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#mouse-pointer-click"/></svg></span>
 <h3>CPC計算ツール</h3>
 <p>クリック単価と、目標CPCでの支出がどのようになるか。</p>
 <span class="ft-link">計算ツールを開く →</span>
 </a>
 <a href="/ja/tools/cpa-calculator" class="ft-card">
-<span class="ft-badge">計算ツール</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#pin"/></svg></span>
 <h3>CPA計算ツール</h3>
 <p>獲得単価、コンバージョンシナリオ、および予算に安全なCPA。</p>
 <span class="ft-link">計算ツールを開く →</span>
 </a>
 <a href="/ja/tools/roas-calculator" class="ft-card">
-<span class="ft-badge">計算ツール</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#chart-line"/></svg></span>
 <h3>ROAS計算ツール</h3>
 <p>収益倍率としての広告費用対効果、目標ROASのギャップ、マージン考慮型貢献ROAS。</p>
 <span class="ft-link">計算ツールを開く →</span>
 </a>
 <a href="/ja/tools/marketing-roi-calculator" class="ft-card">
-<span class="ft-badge">計算ツール</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#trending-down"/></svg></span>
 <h3>マーケティングROI計算ツール</h3>
 <p>キャンペーンの意思決定のためのROI、利益、収益シナリオを数分で。</p>
@@ -278,20 +237,19 @@
 <h2 id="hub-ops-heading">トラッキング、ソーシャル、レポート</h2>
 <p class="tools-hub-desc">クリーンなキャンペーンリンク、チームが記入するブリーフテンプレート、そして投稿間で比較できるエンゲージメント率。</p>
 <div class="tools-hub-grid">
-<a href="/ja/tools/utm-builder" class="ft-card"> <span class="ft-badge">生成ツール</span> <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#link"/></svg></span>
+<a href="/ja/tools/utm-builder" class="ft-card">
+<span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#link"/></svg></span>
 <h3>UTMビルダー</h3>
 <p>GA4対応のキャンペーンリンク、ライブプレビューと検証付き。</p>
 <span class="ft-link">UTMを作成 →</span>
 </a>
 <a href="/ja/tools/weekly-brief-template" class="ft-card">
-<span class="ft-badge">テンプレート</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#clipboard-list"/></svg></span>
 <h3>週次マーケティングブリーフジェネレーター</h3>
 <p>あなたの役割とスタックに合わせた週次レポート構造。ツールごとに1つのスロットです。</p>
 <span class="ft-link">テンプレートを生成 →</span>
 </a>
 <a href="/ja/tools/engagement-rate-calculator" class="ft-card">
-<span class="ft-badge">計算ツール</span>
 <span class="ft-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="/assets/icons.svg#message-square"/></svg></span>
 <h3>エンゲージメント率計算ツール</h3>
 <p>フォロワー、リーチ、またはインプレッションによるエンゲージメントで、投稿間で比較可能です。</p>
@@ -304,8 +262,7 @@
 <section class="faq tools-hub-faq" id="faq">
 <div class="faq-inner">
 <div class="reveal">
-<p class="tag">FAQ</p>
-<h2>これらの<em>ツール</em>について</h2>
+<h2>これらのツールについて</h2>
 </div>
 <div class="faq-list reveal" style="transition-delay:.08s">
 <details class="faq-item">
