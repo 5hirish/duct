@@ -278,6 +278,9 @@ it is a claim about the code, not a way to quiet the check.
   OpenAI credential when no API key is pasted (`X-Provider-OpenAI` +
   `X-OpenAI-Account-Id`). Gated on `capabilities.chatgptAuth` from the shell
   and `chatgpt_auth_enabled` from `/api/providers/status` — both, always.
+  A message into a running session carries `planCredentialHeaders()` (the
+  plan's two headers and nothing else), because the session outlives the
+  hour its starting token was good for.
 - `lib/projectDraft.js` — merges `PROJECT_DRAFT` events into the project
   with provenance (`user` / `crawl` / `document` / `inferred`, in that rank).
   Three rules: a user value is never overwritten, a filled field gives way

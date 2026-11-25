@@ -696,13 +696,13 @@ async def test_the_chat_route_steers_while_a_turn_runs_and_queues_otherwise(sess
     session.turn_active = True
     out = await send_message(
         "insights", session.session_id,
-        AgentMessage(type="chat", content="also mobile", client_message_id="m1"), user=None,
+        AgentMessage(type="chat", content="also mobile", client_message_id="m1"), user=None, user_keys={},
     )
     assert out["delivery"] == "steer"
     assert session.steer_queue.get_nowait() == {"role": "user", "content": "also mobile", "client_message_id": "m1"}
 
     session.turn_active = False
-    out = await send_message("insights", session.session_id, AgentMessage(type="chat", content="next"), user=None)
+    out = await send_message("insights", session.session_id, AgentMessage(type="chat", content="next"), user=None, user_keys={})
     assert out["delivery"] == "turn"
     assert session.chat_queue.get_nowait() == {"role": "user", "content": "next"}
 
@@ -723,7 +723,7 @@ async def test_the_answer_route_resumes_a_checkpointed_pause(session):
     out = await send_message(
         "insights", session.session_id,
         AgentMessage(type="answer", answers={"Goal": "Signups"}, interrupt_id="int_1"),
-        user=None,
+        user=None, user_keys={},
     )
 
     assert out == {"status": "queued", "type": "answer"}
@@ -735,7 +735,7 @@ async def test_an_answer_without_an_id_takes_the_only_pending_pause(session):
     session.pending_pauses = {"int_9": {"event": AgentEvent.CONNECTION_REQUIRED, "interrupt_id": "int_9"}}
 
     await send_message(
-        "insights", session.session_id, AgentMessage(type="answer", answers={"skipped": True}), user=None
+        "insights", session.session_id, AgentMessage(type="answer", answers={"skipped": True}), user=None, user_keys={}
     )
 
     assert session.chat_queue.get_nowait() == {"resume": {"int_9": {"skipped": True}}}
@@ -776,7 +776,7 @@ async def test_chat_while_parked_is_steered_not_refused(session):
     session.pending_pauses = {"int_1": {"event": AgentEvent.QUESTIONS_REQUIRED, "interrupt_id": "int_1"}}
 
     out = await send_message(
-        "insights", session.session_id, AgentMessage(type="chat", content="also mobile"), user=None
+        "insights", session.session_id, AgentMessage(type="chat", content="also mobile"), user=None, user_keys={}
     )
     assert out["delivery"] == "steer"
     assert session.steer_queue.get_nowait() == {"role": "user", "content": "also mobile"}
@@ -1038,22 +1038,22 @@ async def test_an_autonomy_change_is_restated_at_the_next_turn(session, monkeypa
     levels = iter(["ask", "assisted", "assisted"])
     monkeypatch.setattr(routes_agents, "_configured_autonomy", lambda _pid: next(levels))
 
-    await send_message("insights", session.session_id, AgentMessage(type="chat", content="first"), user=None)
+    await send_message("insights", session.session_id, AgentMessage(type="chat", content="first"), user=None, user_keys={})
     assert session.chat_queue.get_nowait()["content"] == "first"          # unchanged: same level
 
-    await send_message("insights", session.session_id, AgentMessage(type="chat", content="second"), user=None)
+    await send_message("insights", session.session_id, AgentMessage(type="chat", content="second"), user=None, user_keys={})
     queued = session.chat_queue.get_nowait()["content"]
     assert queued.startswith("<autonomy>") and "ASSISTED" in queued and queued.endswith("second")
     assert session.autonomy == "assisted"
 
-    await send_message("insights", session.session_id, AgentMessage(type="chat", content="third"), user=None)
+    await send_message("insights", session.session_id, AgentMessage(type="chat", content="third"), user=None, user_keys={})
     assert session.chat_queue.get_nowait()["content"] == "third"          # stated once, not every turn
 
 
 async def test_a_session_without_a_project_keeps_its_message_untouched(session):
     session.artifact_project_id = None
     session.autonomy = "ask"
-    await send_message("insights", session.session_id, AgentMessage(type="chat", content="hi"), user=None)
+    await send_message("insights", session.session_id, AgentMessage(type="chat", content="hi"), user=None, user_keys={})
     assert session.chat_queue.get_nowait()["content"] == "hi"
 
 
@@ -1063,15 +1063,15 @@ async def test_a_format_change_is_restated_at_the_next_turn(session):
     session.artifact_format = "html"
     session.artifact_format_stated = "html"
 
-    await send_message("insights", session.session_id, AgentMessage(type="chat", content="first", artifact_format="html"), user=None)
+    await send_message("insights", session.session_id, AgentMessage(type="chat", content="first", artifact_format="html"), user=None, user_keys={})
     assert session.chat_queue.get_nowait()["content"] == "first"
 
-    await send_message("insights", session.session_id, AgentMessage(type="chat", content="second", artifact_format="markdown"), user=None)
+    await send_message("insights", session.session_id, AgentMessage(type="chat", content="second", artifact_format="markdown"), user=None, user_keys={})
     queued = session.chat_queue.get_nowait()["content"]
     assert queued.startswith("<deliverable_format>") and "markdown" in queued and queued.endswith("second")
     assert session.artifact_format_stated == "markdown"
 
-    await send_message("insights", session.session_id, AgentMessage(type="chat", content="third", artifact_format="markdown"), user=None)
+    await send_message("insights", session.session_id, AgentMessage(type="chat", content="third", artifact_format="markdown"), user=None, user_keys={})
     assert session.chat_queue.get_nowait()["content"] == "third"
 
 
@@ -1083,7 +1083,7 @@ async def test_a_thread_resumed_without_a_prompt_is_told_the_format_at_its_first
     session.artifact_format = "html"
     session.artifact_format_stated = ""
 
-    await send_message("insights", session.session_id, AgentMessage(type="chat", content="in html please"), user=None)
+    await send_message("insights", session.session_id, AgentMessage(type="chat", content="in html please"), user=None, user_keys={})
     queued = session.chat_queue.get_nowait()["content"]
     assert queued.startswith("<deliverable_format>") and "HTML document" in queued
     assert queued.endswith("in html please")

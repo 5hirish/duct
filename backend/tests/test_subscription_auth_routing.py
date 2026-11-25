@@ -91,7 +91,9 @@ def test_a_subscription_is_recognised_and_an_api_key_still_wins(monkeypatch):
     assert codex.should_use_codex("sk-proj-x") is False
 
     # And the client a subscription calls for is the Codex one, not ChatOpenAI.
-    assert type(codex.build_codex_chat(model="gpt-5-mini")).__name__ == "_ChatOpenAICodex"
+    from langchain_openai.chat_models.codex import _ChatOpenAICodex
+
+    assert isinstance(codex.build_codex_chat(model="gpt-5-mini"), _ChatOpenAICodex)
     assert _llm_for("sk-proj-x", Provider.OPENAI, ModelName.GPT_5_MINI) == "ChatOpenAI"
 
 

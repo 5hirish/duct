@@ -1,4 +1,4 @@
-import { providerKeyHeaders } from "./providerKeys.js";
+import { planCredentialHeaders, providerKeyHeaders } from "./providerKeys.js";
 import { consumeSseStream } from "./sse.js";
 // Bearer JWT minted by Google Sign-In. Optional: signed-out sessions omit it and
 // the backend personalises only when a valid token is present.
@@ -358,7 +358,11 @@ export async function sendAgentMessage(agentType, sessionId, message) {
     `${BASE}/api/agents/${encodeURIComponent(agentType)}/sessions/${encodeURIComponent(sessionId)}/messages`,
     {
       method: "POST",
-      headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
+      headers: {
+        ...backendAuthedHeaders({ "Content-Type": "application/json" }),
+        // A plan token is good for an hour; the session may be older.
+        ...(await planCredentialHeaders()),
+      },
       body: JSON.stringify(message),
       signal: controlCallSignal(),
     }

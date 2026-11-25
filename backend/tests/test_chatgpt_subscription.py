@@ -145,7 +145,9 @@ def test_the_kill_switch_drops_a_plan_token_on_the_server(monkeypatch):
 def test_a_subscription_credential_builds_the_codex_client_with_its_headers():
     packed = codex.pack_subscription_credential(ACCESS_TOKEN, ACCOUNT_ID)
     llm = lc.resolve_chat_model(Provider.OPENAI, ModelName.GPT_6_LUNA, packed)
-    assert type(llm).__name__ == "_ChatOpenAICodex"
+    from langchain_openai.chat_models.codex import _ChatOpenAICodex
+
+    assert isinstance(llm, _ChatOpenAICodex)
     token = llm.token_provider.get_token()
     assert token.access_token == ACCESS_TOKEN
     assert token.account_id == ACCOUNT_ID
@@ -238,3 +240,107 @@ def test_status_reports_the_plan_as_the_source_and_the_kill_switch(client):
     assert openai["source"] == "subscription"
     assert openai["reachable"] is True
     assert body["chatgpt_auth_enabled"] is True
+
+
+# ---------------------------------------------------------------------------
+# A session outlives its token
+# ---------------------------------------------------------------------------
+
+
+def _plan_token(exp: int, account: str = ACCOUNT_ID) -> str:
+    return _jwt({"exp": exp, "https://api.openai.com/auth": {"chatgpt_account_id": account}})
+
+
+def test_a_fresher_token_reaches_a_model_already_built():
+    """A question card answered after the hour: the model built at the start
+    of the run must spend the token the answer brought, not the dead one."""
+    held = codex.pack_subscription_credential(_plan_token(2000000000), ACCOUNT_ID)
+    fresh = codex.pack_subscription_credential(_plan_token(2000003600), ACCOUNT_ID)
+    llm = lc.resolve_chat_model(Provider.OPENAI, ModelName.GPT_6_LUNA, held)
+
+    assert codex.renew_subscription_credential(held, fresh)
+
+    new_token = codex.unpack_subscription_credential(fresh).access_token
+    assert llm.token_provider.get_access_token() == new_token
+    assert llm.token_provider.get_token().access_token == new_token
+    # A model built later from the string the runner started with gets it too.
+    later = lc.resolve_chat_model(Provider.OPENAI, ModelName.GPT_6_LUNA, held)
+    assert later.token_provider.get_access_token() == new_token
+
+
+@pytest.mark.parametrize(
+    "fresh",
+    [
+        pytest.param(_plan_token(2100000000, account="acct-someone-else"), id="another-account"),
+        pytest.param(_plan_token(1900000000), id="older"),
+        pytest.param("sk-proj-a-pasted-key", id="an-api-key"),
+    ],
+)
+def test_a_run_never_moves_to_another_plan_or_an_older_token(fresh):
+    held = codex.pack_subscription_credential(_plan_token(2000000000), ACCOUNT_ID)
+    llm = lc.resolve_chat_model(Provider.OPENAI, ModelName.GPT_6_LUNA, held)
+    before = llm.token_provider.get_access_token()
+
+    assert not codex.renew_subscription_credential(held, fresh)
+    assert llm.token_provider.get_access_token() == before
+
+
+def test_a_message_hands_its_fresh_token_to_the_session():
+    from types import SimpleNamespace
+
+    from routes.agents import _renew_plan_credential
+
+    held = codex.pack_subscription_credential(_plan_token(2000000000), ACCOUNT_ID)
+    fresh = codex.pack_subscription_credential(_plan_token(2000003600), ACCOUNT_ID)
+    session = SimpleNamespace(lent_keys={Provider.OPENAI: held})
+
+    _renew_plan_credential(session, {Provider.OPENAI: fresh})
+    assert session.lent_keys[Provider.OPENAI] == fresh
+    # A message with no plan header leaves the session as it was.
+    _renew_plan_credential(session, {})
+    assert session.lent_keys[Provider.OPENAI] == fresh
+
+
+# ---------------------------------------------------------------------------
+# Prompt caching on the ChatGPT backend
+# ---------------------------------------------------------------------------
+
+
+def test_the_system_prompt_leads_the_input_where_the_cache_sees_it():
+    """GPT-6.2 does not cache ``instructions``. Built through the real client,
+    offline: what would go over the wire, not what we hope it is."""
+    from langchain_core.messages import HumanMessage, SystemMessage
+
+    packed = codex.pack_subscription_credential(ACCESS_TOKEN, ACCOUNT_ID)
+    llm = lc.resolve_chat_model(Provider.OPENAI, ModelName.GPT_6_LUNA, packed, cache_key="conv-42")
+    payload = llm._get_request_payload([SystemMessage("You are Duct."), HumanMessage("hi")])
+
+    lead = payload["input"][0]
+    assert lead["role"] == "developer"
+    assert lead["content"] == "You are Duct."
+    assert payload["instructions"] == codex._INSTRUCTIONS_POINTER
+    assert not any(item.get("role") == "system" for item in payload["input"])
+    # One conversation, one cache: the key and the backend's affinity headers.
+    assert payload["prompt_cache_key"] == "conv-42"
+    headers = payload["extra_headers"]
+    assert headers["session-id"] == "conv-42"
+    assert headers["thread-id"] == "conv-42"
+    # The Codex headers are still there.
+    assert headers["ChatGPT-Account-Id"] == ACCOUNT_ID
+    assert headers["originator"] == codex.ORIGINATOR
+
+
+def test_the_payload_rewrite_is_stable_across_steps():
+    """Every step of a tool loop must open with the same bytes, or the cache
+    misses. Running the rewrite on an already-shaped payload changes nothing."""
+    payload = {"instructions": "You are Duct.", "input": [{"role": "user", "content": "hi"}]}
+    once = codex.cache_friendly_payload(payload, "conv-42")
+    snapshot = json.dumps(once, sort_keys=True)
+    twice = codex.cache_friendly_payload(once, "conv-42")
+    assert json.dumps(twice, sort_keys=True) == snapshot
+
+
+def test_no_affinity_means_no_session_headers():
+    payload = codex.cache_friendly_payload({"instructions": "x", "input": []}, "")
+    assert "extra_headers" not in payload
+    assert "prompt_cache_key" not in payload
