@@ -110,7 +110,8 @@ def test_initialize_echoes_a_version_the_client_speaks_and_offers_tools(env):
     out = env.rpc(token, "initialize", {"protocolVersion": "2025-06-18", "capabilities": {},
                                         "clientInfo": {"name": "claude-code", "version": "2"}}).json()["result"]
     assert out["protocolVersion"] == "2025-06-18"
-    assert out["capabilities"] == {"tools": {"listChanged": False}}
+    # Prompts too: the playbooks a person can run as a slash command.
+    assert out["capabilities"] == {"tools": {"listChanged": False}, "prompts": {"listChanged": False}}
     assert "draft_project" in out["instructions"]
 
     newer = env.rpc(token, "initialize", {"protocolVersion": "2099-01-01"}).json()["result"]
