@@ -3087,8 +3087,8 @@ msgid "Compacting context"
 msgstr "Kontext wird komprimiert"
 
 #: src/components/content/BrandContextForm.jsx
-msgid "Company"
-msgstr "Unternehmen"
+#~ msgid "Company"
+#~ msgstr "Unternehmen"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Company name"

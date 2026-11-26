@@ -97,7 +97,11 @@ export default function DeskComposer({ project, autonomy, onAutonomyChange, plac
 
   const website = project?.company?.website_url || "";
   const icon = faviconUrl(website);
-  const name = project?.company?.name || project?.name || t`This project`;
+  // The project's name, as the switcher shows it. The company name is often
+  // a different thing (a studio that ships several apps), and a chip that
+  // read "NomadTools" under a switcher reading "Coloris" looked like the
+  // wrong project was loaded.
+  const name = project?.name || project?.company?.name || t`This project`;
 
   function send() {
     const q = draft.trim();

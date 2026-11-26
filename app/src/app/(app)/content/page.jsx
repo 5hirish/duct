@@ -58,7 +58,8 @@ export default function ContentLandingPage() {
   const [tab, setTab] = useState("plans");
   const projectId = useActiveProjectId();
   const project = useMemo(() => (projectId ? getProjectById(projectId) : null), [projectId]);
-  const projectName = project?.profile?.company?.name || project?.name || t`Project`;
+  // Project name first, like the switcher; see DeskComposer for why.
+  const projectName = project?.name || project?.profile?.company?.name || t`Project`;
 
   // A link from outside the hub (the plan board's first-run fixes) names its
   // tab; read once here rather than with useSearchParams, which would make the
