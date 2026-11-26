@@ -230,6 +230,23 @@ def test_tool_schema_inlines_enums_and_strips_pydantic_noise():
     assert cell["required"] == ["label"]
 
 
+def test_tool_schema_keeps_a_real_union():
+    """A union of two non-null types (a name, or a row) keeps its anyOf,
+    with each side cleaned. It used to recurse until the stack ran out."""
+    from pydantic import BaseModel, Field
+
+    class Row(BaseModel):
+        name: str
+
+    class Inp(BaseModel):
+        items: list[str | Row] | None = Field(None, description="names or rows")
+
+    items = tool_schema(Inp)["properties"]["items"]
+    assert items["description"] == "names or rows"
+    assert items["items"]["anyOf"][0] == {"type": "string"}
+    assert items["items"]["anyOf"][1]["properties"] == {"name": {"type": "string"}}
+
+
 # --- shutdown: close_all_sessions drains SSE streams -------------------------
 
 def test_close_all_sessions_sentinels_sse_and_clears_registry():

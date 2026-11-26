@@ -560,7 +560,8 @@ Postgres `DATABASE_URL` names.
   edit the same rows, and the review_post sub-agent role-plays each one into
   `last_assessment.personas`, advice that never moves the overall score. A
   persona may carry `quotes`, lines that audience really said; only the
-  Brand tab writes them, and `persona_shape` keeps them through any writer
+  Brand tab and MCP `update_project` (the person, through their agent) write
+  them, a draft never does, and `persona_shape` keeps them through any writer
   that sends a persona without the key. The panel is built against what the
   2026 digital-twin studies (Columbia's mega-study, Stanford's 1,052
   interviews) found twins get wrong: the reason to scroll past comes first

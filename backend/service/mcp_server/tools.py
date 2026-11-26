@@ -29,7 +29,7 @@ the reasoning on the person's own subscription, and Duct stores the result.
 from __future__ import annotations
 
 import re
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 from urllib.parse import urlparse
 from uuid import UUID, uuid4
 
@@ -49,8 +49,10 @@ from service.project_config import (
 from service.project_draft import (
     FIELDS,
     MAX_DRAFT_PERSONAS,
+    MAX_PERSONA_QUOTES,
     PERSONA_DESCRIPTION_MAX,
     PERSONA_NAME_MAX,
+    PERSONA_QUOTE_MAX,
     PROVENANCE_CRAWL,
     PROVENANCE_DOCUMENT,
     PROVENANCE_INFERRED,
@@ -289,9 +291,20 @@ class DraftArgs(BaseModel):
     )
 
 
+def _persona(p: PersonaIn) -> tuple:
+    # A persona without ``quotes`` is a pair, and a pair keeps the quotes
+    # already stored under its name (``persona_shape``); a list, even an
+    # empty one, replaces them.
+    quotes = getattr(p, "quotes", None)
+    return (p.name, p.description) if quotes is None else (p.name, p.description, quotes)
+
+
 def _draft_value(name: str, value: Any) -> Any:
     if name == "personas":
-        return persona_rows((p.name, p.description) for p in value)
+        return persona_rows(_persona(p) for p in value)
+    if name == "content_pillars":
+        return [p.strip() if isinstance(p, str) else {"name": p.name.strip(), "description": p.description.strip()}
+                for p in value]
     if name == "competitors":
         return [{"name": c.name.strip(), "differentiator": c.differentiator.strip()} for c in value if c.name.strip()]
     return value.strip() if isinstance(value, str) else value
@@ -396,11 +409,59 @@ def draft_project(args: DraftArgs, caller: Caller) -> dict[str, Any]:
 
 # -- update_project ----------------------------------------------------------
 
+# Quotes are what the audience really said, so only an edit can carry them:
+# the person pasted or approved them in this conversation. A draft reads
+# files, and a quote lifted from a README is marketing, not a customer.
+class PersonaEdit(PersonaIn):
+    quotes: list[Annotated[str, Field(max_length=PERSONA_QUOTE_MAX)]] | None = Field(
+        None,
+        max_length=MAX_PERSONA_QUOTES,
+        description=(
+            "Up to 3 things this audience really said (a review, a comment, a support email), one "
+            "short line each. Only lines the person gave you or approved, never ones you wrote. "
+            "Leave it out to keep the quotes already there; an empty list clears them."
+        ),
+    )
+
+
+class PillarEdit(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    name: str = Field(max_length=80, description="The theme, a few words.")
+    description: str = Field("", max_length=400, description="What posts under it cover.")
+
+
+class EditFields(DraftFields):
+    personas: list[PersonaEdit] | None = Field(
+        None, max_length=MAX_DRAFT_PERSONAS, description="Who buys it, primary first."
+    )
+    # A draft names pillars; an edit may also say what one covers, which the
+    # planner reads. A pillar keeps its id (posts are filed under it) when its
+    # name is unchanged.
+    content_pillars: list[str | PillarEdit] | None = Field(
+        None,
+        max_length=6,
+        description=(
+            "The 3 to 6 themes its marketing returns to: a name, or {name, description} to also "
+            "say what posts under it cover. A name sent alone keeps the description it has."
+        ),
+    )
+
+    @field_validator("content_pillars")
+    @classmethod
+    def _short_pillars(cls, v: list[str | PillarEdit] | None) -> list[str | PillarEdit] | None:
+        if v is None:
+            return v
+        names = [p if isinstance(p, str) else p.name for p in v]
+        if any(len(n) > 80 for n in names):
+            raise ValueError("each pillar is a few words (80 characters at most)")
+        return [p.strip() if isinstance(p, str) else p for p in v if (p if isinstance(p, str) else p.name).strip()]
+
+
 class UpdateArgs(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     project_id: UUID = Field(description="The project to edit, from list_projects.")
-    fields: DraftFields = Field(
+    fields: EditFields = Field(
         description="Only the fields the person asked to change, with the new value. An empty value clears it."
     )
 
@@ -418,7 +479,7 @@ def update_project(args: UpdateArgs, caller: Caller) -> dict[str, Any]:
 
     values = {
         name: _draft_value(name, value)
-        for name in DraftFields.model_fields
+        for name in EditFields.model_fields
         if (value := getattr(args.fields, name)) is not None
     }
     if not values:

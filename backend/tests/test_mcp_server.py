@@ -430,6 +430,53 @@ def test_an_edit_reaches_only_the_callers_projects_and_needs_a_field(env):
     assert empty["isError"]
 
 
+def test_an_edit_sets_persona_quotes_and_a_draft_cannot(env):
+    ana = env.user("ana@acme.example")
+    project = env.project(ana)
+    token = env.token(ana)
+
+    def edit(persona):
+        out = env.call(token, "update_project", {"project_id": str(project.id), "fields": {"personas": [persona]}})
+        assert not out["isError"], out
+        env.session.refresh(project)
+        return project.audience["personas"][0].get("quotes")
+
+    assert edit({"name": "Maya", "quotes": [" type me ", "type me", "I hate my season's colors"]}) == [
+        "type me", "I hate my season's colors",
+    ]
+    # An agent rewriting the description never saw the quotes: they stay.
+    assert edit({"name": "Maya", "description": "Three apps, three seasons."}) == [
+        "type me", "I hate my season's colors",
+    ]
+    assert edit({"name": "Maya", "quotes": []}) == []
+
+    too_many = env.call(token, "update_project", {"project_id": str(project.id), "fields": {
+        "personas": [{"name": "Maya", "quotes": ["a", "b", "c", "d"]}]}})
+    assert too_many["isError"]
+
+    # Pillars: an edit can say what one covers, and the pillar keeps its id
+    # (posts are filed under it); a name sent alone keeps its description.
+    project.content_pillars = {"items": [
+        {"id": "no_scores", "name": "No scores", "description": "Why MaxAura never rates you."},
+        {"id": "seasons", "name": "Seasons", "description": "What a season is.", "research_hint": "r/coloranalysis"},
+    ]}
+    env.session.add(project)
+    env.session.commit()
+    out = env.call(token, "update_project", {"project_id": str(project.id), "fields": {"content_pillars": [
+        {"name": "No scores", "description": "Why Coloris never rates you."}, "Seasons"]}})
+    assert not out["isError"], out
+    env.session.refresh(project)
+    assert project.content_pillars["items"] == [
+        {"id": "no_scores", "name": "No scores", "description": "Why Coloris never rates you."},
+        {"id": "seasons", "name": "Seasons", "description": "What a season is.", "research_hint": "r/coloranalysis"},
+    ]
+
+    # A draft reads files, and a line from a README is not the audience speaking.
+    drafted = env.call(token, "draft_project", {"project_id": str(project.id), "fields": {
+        "personas": [{"name": "Maya", "quotes": ["Best app ever!"]}]}})
+    assert drafted["isError"]
+
+
 def test_undo_puts_back_the_old_values_and_labels_once(env):
     ana = env.user("ana@acme.example")
     project = env.project(ana, pitch="Old pitch", industry="Education", provenance={"pitch": PROVENANCE_USER})

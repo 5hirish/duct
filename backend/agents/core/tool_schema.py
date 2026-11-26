@@ -61,7 +61,12 @@ def tool_schema(model: type[BaseModel]) -> dict[str, Any]:
             rest = {k: v for k, v in node.items() if k != "anyOf"}
             if len(variants) == 1:
                 return clean({**variants[0], **rest})  # field-level keys (description) win
-            return clean({**rest, "anyOf": variants})
+            # A real union (str | Model) keeps its anyOf. Cleaning the same
+            # node again re-entered this branch forever, unnoticed until the
+            # first tool argument with two non-null variants.
+            out = {k: clean(v) for k, v in rest.items() if k not in _SCHEMA_DROP_KEYS}
+            out["anyOf"] = clean(variants)
+            return out
         if "$ref" in node:  # inline the enum/nested def in place
             target = dict(defs.get(node["$ref"].split("/")[-1], {}))
             target.update({k: v for k, v in node.items() if k != "$ref"})
