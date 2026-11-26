@@ -750,6 +750,14 @@ msgstr ""
 msgid "{planAccount} — no API key, no extra bill."
 msgstr ""
 
+#: src/components/models/UsagePanel.jsx
+msgid "{planCalls, plural, one {plus # call on your ChatGPT plan} other {plus # calls on your ChatGPT plan}}"
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "{planCalls} on your ChatGPT plan"
+msgstr ""
+
 #: src/components/content/AccountsTab.jsx
 msgid "{platform} · via {scheduler}"
 msgstr ""
@@ -1812,6 +1820,10 @@ msgstr ""
 msgid "All notes"
 msgstr ""
 
+#: src/components/models/UsagePanel.jsx
+msgid "all on your ChatGPT plan, no key charged"
+msgstr ""
+
 #: src/components/content/AnalyticsView.jsx
 msgid "All posts <0>· {rowCount}</0>"
 msgstr ""
@@ -2809,6 +2821,10 @@ msgstr ""
 #: src/components/insights/InsightsWorkspace.jsx
 #: src/components/workspace/SplitWorkspace.jsx
 msgid "Chat"
+msgstr ""
+
+#: src/components/models/UsagePanel.jsx
+msgid "ChatGPT plan"
 msgstr ""
 
 #: src/components/onboarding/ProviderStep.jsx

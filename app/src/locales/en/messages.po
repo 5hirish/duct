@@ -750,6 +750,14 @@ msgstr "{pillarCount, plural, one {# content pillar} other {# content pillars}}"
 msgid "{planAccount} — no API key, no extra bill."
 msgstr "{planAccount} — no API key, no extra bill."
 
+#: src/components/models/UsagePanel.jsx
+msgid "{planCalls, plural, one {plus # call on your ChatGPT plan} other {plus # calls on your ChatGPT plan}}"
+msgstr "{planCalls, plural, one {plus # call on your ChatGPT plan} other {plus # calls on your ChatGPT plan}}"
+
+#: src/components/models/UsagePanel.jsx
+msgid "{planCalls} on your ChatGPT plan"
+msgstr "{planCalls} on your ChatGPT plan"
+
 #: src/components/content/AccountsTab.jsx
 msgid "{platform} · via {scheduler}"
 msgstr "{platform} · via {scheduler}"
@@ -1818,6 +1826,10 @@ msgstr "All documents in this thread"
 msgid "All notes"
 msgstr "All notes"
 
+#: src/components/models/UsagePanel.jsx
+msgid "all on your ChatGPT plan, no key charged"
+msgstr "all on your ChatGPT plan, no key charged"
+
 #: src/components/content/AnalyticsView.jsx
 msgid "All posts <0>· {rowCount}</0>"
 msgstr "All posts <0>· {rowCount}</0>"
@@ -2816,6 +2828,10 @@ msgstr "Charges on your own provider key. Duct never bills them."
 #: src/components/workspace/SplitWorkspace.jsx
 msgid "Chat"
 msgstr "Chat"
+
+#: src/components/models/UsagePanel.jsx
+msgid "ChatGPT plan"
+msgstr "ChatGPT plan"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "ChatGPT sign-in isn't available for this account right now"

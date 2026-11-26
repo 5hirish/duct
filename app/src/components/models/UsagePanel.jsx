@@ -42,7 +42,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Cpu, KeyRound, Layers, LockKeyhole, Wallet } from "lucide-react";
 import { Plural, Trans, useLingui } from "@lingui/react/macro";
-import { msg } from "@lingui/core/macro";
+import { msg, plural } from "@lingui/core/macro";
 import { hasAuthToken } from "@/lib/authFetch";
 import { Button } from "@/components/ui/button";
 import EmptyState from "@/components/ui/empty-state";
@@ -134,6 +134,11 @@ function Breakdown({ title, icon: Icon, rows, total, labelFor, empty }) {
         <ul className="usage-rows">
           {rows.map((row) => {
             const cost = formatCost(row.cost_usd);
+            // Served wholly on the ChatGPT plan: no key was charged, and the
+            // plan's price does not move with use, so it names the plan
+            // rather than a dollar figure or a bare token count.
+            const onPlan = row.plan_calls > 0 && row.plan_calls === row.calls;
+            const planCalls = row.plan_calls || 0;
             const percent = Math.round(share(row.total_tokens, total) * 100);
             const tokens = formatTokens(row.total_tokens);
             const cached = formatTokens(row.cached_tokens);
@@ -145,7 +150,9 @@ function Breakdown({ title, icon: Icon, rows, total, labelFor, empty }) {
                   {/* No dollar figure rather than a made-up one: the price
                       table does not know every model, and $0.00 would read as
                       free. */}
-                  <span className="usage-row-cost">{cost ?? formatTokens(row.total_tokens)}</span>
+                  <span className="usage-row-cost">
+                    {onPlan ? t`ChatGPT plan` : cost ?? formatTokens(row.total_tokens)}
+                  </span>
                 </div>
                 <div
                   className="usage-bar"
@@ -165,6 +172,12 @@ function Breakdown({ title, icon: Icon, rows, total, labelFor, empty }) {
                       {tokens} tokens · <Plural value={calls} one="# call" other="# calls" />
                     </Trans>
                   )}
+                  {planCalls > 0 && !onPlan ? (
+                    <>
+                      {" · "}
+                      <Trans>{planCalls} on your ChatGPT plan</Trans>
+                    </>
+                  ) : null}
                 </div>
               </li>
             );
@@ -180,7 +193,7 @@ function Breakdown({ title, icon: Icon, rows, total, labelFor, empty }) {
  * so the empty state can render it over invented numbers — the sample and the
  * real thing are the same component or the sample is a lie about the product.
  */
-function UsageReport({ usage, modelName }) {
+export function UsageReport({ usage, modelName }) {
   const { t, i18n } = useLingui();
   const total = usage.total || EMPTY_USAGE.total;
   const cost = formatCost(total.cost_usd);
@@ -190,14 +203,26 @@ function UsageReport({ usage, modelName }) {
   const windowDays = usage.window_days;
   const tokensIn = formatTokens(total.input_tokens);
   const tokensOut = formatTokens(total.output_tokens);
+  // Calls on the ChatGPT plan are usage, never spend: Spent is what the
+  // person's keys were charged, and the plan's price is flat.
+  const planCalls = total.plan_calls || 0;
+  const allOnPlan = planCalls > 0 && planCalls === total.calls;
+  let spentHint = cost ? t`over ${windowDays} days` : t`no price for these models`;
+  if (allOnPlan) spentHint = t`all on your ChatGPT plan, no key charged`;
+  else if (planCalls > 0) {
+    spentHint = plural(planCalls, {
+      one: "plus # call on your ChatGPT plan",
+      other: "plus # calls on your ChatGPT plan",
+    });
+  }
 
   return (
     <>
       <div className="usage-stats">
         <Stat
           label={t`Spent`}
-          value={cost ?? "—"}
-          hint={cost ? t`over ${windowDays} days` : t`no price for these models`}
+          value={cost ?? (allOnPlan ? formatCost(0) : "—")}
+          hint={spentHint}
         />
         <Stat
           label={t`Tokens`}

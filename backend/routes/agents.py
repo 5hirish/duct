@@ -69,7 +69,7 @@ from agents.insights.setup import (
 )
 from agents.core import session as _core_session
 from agents.core.context import format_business_context
-from agents.core.codex import renew_subscription_credential
+from agents.core.codex import is_plan_credential, renew_subscription_credential
 from agents.models import Provider, run_model_fields
 from agents.core.events import AgentEvent, StepStatus
 from agents.core.errors import error_payload
@@ -508,6 +508,13 @@ async def create_session(
             user_id=session.user_id,
             project_id=getattr(session, "artifact_project_id", None) or getattr(session, "project_id", None),
             agent_type=agent_type,
+            # A header credential wins over a saved key for its provider
+            # (providers.status ranks them the same way), so a plan sent here
+            # is what this run's calls to that provider are served on.
+            plan_providers=frozenset(
+                getattr(p, "value", str(p)) for p, key in (user_keys or {}).items()
+                if is_plan_credential(p, key or "")
+            ),
         )
 
     async def emit_fn(event_body: dict[str, Any]) -> None:

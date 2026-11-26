@@ -65,6 +65,7 @@ def record_usage_event(
     agent_type: str,
     provider: str = "",
     tier: str = "",
+    on_plan: bool = False,
 ) -> None:
     """Store one TOKEN_USAGE event. Synchronous; call it off the loop."""
     row = ModelUsage(
@@ -84,6 +85,7 @@ def record_usage_event(
         cache_read_tokens=int(body.get("cache_read_tokens") or 0),
         cache_creation_tokens=int(body.get("cache_creation_tokens") or 0),
         cost_micros=_micros(body.get("cost_usd")),
+        on_plan=on_plan,
     )
     with next(db_session()) as db:
         db.add(row)
@@ -148,6 +150,9 @@ class UsageSlice:
     output_tokens: int = 0
     cached_tokens: int = 0
     cost_micros: int | None = None
+    # Calls served on the ChatGPT plan: counted in calls and tokens, never in
+    # cost_micros, because the plan's price does not move with them.
+    plan_calls: int = 0
 
     @property
     def total_tokens(self) -> int:
@@ -163,6 +168,7 @@ class UsageSlice:
             "total_tokens": self.total_tokens,
             # Dollars at the edge, micros everywhere inside.
             "cost_usd": None if self.cost_micros is None else self.cost_micros / MICROS_PER_USD,
+            "plan_calls": self.plan_calls,
         }
 
 
@@ -198,15 +204,22 @@ def _slice_from_row(key: str, row) -> UsageSlice:
         # SUM over a nullable column is NULL only when every row was NULL, which
         # is exactly the "we do not know what this cost" case worth preserving.
         cost_micros=None if row.cost_micros is None else int(row.cost_micros),
+        plan_calls=int(row.plan_calls or 0),
     )
 
+
+# What a call charged the person's key: nothing when it ran on their plan.
+# NULL rather than 0, so a slice served wholly on the plan reads "no charge to
+# a key" (tokens, no dollar figure) and never a confident $0.00 beside a key's.
+_CHARGED = sa.case((ModelUsage.on_plan, sa.null()), else_=ModelUsage.cost_micros)
 
 _AGGREGATES = (
     sa.func.count().label("calls"),
     sa.func.coalesce(sa.func.sum(ModelUsage.input_tokens), 0).label("input_tokens"),
     sa.func.coalesce(sa.func.sum(ModelUsage.output_tokens), 0).label("output_tokens"),
     sa.func.coalesce(sa.func.sum(ModelUsage.cache_read_tokens), 0).label("cached_tokens"),
-    sa.func.sum(ModelUsage.cost_micros).label("cost_micros"),
+    sa.func.sum(_CHARGED).label("cost_micros"),
+    sa.func.coalesce(sa.func.sum(sa.case((ModelUsage.on_plan, 1), else_=0)), 0).label("plan_calls"),
 )
 
 
@@ -245,7 +258,7 @@ def summarise(
                 .group_by(column)
                 # Cost first so the expensive thing is the first thing read; a
                 # NULL cost sorts last rather than looking free.
-                .order_by(sa.func.coalesce(sa.func.sum(ModelUsage.cost_micros), 0).desc())
+                .order_by(sa.func.coalesce(sa.func.sum(_CHARGED), 0).desc())
             ).all()
             target.extend(_slice_from_row(row[0], row) for row in rows)
 

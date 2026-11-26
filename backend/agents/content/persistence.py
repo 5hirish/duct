@@ -490,6 +490,7 @@ class ConversationRecorder:
         self._usage_user_id: UUID | None = None
         self._usage_project_id: UUID | None = None
         self._usage_agent_type: str = ""
+        self._usage_plan_providers: frozenset[str] = frozenset()
 
     def set_usage_context(
         self,
@@ -497,8 +498,13 @@ class ConversationRecorder:
         user_id: UUID | None,
         project_id: UUID | None = None,
         agent_type: str = "",
+        plan_providers: frozenset[str] = frozenset(),
     ) -> None:
         """Attribute this conversation's model calls to a user.
+
+        ``plan_providers`` names the providers this run reaches on the
+        person's own plan rather than a key (today, OpenAI on a ChatGPT
+        sign-in): their calls are usage, not spend.
 
         Called from the one place that creates a session for every agent type,
         so a new agent is covered by existing code rather than by remembering
@@ -507,6 +513,7 @@ class ConversationRecorder:
         self._usage_user_id = user_id
         self._usage_project_id = project_id
         self._usage_agent_type = agent_type
+        self._usage_plan_providers = frozenset(plan_providers)
 
     async def _record_usage(self, body: dict) -> None:
         """Store one model call's tokens and cost.
@@ -527,6 +534,7 @@ class ConversationRecorder:
         from service.usage import record_usage_event
 
         provider = provider_of(str(body.get("model") or ""))
+        provider_id = getattr(provider, "value", "") if provider else ""
         await asyncio.to_thread(
             record_usage_event,
             body,
@@ -534,7 +542,10 @@ class ConversationRecorder:
             project_id=self._usage_project_id,
             conversation_id=self.conversation_id,
             agent_type=self._usage_agent_type,
-            provider=getattr(provider, "value", "") if provider else "",
+            provider=provider_id,
+            # Per call, from the model that answered: a fallback to another
+            # provider inside a plan run is billed to that provider's key.
+            on_plan=provider_id in self._usage_plan_providers,
         )
 
     def wrap_emit(self, emit_fn):

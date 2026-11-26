@@ -646,6 +646,14 @@ msgstr "{pillarCount, plural, other {# 个内容支柱}}"
 msgid "{planAccount} — no API key, no extra bill."
 msgstr "{planAccount}——无需 API 密钥，无额外费用。"
 
+#: src/components/models/UsagePanel.jsx
+msgid "{planCalls, plural, one {plus # call on your ChatGPT plan} other {plus # calls on your ChatGPT plan}}"
+msgstr "{planCalls, plural, one {外加 ChatGPT 订阅计划中的 # 次调用} other {外加 ChatGPT 订阅计划中的 # 次调用}}"
+
+#: src/components/models/UsagePanel.jsx
+msgid "{planCalls} on your ChatGPT plan"
+msgstr "{planCalls} 次来自你的 ChatGPT 订阅计划"
+
 #: src/components/content/AccountsTab.jsx
 msgid "{platform} · via {scheduler}"
 msgstr "{platform} · 通过 {scheduler}"
@@ -1544,6 +1552,10 @@ msgstr "此线程中的所有文档"
 msgid "All notes"
 msgstr "所有笔记"
 
+#: src/components/models/UsagePanel.jsx
+msgid "all on your ChatGPT plan, no key charged"
+msgstr "全部来自你的 ChatGPT 订阅计划，不消耗 Key"
+
 #: src/components/content/AnalyticsView.jsx
 msgid "All posts <0>· {rowCount}</0>"
 msgstr "所有帖子 <0>· {rowCount}</0>"
@@ -2441,6 +2453,10 @@ msgstr "费用由你自己的提供商密钥承担。Duct 从不向你收费。"
 #: src/components/workspace/SplitWorkspace.jsx
 msgid "Chat"
 msgstr "聊天"
+
+#: src/components/models/UsagePanel.jsx
+msgid "ChatGPT plan"
+msgstr "ChatGPT 订阅计划"
 
 #: src/components/onboarding/ProviderStep.jsx
 msgid "ChatGPT sign-in isn't available for this account right now"

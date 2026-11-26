@@ -127,7 +127,7 @@ import StepProgress from "@/components/workspace/StepProgress";
 import { Row as ChatRow } from "@/lib/agentSession";
 import { StepStatus } from "@/lib/agentSteps";
 import VoiceSample from "@/components/profile/VoiceSample";
-import { UsageEmpty } from "@/components/models/UsagePanel";
+import { UsageEmpty, UsageReport } from "@/components/models/UsagePanel";
 import { TIERS } from "@/lib/modelTiers";
 import { Button } from "@/components/ui/button";
 import { AccountMenuItems, NotificationRow } from "@/components/AppSidebar";
@@ -1353,6 +1353,23 @@ const MODEL_PROVIDERS_ON_PLAN = {
   ...MODEL_PROVIDERS,
   google_genai: { ...MODEL_PROVIDERS.google_genai, source: "none", reachable: false },
   openai: { id: "openai", label: "OpenAI", source: "subscription", reachable: true, engines: ["v1"] },
+};
+
+// One month where the conversation ran on a ChatGPT plan and the pictures on
+// a Gemini key: the plan's calls count as usage and never as spend.
+const USAGE_WITH_PLAN = {
+  window_days: 30,
+  total: { calls: 67, plan_calls: 41, input_tokens: 4_100_000, output_tokens: 132_000, cached_tokens: 3_500_000, total_tokens: 4_232_000, cost_usd: 0.42 },
+  by_agent: [{ key: "content", calls: 67, plan_calls: 41, total_tokens: 4_232_000, cached_tokens: 3_500_000, cost_usd: 0.42 }],
+  by_model: [
+    { key: "Gemini 3.8 Flash", calls: 26, plan_calls: 0, total_tokens: 1_600_000, cached_tokens: 1_200_000, cost_usd: 0.42 },
+    { key: "GPT-6.1 Sol", calls: 41, plan_calls: 41, total_tokens: 2_632_000, cached_tokens: 2_300_000, cost_usd: null },
+  ],
+  by_provider: [
+    { key: "google_genai", calls: 26, plan_calls: 0, total_tokens: 1_600_000, cached_tokens: 1_200_000, cost_usd: 0.42 },
+    { key: "openai", calls: 41, plan_calls: 41, total_tokens: 2_632_000, cached_tokens: 2_300_000, cost_usd: null },
+  ],
+  daily: [],
 };
 
 const MODEL_PICKS = {
@@ -3814,6 +3831,14 @@ export const SCENES = [
         />
       </div>
     ),
+  },
+  {
+    id: "usage-chatgpt-plan",
+    state: "some calls on a key · some on the ChatGPT plan",
+    group: "UsagePanel",
+    title: "Usage when part of it ran on a ChatGPT plan",
+    note: "Calls on the ChatGPT plan are usage, never spend: they add calls and tokens, and Spent says how many ran on the plan instead of pricing them. A row served wholly on the plan names it where the dollar figure goes; a mixed row adds how many of its calls the plan covered.",
+    render: () => <UsageReport usage={USAGE_WITH_PLAN} modelName={(key) => key} />,
   },
 
   // ------------------------------------------------------------------ Shots

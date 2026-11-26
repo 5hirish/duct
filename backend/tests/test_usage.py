@@ -118,3 +118,50 @@ class TestRecorderAttribution:
         rec.set_usage_context(user_id=uuid.uuid4(), agent_type="audit")
         await rec._record_usage({"model": "some-model-we-have-never-heard-of"})
         assert seen["provider"] == ""
+
+    @pytest.mark.asyncio
+    async def test_a_call_on_the_chatgpt_plan_is_marked_and_a_fallback_is_not(self, monkeypatch):
+        """The plan covers its own provider's calls only. A run on the plan
+        that falls back to another provider pays that provider's key."""
+        seen: list = []
+        monkeypatch.setattr("service.usage.record_usage_event", lambda *a, **k: seen.append(k))
+        rec = self._recorder()
+        rec.set_usage_context(user_id=uuid.uuid4(), agent_type="content", plan_providers=frozenset({"openai"}))
+        await rec._record_usage({"model": "gpt-6.1-sol", "input_tokens": 5})
+        await rec._record_usage({"model": "claude-haiku-4-5-20251001", "input_tokens": 5})
+        assert [(k["provider"], k["on_plan"]) for k in seen] == [("openai", True), ("anthropic", False)]
+
+
+def test_plan_calls_count_as_usage_but_not_spend(monkeypatch):
+    """Spent is what the person's keys were charged. A plan's price is flat,
+    so its calls add tokens and calls, never dollars, and a slice served only
+    on the plan says so rather than showing $0.00."""
+    from sqlmodel import Session
+
+    from models.usage import ModelUsage
+    from service import usage
+    from tests.conftest import make_sqlite_engine
+
+    engine = make_sqlite_engine()
+
+    def session():
+        with Session(engine) as db:
+            yield db
+
+    monkeypatch.setattr(usage, "db_session", session)
+    user = uuid.uuid4()
+    with Session(engine) as db:
+        db.add_all([
+            ModelUsage(user_id=user, agent_type="content", provider="google", model="gemini",
+                       input_tokens=100, output_tokens=10, cost_micros=1_000_000),
+            ModelUsage(user_id=user, agent_type="content", provider="openai", model="gpt",
+                       input_tokens=200, output_tokens=20, cost_micros=3_000_000, on_plan=True),
+        ])
+        db.commit()
+
+    out = usage.summarise(user_id=user).as_dict()
+    assert out["total"]["cost_usd"] == 1.0
+    assert (out["total"]["calls"], out["total"]["plan_calls"], out["total"]["total_tokens"]) == (2, 1, 330)
+    by_provider = {row["key"]: row for row in out["by_provider"]}
+    assert by_provider["openai"]["cost_usd"] is None and by_provider["openai"]["plan_calls"] == 1
+    assert by_provider["google"]["cost_usd"] == 1.0
