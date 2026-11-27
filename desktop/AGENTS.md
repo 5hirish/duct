@@ -39,6 +39,11 @@ carries all the code.
   - **`"visible": false` must be set in every config that defines `windows`**,
     for the same reason. All four do (`local` was missing it, which opened
     a blank window beside the splash).
+  - **`"dragDropEnabled": false`, in all four, for the same reason.** Tauri's
+    native file-drop handler is on by default, and on macOS it answers every
+    drag itself, so WKWebView never sees `dragenter` or `drop`: dropping a
+    file on the composer or the document picker did nothing in the app while
+    it worked in a browser. Nothing here listens for Tauri's drop events.
   - **`SPLASH_DEADLINE` reveals the window regardless after 30 s.**
     `on_page_load` never fires if the hosted app is unreachable, and a hidden
     main window behind a splash that never dismisses is an app with no way in
