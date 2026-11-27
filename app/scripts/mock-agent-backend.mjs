@@ -183,10 +183,16 @@ const server = http.createServer(async (req, res) => {
     const session = sessions.get(m[2]);
     if (!session) return json(res, 404, { detail: "Session not found." });
     // What the run is parked on, so a reattaching client can put the card back.
-    const pending = session.waiting === "answer" ? [session.frames.slice(0, session.cursor).reverse().find((f) => f.event === "questions_required")].filter(Boolean) : [];
+    // The real backend is parked from the moment it sends the card; the pump
+    // here only marks it on reaching the wait frame, a frame-gap later, and a
+    // reload inside that gap read "running, nothing pending" and lost the
+    // card (CI, 2026-11-27). The next frame being a wait counts as parked.
+    const next = session.frames[session.cursor];
+    const parked = session.waiting || (next?.__answer__ !== undefined ? "answer" : next?.__send__ !== undefined ? "chat" : null);
+    const pending = parked === "answer" ? [session.frames.slice(0, session.cursor).reverse().find((f) => f.event === "questions_required")].filter(Boolean) : [];
     // `running` as the real route reports it: a turn is in flight while frames
     // are left to play and the session is not parked waiting for the person.
-    const running = !session.waiting && session.cursor < session.frames.length;
+    const running = !parked && session.cursor < session.frames.length;
     const opened = session.frames.slice(0, session.cursor).some((f) => f.event === "pipeline_finished");
     return json(res, 200, { session_id: m[2], agent_type: m[1], report_versions: [], has_pending_question: pending.length > 0, running, opened, pending });
   }
