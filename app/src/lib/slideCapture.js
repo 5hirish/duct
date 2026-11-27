@@ -149,11 +149,23 @@ function inert(node) {
       continue;
     }
     for (const attr of [...el.attributes]) {
-      const value = attr.value.trim().toLowerCase();
-      if (attr.name.startsWith("on") || value.startsWith("javascript:")) el.removeAttribute(attr.name);
+      if (attr.name.toLowerCase().startsWith("on") || unsafeUrl(attr.value)) el.removeAttribute(attr.name);
     }
   }
   return node;
+}
+
+/**
+ * A value that would run or render a document if followed: javascript: and
+ * vbscript:, and any data: URL but an image. Browsers ignore whitespace and
+ * control characters inside a scheme ("java\tscript:"), so they are dropped
+ * before the check. A data: image stays: slides draw grain and textures
+ * that way, and an image runs nothing.
+ */
+export function unsafeUrl(value) {
+  const v = String(value || "").replace(/[\u0000-\u0020]+/g, "").toLowerCase();
+  if (v.startsWith("javascript:") || v.startsWith("vbscript:")) return true;
+  return v.startsWith("data:") && !v.startsWith("data:image/");
 }
 
 function waitForImages(doc, timeoutMs) {
