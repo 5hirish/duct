@@ -192,5 +192,9 @@ async def test_the_session_state_says_whether_a_turn_is_in_flight():
         session.turn_active = False
         state = await agents_routes.get_session_state("insights", "anonymous-run", user=None)
         assert state["running"] is False
+        assert state["opened"] is False
+        session.opened = True
+        state = await agents_routes.get_session_state("insights", "anonymous-run", user=None)
+        assert state["opened"] is True
     finally:
         close_session("anonymous-run")

@@ -291,6 +291,31 @@ def test_generate_image_refuses_more_than_three_references_before_paying():
     assert "max 3" in result["message"]
 
 
+def test_a_photo_for_a_text_card_shows_the_whole_frame():
+    """A text-only post's slide that gets a generated photo becomes a photo
+    slide with its words over the image, so the preview shows the frame the
+    person approved instead of a card that hides it."""
+    from agents.content.tools import _attach_image_to_slide
+    from models.content import ContentPost
+
+    class _FakeDB:
+        def add(self, _row):
+            pass
+
+    row = ContentPost(
+        project_id=uuid4(), post_dir_slug="x", layout="text-only",
+        slides=[
+            {"slide_id": "slide-01", "kind": "text", "headline": "Blunt bob or face-framing layers?"},
+            {"slide_id": "slide-02", "kind": "text", "headline": "Pick the feeling first."},
+        ],
+    )
+    assert _attach_image_to_slide(_FakeDB(), row, "slide-01", asset_id=str(uuid4()), url="https://cdn/bob.jpg", item_index=0)
+    assert row.slides[0]["kind"] == "photo" and row.slides[0]["image_url"] == "https://cdn/bob.jpg"
+    assert row.slides[1]["kind"] == "text"          # only the slide that got a photo changes
+    assert row.layout == "full-bleed"
+    assert "https://cdn/bob.jpg" in row.slides_html and "Blunt bob" in row.slides_html
+
+
 # ---------------------------------------------------------------------------
 # Frontend ↔ backend event-enum mirror — guard against drift
 # ---------------------------------------------------------------------------
@@ -770,3 +795,90 @@ def test_the_writer_schemas_carry_nothing_gemini_refuses():
 
     for model in (PlanDraft, PostDraft):
         assert not list(_empty_enum_members(model.model_json_schema())), model.__name__
+
+
+def test_an_escaped_line_break_in_slide_copy_is_a_real_one():
+    """A model writing JSON by hand sent backslash-n, and the slide showed it
+    (2026-11-27). Stored copy and the rendered slide both read it as a break."""
+    from agents.content.schema import Slide
+    from agents.content.templates import render_slides_html
+
+    slide = Slide.model_validate({"slide_id": "slide-06", "kind": "text", "headline": "Ask for:\\nlayers at the chin"})
+    assert slide.headline == "Ask for:\nlayers at the chin"
+    assert "\\n" not in render_slides_html("full-bleed", [slide])
+    assert "Ask for:<br>layers at the chin" in render_slides_html("full-bleed", [slide])
+
+
+def test_a_design_slide_renders_the_agents_layout_and_nothing_that_runs():
+    """kind "design" is the agent's own HTML and CSS: stored cleaned, scoped to
+    its slide in the one-document slides_html, and drawn the same way the app
+    draws it (renderDesign in app/src/lib/slideDoc.js)."""
+    from agents.content.schema import Slide
+    from agents.content.templates import render_slides_html
+
+    slide = Slide.model_validate({
+        "slide_id": "slide-06", "kind": "design",
+        "html": '<ol class="brief"><li onclick="steal()">Chin length</li></ol>'
+                '<script>steal()</script><iframe src="https://x.example"></iframe>'
+                '<a href="javascript:steal()">go</a>',
+        "css": ".brief{font:600 52px Inter;position:fixed} @import url(https://x.example/a.css); "
+               "</style><script>steal()</script> .bg{background:url(http://x.example/t.png)}",
+    })
+    doc = render_slides_html("full-bleed", [Slide.model_validate({"slide_id": "slide-01"}), slide])
+
+    assert '<div class="slide slide-design" id="slide-02">' in doc
+    assert "@scope (#slide-02) {" in doc and ".brief{font:600 52px Inter;" in doc
+    assert "<li>Chin length</li>" in doc
+    for gone in ("onclick", "<script", "<iframe", "javascript:", "@import", "position:fixed", "http://x.example"):
+        assert gone not in doc.split("</head>", 1)[1], gone
+
+
+@pytest.mark.parametrize("markup", [
+    "<svg/onload=steal()>",
+    "<img src=x onerror=steal()>",
+    "<IMG SRC=JaVaScRiPt:steal()>",
+    '<svg><animate attributeName="href" to="javascript:steal()"/></svg>',
+    '<a href="javascript:steal()">go</a>',
+    "<scr<script>ipt>steal()</script>",
+    '<div style="background:url(javascript:steal())">x</div>',
+    '<svg><use href="https://x.example/s.svg#a"/></svg>',
+    '<svg><rect fill="url(https://x.example/p.svg#g)"/></svg>',
+    '<svg><feimage href="https://x.example/t.png"/></svg>',
+])
+def test_design_markup_that_could_run_is_dropped(markup):
+    """The usual sanitizer bypasses, against the allowlist that replaced a
+    regex denylist after review."""
+    from agents.content.design import clean_design_html
+
+    cleaned = clean_design_html(markup).lower()
+    for sign in ("onload", "onerror", "javascript", "<script", "<animate", "<a ", "x.example", "<feimage"):
+        assert sign not in cleaned, (markup, cleaned)
+
+
+def test_a_design_slide_keeps_the_drawing_and_stays_inside_its_slide():
+    """Creative freedom is the brief: gradients, masks, filters and grain
+    survive cleaning; what cannot survive is a slide reaching past itself, by
+    an unclosed tag, a stray close, another slide's id or another site."""
+    from agents.content.design import clean_design_html, design_slide_markup
+
+    art = (
+        '<svg viewBox="0 0 1080 1920"><defs>'
+        '<linearGradient id="sky" gradientTransform="rotate(90)"><stop offset="0" stop-color="#ff7a59"/></linearGradient>'
+        '<filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3"/>'
+        '<feColorMatrix type="saturate" values="0"/></filter>'
+        '<clipPath id="cut"><circle cx="540" cy="700" r="400"/></clipPath></defs>'
+        '<rect width="1080" height="1920" fill="url(#sky)" filter="url(#grain)" clip-path="url(#cut)"/></svg>'
+    )
+    cleaned = clean_design_html(art)
+    for kept in ("<lineargradient", "<feturbulence", "<clippath", 'fill="url(#sky)"', 'basefrequency="0.8"'):
+        assert kept in cleaned, kept
+
+    assert clean_design_html("<div><p>open") == "<div><p>open</p></div>"
+    assert clean_design_html("</div></div><p>x</p>") == "<p>x</p>"
+    assert "id=" not in clean_design_html('<div id="slide-03">x</div>')
+    assert "src" not in clean_design_html('<img src="//x.example/t.png">')
+
+    slide = design_slide_markup(art, ".hero { mask-image: url(#cut) }", 4)
+    assert 'id="slide-04-sky"' in slide and 'fill="url(#slide-04-sky)"' in slide
+    assert "mask-image: url(#slide-04-cut)" in slide
+    assert slide.endswith("</svg></div></div>")

@@ -73,6 +73,10 @@ class ModelUsage(SQLModel, table=True):
     tier: str = Field(default="", sa_column=Column(String, nullable=False, server_default=""))
     # thread / subagent / compaction — see `_usage_scope` in agents/core/lc.py.
     scope: str = Field(default="thread", sa_column=Column(String, nullable=False, server_default="thread"))
+    # Served on the person's ChatGPT plan, not on a key. The plan's price is
+    # flat, so the call is usage but never spend: `cost_micros` keeps what it
+    # would have cost on a key, and the page's Spent leaves it out.
+    on_plan: bool = Field(default=False, sa_column=Column(sa.Boolean(), nullable=False, server_default=sa.false()))
 
     input_tokens: int = Field(default=0, sa_column=Column(Integer, nullable=False, server_default="0"))
     output_tokens: int = Field(default=0, sa_column=Column(Integer, nullable=False, server_default="0"))

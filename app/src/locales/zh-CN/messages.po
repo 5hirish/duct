@@ -51,6 +51,10 @@ msgstr "(已阅读页面第一部分)"
 msgid "(untitled)"
 msgstr "(无标题)"
 
+#: src/components/content/PlanChanges.jsx
+msgid "(was {from})"
+msgstr "（原为 {from}）"
+
 #: src/components/ProjectMembers.jsx
 msgid "(you)"
 msgstr "(你)"
@@ -84,6 +88,11 @@ msgstr "{0, plural, other {比上个计划少 #}}"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "{0, plural, one {# match} other {# matches}}"
 msgstr "{0, plural, other {# 个匹配项}}"
+
+#. placeholder {0}: fields.length
+#: src/components/content/PlanChanges.jsx
+msgid "{0, plural, one {# more change} other {# more changes}}"
+msgstr "{0, plural, other {还有 # 项变更}}"
 
 #. placeholder {0}: row.change
 #: src/components/content/PlanStrategy.jsx
@@ -140,6 +149,11 @@ msgstr "{0, plural, other {显示 # 个更多}}"
 msgid "{0, plural, one {Show all #} other {Show all #}}"
 msgstr "{0, plural, other {显示全部 #}}"
 
+#. placeholder {0}: slides.length
+#: src/components/content/PostViewport.jsx
+msgid "{0, plural, one {The slide is ready to publish.} other {All # slides are ready to publish.}}"
+msgstr "{0, plural, one {幻灯片已准备好发布。} other {所有 # 张幻灯片已准备好发布。}}"
+
 #. placeholder {0}: items.length
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "{0, plural, one {Working on # thing} other {Working on # things}}"
@@ -154,6 +168,12 @@ msgstr "{0, plural, other {正在工作。# 个工具已准备好进行洞察对
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "{0, plural, one {You asked this # time} other {You asked this # times}}"
 msgstr "{0, plural, other {你已询问此项 # 次}}"
+
+#. placeholder {0}: formatDate(when, { locale: i18n.locale, withYear: false })
+#. placeholder {1}: formatTime(when, { locale: i18n.locale })
+#: src/components/content/PublishModal.jsx
+msgid "{0} at {1}"
+msgstr "{0} {1}"
 
 #. placeholder {0}: meta.failed
 #: src/components/workspace/ActivityRow.jsx
@@ -192,8 +212,8 @@ msgid "{0} sources"
 msgstr "{0} 个来源"
 
 #: src/components/content/PublishReviewPanel.jsx
-msgid "{action}: {verdict}"
-msgstr "{action}: {verdict}"
+#~ msgid "{action}: {verdict}"
+#~ msgstr "{action}: {verdict}"
 
 #: src/components/settings/AgentGrantPicker.jsx
 msgid "{agent} also asked for <0>{askedNames}</0>. Turn it on in Customise if you want it."
@@ -453,8 +473,8 @@ msgid "{label} publishes the post and its first reply."
 msgstr "{label} 发布帖子及其第一条回复。"
 
 #: src/components/content/PublishReviewPanel.jsx
-msgid "{label} score"
-msgstr "{label} 评分"
+#~ msgid "{label} score"
+#~ msgstr "{label} 评分"
 
 #: src/app/(app)/content/page.jsx
 #: src/components/content/PlanBoard.jsx
@@ -619,8 +639,8 @@ msgid "{passCount} passing"
 msgstr "{passCount} 个通过"
 
 #: src/components/content/PublishReviewPanel.jsx
-msgid "{passed} of {total} checks pass"
-msgstr "{total} 个检查中，{passed} 个通过"
+#~ msgid "{passed} of {total} checks pass"
+#~ msgstr "{total} 个检查中，{passed} 个通过"
 
 #: src/components/content/PostViewport.jsx
 msgid "{pending, plural, one {Approve & generate # image — one by one} other {Approve & generate # images — one by one}}"
@@ -645,6 +665,18 @@ msgstr "{pillarCount, plural, other {# 个内容支柱}}"
 #: src/components/onboarding/ProviderStep.jsx
 msgid "{planAccount} — no API key, no extra bill."
 msgstr "{planAccount}——无需 API 密钥，无额外费用。"
+
+#: src/components/models/UsagePanel.jsx
+msgid "{planCalls, plural, one {plus # call on your ChatGPT plan} other {plus # calls on your ChatGPT plan}}"
+msgstr "{planCalls, plural, one {外加 ChatGPT 订阅计划中的 # 次调用} other {外加 ChatGPT 订阅计划中的 # 次调用}}"
+
+#: src/components/models/UsagePanel.jsx
+msgid "{planCalls} on your ChatGPT plan"
+msgstr "{planCalls} 次来自你的 ChatGPT 订阅计划"
+
+#: src/components/models/TierSummary.jsx
+msgid "{planName} · {planModelName} only"
+msgstr "{planName} · 仅限 {planModelName}"
 
 #: src/components/content/AccountsTab.jsx
 msgid "{platform} · via {scheduler}"
@@ -694,6 +726,10 @@ msgstr "{read}，部分已读"
 msgid "{ready} of {total} ready"
 msgstr "{total} 个中，{ready} 个已就绪"
 
+#: src/components/content/PostViewport.jsx
+msgid "{ready} of {total} slides ready · slide {nextN} needs a picture"
+msgstr "{ready} / {total} 张幻灯片已就绪 · 幻灯片 {nextN} 需要图片"
+
 #: src/components/execution/ChangeSetCard.jsx
 msgid "{ready} of {total} will apply · {blocked, plural, one {# needs a person} other {# need a person}}"
 msgstr "{total} 个中，{ready} 个将应用 · {blocked, plural, other {# 个需要人工处理}}"
@@ -725,6 +761,10 @@ msgstr "{robotsLines} 行"
 #: src/components/schedules/ScheduleCard.jsx
 #~ msgid "{runs} of {cap} runs this month"
 #~ msgstr "本月已运行 {runs} / {cap} 次"
+
+#: src/components/content/PublishModal.jsx
+msgid "{scheduler} can take a minute."
+msgstr "{scheduler} 可能需要一分钟。"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "{scheduler} hasn’t reported a post for {names} and {more} more yet."
@@ -770,6 +810,14 @@ msgstr "{size} 上下文"
 #: src/components/content/PostViewport.jsx
 msgid "{slideCount, plural, one {# slide} other {# slides}}"
 msgstr "{slideCount, plural, other {# 张幻灯片}}"
+
+#: src/components/content/PublishModal.jsx
+msgid "{slides, plural, one {# slide} other {# slides}}"
+msgstr "{slides, plural, other {# 张幻灯片}}"
+
+#: src/components/content/PublishModal.jsx
+msgid "{slides, plural, one {Sending # slide and the caption.} other {Sending # slides and the caption.}}"
+msgstr "{slides, plural, other {正在发送 # 张幻灯片和文案。}}"
 
 #: src/components/content/SynthesisPanel.jsx
 msgid "{slideShare} of posts · <0>{slideEng}</0> eng."
@@ -830,6 +878,10 @@ msgstr "{total, plural, other {已授予全部 # 项}}"
 #: src/components/insights/desk/DeskLists.jsx
 msgid "{total, plural, one {Show all #} other {Show all #}}"
 msgstr "{total, plural, other {显示全部 #}}"
+
+#: src/components/content/PlanViewport.jsx
+msgid "{updatedCount, plural, one {Saved · # day updated} other {Saved · # days updated}}"
+msgstr "{updatedCount, plural, one {已保存 · 已更新 # 天} other {已保存 · 已更新 # 天}}"
 
 #: src/components/schedules/ScheduleCard.jsx
 msgid "{used} of {cap} runs this month"
@@ -1102,6 +1154,10 @@ msgstr "一个为你撰写的发现"
 #: src/components/content/DraftsQueue.jsx
 msgid "A good default for {channelLabel} until five posts have numbers."
 msgstr "对于 {channelLabel} 来说，这是一个很好的默认值，直到有五个帖子有数据。"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "A guess until it has been tested on five of your published posts."
+msgstr "在你的 5 个已发布帖子中测试前，这只是猜测。"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "A helper agent answered"
@@ -1516,9 +1572,14 @@ msgstr "全部"
 msgid "All"
 msgstr "全部"
 
+#. placeholder {0}: checks.length
 #: src/components/content/PublishReviewPanel.jsx
-msgid "All {total} checks pass"
-msgstr "全部 {total} 项检查通过"
+msgid "All {0} checks pass"
+msgstr "所有 {0} 项检查均已通过"
+
+#: src/components/content/PublishReviewPanel.jsx
+#~ msgid "All {total} checks pass"
+#~ msgstr "全部 {total} 项检查通过"
 
 #: src/app/(app)/execute/page.jsx
 msgid "all accounts"
@@ -1543,6 +1604,10 @@ msgstr "此线程中的所有文档"
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "All notes"
 msgstr "所有笔记"
+
+#: src/components/models/UsagePanel.jsx
+msgid "all on your ChatGPT plan, no key charged"
+msgstr "全部来自你的 ChatGPT 订阅计划，不消耗 Key"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "All posts <0>· {rowCount}</0>"
@@ -1921,6 +1986,10 @@ msgstr "询问 Duct 一些事情"
 msgid "Ask Duct to refine the plan or post…"
 msgstr "让 Duct 优化计划或帖子…"
 
+#: src/components/content/PostViewport.jsx
+msgid "Ask for a change to slide {n}"
+msgstr "要求修改幻灯片 {n}"
+
 #: src/components/settings/AgentAccess.jsx
 msgid "Ask it to set up your project"
 msgstr "让它设置你的项目"
@@ -1993,6 +2062,10 @@ msgstr "受众"
 #: src/components/content/BrandContextForm.jsx
 msgid "Audience personas"
 msgstr "目标受众画像"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Audience pick"
+msgstr "受众首选"
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Audience, competitors, positioning"
@@ -2077,6 +2150,10 @@ msgstr "返回"
 msgid "Back to Duct's defaults"
 msgstr "恢复 Duct 默认设置"
 
+#: src/components/content/PostViewport.jsx
+msgid "Back to latest"
+msgstr "返回最新"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Back to projects"
 msgstr "返回项目"
@@ -2130,8 +2207,8 @@ msgid "Big Bets"
 msgstr "重大押注"
 
 #: src/components/content/PublishReviewPanel.jsx
-msgid "Biggest fixes"
-msgstr "最大修复"
+#~ msgid "Biggest fixes"
+#~ msgstr "最大修复"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Bio"
@@ -2442,6 +2519,10 @@ msgstr "费用由你自己的提供商密钥承担。Duct 从不向你收费。"
 msgid "Chat"
 msgstr "聊天"
 
+#: src/components/models/UsagePanel.jsx
+msgid "ChatGPT plan"
+msgstr "ChatGPT 订阅计划"
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "ChatGPT sign-in isn't available for this account right now"
 msgstr "此账户暂时无法登录 ChatGPT"
@@ -2567,7 +2648,6 @@ msgid "Clear filters"
 msgstr "清除筛选器"
 
 #: src/components/content/PlanDayOne.jsx
-#: src/lib/contentReview.js
 msgid "Clicks"
 msgstr "点击量"
 
@@ -2643,6 +2723,7 @@ msgstr "OpenCode 命令"
 
 #: src/components/content/AnalyticsView.jsx
 #: src/components/content/PostMetricsForm.jsx
+#: src/lib/contentReview.js
 msgid "Comments"
 msgstr "评论"
 
@@ -2688,8 +2769,8 @@ msgid "Compacting context"
 msgstr "正在压缩上下文"
 
 #: src/components/content/BrandContextForm.jsx
-msgid "Company"
-msgstr "公司"
+#~ msgid "Company"
+#~ msgstr "公司"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Company name"
@@ -3328,6 +3409,10 @@ msgstr "数据驻留"
 msgid "Date"
 msgstr "日期"
 
+#: src/components/content/PublishModal.jsx
+msgid "Date and time to post"
+msgstr "发布日期和时间"
+
 #: src/components/content/FeedPlanDialog.jsx
 msgid "Dated pages from one database"
 msgstr "来自一个数据库的带日期页面"
@@ -3641,6 +3726,7 @@ msgid "Don’t have time to fix these? Duct can execute <0>{totalFixes}</0> of t
 msgstr "没时间修复这些？Duct 可以为你执行其中的 <0>{totalFixes}</0> 项。"
 
 #: src/components/audit/ExecutionOffer.jsx
+#: src/components/content/PublishModal.jsx
 #: src/components/models/TierSummary.jsx
 #: src/components/settings/AgentGrantPicker.jsx
 msgid "Done"
@@ -3933,6 +4019,10 @@ msgstr "Duct 在你的账户上运行，因此一次审计只需你几美分—�
 msgid "Duct runs on your own provider keys — paste one below, and its card says where that key is kept. Use a restricted or budget-capped key if your provider offers one."
 msgstr "Duct 在你的提供商密钥上运行——在下方粘贴一个，其卡片会显示该密钥的存储位置。如果你的提供商提供，请使用受限或有预算上限的密钥。"
 
+#: src/components/content/PostViewport.jsx
+msgid "Duct scores the opening, the flow and what people would do with it, and your personas say whether they would stop."
+msgstr "Duct 会对开头、行文和受众反应打分，你的用户画像会表明是否会停下阅读。"
+
 #: src/app/(app)/settings/models/page.jsx
 msgid "Duct sends each job to the rung it deserves. Pick what sits on each one."
 msgstr "Duct 将每个任务发送到其应有的层级。选择每个层级上的内容。"
@@ -4064,6 +4154,10 @@ msgstr "Duct 读取的每个来源都会在此处显示，并附带其涵盖的�
 #: src/components/content/PlanList.jsx
 msgid "Earlier"
 msgstr "更早"
+
+#: src/components/content/PostViewport.jsx
+msgid "Earlier version"
+msgstr "较早版本"
 
 #: src/components/content/PlanStrategy.jsx
 msgid "earns less per post"
@@ -4377,6 +4471,10 @@ msgstr "订阅源地址"
 msgid "Feedback"
 msgstr "反馈"
 
+#: src/components/content/PostViewport.jsx
+#~ msgid "Feedback on slide {n}"
+#~ msgstr "幻灯片 {n} 的反馈"
+
 #: src/components/content/AnalyticsView.jsx
 msgid "Fetching analytics from your schedulers…"
 msgstr "正在从你的调度器获取分析数据…"
@@ -4481,9 +4579,21 @@ msgstr "第一行是引子。保持 2–3 句话。"
 msgid "First prompt"
 msgstr "首次提示"
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Fix first"
+msgstr "优先修复"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "Fix These First"
 msgstr "优先修复这些"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Fix this"
+msgstr "修复此项"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Fix:"
+msgstr "修复："
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Fixed, so your copy stands in for the built-in"
@@ -5214,6 +5324,7 @@ msgid "In progress"
 msgstr "进行中"
 
 #: src/components/content/BrandContextForm.jsx
+#: src/components/content/PublishReviewPanel.jsx
 msgid "In their words"
 msgstr "他们的原话"
 
@@ -5362,6 +5473,10 @@ msgstr "Duct 上次调用时它没有响应。下次聊天会重试，或者你�
 msgid "It didn't answer. Try again in a moment."
 msgstr "它没有响应。请稍后重试。"
 
+#: src/components/content/PublishModal.jsx
+msgid "It goes out on {to}. You can change or cancel it from the post until then."
+msgstr "将于 {to} 发布。在此之前，你可以在帖子中修改或取消。"
+
 #: src/hooks/useAgentNotifications.js
 msgid "It has a question before it can continue."
 msgstr "它在继续之前有一个问题。"
@@ -5398,6 +5513,10 @@ msgstr "下个月会再次运行，也可以提高上限。"
 #~ msgid "It won't see or set up any other project."
 #~ msgstr "它无法查看或设置任何其他项目。"
 
+#: src/components/content/PublishModal.jsx
+msgid "It's live on {to}."
+msgstr "已在 {to} 发布。"
+
 #: src/components/AppErrorPanel.jsx
 msgid "It’s logged on our side. Copy the details below if you report it."
 msgstr "它已在我们的服务器端记录。如果你要报告此问题，请复制以下详细信息。"
@@ -5405,6 +5524,10 @@ msgstr "它已在我们的服务器端记录。如果你要报告此问题，请
 #: src/app/(auth)/desktop-auth/page.js
 msgid "It's logged on our side. Try again, and send us the details below if it keeps happening."
 msgstr "它已在我们的服务器端记录。请重试，如果问题持续发生，请将以下详细信息发送给我们。"
+
+#: src/components/content/PublishModal.jsx
+msgid "It's on its way to {to}. The link appears on the post once the platform confirms it."
+msgstr "正在发送至 {to}。平台确认后，链接将显示在帖子中。"
 
 #: src/lib/userProfile.js
 msgid "Italiano"
@@ -5433,6 +5556,10 @@ msgstr "刚刚压缩——下次调用时重新计数"
 #: src/components/insights/desk/useRelativeTime.js
 msgid "just now"
 msgstr "刚才"
+
+#: src/components/content/PostViewport.jsx
+msgid "Just updated"
+msgstr "刚刚更新"
 
 #: src/components/content/PlanBoard.jsx
 msgid "Kanban"
@@ -5557,6 +5684,14 @@ msgstr "迟付款的客户？请逐字说出以下内容。"
 #: src/components/UpdateToast.jsx
 msgid "Later"
 msgstr "稍后"
+
+#: src/components/content/PostViewport.jsx
+msgid "Later version"
+msgstr "较新版本"
+
+#: src/components/content/PostViewport.jsx
+msgid "Latest of {total} versions"
+msgstr "共 {total} 个版本中的最新版本"
 
 #: src/components/content/PlanStrategy.jsx
 msgid "Leans on"
@@ -5789,13 +5924,17 @@ msgstr "加载对话"
 msgid "Loading topic + brand context"
 msgstr "加载主题 + 品牌上下文"
 
+#: src/components/content/PublishModal.jsx
+msgid "Loading your accounts"
+msgstr "正在加载你的账号"
+
 #: src/components/content/PlanViewport.jsx
 msgid "Loading your brand & pillars"
 msgstr "加载你的品牌和支柱"
 
 #: src/components/content/PublishModal.jsx
-msgid "Loading your connected accounts…"
-msgstr "加载你已连接的账户…"
+#~ msgid "Loading your connected accounts…"
+#~ msgstr "加载你已连接的账户…"
 
 #: src/components/models/TierSummary.jsx
 msgid "Loading your models…"
@@ -5859,6 +5998,14 @@ msgstr "正在查找你的端点。"
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Looking…"
 msgstr "正在查找…"
+
+#: src/components/content/PostViewport.jsx
+#~ msgid "Looks good"
+#~ msgstr "看起来不错"
+
+#: src/components/content/PostViewport.jsx
+msgid "Looks good, make slide {nextN}"
+msgstr "看起来不错，制作幻灯片 {nextN}"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Looks right"
@@ -5961,6 +6108,7 @@ msgstr "匹配我的消息"
 msgid "Match the brand description"
 msgstr "与品牌描述一致"
 
+#: src/components/content/PublishReviewPanel.jsx
 #: src/lib/contentReview.js
 msgid "Maybe"
 msgstr "可能"
@@ -6386,6 +6534,7 @@ msgstr "下周"
 msgid "Nightly check"
 msgstr "夜间检查"
 
+#: src/components/content/PublishReviewPanel.jsx
 #: src/lib/contentReview.js
 msgid "No"
 msgstr "否"
@@ -6440,6 +6589,10 @@ msgstr "无标题"
 msgid "No caption yet."
 msgstr "暂无标题。"
 
+#: src/components/content/PublishModal.jsx
+msgid "No caption."
+msgstr "无文案。"
+
 #: src/components/content/PostVideo.jsx
 msgid "No clip yet"
 msgstr "暂无片段"
@@ -6467,6 +6620,10 @@ msgstr "无每日提醒"
 #: src/components/content/PlanList.jsx
 msgid "No date"
 msgstr "无日期"
+
+#: src/components/content/PlanList.jsx
+msgid "No day changed."
+msgstr "未更改日期。"
 
 #: src/app/(app)/artifacts/page.jsx
 msgid "No documents yet"
@@ -6690,7 +6847,6 @@ msgid "Non-profit"
 msgstr "非营利组织"
 
 #: src/components/audit/AuditStepProgress.jsx
-#: src/components/content/PlanChanges.jsx
 msgid "none"
 msgstr "无"
 
@@ -6726,6 +6882,10 @@ msgstr "无法使用的密钥"
 #: src/lib/mcpServers.js
 msgid "Not answering"
 msgstr "无响应"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Not asked"
+msgstr "未询问"
 
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "Not confirmed yet"
@@ -6804,6 +6964,10 @@ msgstr "未记录"
 msgid "Not remembering"
 msgstr "未记忆"
 
+#: src/components/content/PostViewport.jsx
+msgid "Not reviewed yet"
+msgstr "尚未评审"
+
 #: src/components/AutoFallbackCard.jsx
 msgid "Not saved — sign in to keep this setting across your devices."
 msgstr "未保存——登录以在你的所有设备上保留此设置。"
@@ -6843,8 +7007,8 @@ msgid "Not stored"
 msgstr "未存储"
 
 #: src/components/content/PublishReviewPanel.jsx
-msgid "Not tested on your results yet: that needs five published posts with numbers. Read this as a guess."
-msgstr "尚未根据你的实际效果进行测试：这需要 5 条已发布且带有数据的帖子。请将其视为推测。"
+#~ msgid "Not tested on your results yet: that needs five published posts with numbers. Read this as a guess."
+#~ msgstr "尚未根据你的实际效果进行测试：这需要 5 条已发布且带有数据的帖子。请将其视为推测。"
 
 #: src/lib/contentEnums.js
 msgid "Not true"
@@ -7370,6 +7534,10 @@ msgstr "打开工具箱"
 msgid "Open the Toolbox →"
 msgstr "打开工具箱 →"
 
+#: src/components/content/PublishModal.jsx
+msgid "Open TikTok on {to} to post it yourself."
+msgstr "在 {to} 上打开 TikTok 以自行发布。"
+
 #: src/components/connections/McpConnectors.jsx
 msgid "Open to try again"
 msgstr "打开重试"
@@ -7432,8 +7600,8 @@ msgid "Opening…"
 msgstr "正在打开…"
 
 #: src/components/content/PublishReviewPanel.jsx
-msgid "Openings they compared"
-msgstr "他们对比的开头"
+#~ msgid "Openings they compared"
+#~ msgstr "他们对比的开头"
 
 #: src/components/connections/logos.jsx
 msgid "OpenRouter"
@@ -7697,6 +7865,7 @@ msgid "Permissions"
 msgstr "权限"
 
 #: src/components/content/BrandContextForm.jsx
+#: src/components/content/PublishReviewPanel.jsx
 msgid "Persona"
 msgstr "受众画像"
 
@@ -7880,6 +8049,7 @@ msgid "Português"
 msgstr "葡萄牙语"
 
 #: src/components/content/AnalyticsView.jsx
+#: src/components/content/PostViewport.jsx
 #: src/components/content/TextPostEditor.jsx
 msgid "Post"
 msgstr "帖子"
@@ -7909,12 +8079,12 @@ msgid "post preview"
 msgstr "帖子预览"
 
 #: src/components/content/PublishModal.jsx
-msgid "Post published"
-msgstr "帖子已发布"
+#~ msgid "Post published"
+#~ msgstr "帖子已发布"
 
 #: src/components/content/PublishModal.jsx
-msgid "Post scheduled"
-msgstr "帖子已安排"
+#~ msgid "Post scheduled"
+#~ msgstr "帖子已安排"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Post to all your accounts from one place"
@@ -7928,6 +8098,7 @@ msgstr "PostBridge"
 msgid "posted"
 msgstr "已发布"
 
+#: src/components/content/PublishModal.jsx
 #: src/lib/contentEnums.js
 msgid "Posted"
 msgstr "已发布"
@@ -7939,6 +8110,10 @@ msgstr "发布于 {postedOn}"
 #: src/components/content/AccountsTab.jsx
 msgid "Posting by hand"
 msgstr "手动发布"
+
+#: src/components/content/PublishModal.jsx
+msgid "Posting to {to}…"
+msgstr "正在发布至 {to}…"
 
 #: src/app/(app)/content/page.jsx
 msgid "posts"
@@ -8699,6 +8874,10 @@ msgstr "移除此支柱"
 msgid "Remove your {providerName} key?"
 msgstr "移除你的 {providerName} 密钥？"
 
+#: src/components/content/PlanChanges.jsx
+msgid "removed"
+msgstr "已移除"
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "Rendered a slide"
 msgstr "渲染了幻灯片"
@@ -8726,6 +8905,10 @@ msgstr "已替换"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "replaced on {endedOn}"
 msgstr "已于 {endedOn} 替换"
+
+#: src/components/content/PlanChanges.jsx
+msgid "Replaces:"
+msgstr "替换："
 
 #: src/components/content/TextPostEditor.jsx
 msgid "Reply {n}"
@@ -8878,6 +9061,10 @@ msgstr "重启以更新"
 msgid "Restore this version"
 msgstr "恢复此版本"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Restored an earlier version of a slide"
+msgstr "已恢复幻灯片的较早版本"
+
 #: src/app/(app)/connections/page.jsx
 msgid "Restricted API key"
 msgstr "受限 API 密钥"
@@ -8921,6 +9108,7 @@ msgid "Reversible changes on the allowlist apply on their own; the rest waits he
 msgstr "允许列表中的可逆变更会自动应用；其余的在此等待。"
 
 #: src/app/(app)/execute/page.jsx
+#: src/components/content/PostViewport.jsx
 #: src/components/content/PublishReviewPanel.jsx
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "Review"
@@ -8931,12 +9119,16 @@ msgid "Review again"
 msgstr "再次审查"
 
 #: src/components/content/PostViewport.jsx
-msgid "Review before publishing"
-msgstr "发布前审查"
+#~ msgid "Review before publishing"
+#~ msgstr "发布前审查"
 
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "Review changes"
 msgstr "审查变更"
+
+#: src/components/content/PostViewport.jsx
+msgid "Review first"
+msgstr "先审阅"
 
 #: src/components/schedules/ScheduleCard.jsx
 msgid "Review the plan"
@@ -8945,6 +9137,10 @@ msgstr "查看计划"
 #: src/components/schedules/ScheduleCard.jsx
 #~ msgid "Review the proposal"
 #~ msgstr "查看方案"
+
+#: src/components/content/PostViewport.jsx
+msgid "Review this post"
+msgstr "评审此帖子"
 
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Review what changed"
@@ -8966,6 +9162,10 @@ msgstr "正在审查一个帖子"
 msgid "Reviewing Open Graph completeness…"
 msgstr "正在审查 Open Graph 完整性…"
 
+#: src/components/content/PostViewport.jsx
+msgid "Reviewing this post…"
+msgstr "正在评审此帖子…"
+
 #: src/components/content/PlanViewport.jsx
 msgid "Reviewing your content pillars…"
 msgstr "正在审查你的内容支柱…"
@@ -8981,6 +9181,10 @@ msgstr "修订计划的其余部分"
 #: src/components/content/PostViewport.jsx
 msgid "Revise with Duct"
 msgstr "用 Duct 修订"
+
+#: src/components/content/PostViewport.jsx
+msgid "Revise with Duct and ask for a review to get one."
+msgstr "使用 Duct 进行修改并请求评审。"
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Revoke"
@@ -9090,6 +9294,14 @@ msgstr "运行中"
 msgid "Running now"
 msgstr "正在运行"
 
+#: src/components/workspace/AgentChat.jsx
+msgid "Running on {model}: your ChatGPT {plan} plan doesn't include {picked}. An API key or a higher plan does."
+msgstr "正在运行 {model}：你的 ChatGPT {plan} 套餐未包含 {picked}。需要 API 密钥或更高阶套餐。"
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Running on {model}: your ChatGPT plan doesn't include {picked}. An API key or a higher plan does."
+msgstr "正在运行 {model}：你的 ChatGPT 套餐未包含 {picked}。需要 API 密钥或更高阶套餐。"
+
 #: src/lib/modelTiers.js
 msgid "Running on a key already on this computer, not one you added here."
 msgstr "正在使用此电脑上已有的密钥运行，而非你在此处添加的密钥。"
@@ -9185,12 +9397,16 @@ msgid "Save a model key so a run can start without you."
 msgstr "保存一个模型密钥，运行就能在你不在时开始。"
 
 #: src/components/content/PublishModal.jsx
+msgid "Save as a TikTok draft, to post from the app yourself"
+msgstr "保存为 TikTok 草稿，以便自行从应用中发布"
+
+#: src/components/content/PublishModal.jsx
 msgid "Save as draft"
 msgstr "保存为草稿"
 
 #: src/components/content/PublishModal.jsx
-msgid "Save as TikTok draft (post manually from the app)"
-msgstr "保存为 TikTok 草稿（从应用手动发布帖子）"
+#~ msgid "Save as TikTok draft (post manually from the app)"
+#~ msgstr "保存为 TikTok 草稿（从应用手动发布帖子）"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Save brand"
@@ -9245,8 +9461,8 @@ msgid "Saved {savedAtText}"
 msgstr "已保存 {savedAtText}"
 
 #: src/components/content/PublishModal.jsx
-msgid "Saved as TikTok draft"
-msgstr "已保存为 TikTok 草稿"
+#~ msgid "Saved as TikTok draft"
+#~ msgstr "已保存为 TikTok 草稿"
 
 #: src/components/content/PlanViewport.jsx
 msgid "Saved as your plan"
@@ -9276,6 +9492,10 @@ msgstr "已保存草稿"
 msgid "Saved to this project, so you won’t be asked again."
 msgstr "已保存到此项目，因此不会再询问你。"
 
+#: src/components/content/PublishModal.jsx
+msgid "Saved to TikTok drafts"
+msgstr "已保存至 TikTok 草稿"
+
 #: src/lib/credentialStorage.js
 msgid "Saved to your account"
 msgstr "已保存到你的账户"
@@ -9301,6 +9521,10 @@ msgstr "每篇帖子的保存和分享数，这是帖子报告中最接近意图
 #: src/components/content/FormatLibrary.jsx
 msgid "Saving makes this project’s own copy, which replaces the built-in here. Reset it later to go back."
 msgstr "保存会创建此项目自己的副本，它将替换此处内置的。稍后重置即可恢复。"
+
+#: src/components/content/PublishModal.jsx
+msgid "Saving to {to}'s TikTok drafts…"
+msgstr "正在保存至 {to} 的 TikTok 草稿…"
 
 #: src/components/content/AccountsTab.jsx
 #: src/components/content/BrandContextForm.jsx
@@ -9329,8 +9553,12 @@ msgid "Scatter"
 msgstr "散点图"
 
 #: src/components/content/PublishModal.jsx
-msgid "Schedule for:"
-msgstr "安排发布时间："
+msgid "Schedule for"
+msgstr "定时发布于"
+
+#: src/components/content/PublishModal.jsx
+#~ msgid "Schedule for:"
+#~ msgstr "安排发布时间："
 
 #: src/components/content/PublishModal.jsx
 msgid "Schedule post"
@@ -9353,6 +9581,10 @@ msgstr "已安排"
 msgid "Scheduled {scheduledOn}"
 msgstr "已安排 {scheduledOn}"
 
+#: src/components/content/PublishModal.jsx
+msgid "Scheduled for {whenText}"
+msgstr "已预定于 {whenText}"
+
 #: src/components/content/AccountsTab.jsx
 msgid "Scheduled for you"
 msgstr "为你安排"
@@ -9368,6 +9600,10 @@ msgstr "调度器"
 #: src/components/content/AccountsTab.jsx
 #~ msgid "Schedulers"
 #~ msgstr "调度器"
+
+#: src/components/content/PublishModal.jsx
+msgid "Scheduling for {to}…"
+msgstr "正在设置 {to} 的定时发布…"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Schema"
@@ -9386,8 +9622,16 @@ msgid "score {scoreBefore} → {scoreAfter}"
 msgstr "得分 {scoreBefore} → {scoreAfter}"
 
 #: src/components/content/PublishReviewPanel.jsx
+msgid "Score {value} out of 100"
+msgstr "得分 {value} / 100"
+
+#: src/components/content/PublishReviewPanel.jsx
 msgid "Scored {scoredAgo} · advice only, publish either way"
 msgstr "评分于 {scoredAgo} · 仅供参考，无论如何都可发布"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Scores"
+msgstr "评分"
 
 #: src/components/audit/AuditReport.jsx
 msgid "Scoring each SEO category…"
@@ -9396,6 +9640,10 @@ msgstr "正在评估每个 SEO 类别…"
 #: src/components/audit/AuditReport.jsx
 msgid "Scoring signals & building findings"
 msgstr "正在评估信号并构建发现"
+
+#: src/components/content/PostViewport.jsx
+msgid "Scoring the opening and the flow, and reading it as each of your personas. Usually a minute."
+msgstr "正在评估开头与行文，并以你的各个用户画像视角进行阅读。通常需要一分钟。"
 
 #: src/components/content/DiscoverPage.jsx
 msgid "Scrape real posts in your niche. What you save, the research agent cites when it proposes topics."
@@ -9592,6 +9840,7 @@ msgstr "自托管 API URL"
 
 #: src/components/ChatSidebar.jsx
 #: src/components/content/PlanViewport.jsx
+#: src/components/content/PostViewport.jsx
 #: src/components/insights/desk/DeskComposer.jsx
 #: src/components/workspace/ChatInput.jsx
 msgid "Send"
@@ -9605,7 +9854,12 @@ msgstr "发送崩溃报告和使用数据"
 msgid "Send invite"
 msgstr "发送邀请"
 
+#: src/components/content/PublishModal.jsx
+msgid "Sending the post."
+msgstr "正在发送帖子。"
+
 #: src/components/audit/ExecutionOffer.jsx
+#: src/components/content/PublishModal.jsx
 msgid "Sending…"
 msgstr "正在发送…"
 
@@ -9749,6 +10003,7 @@ msgstr "与 {name} 上的所有人分享。"
 #: src/components/content/AnalyticsView.jsx
 #: src/components/content/PlanDayOne.jsx
 #: src/components/content/PostMetricsForm.jsx
+#: src/lib/contentReview.js
 msgid "Shares"
 msgstr "分享"
 
@@ -9818,6 +10073,7 @@ msgid "Show key"
 msgstr "显示密钥"
 
 #: src/components/content/DraftsQueue.jsx
+#: src/components/content/PublishModal.jsx
 #: src/components/workspace/AgentChat.jsx
 msgid "Show less"
 msgstr "显示更少"
@@ -9833,6 +10089,10 @@ msgstr "显示更多"
 #: src/components/GoogleAdsReport.js
 msgid "Show more signals"
 msgstr "显示更多信号"
+
+#: src/components/content/PublishModal.jsx
+msgid "Show the whole caption"
+msgstr "显示完整文案"
 
 #: src/components/profile/VoiceSample.jsx
 msgid "Shown in English. Duct still writes to you in {language}; only this preview does not."
@@ -10062,6 +10322,10 @@ msgstr "幻灯片 {n}"
 #: src/components/content/SlidesCarousel.jsx
 msgid "Slide {n} · {kind}"
 msgstr "幻灯片 {n} · {kind}"
+
+#: src/components/content/PostViewport.jsx
+msgid "Slide {n} updated · View"
+msgstr "幻灯片 {n} 已更新 · 查看"
 
 #: src/components/content/SlidesCarousel.jsx
 msgid "slide {slideNo} preview"
@@ -10315,8 +10579,12 @@ msgid "Stops"
 msgstr "停留"
 
 #: src/components/content/PublishReviewPanel.jsx
-msgid "Stops for: {picked}"
-msgstr "因以下内容停留：{picked}"
+msgid "stops for {picked}"
+msgstr "因 {picked} 停下"
+
+#: src/components/content/PublishReviewPanel.jsx
+#~ msgid "Stops for: {picked}"
+#~ msgstr "因以下内容停留：{picked}"
 
 #: src/components/content/VendorKeyForm.jsx
 msgid "Stored encrypted, and used only for projects you own."
@@ -10656,6 +10924,10 @@ msgstr "该回合失败"
 msgid "That turn failed. Try again."
 msgstr "该回合失败。请重试。"
 
+#: src/components/content/PostViewport.jsx
+msgid "That version didn't come back. Try again."
+msgstr "未能恢复该版本。请重试。"
+
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "That's a share link. Open it, then copy the full address from your browser."
 msgstr "这是一个分享链接。请打开它，然后从浏览器中复制完整地址。"
@@ -10788,6 +11060,10 @@ msgstr "模型响应时间过长。请重试。"
 msgid "The next plan leans on your own best posts and posting times."
 msgstr "下一个计划将借鉴你自己的最佳帖子和发布时间。"
 
+#: src/components/content/AccountsTab.jsx
+msgid "The opening"
+msgstr "开头"
+
 #: src/app/not-found.js
 msgid "The page you are looking for does not exist or has moved."
 msgstr "你查找的页面不存在或已移动。"
@@ -10847,6 +11123,10 @@ msgstr "研究智能体在提出主题时会引用你保存的内容。"
 #: src/app/(app)/connections/page.jsx
 msgid "The revenue every other number should answer to."
 msgstr "其他所有数字都应以此收入为基准。"
+
+#: src/components/content/PostViewport.jsx
+msgid "The review stopped before it finished, so nothing new was scored."
+msgstr "审核未完成即停止，因此未对新内容评分。"
 
 #: src/lib/agentSession.js
 msgid "The run stopped without saying why. Try again."
@@ -11012,6 +11292,10 @@ msgstr "此成果文档没有可渲染的存储内容。"
 #: src/app/(public)/lead/seo-audit/page.jsx
 msgid "This audit link is no longer valid. Links expire after 24 hours. Please enter your website again to get a fresh audit."
 msgstr "此审计链接已失效。链接在 24 小时后过期。请再次输入你的网站以获取新的审计。"
+
+#: src/components/content/PublishModal.jsx
+msgid "This can take a minute."
+msgstr "这可能需要一分钟。"
 
 #: src/components/schedules/ScheduleCard.jsx
 msgid "This computer"
@@ -11364,6 +11648,7 @@ msgstr "尝试次数"
 #: src/components/connections/McpConnectors.jsx
 #: src/components/connections/ProviderCard.jsx
 #: src/components/content/AnalyticsReport.jsx
+#: src/components/content/PostViewport.jsx
 #: src/components/LoadError.jsx
 msgid "Try again"
 msgstr "重试"
@@ -11492,6 +11777,11 @@ msgstr "更新失败。"
 msgid "Update the desktop app — this version can’t run the sign-in."
 msgstr "更新桌面应用——此版本无法运行登录。"
 
+#: src/components/content/PlanList.jsx
+#: src/components/content/PostMiniCard.jsx
+msgid "Updated"
+msgstr "已更新"
+
 #: src/components/content/FormatLibrary.jsx
 msgid "Updated {updated}"
 msgstr "已更新 {updated}"
@@ -11546,12 +11836,20 @@ msgstr "使用你已付费的套餐"
 msgid "Use this account →"
 msgstr "使用此账户 →"
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Use this opening"
+msgstr "使用此开头"
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Use this plan"
 msgstr "使用此套餐"
 
 #: src/components/content/PostVideo.jsx
 msgid "Use this take"
+msgstr "使用此版本"
+
+#: src/components/content/PostViewport.jsx
+msgid "Use this version"
 msgstr "使用此版本"
 
 #: src/components/workspace/ActivityRow.jsx
@@ -11663,6 +11961,10 @@ msgstr "正在验证…"
 msgid "Version"
 msgstr "版本"
 
+#: src/components/content/PostViewport.jsx
+msgid "Version {showing} of {total}"
+msgstr "版本 {showing} / {total}"
+
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Version {version}"
 msgstr "版本 {version}"
@@ -11701,6 +12003,10 @@ msgstr "查看 →"
 msgid "View full screen"
 msgstr "全屏查看"
 
+#: src/components/content/PublishModal.jsx
+msgid "View post"
+msgstr "查看帖子"
+
 #: src/components/content/AnalyticsView.jsx
 #: src/components/content/PostMetricsForm.jsx
 msgid "Views"
@@ -11729,6 +12035,10 @@ msgstr "无论帖子发布到哪里，浏览量、点赞、评论和分享都在
 #: src/components/content/PostMetricsForm.jsx
 msgid "Views, likes, comments and shares update on their own. Add the rest from the platform’s analytics; a sync never changes what you enter."
 msgstr "浏览量、点赞、评论和分享会自动更新。从平台分析中添加其余数据；同步不会更改你输入的内容。"
+
+#: src/lib/contentReview.js
+msgid "Visits profile"
+msgstr "访问主页"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Visual identity"
@@ -11806,8 +12116,8 @@ msgid "was “{replacedTitle}” until {replacedUntil}"
 msgstr "曾是“{replacedTitle}”，直到 {replacedUntil}"
 
 #: src/components/content/PlanChanges.jsx
-msgid "Was: {was}"
-msgstr "原为：{was}"
+#~ msgid "Was: {was}"
+#~ msgstr "原为：{was}"
 
 #: src/components/content/report/GrowthReportView.jsx
 #: src/components/GoogleAdsReport.js
@@ -11922,6 +12232,10 @@ msgstr "Duct 为 {label} 撰写的内容"
 msgid "What each campaign costs and what it brings back."
 msgstr "各个广告系列的成本和回报。"
 
+#: src/components/content/PublishModal.jsx
+msgid "What goes out"
+msgstr "发布内容"
+
 #: src/components/insights/ToolApproval.jsx
 msgid "What goes out, and when"
 msgstr "发布内容与时间"
@@ -11965,6 +12279,10 @@ msgstr "此配方生成的帖子类型。"
 #: src/lib/contentFeedLabels.js
 msgid "What shipped"
 msgstr "已发布的内容"
+
+#: src/components/content/PostViewport.jsx
+#~ msgid "What should change on slide {n}?"
+#~ msgstr "幻灯片 {n} 需要修改什么？"
 
 #: src/components/content/PlanViewport.jsx
 msgid "What should change?"
@@ -12102,6 +12420,10 @@ msgstr "哪个模型层级运行此项"
 #: src/components/workspace/ComposerDials.jsx
 msgid "Which model tier runs this, and how hard it thinks"
 msgstr "哪个模型层级运行此项，以及它思考的深度"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Which opening stops them"
+msgstr "哪个开头能让他们停下阅读"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Which pages should rank and don't?"
@@ -12243,7 +12565,6 @@ msgstr "正在工作…"
 
 #: src/app/(app)/audit/seo/page.jsx
 #: src/components/AppSidebar.jsx
-#: src/components/content/PublishModal.jsx
 #: src/components/insights/desk/DeskLists.jsx
 #: src/components/workspace/AgentChat.jsx
 msgid "Working…"
@@ -12253,9 +12574,18 @@ msgstr "正在工作…"
 msgid "Worth adding next"
 msgstr "接下来值得添加"
 
+#. placeholder {0}: r.scroll_past
 #: src/components/content/PublishReviewPanel.jsx
-msgid "Would scroll past: {scrollPast}"
-msgstr "会直接划过：{scrollPast}"
+msgid "Would scroll past: {0}"
+msgstr "会直接划过：{0}"
+
+#: src/components/content/PublishReviewPanel.jsx
+#~ msgid "Would scroll past: {scrollPast}"
+#~ msgstr "会直接划过：{scrollPast}"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Would win them:"
+msgstr "能打动他们的点："
 
 #: src/components/content/AnalyticsReport.jsx
 msgid "Write the report"
@@ -12331,6 +12661,7 @@ msgstr "xAI"
 msgid "yes"
 msgstr "是"
 
+#: src/components/content/PublishReviewPanel.jsx
 #: src/lib/contentReview.js
 msgid "Yes"
 msgstr "是"
@@ -12431,6 +12762,10 @@ msgstr "你已被邀请加入 <0>{projectName}</0>"
 #: src/components/content/AccountsTab.jsx
 msgid "Your {label} account"
 msgstr "你的 {label} 账户"
+
+#: src/components/models/TierSummary.jsx
+msgid "Your {planName} plan"
+msgstr "你的 {planName} 方案"
 
 #: src/components/ChatSidebar.jsx
 msgid "your account"

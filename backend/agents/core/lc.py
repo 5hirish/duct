@@ -28,6 +28,7 @@ talk to LangChain.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import random
 import re
@@ -814,6 +815,48 @@ def usage_from_messages(messages: list, model: Any) -> dict:
     }
 
 
+# A search the provider runs inside its own model call (Anthropic's
+# ``web_search``) is reported under the name of Duct's own search tool, so the
+# card, the transcript and a session audit read it the same on every provider.
+_SERVER_TOOL_NAMES = {"web_search": "WebSearch"}
+
+
+def _server_tool_traffic(msg: Any) -> list[tuple[str, dict, str, Any, bool]]:
+    """(tool, args, id, result, is_error) for each provider-side tool call in a
+    reply. These arrive as content blocks, never as ``tool_calls``, so nothing
+    else in the stream would see them."""
+    content = getattr(msg, "content", None)
+    if not isinstance(content, list):
+        return []
+    uses = {
+        b.get("id"): b for b in content
+        if isinstance(b, dict) and b.get("type") == "server_tool_use" and b.get("name") in _SERVER_TOOL_NAMES
+    }
+    out = []
+    for block in content:
+        if not isinstance(block, dict) or not str(block.get("type", "")).endswith("_tool_result"):
+            continue
+        use = uses.get(block.get("tool_use_id"))
+        if use is None:
+            continue
+        args = use.get("input") if isinstance(use.get("input"), dict) else {}
+        found = block.get("content")
+        is_error = not isinstance(found, list)
+        sources = [
+            {"title": r.get("title", ""), "url": r.get("url", "")}
+            for r in (found if isinstance(found, list) else [])
+            if isinstance(r, dict) and r.get("url")
+        ]
+        result = json.dumps({
+            "status": "error" if is_error else "ok",
+            "query": args.get("query", ""),
+            "sources": sources,
+            "message": "" if not is_error else str((found or {}).get("error_code", "search failed")),
+        })
+        out.append((_SERVER_TOOL_NAMES[use["name"]], args, use.get("id") or "", result, is_error))
+    return out
+
+
 async def _dispatch_updates(
     chunk: Any,
     *,
@@ -859,6 +902,11 @@ async def _dispatch_updates(
             if todos and on_todo is not None:
                 await on_todo(list(todos))
             for msg in state.get("messages") or []:
+                for name, args, call_id, result, is_error in _server_tool_traffic(msg):
+                    if on_tool_use is not None:
+                        await on_tool_use(name, args, call_id)
+                    if on_tool_result is not None:
+                        await on_tool_result(name, result, call_id, is_error)
                 for call in getattr(msg, "tool_calls", None) or []:
                     if on_tool_use is not None and isinstance(call, dict):
                         await on_tool_use(
@@ -873,15 +921,16 @@ async def _dispatch_updates(
                     )
 
 
-def _turn_input(prompt: str | Command | None) -> Any:
+def _turn_input(prompt: str | list | Command | None) -> Any:
     """What ``astream`` is fed for one turn.
 
-    A string is a fresh user message. ``None`` continues whatever the thread was
+    A string (or a block list, when the message carries attachments) is a
+    fresh user message. ``None`` continues whatever the thread was
     doing — an unfinished run picks up from its last checkpoint, and a parked
     one re-raises its live pauses (which is how a resumed session shows the
     question it is still waiting on). A ``Command`` is a resume with answers.
     """
-    if isinstance(prompt, str):
+    if isinstance(prompt, (str, list)):  # a list is text plus attachments
         return {"messages": [{"role": "user", "content": prompt}]}
     return prompt
 
@@ -1012,6 +1061,47 @@ def chat_message_text(chat_msg: Any) -> str:
     return str(chat_msg or "")
 
 
+def _standard_block(block: Any) -> Any:
+    """An attachment block in LangChain's provider-neutral shape.
+
+    The app sends an image the Messages API way (``source.data``); LangChain
+    translates that for OpenAI but not for every adapter, while its own
+    ``base64`` + ``mime_type`` shape is the one every adapter reads."""
+    if not isinstance(block, dict) or block.get("type") != "image":
+        return block
+    source = block.get("source")
+    if not isinstance(source, dict) or source.get("type") != "base64":
+        return block
+    return {"type": "image", "base64": source.get("data", ""), "mime_type": source.get("media_type") or "image/png"}
+
+
+def chat_message_content(chat_msg: Any) -> str | list:
+    """A queued chat message as what the model should be handed: a string
+    stays a string, a block list stays a block list (images normalised).
+
+    ``chat_message_text`` is for prompt slots and memory search. A turn must
+    not use it: flattening dropped every attachment on a follow-up, so the
+    model answered "I can't see the image" about a picture the person had
+    just sent, on a vision model.
+    """
+    content = chat_msg.get("content", "") if isinstance(chat_msg, dict) else chat_msg
+    if isinstance(content, list):
+        return [_standard_block(b) for b in content if isinstance(b, dict)]
+    return chat_message_text(chat_msg)
+
+
+def merge_chat_contents(contents: list[str | list]) -> str | list:
+    """Several queued messages as one turn: joined text, or one block list
+    when any of them carries an attachment."""
+    contents = [c for c in contents if c]
+    if all(isinstance(c, str) for c in contents):
+        return "\n\n".join(contents)
+    blocks: list = []
+    for c in contents:
+        blocks.extend(c if isinstance(c, list) else [{"type": "text", "text": c}])
+    return blocks
+
+
 def drain_steers(queue: Any) -> list[tuple[Any, str]]:
     """Everything waiting on a steer queue, as (message, client id), without
     blocking. Empty when there is no queue."""
@@ -1030,8 +1120,8 @@ def steer_messages(items: list[tuple[Any, str]]) -> list[HumanMessage]:
     """User messages for steered items; each consumed one is reported."""
     messages: list[HumanMessage] = []
     for item, client_id in items:
-        content = item.get("content") if isinstance(item, dict) else item
-        if content is None or content == "":
+        content = chat_message_content(item)
+        if not content:
             continue
         messages.append(HumanMessage(content=content))
         if client_id:
@@ -1138,6 +1228,65 @@ class SeenImagePruneMiddleware(AgentMiddleware):
 
 def _is_image_block(block: Any) -> bool:
     return isinstance(block, dict) and block.get("type") == "image" and bool(block.get("base64"))
+
+
+# Providers whose API takes an image inside a tool result. Everywhere else a
+# picture a tool returns is handed over in a user message straight after the
+# results (``ToolImagesInUserTurnMiddleware``), which every vision API takes.
+TOOL_RESULT_IMAGE_PROVIDERS = frozenset({"anthropic"})
+
+TOOL_IMAGE_NOTE = "[image: shown in the next message]"
+TOOL_IMAGES_LEAD = "The pictures the tool calls above returned, in order:"
+
+
+def images_out_of_tool_results(messages: list) -> list:
+    """The request's messages with tool-result images moved into one user
+    message after each run of tool results.
+
+    OpenAI's chat API refuses an image in a ``tool`` message and other
+    gateways vary, so a content run there used to get a URL instead of the
+    slide it rendered and could not check its own work, which the old engine
+    always could. Only the request changes: the thread keeps the tool result
+    as written, and ``SeenImagePruneMiddleware`` still drops the bytes from
+    state once the model has looked.
+    """
+    out: list = []
+    pending: list = []
+
+    def flush() -> None:
+        if pending:
+            out.append(HumanMessage(content=[{"type": "text", "text": TOOL_IMAGES_LEAD}, *pending]))
+            pending.clear()
+
+    for message in messages:
+        is_tool = getattr(message, "type", "") == "tool"
+        if not is_tool:
+            flush()
+        if is_tool and isinstance(message.content, list) and any(_is_image_block(b) for b in message.content):
+            pending.extend(b for b in message.content if _is_image_block(b))
+            content = [{"type": "text", "text": TOOL_IMAGE_NOTE} if _is_image_block(b) else b for b in message.content]
+            message = message.model_copy(update={"content": content})
+        out.append(message)
+    flush()
+    return out
+
+
+class ToolImagesInUserTurnMiddleware(AgentMiddleware):
+    """Show the model the pictures its tools returned, on any vision provider.
+
+    Mounted where the provider takes images but not inside tool results
+    (``TOOL_RESULT_IMAGE_PROVIDERS``); see ``images_out_of_tool_results``.
+    """
+
+    def _moved(self, request):
+        messages = images_out_of_tool_results(list(request.messages))
+        return request.override(messages=messages) if messages != list(request.messages) else request
+
+    async def awrap_model_call(self, request, handler):  # type: ignore[override]
+        return await handler(self._moved(request))
+
+    def wrap_model_call(self, request, handler):  # type: ignore[override]
+        return handler(self._moved(request))
 
 
 class SteerMiddleware(AgentMiddleware):
@@ -1325,7 +1474,7 @@ class TurnClock:
 
 async def stream_agent(
     agent: Any,
-    prompt: str | Command | None,
+    prompt: str | list | Command | None,
     emit: Callable,
     *,
     on_artifact_chunk_event: str = AgentEvent.ARTIFACT_CHUNK,

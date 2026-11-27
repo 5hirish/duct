@@ -290,6 +290,22 @@ export async function patchPost(postId, patch) {
   return out;
 }
 
+/** Put one slide back as it was `back` versions ago (1 = just before the
+ * current). The state it replaces is kept, so the same call undoes it. */
+export async function restoreSlideVersion(postId, slideId, back = 1) {
+  const res = await fetch(
+    `${BASE}/api/content/posts/${encodeURIComponent(postId)}/slides/${encodeURIComponent(slideId)}/restore`,
+    {
+      method: "POST",
+      headers: backendAuthedHeaders({ "Content-Type": "application/json" }),
+      body: JSON.stringify({ back }),
+    },
+  );
+  const out = await jsonOrThrow(res);
+  invalidatePosts();
+  return out;
+}
+
 /** Make one of a video post's takes the clip it publishes. Returns the post. */
 export async function selectPostVideo(postId, assetId) {
   const res = await fetch(

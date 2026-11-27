@@ -61,6 +61,10 @@ msgstr "(ersten Teil der Seite gelesen)"
 msgid "(untitled)"
 msgstr "(ohne Titel)"
 
+#: src/components/content/PlanChanges.jsx
+msgid "(was {from})"
+msgstr "(war {from})"
+
 #: src/components/ProjectMembers.jsx
 msgid "(you)"
 msgstr "(du)"
@@ -94,6 +98,11 @@ msgstr "{0, plural, one {# weniger als der letzte Plan} other {# weniger als der
 #: src/components/memory/MemoryTimeline.jsx
 msgid "{0, plural, one {# match} other {# matches}}"
 msgstr "{0, plural, one {# Treffer} other {# Treffer}}"
+
+#. placeholder {0}: fields.length
+#: src/components/content/PlanChanges.jsx
+msgid "{0, plural, one {# more change} other {# more changes}}"
+msgstr "{0, plural, one {# weitere Änderung} other {# weitere Änderungen}}"
 
 #. placeholder {0}: row.change
 #: src/components/content/PlanStrategy.jsx
@@ -160,6 +169,11 @@ msgstr "{0, plural, one {Zeige # mehr} other {Zeige # mehr}}"
 msgid "{0, plural, one {Show all #} other {Show all #}}"
 msgstr "{0, plural, one {Alle # anzeigen} other {Alle # anzeigen}}"
 
+#. placeholder {0}: slides.length
+#: src/components/content/PostViewport.jsx
+msgid "{0, plural, one {The slide is ready to publish.} other {All # slides are ready to publish.}}"
+msgstr "{0, plural, one {Die Folie ist bereit zum Veröffentlichen.} other {Alle # Folien sind bereit zum Veröffentlichen.}}"
+
 #. placeholder {0}: items.length
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "{0, plural, one {Working on # thing} other {Working on # things}}"
@@ -180,6 +194,12 @@ msgstr "{0, plural, one {Das hast du # Mal gefragt} other {Das hast du # Male ge
 #: src/components/workspace/ComposerDials.jsx
 #~ msgid "{0} {1} · whatever this model does anyway"
 #~ msgstr "{0} {1} · was dieses Modell sowieso tut"
+
+#. placeholder {0}: formatDate(when, { locale: i18n.locale, withYear: false })
+#. placeholder {1}: formatTime(when, { locale: i18n.locale })
+#: src/components/content/PublishModal.jsx
+msgid "{0} at {1}"
+msgstr "{0} um {1}"
 
 #. placeholder {0}: meta.failed
 #: src/components/workspace/ActivityRow.jsx
@@ -224,8 +244,8 @@ msgid "{0} sources"
 msgstr "{0} Quellen"
 
 #: src/components/content/PublishReviewPanel.jsx
-msgid "{action}: {verdict}"
-msgstr "{action}: {verdict}"
+#~ msgid "{action}: {verdict}"
+#~ msgstr "{action}: {verdict}"
 
 #: src/components/settings/AgentGrantPicker.jsx
 msgid "{agent} also asked for <0>{askedNames}</0>. Turn it on in Customise if you want it."
@@ -533,8 +553,8 @@ msgid "{label} publishes the post and its first reply."
 msgstr "{label} veröffentlicht den Beitrag und seine erste Antwort."
 
 #: src/components/content/PublishReviewPanel.jsx
-msgid "{label} score"
-msgstr "{label} Punktzahl"
+#~ msgid "{label} score"
+#~ msgstr "{label} Punktzahl"
 
 #: src/app/(app)/content/page.jsx
 #: src/components/content/PlanBoard.jsx
@@ -715,8 +735,8 @@ msgid "{passCount} passing"
 msgstr "{passCount} bestanden"
 
 #: src/components/content/PublishReviewPanel.jsx
-msgid "{passed} of {total} checks pass"
-msgstr "{passed} von {total} Prüfungen bestanden"
+#~ msgid "{passed} of {total} checks pass"
+#~ msgstr "{passed} von {total} Prüfungen bestanden"
 
 #: src/components/content/PostViewport.jsx
 msgid "{pending, plural, one {Approve & generate # image — one by one} other {Approve & generate # images — one by one}}"
@@ -749,6 +769,18 @@ msgstr "{pillarCount, plural, one {# Content-Säule} other {# Content-Säulen}}"
 #: src/components/onboarding/ProviderStep.jsx
 msgid "{planAccount} — no API key, no extra bill."
 msgstr "{planAccount} — kein API-Schlüssel, keine zusätzliche Rechnung."
+
+#: src/components/models/UsagePanel.jsx
+msgid "{planCalls, plural, one {plus # call on your ChatGPT plan} other {plus # calls on your ChatGPT plan}}"
+msgstr "{planCalls, plural, one {plus # Aufruf über deinen ChatGPT-Plan} other {plus # Aufrufe über deinen ChatGPT-Plan}}"
+
+#: src/components/models/UsagePanel.jsx
+msgid "{planCalls} on your ChatGPT plan"
+msgstr "{planCalls} über deinen ChatGPT-Plan"
+
+#: src/components/models/TierSummary.jsx
+msgid "{planName} · {planModelName} only"
+msgstr "{planName} · nur {planModelName}"
 
 #: src/components/content/AccountsTab.jsx
 msgid "{platform} · via {scheduler}"
@@ -810,6 +842,10 @@ msgstr "{read}, teilweise gelesen"
 msgid "{ready} of {total} ready"
 msgstr "{ready} von {total} bereit"
 
+#: src/components/content/PostViewport.jsx
+msgid "{ready} of {total} slides ready · slide {nextN} needs a picture"
+msgstr "{ready} von {total} Folien bereit · Folie {nextN} braucht ein Bild"
+
 #: src/components/execution/ChangeSetCard.jsx
 msgid "{ready} of {total} will apply · {blocked, plural, one {# needs a person} other {# need a person}}"
 msgstr "{ready} von {total} werden angewendet · {blocked, plural, one {# braucht eine Person} other {# brauchen eine Person}}"
@@ -845,6 +881,10 @@ msgstr "{robotsLines} Zeilen"
 #: src/components/schedules/ScheduleCard.jsx
 #~ msgid "{runs} of {cap} runs this month"
 #~ msgstr "{runs} von {cap} Läufen in diesem Monat"
+
+#: src/components/content/PublishModal.jsx
+msgid "{scheduler} can take a minute."
+msgstr "{scheduler} kann eine Minute dauern."
 
 #: src/components/content/AnalyticsView.jsx
 msgid "{scheduler} hasn’t reported a post for {names} and {more} more yet."
@@ -891,9 +931,13 @@ msgstr "{size} Kontext"
 msgid "{slideCount, plural, one {# slide} other {# slides}}"
 msgstr "{slideCount, plural, one {# Folie} other {# Folien}}"
 
-#: src/components/content/FormatLibrary.jsx
-#~ msgid "{slides, plural, one {# slide} other {# slides}}"
-#~ msgstr "{slides, plural, one {# Folie} other {# Folien}}"
+#: src/components/content/PublishModal.jsx
+msgid "{slides, plural, one {# slide} other {# slides}}"
+msgstr "{slides, plural, one {# Folie} other {# Folien}}"
+
+#: src/components/content/PublishModal.jsx
+msgid "{slides, plural, one {Sending # slide and the caption.} other {Sending # slides and the caption.}}"
+msgstr "{slides, plural, one {# Folie und die Bildunterschrift werden gesendet.} other {# Folien und die Bildunterschrift werden gesendet.}}"
 
 #: src/components/content/SynthesisPanel.jsx
 msgid "{slideShare} of posts · <0>{slideEng}</0> eng."
@@ -966,6 +1010,10 @@ msgstr "{total, plural, one {Alle # anzeigen} other {Alle # anzeigen}}"
 #: src/components/memory/MemoryTimeline.jsx
 #~ msgid "{unconfirmed, plural, one {# unconfirmed} other {# unconfirmed}}"
 #~ msgstr "{unconfirmed, plural, one {# unbestätigt} other {# unbestätigt}}"
+
+#: src/components/content/PlanViewport.jsx
+msgid "{updatedCount, plural, one {Saved · # day updated} other {Saved · # days updated}}"
+msgstr "{updatedCount, plural, one {Gespeichert · # Tag aktualisiert} other {Gespeichert · # Tage aktualisiert}}"
 
 #: src/components/schedules/ScheduleCard.jsx
 msgid "{used} of {cap} runs this month"
@@ -1299,6 +1347,10 @@ msgstr "Ein Befund, für dich geschrieben"
 #: src/components/content/DraftsQueue.jsx
 msgid "A good default for {channelLabel} until five posts have numbers."
 msgstr "Ein guter Standard für {channelLabel}, bis fünf Beiträge Zahlen haben."
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "A guess until it has been tested on five of your published posts."
+msgstr "Eine Vermutung, bis es an fünf deiner veröffentlichten Beiträge getestet wurde."
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "A helper agent answered"
@@ -1785,9 +1837,14 @@ msgstr "alle"
 msgid "All"
 msgstr "Alle"
 
+#. placeholder {0}: checks.length
 #: src/components/content/PublishReviewPanel.jsx
-msgid "All {total} checks pass"
-msgstr "Alle {total} Prüfungen bestanden"
+msgid "All {0} checks pass"
+msgstr "Alle {0} Prüfungen bestanden"
+
+#: src/components/content/PublishReviewPanel.jsx
+#~ msgid "All {total} checks pass"
+#~ msgstr "Alle {total} Prüfungen bestanden"
 
 #: src/app/(app)/execute/page.jsx
 msgid "all accounts"
@@ -1817,6 +1874,10 @@ msgstr "Alle Dokumente in diesem Thread"
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "All notes"
 msgstr "Alle Notizen"
+
+#: src/components/models/UsagePanel.jsx
+msgid "all on your ChatGPT plan, no key charged"
+msgstr "alle über deinen ChatGPT-Plan, kein Key abgerechnet"
 
 #: src/components/content/AnalyticsView.jsx
 msgid "All posts <0>· {rowCount}</0>"
@@ -2231,6 +2292,10 @@ msgstr "Frage Duct etwas"
 msgid "Ask Duct to refine the plan or post…"
 msgstr "Bitte Duct, den Plan oder Beitrag zu verfeinern…"
 
+#: src/components/content/PostViewport.jsx
+msgid "Ask for a change to slide {n}"
+msgstr "Änderung an Folie {n} anfordern"
+
 #: src/components/settings/AgentAccess.jsx
 msgid "Ask it to set up your project"
 msgstr "Bitte ihn, dein Projekt einzurichten"
@@ -2315,6 +2380,10 @@ msgstr "Zielgruppe"
 #: src/components/content/BrandContextForm.jsx
 msgid "Audience personas"
 msgstr "Zielgruppen-Personas"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Audience pick"
+msgstr "Zielgruppen-Favorit"
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Audience, competitors, positioning"
@@ -2416,6 +2485,10 @@ msgstr "Zurück zu Ducts Standardeinstellungen"
 #~ msgid "Back to Insights"
 #~ msgstr "Zurück zu Insights"
 
+#: src/components/content/PostViewport.jsx
+msgid "Back to latest"
+msgstr "Zurück zur neuesten"
+
 #: src/app/(app)/project/[projectId]/page.jsx
 #~ msgid "Back to manage projects"
 #~ msgstr "Zurück zur Projektverwaltung"
@@ -2481,8 +2554,8 @@ msgid "Big Bets"
 msgstr "Große Wetten"
 
 #: src/components/content/PublishReviewPanel.jsx
-msgid "Biggest fixes"
-msgstr "Größte Korrekturen"
+#~ msgid "Biggest fixes"
+#~ msgstr "Größte Korrekturen"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Bio"
@@ -2817,6 +2890,10 @@ msgstr "Gebühren über deinen eigenen Anbieter-Key. Duct stellt sie niemals in 
 msgid "Chat"
 msgstr "Chat"
 
+#: src/components/models/UsagePanel.jsx
+msgid "ChatGPT plan"
+msgstr "ChatGPT-Plan"
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "ChatGPT sign-in isn't available for this account right now"
 msgstr "ChatGPT-Anmeldung ist für dieses Konto derzeit nicht verfügbar"
@@ -2958,7 +3035,6 @@ msgid "Clear filters"
 msgstr "Filter löschen"
 
 #: src/components/content/PlanDayOne.jsx
-#: src/lib/contentReview.js
 msgid "Clicks"
 msgstr "Klicks"
 
@@ -3038,6 +3114,7 @@ msgstr "Befehle für OpenCode"
 
 #: src/components/content/AnalyticsView.jsx
 #: src/components/content/PostMetricsForm.jsx
+#: src/lib/contentReview.js
 msgid "Comments"
 msgstr "Kommentare"
 
@@ -3087,8 +3164,8 @@ msgid "Compacting context"
 msgstr "Kontext wird komprimiert"
 
 #: src/components/content/BrandContextForm.jsx
-msgid "Company"
-msgstr "Unternehmen"
+#~ msgid "Company"
+#~ msgstr "Unternehmen"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Company name"
@@ -3837,6 +3914,10 @@ msgstr "Datenresidenz"
 msgid "Date"
 msgstr "Datum"
 
+#: src/components/content/PublishModal.jsx
+msgid "Date and time to post"
+msgstr "Datum und Uhrzeit zum Veröffentlichen"
+
 #: src/components/content/FeedPlanDialog.jsx
 msgid "Dated pages from one database"
 msgstr "Datierte Seiten aus einer Datenbank"
@@ -4198,6 +4279,7 @@ msgid "Don’t have time to fix these? Duct can execute <0>{totalFixes}</0> of t
 msgstr "Keine Zeit, diese zu beheben? Duct kann <0>{totalFixes}</0> davon für dich ausführen."
 
 #: src/components/audit/ExecutionOffer.jsx
+#: src/components/content/PublishModal.jsx
 #: src/components/models/TierSummary.jsx
 #: src/components/settings/AgentGrantPicker.jsx
 msgid "Done"
@@ -4530,6 +4612,10 @@ msgstr "Duct läuft auf deinem eigenen Konto, daher kostet dich ein Audit nur Ce
 msgid "Duct runs on your own provider keys — paste one below, and its card says where that key is kept. Use a restricted or budget-capped key if your provider offers one."
 msgstr "Duct läuft mit deinen eigenen Provider-Schlüsseln — füge einen unten ein, und seine Karte zeigt, wo dieser Schlüssel gespeichert ist. Verwende einen eingeschränkten oder budgetierten Schlüssel, falls dein Provider einen anbietet."
 
+#: src/components/content/PostViewport.jsx
+msgid "Duct scores the opening, the flow and what people would do with it, and your personas say whether they would stop."
+msgstr "Duct bewertet den Einstieg, den Fluss und was Personen damit tun würden, und deine Personas sagen, ob sie innehalten würden."
+
 #: src/app/(app)/settings/models/page.jsx
 msgid "Duct sends each job to the rung it deserves. Pick what sits on each one."
 msgstr "Duct sendet jeden Job an die Stufe, die er verdient. Wähle, was auf jeder sitzt."
@@ -4681,6 +4767,10 @@ msgstr "Jede Quelle, die Duct liest, erscheint hier mit dem abgedeckten Zeitraum
 #: src/components/content/PlanList.jsx
 msgid "Earlier"
 msgstr "Früher"
+
+#: src/components/content/PostViewport.jsx
+msgid "Earlier version"
+msgstr "Ältere Version"
 
 #: src/components/content/PlanStrategy.jsx
 msgid "earns less per post"
@@ -5035,6 +5125,10 @@ msgstr "Feed-Adressen"
 msgid "Feedback"
 msgstr "Feedback"
 
+#: src/components/content/PostViewport.jsx
+#~ msgid "Feedback on slide {n}"
+#~ msgstr "Feedback zu Folie {n}"
+
 #: src/components/content/AnalyticsView.jsx
 #~ msgid "Fetching analytics from PostBridge…"
 #~ msgstr "Analysen von PostBridge werden abgerufen…"
@@ -5147,9 +5241,21 @@ msgstr "Erste Zeile ist der Aufhänger. Halte sie 2–3 Sätze lang."
 msgid "First prompt"
 msgstr "Erster Prompt"
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Fix first"
+msgstr "Zuerst beheben"
+
 #: src/components/audit/AuditReportV1.jsx
 msgid "Fix These First"
 msgstr "Diese zuerst beheben"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Fix this"
+msgstr "Das beheben"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Fix:"
+msgstr "Beheben:"
 
 #: src/components/content/FormatLibrary.jsx
 msgid "Fixed, so your copy stands in for the built-in"
@@ -5973,6 +6079,7 @@ msgid "In progress"
 msgstr "In Bearbeitung"
 
 #: src/components/content/BrandContextForm.jsx
+#: src/components/content/PublishReviewPanel.jsx
 msgid "In their words"
 msgstr "In ihren Worten"
 
@@ -6133,6 +6240,10 @@ msgstr "Es hat beim letzten Aufruf durch Duct nicht geantwortet. Der nächste Ch
 msgid "It didn't answer. Try again in a moment."
 msgstr "Es hat nicht geantwortet. Versuche es gleich noch einmal."
 
+#: src/components/content/PublishModal.jsx
+msgid "It goes out on {to}. You can change or cancel it from the post until then."
+msgstr "Wird auf {to} veröffentlicht. Du kannst es bis dahin über den Beitrag ändern oder abbrechen."
+
 #: src/hooks/useAgentNotifications.js
 msgid "It has a question before it can continue."
 msgstr "Es hat eine Frage, bevor es fortfahren kann."
@@ -6169,6 +6280,10 @@ msgstr "Er läuft nächsten Monat wieder, oder du erhöhst das Limit."
 #~ msgid "It won't see or set up any other project."
 #~ msgstr "Es kann keine anderen Projekte sehen oder einrichten."
 
+#: src/components/content/PublishModal.jsx
+msgid "It's live on {to}."
+msgstr "Ist live auf {to}."
+
 #: src/components/AppErrorPanel.jsx
 msgid "It’s logged on our side. Copy the details below if you report it."
 msgstr "Es wurde bei uns protokolliert. Kopiere die Details unten, wenn du es meldest."
@@ -6176,6 +6291,10 @@ msgstr "Es wurde bei uns protokolliert. Kopiere die Details unten, wenn du es me
 #: src/app/(auth)/desktop-auth/page.js
 msgid "It's logged on our side. Try again, and send us the details below if it keeps happening."
 msgstr "Es wurde bei uns protokolliert. Versuche es erneut und sende uns die Details unten, falls es weiterhin auftritt."
+
+#: src/components/content/PublishModal.jsx
+msgid "It's on its way to {to}. The link appears on the post once the platform confirms it."
+msgstr "Ist unterwegs zu {to}. Der Link erscheint auf dem Beitrag, sobald die Plattform ihn bestätigt."
 
 #: src/lib/userProfile.js
 msgid "Italiano"
@@ -6208,6 +6327,10 @@ msgstr "Gerade komprimiert — wird beim nächsten Aufruf neu gezählt"
 #: src/components/insights/desk/useRelativeTime.js
 msgid "just now"
 msgstr "gerade eben"
+
+#: src/components/content/PostViewport.jsx
+msgid "Just updated"
+msgstr "Gerade aktualisiert"
 
 #: src/components/content/PlanBoard.jsx
 msgid "Kanban"
@@ -6336,6 +6459,14 @@ msgstr "Zahlungssäumiger Kunde? Sag das, Wort für Wort."
 #: src/components/UpdateToast.jsx
 msgid "Later"
 msgstr "Später"
+
+#: src/components/content/PostViewport.jsx
+msgid "Later version"
+msgstr "Neuere Version"
+
+#: src/components/content/PostViewport.jsx
+msgid "Latest of {total} versions"
+msgstr "Neueste von {total} Versionen"
 
 #: src/components/content/PlanStrategy.jsx
 msgid "Leans on"
@@ -6616,13 +6747,17 @@ msgstr "Lädt den Thread"
 msgid "Loading topic + brand context"
 msgstr "Thema + Markenkontext werden geladen"
 
+#: src/components/content/PublishModal.jsx
+msgid "Loading your accounts"
+msgstr "Deine Konten werden geladen"
+
 #: src/components/content/PlanViewport.jsx
 msgid "Loading your brand & pillars"
 msgstr "Deine Marke & Säulen werden geladen"
 
 #: src/components/content/PublishModal.jsx
-msgid "Loading your connected accounts…"
-msgstr "Deine verbundenen Konten werden geladen…"
+#~ msgid "Loading your connected accounts…"
+#~ msgstr "Deine verbundenen Konten werden geladen…"
 
 #: src/components/models/TierSummary.jsx
 msgid "Loading your models…"
@@ -6690,6 +6825,14 @@ msgstr "Dein Endpunkt wird geprüft."
 #: src/components/connections/EndpointProviderCard.jsx
 msgid "Looking…"
 msgstr "Suche…"
+
+#: src/components/content/PostViewport.jsx
+#~ msgid "Looks good"
+#~ msgstr "Sieht gut aus"
+
+#: src/components/content/PostViewport.jsx
+msgid "Looks good, make slide {nextN}"
+msgstr "Sieht gut aus, Folie {nextN} erstellen"
 
 #: src/app/(app)/project/[projectId]/page.jsx
 msgid "Looks right"
@@ -6804,6 +6947,7 @@ msgstr "Meine Nachrichten anpassen"
 msgid "Match the brand description"
 msgstr "Wie die Markenbeschreibung"
 
+#: src/components/content/PublishReviewPanel.jsx
 #: src/lib/contentReview.js
 msgid "Maybe"
 msgstr "Vielleicht"
@@ -7275,6 +7419,7 @@ msgstr "Nächste Woche"
 msgid "Nightly check"
 msgstr "Nächtliche Prüfung"
 
+#: src/components/content/PublishReviewPanel.jsx
 #: src/lib/contentReview.js
 msgid "No"
 msgstr "Nein"
@@ -7341,6 +7486,10 @@ msgstr "Keine Bildunterschrift"
 msgid "No caption yet."
 msgstr "Noch keine Bildunterschrift."
 
+#: src/components/content/PublishModal.jsx
+msgid "No caption."
+msgstr "Keine Bildunterschrift."
+
 #: src/components/content/PostVideo.jsx
 msgid "No clip yet"
 msgstr "Noch kein Clip"
@@ -7368,6 +7517,10 @@ msgstr "Keine tägliche Erinnerung"
 #: src/components/content/PlanList.jsx
 msgid "No date"
 msgstr "Kein Datum"
+
+#: src/components/content/PlanList.jsx
+msgid "No day changed."
+msgstr "Kein Tag geändert."
 
 #: src/app/(app)/artifacts/page.jsx
 msgid "No documents yet"
@@ -7618,7 +7771,6 @@ msgid "Non-profit"
 msgstr "Gemeinnützig"
 
 #: src/components/audit/AuditStepProgress.jsx
-#: src/components/content/PlanChanges.jsx
 msgid "none"
 msgstr "keine"
 
@@ -7654,6 +7806,10 @@ msgstr "Kein Schlüssel, den wir verwenden können"
 #: src/lib/mcpServers.js
 msgid "Not answering"
 msgstr "Antwortet nicht"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Not asked"
+msgstr "Nicht gefragt"
 
 #: src/components/insights/desk/DeskCards.jsx
 #~ msgid "Not confirmed"
@@ -7744,6 +7900,10 @@ msgstr "Nicht aufgezeichnet"
 msgid "Not remembering"
 msgstr "Erinnert sich nicht"
 
+#: src/components/content/PostViewport.jsx
+msgid "Not reviewed yet"
+msgstr "Noch nicht geprüft"
+
 #: src/components/AutoFallbackCard.jsx
 msgid "Not saved — sign in to keep this setting across your devices."
 msgstr "Nicht gespeichert – melde dich an, um diese Einstellung auf all deinen Geräten zu behalten."
@@ -7787,8 +7947,8 @@ msgid "Not stored"
 msgstr "Nicht gespeichert"
 
 #: src/components/content/PublishReviewPanel.jsx
-msgid "Not tested on your results yet: that needs five published posts with numbers. Read this as a guess."
-msgstr "Noch nicht an deinen Ergebnissen getestet: Dafür werden fünf veröffentlichte Beiträge mit Zahlen benötigt. Sieh das als Schätzung."
+#~ msgid "Not tested on your results yet: that needs five published posts with numbers. Read this as a guess."
+#~ msgstr "Noch nicht an deinen Ergebnissen getestet: Dafür werden fünf veröffentlichte Beiträge mit Zahlen benötigt. Sieh das als Schätzung."
 
 #: src/lib/contentEnums.js
 msgid "Not true"
@@ -8419,6 +8579,10 @@ msgstr "Öffne den Werkzeugkasten"
 msgid "Open the Toolbox →"
 msgstr "Öffne den Werkzeugkasten →"
 
+#: src/components/content/PublishModal.jsx
+msgid "Open TikTok on {to} to post it yourself."
+msgstr "Öffne TikTok auf {to}, um ihn selbst zu veröffentlichen."
+
 #: src/components/connections/McpConnectors.jsx
 msgid "Open to try again"
 msgstr "Öffnen, um es erneut zu versuchen"
@@ -8485,8 +8649,8 @@ msgid "Opening…"
 msgstr "Wird geöffnet…"
 
 #: src/components/content/PublishReviewPanel.jsx
-msgid "Openings they compared"
-msgstr "Verglichene Einstiege"
+#~ msgid "Openings they compared"
+#~ msgstr "Verglichene Einstiege"
 
 #: src/components/connections/logos.jsx
 msgid "OpenRouter"
@@ -8766,6 +8930,7 @@ msgid "Permissions"
 msgstr "Berechtigungen"
 
 #: src/components/content/BrandContextForm.jsx
+#: src/components/content/PublishReviewPanel.jsx
 msgid "Persona"
 msgstr "Persona"
 
@@ -8961,6 +9126,7 @@ msgid "Português"
 msgstr "Portugiesisch"
 
 #: src/components/content/AnalyticsView.jsx
+#: src/components/content/PostViewport.jsx
 #: src/components/content/TextPostEditor.jsx
 msgid "Post"
 msgstr "Beitrag"
@@ -8990,12 +9156,12 @@ msgid "post preview"
 msgstr "Beitragsvorschau"
 
 #: src/components/content/PublishModal.jsx
-msgid "Post published"
-msgstr "Beitrag veröffentlicht"
+#~ msgid "Post published"
+#~ msgstr "Beitrag veröffentlicht"
 
 #: src/components/content/PublishModal.jsx
-msgid "Post scheduled"
-msgstr "Beitrag geplant"
+#~ msgid "Post scheduled"
+#~ msgstr "Beitrag geplant"
 
 #: src/components/content/AccountsTab.jsx
 msgid "Post to all your accounts from one place"
@@ -9021,6 +9187,7 @@ msgstr "PostBridge"
 msgid "posted"
 msgstr "gepostet"
 
+#: src/components/content/PublishModal.jsx
 #: src/lib/contentEnums.js
 msgid "Posted"
 msgstr "Gepostet"
@@ -9032,6 +9199,10 @@ msgstr "Gepostet {postedOn}"
 #: src/components/content/AccountsTab.jsx
 msgid "Posting by hand"
 msgstr "Manuelles Posten"
+
+#: src/components/content/PublishModal.jsx
+msgid "Posting to {to}…"
+msgstr "Wird auf {to} veröffentlicht…"
 
 #: src/app/(app)/content/page.jsx
 msgid "posts"
@@ -9867,6 +10038,10 @@ msgstr "Diese Säule entfernen"
 msgid "Remove your {providerName} key?"
 msgstr "Deinen {providerName}-Schlüssel entfernen?"
 
+#: src/components/content/PlanChanges.jsx
+msgid "removed"
+msgstr "entfernt"
+
 #: src/components/workspace/ActivityRow.jsx
 msgid "Rendered a slide"
 msgstr "Eine Folie gerendert"
@@ -9894,6 +10069,10 @@ msgstr "ersetzt"
 #: src/components/memory/MemoryTimeline.jsx
 msgid "replaced on {endedOn}"
 msgstr "ersetzt am {endedOn}"
+
+#: src/components/content/PlanChanges.jsx
+msgid "Replaces:"
+msgstr "Ersetzt:"
 
 #: src/components/content/TextPostEditor.jsx
 msgid "Reply {n}"
@@ -10046,6 +10225,10 @@ msgstr "Neu starten zum Aktualisieren"
 msgid "Restore this version"
 msgstr "Diese Version wiederherstellen"
 
+#: src/components/workspace/ActivityRow.jsx
+msgid "Restored an earlier version of a slide"
+msgstr "Ältere Version einer Folie wiederhergestellt"
+
 #: src/app/(app)/connections/page.jsx
 msgid "Restricted API key"
 msgstr "Eingeschränkter API-Schlüssel"
@@ -10093,6 +10276,7 @@ msgid "Reversible changes on the allowlist apply on their own; the rest waits he
 msgstr "Reversible Änderungen auf der Zulassungsliste werden automatisch angewendet; der Rest wartet hier."
 
 #: src/app/(app)/execute/page.jsx
+#: src/components/content/PostViewport.jsx
 #: src/components/content/PublishReviewPanel.jsx
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "Review"
@@ -10103,12 +10287,16 @@ msgid "Review again"
 msgstr "Erneut überprüfen"
 
 #: src/components/content/PostViewport.jsx
-msgid "Review before publishing"
-msgstr "Vor Veröffentlichung überprüfen"
+#~ msgid "Review before publishing"
+#~ msgstr "Vor Veröffentlichung überprüfen"
 
 #: src/components/insights/desk/DeskQueue.jsx
 msgid "Review changes"
 msgstr "Änderungen prüfen"
+
+#: src/components/content/PostViewport.jsx
+msgid "Review first"
+msgstr "Erst prüfen"
 
 #: src/components/schedules/ScheduleCard.jsx
 msgid "Review the plan"
@@ -10117,6 +10305,10 @@ msgstr "Plan ansehen"
 #: src/components/schedules/ScheduleCard.jsx
 #~ msgid "Review the proposal"
 #~ msgstr "Vorschlag prüfen"
+
+#: src/components/content/PostViewport.jsx
+msgid "Review this post"
+msgstr "Diesen Beitrag prüfen"
 
 #: src/components/audit/AuditWorkspace.jsx
 msgid "Review what changed"
@@ -10138,6 +10330,10 @@ msgstr "Überprüft einen Beitrag"
 msgid "Reviewing Open Graph completeness…"
 msgstr "Open Graph Vollständigkeit wird überprüft…"
 
+#: src/components/content/PostViewport.jsx
+msgid "Reviewing this post…"
+msgstr "Dieser Beitrag wird geprüft…"
+
 #: src/components/content/PlanViewport.jsx
 msgid "Reviewing your content pillars…"
 msgstr "Deine Content-Säulen werden überprüft…"
@@ -10153,6 +10349,10 @@ msgstr "Überarbeite den Rest des Plans"
 #: src/components/content/PostViewport.jsx
 msgid "Revise with Duct"
 msgstr "Mit Duct überarbeiten"
+
+#: src/components/content/PostViewport.jsx
+msgid "Revise with Duct and ask for a review to get one."
+msgstr "Überarbeite mit Duct und fordere eine Prüfung an, um eine zu erhalten."
 
 #: src/components/settings/AgentAccess.jsx
 msgid "Revoke"
@@ -10286,6 +10486,14 @@ msgstr "Läuft"
 msgid "Running now"
 msgstr "Läuft gerade"
 
+#: src/components/workspace/AgentChat.jsx
+msgid "Running on {model}: your ChatGPT {plan} plan doesn't include {picked}. An API key or a higher plan does."
+msgstr "Läuft auf {model}: Dein ChatGPT-{plan}-Abo enthält {picked} nicht. Ein API-Schlüssel oder ein höheres Abo schon."
+
+#: src/components/workspace/AgentChat.jsx
+msgid "Running on {model}: your ChatGPT plan doesn't include {picked}. An API key or a higher plan does."
+msgstr "Läuft auf {model}: Dein ChatGPT-Abo enthält {picked} nicht. Ein API-Schlüssel oder ein höheres Abo schon."
+
 #: src/lib/modelTiers.js
 msgid "Running on a key already on this computer, not one you added here."
 msgstr "Wird mit einem Schlüssel ausgeführt, der bereits auf diesem Computer vorhanden ist, nicht mit einem, den du hier hinzugefügt hast."
@@ -10381,12 +10589,16 @@ msgid "Save a model key so a run can start without you."
 msgstr "Speichere einen Modellschlüssel, damit ein Lauf ohne dich starten kann."
 
 #: src/components/content/PublishModal.jsx
+msgid "Save as a TikTok draft, to post from the app yourself"
+msgstr "Als TikTok-Entwurf speichern, um ihn selbst aus der App zu veröffentlichen"
+
+#: src/components/content/PublishModal.jsx
 msgid "Save as draft"
 msgstr "Als Entwurf speichern"
 
 #: src/components/content/PublishModal.jsx
-msgid "Save as TikTok draft (post manually from the app)"
-msgstr "Als TikTok-Entwurf speichern (manuell aus der App posten)"
+#~ msgid "Save as TikTok draft (post manually from the app)"
+#~ msgstr "Als TikTok-Entwurf speichern (manuell aus der App posten)"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Save brand"
@@ -10441,8 +10653,8 @@ msgid "Saved {savedAtText}"
 msgstr "Gespeichert {savedAtText}"
 
 #: src/components/content/PublishModal.jsx
-msgid "Saved as TikTok draft"
-msgstr "Als TikTok-Entwurf gespeichert"
+#~ msgid "Saved as TikTok draft"
+#~ msgstr "Als TikTok-Entwurf gespeichert"
 
 #: src/components/content/PlanViewport.jsx
 msgid "Saved as your plan"
@@ -10476,6 +10688,10 @@ msgstr "Den Entwurf gespeichert"
 msgid "Saved to this project, so you won’t be asked again."
 msgstr "In diesem Projekt gespeichert, damit du nicht erneut gefragt wirst."
 
+#: src/components/content/PublishModal.jsx
+msgid "Saved to TikTok drafts"
+msgstr "In TikTok-Entwürfen gespeichert"
+
 #: src/lib/credentialStorage.js
 msgid "Saved to your account"
 msgstr "In deinem Konto gespeichert"
@@ -10501,6 +10717,10 @@ msgstr "Saves und Shares pro Beitrag, das deutlichste Zeichen der Absicht, das d
 #: src/components/content/FormatLibrary.jsx
 msgid "Saving makes this project’s own copy, which replaces the built-in here. Reset it later to go back."
 msgstr "Speichern erstellt eine eigene Kopie dieses Projekts, die das integrierte hier ersetzt. Setze es später zurück, um zurückzukehren."
+
+#: src/components/content/PublishModal.jsx
+msgid "Saving to {to}'s TikTok drafts…"
+msgstr "Wird in den TikTok-Entwürfen von {to} gespeichert…"
 
 #: src/components/content/AccountsTab.jsx
 #: src/components/content/BrandContextForm.jsx
@@ -10533,8 +10753,12 @@ msgid "Scatter"
 msgstr "Streuung"
 
 #: src/components/content/PublishModal.jsx
-msgid "Schedule for:"
-msgstr "Planen für:"
+msgid "Schedule for"
+msgstr "Planen für"
+
+#: src/components/content/PublishModal.jsx
+#~ msgid "Schedule for:"
+#~ msgstr "Planen für:"
 
 #: src/components/content/PublishModal.jsx
 msgid "Schedule post"
@@ -10557,6 +10781,10 @@ msgstr "Geplant"
 msgid "Scheduled {scheduledOn}"
 msgstr "Geplant {scheduledOn}"
 
+#: src/components/content/PublishModal.jsx
+msgid "Scheduled for {whenText}"
+msgstr "Geplant für {whenText}"
+
 #: src/components/content/AccountsTab.jsx
 msgid "Scheduled for you"
 msgstr "Für dich geplant"
@@ -10572,6 +10800,10 @@ msgstr "Planer"
 #: src/components/content/AccountsTab.jsx
 #~ msgid "Schedulers"
 #~ msgstr "Planer"
+
+#: src/components/content/PublishModal.jsx
+msgid "Scheduling for {to}…"
+msgstr "Wird für {to} geplant…"
 
 #: src/components/audit/AuditStepProgress.jsx
 msgid "Schema"
@@ -10594,8 +10826,16 @@ msgid "score {scoreBefore} → {scoreAfter}"
 msgstr "Punktzahl {scoreBefore} → {scoreAfter}"
 
 #: src/components/content/PublishReviewPanel.jsx
+msgid "Score {value} out of 100"
+msgstr "Bewertung {value} von 100"
+
+#: src/components/content/PublishReviewPanel.jsx
 msgid "Scored {scoredAgo} · advice only, publish either way"
 msgstr "Bewertet {scoredAgo} · nur Empfehlung, trotzdem veröffentlichen"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Scores"
+msgstr "Bewertungen"
 
 #: src/components/audit/AuditReport.jsx
 msgid "Scoring each SEO category…"
@@ -10604,6 +10844,10 @@ msgstr "Jede SEO-Kategorie wird bewertet…"
 #: src/components/audit/AuditReport.jsx
 msgid "Scoring signals & building findings"
 msgstr "Signale werden bewertet & Befunde erstellt"
+
+#: src/components/content/PostViewport.jsx
+msgid "Scoring the opening and the flow, and reading it as each of your personas. Usually a minute."
+msgstr "Bewertet den Einstieg und den Fluss und liest es aus der Sicht jeder deiner Personas. Dauert meist eine Minute."
 
 #: src/components/content/DiscoverPage.jsx
 msgid "Scrape real posts in your niche. What you save, the research agent cites when it proposes topics."
@@ -10816,6 +11060,7 @@ msgstr "Selbst gehostete API-URL"
 
 #: src/components/ChatSidebar.jsx
 #: src/components/content/PlanViewport.jsx
+#: src/components/content/PostViewport.jsx
 #: src/components/insights/desk/DeskComposer.jsx
 #: src/components/workspace/ChatInput.jsx
 msgid "Send"
@@ -10829,7 +11074,12 @@ msgstr "Absturzberichte und Nutzungsdaten senden"
 msgid "Send invite"
 msgstr "Einladung senden"
 
+#: src/components/content/PublishModal.jsx
+msgid "Sending the post."
+msgstr "Beitrag wird gesendet."
+
 #: src/components/audit/ExecutionOffer.jsx
+#: src/components/content/PublishModal.jsx
 msgid "Sending…"
 msgstr "Senden…"
 
@@ -11005,6 +11255,7 @@ msgstr "Mit allen auf {name} geteilt."
 #: src/components/content/AnalyticsView.jsx
 #: src/components/content/PlanDayOne.jsx
 #: src/components/content/PostMetricsForm.jsx
+#: src/lib/contentReview.js
 msgid "Shares"
 msgstr "Teilungen"
 
@@ -11078,6 +11329,7 @@ msgid "Show key"
 msgstr "Schlüssel anzeigen"
 
 #: src/components/content/DraftsQueue.jsx
+#: src/components/content/PublishModal.jsx
 #: src/components/workspace/AgentChat.jsx
 msgid "Show less"
 msgstr "Weniger anzeigen"
@@ -11101,6 +11353,10 @@ msgstr "Mehr Signale anzeigen"
 #: src/components/memory/MemoryTimeline.jsx
 #~ msgid "Show superseded"
 #~ msgstr "Überholte anzeigen"
+
+#: src/components/content/PublishModal.jsx
+msgid "Show the whole caption"
+msgstr "Gesamte Bildunterschrift anzeigen"
 
 #: src/components/insights/ToolApproval.jsx
 #~ msgid "Showing the first part. The rest goes too."
@@ -11366,6 +11622,10 @@ msgstr "Folie {n}"
 #: src/components/content/SlidesCarousel.jsx
 msgid "Slide {n} · {kind}"
 msgstr "Folie {n} · {kind}"
+
+#: src/components/content/PostViewport.jsx
+msgid "Slide {n} updated · View"
+msgstr "Folie {n} aktualisiert · Ansehen"
 
 #: src/components/content/ContentWorkspace.jsx
 #~ msgid "Slide {slideNo}"
@@ -11647,8 +11907,12 @@ msgid "Stops"
 msgstr "Stoppt"
 
 #: src/components/content/PublishReviewPanel.jsx
-msgid "Stops for: {picked}"
-msgstr "Stoppt bei: {picked}"
+msgid "stops for {picked}"
+msgstr "hält inne bei {picked}"
+
+#: src/components/content/PublishReviewPanel.jsx
+#~ msgid "Stops for: {picked}"
+#~ msgstr "Stoppt bei: {picked}"
 
 #: src/components/content/VendorKeyForm.jsx
 msgid "Stored encrypted, and used only for projects you own."
@@ -12020,6 +12284,10 @@ msgstr "Dieser Zug ist fehlgeschlagen"
 msgid "That turn failed. Try again."
 msgstr "Dieser Zug ist fehlgeschlagen. Versuche es erneut."
 
+#: src/components/content/PostViewport.jsx
+msgid "That version didn't come back. Try again."
+msgstr "Diese Version konnte nicht wiederhergestellt werden. Versuche es erneut."
+
 #: src/components/content/CloneFromUrlDialog.jsx
 msgid "That's a share link. Open it, then copy the full address from your browser."
 msgstr "Das ist ein Share-Link. Öffne ihn und kopiere dann die vollständige Adresse aus deinem Browser."
@@ -12172,6 +12440,10 @@ msgstr "Das Modell hat zu lange gebraucht, um zu antworten. Versuche es erneut."
 msgid "The next plan leans on your own best posts and posting times."
 msgstr "Der nächste Plan stützt sich auf deine eigenen besten Beiträge und Posting-Zeiten."
 
+#: src/components/content/AccountsTab.jsx
+msgid "The opening"
+msgstr "Der Einstieg"
+
 #: src/app/not-found.js
 msgid "The page you are looking for does not exist or has moved."
 msgstr "Die Seite, die du suchst, existiert nicht oder wurde verschoben."
@@ -12231,6 +12503,10 @@ msgstr "Der Recherche-Agent zitiert, was du gespeichert hast, wenn er Themen vor
 #: src/app/(app)/connections/page.jsx
 msgid "The revenue every other number should answer to."
 msgstr "Der Umsatz, dem alle anderen Zahlen dienen sollten."
+
+#: src/components/content/PostViewport.jsx
+msgid "The review stopped before it finished, so nothing new was scored."
+msgstr "Die Überprüfung wurde abgebrochen, bevor sie beendet war, sodass nichts Neues bewertet wurde."
 
 #: src/lib/agentSession.js
 msgid "The run stopped without saying why. Try again."
@@ -12408,6 +12684,10 @@ msgstr "Dieses Artefakt hat keinen gespeicherten Inhalt zum Rendern."
 #: src/app/(public)/lead/seo-audit/page.jsx
 msgid "This audit link is no longer valid. Links expire after 24 hours. Please enter your website again to get a fresh audit."
 msgstr "Dieser Audit-Link ist nicht mehr gültig. Links verfallen nach 24 Stunden. Bitte gib deine Website erneut ein, um ein neues Audit zu erhalten."
+
+#: src/components/content/PublishModal.jsx
+msgid "This can take a minute."
+msgstr "Das kann eine Minute dauern."
 
 #: src/components/schedules/ScheduleCard.jsx
 msgid "This computer"
@@ -12784,6 +13064,7 @@ msgstr "Versucht"
 #: src/components/connections/McpConnectors.jsx
 #: src/components/connections/ProviderCard.jsx
 #: src/components/content/AnalyticsReport.jsx
+#: src/components/content/PostViewport.jsx
 #: src/components/LoadError.jsx
 msgid "Try again"
 msgstr "Erneut versuchen"
@@ -12932,6 +13213,11 @@ msgstr "Update fehlgeschlagen."
 msgid "Update the desktop app — this version can’t run the sign-in."
 msgstr "Aktualisiere die Desktop-App — diese Version kann die Anmeldung nicht ausführen."
 
+#: src/components/content/PlanList.jsx
+#: src/components/content/PostMiniCard.jsx
+msgid "Updated"
+msgstr "Aktualisiert"
+
 #: src/components/content/FormatLibrary.jsx
 msgid "Updated {updated}"
 msgstr "Aktualisiert {updated}"
@@ -12998,6 +13284,10 @@ msgstr "Den Plan nutzen, den du bereits bezahlst"
 msgid "Use this account →"
 msgstr "Dieses Konto nutzen →"
 
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Use this opening"
+msgstr "Diesen Einstieg verwenden"
+
 #: src/components/onboarding/ProviderStep.jsx
 msgid "Use this plan"
 msgstr "Diesen Plan nutzen"
@@ -13005,6 +13295,10 @@ msgstr "Diesen Plan nutzen"
 #: src/components/content/PostVideo.jsx
 msgid "Use this take"
 msgstr "Diesen Take verwenden"
+
+#: src/components/content/PostViewport.jsx
+msgid "Use this version"
+msgstr "Diese Version verwenden"
 
 #: src/components/workspace/ActivityRow.jsx
 msgid "Used {tool}"
@@ -13123,6 +13417,10 @@ msgstr "Verifiziere…"
 msgid "Version"
 msgstr "Version"
 
+#: src/components/content/PostViewport.jsx
+msgid "Version {showing} of {total}"
+msgstr "Version {showing} von {total}"
+
 #: src/components/insights/InsightsWorkspace.jsx
 msgid "Version {version}"
 msgstr "Version {version}"
@@ -13161,6 +13459,10 @@ msgstr "Anzeigen →"
 msgid "View full screen"
 msgstr "Vollbild anzeigen"
 
+#: src/components/content/PublishModal.jsx
+msgid "View post"
+msgstr "Beitrag anzeigen"
+
 #: src/components/content/AnalyticsView.jsx
 #: src/components/content/PostMetricsForm.jsx
 msgid "Views"
@@ -13189,6 +13491,10 @@ msgstr "Aufrufe, Likes, Kommentare und Shares in einer Tabelle, egal wo der Beit
 #: src/components/content/PostMetricsForm.jsx
 msgid "Views, likes, comments and shares update on their own. Add the rest from the platform’s analytics; a sync never changes what you enter."
 msgstr "Aufrufe, Likes, Kommentare und Shares aktualisieren sich automatisch. Füge den Rest aus den Analysedaten der Plattform hinzu; eine Synchronisierung ändert nie, was du eingibst."
+
+#: src/lib/contentReview.js
+msgid "Visits profile"
+msgstr "Besucht Profil"
 
 #: src/components/content/BrandContextForm.jsx
 msgid "Visual identity"
@@ -13270,8 +13576,8 @@ msgid "was “{replacedTitle}” until {replacedUntil}"
 msgstr "war „{replacedTitle}“ bis {replacedUntil}"
 
 #: src/components/content/PlanChanges.jsx
-msgid "Was: {was}"
-msgstr "War: {was}"
+#~ msgid "Was: {was}"
+#~ msgstr "War: {was}"
 
 #: src/components/content/report/GrowthReportView.jsx
 #: src/components/GoogleAdsReport.js
@@ -13418,6 +13724,10 @@ msgstr "Was Duct für {label} schreibt"
 msgid "What each campaign costs and what it brings back."
 msgstr "Was jede Kampagne kostet und was sie einbringt."
 
+#: src/components/content/PublishModal.jsx
+msgid "What goes out"
+msgstr "Was veröffentlicht wird"
+
 #: src/components/insights/ToolApproval.jsx
 msgid "What goes out, and when"
 msgstr "Was rausgeht und wann"
@@ -13465,6 +13775,10 @@ msgstr "Welche Art von Beitrag dieses Rezept erstellt."
 #: src/lib/contentFeedLabels.js
 msgid "What shipped"
 msgstr "Was veröffentlicht wurde"
+
+#: src/components/content/PostViewport.jsx
+#~ msgid "What should change on slide {n}?"
+#~ msgstr "Was soll auf Folie {n} geändert werden?"
 
 #: src/components/content/PlanViewport.jsx
 msgid "What should change?"
@@ -13610,6 +13924,10 @@ msgstr "Welche Modellstufe führt dies aus"
 #: src/components/workspace/ComposerDials.jsx
 msgid "Which model tier runs this, and how hard it thinks"
 msgstr "Welche Modellstufe dies ausführt und wie intensiv es denkt"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Which opening stops them"
+msgstr "Welcher Einstieg sie innehalten lässt"
 
 #: src/components/insights/desk/DeskDayOne.jsx
 msgid "Which pages should rank and don't?"
@@ -13775,7 +14093,6 @@ msgstr "arbeitet…"
 
 #: src/app/(app)/audit/seo/page.jsx
 #: src/components/AppSidebar.jsx
-#: src/components/content/PublishModal.jsx
 #: src/components/insights/desk/DeskLists.jsx
 #: src/components/workspace/AgentChat.jsx
 msgid "Working…"
@@ -13785,9 +14102,18 @@ msgstr "Arbeitet…"
 msgid "Worth adding next"
 msgstr "Als Nächstes hinzufügen"
 
+#. placeholder {0}: r.scroll_past
 #: src/components/content/PublishReviewPanel.jsx
-msgid "Would scroll past: {scrollPast}"
-msgstr "Würden vorbeiscrollen: {scrollPast}"
+msgid "Would scroll past: {0}"
+msgstr "Würden weiterscrollen: {0}"
+
+#: src/components/content/PublishReviewPanel.jsx
+#~ msgid "Would scroll past: {scrollPast}"
+#~ msgstr "Würden vorbeiscrollen: {scrollPast}"
+
+#: src/components/content/PublishReviewPanel.jsx
+msgid "Would win them:"
+msgstr "Würde sie überzeugen:"
 
 #: src/components/content/AnalyticsReport.jsx
 msgid "Write the report"
@@ -13863,6 +14189,7 @@ msgstr "xAI"
 msgid "yes"
 msgstr "Ja"
 
+#: src/components/content/PublishReviewPanel.jsx
 #: src/lib/contentReview.js
 msgid "Yes"
 msgstr "Ja"
@@ -13971,6 +14298,10 @@ msgstr "Du wurdest zu <0>{projectName}</0> eingeladen"
 #: src/components/content/AccountsTab.jsx
 msgid "Your {label} account"
 msgstr "Dein {label} Konto"
+
+#: src/components/models/TierSummary.jsx
+msgid "Your {planName} plan"
+msgstr "Dein {planName}-Plan"
 
 #: src/components/ChatSidebar.jsx
 msgid "your account"

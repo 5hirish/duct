@@ -394,3 +394,17 @@ def test_the_agents_scheduled_time_keeps_its_offset_too(engine, db, project, sli
 
     assert result.get("status") != "error", result
     assert queue.created()["scheduled_at"] == "2026-11-02T08:00:00Z"
+
+
+def test_a_card_shows_what_the_post_publishes_first_not_its_oldest_picture(db, project, r2, slideshow):
+    from agents.content.publishing import cover_urls
+
+    # A picture made first and replaced since is still linked to the post.
+    _asset(db, slideshow, r2, "replaced.png", at=-5)
+    assert cover_urls(db, [slideshow])[slideshow.id].endswith("/renders/slide-01.png")
+
+    # A design cover not rendered yet: the first picture a slide still shows.
+    slideshow.slides = [{"slide_id": "slide-09", "kind": "design", "html": "<div></div>"}, *slideshow.slides]
+    db.add(slideshow)
+    db.commit()
+    assert cover_urls(db, [slideshow])[slideshow.id].endswith("/generated/raw-1.png")

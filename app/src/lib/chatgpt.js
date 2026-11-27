@@ -26,7 +26,16 @@ export const CHATGPT_REVOKED = "revoked";
  */
 export const CHATGPT_CANCELLED = "cancelled";
 
-const PLAN_LABELS = { plus: "ChatGPT Plus", pro: "ChatGPT Pro", team: "ChatGPT Team", free: "ChatGPT Free" };
+const PLAN_LABELS = {
+  free: "ChatGPT Free",
+  go: "ChatGPT Go",
+  plus: "ChatGPT Plus",
+  pro: "ChatGPT Pro",
+  team: "ChatGPT Team",
+  business: "ChatGPT Business",
+  enterprise: "ChatGPT Enterprise",
+  edu: "ChatGPT Edu",
+};
 
 /** The plan as the user would name it, from the `plan_type` claim the shell reports. */
 export function planLabel(planType) {

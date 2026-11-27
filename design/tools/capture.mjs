@@ -73,6 +73,7 @@ writeFileSync(join(build, "routes.json"), JSON.stringify(fixtures.routes()));
 // A screen with `shot` gets <agent>@<shot>.json: the plan session is the
 // content agent making a plan, where the default content stream drafts a post.
 writeFileSync(join(build, "tiktok_studio@plan.json"), JSON.stringify(fixtures.planFrames()));
+writeFileSync(join(build, "tiktok_studio@plan-change.json"), JSON.stringify(fixtures.planChangeFrames()));
 const mock = spawn(process.execPath, [join(REPO, "app/scripts/mock-agent-backend.mjs"), String(MOCK_PORT)], {
   env: {
     ...process.env,

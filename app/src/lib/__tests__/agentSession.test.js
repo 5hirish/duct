@@ -220,6 +220,16 @@ describe("dividers and the thinking clock", () => {
     expect(notices).toEqual([{ role: Row.NOTICE, kind: Notice.MODEL, label: "GPT-6.1 Sol", model: "gpt-6.1-sol" }]);
   });
 
+  it("says once when the ChatGPT plan answers on another model than the one picked", () => {
+    const onGo = { ...started("gpt-6-luna", "GPT-6 Luna"), requested_model: "gpt-6.1-sol", requested_label: "GPT-6.1 Sol", plan: "go" };
+    const first = drive([onGo]);
+    const said = first.state.messages.filter((m) => m.kind === Notice.PLAN);
+    expect(said).toEqual([{ role: Row.NOTICE, kind: Notice.PLAN, label: "GPT-6 Luna", requested: "GPT-6.1 Sol", plan: "go" }]);
+
+    const again = drive([onGo], first.state);
+    expect(again.state.messages.filter((m) => m.kind === Notice.PLAN)).toHaveLength(1);
+  });
+
   it("a compaction learns what it freed from the next call on the thread", () => {
     const { state } = drive([
       { event: AgentEvent.TOKEN_USAGE, input_tokens: 180_000, output_tokens: 500, scope: "thread" },
@@ -502,6 +512,38 @@ describe("context and cost", () => {
     });
     expect(hydrated.usage.last.cost).toBe(0.01);
     expect(hydrated.usage.total.cost).toBe(0.3);
+  });
+
+  it("a card answered before the session's state arrives does not come back", () => {
+    // The card is drawn from the thread's state, the person answers it, and
+    // only then does the reattach's session snapshot (taken before the
+    // answer) arrive, still listing it as pending.
+    const card = { event: AgentEvent.QUESTIONS_REQUIRED, interrupt_id: "int_1", questions: [{ question: "Which goal?" }] };
+    const shown = reduceAgentSession(initialAgentState, { type: Action.PAUSES, pauses: [card] });
+    const answered = reduceAgentSession(shown, { type: Action.ANSWER_SENT, pause: card });
+    const stale = reduceAgentSession(answered, { type: Action.PAUSES, pauses: [card] });
+    expect(stale.pauses).toEqual([]);
+    expect(stale.phase).not.toBe(Phase.QUESTIONS);
+    // Nor does the resume's replay of it, when the answer got there first.
+    const replayed = replayEvents([{ ...card, replay: true }], answered);
+    expect(replayed.pauses).toEqual([]);
+    // An answer that failed to send puts it back, and a fresh snapshot may too.
+    const failed = reduceAgentSession(answered, { type: Action.ANSWER_FAILED, pause: card });
+    expect(reduceAgentSession(failed, { type: Action.PAUSES, pauses: [card] }).pauses).toHaveLength(1);
+  });
+
+  it("a reattached session that sent nothing new still leaves Connecting", () => {
+    const idle = reduceAgentSession(initialAgentState, { type: Action.ATTACHED, running: false });
+    expect(idle.phase).toBe(Phase.READY);
+    const opening = reduceAgentSession(initialAgentState, { type: Action.ATTACHED, running: true });
+    expect(opening.phase).toBe(Phase.PIPELINE);
+    // A follow-up in flight ends on its turn's stop, never on the run's finish.
+    const followUp = reduceAgentSession(initialAgentState, { type: Action.ATTACHED, running: true, opened: true });
+    expect(followUp.phase).toBe(Phase.CHATTING);
+    expect(replayEvents([{ event: AgentEvent.MESSAGE_STOP }], followUp).phase).toBe(Phase.READY);
+    // A frame that arrived first already said where the run is.
+    const finished = replayEvents([{ event: AgentEvent.PIPELINE_STARTED }, { event: AgentEvent.PIPELINE_FINISHED }]);
+    expect(reduceAgentSession(finished, { type: Action.ATTACHED, running: true }).phase).toBe(Phase.READY);
   });
 
   it("compaction is status while it runs, then a quiet note", () => {

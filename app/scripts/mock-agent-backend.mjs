@@ -48,6 +48,10 @@ const MEDIA_TYPES = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", w
 const FRAME_MS = Number(process.env.FRAME_MS || 220);
 
 const sessions = new Map();   // id -> { type, frames, cursor, waiting, wake, conversationId, res, log }
+// Every chat body the app posted, in order, so a journey can assert on what
+// would have reached the agent (the attachments, the words) rather than only
+// on what the page drew. Read with GET /__mock/messages.
+const received = [];
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
 
 function cors(res) {
@@ -119,6 +123,14 @@ const server = http.createServer(async (req, res) => {
   if (req.method === "OPTIONS") { cors(res); res.writeHead(204); return res.end(); }
   if (!path.includes("/stream")) log("→", req.method, path);
 
+  if (path === "/__mock/messages" && req.method === "GET") return json(res, 200, received);
+  // A change set the fixtures proposed, as GET /api/execute/{id} returns it.
+  const proposed = path.match(/^\/api\/execute\/([^/]+)$/);
+  if (proposed && req.method === "GET") {
+    const frame = Object.values(fixtures).flat().find((f) => f.change_set?.id === proposed[1]);
+    if (frame) return json(res, 200, frame.change_set);
+  }
+
   let m;
   if ((m = path.match(/^\/api\/agents\/([^/]+)\/sessions$/)) && req.method === "POST") {
     const type = m[1];
@@ -153,6 +165,7 @@ const server = http.createServer(async (req, res) => {
     const session = sessions.get(m[2]);
     if (!session) return json(res, 404, { detail: "Session not found." });
     const body = await readBody(req);
+    received.push({ agent: m[1], session: m[2], ...body });
     log("message", body.type, m[2].slice(0, 8), JSON.stringify(body.answers || body.content || "").slice(0, 60), body.interrupt_id ? `interrupt_id=${body.interrupt_id}` : "");
     // A chat while the run is busy (mid-frames, or parked on a card) is
     // queued, as the real backend does; it is consumed at the next __send__
@@ -170,8 +183,18 @@ const server = http.createServer(async (req, res) => {
     const session = sessions.get(m[2]);
     if (!session) return json(res, 404, { detail: "Session not found." });
     // What the run is parked on, so a reattaching client can put the card back.
-    const pending = session.waiting === "answer" ? [session.frames.slice(0, session.cursor).reverse().find((f) => f.event === "questions_required")].filter(Boolean) : [];
-    return json(res, 200, { session_id: m[2], agent_type: m[1], report_versions: [], has_pending_question: pending.length > 0, pending });
+    // The real backend is parked from the moment it sends the card; the pump
+    // here only marks it on reaching the wait frame, a frame-gap later, and a
+    // reload inside that gap read "running, nothing pending" and lost the
+    // card (CI, 2026-11-27). The next frame being a wait counts as parked.
+    const next = session.frames[session.cursor];
+    const parked = session.waiting || (next?.__answer__ !== undefined ? "answer" : next?.__send__ !== undefined ? "chat" : null);
+    const pending = parked === "answer" ? [session.frames.slice(0, session.cursor).reverse().find((f) => f.event === "questions_required")].filter(Boolean) : [];
+    // `running` as the real route reports it: a turn is in flight while frames
+    // are left to play and the session is not parked waiting for the person.
+    const running = !parked && session.cursor < session.frames.length;
+    const opened = session.frames.slice(0, session.cursor).some((f) => f.event === "pipeline_finished");
+    return json(res, 200, { session_id: m[2], agent_type: m[1], report_versions: [], has_pending_question: pending.length > 0, running, opened, pending });
   }
   if ((m = path.match(/^\/api\/agents\/([^/]+)\/sessions\/([^/]+)$/)) && req.method === "DELETE") {
     const session = sessions.get(m[2]);
@@ -181,7 +204,11 @@ const server = http.createServer(async (req, res) => {
     return json(res, 200, { status: "ok" });
   }
   if ((m = path.match(/^\/api\/agents\/([^/]+)\/conversations\/([^/]+)\/state$/))) {
-    const pause = pauseFrameOf(fixtures[m[1]] || []);
+    // Parked only while a live session of this thread is waiting on its card,
+    // as the real thread state is; an answered card must not come back on the
+    // next read just because the fixture once asked it.
+    const live = [...sessions.values()].find((s) => s.conversationId === m[2]);
+    const pause = live && live.waiting !== "answer" ? null : pauseFrameOf(fixtures[m[1]] || []);
     return json(res, 200, m[1] === "insights" && pause
       ? { status: "paused", pauses: [pause], todos: [{ content: "Pull Ads campaigns", status: "completed" }] }
       : { status: "unsupported", pauses: [], todos: [] });

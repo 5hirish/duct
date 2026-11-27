@@ -93,6 +93,10 @@ class BaseAgentSession:
     # True while the runner is inside a turn — what makes a new message a
     # steer rather than the start of the next turn.
     turn_active: bool = False
+    # True once the opening run has finished. A client that reattaches mid-turn
+    # reads it to know whether the turn it joined ends with the run's finish
+    # event (the opening) or only with the turn's own stop (a follow-up).
+    opened: bool = False
 
 
 CLIENT_MESSAGE_ID = "client_message_id"

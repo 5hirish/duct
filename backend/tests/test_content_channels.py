@@ -60,6 +60,9 @@ def test_every_offered_channel_has_rules_and_a_guide():
     for cid in OFFERED:
         assert cid in GUIDES, cid
         assert resolve(cid).label
+        # Every feed decides on its own fold; a channel without one is
+        # written to the generic opening rules and misses where it lands.
+        assert GUIDES[cid].opening, cid
     # An article is written as text whatever playbook stands in for it.
     assert resolve(Platform.BLOG).text_first and resolve(Platform.BLOG).rules.long_form
     assert resolve(Platform.WORDPRESS).text_first

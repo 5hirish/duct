@@ -130,6 +130,69 @@ async def run_crawl(
 
 
 # ---------------------------------------------------------------------------
+# What the crawl steps show — the ladder's expanded panels
+# ---------------------------------------------------------------------------
+
+# Enough of robots.txt / llms.txt to recognise the file, not to read it.
+FILE_PREVIEW_CHARS = 300
+
+
+def _file_facts(prefix: str, text: str) -> dict:
+    return {
+        f"{prefix}_found":   bool(text),
+        f"{prefix}_bytes":   len(text.encode()) if text else 0,
+        f"{prefix}_lines":   text.count("\n") + 1 if text else 0,
+        f"{prefix}_preview": text[:FILE_PREVIEW_CHARS],
+    }
+
+
+def sitemap_step_payload(crawl_result: CrawlResult) -> dict:
+    """The fetch_sitemap step's panel: the sitemap, robots.txt, llms.txt and
+    the URLs the crawl chose (app/src/components/audit/AuditStepProgress.jsx)."""
+    plan = crawl_result.plan
+    return {
+        "landing_pages":     len(plan.landing_pages),
+        "blog_posts":        len(plan.blog_posts),
+        "sitemap_url":       plan.sitemap_url,
+        "landing_page_urls": plan.landing_pages,
+        "blog_post_urls":    plan.blog_posts,
+        **_file_facts("robots_txt", crawl_result.robots_txt or ""),
+        **_file_facts("llms_txt", crawl_result.llms_txt or ""),
+    }
+
+
+def crawl_step_payload(crawl_result: CrawlResult) -> dict:
+    """The crawl_pages step's panel: one row of signals per page fetched."""
+    return {
+        "pages": [
+            {
+                "url":                    p.url,
+                "page_type":              p.page_type,
+                "http_status":            p.http_status,
+                "word_count":             p.word_count_approx,
+                "body_preview":           p.body_text_snippet,
+                "title":                  p.title,
+                "title_chars":            len(p.title),
+                "meta_description":       p.meta_description,
+                "meta_description_chars": len(p.meta_description),
+                "images":                 p.image_count,
+                "images_missing_alt":     p.images_missing_alt,
+                "has_schema_org":         p.has_schema_org,
+                "schema_types":           p.schema_types,
+                "has_canonical":          bool(p.canonical),
+                "canonical":              p.canonical,
+                "is_noindex":             p.is_noindex,
+                "hreflang_count":         len(p.hreflang_langs),
+                "internal_links":         len(p.internal_links),
+                "external_links":         len(p.external_links),
+            }
+            for p in crawl_result.pages
+        ],
+        "errors": crawl_result.crawl_errors,
+    }
+
+
+# ---------------------------------------------------------------------------
 # Report parsing — freehand mode delivers the report as text, not tool calls
 # ---------------------------------------------------------------------------
 
@@ -199,7 +262,9 @@ def extract_report_update(text: str, base: AuditReport | None = None) -> AuditRe
 __all__ = [
     "EmitFn",
     "create_audit_session",
+    "crawl_step_payload",
     "extract_report_update",
     "parse_report",
     "run_crawl",
+    "sitemap_step_payload",
 ]

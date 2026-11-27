@@ -60,8 +60,11 @@ from agents.core.tool_calls import executing_tool_call
 from agents.core.lc import (
     ReportedRetryMiddleware,
     SeenImagePruneMiddleware,
+    TOOL_RESULT_IMAGE_PROVIDERS,
+    ToolImagesInUserTurnMiddleware,
     SteerMiddleware,
-    chat_message_text,
+    chat_message_content,
+    merge_chat_contents,
     compact_thread,
     drain_steers,
     live_pauses,
@@ -204,6 +207,10 @@ class _NoFallback(GraphBubbleUp):
         self.exc = exc
 
 
+def _another_model_could_serve(exc: BaseException) -> bool:
+    return is_retryable(exc) or classify_error(exc) == ErrorCode.MODEL_NOT_FOUND
+
+
 class ClassifiedFallbackMiddleware(ModelFallbackMiddleware):
     """Fall back only on a failure another model could survive.
 
@@ -215,6 +222,11 @@ class ClassifiedFallbackMiddleware(ModelFallbackMiddleware):
     has given up on a transient failure — a rate limit, an overload, an
     upstream error, a timeout, a network drop — another model is worth a try;
     for anything else the first answer is the answer. Rulebook gap 4.
+
+    One non-transient failure also falls back: a model this credential cannot
+    use (`model_not_found`). The step down is a different model, so it can
+    succeed where the first never would; a ChatGPT plan whose catalogue lacks
+    the picked Sol still has Luna.
     """
 
     def wrap_model_call(self, request, handler):
@@ -224,7 +236,7 @@ class ClassifiedFallbackMiddleware(ModelFallbackMiddleware):
             except GraphBubbleUp:
                 raise
             except Exception as exc:
-                if is_retryable(exc):
+                if _another_model_could_serve(exc):
                     raise
                 raise _NoFallback(exc) from exc
 
@@ -240,7 +252,7 @@ class ClassifiedFallbackMiddleware(ModelFallbackMiddleware):
             except GraphBubbleUp:
                 raise
             except Exception as exc:
-                if is_retryable(exc):
+                if _another_model_could_serve(exc):
                     raise
                 raise _NoFallback(exc) from exc
 
@@ -503,6 +515,15 @@ def session_middleware(
             ],
         ),
         *([SeenImagePruneMiddleware()] if prune_seen_images else []),
+        # A provider that takes images but not inside a tool result sees the
+        # picture in a user message instead, so a run can check its own work
+        # on every vision provider, not only Anthropic.
+        *(
+            [ToolImagesInUserTurnMiddleware()]
+            if prune_seen_images and provider is not None
+            and getattr(provider, "value", provider) not in TOOL_RESULT_IMAGE_PROVIDERS
+            else []
+        ),
         # Every tool body can name the call it runs in; the writers key on
         # it so a run continued from its checkpoint writes once.
         ToolCallBinder(),
@@ -693,7 +714,7 @@ class DeepSession:
 
     # -- one turn -------------------------------------------------------------
 
-    async def _stream(self, text: str | Command | None) -> Pauses:
+    async def _stream(self, text: str | list | Command | None) -> Pauses:
         return await stream_agent(
             self.agent,
             text,
@@ -719,7 +740,7 @@ class DeepSession:
         if self.session is not None:
             self.session.pending_pauses = {p["interrupt_id"]: p for p in pauses}
 
-    async def _stream_with_room(self, text: str | Command | None) -> Pauses:
+    async def _stream_with_room(self, text: str | list | Command | None) -> Pauses:
         """One turn, with one emergency compaction if the provider says the
         request is too long. The failed request is checkpointed with its
         input, so the retry continues from the checkpoint rather than
@@ -737,7 +758,7 @@ class DeepSession:
             await self.emit({"event": AgentEvent.CONTEXT_COMPACTED, "summary": summary})
             return await self._stream(None)
 
-    async def turn(self, text: str | Command | None) -> Pauses:
+    async def turn(self, text: str | list | Command | None) -> Pauses:
         """One exchange: stream it, then absorb any steers that missed it.
 
         Returns the pauses the thread is parked on; empty means it ran to
@@ -768,10 +789,10 @@ class DeepSession:
             for _, client_id in items:
                 if client_id:
                     await self.emit({"event": AgentEvent.USER_INPUT_CONSUMED, "client_message_id": client_id})
-            text = "\n\n".join(chat_message_text(item) for item, _ in items if chat_message_text(item))
-            if not text:
+            content = merge_chat_contents([chat_message_content(item) for item, _ in items])
+            if not content:
                 return pauses
-            pauses = await self.turn(text)
+            pauses = await self.turn(content)
         return pauses
 
     # -- lifecycle ------------------------------------------------------------
@@ -783,6 +804,8 @@ class DeepSession:
         if self.opened or pauses:
             return
         self.opened = True
+        if self.session is not None:
+            self.session.opened = True
         extra = self._finish_payload() if self._finish_payload is not None else {}
         await self.emit({"event": AgentEvent.PIPELINE_FINISHED, "status": StepStatus.SUCCESS, **extra})
 
@@ -853,7 +876,7 @@ class DeepSession:
                 if isinstance(chat_msg, dict) and "resume" in chat_msg:
                     pauses = await self.turn(Command(resume=chat_msg["resume"]))
                 else:
-                    pauses = await self.turn(chat_message_text(chat_msg))
+                    pauses = await self.turn(chat_message_content(chat_msg))
                 await self._finish_opening(pauses)
             except Exception as exc:
                 logger.exception("%s: chat turn failed for session %s", self.log_prefix, session.session_id)

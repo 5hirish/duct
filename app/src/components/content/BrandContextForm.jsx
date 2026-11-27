@@ -263,9 +263,6 @@ export default function BrandContextForm({ projectId, onSaved }) {
             </Button>
           </header>
           <dl className="grid grid-cols-1 gap-3 @lg:grid-cols-2">
-            {/* The product's own name when no separate company is set: most
-                projects are both, and "Not set" read as a gap to fill. */}
-            <ReadOnly label={t`Company`} value={project?.company?.name || project?.name} />
             <ReadOnly label={t`Industry`} value={project?.company?.industry} />
             <ReadOnly label={t`Website`} value={project?.company?.website_url} />
             <ReadOnly label={t`Brand voice`} value={project?.brand_channels?.brand_voice} />
@@ -290,7 +287,7 @@ export default function BrandContextForm({ projectId, onSaved }) {
           </Field>
           <Field label={t`Content language`} hint={t`Plans, briefs and every post are written in it.`}>
             <Select value={contentLanguage || "auto"} onValueChange={(v) => setContentLanguage(v === "auto" ? "" : v)}>
-              <SelectTrigger aria-label={t`Content language`}>
+              <SelectTrigger aria-label={t`Content language`} className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -313,15 +310,17 @@ export default function BrandContextForm({ projectId, onSaved }) {
         </Field>
         <div className="grid grid-cols-1 gap-4 @lg:grid-cols-2">
           <Field
+            fill
             label={<span className="inline-flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-success" /> <Trans>Always say</Trans></span>}
           >
-            <Textarea value={doSay} onChange={e => setDoSay(e.target.value)} rows={3}
+            <Textarea value={doSay} onChange={e => setDoSay(e.target.value)} rows={3} className="h-full"
               placeholder={t`knowledgeable friend, science-backed, real results`} />
           </Field>
           <Field
+            fill
             label={<span className="inline-flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-destructive" /> <Trans>Never say</Trans></span>}
           >
-            <Textarea value={doNotSay} onChange={e => setDoNotSay(e.target.value)} rows={3}
+            <Textarea value={doNotSay} onChange={e => setDoNotSay(e.target.value)} rows={3} className="h-full"
               placeholder={t`medical claims, perfect, flawless`} />
           </Field>
         </div>
@@ -531,9 +530,14 @@ function ReadOnly({ label, value, className = "" }) {
   );
 }
 
-function Field({ label, hint, children }) {
+// `content-start`: beside a taller neighbour (a hint that wraps, a textarea
+// that grew) a grid stretches its rows to fill, which pushed the label down
+// and the control out of line with the field next to it. `fill` is for a
+// hintless pair of textareas: the control takes the spare height instead, so
+// both boxes end on the same line too.
+function Field({ label, hint, fill = false, children }) {
   return (
-    <div className="grid gap-2">
+    <div className={`grid gap-2 ${fill ? "grid-rows-[auto_1fr]" : "content-start"}`}>
       <Label className="text-sm font-medium">{label}</Label>
       {children}
       {hint && <span className="text-xs text-muted-foreground">{hint}</span>}

@@ -33,7 +33,8 @@
         "minWidth": 900,
         "minHeight": 600,
         "center": true,
-        "preventOverflow": true
+        "preventOverflow": true,
+        "dragDropEnabled": false
       }
     ]
   }

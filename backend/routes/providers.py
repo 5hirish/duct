@@ -60,9 +60,11 @@ from agents.tiers import (
     resolve_tier_model,
 )
 from agents.core.codex import (
+    PLAN_ONLY_MODEL,
     is_plan_credential,
     is_subscription_credential,
     is_usable_credential,
+    plan_type_of,
 )
 from config import allow_server_provider_keys, get_configs
 from service.model_settings import get_model_settings
@@ -274,6 +276,13 @@ def providers_status(
             "keyless": False,
             "engines": _engines_for(provider),
         }
+        if source == "subscription":
+            # Which ChatGPT plan, and the one model it serves when it serves
+            # only one (Free, Go), so the Models page shows what will run
+            # rather than a pick the plan refuses.
+            plan = plan_type_of(supplied)
+            row["plan_type"] = plan
+            row["plan_only_model"] = PLAN_ONLY_MODEL.get(plan)
         if provider is Provider.OPENAI_COMPATIBLE:
             row.update(_endpoint_status(supplied if has_user else "", has_stored, db, user))
         providers.append(row)

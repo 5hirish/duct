@@ -41,6 +41,10 @@ class PlatformGuide:
     avoid: tuple[str, ...]            # what it punishes or quietly drops
     cadence: str                      # a sustainable posting rhythm
     media: tuple[str, ...] = field(default=("video", "slideshow", "image", "text"))
+    # Where the opening lands on this channel and what it has to do there:
+    # every feed decides on its own fold, and craft.OPENING_CRAFT is written
+    # once for all of them.
+    opening: tuple[str, ...] = ()
 
 
 GUIDES: dict[str, PlatformGuide] = {
@@ -61,6 +65,11 @@ GUIDES: dict[str, PlatformGuide] = {
         avoid=("Watermarked reposts from other apps", "Twenty hashtags", "Undisclosed AI-made footage: it is labelled and viewers can turn it down"),
         cadence="Daily if the quality holds, three to five a week at least",
         media=("video", "slideshow", "image"),
+        opening=(
+            "The first second and the on-screen text decide it, sound off: state the tension there, not a title card",
+            "The caption's first line says the same thing as the phrase a viewer would search",
+            "A carousel's slide 1 asks; slide 2 promises what the last slides pay",
+        ),
     ),
     Platform.INSTAGRAM: PlatformGuide(
         platform=Platform.INSTAGRAM,
@@ -79,6 +88,11 @@ GUIDES: dict[str, PlatformGuide] = {
         avoid=("Undisclosed AI-generated content: reach drops", "Hashtags as the first line", "Engagement bait"),
         cadence="Three to five posts a week, a Story most days",
         media=("video", "slideshow", "image"),
+        opening=(
+            "Slide 1 or the Reel's first second, plus the caption's first ~125 characters before the fold",
+            "Slide 2 is an opening too: Instagram shows it to people who scrolled past slide 1",
+            "The caption opens on the reader's question, never on hashtags or a greeting",
+        ),
     ),
     Platform.YOUTUBE: PlatformGuide(
         platform=Platform.YOUTUBE,
@@ -103,6 +117,10 @@ GUIDES: dict[str, PlatformGuide] = {
         ),
         cadence="Two or three Shorts a week; one long-form a week or fortnight",
         media=("video",),
+        opening=(
+            "Shorts: the first second, on screen and spoken, and an end that loops back to it",
+            "Long-form: the title and the first 15 seconds restate the promise that earned the click",
+        ),
     ),
     Platform.FACEBOOK: PlatformGuide(
         platform=Platform.FACEBOOK,
@@ -120,6 +138,10 @@ GUIDES: dict[str, PlatformGuide] = {
         avoid=("A link in the post body: reach is cut, so it goes in the first comment", "Engagement bait ('tag a friend who…')", "Posting more than once a day"),
         cadence="Three to five posts a week",
         media=("video", "slideshow", "image", "text"),
+        opening=(
+            "The first line of the three before 'See more', or the Reel's first second",
+            "A question the reader can answer from their own life",
+        ),
     ),
     Platform.TWITTER: PlatformGuide(
         platform=Platform.TWITTER,
@@ -137,6 +159,10 @@ GUIDES: dict[str, PlatformGuide] = {
         avoid=("A link in the post itself: reach drops hard on a free account", "Hashtag strings", "Reposting the LinkedIn version unchanged"),
         cadence="One to three a day, replies included",
         media=("text", "image", "video"),
+        opening=(
+            "The first line is the post for most readers: it stands alone and invites a reply",
+            "In a thread, the first post makes the promise and the second starts paying it",
+        ),
     ),
     Platform.LINKEDIN: PlatformGuide(
         platform=Platform.LINKEDIN,
@@ -154,6 +180,10 @@ GUIDES: dict[str, PlatformGuide] = {
         avoid=("Template-shaped AI prose: it is down-ranked", "A link in the post: put it in a comment", "Tagging people who will not reply"),
         cadence="Three to five posts a week, weekday mornings",
         media=("text", "slideshow", "image", "video"),
+        opening=(
+            "The first two lines, about 210 characters, before 'see more': a claim, a number or a tension",
+            "Line two pays or deepens line one; never a greeting, a setup or 'I'm excited to share'",
+        ),
     ),
     Platform.BLOG: PlatformGuide(
         platform=Platform.BLOG,
@@ -176,6 +206,10 @@ GUIDES: dict[str, PlatformGuide] = {
         avoid=("Thin generated prose padded to a word count", "Keyword-stuffed headings", "Publishing without a canonical URL"),
         cadence="One or two a week, and a refresh of an old post a month",
         media=("article",),
+        opening=(
+            "The title names the question; the first 40 to 60 words answer it directly",
+            "The rest earns the scroll with the why and the how, one question per heading",
+        ),
     ),
     Platform.WORDPRESS: PlatformGuide(
         platform=Platform.WORDPRESS,
@@ -197,6 +231,10 @@ GUIDES: dict[str, PlatformGuide] = {
         avoid=("Thin generated prose", "Uncategorised posts and empty alt text", "A second H1 inside the body"),
         cadence="One or two a week",
         media=("article",),
+        opening=(
+            "The title names the question; the first 40 to 60 words answer it directly",
+            "The featured image and excerpt carry the same promise as the title",
+        ),
     ),
 }
 
@@ -248,6 +286,8 @@ def render_channel_guides(channels: list[str], profiles: dict[str, dict] | None 
         lines.append("  fit: " + "; ".join(g.limits))
         lines.append("  wins: " + "; ".join(g.wins))
         lines.append("  avoid: " + "; ".join(g.avoid))
+        if g.opening:
+            lines.append("  opening: " + "; ".join(g.opening))
         lines.append(f"  cadence: {g.cadence}")
         lines += _profile_lines((profiles or {}).get(cid))
         entries.append("\n".join(lines))

@@ -48,6 +48,7 @@ from agents.core.deep_session import (
 )
 from agents.core.lc import build_ask_user_tool, resolve_chat_model
 from agents.core.memory_tools import build_memory_tools_lc
+from agents.core.web_tools import build_web_tools_lc
 from agents.core.quota import credential_identity
 from agents.core.session import BaseAgentSession
 from agents.tools.execution_tools import build_execution_tools_lc
@@ -104,6 +105,135 @@ LIMITS = RunLimits(
     tool_results_kept=12,
 )
 
+# Connector knowledge packs in the system prompt. Static per configuration,
+# never per request, because the system prompt is the cached prefix. Search
+# Console is the audit's own source; Ads, GA4 and GTM join when the execution
+# tools mount, since those are the accounts it can propose changes to and each
+# pack holds the platform facts a proposal must not get wrong.
+AUDIT_KNOWLEDGE_PACKS: tuple[str, ...] = ("gsc",)
+EXECUTION_KNOWLEDGE_PACKS: tuple[str, ...] = ("google_ads", "ga4", "gtm")
+
+
+def system_prompt_for(report_mode: str, template_id: str, *, with_data: bool, execution: bool) -> str:
+    """The audit's system prompt for one configuration of its tools.
+
+    ``execution`` must match whether ``build_execution_tools_lc`` mounted
+    anything (it does for a membership-checked project with a user), or the
+    prompt carries packs for tools that are not there.
+    """
+    from agents.audit.prompts import build_unified_system_prompt
+
+    packs = AUDIT_KNOWLEDGE_PACKS + (EXECUTION_KNOWLEDGE_PACKS if execution else ())
+    return build_unified_system_prompt(
+        report_mode=report_mode, template_id=template_id,
+        knowledge_packs=packs, with_data=with_data,
+    )
+
+
+def _host(url: str) -> str:
+    from urllib.parse import urlparse
+
+    return urlparse(url or "").netloc.lower().removeprefix("www.")
+
+
+def own_site_redirect(root_url: str) -> Callable[[str], str | None]:
+    """WebFetch's answer for a page of the audited site: use FetchPages, which
+    returns the SEO signals (status, canonical, headings, schema) that a
+    readable-text fetch strips."""
+    site = _host(root_url)
+
+    def redirect(url: str) -> str | None:
+        if site and _host(url) == site:
+            return (
+                f"Use FetchPages(['{url}']) instead of WebFetch for pages on the audited "
+                "site: it returns structured SEO signals and the full body text."
+            )
+        return None
+
+    return redirect
+
+
+def _stored_crawl_summary(session: Any) -> Any:
+    """The crawl strip of the newest stored version that has one. A resumed
+    chat runs on a crawl stub with no pages, so a revision carries it forward
+    rather than publishing a report without it."""
+    for version in reversed(getattr(session, "report_versions", None) or []):
+        data = getattr(version.report, "structured_data", None)
+        if data is not None and data.crawl_summary is not None:
+            return data.crawl_summary
+    return None
+
+
+def report_publisher(
+    session: Any,
+    crawl_result: CrawlResult,
+    *,
+    report_mode: str,
+    template_id: str,
+    emit: Callable,
+    on_report: Callable[[Any], None] | None = None,
+) -> tuple[Callable, Callable]:
+    """The two ways a report arrives (the report tools, and an inline
+    ``<duct_artifact>`` in freehand mode), validated and published as the next
+    numbered version. One copy for the opening run and a resumed chat, which
+    each had their own and drifted.
+
+    A validation failure is returned to the model, not raised, so a malformed
+    report is retried rather than fatal.
+    """
+    from datetime import datetime, timezone
+
+    from agents.audit.events import AuditEvent
+    from agents.audit.schema import AuditReport, StructuredAuditData
+
+    async def submit(args: dict) -> dict:
+        try:
+            structured = StructuredAuditData.model_validate(args)
+        except Exception as exc:  # noqa: BLE001 — reported back to the model
+            return {
+                "status": "validation_error",
+                "message": f"Report validation failed — fix these issues and resubmit: {exc}",
+            }
+        # Scores, counts and crawl figures follow from the findings and the
+        # crawl, never from the model's own tally (agents/audit/scoring.py).
+        calibrate(structured, crawl_result)
+        if structured.crawl_summary is None:
+            structured.crawl_summary = _stored_crawl_summary(session)
+        version_id = len(getattr(session, "report_versions", []) or []) + 1
+        label = "Initial audit" if version_id == 1 else f"Update {version_id}"
+        report = AuditReport(
+            url=crawl_result.plan.root_url,
+            generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            update_label=label,
+            executive_summary=" · ".join(structured.key_signals) if structured.key_signals else "",
+            report_mode=report_mode,
+            template_id=template_id,
+            structured_data=structured,
+        )
+        if on_report is not None:
+            on_report(report)
+        _record_version(session, report, version_id)
+        # The label rides on the event: the version pill reads it, and the
+        # artifact store names the stored version from it ("Version N" without).
+        await emit({
+            "event": AuditEvent.ARTIFACT_VERSION,
+            "version_id": version_id,
+            "label": label,
+            "payload": report.model_dump(),
+        })
+        return {"status": "received", "version_id": version_id}
+
+    async def on_artifact_close(raw: str, turn_text: str) -> None:
+        """Freehand mode delivers the report inline rather than via tools."""
+        import json as _json
+        try:
+            await submit(_json.loads(raw))
+        except Exception:  # noqa: BLE001 — a malformed inline payload is not fatal
+            logger.warning("audit-v1: could not parse inline <duct_artifact> payload", exc_info=True)
+
+    return submit, on_artifact_close
+
+
 def mounts_connected_data(project_id: Any, *, lead_magnet: bool, crawl_depth: str) -> bool:
     """Whether a first audit run reads Search Console and GA4.
 
@@ -138,6 +268,8 @@ def build_audit_agent(
     fallbacks: list[Any] | None = None,  # deep_session.fallback_chain, or none for a test's fake
     identity: str = "",       # quota.credential_identity of the key, for a final 429
     provider: Provider | None = None,
+    model: ModelName | str | None = None,  # picks the provider's built-in search, if any
+    gemini_api_key: str = "",  # backs Duct's own WebSearch where there is no built-in
 ):
     """Assemble the audit agent: crawl/report tools plus optional mid-run questions."""
     tools = build_audit_tools(
@@ -145,6 +277,14 @@ def build_audit_agent(
         report_mode=report_mode,
         on_submit_report=on_submit_report,
         on_category_added=on_category_added,
+    )
+    # The open web, for what the crawl cannot answer: a competitor's page, a
+    # SERP, a source the user names. The same tools and search choice as the
+    # research pass (agents/core/web_tools.py). The audited site's own pages
+    # go to FetchPages instead, which keeps their SEO signals.
+    tools += build_web_tools_lc(
+        provider, model, gemini_api_key,
+        fetch_redirect=own_site_redirect(crawl_result.plan.root_url),
     )
     # project_id arrives already membership-checked (routes/agents.py stamps it
     # on the session only after verifying the caller belongs to the project).
@@ -218,6 +358,12 @@ def build_audit_agent(
     )
 
 
+def _mounts_execution(wiring: dict) -> bool:
+    """Whether build_execution_tools_lc mounts anything for this wiring: it
+    needs both a membership-checked project and a user."""
+    return wiring["project_id"] is not None and wiring["user_id"] is not None
+
+
 # ---------------------------------------------------------------------------
 # Pipeline runner — drop-in for ClaudeAuditRunner
 # ---------------------------------------------------------------------------
@@ -240,11 +386,17 @@ class LangChainAuditRunner:
         model: ModelName = ModelName.CLAUDE_SONNET,
         temperature: float = 1.0,
         gemini_api_key: str = "",
+        thinking: str = "",
     ) -> None:
         self.provider = provider
         self.model = model
         self._api_key = api_key
         self._temperature = temperature
+        # A Duct level ("quick" … "exhaustive"), or "" for the provider's own
+        # default (agents/thinking.py). The request decides it
+        # (AuditRequest.thinking_level); every model of the run carries it,
+        # the fallback's included, so a fallen-back audit thinks as hard.
+        self.thinking = thinking
         # Backs Duct's own WebSearch when the run's provider has no usable
         # built-in one; without it the research pass degrades to local signals.
         self._gemini_api_key = gemini_api_key
@@ -257,14 +409,18 @@ class LangChainAuditRunner:
         instead of ending the report, and a final 429 cools this key down for
         the next run rather than every customer's. ``cache_key`` is the one
         the primary model carries, so the fallback stays on the same prefix.
+        The model and the search key also pick which web search the agent
+        mounts (agents/core/web_tools.py).
         """
         return {
             "fallbacks": fallback_chain(
                 self.provider, self.model, self._api_key, self._temperature,
-                cache_key=cache_key,
+                thinking=self.thinking, cache_key=cache_key,
             ),
             "identity": credential_identity(self._api_key),
             "provider": self.provider,
+            "model": self.model,
+            "gemini_api_key": self._gemini_api_key,
         }
 
     async def run_pipeline(
@@ -288,9 +444,10 @@ class LangChainAuditRunner:
         # Imported lazily only to keep the module import graph shallow; nothing
         # here pulls in another engine.
         from agents.audit.events import AuditEvent as _E, AuditStep, STEP_LABELS, StepStatus
-        from agents.audit.prompts import build_audit_user_prompt, build_unified_system_prompt
-        from agents.audit.schema import AuditReport, CrawlDepth, StructuredAuditData
-        from agents.audit.crawl import run_crawl
+        from agents.audit.prompts import build_audit_user_prompt, recovery_nudge
+        from agents.audit.schema import CrawlDepth
+        from agents.audit.crawl import crawl_step_payload, run_crawl, sitemap_step_payload
+        from agents.audit.scoring import CATEGORY_WEIGHTS
         from agents.core.session import get_session
 
         session = get_session(session_id)
@@ -335,7 +492,18 @@ class LangChainAuditRunner:
             "step_id": AuditStep.FETCH_SITEMAP,
             "label": STEP_LABELS[AuditStep.FETCH_SITEMAP],
             "status": "success",
+            "payload": sitemap_step_payload(crawl_result),
         })
+        # The pages are fetched inside run_crawl, so this step opens and closes
+        # at once: it exists for its panel, one row of signals per page.
+        for event in (_E.STEP_STARTED, _E.STEP_FINISHED):
+            await emit({
+                "event": event,
+                "step_id": AuditStep.CRAWL_PAGES,
+                "label": STEP_LABELS[AuditStep.CRAWL_PAGES],
+                "status": StepStatus.RUNNING if event == _E.STEP_STARTED else StepStatus.SUCCESS,
+                **({"payload": crawl_step_payload(crawl_result)} if event == _E.STEP_FINISHED else {}),
+            })
 
         if draft_project:
             # Layer 1 of the project draft: what the crawl says with no model
@@ -357,7 +525,8 @@ class LangChainAuditRunner:
         # Keyed on the thread so OpenAI serves every call of the loop from
         # the machine that holds its prefix (see resolve_chat_model).
         llm = resolve_chat_model(
-            self.provider, self.model, self._api_key, self._temperature, cache_key=session_id,
+            self.provider, self.model, self._api_key, self._temperature,
+            thinking=self.thinking, cache_key=session_id,
         )
 
         # The files the user added beside the site. Read before research so
@@ -448,49 +617,33 @@ class LangChainAuditRunner:
                 await emit({"event": _E.PROJECT_DRAFT, **inferred})
 
         report_holder: dict[str, Any] = {"report": None}
+        _on_submit, _on_artifact_close = report_publisher(
+            session, crawl_result,
+            report_mode=report_mode, template_id=template_id, emit=emit,
+            on_report=lambda report: report_holder.__setitem__("report", report),
+        )
 
-        async def _on_submit(args: dict) -> dict:
-            """Validate and publish a report version.
-
-            A validation failure is returned to the model, not raised — same
-            contract as V3, so a malformed report is retried rather than fatal.
-            """
-            from datetime import datetime, timezone
-            try:
-                structured = StructuredAuditData.model_validate(args)
-            except Exception as exc:  # noqa: BLE001 — reported back to the model
-                return {
-                    "status": "validation_error",
-                    "message": f"Report validation failed — fix these issues and resubmit: {exc}",
-                }
-            # Scores, counts and crawl figures follow from the findings and the
-            # crawl, never from the model's own tally (agents/audit/scoring.py).
-            calibrate(structured, crawl_result)
-            version_id = len(getattr(session, "report_versions", []) or []) + 1
-            report = AuditReport(
-                url=crawl_result.plan.root_url,
-                generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                update_label="Initial audit" if version_id == 1 else f"Update {version_id}",
-                executive_summary=" · ".join(structured.key_signals) if structured.key_signals else "",
-                report_mode=report_mode,
-                template_id=template_id,
-                structured_data=structured,
-            )
-            report_holder["report"] = report
-            _record_version(session, report, version_id)
+        async def _on_category_added(count: int, category: dict) -> None:
+            # "N/9 categories" on the synthesis row while the report is built,
+            # instead of a clock alone (app/src/components/audit/AuditReport.jsx).
             await emit({
-                "event": _E.ARTIFACT_VERSION,
-                "version_id": version_id,
-                "payload": report.model_dump(),
+                "event": _E.STEP_STARTED,
+                "step_id": AuditStep.SYNTHESIZE_AUDIT,
+                "label": STEP_LABELS[AuditStep.SYNTHESIZE_AUDIT],
+                "status": StepStatus.RUNNING,
+                "payload": {
+                    "categories_done": count,
+                    "categories_total": len(CATEGORY_WEIGHTS),
+                    "last_category": category.get("label") or category.get("id"),
+                },
             })
-            return {"status": "received", "version_id": version_id}
 
         wiring = self._project_wiring(session, emit)
         with_data = mounts_connected_data(
             wiring["project_id"], lead_magnet=lead_magnet, crawl_depth=crawl_depth,
         )
-        system_prompt = build_unified_system_prompt(
-            report_mode=report_mode, template_id=template_id, with_data=with_data,
+        system_prompt = system_prompt_for(
+            report_mode, template_id, with_data=with_data, execution=_mounts_execution(wiring),
         )
         agent = build_audit_agent(
             crawl_result=crawl_result,
@@ -501,6 +654,7 @@ class LangChainAuditRunner:
             emit=emit,
             report_mode=report_mode,
             on_submit_report=_on_submit,
+            on_category_added=_on_category_added,
             with_data=with_data,
             **wiring,
             **self._resilience(cache_key=session_id),
@@ -513,21 +667,38 @@ class LangChainAuditRunner:
             "status": "running",
         })
 
-        async def _on_artifact_close(raw: str, turn_text: str) -> None:
-            """Freehand mode delivers the report inline rather than via tools."""
-            import json as _json
-            try:
-                await _on_submit(_json.loads(raw))
-            except Exception:  # noqa: BLE001 — a malformed inline payload is not fatal
-                logger.warning("audit-v1: could not parse inline <duct_artifact> payload", exc_info=True)
+        # Whether the model reasoned during synthesis, for the finished row's
+        # "reasoned" mark. Read off the stream the loop emits, not asked of
+        # the provider: a model with no dial reasons or does not.
+        reasoned = False
+
+        async def _emit_noting_thinking(event: dict) -> None:
+            nonlocal reasoned
+            if event.get("event") == AgentEvent.THINKING_CHUNK:
+                reasoned = True
+            await emit(event)
+
+        nudged = False
+
+        async def _nudge_if_no_report(pauses: list[dict]) -> list[dict]:
+            """One recovery message when the opening turn ends without a
+            report: on a large crawl the model can spend the turn analysing and
+            stop before publishing. Never on a parked turn, never twice."""
+            nonlocal nudged
+            if pauses or nudged or report_holder["report"] is not None:
+                return pauses
+            nudged = True
+            logger.warning("audit-v1: turn ended with no report for session %s — one recovery nudge", session_id)
+            return await loop.turn(recovery_nudge(report_mode))
 
         loop = self._session_loop(
-            agent, llm, session, emit, session_id,
+            agent, llm, session, _emit_noting_thinking, session_id,
             on_artifact_close=_on_artifact_close,
             # PIPELINE_FINISHED is the route's to emit once it has the report in
             # hand; DeepSession would otherwise send it as soon as synthesis
             # ends, and the UI would leave "working" before the report exists.
             announce_finish=False,
+            after_turn=_nudge_if_no_report,
         )
         # The profile, resolved server-side. Until this call passed it, the
         # whole operator block was unreachable in v1: the runner took
@@ -589,6 +760,7 @@ class LangChainAuditRunner:
             "step_id": AuditStep.SYNTHESIZE_AUDIT,
             "label": STEP_LABELS[AuditStep.SYNTHESIZE_AUDIT],
             "status": "success",
+            "payload": {"reasoned": reasoned},
         })
         # Synthesis is over; the session stays open for follow-up questions on
         # the same thread until the user goes quiet. Without this the audit
@@ -608,6 +780,7 @@ class LangChainAuditRunner:
         *,
         on_artifact_close: Callable,
         announce_finish: bool,
+        after_turn: Callable | None = None,
     ) -> DeepSession:
         """The audit's window onto its durable thread.
 
@@ -642,6 +815,7 @@ class LangChainAuditRunner:
             on_artifact_close=on_artifact_close,
             on_tool_use=on_tool_use,
             on_tool_result=on_tool_result,
+            after_turn=after_turn,
         )
         loop.opened = not announce_finish
         return loop
@@ -697,8 +871,7 @@ class LangChainAuditRunner:
         """
         from agents.audit.crawl import run_crawl  # noqa: F401 — kept symmetric with run_pipeline
         from agents.audit.events import AuditEvent as _E, StepStatus
-        from agents.audit.prompts import build_unified_system_prompt
-        from agents.audit.schema import AuditReport, CrawlPlan, StructuredAuditData
+        from agents.audit.schema import CrawlPlan
         from agents.core.session import get_session
 
         session = get_session(session_id)
@@ -706,54 +879,24 @@ class LangChainAuditRunner:
             session.report_mode = report_mode
             session.template_id = template_id
         crawl_result = CrawlResult(plan=CrawlPlan(root_url=url))
-
-        async def _on_submit(args: dict) -> dict:
-            """A revision published during chat — a new numbered version."""
-            from datetime import datetime, timezone
-            try:
-                structured = StructuredAuditData.model_validate(args)
-            except Exception as exc:  # noqa: BLE001 — reported back to the model
-                return {
-                    "status": "validation_error",
-                    "message": f"Report validation failed — fix these issues and resubmit: {exc}",
-                }
-            calibrate(structured, crawl_result)
-            version_id = len(getattr(session, "report_versions", []) or []) + 1
-            report = AuditReport(
-                url=url,
-                generated_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                update_label=f"Update {version_id}",
-                executive_summary=" · ".join(structured.key_signals) if structured.key_signals else "",
-                report_mode=report_mode,
-                template_id=template_id,
-                structured_data=structured,
-            )
-            _record_version(session, report, version_id)
-            await emit({
-                "event": _E.ARTIFACT_VERSION,
-                "version_id": version_id,
-                "payload": report.model_dump(),
-            })
-            return {"status": "received", "version_id": version_id}
-
-        async def _on_artifact_close(raw: str, turn_text: str) -> None:
-            import json as _json
-            try:
-                await _on_submit(_json.loads(raw))
-            except Exception:  # noqa: BLE001 — a malformed inline payload is not fatal
-                logger.warning("audit-v1: could not parse inline <duct_artifact> payload", exc_info=True)
+        # A revision published during chat is a new numbered version.
+        _on_submit, _on_artifact_close = report_publisher(
+            session, crawl_result,
+            report_mode=report_mode, template_id=template_id, emit=emit,
+        )
 
         # Keyed on the thread so OpenAI serves every call of the loop from
         # the machine that holds its prefix (see resolve_chat_model).
         llm = resolve_chat_model(
-            self.provider, self.model, self._api_key, self._temperature, cache_key=session_id,
+            self.provider, self.model, self._api_key, self._temperature,
+            thinking=self.thinking, cache_key=session_id,
         )
         wiring = self._project_wiring(session, emit)
         # A resumed thread is a project conversation in the app, so follow-up
         # questions can reach the data whichever depth the first run was.
         with_data = wiring["project_id"] is not None
-        system_prompt = build_unified_system_prompt(
-            report_mode=report_mode, template_id=template_id, with_data=with_data,
+        system_prompt = system_prompt_for(
+            report_mode, template_id, with_data=with_data, execution=_mounts_execution(wiring),
         )
         agent = build_audit_agent(
             crawl_result=crawl_result,
@@ -788,6 +931,20 @@ class LangChainAuditRunner:
                 blocks={"resume_primer": getattr(session, "resume_primer", "") or ""},
             ),
         )
+        # The stored report first, so the reopened workspace has something to
+        # show before anything else arrives; without it the app reads the
+        # PIPELINE_FINISHED below as a run that produced no report. ``replay``
+        # keeps the artifact store and the recorder from saving it again.
+        versions = getattr(session, "report_versions", None) or []
+        if versions:
+            latest = versions[-1]
+            await emit({
+                "event": _E.ARTIFACT_VERSION,
+                "version_id": latest.version_id,
+                "label": latest.label,
+                "payload": latest.report.model_dump(),
+                "replay": True,
+            })
         # resume=True: a thread parked on a question re-raises it, one cut
         # mid-run continues from its checkpoint, an idle one just waits.
         await loop.open("", resume=True)

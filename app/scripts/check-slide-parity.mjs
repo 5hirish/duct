@@ -20,6 +20,12 @@ const CASES = [
    ["slide-ba", "ba-half", "ba-marker dont", "ba-marker do"]],
   [{ slide_id: "s6", kind: "editorial", headline: "Edit", subtext: "sub", image_prompt: "x" },
    ["slide-editorial", "ed-frame", 'class="et"', 'class="es"']],
+  // Stored markup is already cleaned by the backend, so the case is cleaned markup.
+  [{ slide_id: "s7", kind: "design",
+     html: '<svg><defs><lineargradient id="g"></lineargradient></defs><rect fill="url(#g)" /></svg>',
+     css: ".x { clip-path: url(#g); }" },
+   ["slide-design", 'class="design"', 'id="slide-01-g"', 'fill="url(#slide-01-g)"',
+    "clip-path: url(#slide-01-g)", "@scope (#slide-01)"]],
 ];
 
 let ok = true;

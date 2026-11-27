@@ -127,10 +127,14 @@ The web app owns HTML rendering. The backend produces JSON payloads only — it 
 
   Two consequences, stated rather than discovered later. **Content on Claude now
   needs an API key** — `routes/content.py` refuses the subscription credential with
-  the same 402 the browser already handles. And **the model only sees the images it
-  generates on Anthropic**: image blocks inside a tool result are accepted there and
-  rejected by the OpenAI chat API, so `VISION_PROVIDERS` decides whether the tools
-  return pictures or URLs, and the system prompt says which. Where it does see
+  the same 402 the browser already handles. And **the model sees the images it
+  generates and renders whenever the model reads images**, decided per model by
+  `MODEL_SEES_IMAGES` in `agents/models.py` (every catalogue model is classified;
+  an unknown id is blind), never per provider, because a gateway fronts both
+  kinds. Anthropic takes image blocks inside a tool result; the OpenAI chat API
+  rejects them, so elsewhere `ToolImagesInUserTurnMiddleware` moves them into a
+  user message after the tool results. On a blind model the tools return URLs
+  and the system prompt says so. Where it does see
   them, `SeenImagePruneMiddleware` (`agents/core/lc.py`) swaps the base64 for a
   note after the model call that looked at it: the thread is durable and the
   Postgres saver writes the whole `messages` channel per superstep, so a
@@ -519,8 +523,8 @@ Postgres `DATABASE_URL` names.
   A post the project already saved is reused, else it goes through
   `service/discovery.py`'s ingest and capture. The clone itself is
   `ContentRunner.run_clone`: draft_post's system prompt, one structured call on
-  the run's own model for why the reference worked (the slides attached only on
-  `VISION_PROVIDERS`), and the FIT × PROOF discipline in the USER turn.
+  the run's own model for why the reference worked (the slides attached only on a
+  model that reads images, `model_sees_images`), and the FIT × PROOF discipline in the USER turn.
   `submit_post_draft` writes `content_posts.clone_source` from the session's
   link plus the model's verdict; the approach is derived, never typed.
 - `agents/audit/draft.py` — the project drafted from the crawl, in layers
@@ -560,7 +564,8 @@ Postgres `DATABASE_URL` names.
   edit the same rows, and the review_post sub-agent role-plays each one into
   `last_assessment.personas`, advice that never moves the overall score. A
   persona may carry `quotes`, lines that audience really said; only the
-  Brand tab writes them, and `persona_shape` keeps them through any writer
+  Brand tab and MCP `update_project` (the person, through their agent) write
+  them, a draft never does, and `persona_shape` keeps them through any writer
   that sends a persona without the key. The panel is built against what the
   2026 digital-twin studies (Columbia's mega-study, Stanford's 1,052
   interviews) found twins get wrong: the reason to scroll past comes first
@@ -571,7 +576,22 @@ Postgres `DATABASE_URL` names.
   posts: `fetch_panel_posts` shows openings and short ids, never numbers,
   and `submit_assessment` scores the returned order against the goal
   measure (`panel_check`). The app shows the yes/maybe/no chips only when
-  that check beat a coin.
+  that check beat a coin. The same review is the **draft check**: a new
+  draft is reviewed on its words before the person reads it, with the
+  writer's three openings as the panel's choice, and goes back once when
+  `assessment.draft_verdict` says so (content score under `DRAFT_BAR`, most
+  personas taking no part, or another opening winning outright).
+  `ContentSession.draft_check_due` holds it: set by `submit_post_draft` on a
+  post no review scored, cleared by `submit_assessment`, and a turn that ends
+  with it set gets one nudge. Putting the winning opening on slide 1 keeps
+  the review current (`opening_kept_fresh`).
+  Every writer and the review hold a post to one bar for its opening and
+  its momentum, `agents/content/craft.py` (the carousel sub-agent, the
+  orchestrator's draft mode, the text writer and review_post all read it,
+  with the evidence it rests on), and each channel's guide says where the
+  opening lands there (`PlatformGuide.opening`). Until 2026-11-27 the
+  orchestrator drafted with no hook or momentum rules at all and was then
+  scored against the sub-agent's.
 - `routes/mcp_server.py` + `service/mcp_server/` — Duct as an MCP server at
   `POST /mcp`, for the person's own agent (Claude Code, Codex, Cursor,
   OpenCode). Stateless JSON-RPC with no SDK: seven methods (tools and

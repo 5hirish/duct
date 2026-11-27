@@ -684,9 +684,11 @@ export function FormatEditorSheet({ open, onOpenChange, projectId, initial, onSa
 function Field({ label, hint, error, children }) {
   return (
     <div>
-      <Label className="text-xs">{label}</Label>
-      {hint && <p className="mb-1.5 text-2xs text-muted-foreground">{hint}</p>}
+      {/* Hint under the control, not over it: over it, a field with a hint
+          sat its input lower than the hintless one beside it. */}
+      <Label className="mb-1.5 text-xs">{label}</Label>
       {children}
+      {hint && <p className="mt-1 text-2xs text-muted-foreground">{hint}</p>}
       {error && <p className="mt-1 text-2xs text-destructive">{error}</p>}
     </div>
   );

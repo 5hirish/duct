@@ -131,7 +131,9 @@ export default function ChangeSetCard({ changeSet: initial }) {
     // Deferred so a synchronous throw (no API base, as in /preview) lands in the catch.
     Promise.resolve()
       .then(() => getChangeSet(id))
-      .then((row) => { if (live) setCs((prev) => apiToCard(row, prev)); })
+      // A row with no status is not a change set (a proxy's empty answer, an
+      // older API): keep the stored card rather than throw on its badge.
+      .then((row) => { if (live && row?.status) setCs((prev) => apiToCard(row, prev)); })
       .catch(() => {}); // keep the stored card: a stale badge beats an error in the transcript
     return () => { live = false; };
   }, [id]);

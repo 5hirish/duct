@@ -44,6 +44,7 @@ from agents.content.schema import (
     MarkerScore,
     PanelCheck,
     PersonaReaction,
+    PersonaVerdict,
     PublishAssessment,
     ReviewBand,
     ReviewMarker,
@@ -149,9 +150,11 @@ def compute_sanity(
     for i, s in enumerate(slides):
         sid = str(s.get("slide_id") or f"slide-{i + 1:02d}")
         cells = [c for c in (s.get("items") or []) if isinstance(c, dict)]
-        # A text slide has no picture by design; every other slide, or each of
-        # its cells, needs one.
-        if s.get("kind") != "text" and (
+        # A text slide and a design slide (the agent's own layout) have no
+        # picture by design; every other slide, or each of its cells, needs
+        # one. Design slides used to fail this, which cost a post's score for
+        # its best slides and sent the review after pictures nobody wanted.
+        if s.get("kind") not in ("text", "design") and (
             any(not (c.get("image_url") or "").strip() for c in cells)
             if cells else not (s.get("image_url") or "").strip()
         ):
@@ -363,7 +366,9 @@ __all__ = [
     "clean_hooks",
     "compute_overall",
     "compute_sanity",
+    "draft_verdict",
     "fingerprint",
+    "opening_kept_fresh",
     "reassess",
     "reassess_post",
     "reply_id",
@@ -378,3 +383,95 @@ def reassess_post(row) -> PublishAssessment:
         row.slides or [], row.caption or "", row.hashtags or [], row.last_assessment,
         replies=row.replies or [], channel=primary_channel(row.platforms),
     )
+
+
+# ---------------------------------------------------------------------------
+# The draft check: the review, run on a new draft before the person reads it
+# ---------------------------------------------------------------------------
+
+# Below this content score a draft goes back for one revision before anyone
+# sees it. The content score, not the overall: a draft has no pictures yet,
+# and the image checks would sink every one of them.
+DRAFT_BAR = 70
+
+# What a persona would do that says the post was for them.
+_TAKES_PART = ("comment", "save", "share")
+
+
+def draft_verdict(result: PublishAssessment) -> dict[str, Any]:
+    """What the draft check says to do next, from a review's numbers.
+
+    ``audience_miss``: more than half the personas would neither stop for it
+    nor comment, save or share, which is how "this isn't my question" reads in
+    verdicts. ``better_opening``: another of the review's openings won more of
+    the panel's picks than the draft's own (a tie keeps the draft's).
+    ``revise``: either of those, or a content score under the bar.
+    """
+    people = list(result.personas)
+    missed = [
+        r for r in people
+        if r.stop != PersonaVerdict.YES and not any(getattr(r, k) == PersonaVerdict.YES for k in _TAKES_PART)
+    ]
+    audience_miss = bool(people) and len(missed) * 2 > len(people)
+
+    hooks = list(result.hooks)
+    voters = [r for r in (result.baseline, *people) if r is not None]
+    votes = [0] * len(hooks)
+    for r in voters:
+        if r.pick is not None and 0 <= r.pick < len(hooks):
+            votes[r.pick] += 1
+    better = None
+    if len(hooks) > 1:
+        best = max(range(1, len(hooks)), key=lambda i: votes[i])
+        if votes[best] > votes[0]:
+            better = {"index": best, "text": hooks[best], "votes": votes[best], "of": len(voters)}
+
+    score = result.content_score or 0
+    below = score < DRAFT_BAR
+    return {
+        "bar": DRAFT_BAR,
+        "content_score": score,
+        "below_bar": below,
+        "audience_miss": audience_miss,
+        "better_opening": better,
+        "revise": below or audience_miss or better is not None,
+    }
+
+
+def _as_read(slide: Any) -> dict:
+    """A stored slide as the renderer reads it, so a write that only fills in
+    defaults is not taken for a change."""
+    from agents.content.schema import Slide
+
+    try:
+        return Slide.model_validate(slide).model_dump(mode="json")
+    except (ValidationError, TypeError):
+        return dict(slide) if isinstance(slide, dict) else {}
+
+
+def opening_kept_fresh(
+    stored: dict | None, before: list, after: list, caption: str, hashtags: list, replies: list | None = None,
+) -> dict | None:
+    """The stored review, still current after slide 1 took one of the
+    openings that same review compared; None when it does not apply.
+
+    The panel read each of its openings against the rest of the post, so
+    putting the winner on slide 1 changes nothing it judged. Marking the
+    review out of date for it would ask for the same review again.
+    """
+    if not stored or not stored.get("fingerprint") or not before or len(before) != len(after):
+        return None
+    if stored["fingerprint"] != fingerprint(before, caption, hashtags, replies):
+        return None  # already out of date before this edit
+    if any(_as_read(b) != _as_read(a) for b, a in zip(before[1:], after[1:])):
+        return None
+    first_before, first_after = _as_read(before[0]), _as_read(after[0])
+    for key in ("headline", "subtext"):
+        first_before.pop(key, None)
+        first_after.pop(key, None)
+    if first_before != first_after:
+        return None
+    hooks = {" ".join(str(h).split()).casefold() for h in stored.get("hooks") or []}
+    if " ".join(str(after[0].get("headline") or "").split()).casefold() not in hooks:
+        return None
+    return {**stored, "fingerprint": fingerprint(after, caption, hashtags, replies)}

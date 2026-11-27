@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import asyncio
 
+import pytest
+
 from agents.core.context import BusinessContext, format_business_context
 from agents.core.events import AgentEvent, AgentStep
 from agents.core.prompts import DUCT_ARTIFACT_CLOSE, DUCT_ARTIFACT_OPEN, xml_block
@@ -122,6 +124,34 @@ def test_parser_full_report_single_chunk():
     assert "".join(rec.text) == "intro  outro"  # prose before + after the tag
 
 
+@pytest.mark.parametrize("chunks", [
+    ['"} <|im_end|>Drafted a seven-slide carousel.'],
+    ['Here it is.', '"} <|im_', 'end|>Drafted a seven-slide carousel.'],
+    ['<|im_start|>assistant\nDrafted a seven-slide carousel.'],
+])
+def test_parser_drops_chat_template_tokens_from_prose(chunks):
+    """A model leaked the tail of a tool call and its end-of-turn token into
+    the reply (`"} <|im_end|>Drafted…`). Neither is prose, split or whole."""
+    out = []
+
+    async def on_text(t):
+        out.append(t)
+
+    async def noop(*_a):
+        return None
+
+    async def go():
+        parser = DuctArtifactStreamParser(on_text=on_text, on_artifact_chunk=noop, on_artifact_close=noop)
+        for c in chunks:
+            await parser.feed(c)
+        await parser.flush()
+
+    asyncio.run(go())
+    text = "".join(out)
+    assert "<|" not in text and '"}' not in text
+    assert text.endswith("Drafted a seven-slide carousel.")
+
+
 def test_parser_split_open_tag_holdback():
     # The open tag is split across chunks — holdback must not miss it.
     rec = _run_parser(["before <duct_arti", "fact>PAY</duct_artifact>"])
@@ -228,6 +258,23 @@ def test_tool_schema_inlines_enums_and_strips_pydantic_noise():
     cell = s["properties"]["cells"]["items"]
     assert cell["properties"]["shade"]["enum"] == ["red", "blue"]
     assert cell["required"] == ["label"]
+
+
+def test_tool_schema_keeps_a_real_union():
+    """A union of two non-null types (a name, or a row) keeps its anyOf,
+    with each side cleaned. It used to recurse until the stack ran out."""
+    from pydantic import BaseModel, Field
+
+    class Row(BaseModel):
+        name: str
+
+    class Inp(BaseModel):
+        items: list[str | Row] | None = Field(None, description="names or rows")
+
+    items = tool_schema(Inp)["properties"]["items"]
+    assert items["description"] == "names or rows"
+    assert items["items"]["anyOf"][0] == {"type": "string"}
+    assert items["items"]["anyOf"][1]["properties"] == {"name": {"type": "string"}}
 
 
 # --- shutdown: close_all_sessions drains SSE streams -------------------------

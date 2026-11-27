@@ -105,10 +105,12 @@ function usePlanView() {
 
 /**
  * Where drafting a day goes: the post workspace, carrying the plan, the day
- * and the day's first channel, which is the channel it was made for.
+ * and the day's first channel, which is the channel it was made for. A day
+ * that already holds a post opens that post, with its conversation.
  */
 export function draftDayHref(plan, index) {
   const day = Array.isArray(plan?.days) ? plan.days[index] : null;
+  if (day?.post_id) return `/content/posts/${day.post_id}`;
   const channel = (Array.isArray(day?.platforms) && day.platforms[0]) || "tiktok";
   const params = new URLSearchParams();
   if (plan?.id) params.set("plan_id", plan.id);

@@ -582,6 +582,7 @@ function ChannelGuide({ guide, label, defaultOpen }) {
   const { t } = useLingui();
   const lists = [
     { title: t`Make`, items: guide.formats },
+    { title: t`The opening`, items: guide.opening },
     { title: t`Wins`, items: guide.wins },
     { title: t`Avoid`, items: guide.avoid },
   ].filter((l) => l.items?.length);

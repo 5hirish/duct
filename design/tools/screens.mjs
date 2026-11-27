@@ -252,6 +252,35 @@ export const SCREENS = [
     },
   },
   {
+    // The plan session after "rethink the rest of the week": a proposal that
+    // changes two days, drawn as those days alone (PlanChanges).
+    id: "plan-session-change", group: "Content Studio", title: "Content workspace · changes to some days",
+    route: "/content/sessions/new#change", workspace: true, shot: "plan-change",
+    open: async ({ page, app, story, plan }) => {
+      await page.goto(`${app}/content/sessions/new?plan=${plan.id}&project=${story.project.id}`);
+      await page.getByText(/proposes changes? to/).first().waitFor({ timeout: 60000 }).catch(() => {});
+      await page.waitForTimeout(1500);
+    },
+  },
+  {
+    // The same change after Accept: the whole plan again, opened on the days
+    // the revision changed.
+    id: "plan-session-change-saved", group: "Content Studio", title: "Content workspace · changes saved",
+    route: "/content/sessions/new#change-saved", workspace: true, shot: "plan-change",
+    open: async ({ page, app, story, plan, fixtures }) => {
+      await page.route("**/api/content/plans/accept", (route) => route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        headers: { "access-control-allow-origin": app, "access-control-allow-credentials": "true" },
+        body: JSON.stringify(fixtures.reworkedPlan()),
+      }));
+      await page.goto(`${app}/content/sessions/new?plan=${plan.id}&project=${story.project.id}`);
+      await page.getByRole("button", { name: "Accept" }).first().click({ timeout: 60000 }).catch(() => {});
+      await page.getByText(/days? updated/).first().waitFor({ timeout: 20000 }).catch(() => {});
+      await page.waitForTimeout(800);
+    },
+  },
+  {
     id: "post-view", group: "Content Studio", title: "A posted post", route: "/content/posts/:id", workspace: true,
     link: ({ fixtures }) => `/content/posts/${fixtures.SHOWCASE.postedPostId}`,
     open: async ({ page, app, fixtures }) => {
@@ -315,6 +344,37 @@ export const SCREENS = [
 
   // --- Settings ---------------------------------------------------------------------------
   { id: "models", group: "Settings", title: "Models & providers", route: "/settings/models", open: framed("/settings/models") },
+  {
+    // The same page signed in with a ChatGPT Go plan, the one plan state the
+    // story's own setup does not show: Go reaches one model through Codex, so
+    // the label says so and every OpenAI tier reads GPT-6 Luna.
+    id: "models-chatgpt-go", group: "Settings", title: "Models · on a ChatGPT Go plan", route: "/settings/models#chatgpt-go",
+    open: async (ctx) => {
+      const openai = { heavy: "gpt-6.1-sol", standard: "gpt-6.1-sol", light: "gpt-6-luna" };
+      const answer = (body) => (route) => route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        headers: { "access-control-allow-origin": ctx.app, "access-control-allow-credentials": "true" },
+        body: JSON.stringify(body),
+      });
+      await ctx.page.route("**/api/providers/status", answer({
+        chatgpt_auth_enabled: true,
+        providers: [
+          { id: "openai", label: "OpenAI", source: "subscription", reachable: true, stored: false, plan_type: "go", plan_only_model: "gpt-6-luna", engines: ["v1"] },
+          { id: "google_genai", label: "Google Gemini", source: "stored", reachable: true, stored: true, engines: ["v1"] },
+        ],
+        images: { provider: "google_genai", model: "gemini-3.1-flash-image", source: "stored" },
+        videos: { provider: "google_genai", model: "veo-3.1-lite-generate-preview", source: "stored" },
+      }));
+      await ctx.page.route("**/api/user/model-settings", answer({ tiers: openai, auto_fallback: true, engine: "", image_model: "", video_model: "" }));
+      await ctx.page.route("**/api/models/preview", answer({
+        engine: "v1",
+        tiers: Object.entries(openai).map(([id, model]) => ({ id, model, provider: "openai", runnable: true, serves: null, reason: null })),
+      }));
+      await framed("/settings/models")(ctx);
+      await ctx.page.getByText("GPT-6 Luna only").first().waitFor({ timeout: 20000 }).catch(() => {});
+    },
+  },
   { id: "profile", group: "Settings", title: "Profile", route: "/settings/profile", open: framed("/settings/profile") },
   { id: "agents", group: "Settings", title: "Connect your AI agent", route: "/settings/agents", open: framed("/settings/agents") },
   { id: "projects", group: "Settings", title: "Projects", route: "/projects", open: framed("/projects") },

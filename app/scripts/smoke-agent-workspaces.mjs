@@ -1,8 +1,7 @@
 // Drives the three agent workspaces in a headless browser against the
-// fixture-replaying mock, and screenshots each state. Still not a CI gate —
-// see below — but the checkpoints it visits are asserted now, not just
-// logged, so a broken pause card or a reattach that loses its card fails
-// loudly (exit 1) instead of leaving a screenshot nobody was looking at.
+// fixture-replaying mock, and screenshots each state. The checkpoints it
+// visits are asserted, not just logged, so a broken pause card or a reattach
+// that loses its card fails loudly (exit 1).
 //
 //   npm run mock:agents                       # terminal 1, on :8012
 //   npm run dev                               # terminal 2, on :3003 (its backend calls are rerouted below)
@@ -11,13 +10,12 @@
 // Playwright comes from site/ (the only workspace that installs it); the
 // browser needs `npx --prefix ../site playwright install chromium` once.
 //
-// Deliberately still not wired into app.yml. The reducer tests
-// (agentSession.test.js) are the real regression gate for this state
-// machine and run in milliseconds with no server to boot; this script needs
-// two long-lived processes and drives real SSE timing, which is exactly the
-// shape of flaky. Run it by hand after touching the agent shell, the way
-// app/AGENTS.md already asks — promoting it to CI is a separate call, made
-// once it has actually proven flake-free over real use, not before.
+// Runs in CI (app.yml, the app-layout job) against the production build. It
+// was kept out on the fear of SSE flake; what that cost was a composer stuck
+// on "Connecting…" after every reload and follow-up pictures that never
+// reached the agent, both invisible to the reducer tests, which replay events
+// and so never see a reload that receives none. A flake here is a bug to fix
+// in the mock's timing, not a reason to take the journey out again.
 import { chromium } from "../../site/node_modules/playwright/index.mjs";
 import { randomUUID } from "node:crypto";
 import { mkdirSync } from "node:fs";
@@ -74,7 +72,7 @@ await page.getByText("Which goal matters most?", { exact: true }).waitFor({ time
 console.log("insights: after reload, card back; status:", await status());
 await shot("insights-2-reload-reattached");
 
-await page.getByRole("button", { name: "Signups", exact: true }).click();
+await page.getByRole("radio", { name: "Signups", exact: true }).click();
 await page.getByRole("button", { name: /Continue/ }).click();
 
 // Type the moment the turn resumes, while it is still streaming: the box
@@ -90,7 +88,7 @@ await page.getByText("I proposed two changes above.").waitFor({ timeout: 30000 }
 await page.getByText("Mobile CPA is flat.").waitFor({ timeout: 30000 });
 await page.locator('[role="status"]', { hasText: "Ready" }).first().waitFor({ timeout: 15000 });
 if (await page.getByText("↳ Queued").count()) throw new Error("queued mark was not released");
-if (!(await page.getByText("Context compacted").count())) throw new Error("no compaction note in the transcript");
+if (!(await page.getByText(/^Compacted ·/).count())) throw new Error("no compaction note in the transcript");
 console.log("insights: brief, change set, queued follow-up answered; status:", await status());
 await shot("insights-4-ready");
 
@@ -109,6 +107,45 @@ await page.getByLabel("Message the content agent").fill("make day 3 about pricin
 await page.keyboard.press("Enter");
 await page.getByText("day 3 is now pricing").waitFor({ timeout: 30000 });
 await shot("content-2-followup");
+
+// Reload once the reply has finished. The stream replays only what the rows
+// do not hold, so a finished run sends nothing at all; the page must still
+// leave "Connecting…" (it once sat there for good, box locked).
+await page.locator('[role="status"]', { hasText: "Ready" }).first().waitFor({ timeout: 15000 });
+await page.waitForTimeout(500);  // the last frames are on the client, not still in the mock
+await page.reload();
+await page.locator('[role="status"]', { hasText: "Ready" }).first().waitFor({ timeout: 15000 });
+if (await page.getByLabel("Message the content agent").isDisabled()) throw new Error("composer still locked after reload");
+console.log("content: reload of an idle run is ready; status:", await status());
+await shot("content-3-reload-idle");
+
+// A picture dropped on the composer is a tile, and the message that carries
+// it reaches the agent with the picture in it. Each layer had its own test
+// while follow-up pictures were silently dropped for eleven weeks; this
+// asserts on what was posted, not on what the page drew.
+const composer = page.locator("[data-composer]").first();
+const drop = await page.evaluateHandle(() => {
+  const d = new DataTransfer();
+  const png = Uint8Array.from(atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="), (c) => c.charCodeAt(0));
+  d.items.add(new File([png], "slide-3.png", { type: "image/png" }));
+  return d;
+});
+await composer.dispatchEvent("dragenter", { dataTransfer: drop });
+await composer.dispatchEvent("drop", { dataTransfer: drop });
+await composer.locator('img[alt="slide-3.png"]').waitFor({ timeout: 5000 });
+await page.getByLabel("Message the content agent").fill("does slide 3 fit?");
+await Promise.all([
+  page.waitForResponse((r) => r.url().endsWith("/messages") && r.request().method() === "POST"),
+  page.keyboard.press("Enter"),
+]);
+const posted = await (await fetch(`${MOCK}/__mock/messages`)).json();
+const last = posted.at(-1);
+const blocks = Array.isArray(last?.content) ? last.content : [];
+if (!blocks.some((b) => b.type === "image" && (b.source?.data || b.base64))) {
+  throw new Error(`the dropped picture was not in the message: ${JSON.stringify(last).slice(0, 200)}`);
+}
+console.log("content: dropped picture posted with the message");
+await shot("content-4-picture-sent");
 
 // ---------------------------------------------------------------- audit
 const auditId = randomUUID();

@@ -247,7 +247,8 @@ export function contentFrames() {
     say(`Day 3, *${day.topic}*. Six slides: the rule, why 12%, the one account that makes it stick, and a save prompt for the 25th.`),
     { event: "post_draft_updated", payload: { ...withoutImage, slides_html: slidesHtml() } },
     ...step("generate_image:slide-01", "Image · slide 1 of 6"),
-    { event: "post_draft_updated", payload: { ...DRAFT_POST, slides_html: slidesHtml() } },
+    // The image landing on slide 1 is where the preview goes (PostViewport's _focus).
+    { event: "post_draft_updated", payload: { ...DRAFT_POST, slides_html: slidesHtml() }, inline_preview: { slide_id: "slide-01" } },
     say(" Slide 1 is in so you can see the look. Three more images to go: say the word, or change the hook first."),
     { event: "message_stop" },
     usage(23800, 3400),
@@ -280,6 +281,50 @@ export function auditFrames() {
 export function planFrames() {
   const plan = content.routes(story)[`GET /api/content/plans/${PLAN.id}`];
   return recorded("content-plan.json").map((frame) => (frame.event === "plan_generated" ? { ...frame, payload: plan } : frame));
+}
+
+// The same session after "rethink the rest of the week": revise_plan_days
+// proposes new ideas for the two days nothing has been drafted for, and most
+// of the planner's tags move with them. Only those days are drawn, before and
+// after; Accept writes them and nothing else.
+const REWORKED_DAYS = {
+  3: {
+    topic: "Your client pays in 60 days. Your rent is due in 30.",
+    hook_text: "Your client pays in 60 days. Your rent is due in 30.",
+    pillar: "Money habits", hook_type: "contrast", hook_emotion: "recognition",
+    post_type: "video", format_slug: "talking-head", platforms: ["tiktok", "youtube"],
+    funnel_stage: "awareness", objective: "shares",
+  },
+  4: {
+    topic: "Three invoices, three months: plan on what you have, not what you're owed",
+    hook_text: "Plan on what you have, not what you're owed",
+    pillar: "Tax without fear", hook_type: "checklist", hook_emotion: "relief",
+    funnel_stage: "consideration", objective: "saves", series: "Cash flow, 1/3",
+    experiment: "a checklist slideshow against the account's talking-head average on saves",
+  },
+};
+
+// The plan as Accept saves it: the story's week with the reworked days in.
+export function reworkedPlan() {
+  const plan = content.routes(story)[`GET /api/content/plans/${PLAN.id}`];
+  return { ...plan, days: plan.days.map((d, i) => (REWORKED_DAYS[i] ? { ...d, ...REWORKED_DAYS[i] } : d)) };
+}
+
+export function planChangeFrames() {
+  const plan = content.routes(story)[`GET /api/content/plans/${PLAN.id}`];
+  const indexes = Object.keys(REWORKED_DAYS).map(Number);
+  const proposal = {
+    ...plan,
+    id: null,
+    status: "proposed",
+    proposal_id: "proposal-rework",
+    replaces_plan_id: plan.id,
+    only_days: true,
+    changed_days: indexes,
+    previous_days: indexes.map((i) => plan.days[i]),
+    days: plan.days.map((d, i) => (REWORKED_DAYS[i] ? { ...d, ...REWORKED_DAYS[i] } : d)),
+  };
+  return recorded("content-plan.json").map((frame) => (frame.event === "plan_generated" ? { ...frame, payload: proposal } : frame));
 }
 
 // A change set as GET /api/execute/{id} returns it. ChangeSetCard re-reads

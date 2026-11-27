@@ -38,9 +38,13 @@ outright with "The '<model>' model is not supported when using Codex with a
 ChatGPT account". Duct's catalogue (``agents/models.py``) lists no OpenAI
 ``-pro`` id at all, so the tier map's rungs — GPT-6.1 Sol and GPT-6 Luna,
 with Astra offered above them — and the ``GPT_5_MINI`` fallback beneath them
-are all reachable on a plan. (OpenAI lists 6.1 Sol in Codex for Plus and up;
-the rest of GPT-6 on a plan is assumed from that rule, not yet seen live; the
-verify step reports ``model_access`` if it is wrong.) Adding a
+are meant to be reachable on a plan. That was an assumption, and on
+2026-11-26 a plan refused 6.1 Sol live ("not supported when using Codex with
+a ChatGPT account", subreason ``model_not_in_accessible_catalog``): which
+models a plan reaches depends on the account. ``errors.classify_error``
+reads that 400 as ``model_not_found``, and ``ClassifiedFallbackMiddleware``
+steps down to the next model on it, so a Sol pick runs on Luna rather than
+failing the turn. Adding a
 ``-pro`` id to that catalogue would make the Heavy tier fail for every
 subscription user and nobody else, which is exactly the kind of break a
 verify step reports as ``model_access`` long after the change.
@@ -196,6 +200,28 @@ def pack_subscription_credential(access_token: str, account_id: str = "") -> str
     token = (access_token or "").strip()
     account = (account_id or "").strip()
     return f"{token}{_PACK_SEPARATOR}{account}" if account else token
+
+
+# What a plan reaches through Codex, by OpenAI's Codex pricing and models
+# pages (read 2026-11-26): Free and Go get GPT-6 Luna and nothing else; Plus
+# and up get Sol and Luna. A Go plan refused gpt-6.1-sol live the same day
+# ("model_not_in_accessible_catalog"). So a tier pick on these plans is served
+# by Luna from the start, rather than failing once per call and falling back.
+# A plan type this table does not name is left to ask for the model it picked.
+PLAN_ONLY_MODEL: dict[str, str] = {"free": "gpt-6-luna", "go": "gpt-6-luna"}
+
+
+def plan_type_of(value: str) -> str:
+    """The plan a packed ChatGPT credential belongs to, lowercase, or ''."""
+    if not is_subscription_credential(value):
+        return ""
+    return unpack_subscription_credential(value).plan_type.lower()
+
+
+def model_on_plan(model: Any, plan_type: str) -> str:
+    """The model a plan will actually serve for ``model``."""
+    name = str(getattr(model, "value", model))
+    return PLAN_ONLY_MODEL.get((plan_type or "").lower(), name)
 
 
 @dataclass(frozen=True)
@@ -489,11 +515,14 @@ def build_codex_chat(
             # opaque error several screens later; say it here instead.
             logger.warning("codex: access token carried no chatgpt_account_id")
         token_provider: Any = _HeaderTokenProvider(credential)
+        served = model_on_plan(model, credential.plan_type)
         logger.info(
-            "v1 OpenAI slot on the user's ChatGPT plan (%s): model=%s",
+            "v1 OpenAI slot on the user's ChatGPT plan (%s): model=%s%s",
             credential.plan_type or "plan unknown",
-            model,
+            served,
+            "" if served == str(getattr(model, "value", model)) else f" (picked {getattr(model, 'value', model)})",
         )
+        model = served
     else:
         from langchain_openai.chatgpt_oauth import _FileChatGPTOAuthTokenProvider
 

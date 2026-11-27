@@ -84,8 +84,9 @@ PERSONA_DESCRIPTION_MAX = 400
 # support email. A persona written as a description is the weakest thing a
 # simulation can be grounded in (Stanford's 1,052-person study scored a
 # self-written persona below its interviews and surveys), so the review speaks
-# from these first. Only the Brand tab writes them; every other writer's rows
-# keep the ones already stored under the same name (``persona_shape``).
+# from these first. Only the Brand tab and the MCP server's update_project (the
+# person, through their agent) write them; every other writer's rows keep the
+# ones already stored under the same name (``persona_shape``).
 MAX_PERSONA_QUOTES = 3
 PERSONA_QUOTE_MAX = 200
 
@@ -121,7 +122,9 @@ def pillar_rows(value: Any, current: Any = None) -> list[dict[str, str]]:
     description}``, from the names a draft sends or the rows the Brand tab
     sends. A name already there keeps its row: a name alone says less than
     the person wrote, and a re-sync of the same names must change nothing.
-    A row is taken as sent, so a description cleared on purpose stays clear."""
+    A row is taken as sent, so a description cleared on purpose stays clear,
+    but a row sent without an id (an agent rewriting a description) keeps
+    the stored one, because posts are filed under the id."""
     known = {
         str(row.get("name") or "").strip().lower(): row
         for row in current or []
@@ -133,14 +136,16 @@ def pillar_rows(value: Any, current: Any = None) -> list[dict[str, str]]:
         name = str((item.get("name") if sent_row else item) or "").strip()
         if not name or name.lower() in {r["name"].lower() for r in rows}:
             continue
-        row = item if sent_row else known.get(name.lower(), {})
+        stored = known.get(name.lower(), {})
+        row = item if sent_row else stored
         shaped = {
-            "id": str(row.get("id") or slugify(name, sep=PILLAR_ID_SEP)),
+            "id": str(row.get("id") or stored.get("id") or slugify(name, sep=PILLAR_ID_SEP)),
             "name": name,
             "description": str(row.get("description") or "").strip(),
         }
-        if row.get("research_hint"):
-            shaped["research_hint"] = str(row["research_hint"])
+        hint = row.get("research_hint") if "research_hint" in row else stored.get("research_hint")
+        if hint:
+            shaped["research_hint"] = str(hint)
         rows.append(shaped)
     return rows
 

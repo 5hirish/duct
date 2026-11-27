@@ -21,6 +21,7 @@ class GenerateImageResult(BaseModel):
     asset_urls: list[str]
     model: str
     attached_to: str | None = None  # slide_id the image was attached to, or null
+    note: str | None = None         # what attaching changed beyond the image, for the reply
 
 
 class GenerateVideoResult(BaseModel):
@@ -53,6 +54,13 @@ class EditSlideResult(BaseModel):
     post_id: str
     slide_id: str
     updated: list[str]  # the patched field names
+
+
+class RestoreSlideResult(BaseModel):
+    post_id: str
+    slide_id: str
+    # Earlier versions still kept for this slide, the one just replaced among them.
+    versions: int
 
 
 class SubmitPlanResult(BaseModel):

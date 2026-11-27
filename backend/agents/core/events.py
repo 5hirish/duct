@@ -398,6 +398,7 @@ def run_context(
     turn: str,
     resume: bool,
     blocks: dict[str, Any],
+    api_key: str = "",
 ) -> dict[str, Any]:
     """The CONTEXT event's payload, built the same way by every runner.
 
@@ -407,12 +408,15 @@ def run_context(
     matches the hash to a commit; storing the text would multiply every
     thread's size by the one thing already under version control. The
     composed turn IS stored, because it is per-run and nothing else holds
-    it."""
+    it. ``api_key`` is read only to tell which model a ChatGPT plan
+    serves; nothing of it is stored."""
+    from agents.models import run_model_fields
+
     text = system_prompt or ""
     return {
         "agent_type": agent_type,
-        "provider": str(getattr(provider, "value", provider) or ""),
-        "model": str(getattr(model, "value", model) or ""),
+        # The model that answered, and the pick a ChatGPT plan overrode.
+        **run_model_fields(provider, model, api_key),
         "thinking": str(getattr(thinking, "value", thinking) or ""),
         "system_prompt_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest() if text else "",
         "system_prompt_chars": len(text),

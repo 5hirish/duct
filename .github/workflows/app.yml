@@ -158,6 +158,20 @@ jobs:
           done
           npm run check:layout
 
+      # The three agent workspaces driven end to end against the fixture
+      # backend: pause, reload and reattach, answer, queued follow-up, a
+      # dropped picture reaching the posted message, a reload of an idle run,
+      # a failed turn. Reducer tests replay events; these are the paths where
+      # nothing arrives, which is where the shell broke without a test failing.
+      - name: Agent workspace journeys
+        run: |
+          node scripts/mock-agent-backend.mjs 8012 > mock.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf -o /dev/null http://localhost:8012/__mock/messages && break
+            sleep 1
+          done
+          OUT=smoke-shots node scripts/smoke-agent-workspaces.mjs || { tail -40 mock.log; exit 1; }
+
   # ---------------------------------------------------------------------------
   # Deploy the Worker (OpenNext → wrangler) on merge to main, only after the
   # checks above pass. Replaces the Cloudflare "Workers Builds" git integration,

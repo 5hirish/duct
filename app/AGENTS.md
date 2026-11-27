@@ -694,7 +694,12 @@ To see it run without a backend: `npm run mock:agents` replays the fixtures
 over SSE on :8012 (pausing where the real backend would), and
 `scripts/smoke-agent-workspaces.mjs` drives all three workspaces through a
 headless browser against it — pause, reload-and-reattach, answer, follow-up,
-turn failure — and screenshots each state. Run it after touching the shell.
+a dropped picture reaching the posted message (`GET /__mock/messages` is what
+the app posted), a reload of an idle run, turn failure — and screenshots each
+state. CI runs it in the `app-layout` job, so a journey that breaks fails the
+PR; run it after touching the shell rather than finding out there. A new
+path where the page waits on the backend gets a step in it, because the
+reducer tests replay events and cannot see a wait where none arrives.
 The same mock takes `FIXTURES_DIR` (another set of streams with the same
 filenames), `ROUTES_FILE` (canned JSON for the non-agent routes it would
 otherwise answer with `[]`) and `MEDIA_DIR` (a folder served as

@@ -336,6 +336,30 @@ def normalize_level(value) -> ThinkingLevel | None:
         return None
 
 
+# The audit form's older dial (``AgentEffort``: low … max), read as a Duct rung
+# by meaning. It predates this module and spells its rungs the Anthropic way,
+# so "medium" here is "balanced", not Gemini's or OpenAI's medium. Two native
+# rungs land on Exhaustive because Duct has nothing above it.
+_EFFORT_LEVELS: dict[str, ThinkingLevel] = {
+    LOW: ThinkingLevel.QUICK,
+    MEDIUM: ThinkingLevel.BALANCED,
+    HIGH: ThinkingLevel.DEEP,
+    XHIGH: ThinkingLevel.EXHAUSTIVE,
+    MAX: ThinkingLevel.EXHAUSTIVE,
+}
+
+
+def level_for_effort(effort) -> str:
+    """The Duct rung an ``AgentEffort`` choice means, or "" for none.
+
+    The caller decides whether the effort was chosen at all (rule 3): a
+    request field that only carries its default is not a choice.
+    """
+    raw = str(getattr(effort, "value", effort) or "").strip().lower()
+    level = _EFFORT_LEVELS.get(raw)
+    return level.value if level else ""
+
+
 def resolve_native(model, level) -> str:
     """The native value this model should receive for a Duct level.
 

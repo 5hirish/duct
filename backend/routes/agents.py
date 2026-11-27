@@ -69,7 +69,7 @@ from agents.insights.setup import (
 )
 from agents.core import session as _core_session
 from agents.core.context import format_business_context
-from agents.core.codex import renew_subscription_credential
+from agents.core.codex import is_plan_credential, renew_subscription_credential
 from agents.models import Provider, run_model_fields
 from agents.core.events import AgentEvent, StepStatus
 from agents.core.errors import error_payload
@@ -508,6 +508,13 @@ async def create_session(
             user_id=session.user_id,
             project_id=getattr(session, "artifact_project_id", None) or getattr(session, "project_id", None),
             agent_type=agent_type,
+            # A header credential wins over a saved key for its provider
+            # (providers.status ranks them the same way), so a plan sent here
+            # is what this run's calls to that provider are served on.
+            plan_providers=frozenset(
+                getattr(p, "value", str(p)) for p, key in (user_keys or {}).items()
+                if is_plan_credential(p, key or "")
+            ),
         )
 
     async def emit_fn(event_body: dict[str, Any]) -> None:
@@ -1092,6 +1099,9 @@ async def get_session_state(
         # A turn in flight. A tab that left a run behind polls this to keep
         # its sidebar badge honest without reopening the stream.
         "running": bool(getattr(session, "turn_active", False)),
+        # Whether that turn is the opening run or a follow-up: the client
+        # waits for a different end event for each.
+        "opened": bool(getattr(session, "opened", False)),
         # The pauses the run is parked on, whichever way it parked — what a
         # client that reattaches needs in order to put the card back on screen.
         "pending": pending,
@@ -1603,6 +1613,8 @@ async def _start_seo_audit(
             user_keys, stored_keys_for(owner_id),
             billed_to_duct=run.source in ("cloud", "subscription"),
         ),
+        # The saved dial, else the form's effort; nothing when neither was set.
+        thinking=req.thinking_level(),
     )
     # The artifact digest runs on the caller's own provider now, so the key no
     # longer has to be zeroed for anyone. It used to be Anthropic-only (the
@@ -2001,7 +2013,7 @@ async def _start_insights(
                 "status": StepStatus.RUNNING,
                 "autonomy": run.autonomy,
                 "autonomy_configured": run.configured_autonomy,
-                **run_model_fields(provider, model),
+                **run_model_fields(provider, model, run.api_key),
                 # A tier step-down is the same shape of fact and gets the same
                 # treatment. It is true for the whole run and for the artifact
                 # the run produced, so it cannot be a transient toast — and the

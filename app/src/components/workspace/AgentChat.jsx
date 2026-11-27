@@ -479,6 +479,21 @@ function NoticeRow({ msg: row }) {
   if (row.kind === Notice.MODEL) {
     return <Divider label={t`Switched to ${row.label}`} />;
   }
+  if (row.kind === Notice.PLAN) {
+    // Plan names are ChatGPT's own, in English everywhere: "Go", "Plus".
+    const plan = row.plan ? row.plan.charAt(0).toUpperCase() + row.plan.slice(1) : "";
+    const model = row.label;
+    const picked = row.requested;
+    return (
+      <Divider>
+        <span className="min-w-0 text-center">
+          {plan
+            ? t`Running on ${model}: your ChatGPT ${plan} plan doesn't include ${picked}. An API key or a higher plan does.`
+            : t`Running on ${model}: your ChatGPT plan doesn't include ${picked}. An API key or a higher plan does.`}
+        </span>
+      </Divider>
+    );
+  }
   return (
     <p className="my-3 text-center text-2xs text-muted-foreground" role="note">
       {errorText(i18n, row.text)}

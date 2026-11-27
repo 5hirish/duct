@@ -48,6 +48,20 @@ describe("memory and context rows come back on a reopened thread", () => {
   });
 });
 
+describe("a plan that answers on another model is said once on a reopened thread", () => {
+  it("draws one notice for the pair, however many runs it served", () => {
+    const onGo = { model: "gpt-6-luna", model_label: "GPT-6 Luna", requested_model: "gpt-6.1-sol", requested_label: "GPT-6.1 Sol", plan: "go", blocks: {} };
+    const rows = mapEventsToMessages([
+      { seq: 1, kind: "context", data: onGo },
+      { seq: 2, kind: "assistant", data: { text: "Draft." } },
+      { seq: 3, kind: "context", data: { ...onGo, resume: true } },
+    ]);
+    expect(rows.filter((r) => r.kind === "plan")).toEqual([
+      { role: "notice", kind: "plan", label: "GPT-6 Luna", requested: "GPT-6.1 Sol", plan: "go" },
+    ]);
+  });
+});
+
 describe("review cards come back on a reopened thread", () => {
   const card = (status) => ({ change_set_id: "cs-1", title: "Pause Display", status, changes: [] });
 

@@ -16,6 +16,7 @@ but nothing emits it.
 from __future__ import annotations
 
 import logging
+import re
 from collections.abc import Awaitable, Callable
 
 from agents.core.prompts import (
@@ -35,6 +36,26 @@ _TAG_PAIRS: tuple[tuple[str, str], ...] = (
     (DUCT_ARTIFACT_OPEN, DUCT_ARTIFACT_CLOSE),
     (LEGACY_ARTIFACT_OPEN, LEGACY_ARTIFACT_CLOSE),
 )
+
+# A model's chat-template control tokens are never prose. GPT-6 Luna on a
+# ChatGPT plan streamed `"} <|im_end|>Drafted a seven-slide…` into a content
+# reply (2026-11-27): the tail of a tool call's arguments, the end-of-turn
+# token, then the answer. The token goes, with the JSON closers stuck to its
+# front and a role name stuck to its back; anything else is left alone.
+_CONTROL_TOKEN = re.compile(
+    r"""(?:["\]}]{1,4}[ \t]*)?"""
+    r"<\|(?:im_start|im_end|im_sep|endoftext|end_of_text|eot_id|eom_id|start_header_id|end_header_id|end|start)\|>"
+    r"(?:assistant|user|system)?\n?"
+)
+# The longest of those, so one split across two chunks is held back whole.
+_CONTROL_TOKEN_HOLD = len('"}]} <|start_header_id|>assistant') + 1
+
+
+def strip_control_tokens(text: str) -> str:
+    """Prose with any chat-template control token (and its stuck-on JSON
+    closers) taken out."""
+    return _CONTROL_TOKEN.sub("", text) if "<|" in text else text
+
 
 class DuctArtifactStreamParser:
     """Feed streamed text deltas in; callbacks fire as tags open, stream, close.
@@ -77,7 +98,8 @@ class DuctArtifactStreamParser:
             self._pairs = _TAG_PAIRS
         # Hold back enough trailing characters that the longest open tag can
         # never be missed when split across chunk boundaries.
-        self._holdback_len = max(len(o) for o, _ in self._pairs) - 1
+        # The same tail also has to hold a control token split across chunks.
+        self._holdback_len = max(max(len(o) for o, _ in self._pairs) - 1, _CONTROL_TOKEN_HOLD)
 
         self.in_tag = False
         self._close = ""        # close tag matching the open tag that fired
@@ -136,7 +158,7 @@ class DuctArtifactStreamParser:
                     await self._on_artifact_chunk(chunk)
             return
 
-        working = self._holdback + chunk
+        working = strip_control_tokens(self._holdback + chunk)
         self._holdback = ""
 
         idx, open_tag, close_tag = self._find_open(working)
@@ -165,10 +187,10 @@ class DuctArtifactStreamParser:
 
     async def flush(self) -> None:
         """Flush any held-back trailing prose (call at end of a turn)."""
-        if self._holdback:
-            await self._on_text(self._holdback)
-            self.turn_text.append(self._holdback)
-            self._holdback = ""
+        tail, self._holdback = strip_control_tokens(self._holdback), ""
+        if tail:
+            await self._on_text(tail)
+            self.turn_text.append(tail)
 
     async def _finish(self) -> None:
         self.in_tag = False
