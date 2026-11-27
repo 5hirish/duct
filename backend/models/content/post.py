@@ -62,6 +62,13 @@ class ContentPost(SQLModel, table=True):
         sa_column=Column(json_column(), nullable=False, server_default="[]"),
     )
     slides_html: str = Field(default="", sa_column=Column(Text, nullable=False, server_default=""))
+    # Each slide's earlier states, keyed by slide_id, oldest first and capped
+    # (agents/content/slide_versions.py), so "go back to the last one" is a
+    # restore and not a regeneration. Not shown to the agent.
+    slide_versions: dict = Field(
+        default_factory=dict,
+        sa_column=Column(json_column(), nullable=False, server_default="{}"),
+    )
     # The post's words on every platform: a TikTok caption, the tweet, the
     # LinkedIn post. A text post (post_type "text") is this, with no slides.
     # Its limit is the channel's, in agents/content/channels.RULES.

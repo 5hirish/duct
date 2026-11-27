@@ -245,12 +245,12 @@ export function useAgentSession({
       // History first, so the order is stored turns then live ones. Non-fatal:
       // the server still resumes; the UI just lacks the transcript.
       try {
-        const { events } = await getAgentConversation(agentType, cid);
+        const { events, conversation } = await getAgentConversation(agentType, cid);
         if (dead()) return;
         hydratedThrough = hydratedThroughSegment(events, liveSessionId);
         const messages = mapEventsToMessages(events);
         dispatch({ type: Action.HYDRATE, messages, suppressThinking: true });
-        onHydrateRef.current?.(events || []);
+        onHydrateRef.current?.(events || [], conversation || null);
       } catch {
         /* see above */
       }
@@ -305,11 +305,14 @@ export function useAgentSession({
       forgetDetachedRun(sid);  // this page is watching it again
       // The stream only carries what happens from now on. A card the run is
       // already parked on was delivered before the drop, so it is put back
-      // from the session's state rather than waited for. Not awaited: the
+      // from the session's state rather than waited for, and so is whether a
+      // turn is running at all. Not awaited: the
       // stream must start draining now, and the card can land a beat later.
       getAgentSessionState(agentType, sid)
         .then((state) => {
-          if (!dead() && state?.pending?.length) dispatch({ type: Action.PAUSES, pauses: state.pending });
+          if (dead()) return;
+          if (state?.pending?.length) dispatch({ type: Action.PAUSES, pauses: state.pending });
+          else dispatch({ type: Action.ATTACHED, running: Boolean(state?.running), opened: Boolean(state?.opened) });
         })
         .catch(() => { /* an older backend without the field — the next event will tell */ });
       return stream;

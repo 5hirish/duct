@@ -12,6 +12,7 @@ import {
   CONTENT_AGENT_TYPE,
   archiveContentConversation,
   contentSessionBody,
+  getPost,
   getSlideRenderDoc,
   mediaUrl,
   postSlideRender,
@@ -31,7 +32,7 @@ import { captureSlideDocToPng } from "../../lib/slideCapture";
  * Props:
  *   - mode: 'plan_month' | 'draft_post'
  *   - context: { projectId } | { projectId, planId, dayIndex, topic, pillar, postId, cloneUrl }
- *   - renderViewport: ({ payload, mode, sessionId, phase, steps, building, feed, onSendMessage }) => ReactNode
+ *   - renderViewport: ({ payload, mode, sessionId, phase, steps, building, feed, idle, onSendMessage }) => ReactNode
  *     Called every render with the latest plan/post payload from the agent.
  *     onSendMessage(text) sends a chat turn into the live session (used by the
  *     viewport for "approve & generate images" / per-slide regenerate).
@@ -68,9 +69,27 @@ export default function ContentWorkspace({ mode, context, renderViewport, render
     body,
     handleKey,
     onEvent: handleEvent,
-    onHydrate: (events) => setStoredFeed(feedFromHistory(events)),
+    onHydrate: (events, conversation) => {
+      setStoredFeed(feedFromHistory(events));
+      restoreDraft(conversation);
+    },
   });
   const feed = agent.steps.find((s) => s.step_id === ContentStep.READ_WORK)?.payload || storedFeed;
+
+  // A reload reattaches to the run but streams only what came after the
+  // stored transcript, and a draft is a row, not a transcript event: the
+  // pane sat on "Drafting the post…" over a post that was already written.
+  // The conversation names the post it drafted, so the pane reads it back.
+  async function restoreDraft(conversation) {
+    if (mode === "plan_month" || conversation?.artifact_type !== "post" || !conversation.artifact_id) return;
+    try {
+      const post = await getPost(conversation.artifact_id);
+      // A live event that landed meanwhile is newer than this read.
+      setPayload((prev) => prev || { type: "post", ...post });
+    } catch {
+      /* the pane keeps waiting; the next draft event fills it */
+    }
+  }
 
   function handleEvent(event, { appendMessage, sessionId }) {
     switch (event.event) {
@@ -96,8 +115,10 @@ export default function ContentWorkspace({ mode, context, renderViewport, render
 
       case ContentEvent.POST_DRAFT_UPDATED: {
         if (mode === "plan_month") break;
-        const base = { type: "post", ...event.payload };
         const ip = event.inline_preview;
+        // A slide that just got its image is where the preview should be:
+        // the person reviews each frame as it lands (`_focus`, PostViewport).
+        const base = { type: "post", ...event.payload, ...(ip?.slide_id ? { _focus: { slide_id: ip.slide_id, at: Date.now() } } : {}) };
         if (!ip?.data_uri) {
           setPayload(base);
           break;
@@ -125,6 +146,8 @@ export default function ContentWorkspace({ mode, context, renderViewport, render
       }
 
       case ContentEvent.SLIDE_RENDER_REQUESTED:
+        // The agent is looking at this slide composed; so should the person.
+        setPayload((prev) => (prev?.type === "post" ? { ...prev, _focus: { slide_id: event.slide_id, at: Date.now() } } : prev));
         handleSlideRender(event, sessionId);
         break;
 
@@ -183,6 +206,8 @@ export default function ContentWorkspace({ mode, context, renderViewport, render
     Object.entries(STEP_LABELS).map(([id, label]) => [id, i18n._(label)]),
   );
   const rightStatus = hasPayload ? "ready" : agent.isRunning ? "busy" : "idle";
+  // Waiting on the person: no turn running, nothing parked, not reconnecting.
+  const idle = agent.phase === Phase.READY && !agent.reconnecting;
 
   const viewportEl = (
     <div className="flex h-full flex-col overflow-hidden">
@@ -201,6 +226,11 @@ export default function ContentWorkspace({ mode, context, renderViewport, render
             steps: agent.steps,
             building: viewportBuilding,
             feed,
+            // The slide strip offers "Looks good" only while the agent listens.
+            idle,
+            // A run that failed is not coming back on its own: a wait on it
+            // (the post's review) ends there.
+            failed: agent.phase === Phase.FAILED,
             onSendMessage: agent.send,
           })
         ) : (
@@ -254,7 +284,7 @@ export default function ContentWorkspace({ mode, context, renderViewport, render
             renderFooter
               ? renderFooter({
                   payload,
-                  idle: agent.phase === Phase.READY && !agent.reconnecting,
+                  idle,
                   onSendMessage: agent.send,
                 })
               : null

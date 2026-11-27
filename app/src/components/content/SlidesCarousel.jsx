@@ -17,7 +17,7 @@ import { buildSlideDoc } from "@/lib/slideDoc";
  *   - index, onIndexChange: controlled current-slide index
  *   - maxHeight: cap for the rendered phone height (px)
  */
-export default function SlidesCarousel({ slides = [], headHtml = "", index = 0, onIndexChange, maxHeight = 600 }) {
+export default function SlidesCarousel({ slides = [], headHtml = "", index = 0, onIndexChange, maxHeight = 600, note = null }) {
   const { t } = useLingui();
   const boxRef = useRef(null);
   const [boxW, setBoxW] = useState(340);
@@ -58,9 +58,14 @@ export default function SlidesCarousel({ slides = [], headHtml = "", index = 0, 
     return slide ? buildSlideDoc(slide, clamped + 1, headHtml, zoom) : "";
   }, [debKey, clamped, headHtml, zoom]);
 
+  // No wrap-around: a post has a first and a last slide, as it will on the
+  // phone, and a "previous" arrow on slide 1 that jumps to the end hides that.
+  const atFirst = clamped === 0;
+  const atLast = clamped === total - 1;
   function go(delta) {
-    if (total < 2) return;
-    onIndexChange?.((clamped + delta + total) % total);
+    const next = clamped + delta;
+    if (next < 0 || next >= total) return;
+    onIndexChange?.(next);
   }
 
   function onKeyDown(e) {
@@ -90,7 +95,7 @@ export default function SlidesCarousel({ slides = [], headHtml = "", index = 0, 
 
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-muted/20">
-      <CarouselHeader index={clamped} total={total} />
+      <CarouselHeader index={clamped} total={total} note={note} />
 
       <div
         ref={boxRef}
@@ -117,8 +122,8 @@ export default function SlidesCarousel({ slides = [], headHtml = "", index = 0, 
 
         {total > 1 && (
           <>
-            <NavButton side="left" onClick={() => go(-1)} />
-            <NavButton side="right" onClick={() => go(1)} />
+            {!atFirst && <NavButton side="left" onClick={() => go(-1)} />}
+            {!atLast && <NavButton side="right" onClick={() => go(1)} />}
           </>
         )}
       </div>
@@ -146,15 +151,18 @@ export default function SlidesCarousel({ slides = [], headHtml = "", index = 0, 
   );
 }
 
-function CarouselHeader({ index, total }) {
+function CarouselHeader({ index, total, note = null }) {
   const { t } = useLingui();
   return (
-    <div className="flex items-center justify-between border-b border-border/50 px-3 py-1.5">
+    <div className="flex items-center justify-between gap-2 border-b border-border/50 px-3 py-1.5">
       <span className="inline-flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
         <Smartphone className="size-3.5" /> <Trans>Slides preview</Trans>
       </span>
-      <span className="text-2xs text-muted-foreground">
-        {total > 0 ? `${index + 1} / ${total}` : t`sandboxed`}
+      <span className="flex items-center gap-2">
+        {note}
+        <span className="text-2xs text-muted-foreground tabular-nums">
+          {total > 0 ? `${index + 1} / ${total}` : t`sandboxed`}
+        </span>
       </span>
     </div>
   );

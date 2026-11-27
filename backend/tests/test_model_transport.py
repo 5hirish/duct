@@ -655,3 +655,11 @@ def test_direct_vendors_get_no_reply_limit_from_duct():
         profile = {"max_output_tokens": 128_000}
 
     assert _bound_reply(Direct(), Provider.ANTHROPIC).max_tokens is None
+
+
+def test_every_catalogue_model_says_whether_it_reads_images():
+    """A new model is classified when it joins, or the content agent guesses
+    whether it can look at its own slides."""
+    from agents.models import MODEL_SEES_IMAGES
+
+    assert {m.value for m in ModelName} == set(MODEL_SEES_IMAGES)

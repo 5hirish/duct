@@ -41,6 +41,13 @@ CASES = [
         Slide(slide_id="s6", kind="editorial", headline="Edit", subtext="sub", image_prompt="x"),
         ["slide-editorial", "ed-frame", 'class="et"', 'class="es"'],
     ),
+    (
+        Slide(slide_id="s7", kind="design",
+              html='<svg><defs><lineargradient id="g"></lineargradient></defs><rect fill="url(#g)" /></svg>',
+              css=".x { clip-path: url(#g); }"),
+        ["slide-design", 'class="design"', 'id="slide-01-g"', 'fill="url(#slide-01-g)"',
+         "clip-path: url(#slide-01-g)", "@scope (#slide-01)"],
+    ),
 ]
 
 

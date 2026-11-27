@@ -117,10 +117,12 @@ export default function PostDetailPage() {
               ? { conversationId: post.active_conversation_id, resume: true }
               : {}),
           }}
-          renderViewport={({ payload, onSendMessage }) => (
+          renderViewport={({ payload, idle, failed, onSendMessage }) => (
             <PostViewport
               payload={payload || { type: "post", ...post }}
               onSendMessage={onSendMessage}
+              idle={idle}
+              failed={failed}
               canPublish={canPublish}
               onPublish={() => setPublishOpen(true)}
             />

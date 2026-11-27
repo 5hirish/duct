@@ -123,6 +123,14 @@ _CONTEXT_WINDOW_RE = re.compile(
     r"prompt is too long|context.?(window|length)|maximum.*tokens|token limit|too many tokens",
     re.IGNORECASE,
 )
+# A 400 that names the model as the problem. The Codex backend answers a
+# ChatGPT plan this way for a model outside that account's catalogue ("The
+# 'gpt-6.1-sol' model is not supported when using Codex with a ChatGPT
+# account", code model_not_found): the request was fine, the model is not.
+_MODEL_NOT_FOUND_RE = re.compile(
+    r"model_not_found|model_not_in_accessible_catalog|model is not supported when using Codex",
+    re.IGNORECASE,
+)
 _RATE_LIMIT_RE = re.compile(r"rate.?limit|too many requests", re.IGNORECASE)
 _OVERLOADED_RE = re.compile(r"overloaded", re.IGNORECASE)
 _TIMEOUT_RE = re.compile(r"timed?.?out", re.IGNORECASE)
@@ -183,7 +191,9 @@ def _from_status(status: int, message: str, *, connector: bool = False) -> Error
     if status >= 500:
         return ErrorCode.UPSTREAM_ERROR
     if status == 400:
-        return ErrorCode.CONTEXT_WINDOW if _CONTEXT_WINDOW_RE.search(message) else ErrorCode.BAD_REQUEST
+        if _CONTEXT_WINDOW_RE.search(message):
+            return ErrorCode.CONTEXT_WINDOW
+        return ErrorCode.MODEL_NOT_FOUND if _MODEL_NOT_FOUND_RE.search(message) else ErrorCode.BAD_REQUEST
     return None
 
 
@@ -203,9 +213,11 @@ def _classify_one(exc: BaseException) -> ErrorCode | None:
         code = _BY_CLASS_NAME.get(name)
         if code is None:
             continue
-        # A 400 from the SDK is the one class that hides two meanings.
+        # A 400 from the SDK is the one class that hides three meanings.
         if name == "ModelInvalidRequestError" and _CONTEXT_WINDOW_RE.search(message):
             return ErrorCode.CONTEXT_WINDOW
+        if name == "ModelInvalidRequestError" and _MODEL_NOT_FOUND_RE.search(message):
+            return ErrorCode.MODEL_NOT_FOUND
         return code
     status = getattr(exc, "status_code", None)
     if isinstance(status, int):

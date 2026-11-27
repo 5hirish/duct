@@ -67,6 +67,7 @@ export const ACTIVITY_TOOLS = Object.freeze({
   revise_plan_days: ActivityKind.ACTION,
   submit_post_draft: ActivityKind.ACTION,
   edit_slide: ActivityKind.ACTION,
+  restore_slide: ActivityKind.ACTION,
   submit_assessment: ActivityKind.ACTION,
   publish_post: ActivityKind.ACTION,
   mark_posted: ActivityKind.ACTION,

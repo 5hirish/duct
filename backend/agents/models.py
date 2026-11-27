@@ -923,14 +923,12 @@ def takes_temperature(model: "ModelName | str | None") -> bool:
 
 
 class Modality(StrEnum):
-    """What a model can *emit*. Input modality is deliberately not modelled.
+    """What a model can *emit*. What it can read is ``MODEL_SEES_IMAGES``.
 
-    The distinction is the whole reason this exists. Every chat model in the
-    catalogue *accepts* images — that is how file upload already works — so an
-    input table would be a column of True and would answer the wrong question.
-    What the settings page needs to know is whether a chosen model can produce
-    an image, because that decides whether the user has to pick a separate
-    image model at all.
+    Two tables because they answer two questions. The settings page needs to
+    know whether a chosen model can produce an image, because that decides
+    whether the user has to pick a separate image model at all. The content
+    agent needs to know whether its model can look at the slides it renders.
     """
 
     TEXT = "text"
@@ -956,6 +954,52 @@ def model_emits(model: "ModelName | str", modality: Modality) -> bool:
     """True when this model can produce ``modality`` itself."""
     name = str(getattr(model, "value", model) or "").strip()
     return modality in MODEL_EMITS.get(name, frozenset({Modality.TEXT}))
+
+
+# Whether each catalogue model reads an image it is handed. The content agent
+# draws slides and looks at them before it shows them, so on a model that
+# cannot see, the tools return URLs and the prompt says so; a text-only model
+# handed a picture refuses the whole request. Per model, not per provider: a
+# gateway fronts both kinds (DeepSeek V4.1 Flash reads images, V4 Pro does
+# not). Checked against OpenRouter's /api/v1/models `input_modalities` on
+# 2026-11-27, which lists the first-party models too.
+#
+# Every ``ModelName`` is classified (``tests/test_model_transport.py``), so a
+# new model joins this table when it joins the catalogue. An id it does not
+# know (a pass-through OpenRouter slug, an Ollama tag, an OpenAI-compatible
+# endpoint's model) is treated as blind: guessing wrong that way costs the
+# agent its look, guessing wrong the other way costs the run.
+MODEL_SEES_IMAGES: dict[str, bool] = {
+    ModelName.GPT_6_ASTRA.value: True,
+    ModelName.GPT_6_1_SOL.value: True,
+    ModelName.GPT_6_LUNA.value: True,
+    ModelName.GPT_5_MINI.value: True,
+    ModelName.GPT_4O.value: True,
+    ModelName.GPT_4O_MINI.value: True,
+    ModelName.GEMINI_3_1_PRO_PREVIEW.value: True,
+    ModelName.GEMINI_3_8_FLASH.value: True,
+    ModelName.GEMINI_3_5_FLASH_LITE.value: True,
+    ModelName.GEMINI_2_5_FLASH.value: True,
+    ModelName.CLAUDE_FABLE.value: True,
+    ModelName.CLAUDE_OPUS.value: True,
+    ModelName.CLAUDE_SONNET.value: True,
+    ModelName.CLAUDE_HAIKU.value: True,
+    ModelName.GROK_4_7.value: True,
+    ModelName.OR_DEEPSEEK_V4_1_FLASH.value: True,
+    ModelName.OR_DEEPSEEK_V4_PRO.value: False,  # text only
+    ModelName.OR_QWEN3_8_FLASH.value: True,
+    ModelName.OR_KIMI_K3.value: True,
+    ModelName.OR_GLM_5_3_FLASH.value: True,
+    ModelName.OR_CLAUDE_OPUS.value: True,
+    ModelName.OR_CLAUDE_SONNET.value: True,
+    ModelName.OR_GPT_6_LUNA.value: True,
+}
+
+
+def model_sees_images(model: "ModelName | str | None") -> bool:
+    """True when this model reads images in its input."""
+    name = current_model_id(str(getattr(model, "value", model) or ""))
+    return MODEL_SEES_IMAGES.get(name, False)
 
 
 # The name a person would say out loud, keyed by model id.
@@ -1021,16 +1065,45 @@ def model_label(model: Any) -> str:
     return MODEL_LABELS.get(value, value)
 
 
-def run_model_fields(provider: Any, model: Any) -> dict[str, str]:
+def served_model(provider: Any, model: Any, api_key: str = "") -> tuple[str, str]:
+    """``(the model that answers, the ChatGPT plan when one decided it)``.
+
+    A ChatGPT plan can serve a different model than the one picked: Free and
+    Go reach GPT-6 Luna alone (agents/core/codex.PLAN_ONLY_MODEL). Every other
+    credential is answered by the model it asked for, and the plan is "".
+    """
+    name = str(getattr(model, "value", model) or "")
+    if str(getattr(provider, "value", provider) or "") != Provider.OPENAI.value or not api_key:
+        return name, ""
+    from agents.core.codex import is_subscription_credential, model_on_plan, plan_type_of
+
+    if not is_subscription_credential(api_key):
+        return name, ""
+    plan = plan_type_of(api_key)
+    return model_on_plan(name, plan), plan
+
+
+def run_model_fields(provider: Any, model: Any, api_key: str = "") -> dict[str, str]:
     """What a run-start event says about the model it runs on.
 
     On every PIPELINE_STARTED, from one helper, so the transcript can say
     "Switched to Claude Sonnet 5.5" when a resumed thread comes back on a
     different model — a fact the reader could not otherwise learn, and one
     that explains a change of voice or a different verdict on the same data.
+
+    ``model`` is the model that answers. When a ChatGPT plan answers with
+    another than the one picked, ``requested_model`` names the pick and
+    ``plan`` the plan, so the transcript can say why: a Go plan drafted on
+    GPT-6 Luna under a GPT-6.1 Sol pick, and only the server log knew
+    (2026-11-27).
     """
-    return {
+    requested = str(getattr(model, "value", model) or "")
+    served, plan = served_model(provider, model, api_key)
+    fields = {
         "provider": str(getattr(provider, "value", provider) or ""),
-        "model": str(getattr(model, "value", model) or ""),
-        "model_label": model_label(model),
+        "model": served or requested,
+        "model_label": model_label(served or requested),
     }
+    if served and served != requested:
+        fields.update(requested_model=requested, requested_label=model_label(requested), plan=plan)
+    return fields

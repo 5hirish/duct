@@ -17,7 +17,10 @@ function escAttr(s) {
 
 // Escape caption copy but honour intentional line breaks (\n or <br>).
 function escCap(s) {
-  let t = String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  // "\n" typed as two characters by a model is a line break it meant; the
+  // backend reads it the same way (schema.literal_line_breaks).
+  let t = String(s || "").replace(/(?:\\r)?\\n/g, "\n");
+  t = t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   t = t.replace(/\n/g, "<br>");
   t = t.replace(/&lt;br\s*\/?&gt;/gi, "<br>");
   return t;
@@ -133,8 +136,31 @@ function renderEditorial(slide, n) {
   return `<div class="slide slide-editorial" id="slide-${pad(n)}">${frame}${title}</div>`;
 }
 
+// A slide the agent laid out itself. The backend stored it cleaned
+// (agents/content/design.py), writes the same markup for slides_html, and the
+// frame it renders in runs no scripts; the CSS is scoped to this slide so the
+// one-document slides_html cannot leak one slide's rules onto the next.
+// Every id a design slide defines or references, prefixed with the slide's
+// own: one document holds every slide of a post, and two slides that each
+// define #glow would both paint the first one's. Same as scope_ids in
+// backend/agents/content/design.py.
+export function scopeIds(text, prefix) {
+  return String(text)
+    .replace(/(\s)id="([\w-]+)"/g, `$1id="${prefix}-$2"`)
+    .replace(/(\s(?:xlink:)?href)="#([\w-]+)"/g, `$1="#${prefix}-$2"`)
+    .replace(/url\(\s*(['"]?)#([\w-]+)\1\s*\)/g, `url($1#${prefix}-$2$1)`);
+}
+
+function renderDesign(slide, n) {
+  const id = `slide-${pad(n)}`;
+  const css = slide.css ? scopeIds(String(slide.css).replace(/</g, ""), id) : "";
+  const style = css ? `<style>@scope (#${id}) { ${css} }</style>` : "";
+  return `<div class="slide slide-design" id="${id}">${style}<div class="design">${scopeIds(slide.html, id)}</div></div>`;
+}
+
 export function renderSlideBody(slide, n) {
   if (!slide) return "";
+  if (slide.kind === "design" && slide.html) return renderDesign(slide, n);
   if (slide.kind === "text") return renderText(slide, n);
   if (slide.kind === "collage" && (slide.items || []).length) return renderCollage(slide, n);
   if (slide.kind === "before-after" && (slide.items || []).length) return renderBeforeAfter(slide, n);

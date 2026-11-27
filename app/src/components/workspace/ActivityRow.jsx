@@ -93,6 +93,7 @@ const TOOL_WORDS = {
   revise_plan_days: msg`Proposed changes to the plan`,
   submit_post_draft: msg`Saved the draft`,
   edit_slide: msg`Edited a slide`,
+  restore_slide: msg`Restored an earlier version of a slide`,
   submit_assessment: msg`Reviewed the post`,
   publish_post: msg`Published the post`,
   mark_posted: msg`Marked as posted`,

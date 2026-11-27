@@ -36,6 +36,7 @@ from agents.content.schema import (
     CheckSeverity,
     MarkerScore,
     PanelFit,
+    PersonaReaction,
     PersonaVerdict,
     ReviewBand,
     ReviewMarker,
@@ -109,6 +110,13 @@ def test_a_collage_cell_without_an_image_names_its_slide():
         ],
     }]
     assert _by_id(compute_sanity(slides, "cap", ["#x"]))[SanityCheckId.SLIDES_HAVE_IMAGES].offenders == ["slide-04"]
+
+
+def test_a_design_slide_needs_no_image():
+    slides, caption, tags = _complete_post()
+    slides.append({"slide_id": "slide-03", "kind": "design", "headline": "Your brief",
+                   "html": "<ol><li>Texture</li></ol>"})
+    assert _by_id(reassess(slides, caption, tags, None).checks)[SanityCheckId.SLIDES_HAVE_IMAGES].passed
 
 
 def test_a_text_slide_needs_no_image():
@@ -299,7 +307,8 @@ def test_persona_reactions_ride_with_the_review_and_never_move_the_score(engine,
 
     assert result["overall"] == 70          # the same post without personas scores 70 too
     assert [r["persona"] for r in result["personas"]] == ["Priya", "Northside", "Sam"]
-    assert result["personas"][0] == {"persona": "Priya", "pick": None, "stop": "yes", "save": "maybe", "click": "no",
+    assert result["personas"][0] == {"persona": "Priya", "pick": None, "stop": "yes", "comment": None,
+                                     "save": "maybe", "share": None, "click": "no",
                                      "fix": "Name the tool in the first line."}
     assert result["panel_check"] is None    # no published posts to check the panel on
     with Session(engine) as db:
@@ -310,6 +319,23 @@ def test_persona_reactions_ride_with_the_review_and_never_move_the_score(engine,
     slides, caption, tags = _complete_post()
     again = reassess(slides, "", tags, stored)
     assert [r.persona for r in again.personas] == ["Priya", "Northside", "Sam"] and again.stale is True
+
+
+def test_a_persona_says_whether_it_would_comment_and_share(engine, emitted):
+    """Conversation and circle: the two actions the panel left out until
+    2026-11-27. A review stored before them still reads, with None."""
+    row = _post(engine)
+    session = make_session("s", row.project_id, "draft_post")
+    session.post_id = row.id
+    talker = {**_reaction("Priya"), "comment": "yes", "share": "no"}
+
+    result = _submit(session, emitted, {"markers": _wire(_scores(70)), "personas": [talker]})
+
+    (priya,) = result["personas"]
+    assert (priya["comment"], priya["share"]) == ("yes", "no")
+    with Session(engine) as db:
+        stored = db.get(ContentPost, row.id).last_assessment
+    assert stored["personas"][0]["comment"] == "yes"
 
 
 def test_more_reactions_than_a_project_keeps_personas_are_cut_not_refused(engine, emitted):
@@ -522,3 +548,78 @@ def test_the_app_words_every_id_the_backend_sends(enum):
     block = re.search(rf"export const {enum.__name__} = Object\.freeze\(\{{(.*?)\}}\);", source, re.S)
     assert block, f"{enum.__name__} not found in contentReview.js"
     assert set(re.findall(r':\s*"([^"]+)"', block.group(1))) == {m.value for m in enum}
+
+
+# ---------------------------------------------------------------------------
+# The draft check: what a review of a new draft says to do next
+# ---------------------------------------------------------------------------
+
+def _review(score: int, personas=(), baseline=None, hooks=("Mine", "Theirs", "Other")):
+    from agents.content.assessment import assess
+
+    slides, caption, tags = _complete_post()
+    return assess(slides, caption, tags, _scores(score), personas=list(personas), baseline=baseline, hooks=list(hooks))
+
+
+def _persona(name, pick=0, stop="maybe", **acts):
+    return PersonaReaction.model_validate({**_reaction(name, stop=stop, save=acts.get("save", "no"), click="no"),
+                                           "pick": pick, "comment": acts.get("comment"), "share": acts.get("share")})
+
+
+def test_a_strong_draft_the_audience_wants_goes_out_as_written():
+    from agents.content.assessment import draft_verdict
+
+    people = [_persona("Priya", save="yes"), _persona("Sam", stop="yes"), _persona("Jo", share="yes")]
+    verdict = draft_verdict(_review(80, people, _persona("Anyone scrolling")))
+    assert verdict["revise"] is False and verdict["better_opening"] is None
+
+
+def test_a_draft_no_persona_would_act_on_goes_back_whatever_its_score():
+    """The 2026-11-27 post: every persona 'not my question', which reads as
+    no stop, no comment, no save, no share."""
+    from agents.content.assessment import draft_verdict
+
+    people = [_persona(n) for n in ("Maya", "Ama", "Denise")]
+    verdict = draft_verdict(_review(80, people))
+    assert verdict["audience_miss"] is True and verdict["revise"] is True
+
+
+def test_a_low_score_goes_back_and_the_panels_opening_wins_only_outright():
+    from agents.content.assessment import draft_verdict
+
+    people = [_persona("Priya", pick=1, save="yes"), _persona("Sam", pick=1, save="yes"), _persona("Jo", pick=0, save="yes")]
+    verdict = draft_verdict(_review(55, people, _persona("Anyone scrolling", pick=2)))
+    assert verdict["below_bar"] is True
+    assert verdict["better_opening"] == {"index": 1, "text": "Theirs", "votes": 2, "of": 4}
+
+    tied = [_persona("Priya", pick=1, save="yes"), _persona("Jo", pick=0, save="yes")]
+    assert draft_verdict(_review(80, tied))["better_opening"] is None
+
+
+def test_taking_the_panels_opening_keeps_the_review_current():
+    from agents.content.assessment import fingerprint, opening_kept_fresh
+
+    slides, caption, tags = _complete_post()
+    stored = {"fingerprint": fingerprint(slides, caption, tags), "hooks": [slides[0]["headline"], "Your colours, not your cut"]}
+    swapped = [{**slides[0], "headline": "Your colours, not your cut"}, slides[1]]
+    kept = opening_kept_fresh(stored, slides, swapped, caption, tags)
+    assert kept["fingerprint"] == fingerprint(swapped, caption, tags)
+
+    invented = [{**slides[0], "headline": "A line no review compared"}, slides[1]]
+    assert opening_kept_fresh(stored, slides, invented, caption, tags) is None
+    more = [{**slides[0], "headline": "Your colours, not your cut"}, {**slides[1], "headline": "Changed too"}]
+    assert opening_kept_fresh(stored, slides, more, caption, tags) is None
+
+
+def test_only_the_first_review_of_a_new_draft_can_send_it_back(engine, emitted):
+    """The check holds itself to one revision: the review after it reports."""
+    row = _post(engine)
+    session = make_session("s", row.project_id, "draft_post")
+    session.post_id = row.id
+    session.draft_check_due = True           # submit_post_draft on an unscored post
+
+    first = _submit(session, emitted, {"markers": _wire(_scores(55))})
+    assert first["draft_check"]["revise"] is True and session.draft_check_due is False
+
+    second = _submit(session, emitted, {"markers": _wire(_scores(55))})
+    assert "draft_check" not in second

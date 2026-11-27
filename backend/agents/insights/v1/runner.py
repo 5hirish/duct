@@ -607,6 +607,7 @@ class AutonomousInsightsRunner:
                 system_prompt=system_prompt_used["text"],
                 turn=opening,
                 resume=is_resume,
+                api_key=self._api_key,
                 blocks={
                     "prompt": prompt,
                     "business_context": business_context,

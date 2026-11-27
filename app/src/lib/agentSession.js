@@ -31,6 +31,7 @@ export const Action = Object.freeze({
   EVENT:          "event",          // an SSE frame
   HYDRATE:        "hydrate",        // stored transcript, before the live stream
   PAUSES:         "pauses",         // what the thread is parked on, from the state endpoint
+  ATTACHED:       "attached",       // a reattached session's state: is a turn running
   USER_SENT:      "user_sent",
   SEND_FAILED:    "send_failed",
   ANSWER_SENT:    "answer_sent",
@@ -50,6 +51,9 @@ export const initialAgentState = Object.freeze({
   // Pauses the run is parked on, oldest first; `pauses[0]` is the card on
   // screen. More than one happens when two tools pause in the same turn.
   pauses: [],
+  // Cards this tab has answered (interrupt ids). A snapshot of the session
+  // taken before the answer still lists them, and must not draw them again.
+  answered: [],
   // The terminal error (FAILED phase). Per-turn failures are transcript rows.
   error: "",
   // Its ErrorCode, which picks the action offered (retry, open settings,
@@ -89,6 +93,8 @@ export const initialAgentState = Object.freeze({
   // transcript, because a change of voice with no explanation reads as a
   // change of mind.
   model: "",
+  // The key of the last plan notice drawn (planNotice), so it is said once.
+  planNotice: "",
   // The run is not on the tier its owner picked, because that tier's provider
   // is out of quota: { ran, requested, detail, until }. Deliberately NOT part
   // of `retrying` and it must not borrow its clearing rules — a retry is "the
@@ -127,7 +133,30 @@ export const Notice = Object.freeze({
   TEXT:      "text",
   COMPACTED: "compacted",
   MODEL:     "model",
+  PLAN:      "plan",
 });
+
+/**
+ * The person's ChatGPT plan answered on another model than the one they
+ * picked (a Go plan reaches GPT-6 Luna alone), as a notice row, or null when
+ * it did not or this one was already said. `said` is the key of the last
+ * one, so a thread says it once, not on every turn. Only the server log knew
+ * until 2026-11-27, and a draft written on the smaller model read as the
+ * agent's fault.
+ */
+export function planNotice(data, said = "") {
+  const requested = data?.requested_model;
+  if (!requested || requested === data.model) return null;
+  const key = `${data.plan || ""}|${requested}|${data.model}`;
+  if (key === said) return null;
+  return {
+    key,
+    row: {
+      role: Row.NOTICE, kind: Notice.PLAN,
+      label: data.model_label || data.model, requested: data.requested_label || requested, plan: data.plan || "",
+    },
+  };
+}
 
 /** The assistant bubble tokens are flowing into, if one is open. */
 function streamingTail(messages) {
@@ -195,13 +224,12 @@ function afterModelSwitch(prev, event, next) {
   const model = event.model || "";
   if (!model) return next;
   const switched = Boolean(prev.model) && model !== prev.model;
-  return {
-    ...next,
-    model,
-    messages: switched
-      ? [...closeStreaming(next.messages), { role: Row.NOTICE, kind: Notice.MODEL, label: event.model_label || model, model }]
-      : next.messages,
-  };
+  let messages = switched
+    ? [...closeStreaming(next.messages), { role: Row.NOTICE, kind: Notice.MODEL, label: event.model_label || model, model }]
+    : next.messages;
+  const plan = planNotice(event, prev.planNotice);
+  if (plan) messages = [...closeStreaming(messages), plan.row];
+  return { ...next, model, messages, planNotice: plan ? plan.key : prev.planNotice || "" };
 }
 
 function upsertBy(rows, match, row) {
@@ -513,6 +541,9 @@ function reduceEvent(state, event, at = 0) {
     case AgentEvent.CONNECTION_REQUIRED:
     case AgentEvent.ACCOUNT_SELECTION_REQUIRED:
     case AgentEvent.TOOL_APPROVAL_REQUIRED:
+      // A replay of a card this tab already answered (the resume re-sends
+      // what the thread was parked on, and the answer can beat it here).
+      if (event.replay && event.interrupt_id && (state.answered || []).includes(event.interrupt_id)) return state;
       return {
         ...state,
         isAgentTyping: false,
@@ -622,7 +653,9 @@ export function reduceAgentSession(state, action) {
       };
 
     case Action.PAUSES: {
-      const pauses = (action.pauses || []).reduce(addPause, state.pauses);
+      const answered = state.answered || [];
+      const fresh = (action.pauses || []).filter((p) => !p.interrupt_id || !answered.includes(p.interrupt_id));
+      const pauses = fresh.reduce(addPause, state.pauses);
       return {
         ...state,
         pauses,
@@ -632,6 +665,20 @@ export function reduceAgentSession(state, action) {
         phase: pauses.length ? Phase.QUESTIONS : state.phase,
       };
     }
+
+    case Action.ATTACHED:
+      // A reattached stream replays only what the rows do not already hold,
+      // so a session that finished while the tab was away sends nothing at
+      // all, and no event ever moved the phase off STARTING: the composer
+      // sat on "Connecting…" for good. The session's own state says where
+      // it is. Only STARTING moves, because any frame that arrived first
+      // already told the truth.
+      // A running turn is the opening run until the session says it opened;
+      // after that it is a follow-up, which ends on its own stop event and
+      // never sends the run's finish, so PIPELINE would never be left.
+      if (state.phase !== Phase.STARTING) return state;
+      if (!action.running) return { ...state, phase: Phase.READY };
+      return { ...state, phase: action.opened ? Phase.CHATTING : Phase.PIPELINE, isAgentTyping: true };
 
     case Action.USER_SENT: {
       // Sent while the agent is busy — working, thinking, or parked on a
@@ -697,9 +744,11 @@ export function reduceAgentSession(state, action) {
 
     case Action.ANSWER_SENT: {
       const pauses = state.pauses.filter((p) => !samePause(p, action.pause));
+      const id = action.pause?.interrupt_id;
       return {
         ...state,
         pauses,
+        answered: id ? [...(state.answered || []), id] : state.answered,
         // More cards to answer, or the run resumes: as the pipeline if it has
         // not opened yet, as a chat turn if it has.
         phase: pauses.length ? Phase.QUESTIONS : state.opened ? Phase.CHATTING : Phase.PIPELINE,
@@ -710,6 +759,7 @@ export function reduceAgentSession(state, action) {
     case Action.ANSWER_FAILED:
       return {
         ...state,
+        answered: (state.answered || []).filter((id) => id !== action.pause?.interrupt_id),
         isAgentTyping: false,
         pauses: [action.pause, ...state.pauses.filter((p) => !samePause(p, action.pause))],
         phase: Phase.QUESTIONS,

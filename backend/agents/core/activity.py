@@ -89,10 +89,15 @@ def _text(value: Any) -> str:
 def _envelope(result: Any) -> dict[str, Any]:
     """The tool's return as a dict, or ``{}``.
 
-    Tools here return a JSON string; a result that is already a dict (a test,
-    a future tool) is taken as-is, and anything else — content blocks, a bare
-    string, an over-cap preview — yields ``{}`` and the mapper falls back to
-    the call's own arguments.
+    Tools here return a JSON string, or, where the model can see pictures,
+    content blocks: the images and the same JSON as a text block. A result
+    that is already a dict (a test, a future tool) is taken as-is; anything
+    else (a bare string, an over-cap preview) yields ``{}`` and the mapper
+    falls back to the call's own arguments.
+
+    Content blocks used to yield ``{}`` too, so every render and every image
+    on a vision model read as failed and its row turned red, though it had
+    worked (2026-11-27, once OpenAI runs began seeing their slides).
     """
     if isinstance(result, dict):
         return result
@@ -102,6 +107,12 @@ def _envelope(result: Any) -> dict[str, Any]:
         except (ValueError, TypeError):
             return {}
         return parsed if isinstance(parsed, dict) else {}
+    if isinstance(result, list):
+        for block in reversed(result):
+            text = block.get("text") if isinstance(block, dict) and block.get("type") == "text" else None
+            env = _envelope(text) if isinstance(text, str) else {}
+            if env:
+                return env
     return {}
 
 
@@ -331,11 +342,16 @@ def _subagent_start(args: dict[str, Any]) -> dict[str, Any]:
 
 def _subagent_finish(args: dict[str, Any], result: Any, is_error: bool) -> dict[str, Any]:
     text = result if isinstance(result, str) else str(result)
+    # A sub-agent that answers in JSON (review_post's scores) gets its own
+    # one-line note as the summary, never the JSON: the row read
+    # `{"markers":[{"id":"hook_strength",…` (2026-11-27).
+    env = _envelope(text.strip()) if text.strip()[:1] in "{[" else {}
+    summary = _text(env.get("notes") or env.get("summary")) if env else ("" if text.strip()[:1] in "{[" else text.strip())
     return {
         "kind": ActivityKind.SUBAGENT,
         "status": StepStatus.ERROR if is_error else StepStatus.SUCCESS,
         "title": _text(args.get("subagent_type")) or "agent",
-        "meta": {"summary": text.strip()[:TITLE_CHARS]},
+        "meta": {"summary": summary[:TITLE_CHARS]},
     }
 
 
@@ -628,6 +644,7 @@ ACTIVITY_TOOLS: dict[str, tuple[Callable[..., dict], Callable[..., dict]]] = {
     "revise_plan_days": (_action_start, _action_finish),
     "submit_post_draft": (_action_start, _action_finish),
     "edit_slide": (_action_start, _action_finish),
+    "restore_slide": (_action_start, _action_finish),
     "submit_assessment": (_action_start, _action_finish),
     "publish_post": (_action_start, _action_finish),
     "mark_posted": (_action_start, _action_finish),

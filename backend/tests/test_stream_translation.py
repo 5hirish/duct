@@ -365,3 +365,38 @@ def test_the_providers_retry_after_wins_over_the_schedule_up_to_a_cap():
     # Nothing said: the jittered schedule, which grows with the attempt.
     assert 0.7 <= retry_delay(1, Exception("429")) <= 1.3
     assert 5.9 <= retry_delay(4) <= 10.1
+
+
+async def test_a_provider_side_web_search_is_reported_like_ours():
+    """On Anthropic the search runs inside the model call (`server_tool_use`),
+    so it never appears as a LangChain tool call. Before this, those runs
+    showed no search card and recorded no search, while the same search on
+    any other provider (Duct's own WebSearch tool) did both."""
+    from langchain_core.messages import AIMessage
+
+    from agents.core.activity import ACTIVITY_TOOLS
+    from agents.core.lc import _dispatch_updates
+
+    reply = AIMessage(content=[
+        {"type": "server_tool_use", "id": "srv_1", "name": "web_search", "input": {"query": "blunt bob 2026"}},
+        {"type": "web_search_tool_result", "tool_use_id": "srv_1", "content": [
+            {"type": "web_search_result", "url": "https://example.com/bob", "title": "The bob is back"},
+        ]},
+        {"type": "text", "text": "Bobs are trending."},
+    ])
+    used, results = [], []
+
+    async def on_use(name, args, call_id):
+        used.append((name, args, call_id))
+
+    async def on_result(name, content, call_id, is_error):
+        results.append((name, content, call_id, is_error))
+
+    await _dispatch_updates({"model": {"messages": [reply]}}, on_todo=None, on_tool_use=on_use, on_tool_result=on_result)
+
+    assert used == [("WebSearch", {"query": "blunt bob 2026"}, "srv_1")]
+    name, content, call_id, is_error = results[0]
+    assert (name, call_id, is_error) == ("WebSearch", "srv_1", False)
+    _, finish = ACTIVITY_TOOLS["WebSearch"]
+    card = finish({"query": "blunt bob 2026"}, content, is_error)
+    assert card["meta"]["sources"] == [{"title": "The bob is back", "url": "https://example.com/bob"}]

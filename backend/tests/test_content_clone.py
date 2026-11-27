@@ -496,7 +496,7 @@ async def test_both_waits_are_visible_steps(clone_run, emitted):
 
 async def test_the_slides_reach_the_diagnosis_only_on_a_vision_provider(clone_run, emitted):
     await _run_clone(Provider.ANTHROPIC, emitted)
-    await _run_clone(Provider.OPENAI, emitted, model=ModelName.GPT_5_MINI)
+    await _run_clone(Provider.OPENROUTER, emitted, model="deepseek/deepseek-v4-flash")
 
     seen, blind = clone_run["diagnosis_content"]
     assert [b["type"] for b in seen] == ["text", "image"]

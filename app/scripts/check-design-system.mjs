@@ -209,7 +209,7 @@ const RULES = [
     re: /\brounded-(?:lg|xl|2xl|3xl|4xl)\b(?=[^"'`]*\bbg-card\b)(?=[^"'`]*\bborder\b)/g,
     // A burn-down, not an allowlist: the boxes that existed when the rule
     // arrived. Lower it when you replace one; it can never go up.
-    budget: 38,
+    budget: 37,
     allow: new Map(),
   },
   {

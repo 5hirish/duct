@@ -289,7 +289,7 @@ def test_pruning_is_opt_in_and_content_opts_in_only_where_it_sees_pictures():
     runner_module.build_deep_session_agent, restore = _spy, runner_module.build_deep_session_agent
     try:
         ContentRunner(api_key="unused", provider=Provider.ANTHROPIC).build_agent(llm=fake_llm("ok"), interactive=False)
-        ContentRunner(api_key="unused", provider=Provider.OPENAI, model=ModelName.GPT_5_MINI).build_agent(
+        ContentRunner(api_key="unused", provider=Provider.OPENROUTER, model="deepseek/deepseek-v4-flash").build_agent(
             llm=fake_llm("ok"), interactive=False
         )
     finally:
@@ -322,7 +322,7 @@ def _failing(status: int):
     return exc_type(f"status {status}")
 
 
-@pytest.mark.parametrize("status", [401, 400, 404])
+@pytest.mark.parametrize("status", [401, 400])
 def test_a_rejected_key_or_bad_request_is_not_retried_on_the_fallback(no_sanitize, status):
     from agents.core.deep_session import ClassifiedFallbackMiddleware
 
@@ -348,6 +348,35 @@ def test_a_transient_failure_falls_back(no_sanitize, status):
         calls.append("call")
         if len(calls) == 1:
             raise _failing(status)
+        return "answer"
+
+    middleware = ClassifiedFallbackMiddleware(fake_llm("fallback"))
+    assert middleware.wrap_model_call(_Request(), handler) == "answer"
+    assert calls == ["call", "call"]
+
+
+@pytest.mark.parametrize("failure", [
+    _failing(404),
+    # What the Codex backend says to a ChatGPT plan about a model outside its
+    # catalogue: a 400, but about the model, not the request.
+    type("ProviderError", (Exception,), {"status_code": 400})(
+        "Error code: 400 - {'detail': \"The 'gpt-6.1-sol' model is not supported when using Codex with a "
+        "ChatGPT account.\", 'error': {'code': 'model_not_found', 'subreason': 'model_not_in_accessible_catalog'}}"
+    ),
+])
+def test_a_model_this_credential_cannot_use_falls_back(no_sanitize, failure):
+    """The step down is a different model, so it can serve where the first
+    never would: a plan without Sol in its catalogue still has Luna."""
+    from agents.core.deep_session import ClassifiedFallbackMiddleware
+    from agents.core.errors import ErrorCode, classify_error
+
+    assert classify_error(failure) == ErrorCode.MODEL_NOT_FOUND
+    calls: list[str] = []
+
+    def handler(request):
+        calls.append("call")
+        if len(calls) == 1:
+            raise failure
         return "answer"
 
     middleware = ClassifiedFallbackMiddleware(fake_llm("fallback"))
@@ -439,3 +468,64 @@ async def test_the_loop_names_the_call_to_the_tool():
 
     assert seen == ["call_42"]
     assert current_tool_call_id() == ""
+
+
+def test_a_follow_up_keeps_its_picture_for_the_model():
+    """The chat loop flattened every queued message to text, so a picture
+    sent with a follow-up never reached the model, which then said it could
+    not see it. The block list survives, in the shape every adapter reads."""
+    from agents.core.lc import _turn_input, chat_message_content, merge_chat_contents
+
+    sent = {"role": "user", "content": [
+        {"type": "text", "text": "does slide 3 fit?"},
+        {"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": "QUFB"}},
+    ]}
+    content = chat_message_content(sent)
+    assert content == [
+        {"type": "text", "text": "does slide 3 fit?"},
+        {"type": "image", "base64": "QUFB", "mime_type": "image/jpeg"},
+    ]
+    assert _turn_input(content) == {"messages": [{"role": "user", "content": content}]}
+    # A string stays a string, and two queued messages stay one turn.
+    assert chat_message_content({"role": "user", "content": "hi"}) == "hi"
+    assert merge_chat_contents(["a", "b"]) == "a\n\nb"
+    assert merge_chat_contents(["first", content]) == [{"type": "text", "text": "first"}, *content]
+
+
+def test_a_rendered_slide_reaches_a_model_that_refuses_images_in_tool_results():
+    """OpenAI's chat API refuses an image inside a tool message, so a content
+    run there was handed a URL and could not check the slide it had just
+    rendered. The picture now follows the results in a user message, the tool
+    result says where it went, and pairing of call and result is untouched."""
+    from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+
+    from agents.core.lc import TOOL_IMAGE_NOTE, images_out_of_tool_results
+
+    slide = {"type": "image", "base64": "QUFBQQ==", "mime_type": "image/png"}
+    thread = [
+        HumanMessage(content="make slide 6 a three-point brief"),
+        AIMessage(content="", tool_calls=[
+            {"id": "c1", "name": "render_slide", "args": {"slide_id": "slide-06"}},
+            {"id": "c2", "name": "render_slide", "args": {"slide_id": "slide-07"}},
+        ]),
+        ToolMessage(content=[slide, {"type": "text", "text": '{"slide_id": "slide-06"}'}], tool_call_id="c1"),
+        ToolMessage(content=[slide, {"type": "text", "text": '{"slide_id": "slide-07"}'}], tool_call_id="c2"),
+    ]
+    out = images_out_of_tool_results(thread)
+
+    assert [m.type for m in out] == ["human", "ai", "tool", "tool", "human"]
+    assert all(TOOL_IMAGE_NOTE in str(m.content) and "QUFBQQ" not in str(m.content) for m in out[2:4])
+    assert str(out[-1].content).count("QUFBQQ") == 2
+    assert images_out_of_tool_results(thread[:2]) == thread[:2]  # nothing to move, nothing changes
+
+
+def test_the_move_is_mounted_only_where_the_provider_needs_it():
+    from agents.core.deep_session import session_middleware
+    from agents.core.lc import ToolImagesInUserTurnMiddleware
+
+    def mounted(provider):
+        stack = session_middleware(_limits(), prune_seen_images=True, provider=provider)
+        return any(isinstance(m, ToolImagesInUserTurnMiddleware) for m in stack)
+
+    assert mounted(Provider.OPENAI) and mounted(Provider.GOOGLE_GENAI)
+    assert not mounted(Provider.ANTHROPIC)

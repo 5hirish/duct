@@ -13,7 +13,7 @@
 
 import { msg } from "@lingui/core/macro";
 import { ErrorCode } from "./agentEvents";
-import { Notice, Row, TURN_FAILED, friendlyErrorMessage } from "./agentSession";
+import { Notice, Row, TURN_FAILED, friendlyErrorMessage, planNotice } from "./agentSession";
 import { describeContent } from "./attachments";
 import { activityCallIndex, activityFromStored, contextActivity } from "./toolActivity";
 
@@ -73,6 +73,7 @@ export function mapEventsToMessages(events) {
   // before its first call. A later run on a different model gets the same
   // divider the live transcript draws.
   let lastModel = "";
+  let lastPlan = "";
   // The row's clock is when it was written, so a reopened thread shows the
   // same "2 days ago" on hover that the live one would have.
   const stamp = (e) => (e.created_at ? { at: Date.parse(e.created_at) || undefined } : {});
@@ -113,6 +114,8 @@ export function mapEventsToMessages(events) {
           out.push({ role: Row.NOTICE, kind: Notice.MODEL, label: e.data?.model_label || model, model });
         }
         if (model) lastModel = model;
+        const plan = planNotice(e.data, lastPlan);
+        if (plan) { out.push(plan.row); lastPlan = plan.key; }
         // The same "Read project context" row the run drew live, from the
         // row it recorded at the same moment.
         const activity = contextActivity(e.data, e.seq != null ? `context-${e.seq}` : "");

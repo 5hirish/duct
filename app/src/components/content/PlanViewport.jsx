@@ -147,7 +147,13 @@ export default function PlanViewport({
         plan={plan}
         sessionId={sessionId}
         onSendMessage={onSendMessage}
-        onAccepted={(out) => setSaved({ type: "plan", ...out, status: PlanStatus.ACCEPTED })}
+        // The saved row does not say which days the revision changed; the
+        // proposal does, so it rides along until the session's own echo
+        // (which carries them too) replaces it.
+        onAccepted={(out) => setSaved({
+          type: "plan", ...out, status: PlanStatus.ACCEPTED,
+          only_days: plan.only_days, changed_days: plan.changed_days,
+        })}
       />
 
       {plan.only_days && plan.status !== PlanStatus.ACCEPTED ? (
@@ -157,7 +163,11 @@ export default function PlanViewport({
           <PlanStrategy strategy={plan.strategy} days={plan.days} />
           {/* No day action on purpose: drafting from a day is the plan board's job, and
               a route out of the session would end the planning turn. */}
-          <PlanList plan={plan} />
+          <PlanList
+            key={plan.status}
+            plan={plan}
+            updated={plan.status === PlanStatus.ACCEPTED && plan.only_days ? plan.changed_days : null}
+          />
         </>
       )}
     </div>
@@ -199,9 +209,17 @@ function PlanDecision({ plan, sessionId, onSendMessage, onAccepted }) {
   if (plan.status === PlanStatus.ACCEPTED) {
     // The turn is over, so leaving the session for the post workspace ends nothing.
     const next = plan.id ? nextOpenDay(plan) : null;
+    const updatedCount = plan.only_days && Array.isArray(plan.changed_days) ? plan.changed_days.length : 0;
     return (
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border/60 px-4 py-2">
-        <Badge variant="success"><Check aria-hidden="true" /> <Trans>Saved as your plan</Trans></Badge>
+        <Badge variant="success">
+          <Check aria-hidden="true" />{" "}
+          {updatedCount > 0 ? (
+            <Plural value={updatedCount} one="Saved · # day updated" other="Saved · # days updated" />
+          ) : (
+            <Trans>Saved as your plan</Trans>
+          )}
+        </Badge>
         {next && (
           <Button asChild size="sm" variant="outline" className="h-7">
             <Link href={draftDayHref(plan, next.index)} title={next.day?.topic || undefined}>

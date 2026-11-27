@@ -258,6 +258,56 @@ def pick_media(db: Session, post, *, allow_uncomposed: bool) -> MediaPick:
     return pick
 
 
+def _slide_pictures(slide: dict) -> list[str]:
+    """The picture URLs a slide shows, its own or its cells'."""
+    items = slide.get("items")
+    own = [i.get("image_url") for i in items if isinstance(i, dict)] if isinstance(items, list) and items else [slide.get("image_url")]
+    return [u for u in own if u]
+
+
+def cover_urls(db: Session, posts: list) -> dict[UUID, str]:
+    """The picture a card shows for each post: what it publishes first.
+
+    That is slide 1's latest composed render, else slide 1's own picture, else
+    the first picture any slide still shows. Only a post with no structured
+    slides falls back to the oldest image linked to it. The card used to take
+    that oldest image for every post, so a picture since replaced, or one from
+    a version the person undid, stood for a post that no longer contained it
+    (2026-11-27: a published post's Kanban card showed a photo on none of its
+    slides)."""
+    if not posts:
+        return {}
+    rows = db.exec(
+        select(ContentAsset)
+        .where(ContentAsset.post_id.in_([p.id for p in posts]))
+        .where(ContentAsset.url != "")
+        .where(~ContentAsset.mime_type.like("video/%"))
+        .order_by(ContentAsset.created_at)
+    ).all()
+    renders: dict[tuple, str] = {}
+    oldest: dict[UUID, str] = {}
+    for a in rows:
+        slide_id = (a.params or {}).get("slide_id")
+        if a.asset_type == SLIDE_RENDER and slide_id:
+            renders[(a.post_id, str(slide_id))] = a.url   # oldest first: the latest wins
+        elif a.asset_type in ("generated", "upload"):
+            oldest.setdefault(a.post_id, a.url)
+    out: dict[UUID, str] = {}
+    for post in posts:
+        slides = [s for s in (post.slides or []) if isinstance(s, dict)]
+        cover = ""
+        if slides:
+            first = slides[0]
+            cover = renders.get((post.id, str(first.get("slide_id") or ""))) or next(iter(_slide_pictures(first)), "")
+            if not cover:
+                cover = next((u for s in slides for u in _slide_pictures(s)), "")
+        else:
+            cover = oldest.get(post.id, "")
+        if cover:
+            out[post.id] = cover
+    return out
+
+
 async def load_media(files: list[MediaFile]) -> list[tuple[bytes, MediaFile]]:
     """Every file's bytes, read before anything is uploaded so a missing one
     costs no half-sent post. Off the event loop, because on R2 each read is an

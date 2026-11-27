@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import {
   Dialog,
   DialogClose,
@@ -28,6 +29,11 @@ import {
  *     either way since the dialog has no visible heading
  */
 export function Lightbox({ open, onOpenChange, src, alt = "", title }) {
+  // A caller that keeps the open image in state clears it on close, while the
+  // dialog is still animating out, and an <img src=""> refetches the page.
+  // The last real image stays on screen until the dialog is gone.
+  const shown = useRef(src);
+  if (src) shown.current = src;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -38,7 +44,7 @@ export function Lightbox({ open, onOpenChange, src, alt = "", title }) {
         <DialogClose asChild>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={src}
+            src={shown.current || undefined}
             alt={alt}
             className="max-h-[90vh] max-w-full rounded-lg object-contain shadow-2xl"
           />

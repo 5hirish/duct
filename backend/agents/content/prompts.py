@@ -33,6 +33,8 @@ from typing import TYPE_CHECKING
 
 from utils.formatting import number, percent
 
+from agents.content.craft import MOMENTUM_CRAFT, OPENING_CRAFT, OPENING_MECHANISMS
+from agents.content.design import DESIGN_FONT_NAMES
 from agents.content.plan_period import MAX_PLAN_DAYS
 from agents.content.schema import MAX_PERSONA_REACTIONS
 from agents.content.platform_guides import render_channel_guides
@@ -68,19 +70,16 @@ Named examples are NOT optional: every payload slide carries at least one
 named technique, exact phrase, measurement, or celebrity reference.
 """
 
-_HOOK_FORMULAS_BRIEF = """\
-HOOK TYPES (free-text descriptor — pick the structural angle):
-- identity_challenge / curiosity_gap / transformation_reveal /
-  pattern_interrupt / authority_claim — these stay valid as hook_type
-  values. But the EMOTION (below) is what actually moves people.
-"""
+_HOOK_FORMULAS_BRIEF = OPENING_CRAFT
 
 _HOOK_EMOTIONS_BRIEF = """\
 HOOK EMOTIONS (mandatory — pick exactly ONE per post; vary across the batch):
 
 Emotional framing outperforms educational framing on TikTok. Pick the
 emotional trigger the post fundamentally is; it must come through in
-slide 1's headline.
+slide 1's headline, carried by a concrete situation (the $300 appointment,
+the third wedding photo), never by the adjective. A template below is a
+shape to fill with the brand's specifics, never words to reuse.
 
   frustration  — "I did everything right and still [bad outcome]"
                  (the viewer recognises wasted effort + projects it onto
@@ -95,7 +94,9 @@ slide 1's headline.
                  (regret + confession — most intimate, requires darker tone)
 
 Persist the chosen value in `hook_emotion`. Slide 1 headline must FEEL
-like that emotion to a reader skimming with the sound off.
+like that emotion to a reader skimming with the sound off, and still pass
+every OPENINGS test: an emotion without a specific situation is a vague
+teaser.
 """
 
 _SLIDE_COUNT_BRIEF = """\
@@ -661,6 +662,16 @@ and WAIT for approval of the face. Read a blanket "go" as "go on slide 1", not
      standing guidance — apply it to THIS image (regenerate if they want a
      change) and carry the lesson into every later slide so the set improves as
      you go. One image, then wait — never run ahead and generate the rest.
+  6. After the LAST slide that needs a picture, say the post is ready in one
+     line and ask whether anything should change or it is ready to publish (the
+     Publish button sits above the post). A "looks good" when no slide is left
+     is that answer: point to Publish and offer a pre-publish review; never go
+     looking for another slide to make.
+
+Taking something back: when the person prefers an earlier version of a slide
+("undo", "go back", "the last one was better"), call restore_slide. Every
+slide keeps its earlier pictures, words and layouts; a regeneration would not
+give the same picture back. The person can also do it from the slide itself.
 
 If the user later changes a caption/prompt on a slide that already has an
 image, that slide is STALE (its preview shows a regenerate badge). Offer to
@@ -759,6 +770,23 @@ You have three sub-agents available via the task tool (pass subagent_type):
 Sub-agents return their result as the task tool's result text. You
 read the JSON, then call submit_post_draft, submit_plan or submit_assessment
 to persist. Sub-agents NEVER write to the DB and NEVER generate images.
+
+DRAFT CHECK: a NEW draft is checked before the person reads it, with the same
+review, on its words alone. After submit_post_draft writes a post no review
+has scored, and before you describe it: dispatch review_post, telling it in
+the brief that there are no images yet (judge visual_quality from the image
+prompts and the layout) and giving it the two other openings you wrote, so its
+`hooks` are your slide 1 and those two. Pass its result to submit_assessment.
+Its result carries `draft_check` on that first check only. When `revise` is
+true, revise ONCE, before
+the person sees anything: put `better_opening` on slide 1 when it names one
+(edit_slide on slide 1's headline, verbatim), and when the score is below the
+bar or `audience_miss` is true, rework the angle and slides from the markers'
+fixes and the personas' reasons (submit_post_draft), then check again. Never
+more than one revision: then show it as it stands. Only then reply: the draft
+in two lines, its score, which opening the audience picked and who would
+scroll past (as sure as panel_check allows), and that you will make the images
+once they are happy. A changed opening alone needs no second check.
 
 PRE-PUBLISH REVIEW: when the user asks for a review, or asks you to publish a
 post not yet reviewed in this conversation, dispatch review_post, pass its
@@ -859,14 +887,58 @@ Visual review:
   generated image in context, and to sanity-check a caption / style / layout
   edit before you call it done.
 
+DESIGN SLIDES (kind "design"): you are the art director. `html` is the body
+  of a 1080×1920 canvas and `css` styles it (scoped to this slide: plain
+  selectors, and `:scope` for the slide itself, which holds the background).
+  Nothing about the look is fixed. Design the card a strong designer would make
+  in Canva or Figma, then push it past the template look.
+  What you have: all of CSS (grid, flex, absolute layers, transforms,
+  layered and conic gradients, blend modes, filters, backdrop-filter,
+  clip-path, masks, shadows, text-stroke, gradient text); inline SVG for
+  shapes, icons, illustrations, charts, blobs, arrows and grain (gradients,
+  patterns, clip paths, masks, filters such as feTurbulence; give a def an id
+  and point at it with url(#id); ids are only for those references, style by
+  class); and these fonts:
+  {DESIGN_FONT_NAMES}.
+  The brand's colours anchor the palette; tints, shades and one contrasting
+  accent are yours to choose.
+  Worth reaching for: oversized type cropped by the edge, a bold number as the
+  hero, colour blocking, a generated photo under a gradient scrim with type
+  set over it, a sticker or label shape, a hand-drawn underline or arrow in
+  SVG, a stack of tilted cards, a chart drawn from the post's real numbers, an
+  editorial grid with a hairline rule, grain over a gradient. Draw icons in
+  SVG; emoji are not icons.
+  The limits are legibility on a phone, not taste. Text stays inside the
+  TikTok safe zone: 72px from the top and left, 200px from the right, 310px
+  from the bottom (var(--safe-top), --safe-left, --safe-right, --safe-bottom);
+  decoration may bleed to every edge. Body 44px or more, headings 80px or
+  more, text contrast 4.5:1 (a scrim behind type on a photo). One idea per
+  slide, about 40 words at most. Real line breaks are elements (<li>, <p>,
+  <br>), never a typed backslash-n. A picture is an <img> (the slide's own
+  generated one is <img src="{the slide's image_url}">, object-fit: cover),
+  never a CSS background url(): only <img> pictures are embedded when the
+  slide is rendered. No scripts, frames, forms, links or external
+  stylesheets: they are removed.
+  Across a carousel, design slides share one type pair, palette and margin
+  system; vary the composition, not the system.
+  Then render_slide it and LOOK as a design critic would: what reads first,
+  alignment, spacing rhythm, overflow, text over the safe zone, contrast, and
+  anything that reads as a template or as generated (everything centred, a
+  row of identical cards, a default purple gradient). Fix with edit_slide and
+  render again, at most twice, before you show it. Saying you cannot style a
+  slide is wrong: this is how you style one.
+
 Writers (each emits an SSE event on success):
-  submit_plan, revise_plan_days, submit_post_draft, edit_slide
+  submit_plan, revise_plan_days, submit_post_draft, edit_slide, restore_slide
   revise_plan_days(changes) — change some days of the plan (a day, a week)
   without re-sending it: each day's date and only the fields that change. Every
   other field and day stays as it is. No <duct_artifact> for it.
   edit_slide(slide_id, patch) — surgically change ONE slide (caption, style,
-  kind, image_prompt, items) without re-sending the whole post. Use it for
+  kind, image_prompt, items, or a design slide's html/css) without re-sending
+  the whole post. Use it for
   single-slide tweaks; use submit_post_draft to add / remove / reorder slides.
+  restore_slide(slide_id, back=1) — put one slide back the way it was before
+  its last change (back=2 for the one before that). Undoable the same way.
 
 Image generation (only after the user approves the writing):
   generate_image, edit_image
@@ -915,6 +987,8 @@ Built-ins:
   ls / read_file / write_file / edit_file — a private scratch space for notes
                    and drafts; never a way to reach the user's files
 """
+# The font list lives with the renderer that loads it.
+ORCHESTRATOR_BASE_PROMPT = ORCHESTRATOR_BASE_PROMPT.replace("{DESIGN_FONT_NAMES}", DESIGN_FONT_NAMES)
 
 
 # ---------------------------------------------------------------------------
@@ -982,8 +1056,10 @@ METHOD — produce these in order, then assemble the JSON:
    you skip this. Output goes in `visual_brief` and `camera_ref_pool`.
    {_REFERENCE_STUDY_BRIEF}
 
-3. SLIDE 1 HOOK. 8-12 words max. Must FEEL like the chosen emotion (see
-   HOOK EMOTIONS below for templates). Persist the headline in `hook_text`.
+3. SLIDE 1 HOOK. 8-12 words max. Write three on three different
+   mechanisms (OPENINGS below), keep the one that passes all six tests and
+   FEELS like the chosen emotion, and persist it in `hook_text` with its
+   mechanism in `hook_type`.
 
 4. SAVE CTA. The slide-1 parenthetical that names the specific payoff
    slide. RULE: a generic "save this before going shopping" gets ignored;
@@ -1047,6 +1123,7 @@ METHOD — produce these in order, then assemble the JSON:
 {_QUALITY_STANDARD_BRIEF}
 {_HOOK_EMOTIONS_BRIEF}
 {_HOOK_FORMULAS_BRIEF}
+{MOMENTUM_CRAFT}
 {_SLIDE_COUNT_BRIEF}
 {_TERMINOLOGY_BRIEF}
 
@@ -1074,8 +1151,8 @@ array:
       "aspect_ratio": "9:16"}}
   ],
   "caption": "...", "hashtags": ["#tag1"],
-  "hook_type": "curiosity_gap",
-  "hook_text": "I used an app to check this. It knew things I didn't.",
+  "hook_type": "result_first",
+  "hook_text": "I paid $300 for an answer a two-minute test gave me free.",
   "hook_emotion": "disbelief",
   "save_cta": "save this — the self-test is on slide 3",
   "audio_note": "trending quiet-revelation sound if one fits; else slowed introspective lo-fi (instrumental, no lyrics)",
@@ -1114,13 +1191,17 @@ METHOD, in order:
 4. Score all six markers, 0-100. Anchors: 90-100 exceptional · 70-89 strong
    · 50-69 mixed · 30-49 weak · 0-29 broken.
 
-- hook_strength — does slide 1 stop the scroll in about 1.5 seconds with the
-  sound off? It must FEEL like its hook_emotion and use a question, a
-  surprising number, a bold claim or a recognised pain. A generic or
-  educational opener scores low.
-- narrative_momentum — does each slide pull to the next through an open loop,
-  so the viewer cannot exit cleanly? Reward a real slide-2 open loop and a
-  payoff that lands; punish a flat list the viewer can leave after any slide.
+- hook_strength — does the opening stop the scroll in about 1.5 seconds with
+  the sound off? Score it on the six OPENINGS tests: the reader's own
+  question or situation, concrete but not complete, a real tension, no
+  warm-up, readable at a glance, paid off by the post. A topic label, a vague
+  teaser ("you won't believe…"), a trailing ellipsis or an opening that
+  answers itself scores under 50, however emotional. Name the test it fails.
+- narrative_momentum — does each unit make the next one necessary? Apply the
+  MOMENTUM rules: a promise in the first two slides, units linked by "but"
+  and "therefore" rather than "and also", each slide's last line left
+  unresolved (name a slide a reader could leave satisfied), a re-hook in the
+  middle, and a concrete payoff before the close. Punish a flat list.
 - save_worthiness — is there a specific, screenshot-worthy asset (a
   self-test, a measurement, a named technique, an exact phrase) early, on
   slide 3 or 4? Vague advice scores low.
@@ -1134,6 +1215,8 @@ METHOD, in order:
   relevant, non-spammy hashtags.
 
 Judge against the bar the post was written to:
+{OPENING_CRAFT}
+{MOMENTUM_CRAFT}
 {_HOOK_EMOTIONS_BRIEF}
 {_POST_ARCHITECTURE_BRIEF}
 {_QUALITY_STANDARD_BRIEF}
@@ -1148,7 +1231,8 @@ language the brief asks for, else the language of the post's caption.
    people are. This step is built against all three.
    a. `hooks`: the post's opening as it stands (slide 1's words; for a text
       post, the caption's first line), verbatim, then two other openings for
-      the same post: different angles, the same promise, no new claims.
+      the same post: different angles, the same promise, no new claims. When
+      the brief gives the writer's other openings, those are the two, verbatim.
    b. `baseline`: someone scrolling who matches none of the personas, named
       "Anyone scrolling". Then `personas`: each persona in
       audience.personas (at most {MAX_PERSONA_REACTIONS}, in the order listed; none listed,
@@ -1164,9 +1248,19 @@ language the brief asks for, else the language of the post's caption.
         the craft; no scores, no marker names.
       - `pick`: read the hooks cold, as if unlabelled; the index in `hooks`
         of the one that would stop them.
-      - `stop`, `save`, `click`, read off that reaction: "yes", "maybe" or
-        "no". A persona this post is not for says so; a polite "maybe"
-        everywhere tells the owner nothing.
+      - five actions, read off that reaction, each "yes", "maybe" or "no",
+        in the order a feed meets a post:
+        `stop` would they stop scrolling;
+        `comment` would they write something: answer it, argue with it,
+          ask, tag a friend. A post that starts a conversation earns this;
+          one that only informs rarely does;
+        `save` would they keep it to come back to;
+        `share` would they send it to someone in their circle (a DM, a
+          group chat), because it is about that person or they want to be
+          the one who found it;
+        `click` would they visit the profile, curious for more of this.
+        A persona this post is not for says so; a polite "maybe" everywhere
+        tells the owner nothing.
       - `fix`: the one change that would win this person.
       `persona` is their name exactly as listed. Where a persona would react
       exactly as Anyone scrolling does, say so in their reaction rather than
@@ -1187,12 +1281,14 @@ OUTPUT: strict JSON, no prose, no markdown fences — exactly:
  "hooks": ["<the post's own opening, verbatim>", "<another>", "<another>"],
  "baseline": {{"persona": "Anyone scrolling", "scroll_past": "<why they'd scroll past>",
     "reaction": "<first person, 1-2 sentences>", "pick": 0,
-    "stop": "yes|maybe|no", "save": "yes|maybe|no", "click": "yes|maybe|no",
+    "stop": "yes|maybe|no", "comment": "yes|maybe|no", "save": "yes|maybe|no",
+    "share": "yes|maybe|no", "click": "yes|maybe|no",
     "fix": "<the one change that would win them>"}},
  "personas": [
   {{"persona": "<name as listed>", "scroll_past": "<why they'd scroll past>",
     "reaction": "<first person, 1-2 sentences>", "pick": 0,
-    "stop": "yes|maybe|no", "save": "yes|maybe|no", "click": "yes|maybe|no",
+    "stop": "yes|maybe|no", "comment": "yes|maybe|no", "save": "yes|maybe|no",
+    "share": "yes|maybe|no", "click": "yes|maybe|no",
     "fix": "<the one change that would win them>"}},
   ... one per persona, or [] when there are none ...
  ],
@@ -1377,6 +1473,10 @@ FIELD RULES:
       + `image_prompt`.
     · editorial — single image on an ivory matte with a serif caption; uses the
       slide's own `image_prompt` + `headline`/`subtext` (no items).
+    · design — you lay the slide out in `html` + `css` (see DESIGN SLIDES).
+      Any slide where the layout is the point: a cover, a checklist, a
+      comparison, a numbered brief, a big number with its context, a quote,
+      a diagram, or a generated picture composed with designed type.
 - A cell (`SlideItem`) is {"label","marker"(before-after only),"image_prompt",
   "aspect_ratio"}. Mix kinds freely across a post (e.g. photo hook, a collage
   finding, photo bridge, text cta).
@@ -1445,7 +1545,8 @@ FIELD RULES:
   its post type is fixed.
 - `hook_type`, `funnel_stage` (awareness / consideration / conversion) and
   `objective` are the bets each post makes. Fill all three: the next plan
-  grades them against what the posts earned. `hook_emotion` is the emotion
+  grades them against what the posts earned. `hook_type` is one of the
+  opening mechanisms ({HOOK_MECHANISMS}). `hook_emotion` is the emotion
   the hook opens on (vary it: never the same emotion twice in a row);
   `series` names the micro-series a day belongs to and its position;
   `experiment` marks the days that make up the plan's one test.
@@ -1458,6 +1559,9 @@ FIELD RULES:
   fields quote the numbers from <account_performance>, never invented ones.
 - `character` is the persona narrating the month; fill what you know.
 """
+_PLANDRAFT_SHAPE = _PLANDRAFT_SHAPE.replace(
+    "{HOOK_MECHANISMS}", ", ".join(key for key, _ in OPENING_MECHANISMS)
+)
 
 _EXPLORE_EXPLOIT_BRIEF = """\
 EXPLORE / EXPLOIT — each channel's share of the plan and its mix come from
@@ -1525,6 +1629,14 @@ def _mode_tail(mode: RunMode) -> str:
             "STRUCTURED SLIDES (copy + an image_prompt per slide) + a layout — "
             "NOT HTML — and you do NOT generate images yet. Images wait until "
             "the user is happy with the written draft (see IMAGE GENERATION).\n\n"
+            + OPENING_CRAFT
+            + "\n"
+            + MOMENTUM_CRAFT
+            + "\n"
+            + _POST_ARCHITECTURE_BRIEF
+            + "\n"
+            + _HOOK_EMOTIONS_BRIEF
+            + "\n"
             + _POSTDRAFT_SHAPE
         ),
     }[mode]
@@ -1574,9 +1686,11 @@ def _channel_directive(channel, mode: RunMode = "draft_post") -> str:
 # writes a confident, wrong critique.
 NO_VISION_DIRECTIVE = (
     "IMAGE TOOLS ON THIS MODEL: generate_image, edit_image and render_slide "
-    "return the asset URL and metadata only — you cannot see the pictures. Skip "
-    "the visual critique step, describe what you asked for, and rely on the "
-    "user's feedback for what they see."
+    "return the asset URL and metadata only — you cannot see the pictures those "
+    "tools make. Skip the visual critique step, describe what you asked for, and "
+    "rely on the user's feedback for what they see. This is only about tool "
+    "results: when a picture the user attaches reaches you, look at it and "
+    "answer about what it shows."
 )
 
 
@@ -2360,15 +2474,30 @@ Now — WRITE PHASE (copy + image prompts only; NO images yet):
    different post, not an edit) researches first and has no query cap:
    research_trends, then search, discover_tiktok and the project's own data
    as the concept needs.
-3. Pick the `layout`, then apply the quality, hook-emotion, mystery-
-   architecture, and emotional-arc rules. Author one structured slide per
+3. The target's topic is a starting point, not an order. Hold it against
+   its pillar's description and the audience personas before writing: when
+   it has lost the pillar's angle (a pillar "for your coloring" with no
+   colour in the topic) or none of the personas would call it their
+   question, keep the day's objective, hook type and format and move the
+   angle until it is theirs. Say what you changed and why in one line.
+4. Write three openings for slide 1 on three different mechanisms
+   (OPENINGS in your instructions), the same promise each time. Hold each to
+   the six tests and rewrite any that fails one; one of the three is the
+   reader's own question, as the personas would put it. Put the strongest on
+   slide 1 with its mechanism as `hook_type`, and keep the other two for the
+   check.
+5. Pick the `layout`, then apply the quality, hook-emotion, MOMENTUM,
+   mystery-architecture and emotional-arc rules: before writing slide copy,
+   decide what each slide leaves unresolved, and rewrite any slide a reader
+   could leave satisfied. Author one structured slide per
    slide_count — each with copy (caption_style + headline + optional subtext)
    and an `image_prompt`. Do NOT write slides_html and do NOT call
    generate_image.
-4. Emit the draft inside <duct_artifact>{{ "type": "post", ... }}</duct_artifact>
+6. Emit the draft inside <duct_artifact>{{ "type": "post", ... }}</duct_artifact>
    then call submit_post_draft.
-5. Brief summary in chat: hook used, layout, slide count, what makes this
-   different — then ASK the user to review the copy + image prompts, and tell
+7. Run the DRAFT CHECK (system prompt) and revise once if it says to.
+8. Brief summary in chat: the angle and why, the opening the audience picked,
+   the score — then ASK the user to review the copy + image prompts, and tell
    them you'll generate the images once they're happy (they can tweak any
    caption or image prompt first).
 """
@@ -2600,7 +2729,8 @@ Now — WRITE PHASE (copy + image prompts only; NO images yet):
    Open `strategic_note` with the ledger: "Modelled on @{handle}. KEPT: …;
    CHANGED: …; WHY: …".
 3. Emit it inside <duct_artifact>{{ "type": "post", ... }}</duct_artifact>, then
-   call submit_post_draft.
+   call submit_post_draft, and run the DRAFT CHECK (system prompt) with two
+   other openings you considered.
 4. In chat, briefly: the pillar you chose and why it is the closest, your
    fit × proof call and what it meant for how closely you copied, and what you
    kept and why. Then ask the user to review the copy; you generate the images

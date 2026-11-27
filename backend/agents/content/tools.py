@@ -50,6 +50,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 from agents.content.results import (
     EditImageResult,
     EditSlideResult,
+    RestoreSlideResult,
     GenerateImageResult,
     GenerateVideoResult,
     LogMetricsResult,
@@ -74,7 +75,7 @@ from agents.core.events import AgentEvent
 from agents.core.mcp_tools import APPROVAL_TIMEOUT
 from agents.core.memory_tools import build_memory_tools_lc
 from agents.core.session import PauseFn
-from agents.content.assessment import assess, reassess_post
+from agents.content.assessment import assess, draft_verdict, opening_kept_fresh, reassess_post
 from agents.content.channels import (
     Platform,
     channel_payload,
@@ -153,6 +154,7 @@ from agents.content.schema import (
 )
 from agents.content.templates import derive_image_prompts, render_slides_html
 from agents.content.video import VIDEO_POST_TYPE, cut_of, video_takes
+from agents.content.slide_versions import record_changes, restore as restore_slide_version
 from service import storage
 from service.content_metrics import metric_value
 from service.publishers import PublisherError, Target
@@ -170,6 +172,15 @@ from models.project import Project
 from utils.dates import now_iso, parse_iso, utcnow
 
 logger = logging.getLogger(__name__)
+
+# A text card draws no photo. A photo generated for one is made the slide's
+# picture, with the card's words over it: the person approved the image and
+# expects to see the whole frame, not a card that hides what they paid for
+# (2026-11-27: slide 1 of a text-only post got a photo nobody could see).
+TEXT_SLIDE_KIND = "text"
+PHOTO_SLIDE_KIND = "photo"
+TEXT_ONLY_LAYOUT = "text-only"
+PHOTO_LAYOUT = "full-bleed"
 
 EmitFn = Callable[[dict[str, Any]], Awaitable[None]]
 
@@ -531,6 +542,8 @@ def _build_post_payload(row: ContentPost, db: Session) -> dict:
     viewport decides between the slide carousel and the player from them."""
     return {
         "id":              str(row.id),
+        # The publish dialog lists the project's accounts from it.
+        "project_id":      str(row.project_id),
         "post_type":       row.post_type,
         "video":           row.video,
         "video_takes":     video_takes(db, row) if row.video else [],
@@ -540,6 +553,7 @@ def _build_post_payload(row: ContentPost, db: Session) -> dict:
         "layout":          row.layout,
         "slide_count":     row.slide_count,
         "slides":          row.slides,
+        "slide_versions":  row.slide_versions or {},
         "slides_html":     row.slides_html,
         "caption":         row.caption,
         "replies":         row.replies or [],
@@ -594,7 +608,8 @@ def _attach_image_to_slide(
     (the model routinely passes item_index=0 for ordinary photo slides). Returns
     True if the target was found + updated. The caller commits.
     """
-    slides = list(row.slides or [])
+    before = list(row.slides or [])
+    slides = list(before)
     found = False
     for i, s in enumerate(slides):
         if not (isinstance(s, dict) and str(s.get("slide_id")) == str(slide_id)):
@@ -618,6 +633,10 @@ def _attach_image_to_slide(
             items[item_index] = cell
             s["items"] = items
         else:
+            if s.get("kind") == TEXT_SLIDE_KIND:
+                s["kind"] = PHOTO_SLIDE_KIND
+                if row.layout == TEXT_ONLY_LAYOUT:
+                    row.layout = PHOTO_LAYOUT
             s["image_url"] = url
             s["image_asset_id"] = asset_id
             if prompt_used is not None:
@@ -631,6 +650,7 @@ def _attach_image_to_slide(
     if not found:
         return False
     row.slides = slides
+    record_changes(row, before, by="agent")
     parsed = [Slide.model_validate(s) for s in slides]
     row.slides_html = render_slides_html(row.layout, parsed)
     row.image_prompts = derive_image_prompts(parsed)
@@ -910,6 +930,10 @@ def build_content_tools_lc(
     class EditSlideArgs(BaseModel):
         slide_id: str = Field(description="The slide to edit, e.g. 'slide-03'.")
         patch: dict = Field(description="Partial Slide fields to merge (only what changes).")
+
+    class RestoreSlideArgs(BaseModel):
+        slide_id: str = Field(description="The slide to take back, e.g. 'slide-03'.")
+        back: int = Field(1, ge=1, description="How many versions back: 1 is the state just before the current one.")
 
     class HistoryArgs(BaseModel):
         limit: int = Field(30, ge=1, le=100, description="Max rows to return. Default 30, max 100.")
@@ -1468,8 +1492,10 @@ def build_content_tools_lc(
                 if existing is not None:
                     queued = is_queued_at_publisher(existing)
                     before = (existing.caption, list(existing.replies or []))
+                    before_slides = list(existing.slides or [])
                     for k, v in values.items():
                         setattr(existing, k, v)
+                    record_changes(existing, before_slides, by="agent")
                     # Preserve a saved status across agent re-submits (chat
                     # refinements): a post the user already Saved (draft) or
                     # published must NOT be reset to "pending". `status` is
@@ -1511,6 +1537,10 @@ def build_content_tools_lc(
                         logger.warning("content: failed to link conversation %s → post %s",
                                        session.conversation_id, row.id, exc_info=True)
                 session.post_id = row.id
+                # A post no review has scored is checked before the person
+                # reads it (the draft check); one already reviewed is a
+                # revision, and the person asks for its next review.
+                session.draft_check_due = not row.last_assessment
                 logger.info(
                     "content: post %s upserted (slug=%s, layout=%s, slides=%d, images=%d)",
                     row.id, row.post_dir_slug, row.layout, row.slide_count,
@@ -1570,9 +1600,18 @@ def build_content_tools_lc(
                     slide_obj = Slide.model_validate(merged)
                 except ValidationError as exc:
                     return _err(f"patched slide is invalid — fix and call again:\n{exc}")
+                before = list(row.slides or [])
                 slides[idx] = slide_obj.model_dump(mode="json")
                 parsed = [Slide.model_validate(s) for s in slides]
                 row.slides = slides
+                record_changes(row, before, by="agent")
+                # Slide 1 taking an opening its own review compared keeps
+                # that review current (assessment.opening_kept_fresh).
+                kept = opening_kept_fresh(
+                    row.last_assessment, before, slides, row.caption or "", row.hashtags or [], row.replies or [],
+                )
+                if kept is not None:
+                    row.last_assessment = kept
                 row.slides_html = render_slides_html(row.layout, parsed)
                 row.image_prompts = derive_image_prompts(parsed)
                 row.slide_count = len(parsed)
@@ -1594,6 +1633,42 @@ def build_content_tools_lc(
         except Exception as exc:
             logger.exception("edit_slide failed")
             return _err(f"edit_slide failed: {exc}")
+
+    async def restore_slide(slide_id: str, back: int = 1) -> str:
+        try:
+            slide_id = (slide_id or "").strip()
+            if session.post_id is None:
+                return _err("No current post in this session.")
+            async with _post_lock(str(session.post_id)):
+              with _open_db() as db:
+                row, err = _require_post(db, project_id, session.post_id)
+                if err:
+                    return err
+                kept = len((row.slide_versions or {}).get(slide_id) or [])
+                if not restore_slide_version(row, slide_id, back):
+                    return _err(
+                        f"{slide_id} has {kept} earlier version(s); nothing {back} back to restore."
+                    )
+                parsed = [Slide.model_validate(s) for s in row.slides]
+                row.slides_html = render_slides_html(row.layout, parsed)
+                row.image_prompts = derive_image_prompts(parsed)
+                row.updated_at = datetime.now(timezone.utc)
+                db.add(row)
+                db.commit()
+                db.refresh(row)
+                await emit({
+                    "event": ContentEvent.POST_DRAFT_UPDATED,
+                    "session_id": session.session_id,
+                    "post_id": str(row.id),
+                    "payload": _build_post_payload(row, db),
+                })
+                return _ok_model(RestoreSlideResult(
+                    post_id=str(row.id), slide_id=slide_id,
+                    versions=len((row.slide_versions or {}).get(slide_id) or []),
+                ))
+        except Exception as exc:
+            logger.exception("restore_slide failed")
+            return _err(f"restore_slide failed: {exc}")
 
     # ----------------------- Readers -----------------------
 
@@ -2051,12 +2126,18 @@ def build_content_tools_lc(
             # Attach the first image to the target slide so the preview updates
             # live (one slide at a time) without a separate submit_post_draft.
             attached = False
+            became_photo = False
             if target_slide_id and assets and session.post_id is not None:
                 try:
                     async with _post_lock(str(session.post_id)):
                       with _open_db() as db2:
                         row = db2.get(ContentPost, session.post_id)
                         if row is not None and row.project_id == project_id:
+                            was = next(
+                                (s.get("kind") for s in (row.slides or [])
+                                 if isinstance(s, dict) and str(s.get("slide_id")) == target_slide_id),
+                                None,
+                            )
                             attached = _attach_image_to_slide(
                                 db2, row, target_slide_id,
                                 asset_id=str(assets[0].asset_id),
@@ -2065,6 +2146,12 @@ def build_content_tools_lc(
                                 prompt_used=generating_prompt,
                             )
                             if attached:
+                                now = next(
+                                    (s.get("kind") for s in (row.slides or [])
+                                     if isinstance(s, dict) and str(s.get("slide_id")) == target_slide_id),
+                                    None,
+                                )
+                                became_photo = was == TEXT_SLIDE_KIND and now == PHOTO_SLIDE_KIND
                                 db2.commit()
                                 db2.refresh(row)
                                 logger.info(
@@ -2104,6 +2191,11 @@ def build_content_tools_lc(
                 asset_urls=[a.url for a in assets],
                 model=request.model.value,
                 attached_to=target_slide_id if attached else None,
+                note=(
+                    f"{target_slide_id} was a text card, so it is now a photo slide with its words over "
+                    "the image; the preview shows the whole frame. Say so in one line."
+                    if became_photo else None
+                ),
             ))
         except Exception:
             logger.exception("generate_image failed")
@@ -2624,6 +2716,11 @@ def build_content_tools_lc(
                 db.add(row)
                 db.commit()
                 db.refresh(row)
+                # Only the first review of a new draft is its check: the one
+                # after a revision reports, it does not send the draft back
+                # again, which is what holds the check to one revision.
+                checking = bool(getattr(session, "draft_check_due", False))
+                session.draft_check_due = False
                 await emit({
                     "event":      ContentEvent.POST_DRAFT_UPDATED,
                     "session_id": session.session_id,
@@ -2644,12 +2741,15 @@ def build_content_tools_lc(
                     ],
                     "weakest":       [m.model_dump(mode="json", include={"id", "score", "fix"}) for m in weakest],
                     "personas":      [
-                        r.model_dump(mode="json", include={"persona", "pick", "stop", "save", "click", "fix"})
+                        r.model_dump(mode="json", include={"persona", "pick", "stop", "comment", "save", "share", "click", "fix"})
                         for r in result.personas
                     ],
                     # How far to trust those reactions, said with them: the
                     # one-line relay in chat must not sound surer than this.
                     "panel_check":   result.panel_check.model_dump(mode="json") if result.panel_check else None,
+                    # What a draft check does next: revise once when this says
+                    # so, putting better_opening on slide 1 if there is one.
+                    **({"draft_check": draft_verdict(result)} if checking else {}),
                 })
         except ValidationError as exc:
             return _err(f"markers are invalid — fix and call again:\n{exc}")
@@ -2926,12 +3026,22 @@ def build_content_tools_lc(
             "Surgically edit ONE slide of the current post WITHOUT re-sending the "
             "whole post. Pass slide_id + a `patch` of only the fields that change "
             "— e.g. {\"caption_style\":\"cap-raw\"}, {\"headline\":\"...\"}, "
-            "{\"kind\":\"text\"}, {\"image_prompt\":\"...\"}, or {\"items\":[...]}. "
+            "{\"kind\":\"text\"}, {\"image_prompt\":\"...\"}, {\"items\":[...]}, or "
+            "{\"kind\":\"design\",\"html\":\"...\",\"css\":\"...\"} to lay the slide out yourself. "
             "The slide is merged + revalidated, the HTML re-rendered, and "
             "POST_DRAFT_UPDATED emitted. Changing image_prompt marks that image "
             "stale (regenerate to match). Use submit_post_draft for whole-post or "
             "multi-slide changes, or to add / remove / reorder slides.",
             EditSlideArgs,
+        ),
+        _bind(
+            restore_slide, ContentTool.RESTORE_SLIDE,
+            "Take ONE slide back to an earlier version: its picture, words and layout as they "
+            "were. Use it when the person says undo, go back, the previous one was better. "
+            "back=1 is the version just before the current; the current one is kept, so "
+            "restore_slide again with back=1 undoes the restore. Never regenerate to get an "
+            "earlier picture back.",
+            RestoreSlideArgs,
         ),
         _bind(
             fetch_brand_context, ContentTool.FETCH_BRAND_CONTEXT,

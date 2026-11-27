@@ -1,8 +1,8 @@
 # Building and changing agents
 
-**Author:** Shirish Kadam · **Updated:** 2026-11-11
+**Author:** Shirish Kadam · **Updated:** 2026-11-27
 
-Duct's agent rulebook on LangChain 1.x, LangGraph and `deepagents`: 34 rules,
+Duct's agent rulebook on LangChain 1.x, LangGraph and `deepagents`: 36 rules,
 each naming its primitive and its enforcing test, plus 12 ranked open gaps.
 Read it before adding an agent or changing a prompt, tool, model default,
 middleware or pin.
@@ -91,6 +91,14 @@ Each step ends with its Reference rule group.
 
 Exact names and two pricing gotchas: Reference, "Changing an agent, in full".
 
+**Replacing an engine or harness** is the change that loses behaviour without
+a test failing: the new runner is tested against itself, the old one is
+deleted, and whatever only the old one did is gone. Before the delete, write
+what the old engine did, per entry path, as tests the new one must pass (what
+reaches the model, the events the app reads, what a reload shows). The move
+off the Claude Agent SDK skipped this and lost follow-up pictures, the audit's
+resumed report and its progress, and the provider search's card.
+
 ## Open gaps
 
 Ranked by failure prevented or money saved, over effort. Each becomes an issue
@@ -167,6 +175,8 @@ are relative to `backend/`.
 | Retry in exactly one layer, the one that reports each attempt and honours `Retry-After`. Provider SDKs retry underneath by default (Gemini up to 6 times), invisibly. | `ReportedRetryMiddleware`; SDK `max_retries=0` | gap 2 |
 | Fall back only on transient failures. `ModelFallbackMiddleware` falls back on every exception, auth and overflow included. | `ClassifiedFallbackMiddleware` in `deep_session.py` | `tests/test_deep_session.py` (rejected key stays rejected; a 429 falls back) |
 | Input typed mid-turn is steered or queued, never refused. | `SteerMiddleware` + the session's `steer_queue` | `tests/test_insights_session.py`; `tests/test_stream_translation.py` |
+| What the person sent is what the model receives, on every way in: the idle follow-up, a message steered mid-turn, one that missed the turn's last call, the first message of a resumed thread. A turn takes the content blocks, never a text projection; a new entry path gets a row. From 2026-09-05 to 11-27 an idle follow-up lost its pictures and every suite was green. | `chat_message_content`, `_turn_input`, `steer_messages` | `tests/test_model_input_contract.py` (posts through the real route into a real loop and reads what the fake model was sent) |
+| A tool the provider runs inside its own call (Anthropic's `web_search`) is reported through the same hooks as Duct's, so its card, its transcript row and a session audit look the same on every provider. | `_server_tool_traffic` in `_dispatch_updates` | `tests/test_stream_translation.py::test_a_provider_side_web_search_is_reported_like_ours` |
 | A pause is a checkpointed `interrupt()` and survives a redeploy. Work before the interrupt is idempotent, because the node reruns on resume. | `langgraph.types.interrupt`, `Command(resume=…)` | `tests/test_deepagents_harness.py` |
 | A writer survives the replay a cut run makes. A run continued from its checkpoint executes the in-flight tool call again, with the same call id; change sets and artifacts are keyed on it (one row per conversation and call, held by a partial unique index) and memories dedupe by content hash, so the second execution reads what the first wrote. | `ToolCallBinder` (`deep_session.py`), `agents/core/tool_calls.py`, `change_set_for_tool_call`, `artifact_for_tool_call` | `tests/test_writer_idempotency.py`; `tests/test_deep_session.py` (the loop names the call to the tool) |
 | A thread is keyed on the conversation, never the session. | checkpointer `thread_id` | [`backend/AGENTS.md`](../../backend/AGENTS.md) |

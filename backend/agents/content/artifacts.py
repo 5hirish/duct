@@ -45,6 +45,17 @@ RECOVERY_NUDGE_REVIEW = (
     "with one AskUserQuestion carrying two to four directions in the person's words. "
     "Do not research and do not submit a plan until they answer."
 )
+# A draft the person has not yet seen the check of. The check is the same
+# review the person can ask for, run on the words before any picture is made:
+# on 2026-11-27 a draft whose topic none of the personas wanted had seven
+# images made before anything said so.
+RECOVERY_NUDGE_DRAFT_CHECK = (
+    "You saved a new draft without checking it. Before the person reads it, run "
+    "the draft check: dispatch review_post on it (say there are no images yet, and "
+    "pass the two other openings you considered), then submit_assessment. Revise "
+    "once if its draft_check says to, check again, and only then describe the "
+    "draft, its score and which opening the audience picked."
+)
 RECOVERY_NUDGE_POST = (
     "You analysed everything but did not persist the post draft. Emit the complete "
     '<duct_artifact>{"type":"post", …}</duct_artifact> now and then call '
@@ -83,6 +94,7 @@ __all__ = [
     "ARTIFACT_PLAN",
     "ARTIFACT_POST",
     "RECOVERY_NUDGE_PLAN",
+    "RECOVERY_NUDGE_DRAFT_CHECK",
     "RECOVERY_NUDGE_POST",
     "parse_artifact_json",
 ]

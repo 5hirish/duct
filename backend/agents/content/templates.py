@@ -26,6 +26,7 @@ from __future__ import annotations
 import html
 from typing import TYPE_CHECKING
 
+from agents.content.design import DESIGN_FONTS, design_slide_markup
 from agents.content.styles import css_for
 
 if TYPE_CHECKING:  # avoid a hard import cycle at module load
@@ -159,13 +160,17 @@ _LAYOUT_CSS = """\
 }
 """
 
-_FONTS_LINK = (
-    '<link rel="preconnect" href="https://fonts.googleapis.com">'
-    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
-    '<link href="https://fonts.googleapis.com/css2?'
-    "family=Inter:wght@300;400;500;600;700;800;900&"
-    "family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap\" rel=\"stylesheet\">"
-)
+def _fonts_link() -> str:
+    # The templates' two families and the design slides' palette, one request.
+    families = "&".join(f"family={spec}" for _, spec in DESIGN_FONTS)
+    return (
+        '<link rel="preconnect" href="https://fonts.googleapis.com">'
+        '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
+        f'<link href="https://fonts.googleapis.com/css2?{families}&display=swap" rel="stylesheet">'
+    )
+
+
+_FONTS_LINK = _fonts_link()
 
 
 # ---------------------------------------------------------------------------
@@ -185,7 +190,9 @@ def _esc_caption(text: str) -> str:
     previews use `<br>`). We escape everything, then restore those two cases so
     no other markup can be injected.
     """
-    safe = html.escape(text or "", quote=False)
+    from agents.content.schema import literal_line_breaks  # schema imports this module's caller
+
+    safe = html.escape(literal_line_breaks(text or ""), quote=False)
     safe = safe.replace("\n", "<br>")
     safe = safe.replace("&lt;br&gt;", "<br>").replace("&lt;br/&gt;", "<br>").replace("&lt;br /&gt;", "<br>")
     return safe
@@ -357,6 +364,8 @@ def _render_slide(slide: "Slide", n: int) -> str:
         return _render_before_after_slide(slide, n)
     if slide.kind == "editorial":
         return _render_editorial_slide(slide, n)
+    if slide.kind == "design" and slide.html:
+        return design_slide_markup(slide.html, slide.css, n)
     # photo (default) + any multi-image kind missing its items.
     return _render_photo_slide(slide, n)
 

@@ -323,3 +323,24 @@ async def test_a_publish_the_person_said_no_to_is_their_answer_not_published():
     assert events[-1]["reason"] == "skipped"
     assert events[-1]["error"] == ""
     assert events[-1]["title"] == "Morning ritual"
+
+
+@pytest.mark.asyncio
+async def test_a_render_the_model_could_see_is_not_a_failure():
+    """On a vision model the result is the picture plus the payload as a text
+    block. Every such render read as failed, and its row turned red."""
+    blocks = [
+        {"type": "image", "base64": "QUFBQQ==", "mime_type": "image/png"},
+        {"type": "text", "text": json.dumps({"slide_id": "slide-02", "asset_url": "/uploads/r.png"})},
+    ]
+    events, _ = await run_call("render_slide", {"slide_id": "slide-02"}, blocks)
+    finished = events[1]
+    assert finished["status"] == StepStatus.SUCCESS
+    assert finished["meta"]["images"] == ["/uploads/r.png"]
+
+
+@pytest.mark.asyncio
+async def test_a_sub_agent_that_answers_in_json_shows_its_note_not_the_json():
+    review = json.dumps({"markers": [{"id": "hook_strength", "score": 34}], "notes": "Strong checklist, weak opening."})
+    events, _ = await run_call("task", {"subagent_type": "review_post"}, review)
+    assert events[1]["meta"]["summary"] == "Strong checklist, weak opening."

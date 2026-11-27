@@ -111,6 +111,10 @@ import PlanViewport from "@/components/content/PlanViewport";
 import PlanQuickActions from "@/components/content/PlanQuickActions";
 import PostMetricsForm from "@/components/content/PostMetricsForm";
 import PostVideo from "@/components/content/PostVideo";
+import PostViewport from "@/components/content/PostViewport";
+import PublishModal from "@/components/content/PublishModal";
+import SlidesCarousel from "@/components/content/SlidesCarousel";
+import { DESIGN_SLIDES, DESIGN_SLIDE_HEAD, EARLIER_COVER } from "@/lib/__fixtures__/designSlides.mjs";
 import VendorKeyForm from "@/components/content/VendorKeyForm";
 import SynthesisPanel from "@/components/content/SynthesisPanel";
 import PublishReviewPanel from "@/components/content/PublishReviewPanel";
@@ -699,11 +703,11 @@ const REVIEW_WITH_PERSONAS = {
     "Three weddings, three photos where I looked ill",
     "Your undertone in 10 seconds, with a vein",
   ],
-  baseline: { persona: "Anyone scrolling", scroll_past: "Looks like another colour-season ad.", reaction: "A dress, a colour wheel. I've seen this one.", pick: 1, stop: "maybe", save: "no", click: "no", fix: "" },
+  baseline: { persona: "Anyone scrolling", scroll_past: "Looks like another colour-season ad.", reaction: "A dress, a colour wheel. I've seen this one.", pick: 1, stop: "maybe", comment: "no", save: "no", share: "no", click: "no", fix: "" },
   personas: [
-    { persona: "Maya, guest at three weddings this year", scroll_past: "If it opens on the app, I'm gone.", reaction: "Wait, that grey dress was my undertone, not the dress? I'm keeping the vein test for Saturday.", pick: 1, stop: "yes", save: "yes", click: "maybe", fix: "Show the before and after in one frame on slide 1." },
-    { persona: "Tess, stylist with a waiting list", scroll_past: "I tell clients this every week; nothing new for me.", reaction: "Nice for my clients, but I'd want to know the app's accuracy before I send it on.", pick: 2, stop: "yes", save: "maybe", click: "maybe", fix: "Say how the app reads colour, in one line on slide 5." },
-    { persona: "Jo, sceptical of beauty filters", scroll_past: "Another app telling me my season.", reaction: "Another app telling me my season. Scrolling.", pick: 1, stop: "no", save: "no", click: "no", fix: "Open on the $300 appointment it replaced, not the app." },
+    { persona: "Maya, guest at three weddings this year", scroll_past: "If it opens on the app, I'm gone.", reaction: "Wait, that grey dress was my undertone, not the dress? I'm keeping the vein test for Saturday.", pick: 1, stop: "yes", comment: "yes", save: "yes", share: "yes", click: "maybe", fix: "Show the before and after in one frame on slide 1." },
+    { persona: "Tess, stylist with a waiting list", scroll_past: "I tell clients this every week; nothing new for me.", reaction: "Nice for my clients, but I'd want to know the app's accuracy before I send it on.", pick: 2, stop: "yes", comment: "maybe", save: "maybe", share: "no", click: "maybe", fix: "Say how the app reads colour, in one line on slide 5." },
+    { persona: "Jo, sceptical of beauty filters", scroll_past: "Another app telling me my season.", reaction: "Another app telling me my season. Scrolling.", pick: 1, stop: "no", comment: "no", save: "no", share: "no", click: "no", fix: "Open on the $300 appointment it replaced, not the app." },
   ],
   panel_check: { metric: "intent", posts: 8, pairs: 28, agreed: 21, fit: "tracks" },
 };
@@ -711,8 +715,8 @@ const REVIEW_WITH_PERSONAS = {
 // personas that read the post exactly as anyone would.
 const REVIEW_PANEL_UNTESTED = {
   ...REVIEW_WITH_PERSONAS,
-  baseline: { ...REVIEW_WITH_PERSONAS.baseline, pick: 0, stop: "maybe", save: "maybe", click: "no" },
-  personas: REVIEW_WITH_PERSONAS.personas.slice(0, 2).map((r) => ({ ...r, pick: 0, stop: "maybe", save: "maybe", click: "no" })),
+  baseline: { ...REVIEW_WITH_PERSONAS.baseline, pick: 0, stop: "maybe", comment: "no", save: "maybe", share: "no", click: "no" },
+  personas: REVIEW_WITH_PERSONAS.personas.slice(0, 2).map((r) => ({ ...r, pick: 0, stop: "maybe", comment: "no", save: "maybe", share: "no", click: "no" })),
   panel_check: null,
 };
 const REVIEW_STALE = {
@@ -1315,6 +1319,8 @@ const MODEL_CATALOGUE = {
     { id: "claude-opus-5-5", label: "Claude Opus 5.5", provider: "anthropic", engines: ["v1"] },
     { id: "claude-sonnet-5-5", label: "Claude Sonnet 5.5", provider: "anthropic", engines: ["v1"] },
     { id: "claude-haiku-5-5", label: "Claude Haiku 5.5", provider: "anthropic", engines: ["v1"] },
+    { id: "gpt-6.1-sol", label: "GPT-6.1 Sol", provider: "openai", engines: ["v1"] },
+    { id: "gpt-6-luna", label: "GPT-6 Luna", provider: "openai", engines: ["v1"] },
   ],
   tiers: [
     { id: "heavy", default_model: "gemini-3.1-pro-preview", jobs: ["analysis", "audit"] },
@@ -1384,6 +1390,14 @@ const MODEL_PREVIEW_OK = {
   light: { id: "light", provider: "google_genai", model: "gemini-3.5-flash-lite", runnable: true },
 };
 
+// The same three on OpenAI, for the ChatGPT-plan label.
+const MODEL_PICKS_OPENAI = { heavy: "gpt-6.1-sol", standard: "gpt-6.1-sol", light: "gpt-6-luna" };
+const MODEL_PREVIEW_OPENAI = {
+  heavy: { id: "heavy", provider: "openai", model: "gpt-6.1-sol", runnable: true },
+  standard: { id: "standard", provider: "openai", model: "gpt-6.1-sol", runnable: true },
+  light: { id: "light", provider: "openai", model: "gpt-6-luna", runnable: true },
+};
+
 // Heavy set to a provider with no key — the case the summary has to surface
 // rather than hide, since the fold is closed and the cards are not on screen.
 const MODEL_PREVIEW_BLOCKED = {
@@ -1448,6 +1462,67 @@ const here = (path) => (typeof window === "undefined" ? path : new URL(path, win
 const CLIP = "/art/preview-clip.mp4";
 // Built after mount: the frame is rendered on the server first, where there is
 // no origin to resolve against, and hydration keeps the server's attributes.
+function DesignSlideScene() {
+  const [index, setIndex] = useState(0);
+  return (
+    <div className="max-w-sm">
+      <SlidesCarousel slides={DESIGN_SLIDES} headHtml={DESIGN_SLIDE_HEAD} index={index} onIndexChange={setIndex} />
+    </div>
+  );
+}
+
+// A post being made, in the viewport: the cover has an earlier version to
+// step back to, and the last slide still owes a picture, so the agent waits
+// on the person before making it. Then the same post with nothing owed.
+const OWED_SLIDE = { slide_id: "slide-07", kind: "photo", headline: "Save this for your appointment", image_prompt: "a stylist's hands holding a printed brief" };
+function previewPost(slides, versions = {}) {
+  return {
+    type: "post", id: "p-preview", project_id: "proj-preview", status: "draft", post_type: "slideshow",
+    topic: "Blunt bob or face-framing layers?", slides, slide_count: slides.length,
+    slides_html: DESIGN_SLIDE_HEAD, slide_versions: versions, platforms: ["tiktok"],
+    caption: "Blunt bob or face-framing layers? The difference is where the cut removes length.",
+    hashtags: ["#HaircutConsultation"],
+  };
+}
+// The publish dialog over stubbed calls: `loading` never answers the reads,
+// the rest answer at once; Post now then sends (and never answers when
+// `sending`), so the sending and done states are one click away.
+const PUBLISH_ACCOUNTS = [
+  { id: 11, platform: "tiktok", username: "hairbyjo", display_name: "Jo Hair Studio", publisher: "zernio", publisher_label: "Zernio" },
+  { id: 12, platform: "instagram", username: "hairbyjo", publisher: "zernio", publisher_label: "Zernio" },
+];
+function PublishDialogScene({ loading = false, sending = false }) {
+  const post = {
+    ...previewPost(DESIGN_SLIDES),
+    caption: "Blunt bob or face-framing layers? Here's what each cut actually changes.\n\nSlide 3 is the question to ask your stylist before the scissors come out. Save it for your next appointment.",
+    hashtags: ["#HaircutConsultation", "#BluntBob", "#FaceFramingLayers"],
+    thumbnail_url: here("/art/mosaic/salve.webp"),
+  };
+  const never = () => new Promise(() => {});
+  const api = {
+    listSocialAccounts: loading ? never : async () => PUBLISH_ACCOUNTS,
+    listLinkedAccounts: async () => [PUBLISH_ACCOUNTS[0]],
+    getPost: loading ? never : async () => ({ ...post, assessment: REVIEW_SCORED }),
+    publishPost: sending ? never : async () => ({ ...post, status: "published", published_url: "https://www.tiktok.com/@hairbyjo" }),
+  };
+  return <PublishModal open onClose={() => {}} post={post} api={api} />;
+}
+function PostProgressScene({ ready }) {
+  const slides = ready ? DESIGN_SLIDES : [...DESIGN_SLIDES, OWED_SLIDE];
+  const versions = ready ? {} : { "slide-04": [{ slide: EARLIER_COVER, at: "2026-11-27T10:00:00Z", by: "agent" }] };
+  return (
+    <div className="h-[64rem] max-w-xl overflow-hidden rounded-xl border border-border">
+      <PostViewport
+        payload={previewPost(slides, versions)}
+        idle
+        onSendMessage={() => {}}
+        canPublish
+        onPublish={() => {}}
+      />
+    </div>
+  );
+}
+
 function PostVideoScene() {
   const [takes, setTakes] = useState(null);
   useEffect(() => setTakes(videoTakes()), []);
@@ -1642,14 +1717,14 @@ const GUIDE_CHECKED = "2026-11";
 // dumped by guide_payload), so the scene shows what the agent is told rather
 // than a paraphrase that drifts. Regenerate when that table changes.
 const CHANNEL_GUIDES = {
-  tiktok: {"formats": ["Video 9:16, 15 s to 10 min uploads; 21 to 60 s finishes most often", "Photo carousel (photo mode), up to 35 photos, with a sound", "On-screen text for the sound-off viewer"], "limits": ["Caption 4,000 characters; the first 50 carry the search weight", "3 to 5 hashtags", "Links in the caption are not clickable"], "wins": ["Completion and rewatches first, then shares and saves", "A hook in the first second and a payoff that makes the loop", "Captions written as the search phrase a viewer would type; creators can set a video's search keywords", "A trending sound only when it fits the post"], "avoid": ["Watermarked reposts from other apps", "Twenty hashtags", "Undisclosed AI-made footage: it is labelled and viewers can turn it down"], "cadence": "Daily if the quality holds, three to five a week at least", "media": ["video", "slideshow", "image"]},
-  instagram: {"formats": ["Reels 9:16 up to 3 min; 15 to 90 s is the working range", "Carousel 4:5, up to 20 slides; slide 2 is shown to people who scrolled past slide 1", "Single image 4:5; Stories 9:16 for the daily touch"], "limits": ["Caption 2,200 characters, folded after about 125", "At most 5 hashtags", "No clickable link in a caption: bio or sticker"], "wins": ["Sends per reach, then watch time and saves", "Carousels with a sound also surface in Reels", "Keywords in the caption and on-screen text: Instagram search reads them", "Alt text on every image"], "avoid": ["Undisclosed AI-generated content: reach drops", "Hashtags as the first line", "Engagement bait"], "cadence": "Three to five posts a week, a Story most days", "media": ["video", "slideshow", "image"]},
-  youtube: {"formats": ["Shorts 9:16 up to 3 min; 15 to 50 s is the sweet spot", "Long-form 16:9 with chapters when the topic needs more than a minute"], "limits": ["Title 100 characters, about 60 visible", "Description 5,000 characters; the first three hashtags show above the title", "More than 60 hashtags and none count"], "wins": ["Shorts: viewed vs swiped away, then rewatches and a loop that ends where it began", "Long-form: click-through and retention; the title carries the keyword", "Captions on, because many Shorts play muted"], "avoid": ["Mass-produced or repetitive uploads: YouTube calls it inauthentic content and demonetises it", "Realistic altered or synthetic footage without the AI disclosure", "A Short that restates a long video's title and nothing else"], "cadence": "Two or three Shorts a week; one long-form a week or fortnight", "media": ["video"]},
-  facebook: {"formats": ["Reels (every video posts as one); keep it under 90 s", "Photo and carousel posts", "Text posts that ask something; link posts sparingly"], "limits": ["63,206 characters; about three lines show before 'See more'", "Hashtags optional, at most 2 or 3"], "wins": ["Watch time and shares, then comments worth reading", "Native video over links to video", "A question in the first line"], "avoid": ["A link in the post body: reach is cut, so it goes in the first comment", "Engagement bait ('tag a friend who…')", "Posting more than once a day"], "cadence": "Three to five posts a week", "media": ["video", "slideshow", "image", "text"]},
-  twitter: {"formats": ["A post of 280 characters (Premium can write longer, but the feed shows the first lines)", "A thread: a hook post and five to eight that pay it off", "Native video up to 2 min 20 s on a free account; images 16:9 or 4:5"], "limits": ["280 characters per post, every link counts as 23", "0 or 1 hashtag"], "wins": ["Replies weigh far more than likes, so write the post that gets answered", "Native media and text; an outbound link belongs in the first reply", "The first line is the whole post for most readers"], "avoid": ["A link in the post itself: reach drops hard on a free account", "Hashtag strings", "Reposting the LinkedIn version unchanged"], "cadence": "One to three a day, replies included", "media": ["text", "image", "video"]},
-  linkedin: {"formats": ["Text post; the first 210 characters are what shows before 'see more'", "Document carousel (a PDF of 8 to 12 pages) for a how-to", "Vertical video of 1 to 2 min; polls; a newsletter for the long form"], "limits": ["3,000 characters", "0 to 3 hashtags", "No outbound link in the post body"], "wins": ["Comments and dwell time, especially in the first hour", "A specific story or a number in the first two lines", "Replying to every comment the same day"], "avoid": ["Template-shaped AI prose: it is down-ranked", "A link in the post: put it in a comment", "Tagging people who will not reply"], "cadence": "Three to five posts a week, weekday mornings", "media": ["text", "slideshow", "image", "video"]},
-  blog: {"formats": ["An article of 800 to 1,500 words, as long as the answer needs and no longer", "One H1, an H2 per question the reader has, 40 to 60 words of direct answer under each", "A short FAQ at the end, and a figure or table where a comparison is made"], "limits": ["Title under 60 characters with the keyword in it", "Meta description 120 to 155 characters", "One topic per article; a second topic is a second article"], "wins": ["The answer in the first paragraph: search and AI answers both quote it", "Named sources, dates and numbers, which is what gets cited", "Internal links to the two posts a reader would want next", "An author, a date, and an update when the facts change"], "avoid": ["Thin generated prose padded to a word count", "Keyword-stuffed headings", "Publishing without a canonical URL"], "cadence": "One or two a week, and a refresh of an old post a month", "media": ["article"]},
-  wordpress: {"formats": ["An article of 800 to 1,500 words in blocks: heading, paragraph, list, image, table", "One H1 (the title), an H2 per question, 40 to 60 words of answer under each", "A featured image at 1200 by 675 with alt text"], "limits": ["Title under 60 characters; slug three to five words", "Excerpt and meta description 120 to 155 characters", "One category, three to five tags"], "wins": ["The answer in the first paragraph; FAQ and Article schema from the SEO plugin", "Internal links to related posts and a clear next step", "Scheduled publishing at a steady hour"], "avoid": ["Thin generated prose", "Uncategorised posts and empty alt text", "A second H1 inside the body"], "cadence": "One or two a week", "media": ["article"]},
+  tiktok: {"formats": ["Video 9:16, 15 s to 10 min uploads; 21 to 60 s finishes most often", "Photo carousel (photo mode), up to 35 photos, with a sound", "On-screen text for the sound-off viewer"], "limits": ["Caption 4,000 characters; the first 50 carry the search weight", "3 to 5 hashtags", "Links in the caption are not clickable"], "wins": ["Completion and rewatches first, then shares and saves", "A hook in the first second and a payoff that makes the loop", "Captions written as the search phrase a viewer would type; creators can set a video's search keywords", "A trending sound only when it fits the post"], "avoid": ["Watermarked reposts from other apps", "Twenty hashtags", "Undisclosed AI-made footage: it is labelled and viewers can turn it down"], "cadence": "Daily if the quality holds, three to five a week at least", "media": ["video", "slideshow", "image"], "opening": ["The first second and the on-screen text decide it, sound off: state the tension there, not a title card", "The caption's first line says the same thing as the phrase a viewer would search", "A carousel's slide 1 asks; slide 2 promises what the last slides pay"]},
+  instagram: {"formats": ["Reels 9:16 up to 3 min; 15 to 90 s is the working range", "Carousel 4:5, up to 20 slides; slide 2 is shown to people who scrolled past slide 1", "Single image 4:5; Stories 9:16 for the daily touch"], "limits": ["Caption 2,200 characters, folded after about 125", "At most 5 hashtags", "No clickable link in a caption: bio or sticker"], "wins": ["Sends per reach, then watch time and saves", "Carousels with a sound also surface in Reels", "Keywords in the caption and on-screen text: Instagram search reads them", "Alt text on every image"], "avoid": ["Undisclosed AI-generated content: reach drops", "Hashtags as the first line", "Engagement bait"], "cadence": "Three to five posts a week, a Story most days", "media": ["video", "slideshow", "image"], "opening": ["Slide 1 or the Reel's first second, plus the caption's first ~125 characters before the fold", "Slide 2 is an opening too: Instagram shows it to people who scrolled past slide 1", "The caption opens on the reader's question, never on hashtags or a greeting"]},
+  youtube: {"formats": ["Shorts 9:16 up to 3 min; 15 to 50 s is the sweet spot", "Long-form 16:9 with chapters when the topic needs more than a minute"], "limits": ["Title 100 characters, about 60 visible", "Description 5,000 characters; the first three hashtags show above the title", "More than 60 hashtags and none count"], "wins": ["Shorts: viewed vs swiped away, then rewatches and a loop that ends where it began", "Long-form: click-through and retention; the title carries the keyword", "Captions on, because many Shorts play muted"], "avoid": ["Mass-produced or repetitive uploads: YouTube calls it inauthentic content and demonetises it", "Realistic altered or synthetic footage without the AI disclosure", "A Short that restates a long video's title and nothing else"], "cadence": "Two or three Shorts a week; one long-form a week or fortnight", "media": ["video"], "opening": ["Shorts: the first second, on screen and spoken, and an end that loops back to it", "Long-form: the title and the first 15 seconds restate the promise that earned the click"]},
+  facebook: {"formats": ["Reels (every video posts as one); keep it under 90 s", "Photo and carousel posts", "Text posts that ask something; link posts sparingly"], "limits": ["63,206 characters; about three lines show before 'See more'", "Hashtags optional, at most 2 or 3"], "wins": ["Watch time and shares, then comments worth reading", "Native video over links to video", "A question in the first line"], "avoid": ["A link in the post body: reach is cut, so it goes in the first comment", "Engagement bait ('tag a friend who…')", "Posting more than once a day"], "cadence": "Three to five posts a week", "media": ["video", "slideshow", "image", "text"], "opening": ["The first line of the three before 'See more', or the Reel's first second", "A question the reader can answer from their own life"]},
+  twitter: {"formats": ["A post of 280 characters (Premium can write longer, but the feed shows the first lines)", "A thread: a hook post and five to eight that pay it off", "Native video up to 2 min 20 s on a free account; images 16:9 or 4:5"], "limits": ["280 characters per post, every link counts as 23", "0 or 1 hashtag"], "wins": ["Replies weigh far more than likes, so write the post that gets answered", "Native media and text; an outbound link belongs in the first reply", "The first line is the whole post for most readers"], "avoid": ["A link in the post itself: reach drops hard on a free account", "Hashtag strings", "Reposting the LinkedIn version unchanged"], "cadence": "One to three a day, replies included", "media": ["text", "image", "video"], "opening": ["The first line is the post for most readers: it stands alone and invites a reply", "In a thread, the first post makes the promise and the second starts paying it"]},
+  linkedin: {"formats": ["Text post; the first 210 characters are what shows before 'see more'", "Document carousel (a PDF of 8 to 12 pages) for a how-to", "Vertical video of 1 to 2 min; polls; a newsletter for the long form"], "limits": ["3,000 characters", "0 to 3 hashtags", "No outbound link in the post body"], "wins": ["Comments and dwell time, especially in the first hour", "A specific story or a number in the first two lines", "Replying to every comment the same day"], "avoid": ["Template-shaped AI prose: it is down-ranked", "A link in the post: put it in a comment", "Tagging people who will not reply"], "cadence": "Three to five posts a week, weekday mornings", "media": ["text", "slideshow", "image", "video"], "opening": ["The first two lines, about 210 characters, before 'see more': a claim, a number or a tension", "Line two pays or deepens line one; never a greeting, a setup or 'I'm excited to share'"]},
+  blog: {"formats": ["An article of 800 to 1,500 words, as long as the answer needs and no longer", "One H1, an H2 per question the reader has, 40 to 60 words of direct answer under each", "A short FAQ at the end, and a figure or table where a comparison is made"], "limits": ["Title under 60 characters with the keyword in it", "Meta description 120 to 155 characters", "One topic per article; a second topic is a second article"], "wins": ["The answer in the first paragraph: search and AI answers both quote it", "Named sources, dates and numbers, which is what gets cited", "Internal links to the two posts a reader would want next", "An author, a date, and an update when the facts change"], "avoid": ["Thin generated prose padded to a word count", "Keyword-stuffed headings", "Publishing without a canonical URL"], "cadence": "One or two a week, and a refresh of an old post a month", "media": ["article"], "opening": ["The title names the question; the first 40 to 60 words answer it directly", "The rest earns the scroll with the why and the how, one question per heading"]},
+  wordpress: {"formats": ["An article of 800 to 1,500 words in blocks: heading, paragraph, list, image, table", "One H1 (the title), an H2 per question, 40 to 60 words of answer under each", "A featured image at 1200 by 675 with alt text"], "limits": ["Title under 60 characters; slug three to five words", "Excerpt and meta description 120 to 155 characters", "One category, three to five tags"], "wins": ["The answer in the first paragraph; FAQ and Article schema from the SEO plugin", "Internal links to related posts and a clear next step", "Scheduled publishing at a steady hour"], "avoid": ["Thin generated prose", "Uncategorised posts and empty alt text", "A second H1 inside the body"], "cadence": "One or two a week", "media": ["article"], "opening": ["The title names the question; the first 40 to 60 words answer it directly", "The featured image and excerpt carry the same promise as the title"]},
 };
 const CHANNEL_ORDER = ["tiktok", "instagram", "youtube", "facebook", "twitter", "linkedin", "blog", "wordpress"];
 const CHANNEL_LABELS = { tiktok: "TikTok", instagram: "Instagram", youtube: "YouTube", facebook: "Facebook", twitter: "Twitter / X", linkedin: "LinkedIn", blog: "Blog", wordpress: "WordPress" };
@@ -3298,16 +3373,17 @@ export const SCENES = [
   },
   {
     id: "transcript-dividers",
-    state: "compacted (unknown) · compacted (freed) · switched model · plain notice",
+    state: "compacted (unknown) · compacted (freed) · switched model · plan's model · plain notice",
     group: "AgentChat",
     title: "Lines across the transcript",
-    note: "A compaction and a model switch are facts about everything after them, so they are drawn as a rule across the transcript rather than a message in it. The compaction says what it freed once the next call on the thread has reported its size — before that it only says it happened. When the backend sends the summary the thread now opens with, the rule folds it behind a chevron (click the second one), set in italic so it never reads as something the agent said to the person. The model divider carries the name a person knows the model by, sent by the backend on every run start; a resumed thread that comes back on a different model gets one from its stored context rows too.",
+    note: "A compaction and a model switch are facts about everything after them, so they are drawn as a rule across the transcript rather than a message in it. The compaction says what it freed once the next call on the thread has reported its size — before that it only says it happened. When the backend sends the summary the thread now opens with, the rule folds it behind a chevron (click the second one), set in italic so it never reads as something the agent said to the person. The model divider carries the name a person knows the model by, sent by the backend on every run start; a resumed thread that comes back on a different model gets one from its stored context rows too. When a ChatGPT plan answers on a smaller model than the one picked (Go reaches GPT-6 Luna alone), the thread says so once, with what would change it.",
     render: () => (
       <div className="max-w-xl">
         <TranscriptRow msg={{ role: "assistant", text: "Let me look at the last thirty days." }} />
         <TranscriptRow msg={{ role: "notice", kind: "compacted", before: 180000, after: null }} />
         <TranscriptRow msg={{ role: "notice", kind: "compacted", before: 180000, after: 42000, summary: "**Where this started.** Sessions fell 12% after the September pricing change; the drop is entirely mobile organic.\n\n**What was checked.** GA4 landing pages for the last thirty days, Search Console queries for the pricing page, and the Ads campaign that was paused on the 4th.\n\n**Open.** Whether the mobile drop is a tracking change rather than a demand change — the tag was redeployed the same week." }} />
         <TranscriptRow msg={{ role: "notice", kind: "model", label: "GPT-6.1 Sol", model: "gpt-6.1-sol" }} />
+        <TranscriptRow msg={{ role: "notice", kind: "plan", label: "GPT-6 Luna", requested: "GPT-6.1 Sol", plan: "go" }} />
         <TranscriptRow msg={{ role: "notice", text: "Stopped here — the turn was interrupted." }} />
       </div>
     ),
@@ -3444,6 +3520,27 @@ export const SCENES = [
             { id: "v3", kind: "video", status: "error", title: "A founder speaks to camera in a sunlit studio", meta: {}, error: "This model won't animate a first frame that shows a realistic person." },
           ]}
         />
+      </div>
+    ),
+  },
+  {
+    id: "slide-design",
+    state: "a designed cover · a text card · a designed brief",
+    group: "PostViewport",
+    title: "Design slides beside a template slide",
+    note: "kind \"design\" is the agent's own HTML and CSS on the 1080×1920 canvas, with a designer's freedom: SVG gradients, grain and shapes, a dozen display and text fonts, any layout, kept to the safe zone and phone-legible type. Cleaned when stored, its ids and styles scoped to its own slide, drawn in a frame that runs no scripts, and rendered for the agent to look at before it shows you. The middle slide is a template card, with a typed \\n now read as the line break it meant.",
+    render: () => <DesignSlideScene />,
+  },
+  {
+    id: "post-progress",
+    state: "mid-build, an earlier cover version · every slide ready",
+    group: "PostViewport",
+    title: "Where a post stands, and its earlier versions",
+    note: "Under the slides: how many are ready and which needs a picture next, or, once none does, that the post is ready, with Publish beside it. A slide with earlier versions steps back through them in the carousel; nothing changes until Use this version, and the version it replaces is kept. Looks good appears only while the agent waits on that slide before making the next. The Review tab beside Post holds the review, its score on the tab; Review first opens it and says the review is under way until the score lands.",
+    render: () => (
+      <div className="grid gap-6 lg:grid-cols-2">
+        <PostProgressScene />
+        <PostProgressScene ready />
       </div>
     ),
   },
@@ -3680,6 +3777,31 @@ export const SCENES = [
     title: "The setup you already have",
     note: "What the Models page opens with, and the whole answer for anyone on one key. Check that the provider is named once in the heading rather than three times as a logo per row, that Customise sits hard against the right edge at every width, and that the three model names stay on one line each — they ellipsize rather than wrap, because a two-line model name turns a three-row list into five. The note under the list is the credential answer said once for the page; the tier cards repeat it only when the three disagree.",
     render: () => <TierSummaryScene picks={MODEL_PICKS} previewByTier={MODEL_PREVIEW_OK} />,
+  },
+  {
+    id: "model-setup-sources",
+    state: "ChatGPT Go (Luna only) · ChatGPT Plus · this computer's key · saved key · Duct's key",
+    group: "TierSummary",
+    title: "What the three run on, as a label",
+    note: "Whose account pays is the second thing anyone opening the Models page asks, so it is a label beside the provider rather than a muted sentence under the pickers. Green is a credential the person brought (their plan, their saved key); blue is one they did not (this computer's env file, Duct's own key). A ChatGPT plan is named by its tier, and Free or Go, which reach one model through Codex, say so in the label while the rows show the model that runs rather than the pick the plan refuses. The sentence it replaced is the label's title and accessible name.",
+    render: () => (
+      <div style={{ display: "grid", gap: 16 }}>
+        {[
+          ["go", "openai", "subscription", MODEL_PICKS_OPENAI, MODEL_PREVIEW_OPENAI, { plan_type: "go", plan_only_model: "gpt-6-luna" }],
+          ["plus", "openai", "subscription", MODEL_PICKS_OPENAI, MODEL_PREVIEW_OPENAI, { plan_type: "plus", plan_only_model: null }],
+          ["env", "google_genai", "env", MODEL_PICKS, MODEL_PREVIEW_OK, {}],
+          ["stored", "google_genai", "stored", MODEL_PICKS, MODEL_PREVIEW_OK, {}],
+          ["cloud", "google_genai", "cloud", MODEL_PICKS, MODEL_PREVIEW_OK, {}],
+        ].map(([key, provider, source, picks, preview, extra]) => (
+          <TierSummaryScene
+            key={key}
+            picks={picks}
+            previewByTier={preview}
+            providersById={{ ...MODEL_PROVIDERS, [provider]: { ...MODEL_PROVIDERS[provider], source, reachable: true, ...extra } }}
+          />
+        ))}
+      </div>
+    ),
   },
   {
     id: "model-setup-blocked",
@@ -3930,10 +4052,10 @@ export const SCENES = [
     state: "scored 56, needs work · one hard and one soft failure · fixes under every marker",
     group: "PublishReviewPanel",
     title: "Pre-publish review, in the post pane",
-    note: "What the post pane shows once the agent has scored the post. The score is the server's: the six markers at its own weights, less a penalty per failed check, so fixing the caption here raises the number without another model call. Check that hard failures (red) list before soft ones (amber), that a long fix wraps under its bar rather than widening the row, and that Review again is there only because a session is open.",
+    note: "The post pane's Review tab once the agent has scored the post, built to be scanned: the score as a ring, the two fixes worth doing first (Fix this sends one instruction to the agent and goes back to the post), the failed checks as chips, and the six markers as tiles that open to their verdict and fix. The score is the server's: the six markers at its own weights, less a penalty per failed check. Check that hard failures (red) come before soft ones (amber), that a tile opens to its fix, and that the buttons are there only because a session is open.",
     render: () => (
       <div style={{ maxWidth: 672, padding: 20 }}>
-        <PublishReviewPanel assessment={REVIEW_SCORED} onReview={() => {}} />
+        <PublishReviewPanel assessment={REVIEW_SCORED} onReview={() => {}} onFix={() => {}} />
       </div>
     ),
   },
@@ -3942,10 +4064,10 @@ export const SCENES = [
     state: "scored · three audience personas react · one would scroll past",
     group: "PublishReviewPanel",
     title: "How the audience reacts",
-    note: "The reviewer role-plays each persona saved in Brand settings beside someone matching none of them: why they'd scroll past, a first-person reaction, which of three openings would stop them, then stop, save and click, and the one fix that would win them. The line under the heading says how the panel did ranking the brand's past posts against their real numbers; only a panel that beat a coin shows chips. Check that the most-picked opening stands out, that a long persona name wraps above its chips, and that no reads quiet (grey) rather than as an error.",
+    note: "The reviewer role-plays each persona saved in Brand settings beside someone matching none of them. The openings show their votes as dots, the audience's pick marked and one tap from slide 1. Once the panel has beaten a coin on the brand's past posts, a grid shows who would stop, comment, save, share and visit the profile, a dot each. Each persona is a face and a name; their reaction, why they'd scroll past and what would win them open on a tap. Check that the pick stands out, that an empty dot reads as quiet rather than an error, and that a long name truncates.",
     render: () => (
       <div style={{ maxWidth: 672, padding: 20 }}>
-        <PublishReviewPanel assessment={REVIEW_WITH_PERSONAS} onReview={() => {}} />
+        <PublishReviewPanel assessment={REVIEW_WITH_PERSONAS} onReview={() => {}} onFix={() => {}} />
       </div>
     ),
   },
@@ -3974,11 +4096,35 @@ export const SCENES = [
     ),
   },
   {
+    id: "publish-dialog",
+    state: "form · what goes out, the review's cut, accounts, when",
+    group: "PublishModal",
+    title: "Publish a post",
+    note: "Opens on what goes out: the cover, the caption as it will read (folded at four lines with a way to read it all), the hashtags and the slide count. Then the review's cut, the accounts as rows with their platform and scheduler, and when. Post now sends and shows the sending state; it never closes itself.",
+    render: () => <PublishDialogScene />,
+  },
+  {
+    id: "publish-dialog-loading",
+    state: "loading · accounts and the fresh post",
+    group: "PublishModal",
+    title: "While the accounts load",
+    note: "The form's shape as skeletons: the cover and caption, an account row, the when choices. A grey sentence used to stand in for all of it.",
+    render: () => <PublishDialogScene loading />,
+  },
+  {
+    id: "publish-dialog-sending",
+    state: "sending · click Post now",
+    group: "PublishModal",
+    title: "While it sends",
+    note: "Press Post now: the cover under a spinner, who it is going to, and what is being sent. The dialog cannot be dismissed until the scheduler answers. The done state is the publish-dialog scene after the same click: where it went, a link once live, and Done.",
+    render: () => <PublishDialogScene sending />,
+  },
+  {
     id: "publish-review-dialog",
-    state: "compact cut · the two weakest fixes",
+    state: "compact cut · score and checks",
     group: "PublishReviewPanel",
     title: "In the publish dialog",
-    note: "The last look before posting: score, failed checks, the two biggest fixes. Nothing here disables the publish button below it, and the subtitle says so.",
+    note: "The last look before posting: the score and the failed checks. The fixes live on the Review tab; in the dialog they buried the Post button. Nothing here disables publishing, and the subtitle says so.",
     render: () => (
       <div style={{ maxWidth: 512, padding: 20 }}>
         <PublishReviewPanel assessment={REVIEW_SCORED} compact />
@@ -4694,6 +4840,22 @@ export const SCENES = [
     title: "A change to a week",
     note: "Four days at once: a hook moved, a channel moved, a series and objective set on a day whose topic stayed (no Was line), and a topic long enough to wrap. Field names are translated; values the agent wrote (hooks) lose their underscores.",
     render: () => <PlanViewportScene status="proposed" replaces change="week" />,
+  },
+  {
+    id: "plan-viewport-rework",
+    state: "proposed · three days reworked, most tags moved",
+    group: "PlanViewport",
+    title: "A rework of several days",
+    note: "The case that buried the decision: every day's idea moved and with it most of the planner's tags, so a list of before → after rows ran twenty lines for three days. Each day is a card now: the date as a calendar leaf, the new idea over the one it replaces (struck through), the type only when it moved, the new pillar and series as chips, and the planner's other tags folded under \"N more changes\" with their names, so they are one line until someone wants them.",
+    render: () => <PlanViewportScene status="proposed" replaces change="rework" />,
+  },
+  {
+    id: "plan-viewport-rework-accepted",
+    state: "a rework of three days, accepted",
+    group: "PlanViewport",
+    title: "After Accept: which days changed",
+    note: "Once a change to some days is saved, the pane goes back to the whole plan, where those days used to vanish among the rest. The bar says how many days were updated, an \"Updated\" filter is offered and opens first so the list starts on what moved, and each of those rows is tinted and says Updated in words. All is one tap away.",
+    render: () => <PlanViewportScene status="accepted" replaces change="rework" />,
   },
   {
     id: "plan-viewport-day-change-rejected",

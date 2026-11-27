@@ -146,13 +146,21 @@ def test_native_web_search_rides_only_on_a_verified_provider():
     assert provider_web_search_tool(None) is None
 
 
-def test_vision_follows_the_provider():
-    """Only a provider whose API takes image blocks in a tool result can run
-    the look-and-critique loop; the prompt says so for the others."""
+def test_vision_follows_the_model():
+    """The look-and-critique loop runs on a model that reads images, whoever
+    serves it; a gateway carries both kinds, and an id nobody classified is
+    treated as blind, because a text-only model refuses a picture outright."""
     from agents.content.prompts import NO_VISION_DIRECTIVE, build_orchestrator_system_prompt
 
-    assert ContentRunner(api_key="", provider=Provider.ANTHROPIC).vision is True
-    assert ContentRunner(api_key="", provider=Provider.OPENAI, model=ModelName.GPT_5_MINI).vision is False
+    def sees(provider, model):
+        return ContentRunner(api_key="", provider=provider, model=model).vision
+
+    assert sees(Provider.ANTHROPIC, ModelName.CLAUDE_SONNET) is True
+    assert sees(Provider.OPENAI, ModelName.GPT_5_MINI) is True
+    assert sees(Provider.OPENROUTER, ModelName.OR_DEEPSEEK_V4_1_FLASH) is True
+    assert sees(Provider.OPENROUTER, ModelName.OR_DEEPSEEK_V4_PRO) is False
+    assert sees(Provider.OPENROUTER, "some-lab/unlisted-model") is False
+    assert sees(Provider.OLLAMA, "ollama:llama3.3") is False
     assert NO_VISION_DIRECTIVE in build_orchestrator_system_prompt(None, "draft_post", vision=False)
     assert NO_VISION_DIRECTIVE not in build_orchestrator_system_prompt(None, "draft_post", vision=True)
 
@@ -222,6 +230,24 @@ async def test_an_opening_turn_with_nothing_persisted_gets_exactly_one_nudge(pla
     assert stops == 2, "opening turn + one nudge, no more"
     finished = next(e for e in emitted.events if e["event"] == AgentEvent.PIPELINE_FINISHED)
     assert finished["mode"] == "plan_month" and finished["plan_id"] is None
+
+
+async def test_a_new_draft_nobody_checked_gets_one_turn_to_check_it(draft_session, emitted):
+    """A draft goes to the person checked: the review on its words and the
+    audience panel. A model that saves the draft and stops is asked once."""
+    draft_session.post_id = uuid.uuid4()       # what submit_post_draft stashes
+    draft_session.draft_check_due = True       # ...for a post no review scored
+    await _drive(draft_session, emitted, fake_llm("Here is the draft.", "Checked it.", "never sent"))
+
+    assert _kinds(emitted).count(AgentEvent.MESSAGE_STOP) == 2, "the draft turn + one check, no more"
+
+
+async def test_a_checked_draft_is_not_asked_again(draft_session, emitted):
+    draft_session.post_id = uuid.uuid4()
+    draft_session.draft_check_due = False
+    await _drive(draft_session, emitted, fake_llm("Here is the draft, scored 78.", "never sent"))
+
+    assert _kinds(emitted).count(AgentEvent.MESSAGE_STOP) == 1
 
 
 async def test_a_persisted_plan_is_not_nudged_and_rides_on_the_finish_event(plan_session, emitted):

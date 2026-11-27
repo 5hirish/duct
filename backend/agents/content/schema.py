@@ -275,6 +275,11 @@ class ContentSession(BaseAgentSession):
     # direction was given: a turn that ends without a plan is then correct,
     # and the recovery nudge asks for a direction instead of a plan.
     review_opening: bool = False
+    # A new draft waiting for its check: set when submit_post_draft writes a
+    # post no review has scored, cleared by submit_assessment. A turn that
+    # ends with it still set gets one nudge to check the draft before the
+    # person sees it (agents/content/v1/runner.py).
+    draft_check_due: bool = False
     # The dates a plan run manages (agents/content/plan_period.py): set by the
     # runner before the opening turn, from the plan itself when the session is
     # bound to one. submit_plan holds every plan to it; 0 days means no run
@@ -510,6 +515,7 @@ class ContentTool(StrEnum):
     REVISE_PLAN_DAYS            = "revise_plan_days"
     SUBMIT_POST_DRAFT           = "submit_post_draft"
     EDIT_SLIDE                  = "edit_slide"
+    RESTORE_SLIDE               = "restore_slide"
     FETCH_BRAND_CONTEXT         = "fetch_brand_context"
     FETCH_TOPIC_BANK            = "fetch_topic_bank"
     FETCH_FORMAT_LIBRARY        = "fetch_format_library"
@@ -537,13 +543,24 @@ class ContentTool(StrEnum):
 #   collage               — 2×2 grid; one image per `items` cell
 #   before-after          — do/don't split; two `items` cells (marker do/dont)
 #   editorial             — single image on an ivory matte, serif typography
-SlideKind = Literal["photo", "text", "collage", "before-after", "editorial"]
+SlideKind = Literal["photo", "text", "collage", "before-after", "editorial", "design"]
 
 # Caption style keys — must match a `key` in agents/content/styles.py STYLES
 # (plus "hook" for the slide-1 headline). The renderer maps these to classes.
 CaptionStyle = Literal[
     "hook", "cap-stroke", "cap-pill", "cap-raw", "cap-whisper", "body-neutral"
 ]
+
+
+def literal_line_breaks(text: str) -> str:
+    """Slide copy with an escaped line break made a real one.
+
+    A model that writes JSON arguments by hand sometimes sends the two
+    characters backslash and n where it meant a new line, and the slide then
+    showed "\\n" to the reader (2026-11-27). Copy on a slide never wants
+    those two characters, so they are read as the break they were meant as.
+    """
+    return text.replace("\\r\\n", "\n").replace("\\n", "\n") if isinstance(text, str) else text
 
 
 class SlideItem(BaseModel):
@@ -555,6 +572,11 @@ class SlideItem(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     label: str = ""                                # serif cell label / short caption
+
+    @field_validator("label")
+    @classmethod
+    def _real_breaks(cls, v: str) -> str:
+        return literal_line_breaks(v)
     # before-after: ❌ (dont) / ✅ (do); "" everywhere else. A plain str with a
     # validator rather than Literal["", "dont", "do"]: the writers expose this
     # model as their argument schema and Gemini rejects an enum with an empty
@@ -606,6 +628,32 @@ class Slide(BaseModel):
     # Multi-image slides (collage / before-after) use cells instead. collage
     # aims for 4 cells; before-after uses 2 (first marker="dont", second "do").
     items: list[SlideItem] = Field(default_factory=list)
+    # kind "design": the slide laid out by the agent (agents/content/design.py).
+    # Cleaned on the way in; the image fields still work, so a design slide
+    # can place its own generated picture by its image_url.
+    html: str = Field(default="", description=(
+        "kind 'design' only: the slide's markup, inside a 1080×1920 canvas. No scripts."))
+    css: str = Field(default="", description=(
+        "kind 'design' only: the slide's stylesheet, scoped to this slide."))
+
+    @field_validator("html")
+    @classmethod
+    def _clean_html(cls, v: str) -> str:
+        from agents.content.design import clean_design_html
+
+        return clean_design_html(v)
+
+    @field_validator("css")
+    @classmethod
+    def _clean_css(cls, v: str) -> str:
+        from agents.content.design import clean_design_css
+
+        return clean_design_css(v)
+
+    @field_validator("headline", "subtext")
+    @classmethod
+    def _real_breaks(cls, v: str) -> str:
+        return literal_line_breaks(v)
 
     def is_image_stale(self) -> bool:
         """True when a generated image no longer matches the current prompt."""
@@ -959,9 +1007,11 @@ class PersonaVerdict(StrEnum):
 class PersonaReaction(BaseModel):
     """One audience persona's reaction to the post, in its own words.
 
-    The reaction comes first and is the evidence; ``stop``/``save``/``click``
-    are the persona's own reading of it. Advisory only: it never moves the
-    overall, which stays the six markers and the checks.
+    The reaction comes first and is the evidence; the five actions are the
+    persona's own reading of it, in the order a feed meets a post: stop,
+    comment (start a conversation), save, share (send it to someone in their
+    circle), click (visit the profile, curious for more). Advisory only: it
+    never moves the overall, which stays the six markers and the checks.
     """
 
     model_config = ConfigDict(extra="ignore")
@@ -974,8 +1024,12 @@ class PersonaReaction(BaseModel):
     reaction: str = Field(min_length=1, max_length=400, description="First person, in the persona's own words: what they think seeing this in their feed. One or two sentences.")
     pick: int | None = Field(None, ge=0, lt=MAX_HOOK_OPTIONS, description="Which opening in the review's hooks would stop them, by index; 0 is the draft's own.")
     stop: PersonaVerdict = Field(description="Would they stop scrolling for it?")
-    save: PersonaVerdict = Field(description="Would they save it?")
-    click: PersonaVerdict = Field(description="Would they click through, or follow?")
+    # Comment and share joined on 2026-11-27, so a review stored before reads
+    # None for them, and a reply that leaves them out still saves the scores.
+    comment: PersonaVerdict | None = Field(None, description="Would they comment: answer it, argue, ask, tag someone?")
+    save: PersonaVerdict = Field(description="Would they save it to come back to?")
+    share: PersonaVerdict | None = Field(None, description="Would they send it to someone in their circle?")
+    click: PersonaVerdict = Field(description="Would they visit the profile, curious for more?")
     fix: str = Field("", max_length=240, description="The one change that would win this persona.")
 
     # The panel is advice beside the scores, so its newest fields never cost

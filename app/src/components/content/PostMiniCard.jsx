@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Images, Video, Image as ImageIcon, Clock, Type, ChevronRight, Target } from "lucide-react";
+import { Images, Video, Image as ImageIcon, Clock, Type, ChevronRight, Target, RefreshCw } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Trans, useLingui } from "@lingui/react/macro";
 import { mediaUrl } from "@/lib/contentApi";
 import { POST_TYPE_LABELS, PostStatus } from "@/lib/contentEnums";
@@ -63,8 +64,9 @@ function PillarChip({ pillar }) {
  *   - schedule : effectiveSchedule(...) result ({ kind, label, time, ... })
  *   - onRevise : () => void  — drafting affordance when there's no post yet
  *   - variant  : "full" | "compact" | "chip" | "row" (default "full")
+ *   - updated  : row only — this day changed in the revision just accepted
  */
-export default function PostMiniCard({ day, post, schedule, onRevise, variant = "full" }) {
+export default function PostMiniCard({ day, post, schedule, onRevise, variant = "full", updated = false }) {
   const { t, i18n } = useLingui();
   const postId = post?.id || day?.post_id || null;
   const postType = post?.post_type || day?.post_type || "slideshow";
@@ -113,7 +115,12 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
     const objective = day?.objective || "";
     const badge = schedule?.kind === "scheduled" ? SCHEDULED_META : sMeta;
     inner = (
-      <div className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors group-hover/row:bg-muted/60">
+      <div
+        className={cn(
+          "flex items-center gap-3 rounded-lg px-2 py-2 transition-colors group-hover/row:bg-muted/60",
+          updated && "bg-primary/5"
+        )}
+      >
         {/* The agenda's spine: weekday over day number, the way a calendar's
             schedule view reads. The week header above carries the month. */}
         <div className="w-9 shrink-0 text-center leading-none">
@@ -140,6 +147,17 @@ export default function PostMiniCard({ day, post, schedule, onRevise, variant = 
         <div className="min-w-0 flex-1">
           <p className="line-clamp-2 text-sm font-medium leading-snug">{title}</p>
           <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-2xs text-muted-foreground">
+            {/* Said in words as well as the tint, so it survives greyscale
+                and a screen reader. */}
+            {updated && (
+              <>
+                <span className="inline-flex items-center gap-1 font-semibold text-brand">
+                  <RefreshCw className="size-2.5" aria-hidden />
+                  <Trans>Updated</Trans>
+                </span>
+                <span aria-hidden>·</span>
+              </>
+            )}
             <span>{typeLabel ? i18n._(typeLabel) : titleCase(postType)}</span>
             {pillar && <><span aria-hidden>·</span><span>{titleCase(pillar)}</span></>}
             {objective && (

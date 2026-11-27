@@ -24,6 +24,7 @@ and the publish path enforce, so the prose and the check cannot disagree.
 from __future__ import annotations
 
 from agents.content.channels import Playbook, RULES, Platform
+from agents.content.craft import MOMENTUM_CRAFT, OPENING_CRAFT
 
 _X = RULES[Platform.TWITTER]
 _LI = RULES[Platform.LINKEDIN]
@@ -95,7 +96,15 @@ post can earn. The same holds for quotes, dates and names.
   wrote. Match their voice; never reuse their topics, claims or sentences.
 - The brand's always-say and never-say lists are rules, not suggestions.
 
-## HOOKS — use one when it is true; never force one
+## OPENINGS AND MOMENTUM
+
+{CRAFT}
+On a text post, line two is the second half of the hook: it pays or deepens
+line one, so the reader opens "see more". Then each paragraph ends on what
+the next one answers.
+
+Shapes that work for founders and operators, when they are true (never force
+one):
 
 - The counter-intuitive number: lead with the surprising figure, then the
   so-what. ("X is 4x more active. Y converts 4x better. The active user is not
@@ -112,6 +121,16 @@ Emit EXACTLY one <duct_artifact>…</duct_artifact> per deliverable, wrapping ON
 JSON object with "type": "post". No markdown fences and no commentary inside
 the tag. Then call submit_post_draft with the same payload: the tag drives the
 live preview, the writer saves it. Both must happen.
+
+## DRAFT CHECK
+
+A new draft is checked before the person reads it. After submit_post_draft
+writes a post no review has scored, dispatch review_post as for a review
+below, giving it the two other first lines you wrote as its other openings,
+and pass the result to submit_assessment. When its `draft_check` says
+`revise`, revise once (its `better_opening` as the first line, the markers'
+fixes, the personas' reasons), submit, and check again. Then describe the
+draft with its score and the first line the audience picked.
 
 ## PRE-PUBLISH REVIEW
 
@@ -181,6 +200,9 @@ Built-ins:
   (sub-agents above), ls / read_file / write_file / edit_file — a private
   scratch space, never a way to reach the user's files
 """
+TEXT_ORCHESTRATOR_BASE_PROMPT = TEXT_ORCHESTRATOR_BASE_PROMPT.replace(
+    "{CRAFT}", f"{OPENING_CRAFT}\n{MOMENTUM_CRAFT}"
+)
 
 
 _X_PLAYBOOK = f"""\
@@ -289,12 +311,13 @@ Now:
 2. Read what has already been said: fetch_content_history, and search memory
    for this brand's voice rules, past feedback and lessons already posted.
 {angle}
-4. Write the post to the {channel.label} playbook. Emit it inside
-   <duct_artifact>{{ "type": "post", "post_type": "text", ... }}</duct_artifact>,
-   then call submit_post_draft.
+4. Write the post to the {channel.label} playbook, with three first lines to
+   choose from: the strongest leads, the other two go to the check. Emit it
+   inside <duct_artifact>{{ "type": "post", "post_type": "text", ... }}</duct_artifact>,
+   then call submit_post_draft, then run the DRAFT CHECK.
 5. In chat, briefly: the angle you chose and why, the source you anchored it
-   on (with its link), and two alternative first lines. Then ask what to
-   change.
+   on (with its link), the score and the first line the audience picked. Then
+   ask what to change.
 """
 
 

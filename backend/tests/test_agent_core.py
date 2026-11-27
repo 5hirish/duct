@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import asyncio
 
+import pytest
+
 from agents.core.context import BusinessContext, format_business_context
 from agents.core.events import AgentEvent, AgentStep
 from agents.core.prompts import DUCT_ARTIFACT_CLOSE, DUCT_ARTIFACT_OPEN, xml_block
@@ -120,6 +122,34 @@ def test_parser_full_report_single_chunk():
     assert "".join(rec.chunks) == "PAYLOAD"
     assert rec.closes == [("PAYLOAD", "intro")]
     assert "".join(rec.text) == "intro  outro"  # prose before + after the tag
+
+
+@pytest.mark.parametrize("chunks", [
+    ['"} <|im_end|>Drafted a seven-slide carousel.'],
+    ['Here it is.', '"} <|im_', 'end|>Drafted a seven-slide carousel.'],
+    ['<|im_start|>assistant\nDrafted a seven-slide carousel.'],
+])
+def test_parser_drops_chat_template_tokens_from_prose(chunks):
+    """A model leaked the tail of a tool call and its end-of-turn token into
+    the reply (`"} <|im_end|>Drafted…`). Neither is prose, split or whole."""
+    out = []
+
+    async def on_text(t):
+        out.append(t)
+
+    async def noop(*_a):
+        return None
+
+    async def go():
+        parser = DuctArtifactStreamParser(on_text=on_text, on_artifact_chunk=noop, on_artifact_close=noop)
+        for c in chunks:
+            await parser.feed(c)
+        await parser.flush()
+
+    asyncio.run(go())
+    text = "".join(out)
+    assert "<|" not in text and '"}' not in text
+    assert text.endswith("Drafted a seven-slide carousel.")
 
 
 def test_parser_split_open_tag_holdback():

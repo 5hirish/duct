@@ -63,6 +63,7 @@ from agents.content.publishing import (
     ProjectPublishing,
     cancel,
     chosen_publisher,
+    cover_urls,
     is_queued_at_publisher,
     is_text_only,
     load_media,
@@ -82,6 +83,7 @@ from agents.content.publishing import (
     words_changed,
 )
 from agents.content.video import VIDEO_POST_TYPE, cut_of, take_for, video_takes
+from agents.content.slide_versions import record_changes, restore as restore_slide_version
 from agents.content.events import ContentEvent
 from agents.content import formats as format_library
 from agents.content.styles import base_css, list_styles
@@ -1357,6 +1359,8 @@ class PostOut(BaseModel):
     status:        str
     slides:        list
     slides_html:   str
+    # Each slide's earlier states, oldest first (agents/content/slide_versions).
+    slide_versions: dict = Field(default_factory=dict)
     caption:       str
     replies:       list
     hashtags:      list
@@ -1444,6 +1448,7 @@ def _post_out(
         slide_count=p.slide_count,
         status=p.status,
         slides=p.slides or [],
+        slide_versions=p.slide_versions or {},
         slides_html=p.slides_html,
         caption=p.caption,
         replies=p.replies or [],
@@ -1506,34 +1511,13 @@ def _resolve_format_id(db: Session, project_id: UUID, format_slug: str) -> UUID 
     return row.id if row else None
 
 
-def _thumb_map(db: Session, post_ids: list[UUID]) -> dict[UUID, str]:
-    """Map post_id → first usable image asset url (generated or uploaded)."""
-    if not post_ids:
-        return {}
-    rows = db.execute(
-        select(ContentAsset.post_id, ContentAsset.url, ContentAsset.created_at)
-        .where(ContentAsset.post_id.in_(post_ids))
-        .where(ContentAsset.asset_type.in_(["generated", "upload"]))
-        .where(ContentAsset.url != "")
-        # A clip is not a thumbnail: the card draws an <img>. A video post's
-        # card shows its first frame when it has one, else the clip itself.
-        .where(~ContentAsset.mime_type.like("video/%"))
-        .order_by(ContentAsset.created_at.asc())
-    ).all()
-    out: dict[UUID, str] = {}
-    for pid, url, _created in rows:
-        if pid is not None and pid not in out and url:
-            out[pid] = url
-    return out
-
-
 def _fmt_for(post: ContentPost, by_id: dict) -> tuple[str, str] | None:
     return by_id.get(post.format_id)
 
 
 def _enrich_one(db: Session, post: ContentPost) -> PostOut:
     by_id = _format_map(db, post.project_id)
-    thumb = _thumb_map(db, [post.id]).get(post.id, "")
+    thumb = cover_urls(db, [post]).get(post.id, "")
     return _post_out(
         post, fmt=_fmt_for(post, by_id), thumbnail_url=thumb, with_assessment=True,
         video_takes=video_takes(db, post),
@@ -1715,7 +1699,7 @@ def list_posts(
     stmt = stmt.order_by(ContentPost.updated_at.desc())
     rows = db.execute(stmt).scalars().all()
     by_id = _format_map(db, project_id)
-    thumbs = _thumb_map(db, [r.id for r in rows])
+    thumbs = cover_urls(db, rows)
     reasons = _failure_reasons(db, project_id, rows)
     publishing = _publishing(db, proj)
     return [
@@ -1748,7 +1732,7 @@ def get_post(
         db.rollback()
         logger.warning("content: active-conversation lookup failed for post %s", post_id, exc_info=True)
     by_id = _format_map(db, post.project_id)
-    thumb = _thumb_map(db, [post.id]).get(post.id, "")
+    thumb = cover_urls(db, [post]).get(post.id, "")
     return _post_out(
         post,
         fmt=_fmt_for(post, by_id),
@@ -1852,10 +1836,13 @@ def patch_post(
         ]
     # format_slug is input-only — resolve to the FK rather than setting a column.
     format_slug = patch.pop("format_slug", None)
+    before_slides = list(post.slides or [])
     for k, v in patch.items():
         setattr(post, k, v)
     if format_slug is not None:
         post.format_id = _resolve_format_id(db, post.project_id, format_slug)
+    if "slides" in patch:
+        record_changes(post, before_slides, by="user")
     # When structured slides change, re-render the HTML from the template unless
     # the caller also passed an explicit slides_html (don't clobber that).
     if "slides" in patch and "slides_html" not in patch:
@@ -1867,6 +1854,32 @@ def patch_post(
         # A sync route, so a save that never touches the scheduler stays off
         # the event loop; only the queued case crosses to it for the one call.
         anyio.from_thread.run(_keep_queue_in_step, db, user, post, before_caption, before_replies)
+    post.updated_at = datetime.now(timezone.utc)
+    db.add(post)
+    db.commit()
+    db.refresh(post)
+    return _enrich_one(db, post)
+
+
+class SlideRestore(BaseModel):
+    # 1 is the state just before the current one.
+    back: int = Field(default=1, ge=1)
+
+
+@router.post("/content/posts/{post_id}/slides/{slide_id}/restore")
+def restore_slide(
+    post_id: UUID,
+    slide_id: str,
+    body: SlideRestore,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(db_session),
+) -> PostOut:
+    """Put one slide back the way it was. The state it replaces is kept, so
+    the same call takes it back again."""
+    post = _row_for_user(db, user, ContentPost, post_id, "Post")
+    if not restore_slide_version(post, slide_id, body.back):
+        raise HTTPException(404, "That slide has no earlier version to go back to.")
+    _rerender_slides(post)
     post.updated_at = datetime.now(timezone.utc)
     db.add(post)
     db.commit()

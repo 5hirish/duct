@@ -59,6 +59,7 @@ from uuid import UUID
 from agents.content.artifacts import (
     ARTIFACT_PLAN,
     ARTIFACT_POST,
+    RECOVERY_NUDGE_DRAFT_CHECK,
     RECOVERY_NUDGE_PLAN,
     RECOVERY_NUDGE_POST,
     RECOVERY_NUDGE_REVIEW,
@@ -140,7 +141,7 @@ from agents.core.session import register_session
 from agents.core.web_tools import WEB_FETCH_TOOL, build_web_tools_lc
 from agents.insights.data_tools import build_data_tools_lc
 from agents.engines import Engine, resolve_fallback_models
-from agents.models import ModelName, Provider, run_model_fields
+from agents.models import ModelName, Provider, model_sees_images, run_model_fields
 from agents.registry import AgentType
 from utils.dates import utcnow
 
@@ -188,10 +189,6 @@ LIMITS = RunLimits(
 # audit and insights; the route's own inactivity pruner is the longer backstop.
 CHAT_IDLE_TIMEOUT = 1800.0
 
-# Providers whose API accepts image blocks inside a tool result. The image
-# phase is built on the model looking at what it generated; elsewhere the
-# tools return the asset URL and the prompt says so.
-VISION_PROVIDERS = frozenset({Provider.ANTHROPIC})
 
 ASK_USER_DESCRIPTION = (
     "Ask the user up to 3 questions when their answer would materially change "
@@ -681,8 +678,16 @@ class ContentRunner:
 
     @property
     def vision(self) -> bool:
-        """Whether this run's provider lets the model see the images it makes."""
-        return self.provider in VISION_PROVIDERS
+        """Whether this run's model can see the images it makes and renders.
+
+        The image phase is built on the model looking at what it generated or
+        rendered and fixing it in the same turn. It was Anthropic alone until
+        2026-11-27, so on a ChatGPT plan or an OpenAI or Gemini key the agent
+        drew slides it never looked at. Anthropic takes the picture inside the
+        tool result; the others get it in a user message straight after
+        (``ToolImagesInUserTurnMiddleware``). Decided per model
+        (``MODEL_SEES_IMAGES``), because a gateway fronts both kinds."""
+        return model_sees_images(self.model)
 
     # -----------------------------------------------------------------------
     # Assembly
@@ -1254,7 +1259,7 @@ class ContentRunner:
 
         One structured call outside the session's thread, so the slides it
         looks at are never written into a checkpoint. The pictures ride along
-        only on a provider that takes them (``VISION_PROVIDERS``); elsewhere
+        only on a model that reads them (``model_sees_images``); elsewhere
         the model reads the caption and the counts. None when the call fails:
         the clone still runs, and its turn says the reading is inferred.
         """
@@ -1319,7 +1324,7 @@ class ContentRunner:
                 "event": ContentEvent.PIPELINE_STARTED,
                 "session_id": session.session_id,
                 "mode": session.mode,
-                **run_model_fields(self.provider, self.model),
+                **run_model_fields(self.provider, self.model, self._api_key),
                 **(started or {}),
             })
             brand = await self._load_project_step(session.project_id, emit)
@@ -1543,6 +1548,7 @@ class ContentRunner:
                 turn=opening_prompt,
                 resume=resume,
                 blocks=dict(context_blocks or {}),
+                api_key=self._api_key,
             ),
         )
 
@@ -1611,6 +1617,19 @@ class ContentRunner:
                 logger.error("content: session %s still has no %s after the nudge", session_id, "plan" if is_plan else "post")
             return pauses
 
+        async def _check_new_draft(pauses: list[dict]) -> list[dict]:
+            """A new draft is checked before the person reads it: the review
+            on its words, the audience panel and three openings. The prompt
+            asks for it; this holds it when a model forgets, once a session."""
+            if pauses or is_plan or "draft_check" in nudged or not getattr(session, "draft_check_due", False):
+                return pauses
+            nudged.add("draft_check")
+            logger.info("content: session %s saved a draft without its check, asking for it", session_id)
+            return await loop.turn(RECOVERY_NUDGE_DRAFT_CHECK)
+
+        async def _after_turn(pauses: list[dict]) -> list[dict]:
+            return await _check_new_draft(await _nudge_if_empty(pauses))
+
         async def _reprime_if_no_checkpoint(snapshot: Any) -> None:
             """A conversation recorded before the thread was durable: the
             transcript is in the DB and nowhere else, so its summary rides on
@@ -1645,7 +1664,7 @@ class ContentRunner:
             on_tool_use=_on_tool_use,
             on_tool_result=_on_tool_result,
             finish_payload=_finish_payload,
-            after_turn=_nudge_if_empty,
+            after_turn=_after_turn,
             on_resume=_on_resume,
         )
         await loop.run(opening_prompt, resume=resume, chat_idle_timeout=chat_idle_timeout)

@@ -46,11 +46,16 @@ export const PersonaVerdict = Object.freeze({
   NO:    "no",
 });
 
-// The three things a persona is asked, in the order a feed meets a post.
+// What a persona is asked, in the order a feed meets a post: does it stop,
+// start a conversation, keep it, pass it to someone in its circle, go and see
+// who made it. A review from before comment and share has neither, and its
+// chips simply leave them out.
 export const PERSONA_ACTIONS = Object.freeze([
-  { key: "stop",  label: msg`Stops` },
-  { key: "save",  label: msg`Saves` },
-  { key: "click", label: msg`Clicks` },
+  { key: "stop",    label: msg`Stops` },
+  { key: "comment", label: msg`Comments` },
+  { key: "save",    label: msg`Saves` },
+  { key: "share",   label: msg`Shares` },
+  { key: "click",   label: msg`Visits profile` },
 ]);
 
 // How closely the panel's order of the brand's past posts matched what those
@@ -120,6 +125,12 @@ export const BAND_META = Object.freeze({
   [ReviewBand.NEEDS_WORK]: { label: msg`Needs work`, badgeVariant: "warning" },
   [ReviewBand.NOT_READY]:  { label: msg`Not ready`,  badgeVariant: "destructive" },
 });
+
+/** How a 0-100 score reads, on the bar the draft check holds a new draft to
+ *  (backend agents/content/assessment.DRAFT_BAR): good from 70, mixed from 50. */
+export function scoreTone(score) {
+  return score >= 70 ? "good" : score >= 50 ? "mixed" : "weak";
+}
 
 /** Whether the agent has scored this post (the checks exist either way). */
 export function isScored(assessment) {

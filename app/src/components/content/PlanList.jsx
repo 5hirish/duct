@@ -12,6 +12,9 @@ import { cn } from "@/lib/utils";
 import PostMiniCard from "./PostMiniCard";
 
 const ALL = "all";
+// The days the revision just accepted changed. Offered only then, and chosen
+// first, so the list opens on what moved instead of on twenty-three rows.
+const UPDATED = "updated";
 const NO_POSTS = Object.freeze({});
 
 // Missed rows shown before "Show all". An ended plan can have thirty, and the
@@ -21,11 +24,12 @@ const MISSED_SHOWN = 5;
 // Discarded is last and only offered once something is in it, the rule the
 // Kanban already followed for its lane.
 const FILTERS = [ALL, PostStatus.PENDING, PostStatus.DRAFT, PostStatus.POSTED, PostStatus.DISCARDED];
-const FILTER_LABELS = { [ALL]: msg`All`, ...POST_STATUS_LABELS };
+const FILTER_LABELS = { [UPDATED]: msg`Updated`, [ALL]: msg`All`, ...POST_STATUS_LABELS };
 
 // What an empty filter says. Each is true of the filter, not an apology, and
 // the pending one is the plan finished rather than the plan missing.
 const NONE_LABELS = {
+  [UPDATED]: msg`No day changed.`,
   [ALL]: msg`This plan has no posts yet.`,
   [PostStatus.PENDING]: msg`Every post in this plan has a draft.`,
   [PostStatus.DRAFT]: msg`No drafts yet. Pick a pending post to start one.`,
@@ -48,10 +52,13 @@ const NONE_LABELS = {
  *   - scroll: "self" (default) scrolls inside its box, for a pane; "page"
  *     lets the page scroll, with week headings pinned under the top bar
  *   - today: the reader's today, for scenes and tests
+ *   - updated: day indexes the revision just accepted changed; they are
+ *     marked, and an "Updated" filter opens first
  */
-export default function PlanList({ plan, postsById = NO_POSTS, onReviseDay, scroll = "self", today, channel = null }) {
+export default function PlanList({ plan, postsById = NO_POSTS, onReviseDay, scroll = "self", today, channel = null, updated = null }) {
   const { i18n } = useLingui();
-  const [filter, setFilter] = useState(ALL);
+  const changed = useMemo(() => new Set(Array.isArray(updated) ? updated : []), [updated]);
+  const [filter, setFilter] = useState(changed.size ? UPDATED : ALL);
   const [allMissed, setAllMissed] = useState(false);
   const [showEarlier, setShowEarlier] = useState(false);
   const idBase = useId();
@@ -64,12 +71,16 @@ export default function PlanList({ plan, postsById = NO_POSTS, onReviseDay, scro
   );
 
   const counts = useMemo(() => {
-    const out = { [ALL]: items.length };
-    for (const it of items) out[it.status] = (out[it.status] || 0) + 1;
+    const out = { [ALL]: items.length, [UPDATED]: 0 };
+    for (const it of items) {
+      out[it.status] = (out[it.status] || 0) + 1;
+      if (changed.has(it.index)) out[UPDATED] += 1;
+    }
     return out;
-  }, [items]);
+  }, [items, changed]);
 
-  const visible = filter === ALL ? items : items.filter((it) => it.status === filter);
+  const visible =
+    filter === ALL ? items : filter === UPDATED ? items.filter((it) => changed.has(it.index)) : items.filter((it) => it.status === filter);
   const groups = agendaGroups(visible, new Date(dayStamp));
   const fmt = (d) => formatDate(d, { withYear: false, locale: i18n.locale });
   const page = scroll === "page";
@@ -81,9 +92,9 @@ export default function PlanList({ plan, postsById = NO_POSTS, onReviseDay, scro
       {/* Filters over nothing are four zeros; the line below says it once. */}
       {items.length > 0 && (
         <div className={cn("flex shrink-0 flex-wrap items-center gap-1.5", page ? "pb-2" : "border-b border-border/60 px-4 py-2")}>
-          {FILTERS.map((key) => {
+          {[UPDATED, ...FILTERS].map((key) => {
             const n = counts[key] || 0;
-            if (key === PostStatus.DISCARDED && n === 0) return null;
+            if ((key === PostStatus.DISCARDED || key === UPDATED) && n === 0) return null;
             const active = filter === key;
             return (
               <button
@@ -149,6 +160,7 @@ export default function PlanList({ plan, postsById = NO_POSTS, onReviseDay, scro
                           post={it.post}
                           schedule={it.schedule}
                           onRevise={onReviseDay ? () => onReviseDay(it.index) : undefined}
+                          updated={changed.has(it.index)}
                         />
                       </li>
                     ))}

@@ -236,9 +236,33 @@ export function planPickerScenario(id, today) {
  * a hook moved, a channel moved, a series set and one topic long enough to
  * wrap.
  */
+// A rework, as a content agent sends one when asked to rethink a stretch:
+// every day's idea moves, and with it most of what the planner tags a day
+// with. The fields that changed outnumber the days, which is the shape that
+// buried the decision under twenty rows of before → after.
+const REWORK_EDITS = {
+  2: {
+    topic: "Blunt bob or face-framing layers? Choose by the style you want to emphasize",
+    pillar: "hair_makeup_frames", hook_type: "choice_framework", hook_emotion: "curiosity",
+    series: "S5: Style choices, 1/3",
+  },
+  3: {
+    topic: "Black Friday wardrobe check: compare a new piece with the colors you already wear",
+    post_type: "image", pillar: "will_it_suit_me", hook_type: "practical_checklist", hook_emotion: "confidence",
+    funnel_stage: "consideration", objective: "saves", series: "S5: Style choices, 2/3",
+    experiment: "single image checklist test; judge saves and shares against the account's video history",
+    format_slug: "",
+  },
+  4: {
+    topic: "A quick guide to choosing a color palette for your everyday outfits",
+    post_type: "video", pillar: "outfit_ideas_in_your_colors", hook_type: "curiosity_gap", hook_emotion: "inspiration",
+    objective: "shares", series: "S5: Style choices, 3/3", experiment: "", format_slug: "format-d",
+  },
+};
+
 export function planChangeScenario(which, today) {
   const { plan } = planScenario("fresh", today);
-  const edits = which === "week"
+  const edits = which === "rework" ? REWORK_EDITS : which === "week"
     ? {
         3: { topic: "Staging a rental in one afternoon, room by room", hook_type: "question_open_loop" },
         4: { topic: LONG_TOPIC, platforms: ["instagram"], post_type: "slideshow" },
