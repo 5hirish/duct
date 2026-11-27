@@ -565,6 +565,26 @@ and clear on exactly what to do next — not overwhelmed or criticised.
 """
 
 
+# The one recovery message an opening turn gets when it ends without a report:
+# on a large crawl the model sometimes spends the whole turn analysing and
+# stops before publishing. It has the analysis, so one nudge salvages most of
+# these. Per mode, because the two deliver the report differently.
+RECOVERY_NUDGE_TEMPLATE = (
+    "You analysed the crawl but did not publish the report. Build it now: "
+    "StartAuditReport, AddAuditCategory for each of the 9 categories, then "
+    "FinalizeAuditReport. Do not run more tools or add further analysis."
+)
+RECOVERY_NUDGE_FREEHAND = (
+    "You analysed the data but did not emit the report. Output the complete "
+    "<duct_artifact>…</duct_artifact> now, in full. Do not run more tools or add "
+    "further analysis, just produce the report."
+)
+
+
+def recovery_nudge(report_mode: str) -> str:
+    return RECOVERY_NUDGE_TEMPLATE if report_mode == "template" else RECOVERY_NUDGE_FREEHAND
+
+
 # ---------------------------------------------------------------------------
 # Public builders
 # ---------------------------------------------------------------------------

@@ -133,7 +133,9 @@ async def _stream_queue(
         pass
 
 
-def _build_runner(api_key: str, provider: Any, model: Any, engine: Engine, search_key: str = ""):
+def _build_runner(
+    api_key: str, provider: Any, model: Any, engine: Engine, search_key: str = "", thinking: str = "",
+):
     """The audit runner. One engine now — the parameter stays because the route
     still resolves and reports an engine, and `agents/engines.py` is where that
     would grow again."""
@@ -143,6 +145,7 @@ def _build_runner(api_key: str, provider: Any, model: Any, engine: Engine, searc
     # Duct's for a run Duct is not paying for (agents/engines.web_search_key).
     return LangChainAuditRunner(
         api_key=api_key, provider=provider, model=model, gemini_api_key=search_key,
+        thinking=thinking,
     )
 
 
@@ -198,7 +201,9 @@ async def _run_audit_pipeline(
             "status": "success",
         })
 
-        runner = _build_runner(api_key, provider, model, engine, search_key)
+        runner = _build_runner(
+            api_key, provider, model, engine, search_key, thinking=req.thinking_level(),
+        )
         report = await runner.run_pipeline(
             session_id=session_id,
             url=url,

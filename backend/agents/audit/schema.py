@@ -463,9 +463,11 @@ class AuditRequest(BaseModel):
     business_context: AuditBusinessContext = Field(default_factory=AuditBusinessContext)
     engine: str = ""
     max_blog_posts: int = Field(default=5, ge=1, le=10)
-    # Accepted and ignored since the Claude Agent SDK went: both were its
-    # options. Kept so a client that still sends them is not a 422; the
-    # per-model thinking dial (agents/thinking.py) is what applies now.
+    # The audit form's own dial. Read as a Duct thinking rung by
+    # ``thinking_level`` only when the request sent it, so a client that says
+    # nothing gets the provider's default. ``adaptive_thinking`` was the Claude
+    # Agent SDK's extra thinking budget on top of ``effort``; no provider-neutral
+    # dial has that second axis, so it is accepted and has no effect.
     effort: AgentEffort = AgentEffort.MEDIUM
     adaptive_thinking: bool = False
     crawl_depth: CrawlDepth = CrawlDepth.DEEP
@@ -496,6 +498,23 @@ class AuditRequest(BaseModel):
     # ``/api/audit/documents``; the run looks each id up for its own owner and
     # drops any it cannot find (``agents/audit/documents.py``).
     document_ids: list[str] = Field(default_factory=list, max_length=MAX_DOCUMENTS)
+
+    def thinking_level(self) -> str:
+        """The Duct thinking rung this run asked for, or "" for the provider's default.
+
+        The saved dial (``user_preferences.thinking``) wins: it is the choice
+        the person made on purpose, in settings. Otherwise the form's
+        ``effort``, but only when the request carried it; its default is not a
+        choice anyone made (agents/thinking.py, rule 3).
+        """
+        from agents.thinking import level_for_effort, normalize_level
+
+        saved = normalize_level(self.user_preferences.thinking)
+        if saved is not None:
+            return saved.value
+        if "effort" in self.model_fields_set:
+            return level_for_effort(self.effort)
+        return ""
 
 
 class AuditAnswerRequest(BaseModel):

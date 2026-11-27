@@ -28,7 +28,7 @@ from agents.core.lc import (
     stream_agent,
 )
 from agents.core.session import BaseAgentSession, close_session, register_session
-from tests.fakes import ToolCallingFake, tool_names as _tool_names
+from tests.fakes import RecordingFake, ToolCallingFake, fake_llm, tool_names as _tool_names
 
 
 def _thread(name: str) -> dict:
@@ -261,10 +261,14 @@ async def test_run_pipeline_crawls_then_publishes_the_report_the_tools_built(
     ]
     assert steps == [
         (AuditStep.FETCH_SITEMAP, "running"), (AuditStep.FETCH_SITEMAP, "success"),
+        (AuditStep.CRAWL_PAGES, "running"), (AuditStep.CRAWL_PAGES, "success"),
         # The business context names a company, so the research pass runs. It
         # degrades to the crawl's own signals here — the fake model has no web.
         (AuditStep.ENRICHING, "running"), (AuditStep.ENRICHING, "success"),
-        (AuditStep.SYNTHESIZE_AUDIT, "running"), (AuditStep.SYNTHESIZE_AUDIT, "success"),
+        (AuditStep.SYNTHESIZE_AUDIT, "running"),
+        # One progress tick per category the model adds.
+        (AuditStep.SYNTHESIZE_AUDIT, "running"),
+        (AuditStep.SYNTHESIZE_AUDIT, "success"),
     ]
     version = next(e for e in emitted.events if e["event"] == AgentEvent.ARTIFACT_VERSION)
     assert version["version_id"] == 1
@@ -778,3 +782,333 @@ def test_the_audit_thread_is_keyed_on_the_conversation(emitted, monkeypatch):
         on_artifact_close=lambda *_a, **_k: None, announce_finish=True,
     )
     assert seen["thread_id"] == "audit-teaser"
+
+
+# ---------------------------------------------------------------------------
+# What the V3 runner did that V1 had lost (Sept 2026 port)
+# ---------------------------------------------------------------------------
+
+def _crawled() -> CrawlResult:
+    """A two-page crawl with something on each page worth counting."""
+    from agents.audit.schema import PageSignals
+
+    return CrawlResult(
+        plan=CrawlPlan(
+            root_url="https://getduct.ai",
+            sitemap_url="https://getduct.ai/sitemap.xml",
+            landing_pages=["https://getduct.ai", "https://getduct.ai/pricing"],
+            total_sitemap_urls=12,
+        ),
+        robots_txt="User-agent: *\nAllow: /",
+        pages=[
+            PageSignals(url="https://getduct.ai", title="Duct", h1s=["Duct"], ttfb_ms=200.0),
+            PageSignals(
+                url="https://getduct.ai/pricing", ttfb_ms=400.0, is_noindex=True,
+                is_spa_suspected=True, redirect_chain=[{"url": "https://getduct.ai/price", "status": 301}],
+            ),
+        ],
+        crawl_errors=["https://getduct.ai/blog: timed out"],
+    )
+
+
+def _template_responses() -> list:
+    return list(_model_that_builds_a_template_report().responses)
+
+
+async def _offline_pipeline(monkeypatch, emitted, *, crawl=None, llm=None, runner=None, **kwargs):
+    """run_pipeline with the crawl and the model replaced at their seams. No
+    business context, so no research pass spends a canned response."""
+    import agents.audit.crawl as audit_crawl
+    import agents.audit.v1.runner as v1
+    from agents.audit.schema import AuditBusinessContext
+
+    crawl = crawl or _crawled()
+
+    async def offline_crawl(_url, **_kwargs):
+        return crawl
+
+    model = llm or _model_that_builds_a_template_report()
+    monkeypatch.setattr(audit_crawl, "run_crawl", offline_crawl)
+    monkeypatch.setattr(v1, "resolve_chat_model", lambda *_a, **_k: model)
+    runner = runner or v1.LangChainAuditRunner(api_key="unused-no-network")
+    return await runner.run_pipeline(
+        session_id=kwargs.pop("session_id", f"offline-audit-{uuid.uuid4()}"), url="https://getduct.ai",
+        business_context=AuditBusinessContext(), emit=emitted, report_mode="template",
+        **kwargs,
+    )
+
+
+def _versions(events: list) -> list[dict]:
+    return [e for e in events if e["event"] == AgentEvent.ARTIFACT_VERSION]
+
+
+def _stored_report(**structured):
+    from agents.audit.schema import AuditReport, CrawlSummary, StructuredAuditData, VersionedReport
+
+    data = StructuredAuditData(
+        url="https://getduct.ai", generated_at="2026-11-01T00:00:00+00:00",
+        overall_score=80, score_band="good", pages_crawled=2, total_sitemap_urls=12,
+        crawl_summary=CrawlSummary(avg_ttfb_ms=300.0, pages_noindex=1),
+        **structured,
+    )
+    report = AuditReport(
+        url="https://getduct.ai", generated_at=data.generated_at, update_label="Initial audit",
+        report_mode="template", template_id="seo_v1", structured_data=data,
+    )
+    return VersionedReport(version_id=1, label="Initial audit", report=report, created_at=data.generated_at)
+
+
+def _audit_session(session_id: str, versions: list | None = None):
+    from agents.audit.schema import AuditSession
+
+    session = AuditSession(
+        session_id=session_id, agent_type="audit_seo",
+        event_queue=asyncio.Queue(), chat_queue=asyncio.Queue(),
+    )
+    session.report_versions = list(versions or [])
+    return register_session(session)
+
+
+async def test_a_resumed_audit_shows_its_stored_report_again(emitted, monkeypatch):
+    """Reopening an audit showed "AI synthesis finished but no report was
+    generated": the resume sent PIPELINE_FINISHED with nothing before it. The
+    stored version comes back first, flagged replay so nothing stores it twice."""
+    import agents.audit.v1.runner as v1
+
+    monkeypatch.setattr(v1, "resolve_chat_model", lambda *_a, **_k: fake_llm("ok"))
+    session = _audit_session("audit-resume-replay", [_stored_report()])
+
+    resumed = asyncio.create_task(
+        v1.LangChainAuditRunner(api_key="unused-no-network").run_resume(
+            session_id=session.session_id, url="https://getduct.ai",
+            emit=emitted, chat_idle_timeout=0.2, report_mode="template",
+        )
+    )
+    await _drain(session, emitted.events, wait_for=AgentEvent.PIPELINE_FINISHED)
+    close_session(session.session_id)
+    await asyncio.wait_for(resumed, timeout=5)
+
+    kinds = [e["event"] for e in emitted.events]
+    replay = next(e for e in _versions(emitted.events))
+    assert kinds.index(AgentEvent.ARTIFACT_VERSION) < kinds.index(AgentEvent.PIPELINE_FINISHED)
+    assert replay["replay"] is True
+    assert replay["version_id"] == 1
+    assert replay["label"] == "Initial audit"
+    assert replay["payload"]["structured_data"]["overall_score"] == 80
+
+
+async def test_a_revision_in_a_resumed_chat_keeps_the_crawl_strip(emitted, monkeypatch):
+    """A resumed chat runs on a crawl stub with no pages, so the strip it
+    publishes is the stored one carried forward, not an empty one."""
+    import agents.audit.v1.runner as v1
+
+    revised = _stored_report().report.structured_data.model_dump(exclude={"crawl_summary"})
+    model = ToolCallingFake(responses=[
+        AIMessage(content="", tool_calls=[{"name": "SubmitAuditReport", "args": revised, "id": "r1"}]),
+        AIMessage(content="Revised."),
+    ])
+    monkeypatch.setattr(v1, "resolve_chat_model", lambda *_a, **_k: model)
+    session = _audit_session("audit-resume-revise", [_stored_report()])
+
+    resumed = asyncio.create_task(
+        v1.LangChainAuditRunner(api_key="unused-no-network").run_resume(
+            session_id=session.session_id, url="https://getduct.ai",
+            emit=emitted, chat_idle_timeout=1.0, report_mode="template",
+        )
+    )
+    await _drain(session, emitted.events, wait_for=AgentEvent.PIPELINE_FINISHED)
+    await session.chat_queue.put("drop the pricing finding")
+    await asyncio.wait_for(resumed, timeout=10)
+    close_session(session.session_id)
+
+    fresh = [v for v in _versions(emitted.events) if not v.get("replay")]
+    assert [v["version_id"] for v in fresh] == [2]
+    assert fresh[0]["label"] == "Update 2"
+    strip = fresh[0]["payload"]["structured_data"]["crawl_summary"]
+    assert strip["avg_ttfb_ms"] == 300.0 and strip["pages_noindex"] == 1
+
+
+async def test_the_report_carries_the_crawl_strip_counted_from_the_pages(emitted, monkeypatch):
+    """The report's speed/redirect/noindex strip only draws when the field is
+    set, and V1 never set it."""
+    await _offline_pipeline(monkeypatch, emitted)
+
+    version = _versions(emitted.events)[0]
+    assert version["label"] == "Initial audit"
+    assert version["payload"]["structured_data"]["crawl_summary"] == {
+        "avg_ttfb_ms": 300.0, "pages_with_redirects": 1, "spa_pages_count": 1,
+        "pages_noindex": 1, "pages_missing_title": 1, "pages_missing_h1": 1,
+    }
+
+
+async def test_each_category_added_moves_the_synthesis_progress(emitted, monkeypatch):
+    """The progress row reads "N/9 categories" off SYNTHESIZE_AUDIT; with no
+    callback wired it showed only a clock for the whole build."""
+    await _offline_pipeline(monkeypatch, emitted)
+
+    progress = [
+        e["payload"] for e in emitted.events
+        if e["event"] == AgentEvent.STEP_STARTED
+        and e["step_id"] == AuditStep.SYNTHESIZE_AUDIT and e.get("payload")
+    ]
+    assert progress == [{"categories_done": 1, "categories_total": 9, "last_category": "On-page SEO"}]
+
+
+async def test_the_crawl_steps_carry_what_the_crawl_found(emitted, monkeypatch):
+    """The sitemap and crawl rows expand to the files and pages the crawl
+    read; V1 closed the first with no payload and never sent the second."""
+    await _offline_pipeline(monkeypatch, emitted)
+
+    finished = {
+        e["step_id"]: e for e in emitted.events if e["event"] == AgentEvent.STEP_FINISHED
+    }
+    sitemap = finished[AuditStep.FETCH_SITEMAP]["payload"]
+    assert sitemap["sitemap_url"] == "https://getduct.ai/sitemap.xml"
+    assert sitemap["landing_page_urls"] == ["https://getduct.ai", "https://getduct.ai/pricing"]
+    assert sitemap["robots_txt_found"] and sitemap["robots_txt_lines"] == 2
+    assert not sitemap["llms_txt_found"]
+
+    pages = finished[AuditStep.CRAWL_PAGES]["payload"]
+    assert [p["url"] for p in pages["pages"]] == ["https://getduct.ai", "https://getduct.ai/pricing"]
+    assert pages["pages"][1]["is_noindex"] is True
+    assert pages["errors"] == ["https://getduct.ai/blog: timed out"]
+
+
+def _tools_by_name(agent) -> dict:
+    tool_node = agent.nodes.get("tools")
+    inner = getattr(tool_node, "bound", tool_node)
+    return dict(getattr(inner, "tools_by_name", {}))
+
+
+async def test_the_audit_chat_can_read_and_search_the_web(crawl_result):
+    """V3's chat had WebSearch and WebFetch; V1 mounted neither, so "what do
+    competitors rank for?" had nothing to answer with. A page of the audited
+    site still goes to FetchPages, which keeps the SEO signals."""
+    from agents.models import ModelName, Provider
+
+    llm = ToolCallingFake(responses=[AIMessage(content="ok")])
+    agent = build_audit_agent(
+        crawl_result=crawl_result, llm=llm, system_prompt="audit",
+        provider=Provider.OPENAI, model=ModelName.GPT_6_1_SOL, gemini_api_key="search-key",
+    )
+    tools = _tools_by_name(agent)
+    assert {"WebFetch", "WebSearch", "FetchPages"} <= set(tools)
+
+    own_site = await tools["WebFetch"].ainvoke({"url": "https://www.getduct.ai/pricing"})
+    assert "FetchPages" in own_site
+
+    # No key for Duct's search on a provider with no built-in: fetch only.
+    no_search = build_audit_agent(
+        crawl_result=crawl_result, llm=llm, system_prompt="audit",
+        provider=Provider.OPENAI, model=ModelName.GPT_6_1_SOL,
+    )
+    assert "WebFetch" in _tool_names(no_search)
+    assert "WebSearch" not in _tool_names(no_search)
+
+
+def test_the_audit_form_s_effort_is_read_as_a_thinking_level():
+    from agents.audit.schema import AuditRequest
+    from agents.preferences import UserPreferences
+
+    assert AuditRequest(url="getduct.ai").thinking_level() == ""  # nothing chosen
+    assert AuditRequest(url="getduct.ai", effort="low").thinking_level() == "quick"
+    assert AuditRequest(url="getduct.ai", effort="high").thinking_level() == "deep"
+    saved = AuditRequest(
+        url="getduct.ai", effort="low", user_preferences=UserPreferences(thinking="exhaustive"),
+    )
+    assert saved.thinking_level() == "exhaustive"
+
+
+async def test_the_requested_thinking_reaches_the_model(emitted, monkeypatch):
+    """The form's effort and the saved dial reached no model call: the runner
+    took no thinking and never passed one to resolve_chat_model."""
+    import agents.audit.crawl as audit_crawl
+    import agents.audit.v1.runner as v1
+    from agents.audit.schema import AuditBusinessContext
+
+    asked: list[dict] = []
+
+    def resolve(*_a, **kwargs):
+        asked.append(kwargs)
+        return _model_that_builds_a_template_report()
+
+    async def offline_crawl(_url, **_kwargs):
+        return _crawled()
+
+    monkeypatch.setattr(audit_crawl, "run_crawl", offline_crawl)
+    monkeypatch.setattr(v1, "resolve_chat_model", resolve)
+    await v1.LangChainAuditRunner(api_key="unused-no-network", thinking="deep").run_pipeline(
+        session_id=f"offline-audit-{uuid.uuid4()}", url="https://getduct.ai",
+        business_context=AuditBusinessContext(), emit=emitted, report_mode="template",
+    )
+    assert asked and all(k.get("thinking") == "deep" for k in asked)
+
+    # The public audit route builds its runner with the level too.
+    from agents.engines import Engine
+    from agents.models import ModelName, Provider
+    from routes.audit import _build_runner
+
+    runner = _build_runner("k", Provider.ANTHROPIC, ModelName.CLAUDE_SONNET, Engine.V1, thinking="quick")
+    assert runner.thinking == "quick"
+
+
+async def test_synthesis_says_whether_the_model_reasoned(emitted, monkeypatch):
+    """The finished synthesis row shows "reasoned" when the model thought."""
+    responses = _template_responses()
+    responses[-1] = AIMessage(content=[
+        {"type": "thinking", "thinking": "Weighing the noindex page."},
+        {"type": "text", "text": "Report published."},
+    ])
+    await _offline_pipeline(monkeypatch, emitted, llm=ToolCallingFake(responses=responses))
+
+    finished = next(
+        e for e in emitted.events
+        if e["event"] == AgentEvent.STEP_FINISHED and e["step_id"] == AuditStep.SYNTHESIZE_AUDIT
+    )
+    assert finished["payload"]["reasoned"] is True
+
+
+async def test_an_opening_turn_without_a_report_gets_one_recovery_nudge(emitted, monkeypatch):
+    """A model that analyses the whole turn and stops before publishing used
+    to end the run with no report. One nudge, then the report."""
+    from langchain_core.messages import HumanMessage
+
+    llm = RecordingFake(responses=[AIMessage(content="The site looks fine overall."), *_template_responses()])
+    report = await _offline_pipeline(monkeypatch, emitted, llm=llm)
+
+    assert report is not None
+    assert [v["version_id"] for v in _versions(emitted.events)] == [1]
+    assert AgentEvent.PIPELINE_FINISHED in [e["event"] for e in emitted.events]
+    humans = [m for m in llm.requests[-1]["messages"] if isinstance(m, HumanMessage)]
+    assert len(humans) == 2, "the opening turn, then exactly one nudge"
+
+
+async def test_a_turn_that_publishes_is_never_nudged(emitted, monkeypatch):
+    from langchain_core.messages import HumanMessage
+
+    llm = RecordingFake(responses=_template_responses())
+    await _offline_pipeline(monkeypatch, emitted, llm=llm)
+
+    humans = [m for m in llm.requests[-1]["messages"] if isinstance(m, HumanMessage)]
+    assert len(humans) == 1
+
+
+async def test_the_system_prompt_carries_the_connector_knowledge(emitted, monkeypatch):
+    """V3 always gave the audit the Search Console pack, and the Ads, GA4 and
+    GTM packs once it could propose changes there. Static per configuration,
+    so the prefix still caches."""
+    from langchain_core.messages import SystemMessage
+
+    from agents.audit.v1.runner import system_prompt_for
+    from agents.knowledge import knowledge_block
+
+    llm = RecordingFake(responses=_template_responses())
+    await _offline_pipeline(monkeypatch, emitted, llm=llm)
+
+    system = next(m for m in llm.requests[0]["messages"] if isinstance(m, SystemMessage))
+    assert knowledge_block(("gsc",)) in system.content
+    assert knowledge_block(("gsc",)) in system_prompt_for("template", "seo_v1", with_data=False, execution=False)
+    with_execution = system_prompt_for("template", "seo_v1", with_data=True, execution=True)
+    assert knowledge_block(("gsc", "google_ads", "ga4", "gtm")) in with_execution
+    # One variant per configuration: no run's own text in it.
+    assert with_execution == system_prompt_for("template", "seo_v1", with_data=True, execution=True)

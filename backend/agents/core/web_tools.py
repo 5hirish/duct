@@ -162,11 +162,15 @@ def build_web_fetch_tool_lc(
     *,
     on_fetch_start: Callable[[str], Awaitable[None]] | None = None,
     on_fetch: Callable[[str, bool], Awaitable[None]] | None = None,
+    redirect: Callable[[str], str | None] | None = None,
 ) -> Any:
     """``WebFetch`` as a LangChain tool.
 
     The hooks let a runner show each fetch as a step in the UI; they default
     to nothing so a subagent can mount the same tool without a session.
+    ``redirect(url)`` may answer a URL with a message instead of fetching it:
+    the audit sends pages of the site it is auditing to its own FetchPages,
+    which returns the SEO signals a readable-text fetch strips.
     """
     from langchain_core.tools import StructuredTool
     from pydantic import BaseModel, Field
@@ -175,6 +179,9 @@ def build_web_fetch_tool_lc(
         url: str = Field(description="A public http(s) URL to read.")
 
     async def web_fetch(url: str) -> str:
+        message = redirect(url) if redirect is not None else None
+        if message:
+            return json.dumps({"status": "error", "message": message})
         if on_fetch_start is not None:
             await on_fetch_start(url)
         payload = await fetch_page_text(url)
@@ -259,6 +266,7 @@ def build_web_tools_lc(
     *,
     fetch_hooks: tuple[Any, Any] = (None, None),
     search_hooks: tuple[Any, Any] = (None, None),
+    fetch_redirect: Callable[[str], str | None] | None = None,
 ) -> list[Any]:
     """Every web tool this run should carry: fetch, plus whichever search fits.
 
@@ -268,7 +276,9 @@ def build_web_tools_lc(
     """
     on_fetch_start, on_fetch = fetch_hooks
     tools: list[Any] = [
-        build_web_fetch_tool_lc(on_fetch_start=on_fetch_start, on_fetch=on_fetch)
+        build_web_fetch_tool_lc(
+            on_fetch_start=on_fetch_start, on_fetch=on_fetch, redirect=fetch_redirect
+        )
     ]
     native = provider_web_search_tool(provider, model)
     if native is not None:

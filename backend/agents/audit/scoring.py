@@ -10,9 +10,9 @@ model should not be asked for, so the rules live here, the prompt's tables are
 rendered from these constants, and ``calibrate`` overwrites whatever the model
 sent with what its own findings add up to.
 
-Two figures come from the crawl rather than the findings: ``pages_crawled`` and
-``total_sitemap_urls``. A model asked for them fabricates ("1 of 0 sitemap
-URLs"); the crawl already knows.
+Three things come from the crawl rather than the findings: ``pages_crawled``,
+``total_sitemap_urls`` and the ``crawl_summary`` strip. A model asked for them
+fabricates ("1 of 0 sitemap URLs"); the crawl already knows.
 """
 
 from __future__ import annotations
@@ -22,6 +22,7 @@ import logging
 from agents.audit.schema import (
     AuditCategory,
     CrawlResult,
+    CrawlSummary,
     ScoreBand,
     Severity,
     StructuredAuditData,
@@ -104,6 +105,22 @@ def band_for(score: int) -> ScoreBand:
     return ScoreBand.critical
 
 
+def crawl_summary(crawl_result: CrawlResult) -> CrawlSummary:
+    """The report's crawl strip (speed, redirects, SPA pages, noindex, missing
+    title and H1), counted from the pages. The model is told to leave it out;
+    a count it made up would sit beside the crawl that disproves it."""
+    pages = crawl_result.pages
+    ttfbs = [p.ttfb_ms for p in pages if p.ttfb_ms > 0]
+    return CrawlSummary(
+        avg_ttfb_ms=sum(ttfbs) / len(ttfbs) if ttfbs else 0.0,
+        pages_with_redirects=sum(1 for p in pages if p.redirect_chain),
+        spa_pages_count=sum(1 for p in pages if p.is_spa_suspected),
+        pages_noindex=sum(1 for p in pages if p.is_noindex),
+        pages_missing_title=sum(1 for p in pages if not p.title),
+        pages_missing_h1=sum(1 for p in pages if not p.h1s),
+    )
+
+
 def calibrate(structured: StructuredAuditData, crawl_result: CrawlResult) -> StructuredAuditData:
     """Overwrite every derived number on the report with what its findings imply.
 
@@ -131,6 +148,7 @@ def calibrate(structured: StructuredAuditData, crawl_result: CrawlResult) -> Str
     if crawl_result.pages:
         structured.pages_crawled = sum(1 for p in crawl_result.pages if p.http_status > 0)
         structured.total_sitemap_urls = crawl_result.plan.total_sitemap_urls
+        structured.crawl_summary = crawl_summary(crawl_result)
 
     if abs(claimed - structured.overall_score) >= _DRIFT_WORTH_LOGGING:
         logger.info(
@@ -184,6 +202,7 @@ __all__ = [
     "PENALTIES",
     "band_for",
     "calibrate",
+    "crawl_summary",
     "overall_score",
     "score_category",
     "scoring_rules_block",
