@@ -240,6 +240,32 @@ def test_status_reports_the_plan_as_the_source_and_the_kill_switch(client):
     assert openai["source"] == "subscription"
     assert openai["reachable"] is True
     assert body["chatgpt_auth_enabled"] is True
+    assert (openai["plan_type"], openai["plan_only_model"]) == ("plus", None)
+
+
+def _token_on(plan: str) -> str:
+    return _jwt({
+        "exp": 4102444800,
+        "https://api.openai.com/auth": {"chatgpt_account_id": ACCOUNT_ID, "chatgpt_plan_type": plan},
+    })
+
+
+@pytest.mark.parametrize(("plan", "served"), [
+    ("go", "gpt-6-luna"), ("free", "gpt-6-luna"), ("plus", "gpt-6.1-sol"), ("pro", "gpt-6.1-sol"), ("", "gpt-6.1-sol"),
+])
+def test_a_plan_that_reaches_one_model_is_served_on_it(plan, served):
+    """Free and Go reach only Luna through Codex, and a Go plan refused Sol
+    live. Asking for Sol there failed every call before the fallback caught
+    it, so the model is chosen from the plan before the first request."""
+    packed = codex.pack_subscription_credential(_token_on(plan), ACCOUNT_ID)
+    llm = lc.resolve_chat_model(Provider.OPENAI, ModelName.GPT_6_1_SOL, packed)
+    assert llm.model_name == served
+
+
+def test_status_names_the_one_model_a_go_plan_serves(client):
+    body = client.get("/providers/status", headers={"X-Provider-OpenAI": _token_on("go")}).json()
+    openai = next(row for row in body["providers"] if row["id"] == "openai")
+    assert (openai["source"], openai["plan_type"], openai["plan_only_model"]) == ("subscription", "go", "gpt-6-luna")
 
 
 # ---------------------------------------------------------------------------
@@ -344,3 +370,19 @@ def test_no_affinity_means_no_session_headers():
     payload = codex.cache_friendly_payload({"instructions": "x", "input": []}, "")
     assert "extra_headers" not in payload
     assert "prompt_cache_key" not in payload
+
+
+def test_a_run_says_when_its_plan_answers_with_another_model():
+    """The run-start event names the model that answers and the pick it
+    overrode, so the transcript can say why a Go plan drafted on Luna."""
+    from agents.core.codex import pack_subscription_credential
+    from agents.models import ModelName, Provider, run_model_fields
+
+    go = pack_subscription_credential(_token_on("go"), ACCOUNT_ID)
+    fields = run_model_fields(Provider.OPENAI, ModelName.GPT_6_1_SOL, go)
+    assert (fields["model"], fields["requested_model"], fields["plan"]) == ("gpt-6-luna", "gpt-6.1-sol", "go")
+    assert fields["model_label"] != fields["requested_label"]
+
+    plus = pack_subscription_credential(_token_on("plus"), ACCOUNT_ID)
+    assert "requested_model" not in run_model_fields(Provider.OPENAI, ModelName.GPT_6_1_SOL, plus)
+    assert "requested_model" not in run_model_fields(Provider.OPENAI, ModelName.GPT_6_1_SOL, "sk-test")

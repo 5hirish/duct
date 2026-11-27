@@ -15,10 +15,25 @@
  * operated.
  */
 
+import { BadgeCheck, KeyRound, Server } from "lucide-react";
 import { Trans, useLingui } from "@lingui/react/macro";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import ModelPicker, { ProviderMark } from "./ModelPicker";
-import { SOURCE_SENTENCE, TIERS, agreedSource, modelLabel } from "@/lib/modelTiers";
+import { planLabel } from "@/lib/chatgpt";
+import {
+  SOURCE_LABELS,
+  SOURCE_SENTENCE,
+  SOURCE_TONE,
+  TIERS,
+  agreedSource,
+  modelLabel,
+} from "@/lib/modelTiers";
+
+const TONE_VARIANT = { ok: "success", info: "info", warn: "warning" };
+// A plan and an open-model server are not keys, and the icon says so before
+// the words are read.
+const SOURCE_ICON = { subscription: BadgeCheck, instance: Server };
 
 export default function TierSummary({
   picks,
@@ -42,13 +57,18 @@ export default function TierSummary({
   onVideoChange,
 }) {
   const { t, i18n } = useLingui();
+  // A ChatGPT plan that serves one model (Free, Go) runs every OpenAI tier
+  // on it whatever was picked, so the rows show what runs, not the pick.
+  const plan = providersById?.openai?.source === "subscription" ? providersById.openai : null;
+  const planOnly = plan?.plan_only_model || "";
   const rows = TIERS.map((tier) => {
     const id = picks[tier.key];
-    return {
-      tier,
-      model: models.find((entry) => entry.id === id) || (id ? { id } : null),
-      preview: previewByTier[tier.key],
-    };
+    const picked = models.find((entry) => entry.id === id) || (id ? { id } : null);
+    const served =
+      planOnly && picked?.provider === "openai" && picked.id !== planOnly
+        ? models.find((entry) => entry.id === planOnly) || { id: planOnly, provider: "openai" }
+        : picked;
+    return { tier, model: served, preview: previewByTier[tier.key] };
   });
 
   const providerIds = rows.map((row) => row.model?.provider).filter(Boolean);
@@ -83,6 +103,14 @@ export default function TierSummary({
     return model ? modelLabel(model) : id;
   };
 
+  // The plan by name, and what it limits, said where the provider is named.
+  const planName = plan?.plan_type ? planLabel(plan.plan_type) : "";
+  const planModelName = planOnly ? nameOf(planOnly) : "";
+  let planBadge = "";
+  if (shared === "subscription" && planName) {
+    planBadge = planOnly ? t`${planName} · ${planModelName} only` : t`Your ${planName} plan`;
+  }
+
   let note = "";
   if (blocked) {
     const serves = blocked.preview.serves;
@@ -91,9 +119,7 @@ export default function TierSummary({
     note = serves
       ? t`${tierName} has no key, so that work runs on ${servesName} instead.`
       : t`${tierName} has no key and nothing below it can run either.`;
-  } else if (shared) {
-    note = SOURCE_SENTENCE[shared] ? i18n._(SOURCE_SENTENCE[shared]) : "";
-  } else if (resolved) {
+  } else if (resolved && !shared) {
     note = t`Your three tiers run on different keys — open Customise to see which.`;
   }
 
@@ -143,6 +169,18 @@ export default function TierSummary({
         <div className="mt-setup-head">
           {onePr && <ProviderMark providerId={providerIds[0]} className="mt-mark mt-setup-mark" />}
           <h2>{heading}</h2>
+          {/* What the three run on, as a label beside the provider rather
+              than a sentence under the pickers: "whose account pays" is the
+              second thing anyone opening this page asks, and a muted line at
+              the bottom of the card went unread. The sentence stays as the
+              label's title and accessible name. */}
+          {shared && SOURCE_LABELS[shared] && !blocked && (
+            <SourceLabel
+              source={shared}
+              label={planBadge || i18n._(SOURCE_LABELS[shared])}
+              detail={i18n._(SOURCE_SENTENCE[shared])}
+            />
+          )}
           <Button type="button" variant="outline" size="sm" onClick={onToggle}>
             {expanded ? <Trans>Done</Trans> : <Trans>Customise</Trans>}
           </Button>
@@ -245,5 +283,20 @@ export default function TierSummary({
         )}
       </div>
     </>
+  );
+}
+
+function SourceLabel({ source, label, detail }) {
+  const Icon = SOURCE_ICON[source] || KeyRound;
+  return (
+    <Badge
+      variant={TONE_VARIANT[SOURCE_TONE[source]] || "secondary"}
+      className="mt-setup-source"
+      title={detail}
+      aria-label={detail}
+    >
+      <Icon aria-hidden="true" />
+      {label}
+    </Badge>
   );
 }

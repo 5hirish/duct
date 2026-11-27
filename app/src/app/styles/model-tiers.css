@@ -121,6 +121,7 @@
    Tiers tab is either a way to change this or a note about it. It gets the
    extra weight so nothing else has to compete for it. */
 .mt-setup {
+  container-type: inline-size;
   padding: 1.125rem 1.25rem;
   border: 1px solid color-mix(in oklch, var(--primary) 22%, var(--border));
   border-radius: var(--radius-xl);
@@ -159,6 +160,24 @@
 .mt-setup-head > :last-child {
   margin-left: auto;
   flex: none;
+}
+
+/* What the tiers run on. Beside the provider when the card has room; on a
+   narrow card it takes a line of its own under the heading, because the
+   heading is the one thing in this row that must not ellipsize. */
+.mt-setup-source {
+  flex: none;
+}
+
+@container (max-width: 30rem) {
+  .mt-setup-head {
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
+  }
+
+  .mt-setup-source {
+    order: 3;
+  }
 }
 
 .mt-setup-mark {
